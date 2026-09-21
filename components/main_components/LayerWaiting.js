@@ -32,8 +32,10 @@
 // Chip are cheap and this is the only way the two can be relied on to match.
 
 'use client';
+import { useLayoutEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { handedOver } from '../../library/handoff';
+import { Fingerprint, Heart, SketchLogo } from '@phosphor-icons/react';
+import { handedOver, stillReadingOn } from '../../library/handoff';
 import SiteNav from './SiteNav';
 import KeeperTools from './KeeperTools';
 import { useLayerHeaderSlot } from './LayerEntry';
@@ -52,6 +54,29 @@ export default function LayerWaiting({ slug, authed = false }) {
   // and for the keeper the pencil and the printer, inert until the entry
   // lands and takes the slot over with the working ones.
   const headerSlot = useLayerHeaderSlot();
+  // ── Reading on, the wait has no card to draw ────────────────────────────
+  // This screen exists so a swipe has something to look at while the record
+  // it went to is fetched, and what it draws is that record's first screen —
+  // the album, large. Which is right when you swiped from the album and
+  // exactly wrong when you did not: Miyel, "full card still loads in when
+  // swiping from a mini card state; it should load in mini instantly with no
+  // view of the full card."
+  //
+  // So when the swipe came from the notes, the wait is the header the record
+  // is about to draw and nothing else. Asked without spending the answer —
+  // this draws first and the record is the one that needs it.
+  // Looked at once and without spending it — the record is the one that
+  // needs the answer. The mark's strength is said at the same moment, so the
+  // row this draws is already wearing it on its first frame.
+  const [onward] = useState(stillReadingOn);
+  useLayoutEffect(() => {
+    if (!headerSlot) return;
+    headerSlot.setAttribute('class', 'lay-header ln-entry'
+      + (onward ? ' ln-entry--scrolled ln-entry--crowning' : ''));
+    // Where the handover stands, for the row this is about to draw and for
+    // the swipe that may leave from it.
+    if (onward) document.documentElement.style.setProperty('--ln-turn', '1');
+  }, [headerSlot, onward]);
   const header = headerSlot
     ? createPortal(
         <SiteNav tools={authed ? <KeeperTools onEdit={() => {}} slug={slug} /> : null} />,
@@ -65,6 +90,50 @@ export default function LayerWaiting({ slug, authed = false }) {
   const titleSize = known
     ? `clamp(1.25rem, ${(300 / ((known.album || '').length || 1)).toFixed(2)}vw, 2.1rem)`
     : null;
+
+  // The record in the header, at rest in the place the collapse leaves it.
+  // No transform and no measuring: the seat's own size is where it lands, so
+  // drawn plain it is already there.
+  const crown = known && (
+    <div className="ln-crown">
+      <span className="ln-crown-art">
+        {known.album_art ? <img src={known.album_art} alt="" /> : <span className="ln-crown-none">♪</span>}
+      </span>
+      <span className="ln-crown-hole" aria-hidden="true" />
+      <span className="ln-crown-said" style={{ opacity: 1 }}>
+        <span className="ln-crown-album">{known.album}</span>
+        {known.artist && <span className="ln-crown-artist">{known.artist}</span>}
+      </span>
+      <span className="ln-crown-marks" aria-hidden="true" style={{ opacity: 1 }}>
+        {(known.masterpiece || known.rating === 'Masterpiece' ? 5 : parseFloat(known.rating) || 0) > 0 && (
+          <StarRating rating={known.masterpiece || known.rating === 'Masterpiece' ? 5 : parseFloat(known.rating) || 0} size={11} glow={false} animate={false} />
+        )}
+        <span className="ln-crown-flags">
+          {known.favorite && <span className="ln-crown-flag" style={{ color: 'var(--fav, #f0484f)' }}><Heart size={12} weight="fill" /></span>}
+          {(known.masterpiece || known.rating === 'Masterpiece') && <span className="ln-crown-flag" style={{ color: 'var(--mp, #4a9bf0)' }}><SketchLogo size={12} weight="fill" /></span>}
+          {known.formative && <span className="ln-crown-flag" style={{ color: 'var(--formative, #3fa96b)' }}><Fingerprint size={12} weight="bold" /></span>}
+        </span>
+      </span>
+    </div>
+  );
+
+  // Reading on: the header the record is about to have, and an empty page
+  // under it. A screen of album here is the thing being complained about.
+  if (known && onward) {
+    return (<>
+      {headerSlot
+        ? createPortal(
+            <SiteNav mark={crown} lede={false} tools={authed ? <KeeperTools onEdit={() => {}} slug={slug} /> : null} />,
+            headerSlot,
+          )
+        : null}
+      {/* And nothing under it. Three ruled lines stood in for the notes here
+          for an hour and read as exactly what they were — Miyel: "it swipes
+          off the screen with these weird glyphs." A blank page for the length
+          of a prefetched fetch is the quieter wrong answer. */}
+      <div className="ln-screens" aria-hidden="true" />
+    </>);
+  }
 
   if (!known) {
     return (<>

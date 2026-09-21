@@ -126,6 +126,28 @@ const WITH_LISTEN_NUMBERS = `
 // rest. It is what lets the page about a person count the records they are
 // credited on — a backfilled send has no row in submissions, only a name on
 // the entry — and it is a few bytes on the rows that carry it.
+// ── Which tracks were hearted, as one small string ────────────────────────
+// A '1' or a '0' per track, in track order, so a horizon can be drawn with
+// its hearts on it wherever a horizon is drawn — the feed's compare most of
+// all, which is where two people's listens are put next to each other and a
+// loved song is the thing you look for first (Miyel, 2026-09-20).
+//
+// Derived in the query and never stored. `tracks` is the source of truth and
+// everything about a listen's shape is read off it — the horizon already is —
+// so a column holding the same fact would be a second copy to keep in step.
+// Derived in SQL rather than in JS so that the writing stays in the database:
+// reading `tracks` back to count hearts would pull every word of every note
+// across the wire on a page that draws none of them, which is the whole thing
+// the field lists below exist to stop.
+//
+// NAME: `hearts` is a placeholder for Miyel. It crosses between copies, so an
+// older copy simply sends nothing and the bars draw without them.
+const HEARTS_FIELD = `(
+  SELECT string_agg(CASE WHEN COALESCE((t->>'favorite')::boolean, false) THEN '1' ELSE '0' END, '' ORDER BY ord)
+  FROM jsonb_array_elements(CASE WHEN jsonb_typeof(tracks) = 'array' THEN tracks ELSE '[]'::jsonb END)
+       WITH ORDINALITY AS hearted(t, ord)
+) AS hearts`;
+
 const WALL_FIELDS = [
   'id', 'slug', 'album', 'artist', 'year', 'genre', 'album_key',
   'rating', 'rating_value', 'entry_type', 'favorite', 'masterpiece',
@@ -178,7 +200,8 @@ export async function pull_random_slug() {
 
 export async function pull_wall_entries() {
   const rows = await database.query(
-    `SELECT ${[...WALL_FIELDS, ...CREDIT_FIELDS, CREDIT_GUARD].map(f => `"${f}"`).join(', ')}
+    `SELECT ${[...WALL_FIELDS, ...CREDIT_FIELDS, CREDIT_GUARD].map(f => `"${f}"`).join(', ')},
+            ${HEARTS_FIELD}
      FROM (${WITH_LISTEN_NUMBERS}) ranked
      ORDER BY posted_at DESC`
   );
@@ -217,7 +240,8 @@ export async function pull_public_entries() {
   // entry has crossed the wire. A feed that deliberately carries no writing
   // was reading every word of it and throwing it away.
   const rows = await database.query(
-    `SELECT ${[...PUBLIC_FIELDS, ...CREDIT_FIELDS, CREDIT_GUARD].map(f => `"${f}"`).join(', ')}
+    `SELECT ${[...PUBLIC_FIELDS, ...CREDIT_FIELDS, CREDIT_GUARD].map(f => `"${f}"`).join(', ')},
+            ${HEARTS_FIELD}
      FROM (${WITH_LISTEN_NUMBERS}) ranked
      ORDER BY posted_at DESC`
   );
@@ -233,6 +257,10 @@ export async function pull_public_entries() {
   return rows.map(row => {
     const out = {};
     for (const field of PUBLIC_FIELDS) out[field] = row[field];
+    // Derived rather than a column, so it is not in the list above and is
+    // carried across by hand. Null on a record with no tracks, which draws
+    // exactly as an older copy's answer does: a horizon with no hearts on it.
+    out.hearts = row.hearts || null;
     out.album_art = sizedAlbumArt(row.album_art, LIST_ART_PX);
     if (credited(row)) {
       for (const field of CREDIT_FIELDS) out[field] = row[field] || null;

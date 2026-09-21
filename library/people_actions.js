@@ -11,12 +11,48 @@
 import database from './database_connection.js';
 import { tidyJournal, journalUrl } from './return_address.js';
 
+// Pinned first, in the order they were pinned, then everybody else by name.
+// `pinned_at IS NULL` sorts false before true, which puts the pinned ones at
+// the top without a second query or a sort in the page.
 export async function pull_people() {
   return await database`
-    SELECT id, address, name, added_at
+    SELECT id, address, name, added_at, pinned_at
     FROM people
-    ORDER BY lower(coalesce(name, address)), added_at
+    ORDER BY (pinned_at IS NULL), pinned_at, lower(coalesce(name, address)), added_at
   `;
+}
+
+// How many can be up there at once (Miyel, 2026-09-20). Six is two rows of
+// three at the size they are drawn, and past that the shelf is pins and the
+// book is a line under them — which is the pane inside out.
+//
+// **This is the rule.** Friends.js keeps its own copy of the number so it can
+// grey the door out before you press it, and cannot import this one: this
+// module opens the database and that one runs in a browser. If they ever
+// disagree, this wins and the door is merely wrong about itself.
+export const PINS_MOST = 6;
+
+// Pinning is a stamp or nothing — see migrations/021_pinned_people.sql. The
+// stamp is the order as well as the fact, so re-pinning somebody already
+// pinned moves them to the end of the pinned row rather than doing nothing;
+// that is the honest reading of pressing it again on purpose.
+export async function pin_person(id, on) {
+  if (on) {
+    const [{ count }] = await database`
+      SELECT count(*)::int AS count FROM people WHERE pinned_at IS NOT NULL AND id <> ${id}`;
+    if (count >= PINS_MOST) {
+      const full = new Error(`Six is the most you can pin. Unpin somebody first.`);
+      full.full = true;
+      throw full;
+    }
+  }
+  const [row] = await database`
+    UPDATE people
+    SET pinned_at = ${on ? new Date() : null}
+    WHERE id = ${id}
+    RETURNING id, address, name, added_at, pinned_at
+  `;
+  return row || null;
 }
 
 // Filing an address already there is not an error: it is the same person,
@@ -30,14 +66,14 @@ export async function save_person({ address, name }) {
     VALUES (${host}, ${String(name || '').trim() || null})
     ON CONFLICT (address) DO UPDATE
       SET name = COALESCE(EXCLUDED.name, people.name)
-    RETURNING id, address, name, added_at
+    RETURNING id, address, name, added_at, pinned_at
   `;
   return row;
 }
 
 export async function pull_person(id) {
   const [row] = await database`
-    SELECT id, address, name, added_at FROM people WHERE id = ${id} LIMIT 1
+    SELECT id, address, name, added_at, pinned_at FROM people WHERE id = ${id} LIMIT 1
   `;
   return row || null;
 }

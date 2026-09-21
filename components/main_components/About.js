@@ -50,8 +50,27 @@ import {
   DEFAULT_RIG_ICON, LINK_ICONS, RIG_ICONS, identify, readLink, rigIcon,
 } from '../../library/card_links';
 import { useIdentificationCardEditor } from './IdentificationCardEditor';
+import EditingBar from './EditingBar';
 import { useBookplate } from './Bookplate';
 import { BIO_PROMPTS, readBioAnswers } from '../../library/bioprompt';
+import { VERSION, RELEASE_URL } from '../../library/version';
+
+// How long the row at the foot takes to change places with the band. The
+// band's own transition in nav.css is the same number, and the delay that
+// makes the band follow the bar back up rather than cross it is there too.
+const EDIT_BAR_MS = 300;
+
+// The openings carry a trailing em dash of their own (bioprompt.js), put there
+// when the question and the answer shared a line and it had to separate them.
+// They have not shared a line since 2026-09-15 — two lines in two faces, which
+// separate themselves — and the dash was being taken off at the print and left
+// on everywhere else: on the line you press to change an opening, and on all
+// nine in the list under it, where a column of sentences each ending in a dash
+// reads as nine unfinished thoughts. Taken off at the render rather than out of
+// the nine strings, because it is the typography that made it redundant and
+// the typography is the thing most likely to change again.
+const noDash = text => text.replace(/\s*[—–-]\s*$/, '');
+
 
 // Three, and the cap is the point. Somewhere to be found is not somewhere to
 // list every account anybody has ever opened — a row of three marks reads at a
@@ -93,6 +112,61 @@ export default function About({ stamps, authed = false, pinned = null, entries =
   // on it; the prompts print below it now, and two instances of the hook would
   // be two drafts of the same page with one save button between them.
   const edit = useIdentificationCardEditor(settings);
+
+  // ── The band and the editing bar change places ──────────────────────────
+  // One row at the foot of the screen at a time. The band drops out of the
+  // window as the bar rises into it, and on the way back the bar sinks first
+  // and the band follows it up a beat later (the delay is in nav.css).
+  //
+  // The band belongs to the cross and this bar belongs to the card, and they
+  // have no component in common short of HomeNav — so they are joined by a
+  // class on `.hn` rather than by threading editing state up through a pane
+  // and back down. The DOM write is this file's own: it puts the class on and
+  // takes it off, including if the pane goes away mid-correction.
+  const [barUp, setBarUp] = useState(false);
+  const [barGoing, setBarGoing] = useState(false);
+  useEffect(() => {
+    const cross = document.querySelector('.hn');
+    if (edit.editing) {
+      setBarGoing(false);
+      setBarUp(true);
+      // An attribute, not a class — see the same change in SendSheet.js. The
+      // cross's class attribute belongs to React and is rewritten whole on
+      // every render of HomeNav, so this was being wiped whenever anything
+      // else on the cross moved, and the editing bar came up over the band it
+      // was supposed to be replacing. Since 2026-09-20 and not noticed,
+      // because it only shows when the two happen to coincide.
+      cross?.toggleAttribute('data-editing', true);
+      return () => cross?.removeAttribute('data-editing');
+    }
+    cross?.removeAttribute('data-editing');
+    setBarGoing(going => going);
+    return undefined;
+  }, [edit.editing]);
+
+  // And the way out, which is a state of its own because a row that is
+  // unmounted on the frame it stops being wanted does not leave, it vanishes.
+  useEffect(() => {
+    if (edit.editing || !barUp) return undefined;
+    setBarGoing(true);
+    const done = setTimeout(() => { setBarUp(false); setBarGoing(false); }, EDIT_BAR_MS);
+    return () => clearTimeout(done);
+  }, [edit.editing, barUp]);
+
+  // Whether a newer Listening Notes exists, for the line at the foot. Asked
+  // once, of this copy's own server, which asks GitHub's public releases at
+  // most once an hour (app/api/update/route.js). The only thing it can ever
+  // say is that there is a newer version and where the button to take it is.
+  // Only asked of a keeper: a visitor never sees the line and a fetch nobody
+  // reads is a fetch on every journal on the internet.
+  const [update, setUpdate] = useState(null);
+  useEffect(() => {
+    if (!authed) return;
+    fetch('/api/update')
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => d?.newer && setUpdate(d))
+      .catch(() => {});
+  }, [authed]);
 
   // Whether the pin's search is open, and what has been typed into it. Both
   // belong to the pane rather than to the card: the sheet covers the pane, and
@@ -373,7 +447,34 @@ export default function About({ stamps, authed = false, pinned = null, entries =
   const hasReading = answered.length > 0 || rigList.length > 0 || edit.editing;
 
   return (
-    <div className="ab-pane" ref={paneRef}>
+    <div className={'ab-pane' + (edit.editing ? ' ab-pane--editing' : '')} ref={paneRef}>
+      {/* ── The bar that says a correction is open ──────────────────────
+          The entry's own, class for class (entry.css, .ln-editing-bar), and
+          for the same reason: the controls that started it are at the top of
+          a page you are three screens down by the time you are rewriting an
+          answer, and once the portrait has scrolled off nothing else on the
+          screen says you are editing at all. Miyel, 2026-09-20: "edit ID page
+          should take same look as edit mode in entry with same footer to end
+          editing."
+
+          It does not cover the band: the two change places. Miyel,
+          2026-09-20 — "we can have the nav bar leave out the screen down and
+          the edit toolbar come up; when finishing editing that one exits down
+          and the nav bar comes back up." An entry has no band to swap with,
+          which is why the bar simply appears there and why it looked wrong
+          here: two rows stacked at the foot of the screen, one of them four
+          doors out of a correction you have not decided what to do with.
+
+          The band is HomeNav's and this is About's, so the two are joined by
+          an attribute on the cross rather than by a prop — see the effect
+          above, and why it is an attribute and not a class.
+          It stays mounted for the length of the way out, which is what
+          `barGoing` is: unmounted on the frame editing ends, it would vanish
+          rather than leave. */}
+      {barUp && (
+        <EditingBar onSave={edit.save} onCancel={edit.cancel} saving={edit.saving} held={edit.busy} going={barGoing} />
+      )}
+      {edit.trouble && <p className="ln-trouble">{edit.trouble}</p>}
       {/* No floors, and no crown, since 2026-09-15. The card is a page and
           pages scroll: the glance is at the top, the reading continues down
           the same scroll, and there is nothing to arrive at. Down means
@@ -482,24 +583,42 @@ export default function About({ stamps, authed = false, pinned = null, entries =
               />
             </div>
 
-            <div className="ab-pin-list">
+            {/* ── Covers, not rows, 2026-09-20 ───────────────────────────
+                Miyel: "the selection should be grid of albums not list." A
+                row spends most of its width on words and gives the record a
+                40px thumbnail, and a record is a picture: you know the one
+                you are looking for by its cover long before you have read its
+                title. It is also the shape the rest of this site picks
+                records in — the wall on the beacon, the window a count
+                opens, the archive — so this stops being the one place that
+                asks you to read a list.
+
+                The artist goes. Three across a phone leaves room for one line
+                under the art, and between the cover and the title the artist
+                is the third thing you need; it stays on the label for anybody
+                who cannot see the picture. */}
+            <div className="ab-pin-grid">
               {pinResults.map(row => (
                 <button
                   key={row.id}
                   type="button"
-                  className={'ab-pin-hit' + (row.id === edit.pin ? ' ab-pin-hit--on' : '')}
+                  className={'ab-pin-one' + (row.id === edit.pin ? ' ab-pin-one--on' : '')}
                   onClick={() => choosePin(row.id)}
+                  aria-pressed={row.id === edit.pin}
+                  aria-label={`${row.album} — ${row.artist}`}
+                  title={`${row.album} — ${row.artist}`}
                 >
-                  <span className="ab-pin-hit-art">
+                  <span className="ab-pin-one-art">
                     {row.album_art
                       ? <img src={row.album_art} alt="" />
                       : <span aria-hidden="true">♪</span>}
+                    {row.id === edit.pin && (
+                      <span className="ab-pin-one-tick" aria-hidden="true">
+                        <Check size={12} weight="bold" />
+                      </span>
+                    )}
                   </span>
-                  <span className="ab-pin-hit-said">
-                    <span className="ab-pin-hit-album">{row.album}</span>
-                    <span className="ab-pin-hit-artist">{row.artist}</span>
-                  </span>
-                  {row.id === edit.pin && <Check size={14} weight="bold" aria-hidden="true" />}
+                  <span className="ab-pin-one-album">{row.album}</span>
                 </button>
               ))}
               {pinResults.length === 0 && (
@@ -507,16 +626,27 @@ export default function About({ stamps, authed = false, pinned = null, entries =
               )}
             </div>
 
-            <div className="ab-pin-foot">
-              {/* Clearing it is a thing somebody means to do, so it says so
-                  rather than being the absence of a choice. */}
-              <button type="button" className="ln-pill" onClick={() => choosePin(null)}>
-                Pin nothing
-              </button>
-              <button type="button" className="ln-pill" onClick={() => setPinOpen(false)}>
-                Done
-              </button>
-            </div>
+            {/* ── One quiet line, 2026-09-20 ─────────────────────────────
+                Two pills sat here, Pin nothing and Done, and Miyel took both:
+                "pin nothing and done don't like the pills". Done was already
+                saying nothing — pressing a cover chooses it and closes the
+                sheet, and the screen above the sheet closes it without
+                choosing — so a button whose whole job is the thing that
+                happens anyway is a button in the way.
+
+                Clearing it stays, because it is a thing somebody means to do
+                rather than the absence of a choice. As a line and not a pill:
+                `.ln-pill` is for navigation and for the one primary action a
+                screen has (DECISIONS), and on a sheet whose primary action is
+                forty covers this is neither.
+
+                "Remove pin" and not "Pin nothing" (Miyel, 2026-09-20). The
+                old wording named the outcome, which is a state; this names the
+                act, which is what a control is for — and the row it acts on
+                says UPDATE PIN, so the two are the same object said twice. */}
+            <button type="button" className="ab-pin-none" onClick={() => choosePin(null)}>
+              Remove pin
+            </button>
           </div>
         </>
       )}
@@ -528,8 +658,11 @@ export default function About({ stamps, authed = false, pinned = null, entries =
           past. The entrance to a pane's lower half wants designing properly;
           until it is, this is just where one thing stops and the next
           begins. */}
+      {/* `--kept` when there is a colophon under it: that section brings its
+          own air and this one's 40px at the foot of the writing would be a
+          second helping of it. Keyed on authed because .ab-keep is. */}
       {hasReading && (
-      <div className="ab-below">
+      <div className={'ab-below' + (authed ? ' ab-below--kept' : '')}>
         {/* The prompts. Prompt and answer on one line, because they are one
             sentence: "I can never skip — Voodoo, side two" is a thought, and
             the same words as a label over a value are two things stacked. The
@@ -565,7 +698,7 @@ export default function About({ stamps, authed = false, pinned = null, entries =
                     aria-label={`Opening ${index + 1}`}
                   >
                     <span className={chosen ? 'ab-prompt-ask' : 'ab-prompt-none'}>
-                      {chosen ? chosen.text : 'Choose a prompt'}
+                      {chosen ? noDash(chosen.text) : 'Choose a prompt'}
                     </span>
                     <CaretDown size={11} weight="bold" aria-hidden="true" />
                   </button>
@@ -588,7 +721,7 @@ export default function About({ stamps, authed = false, pinned = null, entries =
                             onClick={() => { edit.setBioKey(index, prompt.key); setPicking(null); }}
                             aria-pressed={on}
                           >
-                            <span>{prompt.text}</span>
+                            <span>{noDash(prompt.text)}</span>
                             {on && <Check size={12} weight="bold" aria-hidden="true" />}
                             {elsewhere && <span className="ab-prompt-taken" aria-hidden="true">in use</span>}
                           </button>
@@ -634,7 +767,7 @@ export default function About({ stamps, authed = false, pinned = null, entries =
                 thing most likely to change again. */}
             {answered.map(row => (
               <div className="ab-prompt" key={row.key}>
-                <p className="ab-prompt-ask">{row.text.replace(/\s*[—–-]\s*$/, '')}</p>
+                <p className="ab-prompt-ask">{noDash(row.text)}</p>
                 <p className="ab-prompt-said">{row.answer}</p>
               </div>
             ))}
@@ -882,6 +1015,51 @@ export default function About({ stamps, authed = false, pinned = null, entries =
         )}
 
       </div>
+      )}
+
+      {/* ── The machinery, at the foot of the card, 2026-09-19 ────────────
+          The desk was a page of doors and it is gone; three of its four went
+          to the band and this is the fourth, with the software's own line
+          under it. Here rather than anywhere else because the card is the
+          page about this journal and Settings is where the journal's own
+          facts are kept — the address, the beacon, the key, the password.
+          The rest of the card is what a visitor reads; this is the part only
+          its keeper can see, at the bottom, where you go looking for it
+          rather than past it.
+
+          The door is gone from it, 2026-09-20. Settings went up into the ···
+          at the head of this pane, where everything else you can do to this
+          page already is — Miyel, "settings on ID card should live in the
+          toolbar" — and a single door standing on its own down here was one
+          the keeper had to remember the position of rather than one place to
+          look. What is left is the line about the software, which is not a
+          door and is not the keeper's business alone: it says which version
+          this copy is running. */}
+      {authed && (
+        <section className="ab-keep" aria-label="This copy">
+          {/* The one line about the software rather than the journal: which
+              version this is, and — only when it is true — that there is a
+              newer one. No Source: §13 is owed to visitors and this is the
+              half of the page a visitor never sees; the pitch pane carries it
+              for them. */}
+          <p className="db-colophon">
+            <a className="pt-source" href={RELEASE_URL} target="_blank" rel="noopener noreferrer" title="What this version contains">
+              {VERSION}
+            </a>
+            {update && (
+              <>
+                <span className="pt-colophon-dot" aria-hidden="true">&middot;</span>
+                <a className="db-update db-update--newer" href={update.page} target="_blank" rel="noopener noreferrer">
+                  A newer version is available &#8599;
+                </a>
+              </>
+            )}
+            <span className="pt-colophon-dot" aria-hidden="true">&middot;</span>
+            <Link className="db-update" href="/dashboard/report" title="Something did not work">
+              Report a problem
+            </Link>
+          </p>
+        </section>
       )}
     </div>
   );

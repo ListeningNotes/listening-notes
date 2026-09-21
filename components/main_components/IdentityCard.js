@@ -22,9 +22,10 @@
 // colour of the room.
 
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { arrivingAlone } from '../../library/handoff';
-import { Check, Eye, EyeSlash, PushPin, UploadSimple, User, X } from '@phosphor-icons/react';
+import { Eye, EyeSlash, UploadSimple, User, X } from '@phosphor-icons/react';
 import { useRouter } from 'next/navigation';
 import { useTheme } from './Lightswitch';
 import { useListeningBeacon } from '../../hooks/useListeningBeacon';
@@ -321,8 +322,92 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
 
   const off = key => (editing && edit.hidden.has(key) ? ' idc-off' : '');
 
-  // Whether the counted line under the name has anything left on it.
-  const showAlbums = records != null && showing('albums');
+  // ── The tools stay in the header when the header goes ───────────────────
+  // Miyel, 2026-09-20: "the toolbar needs to stay in the header on scroll."
+  // This row is the first thing on a pane that scrolls, so a screen into the
+  // card the only door it has — Edit, Share, Settings — was above the window,
+  // and the way back to it was to scroll the whole card up again.
+  //
+  // Sticky was the obvious answer and cannot work here: a sticky element is
+  // held by its own containing block, which is the card object, and the card
+  // object ends where the writing starts. It would let go a third of the way
+  // down the page.
+  //
+  // So the row moves into the cross's bar instead, which is the header that
+  // is already fixed up there, by the same trick a layer uses for its own
+  // header (LayerEntry.js): a slot element of this component's making, put in
+  // the bar and drawn into from here. One row, in one of two places, never
+  // both — so the drawer's state, the editing buttons and everything else
+  // about it exist once.
+  //
+  // Phones only, and the width is the question rather than the bar: the bar
+  // exists on a desk too, where it sits over the *journal* and this card is
+  // the left page. Tools posted into it there would be a door to one page
+  // standing on another.
+  const [barSlot, setBarSlot] = useState(null);
+  useEffect(() => {
+    const narrow = window.matchMedia('(max-width: 768px)');
+    let slot = null;
+    const fit = () => {
+      const bar = document.querySelector('.hn-bar');
+      if (narrow.matches && bar && !slot) {
+        slot = document.createElement('div');
+        slot.className = 'hn-bar-tools';
+        bar.appendChild(slot);
+        setBarSlot(slot);
+      } else if ((!narrow.matches || !bar) && slot) {
+        slot.remove();
+        slot = null;
+        setBarSlot(null);
+      }
+    };
+    fit();
+    narrow.addEventListener('change', fit);
+    return () => {
+      narrow.removeEventListener('change', fit);
+      if (slot) slot.remove();
+      setBarSlot(null);
+    };
+  }, []);
+
+  // Whether this card's own header has gone under the bar. Measured against
+  // the bar's own bottom edge rather than a number, so the notch is in it.
+  const headRef = useRef(null);
+  const [headGone, setHeadGone] = useState(false);
+  useEffect(() => {
+    const head = headRef.current;
+    const bar = document.querySelector('.hn-bar');
+    const scroller = head?.closest('.hn-pane');
+    if (!head || !bar || !scroller) return undefined;
+    const look = () => {
+      setHeadGone(head.getBoundingClientRect().bottom <= bar.getBoundingClientRect().bottom);
+    };
+    look();
+    scroller.addEventListener('scroll', look, { passive: true });
+    return () => scroller.removeEventListener('scroll', look);
+  }, []);
+
+  const inBar = Boolean(barSlot && headGone);
+
+  // Nothing up here while a correction is open. Save and Cancel were a tick
+  // and a cross in this corner until 2026-09-20; they are at the foot now, in
+  // the bar an entry raises, which is the shape Miyel asked for — "edit ID
+  // page should take same look as edit mode in entry with same footer to end
+  // editing". An entry's ··· goes the same way while it is being corrected.
+  // See About.js, which owns the editor and raises the bar.
+  const toolsRow = authed && !editing && <KeeperTools what="card" onEdit={edit.begin} />;
+
+  // Whether each counted line has anything left on it. `showing` is the
+  // keeper's own answer and is always true while editing, so the eye that
+  // turns a line off is still reachable on the line it turned off.
+  //
+  // These were computed and then not asked, 2026-09-20: the counts drew on
+  // "is there anything to count" alone and the genres drew on nothing at all,
+  // so the eyes saved a preference that no reader's card ever read. Miyel:
+  // "albums masterpieces and formative hiding option doesn't work... I think
+  // genres should be hideable."
+  const showCounts = (records !== null || marks.length > 0) && showing('albums');
+  const showGenres = genres.length > 0 && showing('genres');
   const showSince = Boolean(since) && showing('since');
 
   // The photograph used to be lifted down the column by a measured spacer, to
@@ -377,7 +462,9 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
             abandon it is worse than a tidy header. Nothing here is a
             permission check — the writing endpoints check the wristband
             whatever is drawn. */}
-        <div className="idc-head">
+        {inBar && createPortal(<div className="idc-tools">{toolsRow}</div>, barSlot)}
+
+        <div className="idc-head" ref={headRef}>
           <svg
             viewBox={`${MARK_BOX.x} ${MARK_BOX.y} ${MARK_BOX.w} ${MARK_BOX.h}`}
             className="idc-mark"
@@ -395,34 +482,7 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
             />
           </svg>
 
-          <div className="idc-tools">
-            {authed && (editing ? (
-              <>
-                <button
-                  type="button"
-                  className="idc-tool idc-tool--keep"
-                  onClick={edit.save}
-                  disabled={edit.saving || edit.busy}
-                  aria-label="Save this card"
-                  title="Save"
-                >
-                  <Check size={18} weight="regular" aria-hidden="true" />
-                </button>
-                <button
-                  type="button"
-                  className="idc-tool"
-                  onClick={edit.cancel}
-                  disabled={edit.saving}
-                  aria-label="Stop editing without saving"
-                  title="Cancel"
-                >
-                  <X size={18} weight="regular" aria-hidden="true" />
-                </button>
-              </>
-            ) : (
-              <KeeperTools what="card" onEdit={edit.begin} />
-            ))}
-          </div>
+          <div className="idc-tools">{inBar ? null : toolsRow}</div>
         </div>
 
         {/* ── The object ───────────────────────────────────────────────────
@@ -480,7 +540,7 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
             Typeset, not stamped. Stamps were tried the hour before and the
             answer is that with a photograph that size above them the photo is
             already the flourish. */}
-        {(records !== null || marks.length > 0) && (
+        {showCounts && (
           <div className={'idc-counts' + off('albums')}>
             {counts.map(c => (
               c.opens ? (
@@ -512,10 +572,11 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
             belongs with them rather than down in the writing, which is where
             it sat for an hour. Computed, never chosen: what this journal
             listens to, not what its keeper would claim. */}
-        {genres.length > 0 && (
-          <p className="idc-genres">
+        {showGenres && (
+          <p className={'idc-genres' + off('genres')}>
             <span className="idc-genres-label">Top genres</span>
             <span className="idc-genres-said">{genres.join(' · ')}</span>
+            {eyeFor('genres')}
           </p>
         )}
 
@@ -532,24 +593,69 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
             finds out the card can hold one at all. */}
         {(pinned || editing) && (
           editing ? (
-            <button type="button" className="idc-pinned idc-pinned--pick" onClick={onPickPin}>
-              {/* A pin rather than the word PINNED, beside the art (Miyel,
-                  2026-09-15). The label was a third line of small caps over
-                  an album and an artist, saying what the mark says in one
-                  glyph. The word survives where it is actually needed — in
-                  the row's own label, for anybody who cannot see the pin. */}
-              <PushPin size={15} weight="fill" className="idc-pinned-mark" aria-hidden="true" />
-              <span className="idc-pinned-art">
-                {pinned?.album_art
-                  ? <img src={pinned.album_art} alt="" />
-                  : <span className="idc-pinned-none" aria-hidden="true">♪</span>}
-              </span>
-              <span className="idc-pinned-said">
-                <span className="idc-pinned-album">{pinned ? pinned.album : 'Choose a record'}</span>
-                <span className="idc-pinned-artist">{pinned ? pinned.artist : 'Nothing pinned'}</span>
-              </span>
+            <button
+              type="button"
+              className={'idc-pinned idc-pinned--pick' + (pinned ? '' : ' idc-pinned--empty')}
+              onClick={onPickPin}
+            >
+              {pinned ? (
+                <>
+                  <span className="idc-pinned-art">
+                    {pinned.album_art
+                      ? <img src={pinned.album_art} alt="" />
+                      : <span className="idc-pinned-none" aria-hidden="true">♪</span>}
+                  </span>
+                  <span className="idc-pinned-said">
+                    <span className="idc-pinned-album">{pinned.album}</span>
+                    <span className="idc-pinned-artist">{pinned.artist}</span>
+                  </span>
+                </>
+              ) : (
+                /* ── Empty, 2026-09-20 ──────────────────────────────────────
+                   The blank square a record would sit in, and three words
+                   beside it. It held four things — a pin, the square,
+                   `Choose a record` and `Nothing pinned` under it — and two
+                   of them were instructions: "just center nothing pinned, we
+                   don't need choose record." The square stayed on its own
+                   merits ("I liked the stand-in blank album that was there
+                   though"), which are that an empty slot the shape of a
+                   record says what is missing better than a sentence does. */
+                <>
+                  <span className="idc-pinned-art">
+                    <span className="idc-pinned-none" aria-hidden="true">♪</span>
+                  </span>
+                  <span className="idc-pinned-empty">Nothing pinned</span>
+                </>
+              )}
+              {/* ── It has to say it can be changed, 2026-09-20 ────────────
+                  Miyel: "editing pinned album should be more obvious you can
+                  swap that out." The row looked in a correction exactly as it
+                  looks printed — a pin, a cover, a title — so the one thing
+                  about it that had changed, that it is now a door, was
+                  invisible.
+
+                  Four goes, and the last is nothing at all here. A CHANGE
+                  pill borrowed from the photograph above — "I don't even like
+                  the pill for change". A Swap mark in the eyes' own box — "I
+                  don't like icon either". Then the row inside a dashed rule
+                  with UPDATE PIN under it, and then the words came off too:
+                  "we can even remove update pin, I think it's able to
+                  understand without it." She is right. A dashed box round the
+                  one object on the page that is not writing says place
+                  something here on its own, and the word under it was the
+                  picture explained. The rule is in .idc-pinned--pick. */}
             </button>
           ) : (
+            /* ── No pin glyph, 2026-09-20 ─────────────────────────────────
+               A filled pin sat beside the cover in both states from
+               2026-09-15, standing in for the word PINNED. Miyel took it off:
+               "let's remove pin icon from ID card entirely — the edit mode
+               makes it noticeable." It was a mark explaining a thing that
+               needs no explaining. One record on somebody's card, above their
+               writing and below their face, is plainly the one they chose;
+               nothing else on the page is a record at all. The word survives
+               where it is actually needed, in the row's own label, for
+               anybody who cannot see the card. */
             <Link
               href={`/entries/${pinned.slug}`}
               className="idc-pinned"
@@ -558,7 +664,6 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
                  a person, not a second journal — see handoff.js. */
               onClick={() => arrivingAlone()}
             >
-              <PushPin size={15} weight="fill" className="idc-pinned-mark" aria-hidden="true" />
               <span className="idc-pinned-art">
                 {pinned.album_art
                   ? <img src={pinned.album_art} alt="" />

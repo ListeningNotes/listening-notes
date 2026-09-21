@@ -44,6 +44,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useListeningBeacon } from '../../hooks/useListeningBeacon';
 import { useBookplate } from './Bookplate';
 
@@ -52,10 +53,35 @@ import { useBookplate } from './Bookplate';
 // a flag because this row should not know what a keeper is: it holds a slot
 // open and the page decides what belongs in it. On every other page the slot
 // is an empty grid column, which is the thing holding the mark in the middle.
-export default function SiteNav({ tools = null }) {
+export default function SiteNav({ tools = null, mark = null, lede = true }) {
   const { cover_name } = useBookplate();
   const { isLive } = useListeningBeacon();
-
+  const here = usePathname();
+  const onAnEntry = Boolean(here && here.startsWith('/entries/'));
+  // ── What is in the middle, 2026-09-20 ─────────────────────────────────
+  // Whatever the page puts there, and on most pages nothing. It was the LN
+  // mark, drawn on entries and nowhere else, until the entry asked for the
+  // middle for itself: on a phone the album art collapses up into this row
+  // and becomes the header, so a logo standing in the same slot is a second
+  // thing in a place that holds one (Miyel: "we don't need the Listening
+  // Notes logo up there, it could just be the album").
+  //
+  // A slot rather than a flag, the same way `tools` is one: this row holds
+  // the middle open and the page decides what belongs in it. The empty
+  // column is still what keeps the tools on the right.
+  //
+  // ── And the mark is back on an entry, over the top of it ───────────────
+  // It came off for an evening, on the reasoning that the album says more
+  // about where you are than a logo does. Miyel put it back with the reason
+  // it was always there: "it should have the Listening Notes header, because
+  // this is like the publication — it's the colophon that we're having."
+  // An entry is a page of a journal, and the journal's name belongs over it.
+  //
+  // So both are drawn, and they are never both on. The mark is what you see
+  // while the record is still down on the page being the record; the entry
+  // fades it out as its cover collapses up into this row and takes its
+  // place. FullPostPage writes the opacity, because it is the one that knows
+  // how far through the collapse is.
   // This row and the dot-nav beneath it are fixed with no background of their
   // own, so page text scrolled straight through the logo and the dot labels. The backdrop that hides it (.sitenav-row::before) only fades
   // in once the page has actually moved, so each page's hero art still runs
@@ -68,18 +94,13 @@ export default function SiteNav({ tools = null }) {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // The mark used to steer the old two-screen cover, flagging sessionStorage
-  // so a navigation home landed on screen two. Neither screen exists — home is
-  // the cross, and it always opens on the beacon, which is what that was
-  // reaching for. So it is a plain link again and the flag is gone with the
-  // markup that read it.
-
   return (
     <div className={'sitenav-row' + (scrolled ? ' sitenav-row--scrolled' : '')}>
       {/* The left slot, and there is nothing in it. It is a spacer that holds
           the mark on the middle of the row. */}
       <div className="sitenav-side sitenav-side--left" aria-hidden="true" />
 
+      {onAnEntry && lede && (
       <Link href="/" className="sitenav-logo" aria-label={cover_name}>
         <svg viewBox="76 96 241 140" className="sitenav-logo-mark" xmlns="http://www.w3.org/2000/svg">
           <path
@@ -98,6 +119,10 @@ export default function SiteNav({ tools = null }) {
           />
         </svg>
       </Link>
+      )}
+
+
+      {mark}
 
       {/* The right slot: the owner's ···, on the pages that have one, in the
           corner the card keeps its own in. */}

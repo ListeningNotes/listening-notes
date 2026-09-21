@@ -21,6 +21,12 @@
    with a picture in it, and 68px of it given away to margins is a column of
    reading lost. */
 .ab-pane { padding: 0 var(--page-gutter); }
+/* Room for the bar that ends a correction. On the element that actually
+   scrolls this time — the pane is the scroller's only child, so its own
+   padding is the page's bottom — or the last answer goes on being typed
+   underneath the button that saves it, which is the note entry.css carries
+   about the same bar over a track list. 96 is that bar's number. */
+.ab-pane--editing { padding-bottom: 96px; }
 /* .ab-card's own padding and .idc's max-width are set further down, where
    those rules already live — stated twice, the copy up here lost to the copy
    down there and the page kept an inset it was supposed to have given up. */
@@ -122,83 +128,83 @@
    than your contents", so a long keeper's name grew the row to 537px inside a
    375px phone and ran off the right edge instead of folding. Measured
    2026-09-19. Miyel's own name is short; the copies each have their own. */
+/* ── The visitor's answer is a circle on the rule, 2026-09-20 ─────────────
+   Miyel: "the round photo is the pfp replacing log listen, and the add and
+   send can take left and right sides of the circle." Same shape as the
+   keeper's way in, which became a ring on the rule an hour before this — one
+   slot, two answers, and now one shape as well.
+
+   `.calling-name` and `.calling-acts` are gone with the row they made. The
+   name is on the button's label: there is nowhere in a circle to put it and
+   nowhere beside one that does not make a third thing on a line that has
+   three already, and it is the first line of the card this opens. */
 .calling {
-  display: flex;
-  align-items: center;
-  gap: 14px;
+  position: relative;
+  /* Everything in it is hung on the rule, so the row itself is only the room
+     under the line that the circle's lower half needs — see the padding on
+     .hn-pane--home .calling in nav.css. */
   min-width: 0;
   max-width: 100%;
 }
+/* Hung on the rule, half above and half below, carrying the page's own colour
+   twelve pixels out so the line stops short of it rather than running into
+   it — the same trick and the same numbers as .hn-go in nav.css. */
 .calling-who {
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-  flex: 1 1 auto;
-  min-width: 0;
-  padding: 4px 0;
-  border: 0;
-  background: none;
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translate(-50%, -50%);
+  /* 72, matching the way in it stands in for (Miyel, 2026-09-20). They are
+     the same shape in the same slot, and a face twelve pixels larger than the
+     ring on the other version of this screen reads as two objects rather than
+     one at two contents. */
+  width: 72px; height: 72px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--bg);
+  box-shadow: 0 0 0 12px var(--bg);
   cursor: pointer;
-  color: var(--ink);
-  text-align: left;
-  transition: opacity 0.15s;
+  transition: border-color 0.15s, opacity 0.15s;
 }
 .calling-who:hover,
-.calling-who:active { opacity: 0.65; }
-.calling-who:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 999px; }
-/* 34, not 40. It went down with the words and glyphs on 2026-09-19: once
-   those were 11px the face was the largest object in the row by some way, and
-   the row is a signature rather than a portrait — the portrait is one pane
-   left, at the size a portrait wants. This sits level with the name. */
+.calling-who:active { opacity: 0.8; border-color: var(--ink-faint); }
+.calling-who:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
 .calling-face {
-  flex: 0 0 auto;
   display: block;
-  width: 34px; height: 34px;
-  border-radius: 999px;
+  width: 100%; height: 100%;
   object-fit: cover;
 }
-/* The floor's voice. Every other line on that screen — LAST LOGGED, BEFORE
-   THAT, START A LISTEN — is a small mono capital, and the record is the
-   largest thing there. On the card the name is 30px and should be; here it
-   would be arguing with the cover.
+/* Either side of it and on the same line, which is what "left and right sides
+   of the circle" means: on the rule, not under it. So they are hung on it the
+   way the circle is, and far enough out that the rule shows on both sides of
+   each of them: 66 from the middle, which leaves about thirty pixels of line
+   between a word and the circle and about thirty outside it. At fifty they
+   hugged the circle and the whole of the rule was outside them — four
+   segments, two of them too short to read as anything (Miyel, 2026-09-20:
+   "fix the left side hairline, it should be before the plus").
 
-   It folds rather than ellipsising, which is what the mock-up draws, and stops
-   at two lines so a copy with a very long name cannot push the row taller than
-   the record above it. `anywhere` is for the name that is one long word. */
-.calling-name {
-  min-width: 0;
-  font-family: var(--font-label);
-  font-size: 12px;
-  letter-spacing: 0.18em;
-  line-height: 1.5;
-  text-transform: uppercase;
-  overflow-wrap: anywhere;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-/* The two words at the far end, in the way in's own class — it is the quiet
-   control of this screen rather than one particular control. Its margin is put
-   back to nothing: nav.css pushes `.ln-onward` down the beacon's grid, and
-   these two are inside the row rather than in that grid. */
-/* The two words at the far end, in the way in's own class — it is the quiet
-   control of this screen rather than one particular control — but a size down
-   from it. START A LISTEN is the only thing on the owner's version of this
-   floor; these two share a row with a face and a name, and at the way in's
-   12px they were the loudest thing in it.
+   They carry the page colour so the line stops either side of them. Three
+   things standing in one rule, with the rule visible between all of them.
 
-   Their margin is put back to nothing: nav.css pushes `.ln-onward` down the
-   beacon's grid, and these two are inside the row rather than in that grid.
-   The 44px min-height stays — it draws nothing and it is what keeps an 11px
-   word a thumb's target. */
-.calling-acts { display: flex; align-items: center; gap: 20px; flex-shrink: 0; }
-.calling-acts .ln-onward {
+   Symmetric whatever the two words measure, because each is positioned from
+   the middle rather than packed from an end. */
+.calling > .ln-onward {
+  position: absolute;
+  top: 0;
+  transform: translateY(-50%);
   margin: 0;
+  min-height: 0;
+  padding: 6px 10px;
   gap: 7px;
+  background: var(--bg);
   font-size: 11px;
   letter-spacing: 0.16em;
+  white-space: nowrap;
 }
+.calling > .ln-onward:first-child { right: calc(50% + 66px); }
+.calling > .ln-onward:last-child { left: calc(50% + 66px); }
 
 /* ── Three counts ───────────────────────────────────────────────────────────
    Records, masterpieces, formative — each in its own flag's colour, which is
@@ -256,6 +262,9 @@
   font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase;
   color: var(--ink-faint);
 }
+/* Built as `idc-count--` + the word (IdentityCard.js), so these two never
+   appear literally anywhere and a search for them finds nothing. They are
+   live. Swept as dead on 2026-09-21 and put straight back. */
 .idc-count--masterpieces .idc-count-n { color: var(--mp); }
 .idc-count--formative .idc-count-n { color: var(--formative); }
 
@@ -307,18 +316,12 @@
   color: var(--ink-faint);
 }
 .idc-pinned-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
-/* The pin, where the word PINNED was. Faint and small: it says what this row
-   is, and the row is already a cover with a title beside it — it does not
-   have to announce itself twice. */
-.idc-pinned-mark {
-  flex: none;
-  color: var(--ink-faint);
-  /* Mirrored, so the pin leans into the record it is pinning rather than away
-     from it. It sits to the left of the art and Phosphor draws it leaning
-     left, which pointed it off the edge of the row. */
-  transform: scaleX(-1);
-}
-.idc-pinned:hover .idc-pinned-mark { color: var(--ink-soft); }
+/* .idc-pinned-mark is gone, 2026-09-20. A filled pin stood to the left of the
+   cover from 2026-09-15, where the word PINNED had been — and it was a mark
+   explaining a thing that needs no explaining. One record on somebody's card,
+   under their face and over their writing, is plainly the one they chose, and
+   nothing else on the page is a record at all. The word survives on the row's
+   own label, which is where it is actually needed. */
 .idc-pinned-said { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .idc-pinned-album {
   font-family: var(--font-display); font-weight: var(--font-display-weight);
@@ -340,18 +343,51 @@
    boundary. */
 .ab-below { margin-top: 34px; }
 
+/* ── The keeper's own foot, 2026-09-19 ──────────────────────────────────────
+   Settings and the software's line, where the desk used to keep them. Below
+   everything a visitor reads, and separated by a rule and a lot of air rather
+   than a heading: it is not another section of the card, it is the machinery
+   under it, and a heading would put it in the reading.
+
+   It hangs off .ab-pane and not .ab-below, so a copy on its first afternoon —
+   no prompts answered, no rig, no links, and therefore no .ab-below at all —
+   still has its own way into Settings. */
+.ab-keep {
+  /* No rule over it, 2026-09-20 (Miyel: "remove final hairline at base of
+     about page before version and report"). The same argument that took the
+     one out from under the header: a line is drawn to separate two things
+     that would otherwise run together, and a caption in the caption face
+     sitting 46px below the last of the writing is already apart from it. It
+     was the foot of a section when a door stood in it; what is left is one
+     quiet line about the software. */
+  /* 46 where there is nothing above it — a fresh copy with no prompts, no
+     rig and therefore no .ab-below at all still has to put air between the
+     card and this line. */
+  margin-top: 46px;
+}
+/* ── And ten where there is, 2026-09-20 ───────────────────────────────────
+   Miyel: "there's a strange space between rig and version/report." There was:
+   .ab-below ends in 40px of its own — the air at the foot of the writing —
+   and this was adding 46 more and then 22 of padding under a rule that came
+   off this morning. A hundred and eight pixels of nothing between the last
+   thing somebody wrote and one grey line about the software. */
+.ab-below + .ab-keep { margin-top: 10px; }
+/* The writing gives up its own bottom air when the colophon follows it. */
+.ab-below--kept { padding-bottom: 0; }
+/* And the line gives up the 22px it wore under the Settings door, which went
+   up into the ··· this morning and left it spacing itself from nothing. */
+.ab-keep .db-colophon { margin-top: 0; }
+/* Only where the desk is gone. Above 769px the book still has its spine and
+   the desk is still its second page, with Settings on it — so this would be
+   the same door twice, one turn apart. The card's foot exists *because* the
+   desk does not, and that is only true on a phone. */
+@media (min-width: 769px) { .ab-keep { display: none; } }
+
 /* ── Below the fold ─────────────────────────────────────────────────────────
    A quiet line saying whose voice the answers are in, then the answers, then
    what the journal actually listens to. The heading is small caps and faint:
    it is a caption for the section, not a title competing with the name at the
    top of the page. */
-.ab-voice {
-  margin: 0 0 4px;
-  font-family: var(--font-label);
-  font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase;
-  font-weight: 400;
-  color: var(--ink-faint);
-}
 
 
 /* ── A count's window ───────────────────────────────────────────────────────
@@ -524,37 +560,107 @@
 /* The list scrolls, the sheet does not. A sheet that scrolls as a whole takes
    the search field away with it exactly when somebody wants to narrow the
    list further. */
-.ab-pin-list {
+/* ── The wall of covers, 2026-09-20 ───────────────────────────────────────
+   Rows until this morning: 40px of thumbnail and the rest of the width given
+   to a title and an artist. A record is a picture and you know the one you
+   are after by its cover before you have read anything, which is why every
+   other place on this site that picks one — the beacon's wall, a count's
+   window, the archive — is covers. `.ab-pin-list` and `.ab-pin-hit*` are gone
+   with the rows they dressed. */
+.ab-pin-grid {
   flex: 1; min-height: 0;
   overflow-y: auto; overscroll-behavior: contain;
-  display: flex; flex-direction: column; gap: 2px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px 10px;
+  /* The last row does not sit on the sheet's own edge. */
+  padding-bottom: 2px;
 }
-.ab-pin-hit {
-  display: flex; align-items: center; gap: 10px;
-  width: 100%; padding: 6px; border: 0; border-radius: 10px;
-  background: transparent; color: var(--ink);
+.ab-pin-one {
+  display: flex; flex-direction: column; align-items: stretch; gap: 6px;
+  min-width: 0; padding: 0;
+  border: 0; background: none; color: var(--ink);
   text-align: left; cursor: pointer;
-  transition: background 0.14s;
 }
-.ab-pin-hit:hover { background: var(--bg-warm); }
-.ab-pin-hit--on { background: var(--bg-warm); }
-.ab-pin-hit-art {
+.ab-pin-one-art {
+  position: relative;
   display: flex; align-items: center; justify-content: center;
-  width: 40px; height: 40px; flex-shrink: 0;
+  width: 100%; aspect-ratio: 1;
   border-radius: 8px; overflow: hidden;
   background: var(--bg-warm); color: var(--ink-faint);
+  /* A hairline under the pointer and nothing else. The one you have wore a
+     2px ring as well until Miyel took it off, 2026-09-20 — "remove black
+     border over chosen album, we know it's chosen from the tick mark" — and
+     she is right twice: the tick says it outright, and a hard rule drawn over
+     somebody's cover is the thing this site took off the chosen face in the
+     address book on 2026-09-19 for the same reason. Drawn inside the corner
+     as an outline, so it takes no pixel off the picture. */
+  outline: 0 solid var(--ink-faint);
+  outline-offset: -1px;
+  transition: outline-width 0.14s;
 }
-.ab-pin-hit-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.ab-pin-hit-said { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
-.ab-pin-hit-album,
-.ab-pin-hit-artist { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ab-pin-hit-album { font-size: 13px; line-height: 1.3; }
-.ab-pin-hit-artist { font-size: 11px; line-height: 1.3; color: var(--ink-faint); }
+.ab-pin-one-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ab-pin-one:hover .ab-pin-one-art { outline-width: 1px; }
+/* The tick is the whole of it, and it has to be: a ring is a hover state on a
+   machine with a pointer and nothing at all on a phone. */
+.ab-pin-one-tick {
+  position: absolute; right: 4px; bottom: 4px;
+  display: flex; align-items: center; justify-content: center;
+  width: 20px; height: 20px; border-radius: 999px;
+  background: var(--bg); color: var(--ink);
+}
+.ab-pin-one-album {
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: 11px; line-height: 1.3; color: var(--ink-soft);
+}
+.ab-pin-one--on .ab-pin-one-album { color: var(--ink); }
+/* ── The pinned record as a slot, 2026-09-20 ──────────────────────────────
+   Three goes at saying this row can be changed: a pill borrowed from the
+   photograph, a mark borrowed from the eyes, and this. A dashed rule is the
+   one of the three that is not a control standing inside a control — the row
+   is the door, and the box is the row saying it is a place something goes
+   rather than a second thing to press. It is also the shape an empty slot
+   wears everywhere, which is what this is: somewhere a record sits.
+
+   Only in a correction. Printed, the row is a link to the record and a dashed
+   box round a link is a form on somebody's card. */
+.idc-pinned--pick {
+  /* Close to what it holds (Miyel: "bring the box in tighter"). A slot is the
+     size of the thing that goes in it; loose, it reads as a panel with a
+     record sitting somewhere inside. */
+  padding: 8px 12px;
+  border: 1px dashed var(--idc-rule);
+  border-radius: 12px;
+  transition: border-color 0.15s;
+}
+.idc-pinned--pick:hover { border-color: var(--ink-faint); }
+/* An empty slot is the same box at the same size, holding the blank square a
+   record would sit in and the three words that say one is not there. */
+.idc-pinned--empty { justify-content: center; }
+.idc-pinned-empty {
+  font-family: var(--font-label);
+  font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--ink-faint);
+  transition: color 0.15s;
+}
+.idc-pinned--empty:hover .idc-pinned-empty { color: var(--ink-soft); }
+
 .ab-pin-empty {
   margin: 12px 0; text-align: center;
   font-family: var(--font-label); font-size: 11px; color: var(--ink-faint);
 }
-.ab-pin-foot { display: flex; gap: 8px; justify-content: center; }
+/* One line, centred, in the caption face — the shape a quiet way out wears
+   everywhere else here. `.ab-pin-foot` and its two pills are gone. */
+.ab-pin-none {
+  align-self: center;
+  padding: 6px 4px;
+  border: 0; background: none; cursor: pointer;
+  font-family: var(--font-label);
+  font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--ink-faint);
+  transition: color 0.15s;
+}
+.ab-pin-none:hover { color: var(--ink-soft); }
 
 @media (max-width: 768px) {
   /* A panel in the middle is a desktop idiom; on a phone it wants to be under
@@ -567,7 +673,14 @@
        much screen is left above it. The fallbacks are the no-keyboard case and
        are what a browser without visualViewport gets. */
     bottom: var(--ab-pin-lift, 0px);
-    max-height: calc(min(var(--ab-pin-room, 100dvh), 100dvh) - 72px);
+    /* ── Half a screen, 2026-09-20 ──────────────────────────────────────
+       Miyel: "let's just do a simple half rise from the bottom to choose the
+       new album vs this full screen second state." It took the screen less
+       72px, which is not a sheet over a page, it is a second page — and the
+       card it covered was the thing you were choosing *for*, so you could no
+       longer see what you were changing. Half, and the keyboard still wins:
+       whichever of the two is smaller. */
+    max-height: min(calc(min(var(--ab-pin-room, 100dvh), 100dvh) - 72px), 56dvh);
     border-radius: 20px 20px 0 0; border-bottom: none;
     padding: 16px 20px calc(16px + env(safe-area-inset-bottom));
     animation: abPinSlide 0.22s ease;
@@ -738,12 +851,28 @@
   background: var(--panel);
   text-wrap: pretty;
 }
+/* ── The question, in the pinned record's face, 2026-09-20 ────────────────
+   Miyel: "can the prompt question use the font we use for pinned album
+   titles." It was the caption face — ten pixels, small caps, wide tracking —
+   which is the face this site puts on labels, and an opening is not a label:
+   it is a sentence somebody is answering. Nunito at the display weight, the
+   size and the case the pinned record's title is set in, so the two things on
+   this pane that are titles are titled the same.
+
+   A step quieter than the answer under it. The question is bold and small and
+   the answer is large and plain, which is the pull quote this block has always
+   been — the weight says which is the asking and the size says which is the
+   part worth reading. */
 .ab-prompt-ask {
   margin: 0;
-  font-family: var(--font-label);
-  font-size: 10px; line-height: 1.5;
-  letter-spacing: 0.15em; text-transform: uppercase;
-  color: var(--ink-faint);
+  font-family: var(--font-display);
+  font-weight: var(--font-display-weight, 700);
+  font-size: 15px; line-height: 1.4;
+  /* Full ink (Miyel, 2026-09-20). It was a step quieter on the reasoning that
+     the answer should lead; at the display weight and four pixels smaller it
+     already reads as the smaller of the two, and the grey was making a
+     question somebody chose look like boilerplate. */
+  color: var(--ink);
 }
 /* Indented behind a rule, like a pull quote: the answer is being quoted into
    the question's card, not continuing its sentence. */
@@ -803,42 +932,45 @@
    and two gaps. */
 .ab-prompt-none { color: var(--ink-faint); font-style: italic; }
 
-/* The list. Same stock as the card's mark chooser — a warm panel, a hairline
-   rule, ten pixels of radius — because it is the same gesture in a different
-   shape and two chooser styles on one page is two answers to one question. */
+/* ── The list, 2026-09-20 ─────────────────────────────────────────────────
+   Miyel: "popdown for choosing prompt needs to match site better in edit
+   mode." It was a warm ground inside a hairline box, which is a shape nothing
+   else here wears: this site's raised surfaces are `--panel` with a generous
+   corner and no rule round them, which is what the answers themselves print
+   on eight lines further up this same column. Same stock as those, so the
+   list of openings and the openings once answered are the same object. */
 .ab-prompt-menu {
   display: flex;
   flex-direction: column;
   margin-top: 8px;
   padding: 6px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--bg-warm);
+  border-radius: 14px;
+  background: var(--panel);
 }
 .ab-prompt-opt {
   display: flex;
   align-items: center;
   gap: 8px;
   width: 100%;
-  padding: 9px 10px;
-  border: 1px solid transparent;
-  border-radius: 7px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 10px;
   background: transparent;
   font-family: inherit;
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.45;
   text-align: left;
   color: var(--ink-soft);
   cursor: pointer;
-  transition: color 0.15s, background 0.15s, border-color 0.15s;
+  transition: color 0.15s, background 0.15s;
 }
 .ab-prompt-opt > span:first-child { flex: 1; min-width: 0; }
-.ab-prompt-opt:hover { color: var(--ink); background: var(--bg); }
-.ab-prompt-opt--on {
-  color: var(--ink);
-  background: var(--bg);
-  border-color: var(--ink-faint);
-}
+.ab-prompt-opt:hover { color: var(--ink); background: var(--panel-strong); }
+/* The one you have taken is lit and ticked, not boxed. A mark in a container
+   is the shape this site took off its controls in September — see DECISIONS,
+   a control is the mark — and a bordered row inside a bordered panel was two
+   boxes deep for one answer. */
+.ab-prompt-opt--on { color: var(--ink); background: transparent; }
 .ab-prompt-opt--taken { color: var(--ink-faint); }
 /* Marked rather than disabled: taking one that is already in another slot
    swaps the two, which is a move somebody is allowed to make and should be
@@ -1007,20 +1139,11 @@ a.ab-rig-name:hover { text-decoration: underline; }
    simply starting further down the page. The header is corner
    furniture; space under it reads as air. */
 .idc-tools { display: flex; align-items: center; gap: 2px; }
-/* The same box as the lights on the other end of the line — 36px,
-   a 10px radius, an 18px glyph — so the two ends of the bar read as
-   one row of controls rather than a big one and a small one. */
-.idc-tool {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 36px; height: 36px; border-radius: 10px;
-  color: var(--ink-faint); background: transparent; border: 0;
-  cursor: pointer; transition: color 0.15s, background 0.15s;
-}
-.idc-tool:hover { color: var(--ink); background: var(--bg-warm); }
-.idc-tool:disabled { opacity: 0.4; cursor: default; }
-/* Saving is the one of these that commits something, so it carries
-   full ink where the others are quiet. */
-.idc-tool--keep { color: var(--ink); }
+/* .idc-tool and .idc-tool--keep are gone, 2026-09-20. They dressed the tick
+   and the cross that used to sit in this corner while a correction was open;
+   the two are at the foot now, in the bar an entry raises (entry.css,
+   .ln-editing-bar). What is left in this row is the ···, which brings its own
+   clothes from KeeperTools. */
 
 /* ── The name ── the beacon's own title face, set a step above the
    size it uses. They started matched, which was tidy and wrong: the
@@ -1176,105 +1299,47 @@ a.ab-rig-name:hover { text-decoration: underline; }
    The ask is the last of them, because it is the last thing you read
    before the button for acting on it. Anything put between the two
    weakens that, which is why the genres sit above rather than below. */
-.idc-line {
-  margin: 16px auto 0; max-width: 300px;
-  font-size: 13px; line-height: 1.6; color: var(--ink);
-  display: flex; align-items: baseline; gap: 9px;
-  text-align: left;
-}
-.idc-line-label {
-  flex-shrink: 0;
-  /* A fixed column, so the two answers start at the same place and the
-     pair reads as one small table rather than two stray sentences.
-     Wide enough for the longer of the two labels to stay on one line —
-     a two-line label beside a one-line answer reads as a wrapping
-     accident, not as a heading. */
-  width: 84px;
-  white-space: nowrap;
-  font-family: var(--font-label);
-  font-size: 8.5px; letter-spacing: 0.1em; text-transform: uppercase;
-  color: var(--ink-faint);
-}
+
 /* One colour for both answers. They were set a step apart — the
    genres soft, the request full — which read as one of the two being
    less finished than the other rather than as a deliberate hierarchy.
    The labels beside them are already doing the quietening; the answers
    are the content and they weigh the same. */
-.idc-line-value { min-width: 0; color: var(--ink); }
 /* The second label on the counted line — "since" — sits after the first
    answer at its own width, not the 84px column the row's first label keeps,
    so the line reads as two short pairs rather than a table with a gap. */
-.idc-line-label--since { width: auto; margin-left: 2px; }
 /* ── The pinned record ──
    Forty-eight square with a ten-pixel radius, which is what the beacon
    draws its recent listens at — same object, same job, so the same
    frame. The name reads to its right rather than under it, because the
    row it sits in is a table of labels and answers and this is one
    answer: a cover and what it is. */
-.idc-pin-row { align-items: center; }
 .idc-pin {
   display: flex; align-items: center; gap: 10px;
   min-width: 0; flex: 1;
   color: var(--ink); text-decoration: none;
 }
-.idc-pin-art {
-  display: block;
-  width: 48px; height: 48px;
-  flex-shrink: 0;
-  border-radius: 10px;
-  overflow: hidden;
-  background: var(--bg-warm);
-  box-shadow: 0 3px 10px rgba(0,0,0,0.12);
-  transition: transform 0.2s ease;
-}
-.idc-pin:hover .idc-pin-art { transform: translateY(-2px); }
-.idc-pin-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.idc-pin-none {
-  display: flex; align-items: center; justify-content: center;
-  width: 100%; height: 100%;
-  color: var(--ink-faint); font-size: 18px;
-}
+
+
 /* min-width: 0 on both, or a long album name refuses to ellipsis and
    pushes the row past the edge of the card instead. */
-.idc-pin-said { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.idc-pin-album,
-.idc-pin-artist {
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-.idc-pin-album { font-size: 13px; line-height: 1.3; }
-.idc-pin-artist { font-size: 11px; line-height: 1.3; color: var(--ink-faint); }
-.idc-pin:hover .idc-pin-album { text-decoration: underline; }
+
+
 @media (prefers-reduced-motion: reduce) {
-  .idc-pin:hover .idc-pin-art { transform: none; }
+
 }
 /* The same row as a button. A button carries its own padding, border,
    background and text alignment, and left alone it would sit a few
    pixels off the link it replaces — which is a row that moves when you
    press Edit. */
-.idc-pin--pick {
-  padding: 0; border: 0; background: transparent;
-  text-align: left; font: inherit; cursor: pointer;
-}
 
 /* The one control that is an action rather than a door, and the reason
    the ask is written directly above it. Weighted by ink rather than by
    fill, so it leads without inventing a second kind of button. */
-.idc-send {
-  margin-top: 20px;
-  color: var(--ink);
-  border-color: var(--ink-faint);
-  padding: 10px 22px;
-  font-size: 9.5px;
-}
-.idc-send:hover { border-color: var(--ink); }
+
 
 /* ── Below the line ── everywhere else the keeper can be found, and the
    one page the card still carries. Quiet, and after the point. */
-.idc-rule {
-  width: 100%; height: 1px; margin: 22px 0 16px;
-  background-image: linear-gradient(to right, var(--idc-rule) 0 4px, transparent 4px 9px);
-  background-size: 9px 1px; background-repeat: repeat-x;
-}
 /* One line: the action, then every other door as a mark beside it. */
 /* Closer to the block above it than it was. The row used to carry the
    rig and the links as well and needed the air to read as its own
@@ -1286,18 +1351,7 @@ a.ab-rig-name:hover { text-decoration: underline; }
   gap: 6px; flex-wrap: wrap;
   margin-top: 14px;
 }
-.idc-mark-btn {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 36px; height: 36px; border-radius: 999px;
-  color: var(--ink-faint);
-  border: 1px solid transparent;
-  transition: color 0.15s, background 0.15s, border-color 0.15s;
-}
-.idc-mark-btn:hover {
-  color: var(--ink);
-  background: var(--bg-warm);
-  border-color: var(--idc-rule);
-}
+
 
 /* ── The links, opened ── the same marks in the same place, each with
    the address it stands for beside it. */
@@ -1464,10 +1518,8 @@ a.ab-rig-name:hover { text-decoration: underline; }
      approved. Whether it should step down on a narrow page is a live question
      and it is in NOTES; it is not something to change by repairing a rule
      nobody knew was broken. */
-  .idc-fields { column-gap: 12px; row-gap: 8px; }
-  .idc-field-value { font-size: 12px; }
-  .idc-field-value--name { font-size: 14px; }
-  .ab-card .idc-send { margin-top: 14px; }
+
+
   /* The writing under the card, on the same scroll rather than a floor of
      its own: on a desk the floors are plain wrappers and the page is the
      scroller, so the card leads and the answers follow it down the page. */

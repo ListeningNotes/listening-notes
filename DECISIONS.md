@@ -104,6 +104,17 @@ behind the card. Home is a horizontal scroll container and the browser does
 the physics. Entries stay real routes — an entry has an address you can send
 somebody and a pane does not.
 
+**A page's controls go in the header the screen already has, 2026-09-20.**
+Not in a row of their own under it: a second bar below the first reads as a
+heading the page has not got. The cross's bar and SiteNav's right-hand slot
+are the two real ones, and a control that belongs to one floor arrives and
+leaves with it.
+
+**A view control's mark names the view you are in**, not the one pressing
+would get; the label says what pressing does. Settled twice in an hour on
+2026-09-20, both ways round, and this is the way the archive's density
+control and the band at the foot already read.
+
 **Panes are named after the routes they absorb**, and those routes mount the
 same component the pane does: `/archive` → Journal, `/about` → About. One
 description of each thing, two places it can be reached.
@@ -138,6 +149,21 @@ and earns its touch target from padding with a matching negative margin, so a
 thumb gets its 44px and the eye sees only the mark. `.ln-pill` keeps its jobs —
 navigation, and the one primary action a screen has — and stops being the
 default shape for everything else.
+
+**And a word is a word, 2026-09-21.** Save and Cancel on the editing bar were
+an outlined pill and a filled one. A pill is the shape for something you could
+turn on — a filter, a keeper, a pin — and editing is not turned on from there;
+you are already in it. They are plain uppercase words now, the one that
+commits on a hairline, and no tick or cross beside them. `.ln-word`, shared by
+the four bars that share that band.
+
+**One exception, 2026-09-20: the way into a listen is a circle on the
+beacon's rule.** It is the one thing on that screen you can press and it was
+reading as a third caption under a line. The ring is a hairline of the same
+weight as the rule it stands in the break of, which is the rule making room
+for a control rather than a box drawn round a word. Miyel asked for it by
+name: "make start a listen feel intentional — maybe it can be a circle
+between the hairlines that looks like a button.
 
 **No loose icons in headers, 2026-09-15.** The mark is centred and the sides
 are for navigation. A single ··· is not a row of tools, it is a door, and it
@@ -180,6 +206,15 @@ three tools and a door reach into it on a 375px phone — so the row becomes the
 menu while the menu is open and the mark comes back when it shuts. The card
 has two tools and 29px to spare and keeps its mark.
 
+**Four panes for the keeper, three for everybody else, 2026-09-19.** Card,
+beacon, inbox, friends — and card, beacon, colophon signed out. **A stop on
+the band is a room you stand in, never a corridor you pass through.** The desk
+was a page of doors, which is a corridor: the two rooms worth being in were
+behind it and Settings is a thing you do twice a year. So the rooms took their
+own stops, Settings went to the foot of the card, and the desk left the phone.
+It is still the spine's second page above 769px, where there is no band. What
+follows is the 2026-09-15 version and still holds, apart from the count.
+
 **The cross is three panes on a phone: ID, beacon, desk, 2026-09-15.** You
 land on the beacon. Three was tried before and failed, and neither reason was
 the count — the panes were the same shape as each other and nothing said where
@@ -198,13 +233,20 @@ side, their tools on the other. With two, one page always carries more.
 The book was an interpretation, not a rule. What it gave this project was an
 object and then the writing underneath, and that survives at any pane count.
 
-**The band at the foot: Card · Beacon · Desk, 2026-09-15.** A glyph over a
-word, the pane you are on in ink and the other two pale. It is the whole of
-what is down there — it replaced the dots, the edge carets and the mini beacon.
+**The band at the foot: Card · Beacon · Friends · Inbox, 2026-09-15, widened
+2026-09-19.** **The order is by depth, not by subject:** two of the four panes
+have a second floor and two do not, so they go flat, deep, deep, flat rather
+than letting a single-floor pane sit between the two that go down. Down should
+mean the same thing on neighbouring stops.
+
+A glyph over a word, the pane you are on in ink and the rest
+pale. It is the whole of what is down there — it replaced the dots, the edge
+carets and the mini beacon. Every mark on it is one this site already uses for
+that exact thing, so none has to be learned twice.
 
 Pressing a name moves the rail exactly as a swipe does, because it is the
 visible version of the gesture and not an alternative to it: somebody presses
-Desk once, watches it move, and swipes from then on. That was always what the
+Friends once, watches it move, and swipes from then on. That was always what the
 carets were for, and a word does it better than a chevron — a chevron says
 there is something that way and a word says what.
 
@@ -225,12 +267,41 @@ with a cover, meaning the one pane where something is cut off at a fold rather
 than simply running on. Everything else scrolls, and content running off the
 edge is its own cue.
 
-**No vertical snap on a one-long-scroll pane; the only vertical snap wanted
-is the entry's, 2026-09-07.** Proximity on the long pane argued with the thumb
-and came off 2026-08-28; mandatory over three screens and a bit would drag a
-reader back to a screen edge halfway down the wall. The two-floor shape (NOTES)
-is different: mandatory over exactly two viewport-tall floors with the reading
-in an inner scroller, which is how the entry keeps its first screen still.
+**A two-floor screen is two stops, and that is not a snap, 2026-09-20.**
+The entry, the beacon and the book all have it. The record
+is one thing to look at and what is under it is the next; move at all and
+let go and it finishes the journey, the way you were already going. It acts
+only between those two, never past the second floor, and only with a hand
+off the glass — so a thumb held half way holds the change. A snap owns a
+whole scroller and pulls back on every throw, which is why there is none.
+
+**No vertical snap anywhere on the cross, 2026-09-20.** The two-floor panes
+snapped for a fortnight and the exception has now gone with the shape that
+earned it: `mandatory` was safe only while a second floor was exactly one
+screen tall with its own scroller inside it — two stops and nothing between
+them. Giving those floors a peek meant taking the inner scroller out, because
+a sliver of an inner scroller is one you can scroll before arriving at it, and
+snapping over a five-screen feed pulls back on every throw. `proximity` was
+tried in between and caught on a real phone, as it had in August.
+
+**A pane scrolls the way a long page scrolls, and the way down is a press.**
+The press lands exactly; `scroll-margin-top` on the second floor is what tells
+it where to stop and is load-bearing with no snap in sight. What the snap was
+for survives without it: a first floor one screen tall, a row at the foot of
+it saying what is below, and — on the book, not the beacon — a peek of it.
+**The beacon has the row and no peek, 2026-09-20.** Its screen is full at the
+sizes the mark and the record are drawn at, so a sliver cost a smaller mark
+and tighter air above the cover, and what it bought was forty pixels under the
+wall's own search bar. A feed is rows and forty pixels of a row reads as a
+row; forty pixels of cover under a bar does not. Miyel, on the seam
+being gone: "i don't even mind that it scrolls seamless from top to bottom,
+that was something i wanted to address anyway."
+
+What follows is the 2026-09-07 reasoning, which is why there was ever an
+exception: proximity on the long pane argued with the thumb and came off
+2026-08-28; mandatory over three screens and a bit would drag a reader back to
+a screen edge halfway down the wall. The two-floor shape was different while
+it lasted.
 
 **The large mark is the beacon's alone, 2026-09-15.** It was on every pane at
 one height, so the square under it landed on the same line whichever pane you
@@ -592,12 +663,17 @@ pane sends people; the About pane carries a short paragraph. `/get` is not
 linked from the About pane, because it does not exist on a copy that has not
 written one.
 
-**The bar is a flush line with the small mark in it, 2026-09-06.** Once a
-pane has scrolled its crown away the row becomes a bar: page colour, one
-hairline, the small mark centred, which is also the way back up. Every other
-page's nav row has the same edge. A fade was a smear the covers dissolved
-into. The crown and the small mark are never on screen together, so it is
-still one mark; the wall starts under the bar so its first row is whole.
+**The bar is page colour and nothing else, 2026-09-06 / 2026-09-20.** Once a
+pane has scrolled its crown away the row becomes a bar: page colour, flush,
+what the pane has to put in it. **The crown is what arrives in it on a
+phone**: it travels there as the beacon scrolls, shrinking as it goes, and
+stays — one mark rather than a large one leaving and a small one fading in
+behind it, which you could catch both of on a slow drag. A fade was a smear the covers dissolved into
+and a hairline replaced it for five days; the hairline came off too, because
+what is in the row — a name, a mark, a control — is what says header. Every
+other page's nav row is the same. The crown and the small mark are never on
+screen together, so it is still one mark; the wall starts under the bar so
+its first row is whole.
 
 **Each caret carries a mark for what is that way** — a card left, a book down,
 a cog right for the owner and an `i` for a visitor. The caret is the verb and
@@ -731,6 +807,9 @@ gesture that wants to mean something else has to be somewhere the rail is not.
 pane is the snap container, `y mandatory` over two screen-tall floors with the
 reading in an inner scroller, rail untouched, no gesture code. The 08-29 run
 was three changes at once with the rail lock live; on its own the shape works.
+**The vertical half of that came off on 2026-09-20** — see "No vertical snap
+anywhere on the cross" — and none of the rest changed: the rail's own
+`x mandatory` is untouched, and it was never the thing being argued about.
 
 **An entry is a layer over the journal, not a fourth pane, 2026-08-29.** Left
 and right meaning different things depending on which row you are in is ruled
@@ -1293,6 +1372,12 @@ you can start. The list at nearly full height, then the message at a third of
 it — the change of size is what says they are steps. **And no × on a sheet
 that pulls down:** it is a mark for a gesture the site already trusts you to
 know, and it sits where the thing worth pressing should be.
+
+**Either half is the step, 2026-09-21.** Whichever of the two is still a
+question takes the screen: a wall of covers coming from the book, a wall of
+faces coming from a record's tools. The half you arrived knowing is never a
+step — a wizard that makes you press through an answer you have already given
+— and the screen you write on is the same screen by either door.
 
 ---
 

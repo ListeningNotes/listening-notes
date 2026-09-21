@@ -1,0 +1,15 @@
+-- Pinned people, 2026-09-20.
+--
+-- The friends brief asked for this on 2026-09-17 and Miyel held it back the
+-- same week — "mostly just beta testers, we don't need it yet" — and asked for
+-- it once the pane had a shelf and a header and looked empty under them.
+--
+-- One nullable stamp and nothing else. A boolean would say who is pinned; a
+-- stamp says that and the order, which is the order they were pinned in, and
+-- the brief asks for exactly that. NULL is not pinned, so every row that
+-- exists is already correct and there is nothing to fill in.
+--
+-- Private and one-sided, like adding: nobody learns they were pinned, nothing
+-- is sent anywhere, and no other copy is told. It is a shelf in your own
+-- house, not a status on somebody else's.
+ALTER TABLE people ADD COLUMN IF NOT EXISTS pinned_at timestamptz;

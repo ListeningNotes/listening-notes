@@ -51,14 +51,17 @@
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { CaretLeft, CaretRight } from '@phosphor-icons/react';
-import { tileBoxOf, neighboursOf, handOffNeighbour, arrivingBySwipe, tookASwipe, growBoxOf, arrivingBack, cameBack, cameAlone } from '../../library/handoff';
+import { tileBoxOf, neighboursOf, handOffNeighbour, arrivingBySwipe, tookASwipe, growBoxOf, arrivingBack, cameBack, cameAlone, carryReading, endReading } from '../../library/handoff';
 
 // How long the sheet takes to grow to the screen. Unhurried, slowing as it
 // lands — the same curve the slide used.
 const GROW_MS = 420;
 // How long the exit of a page turn takes; the stylesheet's settling
 // transition on .lay-content is the same number.
-const TURN_MS = 240;
+// Slower from 2026-09-20, on Miyel's read of it in use: "it can be slowed
+// down a little so it reads smoother, like you're really flipping through
+// pages of a book." 240 was quick enough to read as a cut.
+const TURN_MS = 360;
 const GROW_EASE = 'cubic-bezier(0.22, 0.61, 0.36, 1)';
 
 // How far right the pull has to travel before letting go leaves rather than
@@ -145,7 +148,7 @@ export function useBeforeLeaving(fn) {
 // On a phone `over` changes nothing: the stylesheet reads it above 769px only
 // (.lay--over-* in entry.css); this file does the leaving and measures the
 // growth from the sheet's own corner.
-export default function LayerEntry({ children, label = 'Entry', scrolls = false, arrives = 'tile', over = null }) {
+export default function LayerEntry({ children, label = 'Entry', scrolls = false, arrives = 'tile', over = null, rise = 0 }) {
   const sheetRef = useRef(null);
   const [headerSlot] = useState(() => (typeof document === 'undefined' ? null : document.createElement('div')));
   useLayoutEffect(() => {
@@ -153,8 +156,15 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
     if (!sheet || !headerSlot) return undefined;
     headerSlot.setAttribute('class', 'lay-header');
     sheet.appendChild(headerSlot);
+    // How long the rise takes, when this sheet wants its own answer. Written
+    // here rather than as a React style prop because that attribute is
+    // already shared with the pull-down's transform and with two properties
+    // the keyboard writes, and a fourth owner of it is a fourth chance for
+    // one of them to wipe another. Set before paint, once, and the
+    // stylesheet's own number stands wherever nothing is written.
+    if (rise) sheet.style.setProperty('--lay-rise', `${rise}ms`);
     return () => headerSlot.remove();
-  }, [headerSlot]);
+  }, [headerSlot, rise]);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -183,9 +193,15 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
     // an entry opened from a place that does not browse has no neighbours.
     const alone = cameAlone();
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (arrives === 'bottom') return { swiped: 0, growFrom: null, alone };
+    // A swipe is read before anything else about how this sheet normally
+    // arrives, because it is not an arrival — the sheet is already here and
+    // the record inside it is being turned. It moved above the rise on
+    // 2026-09-20, when the entry started rising: without it, thumbing to the
+    // next album sent the whole sheet back to the floor and brought it up
+    // again, which is a page reload with a curve on it.
     const swiped = tookASwipe();
     if (swiped) return { swiped, growFrom: null, alone };
+    if (arrives === 'bottom') return { swiped: 0, growFrom: null, alone };
     if (reduced) return { swiped: 0, growFrom: null, alone };
     // An entry grows out of its tile; anything else grows out of whatever
     // declared this address in data-grows (a row, a face) — see handoff.js.
@@ -279,40 +295,19 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
       sheet.style.setProperty('--lay-bottom', `${Math.max(0, Math.round(room - vv.offsetTop - vv.height))}px`);
     };
 
-    // And `data-typing` — which is only furniture standing down, never
-    // layout — off the focus, because that is the thing it is actually about.
-    //
-    // A tick behind the event, deliberately. `focusin` fires while the focus
-    // is still moving and `document.activeElement` can still be the element
-    // being left — reading it there said BODY with a textarea plainly
-    // focused. `focusout` has the same problem from the other end: the next
-    // element does not have it yet. A zero timeout lets it settle, and
-    // nothing here is urgent enough to care.
-    let settle = null;
-    const mark = () => {
-      clearTimeout(settle);
-      settle = setTimeout(() => {
-        const el = document.activeElement;
-        const into = el && (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT' || el.isContentEditable);
-        sheet.toggleAttribute('data-typing', Boolean(into));
-      }, 0);
-    };
-
+    // (`data-typing` was set here on every focus until 2026-09-21 and nothing
+    // ever read it — a hook for furniture standing down that no furniture took
+    // up. The trap it had been written around is recorded where the same test
+    // is now actually used, HomeNav's typing effect: `focusin` fires while the
+    // focus is still moving, so read activeElement a tick later.)
     sync();
-    mark();
     vv.addEventListener('resize', sync);
     vv.addEventListener('scroll', sync);
-    document.addEventListener('focusin', mark);
-    document.addEventListener('focusout', mark);
     return () => {
-      clearTimeout(settle);
       vv.removeEventListener('resize', sync);
       vv.removeEventListener('scroll', sync);
-      document.removeEventListener('focusin', mark);
-      document.removeEventListener('focusout', mark);
       sheet.style.removeProperty('--lay-lift');
       sheet.style.removeProperty('--lay-bottom');
-      sheet.removeAttribute('data-typing');
     };
   }, []);
 
@@ -332,6 +327,8 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
     leaving.current = true;
     // Whatever this closes onto is being returned to, not arrived at.
     arrivingBack();
+    // And the read ends here. Closing is not turning a page.
+    endReading();
     window.clearTimeout(pendingTurn.current);
     pendingTurn.current = null;
     // If going back did not remove this layer — nowhere to go back to, which
@@ -464,6 +461,8 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
     if (!target || leaving.current || pendingTurn.current) return;
     handOffNeighbour(target);
     arrivingBySwipe(dir);
+    // And where in the record you were, so the next one opens the same way.
+    carryReading();
     setSettling(true);
     setShift(-dir * (sheetRef.current?.offsetWidth || window.innerWidth));
     pendingTurn.current = window.setTimeout(() => {
@@ -642,10 +641,34 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
 
   return (
     <div
-      className={'lay' + (arrival.still ? ' lay--still' : rises ? ' lay--rises' : arrival.swiped ? ' lay--swiped' : growFrom ? ' lay--grows' : ' lay--fades') + (scrolls ? ' lay--scrolls' : '')
+      /* A swipe is read before the rise, and for the same reason it is read
+         first when the arrival is decided: the sheet is already here. With
+         the rise ahead of it, every thumb to the next album sent the whole
+         sheet to the floor and brought it back up — Miyel, "they're coming
+         off from all over the place." */
+      /* Which way the leaf turned, said on the sheet as well as on the
+         content. The content's own class is what slides it; this is for
+         everything that is not in the content and still belongs to the turn
+         — the record in the header, and the page arriving late enough that
+         the content's animation has already been and gone. */
+      className={'lay' + (arrival.still ? ' lay--still' : arrival.swiped ? ' lay--swiped' : rises ? ' lay--rises' : growFrom ? ' lay--grows' : ' lay--fades') + (scrolls ? ' lay--scrolls' : '')
+        + (arrival.swiped === 1 ? ' lay--from-right' : arrival.swiped === -1 ? ' lay--from-left' : '')
         + (over ? ` lay--over-${over}` : '') + (settling ? ' lay--settling' : '') + (pulled ? ' lay--dragging' : '')}
       ref={sheetRef}
-      style={pulled ? { transform: `translateY(${dragY}px)` } : undefined}
+      /* --lay-shift is how far the leaf has been dragged sideways, said here
+         so that things outside the content can travel with it. The record in
+         the header is the one that wants it: in the reading state it is part
+         of the page, and it stood still while the writing left — Miyel,
+         "think of it as one unit, one page; one page leaves while the other
+         comes in, but the card remains locked in."
+
+         Undefined when there is nothing to say, rather than an empty object:
+         this attribute is shared with two properties the keyboard writes
+         imperatively, and React clears what it has written before. */
+      style={(shift !== 0 || pulled) ? {
+        ...(shift !== 0 ? { '--lay-shift': `${shift}px` } : null),
+        ...(pulled ? { transform: `translateY(${dragY}px)` } : null),
+      } : undefined}
       role="dialog"
       aria-modal="true"
       aria-label={label}

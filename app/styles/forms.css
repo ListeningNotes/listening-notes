@@ -239,7 +239,7 @@ textarea.su-field { resize: vertical; min-height: 64px; }
 /* 16px on touch or Safari zooms in on focus and does not zoom back. */
 @media (pointer: coarse) { .su-field { font-size: 16px; } }
 .su-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.su-row { display: flex; flex-direction: column; gap: 8px; }
+
 .su-add {
   align-self: flex-start; background: none; border: 0; padding: 0;
   font-family: var(--font-label); font-size: 10px; letter-spacing: 0.1em;
@@ -296,7 +296,7 @@ textarea.su-field { resize: vertical; min-height: 64px; }
   display: block; font-family: var(--font-label); font-size: 10px;
   letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 6px;
 }
-.st-status { font-family: var(--font-label); font-size: 10px; color: var(--ink-faint); margin: 0 0 8px; line-height: 1.5; }
+
 .st-field {
   display: block; width: 100%; box-sizing: border-box;
   background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
@@ -339,34 +339,18 @@ textarea.st-field { resize: vertical; min-height: 96px; }
   letter-spacing: 0.16em; text-transform: uppercase;
   color: var(--ink-faint); margin: 0 0 34px;
 }
-.pp-prose { font-size: 15px; line-height: 1.95; color: var(--ink); }
-.pp-prose p { margin: 0 0 22px; }
-.pp-prose p:last-child { margin-bottom: 0; }
-.pp-subhead {
-  font-family: var(--font-display); font-weight: var(--font-display-weight);
-  font-size: 20px; letter-spacing: -0.01em; color: var(--ink);
-  margin: 0 0 12px;
-}
+
+
 .pp-block + .pp-block { margin-top: 48px; }
 .pp-row { border-bottom: 1px solid var(--border); padding: 14px 0; }
 .pp-row-head { display: flex; align-items: center; gap: 12px; min-height: 20px; }
-.pp-row-tail {
-  margin-left: auto; flex-shrink: 0;
-  font-family: var(--font-label); font-size: 10px;
-  letter-spacing: 0.08em; color: var(--ink-faint);
-}
+
 .pp-row-body {
   font-size: 13px; line-height: 1.8; color: var(--ink-soft);
   margin: 8px 0 0;
 }
-.pp-name { font-size: 13px; color: var(--ink); }
-a.pp-name {
-  display: inline-flex; align-items: center; gap: 6px;
-  border-bottom: 1px solid var(--border); padding-bottom: 1px;
-}
-a.pp-name:hover { border-bottom-color: var(--ink-faint); }
-a.pp-name svg { color: var(--ink-faint); transition: color 0.15s; }
-a.pp-name:hover svg { color: var(--ink); }
+
+
 .pp-foot {
   margin-top: 48px; padding-top: 28px; border-top: 1px solid var(--border);
   display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap;
@@ -456,11 +440,6 @@ a.pp-name:hover svg { color: var(--ink); }
   gap: clamp(10px, 1.8dvh, 16px);
 }
 
-.af-square {
-  width: var(--af-square); aspect-ratio: 1;
-  border-radius: 18px; overflow: hidden;
-  display: flex; align-items: center; justify-content: center;
-}
 .af-none { font-size: 2.2rem; color: var(--ink-faint); line-height: 1; }
 
 /* `.af-slot` and `.af-sleeve` were here: a record-sized square holding a ♪
@@ -668,7 +647,7 @@ a.pp-name:hover svg { color: var(--ink); }
 
 @media (max-width: 768px) {
   .af { --af-square: min(140px, 19dvh); }
-  .af-square { border-radius: 15px; }
+
   .af-hand-pair { grid-template-columns: 1fr; }
 }
 
@@ -688,11 +667,7 @@ a.pp-name:hover svg { color: var(--ink); }
   display: flex; flex-direction: column; padding-top: var(--own-nav-bottom);
 }
 .own-screen--layered { --own-nav-bottom: 0px; min-height: 0; }
-.own-kicker {
-  width: 100%; max-width: 1000px; align-self: center; box-sizing: border-box;
-  padding: 10px 24px 0; font-family: var(--font-label); font-size: 10px;
-  letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-faint);
-}
+
 .own-body {
   position: relative; flex: 1; width: 100%; box-sizing: border-box;
   align-self: center; display: flex; flex-direction: column;
@@ -975,26 +950,18 @@ a.pp-name:hover svg { color: var(--ink); }
 /* The address book: the inbox's sheet and panel, one column of people. A
    row is a face and a name, never the address — the row itself opens your
    page about them, the arrow beside it opens their journal. */
-.bk-body { max-width: 720px; padding: 18px 24px 40px; }
 /* The friends pane stands on the page itself — no panel, no second border
    inside a screen that already has one. The gutters are the book's; what
    goes is the card. */
 .fr-body { max-width: 720px; padding: 18px 24px 40px; display: flex; flex-direction: column; }
-.bk-panel { border-radius: 24px; }
-.bk-scroll { position: relative; z-index: 1; flex: 1; padding: 22px 26px 28px; }
+
+
 /* The field, as wide as the list under it, and its two ways in centred
    beneath: file what is in it, or point the camera at a code. Under, not
    beside, at every width — one shape on a phone and a desk (Miyel,
    2026-09-13). */
-.bk-add { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; align-items: center; margin-bottom: 6px; }
-.bk-add .own-act { gap: 6px; white-space: nowrap; }
-.bk-field {
-  flex: 1 1 100%; min-width: 0; box-sizing: border-box;
-  padding: 10px 14px; border-radius: 999px;
-  border: 1px solid var(--border); background: var(--bg); color: var(--ink);
-  font-family: var(--font-sans); font-size: 14px;
-}
-.bk-field:focus { outline: none; border-color: var(--ink-faint); }
+
+
 /* ══ The friends pane ══════════════════════════════════════════════════════
    Faces, not rows. From Miyel's brief of 2026-09-17 (f1, f2, f4); the
    component is components/main_components/Friends.js and the reasoning is
@@ -1036,29 +1003,59 @@ a.pp-name:hover svg { color: var(--ink); }
    straight end on its way out. */
 .fr-head { display: flex; align-items: center; gap: 8px; }
 .fr-slot { display: grid; flex: 1; min-width: 0; }
+/* The book's name and how many are in it, standing in the slot when there is
+   no field in it. Same cell, same clip, so the three of them are one object
+   changing what it says rather than three things appearing and disappearing.
+   The caption face and the caption size: it is a label on the page, not a
+   heading over it — the faces are the heading. */
+.fr-book {
+  grid-area: 1 / 1;
+  display: flex; align-items: center; gap: 0;
+  margin: 0; min-width: 0;
+  padding: 0 2px;
+  font-family: var(--font-label);
+  font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--ink-soft);
+  white-space: nowrap;
+  clip-path: inset(0 0 0 0);
+  transition: clip-path 0.38s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.fr-book span { color: var(--ink-faint); }
+.fr-book.fr-field--gone { clip-path: inset(0 100% 0 0); }
+
 .fr-field {
   grid-area: 1 / 1;
-  display: flex; align-items: center; gap: 9px;
+  display: flex; align-items: center; gap: 10px;
   min-width: 0;
-  padding: 10px 14px; border-radius: 999px;
+  /* The shape of the beacon's album search, 2026-09-19 — "a bit more square"
+     (Miyel). Same 10px corner, same 12px inset, same 10px gap, so the one box
+     you type into on this site is one box wherever it is. The pill it was is
+     the shape of a control you press, and this is a field.
+
+     The clip's corner has to follow it, or the field grows a straight end on
+     its way through the slot. */
+  padding: 0 12px; border-radius: 10px;
   border: 1px solid var(--border); background: var(--panel);
   color: var(--ink-faint);
   white-space: nowrap;
-  clip-path: inset(0 0 0 0 round 999px);
+  clip-path: inset(0 0 0 0 round 10px);
   transition: clip-path 0.38s cubic-bezier(0.22, 0.61, 0.36, 1),
               border-color 0.15s, color 0.15s;
 }
 /* Closed toward its left edge: the right edge travels left and it is gone
    into the side it came from. `inert` takes the keyboard off it, this takes
    the thumb. */
-.fr-field--gone { clip-path: inset(0 100% 0 0 round 999px); pointer-events: none; }
+.fr-field--gone { clip-path: inset(0 100% 0 0 round 10px); pointer-events: none; }
 /* Opened out of its right edge, which is the corner the button is in. */
 .fr-field--address { border-color: var(--ink-faint); color: var(--ink-soft); }
-.fr-field--waiting { clip-path: inset(0 0 0 100% round 999px); pointer-events: none; }
+.fr-field--waiting { clip-path: inset(0 0 0 100% round 10px); pointer-events: none; }
 .fr-field:focus-within { border-color: var(--ink-faint); }
 .fr-field input {
   flex: 1; min-width: 0;
   border: 0; background: none; outline: none;
+  /* The height comes from the field's own padding — the box has none left
+     and right of the text now, the way .ses-search is built. */
+  padding: 12px 0;
   /* 16px, like every other field on a touch screen: Safari zooms in on
      anything smaller and does not reliably zoom back out. */
   color: var(--ink); font-family: var(--font-sans); font-size: 16px;
@@ -1079,39 +1076,52 @@ a.pp-name:hover svg { color: var(--ink); }
 .fr-plus svg { transition: transform 0.34s cubic-bezier(0.22, 0.61, 0.36, 1); }
 .fr-plus--shut svg { transform: rotate(45deg); }
 
-/* Add and Scan, centred under the address field. Collapsed rather than taken
-   away, so the row opens and closes on the same clock as the fields crossing
-   above it instead of blinking in when they have finished.
+/* ── Add and Scan moved into the header, 2026-09-20 ───────────────────────
+   `.fr-add-acts` and everything that dressed it are gone. They were a row of
+   two buttons under the field, collapsing open and shut on a max-height, and
+   Miyel: "I'm not a huge fan of add and scan being under, but I have no idea
+   where else to put them", then "there needs to be an actual add button but
+   I also don't really like pills."
 
-   `.own-act` sets no gap of its own — every other caller passes it a word
-   alone — so the camera and SCAN A CODE were touching. */
-.fr-add-acts {
-  display: flex; align-items: center; justify-content: center;
-  gap: 10px; flex-wrap: wrap;
-  max-height: 0; margin-top: 0; opacity: 0; overflow: hidden;
-  transform: translateY(-8px);
-  pointer-events: none;
-  transition: max-height 0.34s cubic-bezier(0.22, 0.61, 0.36, 1),
-              margin-top 0.34s cubic-bezier(0.22, 0.61, 0.36, 1),
-              transform 0.34s cubic-bezier(0.22, 0.61, 0.36, 1),
-              opacity 0.22s ease;
+   So Add is a mark at the end of the field — where the sentence it commits
+   ends — and Scan is a camera beside the way out. Both are controls that are
+   the mark rather than marks in containers, which is the rule this site
+   already keeps, and the row under the field is simply not there. */
+.fr-scan {
+  display: inline-flex; align-items: center; justify-content: center;
+  flex: 0 0 auto;
+  width: 40px; height: 40px;
+  border: 0; background: none; padding: 0;
+  color: var(--ink-soft); cursor: pointer;
+  transition: color 0.15s;
 }
-/* Near the real height, not wildly above it — the same note `.beacon-meta`
-   carries in nav.css, and the same mistake made again here first. The row is
-   32px and the cap was 80, so the opening was over at two fifths of the
-   clock and the rest of the transition was max-height climbing through air
-   with nothing moving. 56 leaves room for the two words to wrap onto a
-   second line on a narrow phone and still spends most of the duration
-   actually opening. */
-.fr-add-acts--open {
-  max-height: 56px; margin-top: 12px; opacity: 1;
-  transform: none;
-  pointer-events: auto;
+.fr-scan:hover { color: var(--ink); }
+/* At the end of the line, inside it. It arrives with the first character
+   typed, so at rest the row is a field and its two corners. */
+.fr-go {
+  display: inline-flex; align-items: center; justify-content: center;
+  flex: 0 0 auto;
+  width: 30px; height: 30px;
+  margin: -6px -4px -6px 4px;
+  border: 0; background: none; padding: 0;
+  /* Full ink, 2026-09-20 — and it already was `--ink`, which is the thing
+     worth writing down: what made it read grey was the stroke, not the
+     colour. A bold Phosphor arrow at sixteen pixels is four thin lines on a
+     dark ground beside a sixteen-pixel word set solid. So it goes to the far
+     end of the ink — white in the dark, black in the light, the same step
+     the way into a listen takes when it is reached for — and up two pixels,
+     which between them is the difference between a mark that is the right
+     colour and a mark that looks it. */
+  color: var(--lift); cursor: pointer;
+  transition: color 0.15s, opacity 0.15s;
+  animation: fr-go-in 0.16s ease both;
 }
-.fr-add-acts .own-act { gap: 7px; }
+.fr-go:disabled { opacity: 0.4; cursor: default; }
+@keyframes fr-go-in { from { opacity: 0; transform: translateX(-4px); } to { opacity: 1; transform: none; } }
 
 @media (prefers-reduced-motion: reduce) {
-  .fr-field, .fr-plus svg, .fr-add-acts { transition: none; }
+  .fr-field, .fr-plus svg { transition: none; }
+  .fr-go { animation: none; }
 }
 
 /* ── The grid ──────────────────────────────────────────────────────────────
@@ -1123,6 +1133,27 @@ a.pp-name:hover svg { color: var(--ink); }
    A row at a time rather than one grid, because the doors open *between* two
    rows and CSS grid cannot say "after whichever row that item landed in". */
 .fr-row { display: flex; flex-direction: column; }
+/* ── The pinned row ────────────────────────────────────────────────────────
+   Three across and larger, which is now the whole of how it differs. It had
+   PINNED over it and EVERYONE over the rest for an hour and Miyel took both
+   off: the size and the position say it, and two labels on a page of ten
+   faces are two more words than the page can spare.
+
+   92, up from 84 (Miyel: "a smidge bigger, I know there's not much space").
+   Three across a 327px shelf leaves a 100px cell, so this is most of what
+   there is — and six is the cap, which is two rows of it. */
+.fr-row--pinned .fr-face { max-width: 92px; }
+.fr-row--pinned .fr-grid { gap: 20px 14px; }
+.fr-row--pinned .fr-name { font-size: 14px; }
+/* A door that is already done. Ink rather than a second glyph: the word under
+   it changes and that is what says which way the press goes. */
+.fr-door--on { color: var(--ink); }
+/* A door with no room left behind it. Dimmed rather than taken away — the row
+   is four doors wide and a gap where one was is a row that moves — and still
+   pressable, because it has something to say when you press it. See shakeNo
+   in Friends.js. */
+.fr-door--full { opacity: 0.35; }
+.fr-door--full:hover { opacity: 0.35; }
 .fr-grid {
   display: grid;
   grid-template-columns: repeat(var(--fr-across, 4), 1fr);
@@ -1166,6 +1197,22 @@ a.pp-name:hover svg { color: var(--ink); }
   color: var(--ink-faint);
   overflow: hidden;
   transition: box-shadow 0.2s, transform 0.2s;
+}
+/* ── And no long press on somebody else's face ────────────────────────────
+   The crop is the real fix and it is the other copy's to ship: this book
+   draws faces served by other people's journals, and until each of them
+   updates their file is still the whole photograph. iOS offers that file on a
+   long press — the picture, all of it, saved or shared.
+   
+   `-webkit-touch-callout: none` takes the offer away on this page. It is a
+   guard and not a fix, and it is the half of the problem this copy can close
+   today. The keeper's own portrait on the card keeps its long press: it is
+   their picture, on their card, and saving it is a thing they might mean. */
+.fr-face img, .fd-face img {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  pointer-events: none;
 }
 .fr-face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 /* It grows, and that is all it does. There was a 2px ink ring round it as
@@ -1244,16 +1291,17 @@ a.pp-name:hover svg { color: var(--ink); }
               opacity 0.2s ease;
 }
 .fr-doors--open {
-  max-height: 104px;
-  padding: 18px 0 16px;
+  /* Room for the four doors and the quiet line under them. */
+  max-height: 152px;
+  padding: 18px 0 14px;
   opacity: 1;
   transform: none;
   border-top-width: 1px;
   border-bottom-width: 1px;
   pointer-events: auto;
 }
-/* Evenly spread rather than gathered in the middle: four doors under a row
-   of four faces should answer the grid above them. */
+/* Evenly spread rather than gathered in the middle: doors under a row of
+   faces should answer the grid above them. */
 .fr-doors-row {
   display: flex; align-items: flex-start; justify-content: space-evenly;
   width: 100%;
@@ -1268,16 +1316,88 @@ a.pp-name:hover svg { color: var(--ink); }
   transition: opacity 0.15s, color 0.15s;
 }
 .fr-door:hover { opacity: 0.65; }
-/* Quiet at rest, like the rest of the row — the difference is the second
-   press, not the colour. Red only once it has been asked, and then it is the
-   only red on the page. */
-.fr-door--remove { color: var(--ink-soft); }
-.fr-door--remove:hover { color: var(--fav); opacity: 1; }
-.fr-door--sure,
-.fr-door--sure:hover { color: var(--fav); opacity: 1; }
+/* ── Remove, below the row and not in it ───────────────────────────────────
+   Miyel, 2026-09-19: "it undoes the relationship and shouldn't be one mis-tap
+   from Send." So it is not a door: the caption face rather than the display
+   one, small, muted, centred on its own line with air above it. Everything
+   about it says it is a different kind of act from the three above.
+
+   Red only once it has been asked — and then it is the only red on the page,
+   which is the whole of how the second press announces itself. The doubled
+   class beats :hover, because iOS leaves :hover on whatever was last tapped
+   and the armed line must not go quiet at the moment it arms. */
+.fr-cut {
+  display: block;
+  margin: 14px auto 0;
+  padding: 4px 8px;
+  border: 0; background: none; cursor: pointer;
+  font-family: var(--font-label);
+  font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--ink-faint);
+  transition: color 0.15s;
+}
+.fr-cut:hover { color: var(--ink-soft); }
+.fr-cut.fr-cut--sure { color: var(--fav); }
+.fr-cut:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 2px; border-radius: 4px; }
 
 @media (prefers-reduced-motion: reduce) {
   .fr-one, .fr-face, .fr-door, .fr-plus, .fr-doors { transition: none; }
+}
+
+/* ── The shelf, and the line off the end of it ─────────────────────────────
+   On the floor the faces are clipped to a box of settled height: that is what
+   "as many as fit" means, and it is measured in Friends.js off this box. Off
+   the floor there is no box — the whole book runs down the page. */
+.fr-shelf { display: flex; flex-direction: column; }
+/* ── A scroller only while it has something to scroll, 2026-09-20 ─────────
+   It was `overflow-y: auto` all the time, on the reasoning that the rows
+   always fit so there would be nothing to scroll — true, and not the point.
+   A box with `auto` on it is a scroll container whether or not it overflows,
+   and on a phone it takes the first part of every drag that starts inside it
+   before deciding it has nowhere to go. The faces fill most of this floor, so
+   that was most of the drags anybody makes on it: you pull down over somebody
+   and the pane does not move.
+
+   `hidden` until a person is open, which is the only thing that ever
+   overflows it — 150px of doors unfolding between two rows, with the bottom
+   row pushed past the edge. Then it is a scroller, and the doors are scrolled
+   to (see Friends.js). The toggle is on a press and never during a scroll,
+   which is the version of this that bit the rail once before. */
+.fr-shelf--floor { flex: 1; min-height: 0; overflow: hidden; }
+.fr--open .fr-shelf--floor { overflow-y: auto; overscroll-behavior-y: auto; scrollbar-width: none; }
+.fr--open .fr-shelf--floor::-webkit-scrollbar { display: none; }
+/* The way to everybody. Quiet, in the caption face, and the only number on
+   the floor — which it earns, because the number is the point of it. */
+.fr-all {
+  display: block;
+  margin: 10px auto 0;
+  padding: 6px 10px;
+  font-family: var(--font-label);
+  font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--ink-faint); text-decoration: none;
+  transition: color 0.15s;
+}
+.fr-all:hover { color: var(--ink); }
+
+/* ── Nobody filed ──────────────────────────────────────────────────────────
+   The first screen of a new install. Centred in what the shelf leaves, which
+   on this floor is most of the screen, so it reads as the state of the page
+   rather than a notice pinned to the top of an empty list. */
+.fr-nobody {
+  flex: 1; min-height: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 10px;
+  padding: 0 8px 40px;
+  text-align: center;
+}
+.fr-nobody-said {
+  margin: 0;
+  font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
+  font-size: 17px; color: var(--ink-soft);
+}
+.fr-nobody-how {
+  margin: 0; max-width: 26em;
+  font-size: 13px; line-height: 1.55; color: var(--ink-faint);
 }
 
 /* ── An address that came home in a link ────────────────────────────────────
@@ -1318,42 +1438,30 @@ a.pp-name:hover svg { color: var(--ink); }
   font-family: var(--font-label); font-size: 10px; letter-spacing: 0.1em;
   text-transform: uppercase; color: var(--ink-faint); margin: 8px 0 0; min-height: 14px;
 }
-.bk-list { display: flex; flex-direction: column; margin-top: 18px; }
-.bk-row { display: flex; align-items: center; gap: 12px; padding: 14px 6px; border-bottom: 1px solid var(--border); }
-.bk-row:last-child { border-bottom: none; }
-.bk-person { display: flex; align-items: center; gap: 14px; flex: 1; min-width: 0; text-decoration: none; color: inherit; }
+
+
 /* Their journal's own portrait, read straight off it, over the plain mark
    that shows when there is none or the journal is out. A rounded square,
    the card's shape at this size, not a circle (Miyel, 2026-09-12). */
-.bk-face {
-  position: relative; width: 44px; height: 44px; border-radius: 10px; flex-shrink: 0;
-  background: var(--bg); border: 1px solid var(--border); overflow: hidden;
-  display: flex; align-items: center; justify-content: center; color: var(--ink-faint);
-}
-.bk-face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.bk-who { display: flex; flex-direction: column; min-width: 0; }
+
+
 .bk-name { font-family: var(--font-display); font-weight: var(--font-display-weight, 700); font-size: 15px; color: var(--ink); line-height: 1.25; overflow-wrap: anywhere; }
 /* A journal that has not answered yet has no name, and the row never prints
    the address in its place. */
-.bk-name--none { color: var(--ink-faint); font-weight: 400; }
-.bk-visit { white-space: nowrap; }
+
 /* Crossing somebody out is the rare thing on this page, so it is a faint
    word and not a pill: red only under the pointer, never at rest. */
-.bk-remove {
-  font-family: var(--font-label); font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase;
-  color: var(--ink-faint); background: none; border: 0; padding: 6px 4px; cursor: pointer;
-}
-.bk-remove:hover { color: var(--fav); }
+
 /* The camera, in the panel where the field was: a square of it, and Cancel. */
 .bk-scan { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-bottom: 6px; }
 .bk-scan-video { width: 100%; max-width: 360px; aspect-ratio: 1; object-fit: cover; border-radius: 16px; background: #000; }
 .bk-scan-trouble { font-size: 13px; color: var(--fav); margin: 0; text-align: center; }
 @media (max-width: 640px) {
-  .bk-row { flex-wrap: wrap; }
+
 }
 /* Sixteen pixels on touch, like every other field, or Safari zooms in and
    stays there (the rule the send form's section explains). */
-@media (pointer: coarse) { .bk-field { font-size: 16px; } }
+@media (pointer: coarse) {  }
 
 
 /* ── from app/printer/page.js ─────────────────────────────────────────── */
@@ -1662,12 +1770,44 @@ a.pn-item-album:hover { text-decoration: underline; text-underline-offset: 3px; 
    step *is* the list, so there is nothing below it to protect. */
 .sn-sheet--picking .af-results { max-height: none; flex: 1; min-height: 0; }
 
+/* ── The same step, asking who ────────────────────────────────────────────
+   Coming in from a record's tools the question is the person, and it gets the
+   screen the covers get. The faces are MiniAddressBook's, which everywhere
+   else is one row that scrolls sideways — right in a form, wrong here, where
+   a sideways row in a screenful of nothing hides most of a book off the right
+   edge. So the strip becomes a wall for this one step, and grows: 44px faces
+   in a grid with a whole screen to spend read as a list that has not loaded.
+   Sized to land somewhere near the address book's own tiles, which is where
+   anybody looking at a wall of their friends has just come from. */
+.sn-sheet--picking .sn-who { gap: 14px; }
+.sn-sheet--picking .sn-who .ln-sender-book {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 18px 10px;
+  align-content: start;
+  contain: none;
+  overflow-x: hidden;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+  padding: 3px 0 6px;
+}
+/* The auto margins that centre the strip are a row's answer to a row's
+   problem; in a grid they push the first and last tiles out of their own
+   columns. */
+.sn-sheet--picking .sn-who .ln-sender-face { width: auto; }
+.sn-sheet--picking .sn-who .ln-sender-face:first-child,
+.sn-sheet--picking .sn-who .ln-sender-face:last-child { margin-left: 0; margin-right: 0; }
+.sn-sheet--picking .sn-who .ln-sender-portrait {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  border-radius: 12px;
+}
+
 .sn-form { display: flex; flex-direction: column; gap: 18px; }
 .sn-group { display: flex; flex-direction: column; gap: 9px; }
-.sn-label {
-  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.14em;
-  text-transform: uppercase; color: var(--ink-faint);
-}
+
 /* The record, when the send started on one. Centred, with the art over its
    name (Miyel, 2026-09-17): it is the object being handed across and the
    subject of everything below it, and a cover pushed into the left corner with

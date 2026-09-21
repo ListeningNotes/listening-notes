@@ -65,7 +65,7 @@
 
 import { cloneElement, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { DotsThree, EnvelopeSimple, Export, FilePlus, Pencil, Trash, UserCircle, X } from '@phosphor-icons/react';
+import { DotsThree, EnvelopeSimple, Export, FilePlus, GearSix, Pencil, Trash, UserCircle, X } from '@phosphor-icons/react';
 
 // How long the tools take to file back in. It has to outlast the longest
 // kt-file-in in nav.css or the last one is unmounted mid-stride and vanishes,
@@ -104,6 +104,13 @@ const WORDS = {
     all:    'What you can do with this card',
     edit:     ['Edit',  'Edit this card'],
     print:    ['Share', 'Make a picture of this card to share'],
+    // Only here. Settings is about the journal — the address, the beacon, the
+    // key, the password — and the card is the page about the journal. It sat
+    // at the foot of this pane as a door of its own from 2026-09-19 until
+    // Miyel moved it up here on 2026-09-20: everything else you can do to
+    // this page is behind the ···, and one of the keeper's doors standing
+    // outside the drawer is a door you have to remember the position of.
+    settings: ['Settings', 'The key, password, beacon, address'],
     sender:   null,
     send:     null,
     relisten: null,
@@ -134,6 +141,7 @@ export default function KeeperTools({
   // packing-up clock is the same number the animation uses. A plain value and
   // not a ref: it is decided by the props and read while closing.
   const count = 2
+    + (words.settings ? 1 : 0)
     + (onSender && words.sender ? 1 : 0)
     + (onSend && words.send ? 1 : 0)
     + (onRelisten && words.relisten ? 1 : 0)
@@ -208,23 +216,29 @@ export default function KeeperTools({
     return () => window.removeEventListener('keydown', onKey, true);
   }, [open, count]);
 
-  // Nearest the door first, which is also the order they file out in:
-  // Share, Edit, Credit, Send, Relisten, Delete (Miyel, 2026-09-17). Share is
-  // nearest the door because it is the shortest reach and the most-used; the row
-  // is reversed in CSS, so markup order is distance from the ··· and nothing
-  // here has to know which corner it is in.
+  // Nearest the door first, which is also the order they file out in: Edit,
+  // Share, Credit, Send, Relisten, Delete. Edit is nearest the door because
+  // it is the shortest reach and the most-used (Miyel, 2026-09-20 — Share
+  // held that place from 2026-09-17); the row is reversed in CSS, so markup
+  // order is distance from the ··· and nothing here has to know which corner
+  // it is in.
   //
-  // A tool is a glyph, and a glyph over a word once there are more than three
-  // of them. That is the brief's rule, driven off the count rather than off
-  // which surface this is, so it cannot drift: two tools on a card stay
-  // glyphs, because a pencil and a printer in a corner are learned in one
-  // press and a word under each would be a toolbar. Five cannot be learned, so
-  // five say what they are — the same glyph-over-a-word the band at the foot
-  // uses, which means the pattern is familiar before anybody opens this.
+  // ── Every tool says what it is, 2026-09-20 ──────────────────────────────
+  // It used to depend on how many there were: a glyph on its own up to three
+  // of them, a glyph over a word past that, on the reasoning that two marks
+  // in a corner are learned in one press and five cannot be. Miyel: "the
+  // tools are missing their word as well — toolbar should be uniform across
+  // site, those glyphs should be labels."
   //
-  // The word is drawn *and* the whole sentence stays on aria-label: "Print"
+  // She is right and the count was the wrong thing to hang it on. A rule that
+  // changes what a control looks like depending on how many of its neighbours
+  // exist means the same tool wears two faces on two pages, and the card just
+  // gained a third tool and would have changed its clothes for it. It is the
+  // same glyph-over-a-word the band at the foot uses, everywhere.
+  //
+  // The word is drawn *and* the whole sentence stays on aria-label: "Share"
   // under a glyph is enough to choose by and not enough to hear read out.
-  const withWords = count > 3;
+  const withWords = true;
   const box = (word, whole, glyph, extra = '') => ({
     className: 'kt-tool kt-tool--out' + (withWords ? ' kt-tool--said' : '') + extra,
     'aria-label': whole,
@@ -239,6 +253,14 @@ export default function KeeperTools({
 
   const tools = [];
 
+  // Edit first, which is nearest the ··· when the drawer is out: the row
+  // opens back towards the mark that opened it, so the head of the list is
+  // the shortest reach (Miyel, 2026-09-20). It is also the one of these that
+  // gets pressed most.
+  tools.push(
+    <button key="edit" type="button" onClick={() => { shut(); onEdit(); }} {...box(...words.edit, <Pencil size={22} weight="regular" aria-hidden="true" />)} />
+  );
+
   tools.push(
     onPrint ? (
       <button key="print" type="button" onClick={() => { shut(); onPrint(); }} {...box(...words.print, <Export size={22} weight="regular" aria-hidden="true" />)} />
@@ -249,9 +271,13 @@ export default function KeeperTools({
     )
   );
 
-  tools.push(
-    <button key="edit" type="button" onClick={() => { shut(); onEdit(); }} {...box(...words.edit, <Pencil size={22} weight="regular" aria-hidden="true" />)} />
-  );
+  // A room rather than an action, which is why it is last: the two above it
+  // do something to the page you are looking at and this one leaves it.
+  if (words.settings) {
+    tools.push(
+      <Link key="settings" href="/settings" {...box(...words.settings, <GearSix size={22} weight="regular" aria-hidden="true" />)} />
+    );
+  }
 
   // Sent by left the correction on 2026-09-16 and is its own door now. It was
   // a field among fifteen others, which meant saying who gave you a record —

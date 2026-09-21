@@ -2,70 +2,64 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 'use client';
 import { useState } from 'react';
-import { fonts } from '../../../library/sitewide_visuals';
 import CommentThread from './CommentThread';
 import NewCommentForm from './NewCommentForm';
 
-// Everything behind the little speech bubble: the count, the thread it folds
-// open, and the form you post from — which unfolds in place rather than
-// floating over the page. See the note by it. It lived inside TrackThread until the
-// album notes needed the same thing — copying it would have meant two places
-// to keep in step, and the whole point is that commenting on the album feels
-// identical to commenting on a track.
+// Everything behind the way in at the end of a note: the count, the thread it
+// folds open, and the form you post from — which unfolds in place rather than
+// floating over the page. It lived inside TrackThread until the album notes
+// needed the same thing; copying it would have meant two places to keep in
+// step, and the whole point is that commenting on the album feels identical to
+// commenting on a track.
 //
 // `trackIndex` is what the comment is attached to: 0…n for a track, -1 for the
 // album as a whole. That -1 is not a new convention — save_comment has always
 // written it for a comment that names no track, and the moderation inbox
 // already reads `track_index >= 0` to decide whether to print "· track 4".
 // Nothing on the page had ever asked for the bucket, so nothing showed it.
-
-// Quiet text, the same language the actions inside a thread already speak
-// (↑ 0 / reply / collapse). A pill read as a button and pulled the eye away
-// from the writing, which is the thing on this page worth looking at.
-const quietAction = {
-  fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.1em',
-  textTransform: 'uppercase', color: 'var(--ink-faint)',
-  background: 'none', border: 'none', padding: 0, cursor: 'pointer',
-};
-
-export default function CommentBubble({ slug, trackIndex, comments = [], label, onRefresh }) {
+//
+// ── Everything here used to be written inline ─────────────────────────────
+// Rebuilt 2026-09-21. Miyel: "the comments — I feel like they are so outdated,
+// the box is old, it's a thing that has not been touched since we have
+// basically designed every new aspect of this site." It was the last corner of
+// the entry carrying its own style objects, and what they described was a
+// site that no longer exists: a hand-drawn speech bubble, a frosted panel with
+// a 14px radius, a filled accent button with its text colour in hex. The
+// styles are .ln-say-* in entry.css now, with the reasoning beside them.
+export default function CommentBubble({ slug, trackIndex, comments = [], onRefresh }) {
   // Comments are simply there. Hiding them behind a control was solving a
   // volume problem this site doesn't have, and it's what made an approved
   // comment look like it had never posted.
   const [showComments, setShowComments] = useState(true);
   const [composing, setComposing] = useState(false);
   const count = comments.length;
+  const open = count > 0 && showComments;
 
   return (
     <>
-      {/* The way in, at the end of the note you've just read. With comments it
-          carries the count and folds the thread; with none it carries a plus
-          and unfolds the form.
+      {/* The way in, at the end of the note you have just read. With comments
+          it carries the count and folds the thread; with none it is the
+          invitation, and pressing it opens the form.
 
-          The spacing here is deliberate and easy to undo by accident: it sits
-          6px under the note, and only spaces itself away from what follows
-          when a thread is actually open below it. Given its own margins it
-          stacked three gaps — above, below, and the track's own padding — for
-          a mark 16px tall, which cost 33px on every track. */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: count > 0 && showComments ? '16px' : '0' }}>
+          A word rather than the drawn bubble and a number that stood here for
+          a year: a control is the mark or it is the word, and this site has no
+          other hand-drawn glyph left in it. The count is in the word, so the
+          row says what pressing it will do instead of leaving you to read a
+          numeral beside a picture. */}
+      <div className={'ln-say-way' + (open ? ' ln-say-way--open' : '')}>
         <button
+          type="button"
+          className="ln-word"
           onClick={() => (count > 0 ? setShowComments(v => !v) : setComposing(true))}
+          aria-expanded={count > 0 ? showComments : undefined}
           aria-label={count === 0 ? 'Add the first comment' : showComments ? 'Hide comments' : 'Show comments'}
-          style={{
-            display: 'flex', alignItems: 'center', gap: '4px',
-            background: 'none', border: 'none', padding: 0, cursor: 'pointer',
-            color: count > 0 && showComments ? 'var(--ink-soft)' : 'var(--ink-faint)',
-          }}
         >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
-          </svg>
-          <span style={{ fontFamily: fonts.mono, fontSize: '10px' }}>{count > 0 ? count : '+'}</span>
+          {count === 0 ? 'Comment' : count === 1 ? '1 comment' : `${count} comments`}
         </button>
       </div>
 
-      {count > 0 && showComments && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '16px' }}>
+      {open && (
+        <div className="ln-says">
           {comments.map(c => (
             <CommentThread key={c.id} comment={c} slug={slug} onReplyPosted={onRefresh} />
           ))}
@@ -73,12 +67,15 @@ export default function CommentBubble({ slug, trackIndex, comments = [], label, 
       )}
 
       {/* Only at the foot of an open thread, where you land having read it. An
-          empty track already has its way in on the emblem above, and repeating
-          it here would put a second control on every track with nothing to
-          show. */}
-      {count > 0 && showComments && (
-        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-          <button onClick={() => setComposing(true)} style={quietAction}>+ comment</button>
+          empty track already has its way in on the row above, and repeating it
+          here would put a second control on every track with nothing to show.
+          It stands down while the form is open, because the form is what it
+          opens and a button that does nothing is worse than no button. */}
+      {open && !composing && (
+        <div className="ln-say-way">
+          <button type="button" className="ln-word" onClick={() => setComposing(true)}>
+            Add one
+          </button>
         </div>
       )}
 
@@ -94,35 +91,18 @@ export default function CommentBubble({ slug, trackIndex, comments = [], label, 
           stays where it was and stays readable. The page grows and you can
           scroll, which is what a page does. */}
       {composing && (
-        <div
-          style={{
-            marginTop: '10px', marginBottom: '16px',
-            padding: '16px',
-            background: 'var(--panel)',
-            backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
-            border: '1px solid var(--border)', borderRadius: '14px',
-            animation: 'cb-unfold 0.24s ease both',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '12px', marginBottom: '12px' }}>
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-faint)', marginBottom: '4px' }}>Add a comment</div>
-              {/* What you're answering — a track name, or the album's own
-                  title when the bubble belongs to the album notes. */}
-              <div style={{ fontSize: '13px', color: 'var(--ink-soft)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</div>
-            </div>
-            <button
-              onClick={() => setComposing(false)}
-              aria-label="Close"
-              style={{ ...quietAction, fontSize: '13px', lineHeight: 1, padding: '2px 4px' }}
-            >
-              ✕
-            </button>
-          </div>
+        <div className="ln-say-form">
+          {/* No heading over it. It said ADD A COMMENT and then the name of the
+              track — two lines telling you what you had just pressed and which
+              song you were already looking at. Miyel, 2026-09-21: "take away
+              'add a comment' and also song title, we know what song we're on,
+              that's extra bulk." The form opens under the note it answers, and
+              where a thing opens is what it is about. */}
           <NewCommentForm
             slug={slug}
             trackIndex={trackIndex}
             onPosted={() => { setComposing(false); setShowComments(true); onRefresh(); }}
+            onLeave={() => setComposing(false)}
           />
         </div>
       )}

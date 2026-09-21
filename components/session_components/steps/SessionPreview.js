@@ -131,7 +131,7 @@ export default function SessionPreview({
           The editing bar, borrowed. When you open a correction on a real
           entry, the two things you can do with it sit on a solid band at the
           bottom of the page with a hairline over them — Save and Cancel, as
-          .ln-pin buttons. This is the same moment wearing different words,
+          .ln-word buttons. This is the same moment wearing different words,
           so on 2026-09-18 it became the same bar: "maybe we can mimick the
           edit screen for preview… unlike edit being cancel and save it will
           be go back and save to journal."
@@ -147,14 +147,16 @@ export default function SessionPreview({
           away, and going back to the session throws nothing away at all. The
           words have to differ because the acts do.
 
-          No glyphs, which is where this differs from the bar it borrows.
-          Editing an entry is a thing you can be in the middle of and stop,
-          so a tick and a cross on that bar are two shapes you learn once and
-          then read at a glance. This bar has one of each state and you meet
-          it at the end of a listen, having read a whole entry to get here —
-          the words are what you want, and a glyph beside two of them is one
-          more thing on a screen already full of somebody's writing. Miyel
-          took them off one at a time, 2026-09-18. */}
+          No glyphs. This bar led on that and the borrowed one followed: the
+          argument for taking them off here was that you meet this screen at
+          the end of a listen, having read a whole entry to get to it, and a
+          glyph beside two words is one more thing on a screen already full of
+          somebody's writing. Miyel took them off one at a time, 2026-09-18.
+          The editing bar kept its tick and cross for two more days on the
+          grounds that a correction is a thing you can be in the middle of and
+          stop, so two shapes learned once read faster than words. On
+          2026-09-20 the pills went and the glyphs went with them, and the
+          bars are once again identical. See .ln-word in entry.css. */}
       <div className={'ses-preview-bar' + (saved ? ' ses-preview-bar--done' : '')}>
         {!saved ? (
           <>
@@ -165,7 +167,7 @@ export default function SessionPreview({
                 three borrowed controls reading as a toolbar that follows you
                 everywhere. */}
             <span className="ln-editing-label">Previewing</span>
-            <button type="button" className="ln-pin" onClick={onBack} disabled={saving}>
+            <button type="button" className="ln-word" onClick={onBack} disabled={saving}>
               Go back
             </button>
             {/* Disabled rather than absent while the record is untouched. A
@@ -181,7 +183,7 @@ export default function SessionPreview({
                 a record you opened and never touched becoming an entry. */}
             <button
               type="button"
-              className="ln-pin ln-pin--on"
+              className="ln-word ln-word--on"
               onClick={doSave}
               disabled={saving || !hasWriting}
             >
@@ -192,9 +194,9 @@ export default function SessionPreview({
           <>
             <span className="ln-editing-label">Saved</span>
             {savedEntry?.slug && (
-              <a href={`/entries/${savedEntry.slug}`} className="ln-pin ln-pin--on">Read it</a>
+              <a href={`/entries/${savedEntry.slug}`} className="ln-word ln-word--on">Read it</a>
             )}
-            <button type="button" className="ln-pin" onClick={onAnother}>Log another</button>
+            <button type="button" className="ln-word" onClick={onAnother}>Log another</button>
           </>
         )}
       </div>

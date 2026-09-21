@@ -68,9 +68,9 @@
   min-height: 58px;
 }
 /* The bar behind the fixed header once the page has scrolled: the page
-   colour, flush, ending on the same 80px line every page clears, with one
-   hairline under it. A fade used to do this and dissolved the covers into
-   the logo; an edge is what a header is. z-index -1 puts it behind this
+   colour, flush, ending on the same 80px line every page clears. A fade used
+   to do this and dissolved the covers into the logo; it then had a hairline
+   under it for five days, and that came off too (2026-09-20). z-index -1 puts it behind this
    row's own logo/tools/toggle, while the row's stacking context keeps it
    above the page. translateZ(0) forces it onto its own compositing layer —
    the archive grid's tiles carry a perspective and would paint over an
@@ -87,7 +87,8 @@
   opacity: 0;
   transition: opacity 0.22s ease;
   background: var(--bg);
-  border-bottom: 1px solid var(--border);
+  /* And none here either, so the two headers are one header — see the note
+     over .hn-bar--scrolled. */
   transform: translateZ(0);
   will-change: opacity, transform;
 }
@@ -134,8 +135,15 @@
 .sitenav-side { display: flex; align-items: center; gap: 2px; min-width: 0; }
 /* Nothing in it. It is a spacer that keeps the mark on the middle of the row
    now that the tools have gone to the other end. */
-.sitenav-side--left { justify-content: flex-start; }
-.sitenav-side--right { justify-content: flex-end; }
+/* ── Each side in its own column, 2026-09-20 ──────────────────────────────
+   Named columns rather than left to fall where they land. The mark stopped
+   being drawn on every page but entries yesterday, and the middle column it
+   was filling did not stop existing — so on a page with tools and no mark
+   the two children auto-placed into columns one and two, and the tools sat
+   in the middle of the row. It showed the moment the feed put a control up
+   here; the person's page had been doing it since the mark came off. */
+.sitenav-side--left { justify-content: flex-start; grid-column: 1; }
+.sitenav-side--right { justify-content: flex-end; grid-column: 3; }
 /* An open ··· takes the row. Three tools and a door reach further back than
    28px of padding leaves, and the mark is what they reach into — so it goes
    while they are out, rather than being drawn on top of. KeeperTools puts the
@@ -636,11 +644,21 @@
   pointer-events: none;
 }
 .hn-bar > * { pointer-events: auto; }
-/* The wall begins one screen down, which is exactly where the bar is, and
-   the bar is opaque now: without this the first row of covers starts under
-   it. The same height the bar has, so the first row clears it on a notch
-   phone as well as a flat one. */
-.hn-under .arc-main { padding-top: calc(var(--hn-bar-h) + 16px); }
+/* ── The wall starts under the bar, not a bar further down, 2026-09-20 ──
+   This was a bar's height plus sixteen, on the reasoning that the wall
+   begins one screen down, which is exactly where the bar is, and the bar is
+   opaque — so without it the first row of covers starts underneath it.
+
+   That reasoning was overtaken by .hn-floor--wall's scroll-margin-top, which
+   stops the snap a bar's-worth short so the floor comes to rest *below* the
+   bar rather than behind it. Both were clearing the same bar, so the wall
+   came to rest with ninety-six pixels of nothing above its first row —
+   Miyel: "clicking the caret leaves a strange gap, it should bring the
+   albums all the way up to the top of the header."
+
+   Eight, which is the gap between the covers themselves: the first row sits
+   off the header by the same air that sits between it and the second. */
+.hn-under .arc-main { padding-top: 8px; }
 
 /* The strip you tap to go back to the top of a pane. Invisible on purpose:
    the band behind this row already appears when a pane is scrolled, so the
@@ -669,11 +687,87 @@
    screen together. translateZ(0) is not decoration — the archive tiles carry
    a perspective and are on their own compositing layers, which paint over an
    unpromoted bar no matter what its z-index says. */
+/* ── No rule under it, 2026-09-20 ─────────────────────────────────────────
+   Miyel: "do we even need the hairline?" It replaced a fade on 2026-09-15 on
+   the grounds that a fade is a smear and an edge is what a header is — and
+   the header has since become a thing with a name in the middle of it and a
+   control at the end, which says header without a line having to. What the
+   line was doing beyond that is marking where content goes under the bar,
+   and the bar is the page colour, so a cover or a paragraph passing under it
+   simply stops. That is the one thing to look at on a real phone: the wall on
+   the beacon and the writing on the card are what pass under this. */
 .hn-bar--scrolled {
   background: var(--bg);
-  border-bottom: 1px solid var(--border);
   transform: translateZ(0);
 }
+/* ── The header's floor, 2026-09-20 ─────────────────────────────────────
+   The bar's own opaque ground, drawn as a child so it can reach below the
+   80px row. On the beacon the morph writes --ground on it every frame: the
+   foot of the crown at whatever size it currently is, plus a little air. So
+   the header is as tall as the mark in it, everything scrolls *under* it
+   rather than past it, and it collapses onto the row as the mark shrinks.
+
+   Everywhere else it is exactly the bar, which is what it already was. The
+   pane gate matters because this row is one row over all of the panes: a
+   ground measured against the beacon would otherwise hang over the address
+   book's faces on the swipe across.
+
+   It does not take taps. The bar hands pointer events to its children and
+   this one is a floor, not a control — .hn-totop is the tap strip. */
+.hn-bar-ground {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: var(--hn-bar-h);
+  background: var(--bg);
+  pointer-events: none;
+  /* Zero and not auto. An absolutely positioned child paints over a static
+     sibling whatever the order, and the lights are static — so the ground
+     put the moon out on its first evening. Everything in this row that has
+     to be seen sits at 1. */
+  z-index: 0;
+}
+.hn[data-pane="1"] .hn-bar-ground { height: var(--ground, var(--hn-bar-h)); }
+/* Only the static ones need lifting; everything else in this row is absolute
+   already and later in the order, which is enough. Written as names rather
+   than as `> :not(.hn-bar-ground)`, which was a wider net than it looked: it
+   set `position: relative` on the big mark as well and dropped it back into
+   the flex row at the far right.
+
+   **The list is the whole list.** The feed's density toggle was missed for a
+   day because it is only in this row on one floor of one pane, so it is the
+   one you will not see go — and it did go, straight behind the floor, the
+   same way the moon did. Anything put in this row from now on goes here. */
+.hn-lights,
+.fd-dense,
+.hn-bar-tools { position: relative; z-index: 1; }
+
+/* The big mark, drawn by the header rather than by the pane — see the note
+   beside it in HomeNav.js. Centred on the row and placed outright by the
+   morph: `translate(-50%, <top>px) scale(k)`, which is why the origin is the
+   top of its own middle and why there is no `top` here to fight with.
+
+   Only on a phone, and only on the beacon, where the crown it stands in for
+   is. Everywhere else the crown is the mark and this is not drawn at all. */
+.hn-bar-crown {
+  display: none;
+  position: absolute;
+  left: 50%;
+  top: 0;
+  line-height: 0;
+  transform-origin: top center;
+  will-change: transform;
+  pointer-events: none;
+  z-index: 1;
+}
+@media (max-width: 768px) {
+  .hn--morph[data-pane="1"] .hn-bar-crown { display: block; }
+  /* And the crown goes quiet while it does. Not `display: none`: its box is
+     what holds the record where it is, and what the morph measures. */
+  .hn--morph .hn-pane--home .hn-crown-mark { visibility: hidden; }
+}
+
 .hn-bar-mark {
   position: absolute;
   left: 50%;
@@ -782,10 +876,27 @@
   /* The bottom padding is the air under the mark, and half of the gap down to
      the square — --hn-square-top is the other half. Narrowing it walks the
      mark *down* toward the photograph rather than pulling the photograph up
-     to it, which is what keeps everything below where it was put. */
-  padding: env(safe-area-inset-top) 16px 8px;
+     to it, which is what keeps everything below where it was put.
+
+     Widened from 8 to 20 on 2026-09-20 — "move the large beacon logo up just
+     a bit" — which is the surgical version of that: the mark rises by twelve
+     and the box it is in does not change, so the record and everything under
+     it stay exactly where they were put. */
+  padding: env(safe-area-inset-top) 16px 20px;
 }
-.hn-crown-mark { display: block; line-height: 0; }
+.hn-crown-mark {
+  display: block;
+  line-height: 0;
+  /* It travels into the bar on a phone (see the morph in HomeNav.js), so it
+     has to be drawn over the bar's ground rather than under it — and it moves
+     every frame of a drag, which is what will-change is for. Its origin is the
+     top of its own middle: both marks are centred on the pane, so the journey
+     is vertical and the shrink should not drag it sideways. */
+  position: relative;
+  z-index: 96;
+  transform-origin: top center;
+  will-change: transform;
+}
 /* 82px, not 112. This SVG is cropped tight to the glyphs while the PNG it
    replaced carried transparent margin, so the same box height rendered
    smaller letters — 82 here measures out to the letter height the old logo
@@ -827,7 +938,6 @@
 /* The wall as the first screen, on a copy with no beacon. The crown is still
    above it, so it starts where the beacon's art would have and the pane reads
    the same as its neighbours. */
-.hn-under--first { padding-top: var(--hn-square-top); }
 
 /* ── Two floors, on a phone ─────────────────────────────────────────────────
    The entry's shape, in the cross. The pane is the snap container, each floor
@@ -839,9 +949,88 @@
    only, as the entry's two screens are — on a desk the floors are plain
    wrappers in a column that scrolls, and the column is the scroller. */
 @media (max-width: 768px) {
-  /* Home only. It is the pane with a cover, so it is the pane with two
-     floors and a snap; the turning pane is a page and scrolls like one. */
-  .hn-pane--home { scroll-snap-type: y mandatory; }
+  /* ── No vertical snap on these panes at all, 2026-09-20 ────────────────
+     Two goes at this and the phone was right both times.
+
+     `mandatory` was safe while a second floor was exactly one screen tall
+     with its own scroller inside it: two stops, nothing between them, so
+     "must rest on a stop" was always already true. Giving those floors a peek
+     meant taking the inner scroller out, and over a feed five screens deep
+     `mandatory` spent the whole scroll pulling back to the top of it.
+     `proximity` was meant to leave you alone once you were away from the
+     boundary, and on iOS it did not — Miyel: "it still catches in the feed."
+
+     So: nothing. A drag scrolls, the way a long page scrolls, and the way
+     down is the press — which lands exactly and always did. The thing the
+     snap was for is still there without it: the first floor is one screen
+     tall, the peek shows what is under it, and the row above the peek says
+     what that is.
+
+     What it costs: stop halfway and you stay halfway, looking at the foot of
+     one floor and the top of the next. With the peek that is a legible place
+     to be rather than a broken one, which is the whole reason it can go. */
+  .hn-pane--home { scroll-snap-type: none; }
+
+  /* ── How much of a second floor shows under a first ───────────────────
+     One number for both panes that have one, because they are the same
+     idea: the top of the thing below, under a word saying what it is. Not
+     the bar's height on top of it — that is scroll-margin's job now, or the
+     peek would be mostly dead air. See .hn-floor--wall and .hn-floor--feed. */
+  .hn { --hn-peek: 140px; }
+  /* And the wall's bar is not drawn while you are upstairs. It sticks to the
+     bottom of the scrollport, which is exactly where the sliver of covers is,
+     so leaving it there means the peek is a search box for a page you are not
+     on. Faded, not removed: it keeps its 96px of flow the whole time, so
+     nothing jumps when you arrive and it comes back. */
+  .hn-pane--home:not(.hn-pane--inside) .arc-bar-wrap {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .arc-bar-wrap { transition: opacity 0.3s ease; }
+  /* The gaps above the record give up the rest. --hn-square-top is the air
+     between the mark's block and the cover, and it grows with the screen —
+     capped harder here so a tall phone spends the difference on the peek
+     instead. */
+
+  /* ── The beacon's floor clears the band, 2026-09-20 ───────────────────
+     Not a peek — the band's own height and nothing more, so the word and the
+     chevron stand on top of the four doors rather than behind them. A floor
+     of a whole screen put them under the band, which is where the record was
+     before any of this and is fine for a record: nothing of it is lost,
+     because the screen's content is measured from the top. A row at the foot
+     is not fine, because the foot is exactly where the band is. */
+  .hn-pane--home .hn-floor--beacon {
+    height: calc(var(--hn-h) - var(--hn-foot-h));
+    min-height: 0;
+  }
+
+  /* ── And no peek under it, 2026-09-20 ─────────────────────────────────
+     It stopped a peek short for a day, so the top of the wall showed under
+     the chevron the way the feed shows under the book's. Miyel took it back:
+     "bring it back to original positioning and LN. logo size... I don't see
+     teasing of journal on my mobile." Both true at once — the sliver was
+     being paid for by a smaller mark and tighter air above the record, and
+     on a real phone it was not reading as a tease anyway.
+
+     The book keeps its peek. The difference is what is under the fold: a feed
+     is rows, and forty pixels of a row is plainly a row, where the wall's own
+     search bar holds the first 96px of its floor and forty pixels of cover
+     under it was a sliver of a sliver. */
+  /* The snap stops a bar's-worth short, so the wall lands under the mark
+     rather than behind it — and at rest the peek is all wall and no gap. */
+  /* Same, and read by the same press. See the note on .hn-floor--feed. */
+  .hn-floor--wall { scroll-margin-top: var(--hn-bar-h); }
+  /* And the wall stops being a scroller of its own on a phone. It was one so
+     the pane had only two stops; with a sliver of it showing at rest that
+     became a scroller you could reach before arriving at it, and a flick
+     over the peek slid the wall inside its own box while the pane stood
+     still. The floor is a snap area taller than the screen instead, which
+     the snap allows to rest anywhere once it covers the port — the same
+     answer the feed's floor got an hour earlier. */
+  .hn-floor--wall .hn-floor-scroll {
+    height: auto;
+    overflow: visible;
+  }
   .hn-floor {
     /* min-height, not height: a floor is one screen, and on a phone too
        short for everything on it the floor grows and scrolls that overrun
@@ -1031,6 +1220,68 @@
    how it comes. */
 .hn-bar-mark { transition: opacity 0.3s ease 0.16s; }
 .hn--choosing .hn-bar-mark { opacity: 1; }
+
+/* ── And so does the one the bar draws, 2026-09-21 ────────────────────────
+   .hn-crown above is the *pane's* crown. On a phone the big mark is drawn by
+   the bar instead, because the pane paints under it (see .hn-bar-crown and
+   the note beside it in HomeNav.js) — and that copy was never told to stand
+   down. It sat at full strength across the top of a session, over the mini
+   beacon, which is centred on the same 140-odd pixels of the same row. Miyel,
+   2026-09-21: "when starting a session the LN. large logo is on the screen
+   blocking minibeacon."
+
+   It leaves out of the top of the screen and comes back down from it. Miyel,
+   the same day: "i dont like fade outs i think the large LN. should leave out
+   the top of the screen when the minibeacon comes and come back down from top
+   when session ends." It faded for an hour before that, and a fade is the
+   thing this site keeps deciding against: something that goes should have
+   somewhere to have gone.
+
+   ── Why the movement is on the mark and not on its box ──────────────────
+   The morph writes .hn-bar-crown's own transform outright, frame by frame
+   (`translate(-50%, <top>px) scale(k)`), so a transform written here would be
+   overwritten on the next scroll and fight for it in the meantime. The svg
+   inside has no transform of its own, which makes it the free surface: the
+   box goes on being placed by the morph, and the mark goes on riding up out
+   of it. Two transforms, one each, neither in the other's way — which is also
+   why this needs no wrapper and no class to turn a transition on and off.
+
+   The distance is measured off the crown's own height, so a tall phone —
+   which stands the mark further down the screen — still clears the top edge.
+   The 120 is the mark's own height with room to spare.
+
+   0.7s, up from 0.42 on her asking for it slower. Not a new number: it is the
+   one the crown underneath is folding and growing on, and the one the whole
+   pane settles on. The two are the same event seen twice — the pane's copy
+   leaving its place and the bar's copy leaving the screen — and they should
+   not disagree about how long it takes. */
+.hn-bar-crown .hn-crown-svg {
+  /* Coming back: the site's arriving curve, the one the editing bar rises on.
+     Most of the movement early, then it settles into its place rather than
+     stopping in it. */
+  transition: transform 0.7s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.hn--choosing .hn-bar-crown .hn-crown-svg {
+  /* ── Going away, on the leaving curve, first ──────────────────────
+     The sinking curve the editing bar uses: it holds its place for a beat and
+     then sweeps up and out, which is the shape of movement there is any point
+     making slower. The arriving curve is wrong here for the same reason it is
+     right coming back — it spends its first fifth of a second covering most of
+     the distance, so the mark was past the top edge before it looked like it
+     had set off.
+
+     This only works because the record now waits for it. The two movements
+     this press starts travel through the same strip of screen, and on their
+     own clocks they collided: the cover slid through the logo from 220ms to
+     520ms (Miyel, 2026-09-21: "i dont want them overlapping"). The cure is not
+     a faster mark — it is not a race the mark can win by hurrying. It is the
+     cover holding at the card until the mark is clear. MAKE_ROOM_MS in
+     HomeNav.js is that beat, and it is set to where this curve puts the mark's
+     foot past the top of the band the record lands in. Change one and the
+     other has to move. */
+  transition-timing-function: cubic-bezier(0.55, 0, 0.68, 0.53);
+  transform: translateY(calc(-1 * (var(--hn-crown, 200px) + 120px)));
+}
 
 .hn--choosing .hn-pane--home { scroll-snap-type: none; }
 .hn--choosing .hn-pane--home > .hn-floor:nth-of-type(2) { display: none; }
@@ -1235,6 +1486,15 @@
   left: 50%;
   top: calc(env(safe-area-inset-top, 0px) + 10px);
   transform: translateX(-50%);
+  /* In front, for the length of the crossfade the big mark leaves on. This is
+     written after that mark and is absolute like it, which would normally be
+     enough — but it carries an explicit z-index: 1, and an explicit 1 beats a
+     later sibling's auto. So this needs its own. It cannot simply join the
+     .hn-lights list that lifts the static children of this row: that rule also
+     sets position: relative, which on an absolutely placed box is not a lift
+     but a different layout — the note on that list records what it did to the
+     big mark when it caught it. */
+  z-index: 1;
   /* One width, and it is the widest corner's. This has to clear the left
      corner at its widest — which is not the mark but END, the word the mark
      turns into — and it is centred on the screen, so it pays for that on both
@@ -1505,7 +1765,6 @@
 @media (max-width: 768px) { .hn-controls { position: absolute; } }
 /* In the row, not under it. It hung 18px below while the dots were in the
    row with it and it had to clear them; the row holds nothing else now. */
-.hn-controls .edge-caret--down { position: static; transform: none; }
 .hn-controls > * { pointer-events: auto; }
 /* Out of the way while anything is moving. These sit over the page rather than
    beside it, and a wall of album art going past under three static glyphs is
@@ -1517,46 +1776,8 @@
   pointer-events: none;
 }
 
-.edge-caret {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  padding: 0;
-  border: none;
-  background: none;
-  color: var(--ink-faint);
-  cursor: pointer;
-  touch-action: manipulation;
-  transition: opacity 0.25s ease, color 0.2s ease;
-}
-/* The mark speaks and the arrow only points, so the mark carries the ink and
-   the arrow is a hint under it. */
-.edge-caret-mark { opacity: 0.75; }
-.edge-caret-arrow { opacity: 0.4; }
-.edge-caret:hover { color: var(--ink-soft); }
-.edge-caret:hover .edge-caret-mark { opacity: 1; }
-.edge-caret:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 4px; }
-/* Faded in place, keeping its slot. Removing it would slide the other two
-   across to re-centre, moving the control somebody was reaching for. */
-.edge-caret--away {
-  opacity: 0;
-  pointer-events: none;
-}
-/* Down keeps its arrow underneath its mark rather than beside it. It is the
-   one direction the page itself moves in, and a chevron next to the book would
-   read as a fourth pane somewhere off to the right.
-   It used to bob, from when it stood alone in the middle of the screen and had
-   to say "down" on a page that already moved sideways. In a row of three still
-   marks the movement stopped reading as a hint and started reading as one of
-   them being loose — and it put the book five pixels below the other two for
-   most of every cycle, which is the one thing this row is lined up to avoid. */
-.edge-caret--down {
-  flex-direction: column;
-  gap: 2px;
-}
 @media (prefers-reduced-motion: reduce) {
-  .edge-caret--down { animation: none; }
+
   .hn-controls { transition: opacity 0.3s ease; }
   .hn-controls--busy { transform: none; }
 }
@@ -1780,19 +2001,155 @@
 /* The page's measure, like everything else on this face — it had 480px and
    the cross's 34px gutter, which put the feed twelve pixels further in than
    the doors above it on the same scroll. */
-.fd-wrap { width: 100%; max-width: none; margin: 0; padding: 24px var(--page-gutter) 40px; box-sizing: border-box; }
+/* The fallback matters and did not exist: --page-gutter is set on the cross's
+   own faces and nowhere else, so on the feed's standalone address the whole
+   shorthand was invalid and the wrap had no padding at all. Nothing showed it
+   while the row at the top was two centred tabs — a heading that reaches for
+   both edges shows it at once. 24px is .fr-body's number, and it leaves the
+   320px cover exactly where it already sat. */
+.fd-wrap { width: 100%; max-width: none; margin: 0; padding: 24px var(--page-gutter, 24px) 40px; box-sizing: border-box; }
 /* On a phone the floor starts under the bar, the way the writing under the
    card does. */
 .hn-floor-scroll .fd-wrap { padding-top: calc(var(--hn-bar-h) + 24px); }
-.fd-views { display: flex; justify-content: center; gap: 22px; margin-bottom: 18px; }
-.fd-view {
-  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
-  color: var(--ink-faint); background: none; border: 0; border-bottom: 1px solid transparent;
-  padding: 4px 0; cursor: pointer;
+/* ── The density toggle ────────────────────────────────────────────────────
+   One control, and it lives in whatever header the screen already has: the
+   cross's bar on a phone, SiteNav's right-hand slot at the feed's own
+   address. It had a row of its own under the bar until 2026-09-20 — the
+   feed's name on the left, this on the right, on a rule — and Miyel took it
+   off: "it's also giving a false header, it's outside true header." A second
+   bar a little way below the first is a page claiming a heading it has not
+   got, and there was already a header up there with a hairline under it.
+
+   No ground and no border of its own: it is sitting in a row that has both.
+   The colour is the lights' colour beside it, because the two are now the
+   same kind of thing — one small control in a corner. */
+.fd-dense {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 4px; border: 0; background: none; cursor: pointer;
+  color: var(--ink-faint);
+  transition: color 0.18s;
 }
-.fd-view:hover { color: var(--ink-soft); }
-.fd-view--on { color: var(--ink); border-bottom-color: var(--ink); }
+.fd-dense:hover { color: var(--ink-soft); }
+.fd-dense:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 2px; border-radius: 7px; }
+/* ── The floor's name in the bar ──────────────────────────────────────────
+   The caption face at the size and tracking the address book's own title
+   carries, because the two are the same object one floor apart.
+
+   In the middle (Miyel, 2026-09-20: "it can stick right in the middle"), by
+   the same geometry the small mark uses — absolute, half across, centred on
+   the 58px row rather than on the band, which is taller by the notch
+   allowance. Out of the flex flow entirely, so it cannot move the toggle at
+   the end of the row whatever length the word is, and it takes the middle on
+   the one pane where the mark is not drawn.
+
+   Nothing to press: the invisible strip that takes you back to the top of a
+   pane fills this row, and a word sitting on the middle of it would be a dead
+   spot in the one place a thumb lands. */
+@keyframes hn-say-in { from { opacity: 0; } to { opacity: 1; } }
+.hn-bar-say {
+  position: absolute;
+  left: 50%;
+  /* The middle of the 58px row inside the band. It followed a word climbing
+     up from the floor above for an hour; that word is a chevron now, so this
+     is not the same object arriving, it is a name appearing once you are
+     somewhere — which is what the fade is for. */
+  top: calc(22px + var(--safe-top) + 29px);
+  animation: hn-say-in 0.22s ease both;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  font-family: var(--font-label);
+  font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+  /* The quiet end of the ink, like the toggle at the other end of the row. */
+  color: var(--ink-faint);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* Room between it and the sun, when both are there. On the pane it actually
+   appears on the lights are hidden, so the gap goes on the lights rather than
+   on this — put it here and the glyph sits ten pixels short of the edge every
+   other thing in this row lines up with. */
+.hn-bar .fd-dense + .hn-lights { margin-left: 10px; }
+
+/* ── A record you both have ────────────────────────────────────────────────
+   A thin gold rule round the art, in both densities. It is the one thing in a
+   feed you can act on that is worth spotting without reading — and reading is
+   what scrolling past six rows a screen does not leave time for. `outline`
+   rather than a border so it does not take a pixel off the art or move
+   anything beside it; `outline-offset: -1px` keeps it inside the corner
+   radius instead of drawing a square round a rounded picture. */
+.fd-art--shared {
+  outline: 1.5px solid var(--gold);
+  outline-offset: -1px;
+}
+
+/* ── Rows ──────────────────────────────────────────────────────────────────
+   Six to a screen: the art at 56, the name over its line of meta, and the
+   stars and marks at the right. Her brief, 2026-09-20. */
+.fd-rowwrap { border-bottom: 1px solid var(--border); }
+/* ── Back to the ring on the art, 2026-09-20 ───────────────────────────────
+   Three treatments were tried in an evening — the ring on the art, a ring
+   round the whole row, the row lifted onto a ground — and Miyel took the
+   first: "it was simple and works."
+   
+   Which settles the argument the other two were about. The objection to gold
+   was that it is the star colour and so says *rating* — true of a rule
+   running the length of a row beside five stars, and not true of a ring round
+   a picture, where it is plainly about the picture and the record in it. A
+   ring is also the one of the three that is the same idea in both densities:
+   56px of art or 300px of it, the mark is the same mark. */
+.fd-rowwrap:last-child { border-bottom: 0; }
+.fd-row {
+  display: flex; align-items: center; gap: 12px;
+  /* No side padding: the ring is round the art now and needs no room of its
+     own, and those twenty pixels are twenty the meta line does not have to
+     give to an ellipsis. */
+  padding: 11px 0;
+  text-align: left;
+}
+.fd-row-art {
+  flex: 0 0 auto; width: 56px; height: 56px;
+  border-radius: 8px; overflow: hidden;
+  background: var(--panel); display: block;
+}
+.fd-row-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* min-width: 0 the whole way down, or the meta refuses to shrink and pushes
+   the stars off the end — the rule this stylesheet has learned twice. */
+.fd-row-words { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.fd-row-album {
+  font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
+  /* 14, down from 16, Miyel 2026-09-20: "quite large". It was the full view's
+     size brought over unchanged, and the full view gives a record most of a
+     screen — at six rows to a screen the name is a label rather than a title,
+     and 16px bold beside a 10.5px meta line was a heading with a caption
+     under it. It still leads: bold display face against a mono caption four
+     steps smaller says which is which without needing the size to say it
+     twice. */
+  font-size: 14px; line-height: 1.25; color: var(--ink); text-decoration: none;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.fd-row-album:hover { text-decoration: underline; text-underline-offset: 3px; }
+.fd-row-meta {
+  font-family: var(--font-label);
+  /* No tracking. The caption face carries 0.14em almost everywhere on this
+     site and it is worth 20px of a line that is already being cut short. */
+  font-size: 10.5px; letter-spacing: 0;
+  color: var(--ink-faint);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.fd-row-marks { flex: 0 0 auto; display: flex; align-items: center; gap: 5px; }
+/* Kept as a name even though it is now the only shape the control has: every
+   place that draws it says which it means, and the day one of them wants
+   something else this is the hook that is already there. */
+.fd-compare--mark { padding: 2px; }
+
+
 .fd-list { display: flex; flex-direction: column; gap: 52px; }
+/* Rows carry their own rule and sit against each other, so the gap between
+   records is the tall version's alone. Written here rather than up with the
+   other row rules because it has to come after the line above, which has the
+   same weight — a habit this stylesheet is on its third lesson about. */
+.fd-list--rows { gap: 0; }
 /* The record, large and centred, the words under it: the shape an entry's
    first screen has. No box — the art is the tile, with the square's own
    shadow, and everything under it is simply large, because a feed item
@@ -1825,18 +2182,152 @@
 }
 .fd-face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .fd-when { color: var(--ink-faint); }
-.fd-compare { margin-top: 18px; font-size: 11px; padding: 9px 22px; }
-.fd-panel { margin: 18px 0 0; width: 100%; box-sizing: border-box; text-align: left; padding: 14px 16px; border: 1px solid var(--border); border-radius: 14px; background: var(--panel); }
-.fd-panel-scores { display: flex; flex-wrap: wrap; gap: 18px; font-family: var(--font-label); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-soft); }
-.fd-panel-scores b { color: var(--ink); font-weight: 600; }
-.fd-panel-gap { color: var(--ink-faint); }
-.fd-horizons { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
-.fd-horizon-label { font-family: var(--font-label); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); }
-.fd-horizon { display: flex; align-items: flex-end; gap: 2px; height: 24px; }
-.fd-horizon span { flex: 1 1 0; background: var(--ink-faint); border-radius: 1px; min-height: 2px; opacity: 0.8; }
-.fd-horizon--mine span { background: var(--ink); opacity: 1; }
-.fd-panel-note { font-size: 13px; color: var(--ink-soft); margin: 12px 0 0; }
-.fd-panel-note a { color: var(--ink); }
+/* ── The compare mark ──────────────────────────────────────────────────────
+   A glyph and nothing else, 2026-09-20. It is only ever drawn on a record you
+   also have, so its being there is the announcement — the word under it was
+   saying the same thing a second time. Quiet at rest and in ink while the
+   comparison is open, which is the only state it has. */
+.fd-compare {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 2px;
+  border: 0; background: none; cursor: pointer;
+  color: var(--ink-faint);
+  transition: color 0.18s;
+}
+.fd-compare:hover { color: var(--ink-soft); }
+.fd-compare svg { transition: transform 0.32s cubic-bezier(0.22, 0.61, 0.36, 1); }
+/* A quarter turn, so the arrows point down at the thing that has opened
+   (Miyel, 2026-09-20: "should point down towards horizons not left"). Half a
+   turn only sent them the other way along the same line, which says nothing.
+   The glyph turns; the word under it does not, because it is leaving. */
+.fd-compare.fd-compare--open { color: var(--ink); }
+.fd-compare.fd-compare--open svg { transform: rotate(90deg); }
+.fd-compare:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 2px; border-radius: 8px; }
+/* ── The compare, opened ───────────────────────────────────────────────────
+   Theirs, the distance, yours, your stars, and the way to both entries. No
+   panel round it: it opens underneath a record on a page with no boxes on it,
+   and a card here would make the comparison a separate object from the thing
+   being compared. (Miyel's reference, 2026-09-20.) */
+/* ── It opens, and then the horizons rise ──────────────────────────────────
+   Miyel, 2026-09-20: "make sure the window is open fully before they rise."
+   Two movements in order, not one on top of the other — the panel unfolds and
+   pushes the feed below it down, and only once it has stopped moving do the
+   bars leave the baseline. Bars growing inside a box that is itself still
+   growing is two things moving in the same direction at once, and neither
+   reads.
+
+   260, against a panel measured at 225 on a phone once *Your copy* came off
+   the foot of it: near the real height and
+   not wildly above it, which is the rule this stylesheet keeps everywhere it
+   caps a max-height (see .fr-doors, .fd-add-acts). The height is bounded by
+   design — the bars are a fixed 64 whatever the record — so the only things
+   that move it are the star row and the link under it. */
+.fd-cmp {
+  width: 100%; margin: 16px 0 0;
+  overflow: hidden;
+  animation: fd-cmp-open 0.34s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+@keyframes fd-cmp-open {
+  from { max-height: 0; opacity: 0; }
+  to   { max-height: 260px; opacity: 1; }
+}
+/* ── And the same two movements, read backwards ────────────────────────────
+   Miyel, 2026-09-20: "reverse animation and close for closing compare, it
+   just disappears the way it is now." Opening is the panel and then the bars
+   into it; closing is the bars down and then the panel after them. The key
+   stays in the page for the length of it — see SHUT_MS in Feed.js — because
+   a thing that has been unmounted has nowhere to close.
+
+   Nothing in it can be pressed on the way out: it is already gone as far as
+   the page is concerned, and a control that answers while it is leaving
+   answers for a row you have closed. */
+/* One movement, not two, 2026-09-20. It was the opening run backwards — bars
+   down, then the panel — and Miyel: "the horizon bars don't need a reversed
+   animation, just the door needs to feel like it closes on them." She is
+   right, and the reason is what the two movements are for. The bars rising is
+   the comparison being made; running it backwards un-makes it, which is not
+   what closing means. Closing is the door. The bars stay exactly as they are
+   and the door comes down over them.
+
+   So: no delay, because there is nothing to wait for, and the bars keep their
+   heights the whole way. `overflow: hidden` on the panel is what does the
+   work — the horizon is not shrinking, it is being covered. */
+.fd-cmp--shutting {
+  pointer-events: none;
+  animation: fd-cmp-shut 0.3s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+@keyframes fd-cmp-shut {
+  from { max-height: 260px; opacity: 1; }
+  to   { max-height: 0; opacity: 0.4; }
+}
+/* Both horizons are drawn the same way up. A mirrored pair reads as a
+   difference chart, and these are two listens, not one difference. */
+.fd-cmp-bars {
+  display: flex; align-items: flex-end; gap: 3px;
+  height: 64px; width: 100%;
+  /* Headroom, so a ♥ over a full-height bar is drawn rather than clipped —
+     the same 13px HorizonChart keeps for the same reason. */
+  padding-top: 13px; box-sizing: content-box;
+}
+/* ── The bars rise ────────────────────────────────────────────────────────
+   Miyel: "can the horizons rise not just appear." They grow out of their own
+   baseline. **All at once** — they were a frame apart, left to right, on the
+   argument that it was the shape of a listen arriving in the order it
+   happened, and she is right that it is not: a horizon is one thing you look
+   at whole, and dealing it out left to right makes it a list being read to
+   you. One listen, one movement (2026-09-20).
+
+   Height is the animated property and the height each bar is going to is on
+   the element, because every one goes somewhere different and a stylesheet
+   cannot hold a number only known at the moment it is drawn. */
+.fd-cmp-bar {
+  flex: 1 1 0; min-height: 4px;
+  position: relative;
+  border-radius: 3px 3px 1px 1px;
+  height: var(--tall);
+  /* Slower than it was, and it waits for the panel. 0.34 is the unfold above;
+     the bars start as it lands and take three quarters of a second over it,
+     which is about the pace of the record falling into the slot on the
+     beacon — this site's one speed for a thing settling into place. */
+  animation: fd-rise 0.72s cubic-bezier(0.22, 0.61, 0.36, 1) 0.34s both;
+}
+@keyframes fd-rise { from { height: 4px; } to { height: var(--tall); } }
+/* A hearted track carries its ♥ above the bar, which is where the horizon
+   draws one everywhere else on this site (HorizonChart). Above, not on: a
+   mark inside the bar is a mark inside somebody's rating. */
+.fd-cmp-bar--loved svg {
+  position: absolute; left: 50%; bottom: 100%;
+  transform: translate(-50%, -2px);
+  color: var(--fav);
+}
+@media (prefers-reduced-motion: reduce) {
+  .fd-cmp, .fd-cmp-bar, .fd-cmp--shutting { animation: none; }
+  .fd-cmp { max-height: none; }
+}
+/* Theirs is the listen you came to look at, so it is the lit one. Yours is
+   the line you are measuring it against and sits back. */
+.fd-cmp-bars--theirs .fd-cmp-bar { background: var(--ink); opacity: 0.92; }
+.fd-cmp-bars--yours .fd-cmp-bar { background: var(--ink-faint); opacity: 0.85; }
+/* The distance, on the rule between the two listens: the shape the beacon's
+   slot already uses, a hairline with one thing sitting on it. */
+.fd-apart {
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+  margin: 14px 0; padding: 0;
+}
+.fd-apart::before {
+  content: ''; position: absolute; left: 0; right: 0; top: 50%;
+  border-top: 1px solid var(--border);
+}
+.fd-apart span {
+  position: relative;
+  padding: 0 12px; background: var(--bg);
+  font-family: var(--font-label);
+  font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.fd-cmp-stars { display: flex; justify-content: center; margin-top: 10px; }
+
 .fd-empty { padding: 40px 0; text-align: center; font-family: var(--font-label); font-size: 11px; color: var(--ink-faint); line-height: 1.9; }
 .fd-empty a { color: var(--ink-soft); }
 
@@ -1852,14 +2343,7 @@
   align-items: center;
   gap: 8px;
 }
-.hp-recent-head {
-  margin: 0;
-  font-family: var(--font-label);
-  font-size: 0.62rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--ink-faint);
-}
+
 .hp-recent {
   display: flex;
   gap: 10px;
@@ -2087,16 +2571,14 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   padding-top: calc(22px + var(--safe-top));
   background: var(--bg);
 }
-.fd-screen .fd-views {
-  position: sticky;
-  top: var(--hn-bar-h);
-  z-index: 99;
-  background: var(--bg);
-  margin: 0;
-  padding: 4px 0 14px;
-}
 
 .hn-foot { display: none; }
+/* And neither is the way down. It belongs to a floor that is one screen tall
+   with another under it, and above 769px there are no floors — the beacon and
+   the wall are one column that scrolls, the way a page does. Its styling
+   lives in the phone block, so without this it would draw here as a bare
+   button between the record and the covers. */
+.hn-down { display: none; }
 @media (max-width: 768px) {
   /* Stated on the cross so the panes can read it: every scroller inside has
      to end above the band rather than under it. */
@@ -2110,6 +2592,20 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
     position: absolute;
     left: 0; right: 0; bottom: 0;
     z-index: 96;
+    /* ── It steps down while the card is being corrected, 2026-09-20 ────
+       One row at the foot of the screen at a time. The editing bar used to
+       be drawn over the band, which is two rows stacked in the same place
+       and one of them four doors out of a correction you have not decided
+       what to do with — and on an entry, which is the shape that bar was
+       borrowed from, there is no band at all. Miyel: "we can have the nav
+       bar leave out the screen down and the edit toolbar come up. When
+       finishing editing that one exits down and the nav bar comes back up."
+
+       .hn is overflow: hidden, so a hundred percent down is off the screen
+       rather than over the band's own ground. The delay is on the way *back*
+       only — see below — so the band waits a beat and follows the bar up
+       instead of crossing it. */
+    transition: transform 0.3s cubic-bezier(0.22, 0.61, 0.36, 1) 0.12s;
     display: flex;
     align-items: stretch;
     justify-content: center;
@@ -2129,6 +2625,26 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
     background: linear-gradient(to top, var(--bg), transparent);
     pointer-events: none;
   }
+  /* Down it goes, with no delay: the bar is on its way up on the same frame
+     and nothing should be in the way of it.
+
+     And again for the send sheet, 2026-09-21 — same rule, different thing
+     standing in the foot of the screen. The cross sizes itself to the part of
+     the window you can see, so a keyboard walks these four doors up until they
+     are sitting in the gap between the sheet and the keys. Miyel: "we need to
+     make the [band] not shown between keyboard and send flow." SendSheet.js
+     puts the class on. */
+  .hn[data-editing] .hn-foot,
+  .hn[data-sending] .hn-foot,
+  .hn--typing .hn-foot { transform: translateY(100%); transition-delay: 0s; }
+
+  /* Except over the book and its feed (Miyel, 2026-09-20). A dissolve is for
+     a floor whose content runs off the bottom edge and should read as
+     continuing — a wall of covers, a record mid-scroll. This pane ends in
+     rows with hairlines between them, and a soft top edge over a hard line
+     is 26px of the last row going grey for no reason anybody can name.
+     Pane 2 is the book; see the constants in HomeNav.js. */
+  .hn[data-pane="2"] .hn-foot::before { display: none; }
   .hn-foot-stop {
     flex: 1 1 0;
     min-width: 0;
@@ -2268,6 +2784,156 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
    the small mark are never on screen together, so it is still one mark. */
 @media (max-width: 768px) {
   .hn-bar:not(.hn-bar--scrolled) .hn-bar-mark { display: none; }
+  /* ── The mark is the beacon's and nobody else's, 2026-09-20 ───────────
+     Miyel: "remove the LN logo from header of all pages except beacon."
+     It showed on the inbox and the book from the start for one evening —
+     the argument was that every page here says what it belongs to — and
+     the answer is that the mark belongs to the *journal*, which is the
+     beacon, and repeating it over the rooms behind it says nothing except
+     that this is still the same website.
+
+     So on a phone the small mark is the beacon's alone, and even there
+     only once the crown has scrolled away. The card gives its own up in
+     the same breath, below. A desk is untouched: it has no band, one page
+     at a time, and the bar's mark is the only one it has. */
+  /* ── One mark, 2026-09-20 ─────────────────────────────────────────────
+     None at all on a phone *while the crown is doing the travelling*, and
+     the crown says so on the cross — without that, a screen where the morph
+     cannot run has a header with nothing in it, which is what "it disappears
+     into nothing" was. Also not while the picker is open. The crown is
+     what arrives in this row now — it travels there as the pane scrolls and
+     stays — so a second copy fading in behind it is the two logos Miyel
+     caught on a slow drag. The picker is the exception because floor one
+     *is* the picker while it is open, so there is no crown to arrive. */
+  .hn--morph:not(.hn--choosing) .hn-bar-mark { display: none; }
+  /* ── And only over the beacon, 2026-09-20 ────────────────────────────
+     Miyel: "remove LN logo from address book. this only lives on beacon
+     and journal." The book's header is its own — ADDRESS BOOK and the count,
+     handed to RECENT LISTENS at the feed — and both of those are drawn on
+     the middle of the row, which is where the mark stands. Two things in one
+     slot is what she was looking at.
+
+     The rule underneath it is that the mark belongs to the journal: the
+     beacon here, an entry on a standalone page (SiteNav.js), and nowhere
+     else. The rooms behind those get their own name in the header instead,
+     which says more than a logo saying this is still the same website.
+
+     A desk is untouched, below: it has no band and one page at a time, and
+     the bar's mark is the only one it has. */
+  .hn:not([data-pane="1"]) .hn-bar-mark { display: none; }
+  /* Three classes deep on purpose: idcard.css has `.ab-card .idc-mark` and
+     is loaded after this sheet, so anything of equal weight written here
+     loses to it whatever the media query says. */
+  .hn-face--card .idc-head .idc-mark { display: none; }
+
+  /* ── The card's tools stay in the header, 2026-09-20 ──────────────────
+     Miyel: "the toolbar needs to stay in the header on scroll." It was the
+     first row of a pane that scrolls, so a screen into the card the only
+     door it has — Edit, Share, and now Settings — was above the window and
+     gone, and the way back to it was to scroll all the way up.
+
+     Sticky was tried first and cannot work: a sticky element is held by its
+     own containing block, which here is the card object, and the card object
+     ends where the writing starts — it would let go a third of the way down
+     the page. The row moves into this bar instead; IdentityCard.js puts the
+     slot here and draws into it. */
+  .hn-bar-tools { display: flex; align-items: center; }
+  /* ── The book's + in the bar, 2026-09-20 ──────────────────────────────
+     The other half of the relay: while the shelf is what you are on, this
+     corner is the book's way of adding somebody; a floor down it is the
+     feed's density toggle. Neither knows about the other — the corner is
+     handed over by the cross, which is the only thing that knows which floor
+     is up (Friends.js puts the slot here, HomeNav puts the class on). */
+  /* Across the row rather than in the flex flow, so the field the + opens
+     has the whole width and the strip that takes you back to the top is not
+     fighting it for space. The name is drawn absolutely on the same row and
+     steps aside while a field is in it (barSays in HomeNav.js). */
+  .hn-bar-add {
+    position: absolute;
+    left: 28px; right: 28px;
+    top: calc(22px + var(--safe-top));
+    height: 58px;
+    display: flex; align-items: center;
+  }
+  .hn-bar-add > .fr-head { flex: 1; min-width: 0; }
+  /* The empty slot lets the row through. It is a box with nothing in it most
+     of the time, and a box with nothing in it still swallows a tap — which
+     here is the tap that takes you back to the top of the pane. */
+  .hn-bar-add .fr-slot { pointer-events: none; }
+  .hn-bar-add .fr-field { pointer-events: auto; }
+  .hn-bar-add .fr-field--gone,
+  .hn-bar-add .fr-field--waiting { pointer-events: none; }
+
+  /* ── A field in a header is a line, not a box, 2026-09-20 ─────────────
+     Miyel: "the search bar feels big and bulky compared to the other title
+     header... it feels so disjointed." It does, and the reason is that the
+     row it drops into holds a ten-pixel caption and it arrives as a panel
+     with a rule round it and forty-four pixels of height — the shape a field
+     wears in a form, on a row that is not one.
+
+     So in the bar it gives all that up and becomes what the row already is:
+     type on the middle of the line, in the caption face, over a hairline
+     that is the only thing left saying it can be written in. The same
+     argument `.ab-prompt-input` makes on the card — the box should be the
+     shape of the sentence, not the shape of a form.
+
+     Sixteen pixels and not the caption's ten: base.css sets every field on a
+     phone to 16 with !important, because Safari zooms the page in on
+     anything smaller and does not reliably zoom back out. The face is what
+     carries the row here, not the size. */
+  /* ── Or a pill, 2026-09-20 ────────────────────────────────────────────
+     "Can I see that search field as a small rounded search pill instead?"
+     So: the site's own field shape at the smallest it goes — a 999px corner,
+     a hairline, the panel ground — sized to the words rather than to the row,
+     and centred in the slot. The line it replaced is one revision back in
+     git if this is not it.
+
+     Narrower than the row on purpose. A field that fills the header is a
+     header that has become a form; one that sits in the middle of it with
+     air either side is a control standing in a header. */
+  .hn-bar-add .fr-field {
+    /* Centred in the slot, which is the row less its two corner buttons —
+       so it sits a little left of where the name it replaces does. Dead
+       centre was tried and the camera ends up inside the pill: a 190px
+       phrase centred on a 375px screen reaches further right than the
+       corner does, and something has to give. The pill gives. */
+    justify-self: center;
+    width: min(250px, 100%);
+    padding: 0 14px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--panel);
+    clip-path: none;
+    transition: border-color 0.15s, opacity 0.22s ease;
+  }
+  .hn-bar-add .fr-field:focus-within { border-color: var(--ink-faint); }
+  /* The page's own face, not the caption's. It was DM Mono for an hour, on
+     the reasoning that the row it sits in is a caption — and a caption face
+     at sixteen pixels is a typewriter in a header (Miyel: "don't like that
+     font"). What makes it belong to the row is that it is a line rather than
+     a box; the letters are the site's. */
+  /* Five and not twelve: this is the small version of the shape, standing in
+     a 58px row with a corner button at either end. It comes out at 33px,
+     which is a pill in a header rather than a field in a form. */
+  .hn-bar-add .fr-field input {
+    padding: 5px 0;
+    text-align: center;
+  }
+  /* Away rather than clipped. The clip was how one field left while the
+     other arrived across a row they shared; with no box round either of
+     them there is no edge for a clip to read as, so they cross by fading —
+     which is also what the name in the middle of this row does. */
+  .hn-bar-add .fr-field--gone,
+  .hn-bar-add .fr-field--waiting { opacity: 0; }
+  /* The book's, and only while you are on the book. Pane 2 is the friends
+     pane; see the constants in HomeNav.js. */
+  .hn:not([data-pane="2"]) .hn-bar-add,
+  .hn--at-feed .hn-bar-add { display: none; }
+  /* The card's, and only while you are on the card. The slot belongs to a
+     pane that stays mounted while you swipe away from it, and a door to
+     somebody's card sitting over the beacon is a door to the wrong page.
+     Pane 0 is the turning pane; see the constants in HomeNav.js. */
+  .hn:not([data-pane="0"]) .hn-bar-tools { display: none; }
 
   /* ── Three panes on the rail ──────────────────────────────────────────
      ID, beacon, desk, and the beacon is where you land. Three was tried once
@@ -2302,6 +2968,157 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .hn-face--card { order: 1; }
   .hn-pane--home { order: 2; }
   .hn-face--desk { order: 3; }
+
+  /* ── Four stops for the keeper, 2026-09-19 ────────────────────────────
+     The desk comes out of the rail and the two rooms behind it take their own
+     places. It is still in the markup and still the spine's second page above
+     769px, where there is no band to reach anything with; here it would be a
+     fourth pane nothing points at.
+
+     `display: none` and not `order: 99`: a pane out of the band's reckoning
+     but still in the flexbox is a screenful of desk you can swipe into and
+     not swipe out of by pressing anything. */
+  .hn--keeper .hn-face--desk { display: none; }
+  /* Friends before the inbox (Miyel, 2026-09-19: "two double levels two not
+     sandwiched"). Two of these panes have a second floor and two do not, and
+     with the inbox third the flat one sat between the two deep ones. The rail
+     reads flat, deep, deep, flat now, so down means the same thing on
+     neighbouring stops.
+
+     The order here and the order of paneRefs in HomeNav are the same list
+     said twice — change one and change the other, or the band's third word
+     walks you to the fourth pane. */
+  .hn-pane--friends { order: 3; }
+  .hn-pane--inbox { order: 4; }
+  /* The same clearance the faces take: under the bar at the top, above the
+     band at the foot. Written here rather than on the pages inside, because
+     it is the cross's furniture they are clearing and those pages have their
+     own addresses where none of it exists. */
+  /* Back to clearing the status bar rather than the whole bar, now that
+     there is no mark drawn over these two to run through. The book gets the
+     difference: about forty pixels, which is most of another row of faces on
+     a tall phone. */
+  .hn-pane--inbox,
+  .hn-pane--friends {
+    padding: calc(36px + var(--safe-top)) 0 calc(var(--hn-foot-h) + 20px);
+    box-sizing: border-box;
+  }
+  /* ── The book's two floors ─────────────────────────────────────────
+     The same machinery the beacon uses, and for the same reason: this is the
+     other pane where down means cover-then-contents — the people, and then
+     what they have been playing.
+
+     The pane keeps none of the padding the inbox does, because a floor is a
+     screen and has to measure one; the padding belongs inside each floor. */
+  .hn-pane--friends {
+    padding: 0;
+    /* None, for the reason written against .hn-pane--home above. */
+    scroll-snap-type: none;
+    /* Inherited from .hn now — the beacon wants the same number. */
+
+    /* The feed takes its gutter from the floor rather than adding a second
+       one. Stated rather than left undefined: an undefined var in a
+       shorthand throws the whole declaration away, which happens to give
+       the right answer here and would stop doing so the day somebody wrote
+       a fallback into .fd-wrap. */
+    --page-gutter: 0px;
+  }
+  /* Short of a screen by the peek, so the feed shows under it. 24px of
+     gutter, .fr-body's own number, so the book is the same width whichever
+     way you reach it. */
+  /* height, not min-height, and this is the one floor on the site where that
+     is right. Everywhere else a floor grows rather than clip what is on it —
+     the beacon's would cut the Send button off the card. Here the thing that
+     would overflow is the shelf, and the shelf is a scroller: it takes the
+     room it is given and the faces that do not fit are behind See all. A
+     floor that grew would push the sliver off the screen, which is the one
+     thing this floor exists to hold in place. */
+  .hn-floor--book {
+    height: calc(var(--hn-h) - var(--hn-peek));
+    min-height: 0;
+    /* Clear of the bar, 2026-09-20. It used to be 36 and the book's own
+       header stood in the rest of it; the header is in the bar now, so what
+       was holding this floor off the band is not on this floor any more. The
+       shelf measures whatever room is left and fits what it can, so the only
+       thing this number has to get right is where the faces start. */
+    padding: calc(var(--hn-bar-h) + 8px) 24px 0;
+  }
+  /* The book fills the floor, which is what makes "as many faces as fit" a
+     question with an answer: the shelf inside it measures the room it is
+     given, and a book at its content's height would be measuring itself. */
+  .hn-floor--book > .fr { flex: 1; min-height: 0; }
+  /* The caret at the foot of the floor, in the flow rather than fixed over
+     it — the cross's own caret lives above the band, which is exactly where
+     the sliver of covers is, and a chevron drawn over somebody's album art
+     is the thing this site takes carets off pages to avoid. */
+  .hn-down {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    /* Tight, because on the beacon this row is the last twelve pixels of a
+       floor that is already full. The book has slack and does not care. */
+    padding: 12px 0 12px;
+    border: 0; background: none; cursor: pointer;
+    color: var(--ink-faint);
+    transition: color 0.15s;
+  }
+  /* ── And it goes once you are going, 2026-09-20 ──────────────────────
+     The caret says there is something below. The moment you have started
+     towards it that is a sentence nobody needs, and it is in the way of the
+     thing it was pointing at. It comes back at the top, where it is an
+     offer again. Faded rather than removed, so the row under it does not
+     jump, and not tappable while it is gone. */
+  .hn-down { transition: opacity 0.18s linear; }
+  .hn--moved .hn-down { opacity: 0; pointer-events: none; }
+  .hn-down:hover { color: var(--ink-soft); }
+  .hn-down:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; border-radius: 6px; }
+  /* ── The chevron, larger, and breathing, 2026-09-20 ──────────────────
+     Miyel: "those down carets on feed and journal can just be larger and bob
+     up and down to show there's more vs having more text." `.hn-down-say` is
+     gone with the words. Eighteen rather than eleven, and four pixels of
+     travel on a slow loop: a mark that moves says there is more that way in a
+     language a word has to spell out, and it was the third line of small caps
+     on a screen that is mostly type. */
+  .hn-down > svg { animation: hn-bob 1.9s ease-in-out infinite; }
+  @keyframes hn-bob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(4px); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hn-down > svg { animation: none; }
+  }
+  /* The book's way down was drawn over the bar for an hour, so the word
+     climbing into the header was not eaten on the way in. There is no word on
+     it now and nothing to carry over, so it goes under the bar like
+     everything else on that floor. */
+  .hn-floor--feed { padding: 0 24px; }
+  /* ── The snap stops a bar's-worth short, 2026-09-19 ───────────────────
+     The first cover has to clear the mark when this floor is snapped to the
+     top, and it used to do that with padding — which meant the same gap sat
+     in the peek at rest, between the caret and the record it points at.
+     `scroll-margin-top` moves the snap position instead of the content: the
+     floor lands with its top a bar's-worth down the screen, and at rest its
+     first cover begins immediately under the caret. The floor above rides up
+     behind the bar's own ground, which is what that ground is for. */
+  /* ── scroll-margin is load-bearing and not dead, 2026-09-20 ───────────
+     It was here for the snap, to stop this floor a bar's-worth short so the
+     first record lands under the mark rather than behind it. There is no snap
+     any more and the property still matters: `goDown` reads it off this
+     element to work out where the press should stop. Delete it and the way
+     down puts a record behind the logo. */
+  .hn-floor--feed {
+    scroll-margin-top: var(--hn-bar-h);
+    /* A breath, so the cover is not welded to the caret in the peek. */
+    padding-top: 12px;
+  }
+  /* Clear of the band, which has a ground of its own and would otherwise
+     cover the last record rather than letting it show through. */
+  .hn-floor--feed .fd-wrap { padding-bottom: calc(var(--hn-foot-h) + 20px); }
+  /* A page drawn inside a pane has no bar of its own to clear and no screen
+     of its own to fill. */
+  .hn-pane--inbox .own-screen--pane,
+  .hn-pane--friends .own-screen {
+    --own-nav-bottom: 0px;
+    min-height: 0;
+  }
   /* Nothing is hidden and nothing is turning. Both of those belong to a spine
      that shows one page at a time; here all three are panes and all three are
      always there, a swipe away. */
@@ -2381,6 +3198,12 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
     overflow-x: hidden;
   }
   .hn-pane { width: auto; min-width: 0; }
+  /* The book has two pages and neither of them is one of these. A desktop
+     reaches the inbox and the address book the way it always has — a door on
+     the desk, opening as a layer over the spine — so the panes the band
+     needs are not drawn at all here. Not hidden with visibility: they mount,
+     they fetch, and a grid would still give them a column. */
+  .hn-pane--inbox, .hn-pane--friends { display: none; }
   .hn-pane--turn { grid-column: 1; }
   .hn-pane--home { grid-column: 2; border-left: 1px solid var(--border); }
   /* The faces pay nothing at either end here: the switch is at the top and
@@ -2411,7 +3234,7 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
      to display: none would take the switch off the desk with the carets. */
   .hn-crown { display: none; }
   .hn-controls { display: contents; }
-  .hn-controls .edge-caret { display: none; }
+
 
   /* The bar belongs to the right page: the mark centred over the band, the
      lights at the page's right edge, and once the wall has scrolled the
@@ -2490,7 +3313,7 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
      cover's baseline, and no line over them — three small covers beside a
      large one say what they are. */
   .hn-band .hp-recent-set { margin-left: auto; align-self: flex-end; flex-shrink: 0; padding-bottom: 4px; }
-  .hn-band .hp-recent-head { display: none; }
+
   .hn-band .hp-recent { gap: 8px; }
   .hn-band .hp-recent-tile { width: 28px; height: 28px; border-radius: 6px; }
   .hn-band .hp-recent-none { font-size: 12px; }
@@ -2503,7 +3326,6 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .hn-under .arc-main { padding-top: 4px; }
   .hn-under .arc-bar-wrap { margin-top: 14px; }
   /* No beacon, no band: the wall is the first thing, under the bar's row. */
-  .hn-under--first { padding-top: var(--hn-bar-h); }
 
   /* ── The colophon face ── the mark, three sentences, Get one, the key and
      the source line, centred on an otherwise empty page and deliberately
@@ -2548,7 +3370,7 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
      cover fills the width, the words under it ranged left. */
   .fd-wrap { padding: 6px var(--hn-gutter) 40px; }
   .hn-floor-scroll .fd-wrap { padding-top: 6px; }
-  .fd-views { justify-content: flex-start; gap: 16px; margin-bottom: 14px; }
+
   .fd-list { gap: 30px; }
   .fd-item { align-items: flex-start; text-align: left; }
   .fd-art { width: 100%; border-radius: 10px; margin-bottom: 10px; box-shadow: 0 8px 22px rgba(0, 0, 0, 0.14); }
@@ -2558,7 +3380,7 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .fd-who { justify-content: flex-start; font-size: 11px; margin-top: 10px; gap: 6px; }
   .fd-face { width: 24px; height: 24px; border-radius: 7px; }
   .fd-compare { margin-top: 10px; }
-  .fd-panel { padding: 10px 12px; }
+  .fd-cmp-bars { height: 52px; }
 }
 
 /* The foot of the pitch pane: the source link, and the way in. Two quiet lines
@@ -2659,6 +3481,25 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
 
    The logo's own height is free: it stands at the bottom of a block taller
    than itself, so 54 to 82 costs the screen nothing. Only the block costs. */
+/* ── Smaller again, to pay for the way down, 2026-09-19 ────────────────────
+   Miyel: "the LN. logo on beacon must become smaller, everything lives higher,
+   then caret has journal and peek at journal." The mark is the top of a block
+   it stands at the bottom of, so both numbers move together: a shorter block
+   walks the mark up the window and brings everything under it up too, and a
+   shorter mark opens the air between it and the record.
+
+   0.23 → 0.17 of the screen, and the logo 82 → 62. Between them that is about
+   a hundred pixels on a phone, which is what the floor gives up to the peek
+   plus the row that names it. The 0.23 note below is kept: it is the reason
+   the number went back up in September, and this is the first thing since
+   then that has been worth spending it on. */
+/* ── And back where it started, 2026-09-20 ────────────────────────────────
+   Both of those went in the same day and both came out the same evening:
+   "beacon — bring it back to original positioning and LN. logo size." 0.13
+   and 0.17 were paying for a sliver of the journal under the chevron, and the
+   sliver was not showing on a real phone anyway. The word and the chevron
+   stay; they cost this screen nothing, because they are a row in its own flow
+   and the floor is a whole screen again. */
 .hn { --hn-crown: clamp(104px, calc(var(--hn-h) * 0.23), 200px); }
 
 /* Two columns and a row under them: the record and its past side by side, the
@@ -2685,6 +3526,28 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
      room for a 240 record, a 16 gap and a 58 column — 314, with air left. */
   padding: calc(var(--hn-square-top) + 14px) 24px 92px;
 }
+/* ── The 92 goes back to the screen on a phone, 2026-09-19 ────────────────
+   It was the room for the caret that floated above the band, and that caret
+   does not exist any more: the way down is a row in the flow at the foot of
+   this floor, and it brings its own air. Nearly the whole of the peek under
+   it is paid for out of this one number; the mark came down in size for the
+   rest, and for the look of the thing.
+
+   Written here rather than up in the phone block with the floor it serves,
+   because the rule above has the same weight and comes later in the file —
+   the two of them are one number stated twice and they have to stay next to
+   each other. On a desk there is no band, no caret and no peek: 92 is just
+   the space under a record, and it stays. */
+/* The 92 under the record is a desk's. On a phone it was the room for a caret
+   that floated above the band, and that caret has not existed since
+   2026-09-19: the way down is a row in this floor's own flow and brings its
+   own air. Kept here rather than up in the phone block, because the rule it
+   overrides has the same weight and comes later in the file — the two are one
+   number stated twice and have to stay next to each other. */
+@media (max-width: 768px) {
+  .hn-pane--home .hn-screen { padding-bottom: 4px; }
+}
+
 /* ── The name is the screen's, not the record column's ────────────────────
    Centred under the art it sat left of the middle of the screen, because the
    art is one of two columns. Miyel, 2026-09-18: "the title should be centred
@@ -2740,12 +3603,88 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
      only as wide as two words would be an underline for them. The words
      stay centred, because .ln-onward already centres its own contents. */
   display: flex;
+  justify-content: center;
   width: 100%;
   max-width: min(100%, calc(100vw - 48px));
-  margin: clamp(12px, calc(var(--hn-h) * 0.032), 26px) auto 0;
+  /* Room over the rule for the top half of the circle that straddles it, on
+     top of the gap the rule wanted anyway. */
+  margin: clamp(46px, calc(var(--hn-h) * 0.075), 62px) auto 0;
   border-top: 1px solid var(--border);
-  padding-top: clamp(14px, calc(var(--hn-h) * 0.026), 22px);
+  /* And the bottom half under it. The circle is taken out of the flow, so
+     this padding is the whole of what the row occupies below the rule —
+     half the circle, which is 36 of 72. */
+  position: relative;
+  padding-top: 36px;
+  min-height: 0;
 }
+
+/* ── The circle on the line, 2026-09-20 ───────────────────────────────────
+   Miyel: "a circle between the hairlines that looks like a button." It sits
+   in the break in the rule the note used to sit in, half above the line and
+   half below, carrying the page's own colour so the rule stops at its edge
+   and starts again the other side — the same trick the note used, at the size
+   of a control rather than a mark.
+
+   A ring is a container and this site's rule is that a control is the mark
+   (DECISIONS, 2026-09-17). The exception is deliberate and it is hers: this
+   is the one thing on the beacon you can press and it was reading as a third
+   caption under a rule. A ring that is a hairline of the same weight as the
+   rule it stands on is the rule making room for it, not a box drawn round a
+   word. */
+.hn-go {
+  /* Out of the flow and hung on the rule: half of it above the line and half
+     below, whatever the row around it is doing. A negative margin was tried
+     first and a flex item's margin is taken into the line it sits on rather
+     than out of it, which left the circle under the rule instead of on it. */
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  /* 72, down from 84 (Miyel, 2026-09-20: "a bit smaller"). It is the one
+     control on this screen and wants to be reachable rather than large — and
+     the two words inside it are 47px at their widest, so the ring can come in
+     twelve pixels and still be a ring round words rather than a ring on
+     them. The row below it takes half of whatever this is. */
+  width: 72px;
+  height: 72px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg);
+  /* The rule stops short of it rather than running into it (Miyel,
+     2026-09-20: "don't make hairlines touch circle"). A ring of the page's
+     own colour twelve pixels out from the edge, which follows the radius
+     because a box-shadow does — so the line ends twelve pixels away on both
+     sides and the circle sits in a gap rather than in a hole it has cut. */
+  box-shadow: 0 0 0 12px var(--bg);
+  transition: border-color 0.15s, transform 0.15s;
+}
+.ln-onward:hover .hn-go,
+.ln-onward:active .hn-go { border-color: var(--ink-faint); }
+
+/* .hn-go-note is gone with the ♪ it dressed — see HomeNav.js. */
+/* Smaller than the line it replaces, because two of them are stacked and the
+   circle is 84 across: 12px at 0.22em ran to 96 for `Start a`. */
+.hn-go-say {
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  line-height: 1.25;
+  /* Soft grey, not full ink (Miyel, 2026-09-20). .ln-onward is full ink
+     because it used to be a bare line of type that had to out-shout two
+     captions beside it; inside a ring nothing is competing with it, and at
+     nine pixels full ink on this ground reads as loud rather than clear. */
+  color: var(--ink-soft);
+  transition: color 0.15s;
+}
+/* It still answers a press. Without this the ring's own words keep their grey
+   while everything else about the control lifts, which is a button going
+   half-bright. */
+.ln-onward:hover .hn-go-say,
+.ln-onward:active .hn-go-say { color: var(--ink); }
 /* The visitor's answer stands in the keeper's slot — same row, same column
    span, and never on screen at the same time as it. Its own margin because it
    is two lines rather than one and the same 38 under a taller object puts it
@@ -2764,7 +3703,9 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
      viewport less this screen's two 24px gutters. */
   width: 100%;
   max-width: min(100%, calc(100vw - 48px));
-  margin: clamp(12px, calc(var(--hn-h) * 0.032), 26px) auto 0;
+  /* Room over the rule for the top half of the circle that straddles it, the
+     same as the keeper's slot takes. */
+  margin: clamp(46px, calc(var(--hn-h) * 0.075), 62px) auto 0;
   /* ── A hairline above it ───────────────────────────────────────────────
      From Miyel's own mock-up of this floor, f6, drawn 2026-09-17. The row
      was arrived at independently two days later — the same two glyphs in
@@ -2780,7 +3721,9 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
      width the line wants: the record's left edge to the right edge of the
      past column. */
   border-top: 1px solid var(--border);
-  padding-top: clamp(14px, calc(var(--hn-h) * 0.026), 22px);
+  /* And the bottom half under it. The circle is out of the flow, so this is
+     the whole of what the row occupies below the rule — half of 72. */
+  padding-top: 36px;
 }
 /* The empty beacon has neither a cover nor a name — it has one quiet line, and
    it spans. */
@@ -2856,27 +3799,9 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
 
    Both slots wear it, because both wear the rule — the keeper's way in and a
    visitor's calling card are one shape at two contents. */
-.hn-pane--home .calling,
-.hn-pane--home .hn-screen > .ln-onward { position: relative; }
-.hn-pane--home .calling::before,
-.hn-pane--home .hn-screen > .ln-onward::before {
-  content: '\266A';
-  position: absolute;
-  top: 0;
-  left: 50%;
-  /* Half its own width to the left and half its own height up, so it is
-     centred on the line however wide the character turns out to be — a
-     phone that substitutes its own font for this one moves nothing. */
-  transform: translate(-50%, -50%);
-  padding: 0 11px;
-  background: var(--bg);
-  color: var(--ink-faint);
-  font-size: 13px;
-  line-height: 1;
-  /* It is a mark on a rule, not a control: a thumb aiming at Start a listen
-     must not land on it, and a screen reader has no use for it. */
-  pointer-events: none;
-}
+/* The ♪ that sat in the break in the rule is gone from both slots now: the
+   keeper's is a ring with two words in it and a visitor's is the keeper's
+   face, and a mark over a mark is a mark explaining one. */
 
 
 /* ── The picker gets the whole screen back ─────────────────────────────────
