@@ -1196,8 +1196,12 @@ export default function HomeNav() {
     // JOURNEY is therefore how far ahead of the wall the shrink begins, not
     // how much scrolling it takes.
     const JOURNEY = 250;
-    // The air between the foot of the mark and the foot of the header.
-    const GROUND = 16;
+    // The air between the foot of the mark and the foot of the header — the
+    // line everything disappears under. Sixteen to begin with and six from
+    // 2026-09-20, on her asking for it closer to the logo: the header should
+    // read as the mark's own ground rather than as a band the mark happens
+    // to be standing in.
+    const GROUND = 6;
     const ground = cross?.querySelector('.hn-bar-ground');
 
     // Measured rather than written down, because every number in it is a
