@@ -40,7 +40,7 @@
 
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Scan } from '@phosphor-icons/react';
+import { Barcode } from '@phosphor-icons/react';
 import QRCode from 'qrcode';
 import AddressCode from './AddressCode';
 import { CODE_QUIET, LEAST_VERSION } from '../../library/code_shape';
@@ -177,10 +177,12 @@ export default function CodeSlot({
               worse than a mark nobody can read. "We can keep it to a QR
               idea."
 
-              So: the four corners a camera puts round a code. It says the
-              same thing at a third of the ink, and there is nothing else on
-              this site wearing it. */}
-          {turned ? backGlyph : <Scan size={14} weight="bold" />}
+              A viewfinder's corners were the next answer and a barcode is
+              the one that stuck — Miyel: "use the Barcode Phosphor icon, it's
+              recognisable." It is: a row of bars is a thing that gets
+              scanned, at any size, with nothing else on this site wearing
+              it. */}
+          {turned ? backGlyph : <Barcode size={14} weight="bold" />}
         </span>
       )}
       {/* The words are added and removed rather than faded, because that is

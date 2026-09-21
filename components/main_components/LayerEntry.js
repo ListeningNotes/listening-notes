@@ -58,7 +58,10 @@ import { tileBoxOf, neighboursOf, handOffNeighbour, arrivingBySwipe, tookASwipe,
 const GROW_MS = 420;
 // How long the exit of a page turn takes; the stylesheet's settling
 // transition on .lay-content is the same number.
-const TURN_MS = 240;
+// Slower from 2026-09-20, on Miyel's read of it in use: "it can be slowed
+// down a little so it reads smoother, like you're really flipping through
+// pages of a book." 240 was quick enough to read as a cut.
+const TURN_MS = 360;
 const GROW_EASE = 'cubic-bezier(0.22, 0.61, 0.36, 1)';
 
 // How far right the pull has to travel before letting go leaves rather than
