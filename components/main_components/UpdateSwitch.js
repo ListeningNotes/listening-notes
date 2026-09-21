@@ -53,7 +53,10 @@ const RING = Array.from({ length: 8 }, (unused, i) => {
 });
 const GIVE_UP_AFTER = 4 * 60 * 1000;
 
-export default function UpdateSwitch({ centered = false, onDone = null }) {
+// `explain` is Settings: the page somebody opens to find out how a thing
+// works, so it says how this one does. Setup says none of it — that it is
+// automatic is the whole of what matters while somebody is still arriving.
+export default function UpdateSwitch({ centered = false, onDone = null, explain = false }) {
   const [state, setState] = useState(null);
   const [watching, setWatching] = useState(false);
   const [landed, setLanded] = useState(false);
@@ -152,6 +155,20 @@ export default function UpdateSwitch({ centered = false, onDone = null }) {
           own Skip, the same one every screen before this has. */}
       {onDone && on && (
         <button type="button" className="usw-go" onClick={onDone}>Next</button>
+      )}
+
+      {explain && (
+        <div className="usw-told">
+          <p>
+            Your journal checks for a new version once an hour and takes it on its own. Nothing to
+            press, and nothing about you is sent anywhere — it reads the same public page anybody can.
+          </p>
+          <p>
+            A big version is the exception. Those are the ones that change how something works, so
+            they wait for you rather than arriving overnight. When one is ready your desk says so,
+            and you take it with the button above.
+          </p>
+        </div>
       )}
     </div>
   );

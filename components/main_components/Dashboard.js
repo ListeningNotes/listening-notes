@@ -179,7 +179,7 @@ export default function Dashboard({ waiting, mark = null }) {
   useEffect(() => {
     fetch('/api/update')
       .then(r => (r.ok ? r.json() : null))
-      .then(d => d?.stalled && setUpdate(d))
+      .then(d => (d?.stalled || d?.major) && setUpdate(d))
       .catch(() => {});
   }, []);
 
@@ -260,9 +260,11 @@ export default function Dashboard({ waiting, mark = null }) {
                 href={update.page}
                 target="_blank"
                 rel="noopener noreferrer"
-                title={`This copy is on ${update.current}; ${update.latest} is out. Press Enable workflow, then Run workflow.`}
+                title={`This copy is on ${update.current}; ${update.latest} is out.`}
               >
-                This copy has stopped updating itself &#8599;
+                {update.major
+                  ? 'A big version is ready for you'
+                  : 'This copy has stopped updating itself'} &#8599;
               </a>
             </>
           )}

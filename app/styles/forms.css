@@ -1939,3 +1939,10 @@ a.pn-item-album:hover { text-decoration: underline; text-underline-offset: 3px; 
   font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
 }
 .usw--centered .usw-go { align-self: center; }
+
+/* What Settings says and setup does not: how the thing works, and which
+   version will wait to be asked for. */
+.usw-told { display: flex; flex-direction: column; gap: 10px; margin-top: 2px; }
+.usw-told p {
+  margin: 0; font-size: 13px; line-height: 1.7; color: var(--ink-soft); max-width: 58ch;
+}
