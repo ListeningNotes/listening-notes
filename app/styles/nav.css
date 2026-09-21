@@ -876,8 +876,13 @@
   /* The bottom padding is the air under the mark, and half of the gap down to
      the square — --hn-square-top is the other half. Narrowing it walks the
      mark *down* toward the photograph rather than pulling the photograph up
-     to it, which is what keeps everything below where it was put. */
-  padding: env(safe-area-inset-top) 16px 8px;
+     to it, which is what keeps everything below where it was put.
+
+     Widened from 8 to 20 on 2026-09-20 — "move the large beacon logo up just
+     a bit" — which is the surgical version of that: the mark rises by twelve
+     and the box it is in does not change, so the record and everything under
+     it stay exactly where they were put. */
+  padding: env(safe-area-inset-top) 16px 20px;
 }
 .hn-crown-mark {
   display: block;
