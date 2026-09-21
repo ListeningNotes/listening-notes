@@ -676,7 +676,20 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
         + (arrival.swiped === 1 ? ' lay--from-right' : arrival.swiped === -1 ? ' lay--from-left' : '')
         + (over ? ` lay--over-${over}` : '') + (settling ? ' lay--settling' : '') + (pulled ? ' lay--dragging' : '')}
       ref={sheetRef}
-      style={pulled ? { transform: `translateY(${dragY}px)` } : undefined}
+      /* --lay-shift is how far the leaf has been dragged sideways, said here
+         so that things outside the content can travel with it. The record in
+         the header is the one that wants it: in the reading state it is part
+         of the page, and it stood still while the writing left — Miyel,
+         "think of it as one unit, one page; one page leaves while the other
+         comes in, but the card remains locked in."
+
+         Undefined when there is nothing to say, rather than an empty object:
+         this attribute is shared with two properties the keyboard writes
+         imperatively, and React clears what it has written before. */
+      style={(shift !== 0 || pulled) ? {
+        ...(shift !== 0 ? { '--lay-shift': `${shift}px` } : null),
+        ...(pulled ? { transform: `translateY(${dragY}px)` } : null),
+      } : undefined}
       role="dialog"
       aria-modal="true"
       aria-label={label}

@@ -1362,7 +1362,16 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
      every frame, so holding your thumb still holds the handover still, half
      a mark above half a record (Miyel: "that's how closely I'm looking at
      it"). This is the state before any of that is written. */
-  .ln-crown { clip-path: inset(0 0 100% 0); }
+  .ln-crown {
+    clip-path: inset(0 0 100% 0);
+    /* Two authors. The collapse writes --ln-slot, which is how far down the
+       slot the record still is; the sheet writes --lay-shift, which is how
+       far the leaf has been dragged sideways. Added up here so neither has
+       to know about the other. */
+    transform: translate(var(--lay-shift, 0px), var(--ln-slot, 0px));
+  }
+  /* And it settles with the page it belongs to. */
+  .lay--settling .ln-crown { transition: transform 0.36s cubic-bezier(0.22, 0.61, 0.36, 1); }
 
   /* The record's own art stays on the page and scrolls away with it. It was
      hidden here while the header was carrying a travelling copy of it; there
