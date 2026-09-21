@@ -1712,13 +1712,86 @@ export default function HomeNav() {
   // parseFloat reads as 80 on a phone with no notch and 80 on one with —
   // where scrollMarginTop comes back in pixels with the safe area already in
   // it. The one number, asked for in the one place it is true.
+  // Where a pane's second floor comes to rest — the wall under the beacon,
+  // the feed under the book. The press lands here and so does the settle
+  // below, which is the point: one number, so a thumb and a press cannot
+  // disagree about where the next floor sits.
+  function floorTwo(el) {
+    if (!el) return 0;
+    const floors = el.querySelectorAll(':scope > .hn-floor, :scope > * > .hn-floor');
+    const clear = floors.length > 1 ? parseFloat(getComputedStyle(floors[1]).scrollMarginTop) || 0 : 0;
+    return Math.max(0, secondFloorTop(el) - clear);
+  }
   function goDown(index) {
     const el = paneRefs[index].current;
     if (!el) return;
-    const floors = el.querySelectorAll(':scope > .hn-floor, :scope > * > .hn-floor');
-    const clear = floors.length > 1 ? parseFloat(getComputedStyle(floors[1]).scrollMarginTop) || 0 : 0;
-    el.scrollTo({ top: Math.max(0, secondFloorTop(el) - clear), behavior: ease() });
+    el.scrollTo({ top: floorTwo(el), behavior: ease() });
   }
+
+  // ── Two floors, two stops, 2026-09-20 ─────────────────────────────────
+  // The entry got this first and Miyel asked for it here: move down at all
+  // and take your hand off and the pane finishes the journey to its second
+  // floor; move up and it puts the first one back whole. It stops mattering
+  // once you are past the second floor, which on the book is the whole of
+  // the feed.
+  //
+  // Not a snap — see DECISIONS, and the note in FullPostPage this is the
+  // twin of. A snap owns a scroller and pulls back on every throw; this
+  // acts between two places and is silent outside them.
+  //
+  // A finger leaving is the signal rather than the scrolling stopping,
+  // because momentum is a stream of scroll events and each one would push
+  // the answer further away. A hand still on the glass holds whatever is
+  // half way, which is how the mark can be held half in the header.
+  useEffect(() => {
+    const wire = el => {
+      if (!el) return () => {};
+      let held = false;
+      let idle = null;
+      let lift = null;
+      let ours = false;
+      let down = true;
+      let was = 0;
+      const rest = () => {
+        if (held || ours) return;
+        const to = floorTwo(el);
+        if (to < 80) return;
+        const at = el.scrollTop;
+        if (at <= 8 || at >= to - 8) return;
+        ours = true;
+        clearTimeout(idle);
+        clearTimeout(lift);
+        el.scrollTo({ top: down ? to : 0, behavior: 'smooth' });
+        setTimeout(() => { ours = false; }, 500);
+      };
+      const hold = () => { held = true; clearTimeout(idle); clearTimeout(lift); };
+      const letGo = () => { held = false; clearTimeout(lift); lift = setTimeout(rest, 40); };
+      const moved = () => {
+        const at = el.scrollTop;
+        if (at !== was) down = at > was;
+        was = at;
+        clearTimeout(idle);
+        idle = setTimeout(rest, 140);
+      };
+      el.addEventListener('touchstart', hold, { passive: true });
+      el.addEventListener('touchend', letGo, { passive: true });
+      el.addEventListener('touchcancel', letGo, { passive: true });
+      el.addEventListener('scroll', moved, { passive: true });
+      return () => {
+        el.removeEventListener('touchstart', hold);
+        el.removeEventListener('touchend', letGo);
+        el.removeEventListener('touchcancel', letGo);
+        el.removeEventListener('scroll', moved);
+        clearTimeout(idle);
+        clearTimeout(lift);
+      };
+    };
+    // The two panes that have a second floor. The card and the inbox are one
+    // screen each and have nothing to be carried to.
+    const offs = [paneRefs[HOME]?.current, paneRefs[BOOK]?.current].map(wire);
+    return () => offs.forEach(off => off());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paneRefs, authed]);
 
   // ── The one row that sits over all three panes ────────────────────────────
   // The lights, and nothing else. There was a small mark in the corner here
