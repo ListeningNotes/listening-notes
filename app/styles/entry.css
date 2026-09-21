@@ -264,7 +264,6 @@
 .lay--swiped { animation: none; }
 /* Returned to, not arrived at: the sheet under a closed one draws at rest. */
 .lay--still { animation: none; }
-.lay--settling .lay-content { transition: transform 0.36s cubic-bezier(0.22, 0.61, 0.36, 1); }
 /* The page turn, and it is TURN_MS in LayerEntry — the two have to agree or
    the sheet commits before the leaf has landed. Slowed on 2026-09-20: "it
    can be slowed down a little so it reads smoother, like you're really
@@ -514,22 +513,7 @@
 /* The way back to the top of a piece of reading. Sized and coloured like the
    arrow half of an EdgeCaret, because that is what it is — the same family
    with nothing over it, since the place it lands is the place you are. */
-.ln-totop {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  padding: 0;
-  border: 0;
-  border-radius: 9px;
-  background: none;
-  color: var(--ink-faint);
-  opacity: 0.6;
-  cursor: pointer;
-  transition: color 0.2s ease, opacity 0.2s ease;
-}
-.ln-totop:hover { color: var(--ink); opacity: 1; }
+
 
 /* ── The fields at the head of an entry ─────────────────────────────────────
    Each one is set in the type of the thing it replaces — the album title in
@@ -1005,6 +989,22 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
    whole screen and no bar, and padding it would move the page at the moment a
    sheet opens over it — which is the thing this panel was just fixed for. */
 .ln-crediting .ln-screen-two-scroll { padding-bottom: 96px; }
+/* And a comment being written, 2026-09-21. Not a bar at the foot this time but
+   the same problem it solves: the form opens where the note is, and a note on
+   the last track is already at the bottom of the scroller — so the field, and
+   the Post under it, land against the edge with the keyboard over them. The
+   floor is what lets the scroller carry them up. NewCommentForm writes the
+   class, and writes it for a reply inside a branch as readily as for a comment
+   on the album notes, because both of those are that one component. */
+.ln-saying .ln-screen-two-scroll { padding-bottom: 96px; }
+/* One correction to the three of them, measured 2026-09-21: `.ln-screen-two-scroll`
+   is not the element that scrolls any more, whatever the note above says. It
+   was, until the entry became one page instead of two snapped screens on
+   2026-09-20 — `.ln-screens` is the scroller now and this box simply grows. The
+   padding still does the right thing, because room at the end of the content
+   is room the scroller can use either way; it is the *reasoning* that went
+   stale, and anybody moving these to "the element that actually scrolls" would
+   be moving them onto the element they are already on. */
 .ln-editing-label {
   font-family: var(--font-label);
   font-size: 9px;
@@ -1149,6 +1149,162 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
    dragging the sheet. See Journal.js. */
 .ln-locked { overflow: hidden !important; }
 
+/* ── What other people said ─────────────────────────────────────────────────
+   Rebuilt 2026-09-21. Miyel: "the comments — they are so outdated, the box is
+   old, it's a thing that has not been touched since we have basically designed
+   every new aspect of this site."
+
+   It was the last part of the entry still carrying its own styling inline: a
+   hand-drawn speech bubble, 6px fields on a frosted panel, a filled accent
+   button with its text colour written out in hex, and a reply form that opened
+   as a modal over a dimmed screen. Every one of those is a thing the rest of
+   the site has since decided against, in writing:
+
+     a control is the mark, not a mark in a container  (DECISIONS)
+     things open in the page, not over it              (DECISIONS)
+     a word that commits is a word on a rule           (.ln-word)
+     a field is a hairline, not a box                  (.sn-note, .af)
+
+   So this is that vocabulary, and nothing else. No panel, no blur, no radius,
+   no colour that is not a token. A comment is somebody's writing under yours,
+   and the page already knows how to set writing.
+
+   The one thing kept whole is the rail down the side of a branch and the
+   tap-to-fold on it: that is a borrowed idiom people already know, and it was
+   not what looked old. */
+
+/* The way in, at the end of a note. Right-aligned, because it belongs to the
+   note above it rather than to the page, and quiet, because the writing is the
+   thing worth looking at. A word and a count, where there used to be a drawn
+   bubble and a number: the site has no other hand-drawn glyph left in it.
+   Margins only when something is open below, so an empty track does not pay
+   three gaps for a control 23px tall. */
+.ln-say-way { display: flex; justify-content: flex-end; }
+.ln-say-way--open { margin-bottom: 10px; }
+.ln-says { display: flex; flex-direction: column; gap: 22px; margin-bottom: 12px; }
+/* A hairline over each comment and none over the first: the gap is enough
+   between the note and the first thing said about it, and a line there would
+   read as the note's own footer. */
+.ln-says > * + * { border-top: 1px solid var(--border); padding-top: 20px; }
+
+/* Who said it, and when. One row, pressable along its whole width to fold the
+   branch — the header has always been the second way to do what the rail does,
+   and on a phone it is the bigger target of the two. */
+.ln-say-who {
+  display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+  width: 100%; padding: 0; border: 0; background: none; cursor: pointer;
+  text-align: left;
+}
+.ln-say-name {
+  font-family: var(--font-label); font-size: 11px; letter-spacing: 0.04em;
+  color: var(--ink);
+}
+.ln-say-when, .ln-say-more {
+  font-family: var(--font-label); font-size: 9px; letter-spacing: 0.06em;
+  color: var(--ink-faint);
+}
+/* The same measure and leading the notes above are set in, because it is the
+   same kind of thing: somebody writing about a record. Softer than the owner's
+   own, which is the only thing that separates them. */
+.ln-say-body {
+  margin: 6px 0 0;
+  font-size: 14px; line-height: 1.75; color: var(--ink-soft);
+  overflow-wrap: anywhere; white-space: pre-wrap;
+}
+/* The row under a comment. .ln-word, the same word Save and Cancel are on the
+   editing bar — these were already quiet uppercase words and were the one part
+   of this that did not need rethinking, only rehousing. */
+.ln-say-acts { display: flex; gap: 2px; margin: 4px 0 0 -8px; flex-wrap: wrap; }
+.ln-say-up--on { color: var(--ink); cursor: default; }
+
+/* Held: posted, and waiting to be read. It reaches only the browser that wrote
+   it (a signed receipt, see receipts.js), so it is always *your* comment that
+   is dimmed, never somebody else's. The line under it is what explains the
+   dimming; without it the fade is just a rendering fault. */
+.ln-say--held { opacity: 0.55; }
+.ln-say-held-line {
+  margin: 8px 0 0;
+  font-family: var(--font-label); font-size: 9px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--ink-faint);
+}
+
+/* The branch. The rail spans exactly what this comment owns and folds it on a
+   tap, which is the thing people reach for. 2px and --border, unchanged. */
+.ln-say-branch { display: flex; margin-top: 14px; }
+.ln-say-rail {
+  width: 2px; border-radius: 1px; background: var(--border);
+  flex-shrink: 0; padding: 0; border: 0; cursor: pointer;
+}
+.ln-say-rail:hover { background: var(--ink-faint); }
+.ln-say-kids {
+  flex: 1; min-width: 0; padding-left: 14px;
+  display: flex; flex-direction: column; gap: 18px;
+}
+
+/* ── Writing one ──────────────────────────────────────────────────────────
+   In the page, where it will go. The new-comment form already did this and
+   said why in its own note; the *reply* form was still a fixed overlay with a
+   scrim, which is the same instinct the same file had already argued against
+   two screens up. A reply is an answer to the comment directly above it, and a
+   box in the middle of a darkened screen has been taken away from the thing it
+   is about. Pushing the page down is what leaving room looks like.
+   A hairline over it, and nothing else: it is not a panel. */
+.ln-say-form {
+  margin: 12px 0 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  animation: cb-unfold 0.24s ease both;
+}
+/* ── Who it will be signed by ───────────────────────────────────
+   Where two fields were, when the journal landed on already knows both. Miyel,
+   2026-09-21: "we don't need name if you're commenting from a journal — it can
+   just put your keeper name and pfp bubble." The portrait is .ln-sender-portrait,
+   the same object the address book and the feed and the send sheet draw, served
+   from the visitor's own journal at their own address. Smaller here, because it
+   is a signature and not a choice: there is one face and nothing to pick.
+
+   This block used to be a heading — ADD A COMMENT, and under it the name of the
+   track. "Take away 'add a comment' and also song title, we know what song
+   we're on, that's extra bulk." Both were the form telling you what you had
+   just pressed and which song you were already looking at. */
+.ln-say-me { display: flex; align-items: center; gap: 10px; }
+.ln-say-me .ln-sender-portrait { width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0; }
+.ln-say-me-name {
+  font-family: var(--font-label); font-size: 11px; letter-spacing: 0.04em;
+  color: var(--ink);
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+/* The way out of a wrong answer, as far from the face as the row is wide: a
+   shared browser, an old address, somebody who would rather not be introduced
+   as themselves this time. */
+.ln-say-me-not { margin-left: auto; flex-shrink: 0; }
+.ln-say-fields { display: flex; flex-direction: column; gap: 10px; }
+/* Two on a row where there is room and stacked where there is not: a name is
+   short and an address is not, and on a 375px phone side by side gives neither
+   enough to show what has been typed. */
+.ln-say-pair { display: flex; gap: 14px; flex-wrap: wrap; }
+.ln-say-pair > * { flex: 1 1 160px; min-width: 0; }
+/* A hairline, like every other field on this site since the finder's. 16px,
+   because Safari zooms in on anything smaller and does not reliably zoom back
+   out. box-sizing because width:100% plus padding and a border used to add up
+   to wider than the column and scrolled the whole page sideways on a phone —
+   the one note from the old form worth carrying over. */
+.ln-say-field {
+  width: 100%; box-sizing: border-box;
+  padding: 7px 2px; border: 0; border-bottom: 1px solid var(--border);
+  border-radius: 0; background: none;
+  font-family: inherit; font-size: 16px; line-height: 1.5; color: var(--ink);
+  resize: none;
+}
+.ln-say-field::placeholder { color: var(--ink-faint); }
+.ln-say-field:focus { outline: none; border-bottom-color: var(--ink-faint); }
+.ln-say-foot { display: flex; align-items: center; gap: 2px; margin: 12px 0 0 -8px; }
+.ln-say-trouble {
+  margin: 10px 0 0;
+  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.06em;
+  color: var(--fav);
+}
+
 /* A comment form opening where the comment will go. It grows out of the note
    it is answering rather than arriving over the top of it — see the note in
    CommentBubble for why the modal it replaced was the wrong instinct. */
@@ -1250,7 +1406,6 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
   /* Already collapsed before anything was drawn — the wait state, when the
      swipe came from the notes. The entry writes this corner's opacity from
      the collapse once it lands, and an inline number beats this. */
-  .ln-entry--crowned .sitenav-logo { opacity: 0; }
   .ln-crown {
     position: relative;
     /* Always drawn, and hidden by the slot instead: the collapse writes a
@@ -1477,11 +1632,7 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
      have taken is a thing in the way. */
   .ln-scroll-cue { transition: opacity 0.18s linear; }
   .ln-entry--scrolled .ln-scroll-cue { opacity: 0; pointer-events: none; }
-  .ln-entry--scrolled .hp-dotnav {
-    opacity: 0;
-    pointer-events: none;
-  }
-  .hp-dotnav { transition: opacity 0.25s ease; }
+
 
   /* Screen two: the header band holds the top, everything below it
      scrolls inside. Padding rather than margin so the inner scroller
@@ -1521,28 +1672,7 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
      is left where it is: the desktop hero does not use it, but the shape is
      worth keeping legible if it is ever wanted back. */
   .ln-mini { display: none; }
-  .ln-mini--retired {
-    position: relative;
-    z-index: 101;
-    background: var(--bg);
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    width: 100%;
-    box-sizing: border-box;
-    flex-shrink: 0;
-    padding: 0 24px 12px;
-    margin: 0;
-    /* No rule under it. The Album Notes heading is directly below with
-       its own line, so the strip's border sat a few pixels above
-       another one and read as a double underline on the first thing
-       you see. What separates it from the notes is that the notes
-       move and it does not. */
-    border: none;
-    text-align: left;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-  }
+
   .ln-mini-art {
     flex-shrink: 0;
     width: 44px; height: 44px;

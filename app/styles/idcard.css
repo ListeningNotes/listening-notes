@@ -262,6 +262,9 @@
   font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase;
   color: var(--ink-faint);
 }
+/* Built as `idc-count--` + the word (IdentityCard.js), so these two never
+   appear literally anywhere and a search for them finds nothing. They are
+   live. Swept as dead on 2026-09-21 and put straight back. */
 .idc-count--masterpieces .idc-count-n { color: var(--mp); }
 .idc-count--formative .idc-count-n { color: var(--formative); }
 
@@ -385,13 +388,6 @@
    what the journal actually listens to. The heading is small caps and faint:
    it is a caption for the section, not a title competing with the name at the
    top of the page. */
-.ab-voice {
-  margin: 0 0 4px;
-  font-family: var(--font-label);
-  font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase;
-  font-weight: 400;
-  color: var(--ink-faint);
-}
 
 
 /* ── A count's window ───────────────────────────────────────────────────────
@@ -1303,105 +1299,47 @@ a.ab-rig-name:hover { text-decoration: underline; }
    The ask is the last of them, because it is the last thing you read
    before the button for acting on it. Anything put between the two
    weakens that, which is why the genres sit above rather than below. */
-.idc-line {
-  margin: 16px auto 0; max-width: 300px;
-  font-size: 13px; line-height: 1.6; color: var(--ink);
-  display: flex; align-items: baseline; gap: 9px;
-  text-align: left;
-}
-.idc-line-label {
-  flex-shrink: 0;
-  /* A fixed column, so the two answers start at the same place and the
-     pair reads as one small table rather than two stray sentences.
-     Wide enough for the longer of the two labels to stay on one line —
-     a two-line label beside a one-line answer reads as a wrapping
-     accident, not as a heading. */
-  width: 84px;
-  white-space: nowrap;
-  font-family: var(--font-label);
-  font-size: 8.5px; letter-spacing: 0.1em; text-transform: uppercase;
-  color: var(--ink-faint);
-}
+
 /* One colour for both answers. They were set a step apart — the
    genres soft, the request full — which read as one of the two being
    less finished than the other rather than as a deliberate hierarchy.
    The labels beside them are already doing the quietening; the answers
    are the content and they weigh the same. */
-.idc-line-value { min-width: 0; color: var(--ink); }
 /* The second label on the counted line — "since" — sits after the first
    answer at its own width, not the 84px column the row's first label keeps,
    so the line reads as two short pairs rather than a table with a gap. */
-.idc-line-label--since { width: auto; margin-left: 2px; }
 /* ── The pinned record ──
    Forty-eight square with a ten-pixel radius, which is what the beacon
    draws its recent listens at — same object, same job, so the same
    frame. The name reads to its right rather than under it, because the
    row it sits in is a table of labels and answers and this is one
    answer: a cover and what it is. */
-.idc-pin-row { align-items: center; }
 .idc-pin {
   display: flex; align-items: center; gap: 10px;
   min-width: 0; flex: 1;
   color: var(--ink); text-decoration: none;
 }
-.idc-pin-art {
-  display: block;
-  width: 48px; height: 48px;
-  flex-shrink: 0;
-  border-radius: 10px;
-  overflow: hidden;
-  background: var(--bg-warm);
-  box-shadow: 0 3px 10px rgba(0,0,0,0.12);
-  transition: transform 0.2s ease;
-}
-.idc-pin:hover .idc-pin-art { transform: translateY(-2px); }
-.idc-pin-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.idc-pin-none {
-  display: flex; align-items: center; justify-content: center;
-  width: 100%; height: 100%;
-  color: var(--ink-faint); font-size: 18px;
-}
+
+
 /* min-width: 0 on both, or a long album name refuses to ellipsis and
    pushes the row past the edge of the card instead. */
-.idc-pin-said { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.idc-pin-album,
-.idc-pin-artist {
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-.idc-pin-album { font-size: 13px; line-height: 1.3; }
-.idc-pin-artist { font-size: 11px; line-height: 1.3; color: var(--ink-faint); }
-.idc-pin:hover .idc-pin-album { text-decoration: underline; }
+
+
 @media (prefers-reduced-motion: reduce) {
-  .idc-pin:hover .idc-pin-art { transform: none; }
+
 }
 /* The same row as a button. A button carries its own padding, border,
    background and text alignment, and left alone it would sit a few
    pixels off the link it replaces — which is a row that moves when you
    press Edit. */
-.idc-pin--pick {
-  padding: 0; border: 0; background: transparent;
-  text-align: left; font: inherit; cursor: pointer;
-}
 
 /* The one control that is an action rather than a door, and the reason
    the ask is written directly above it. Weighted by ink rather than by
    fill, so it leads without inventing a second kind of button. */
-.idc-send {
-  margin-top: 20px;
-  color: var(--ink);
-  border-color: var(--ink-faint);
-  padding: 10px 22px;
-  font-size: 9.5px;
-}
-.idc-send:hover { border-color: var(--ink); }
+
 
 /* ── Below the line ── everywhere else the keeper can be found, and the
    one page the card still carries. Quiet, and after the point. */
-.idc-rule {
-  width: 100%; height: 1px; margin: 22px 0 16px;
-  background-image: linear-gradient(to right, var(--idc-rule) 0 4px, transparent 4px 9px);
-  background-size: 9px 1px; background-repeat: repeat-x;
-}
 /* One line: the action, then every other door as a mark beside it. */
 /* Closer to the block above it than it was. The row used to carry the
    rig and the links as well and needed the air to read as its own
@@ -1413,18 +1351,7 @@ a.ab-rig-name:hover { text-decoration: underline; }
   gap: 6px; flex-wrap: wrap;
   margin-top: 14px;
 }
-.idc-mark-btn {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 36px; height: 36px; border-radius: 999px;
-  color: var(--ink-faint);
-  border: 1px solid transparent;
-  transition: color 0.15s, background 0.15s, border-color 0.15s;
-}
-.idc-mark-btn:hover {
-  color: var(--ink);
-  background: var(--bg-warm);
-  border-color: var(--idc-rule);
-}
+
 
 /* ── The links, opened ── the same marks in the same place, each with
    the address it stands for beside it. */
@@ -1591,10 +1518,8 @@ a.ab-rig-name:hover { text-decoration: underline; }
      approved. Whether it should step down on a narrow page is a live question
      and it is in NOTES; it is not something to change by repairing a rule
      nobody knew was broken. */
-  .idc-fields { column-gap: 12px; row-gap: 8px; }
-  .idc-field-value { font-size: 12px; }
-  .idc-field-value--name { font-size: 14px; }
-  .ab-card .idc-send { margin-top: 14px; }
+
+
   /* The writing under the card, on the same scroll rather than a floor of
      its own: on a desk the floors are plain wrappers and the page is the
      scroller, so the card leads and the answers follow it down the page. */

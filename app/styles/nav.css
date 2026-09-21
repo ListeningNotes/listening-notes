@@ -938,7 +938,6 @@
 /* The wall as the first screen, on a copy with no beacon. The crown is still
    above it, so it starts where the beacon's art would have and the pane reads
    the same as its neighbours. */
-.hn-under--first { padding-top: var(--hn-square-top); }
 
 /* ── Two floors, on a phone ─────────────────────────────────────────────────
    The entry's shape, in the cross. The pane is the snap container, each floor
@@ -1222,6 +1221,68 @@
 .hn-bar-mark { transition: opacity 0.3s ease 0.16s; }
 .hn--choosing .hn-bar-mark { opacity: 1; }
 
+/* ── And so does the one the bar draws, 2026-09-21 ────────────────────────
+   .hn-crown above is the *pane's* crown. On a phone the big mark is drawn by
+   the bar instead, because the pane paints under it (see .hn-bar-crown and
+   the note beside it in HomeNav.js) — and that copy was never told to stand
+   down. It sat at full strength across the top of a session, over the mini
+   beacon, which is centred on the same 140-odd pixels of the same row. Miyel,
+   2026-09-21: "when starting a session the LN. large logo is on the screen
+   blocking minibeacon."
+
+   It leaves out of the top of the screen and comes back down from it. Miyel,
+   the same day: "i dont like fade outs i think the large LN. should leave out
+   the top of the screen when the minibeacon comes and come back down from top
+   when session ends." It faded for an hour before that, and a fade is the
+   thing this site keeps deciding against: something that goes should have
+   somewhere to have gone.
+
+   ── Why the movement is on the mark and not on its box ──────────────────
+   The morph writes .hn-bar-crown's own transform outright, frame by frame
+   (`translate(-50%, <top>px) scale(k)`), so a transform written here would be
+   overwritten on the next scroll and fight for it in the meantime. The svg
+   inside has no transform of its own, which makes it the free surface: the
+   box goes on being placed by the morph, and the mark goes on riding up out
+   of it. Two transforms, one each, neither in the other's way — which is also
+   why this needs no wrapper and no class to turn a transition on and off.
+
+   The distance is measured off the crown's own height, so a tall phone —
+   which stands the mark further down the screen — still clears the top edge.
+   The 120 is the mark's own height with room to spare.
+
+   0.7s, up from 0.42 on her asking for it slower. Not a new number: it is the
+   one the crown underneath is folding and growing on, and the one the whole
+   pane settles on. The two are the same event seen twice — the pane's copy
+   leaving its place and the bar's copy leaving the screen — and they should
+   not disagree about how long it takes. */
+.hn-bar-crown .hn-crown-svg {
+  /* Coming back: the site's arriving curve, the one the editing bar rises on.
+     Most of the movement early, then it settles into its place rather than
+     stopping in it. */
+  transition: transform 0.7s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.hn--choosing .hn-bar-crown .hn-crown-svg {
+  /* ── Going away, on the leaving curve, first ──────────────────────
+     The sinking curve the editing bar uses: it holds its place for a beat and
+     then sweeps up and out, which is the shape of movement there is any point
+     making slower. The arriving curve is wrong here for the same reason it is
+     right coming back — it spends its first fifth of a second covering most of
+     the distance, so the mark was past the top edge before it looked like it
+     had set off.
+
+     This only works because the record now waits for it. The two movements
+     this press starts travel through the same strip of screen, and on their
+     own clocks they collided: the cover slid through the logo from 220ms to
+     520ms (Miyel, 2026-09-21: "i dont want them overlapping"). The cure is not
+     a faster mark — it is not a race the mark can win by hurrying. It is the
+     cover holding at the card until the mark is clear. MAKE_ROOM_MS in
+     HomeNav.js is that beat, and it is set to where this curve puts the mark's
+     foot past the top of the band the record lands in. Change one and the
+     other has to move. */
+  transition-timing-function: cubic-bezier(0.55, 0, 0.68, 0.53);
+  transform: translateY(calc(-1 * (var(--hn-crown, 200px) + 120px)));
+}
+
 .hn--choosing .hn-pane--home { scroll-snap-type: none; }
 .hn--choosing .hn-pane--home > .hn-floor:nth-of-type(2) { display: none; }
 /* ── The cutaway ──────────────────────────────────────────────────────────
@@ -1425,6 +1486,15 @@
   left: 50%;
   top: calc(env(safe-area-inset-top, 0px) + 10px);
   transform: translateX(-50%);
+  /* In front, for the length of the crossfade the big mark leaves on. This is
+     written after that mark and is absolute like it, which would normally be
+     enough — but it carries an explicit z-index: 1, and an explicit 1 beats a
+     later sibling's auto. So this needs its own. It cannot simply join the
+     .hn-lights list that lifts the static children of this row: that rule also
+     sets position: relative, which on an absolutely placed box is not a lift
+     but a different layout — the note on that list records what it did to the
+     big mark when it caught it. */
+  z-index: 1;
   /* One width, and it is the widest corner's. This has to clear the left
      corner at its widest — which is not the mark but END, the word the mark
      turns into — and it is centred on the screen, so it pays for that on both
@@ -1695,7 +1765,6 @@
 @media (max-width: 768px) { .hn-controls { position: absolute; } }
 /* In the row, not under it. It hung 18px below while the dots were in the
    row with it and it had to clear them; the row holds nothing else now. */
-.hn-controls .edge-caret--down { position: static; transform: none; }
 .hn-controls > * { pointer-events: auto; }
 /* Out of the way while anything is moving. These sit over the page rather than
    beside it, and a wall of album art going past under three static glyphs is
@@ -1707,46 +1776,8 @@
   pointer-events: none;
 }
 
-.edge-caret {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  padding: 0;
-  border: none;
-  background: none;
-  color: var(--ink-faint);
-  cursor: pointer;
-  touch-action: manipulation;
-  transition: opacity 0.25s ease, color 0.2s ease;
-}
-/* The mark speaks and the arrow only points, so the mark carries the ink and
-   the arrow is a hint under it. */
-.edge-caret-mark { opacity: 0.75; }
-.edge-caret-arrow { opacity: 0.4; }
-.edge-caret:hover { color: var(--ink-soft); }
-.edge-caret:hover .edge-caret-mark { opacity: 1; }
-.edge-caret:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 4px; }
-/* Faded in place, keeping its slot. Removing it would slide the other two
-   across to re-centre, moving the control somebody was reaching for. */
-.edge-caret--away {
-  opacity: 0;
-  pointer-events: none;
-}
-/* Down keeps its arrow underneath its mark rather than beside it. It is the
-   one direction the page itself moves in, and a chevron next to the book would
-   read as a fourth pane somewhere off to the right.
-   It used to bob, from when it stood alone in the middle of the screen and had
-   to say "down" on a page that already moved sideways. In a row of three still
-   marks the movement stopped reading as a hint and started reading as one of
-   them being loose — and it put the book five pixels below the other two for
-   most of every cycle, which is the one thing this row is lined up to avoid. */
-.edge-caret--down {
-  flex-direction: column;
-  gap: 2px;
-}
 @media (prefers-reduced-motion: reduce) {
-  .edge-caret--down { animation: none; }
+
   .hn-controls { transition: opacity 0.3s ease; }
   .hn-controls--busy { transform: none; }
 }
@@ -2111,14 +2142,8 @@
    place that draws it says which it means, and the day one of them wants
    something else this is the hook that is already there. */
 .fd-compare--mark { padding: 2px; }
-.fd-views { display: flex; justify-content: center; gap: 22px; margin-bottom: 18px; }
-.fd-view {
-  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
-  color: var(--ink-faint); background: none; border: 0; border-bottom: 1px solid transparent;
-  padding: 4px 0; cursor: pointer;
-}
-.fd-view:hover { color: var(--ink-soft); }
-.fd-view--on { color: var(--ink); border-bottom-color: var(--ink); }
+
+
 .fd-list { display: flex; flex-direction: column; gap: 52px; }
 /* Rows carry their own rule and sit against each other, so the gap between
    records is the tall version's alone. Written here rather than up with the
@@ -2318,14 +2343,7 @@
   align-items: center;
   gap: 8px;
 }
-.hp-recent-head {
-  margin: 0;
-  font-family: var(--font-label);
-  font-size: 0.62rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--ink-faint);
-}
+
 .hp-recent {
   display: flex;
   gap: 10px;
@@ -2608,8 +2626,17 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
     pointer-events: none;
   }
   /* Down it goes, with no delay: the bar is on its way up on the same frame
-     and nothing should be in the way of it. */
-  .hn--editing .hn-foot { transform: translateY(100%); transition-delay: 0s; }
+     and nothing should be in the way of it.
+
+     And again for the send sheet, 2026-09-21 — same rule, different thing
+     standing in the foot of the screen. The cross sizes itself to the part of
+     the window you can see, so a keyboard walks these four doors up until they
+     are sitting in the gap between the sheet and the keys. Miyel: "we need to
+     make the [band] not shown between keyboard and send flow." SendSheet.js
+     puts the class on. */
+  .hn[data-editing] .hn-foot,
+  .hn[data-sending] .hn-foot,
+  .hn--typing .hn-foot { transform: translateY(100%); transition-delay: 0s; }
 
   /* Except over the book and its feed (Miyel, 2026-09-20). A dissolve is for
      a floor whose content runs off the bottom edge and should read as
@@ -3207,7 +3234,7 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
      to display: none would take the switch off the desk with the carets. */
   .hn-crown { display: none; }
   .hn-controls { display: contents; }
-  .hn-controls .edge-caret { display: none; }
+
 
   /* The bar belongs to the right page: the mark centred over the band, the
      lights at the page's right edge, and once the wall has scrolled the
@@ -3286,7 +3313,7 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
      cover's baseline, and no line over them — three small covers beside a
      large one say what they are. */
   .hn-band .hp-recent-set { margin-left: auto; align-self: flex-end; flex-shrink: 0; padding-bottom: 4px; }
-  .hn-band .hp-recent-head { display: none; }
+
   .hn-band .hp-recent { gap: 8px; }
   .hn-band .hp-recent-tile { width: 28px; height: 28px; border-radius: 6px; }
   .hn-band .hp-recent-none { font-size: 12px; }
@@ -3299,7 +3326,6 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .hn-under .arc-main { padding-top: 4px; }
   .hn-under .arc-bar-wrap { margin-top: 14px; }
   /* No beacon, no band: the wall is the first thing, under the bar's row. */
-  .hn-under--first { padding-top: var(--hn-bar-h); }
 
   /* ── The colophon face ── the mark, three sentences, Get one, the key and
      the source line, centred on an otherwise empty page and deliberately
@@ -3344,7 +3370,7 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
      cover fills the width, the words under it ranged left. */
   .fd-wrap { padding: 6px var(--hn-gutter) 40px; }
   .hn-floor-scroll .fd-wrap { padding-top: 6px; }
-  .fd-views { justify-content: flex-start; gap: 16px; margin-bottom: 14px; }
+
   .fd-list { gap: 30px; }
   .fd-item { align-items: flex-start; text-align: left; }
   .fd-art { width: 100%; border-radius: 10px; margin-bottom: 10px; box-shadow: 0 8px 22px rgba(0, 0, 0, 0.14); }

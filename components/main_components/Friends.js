@@ -39,7 +39,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
-import { ArrowRight, BookOpen, Camera, MagnifyingGlass, PaperPlaneTilt, Plus, PushPin, Shuffle, User, X } from '@phosphor-icons/react';
+import { ArrowRight, BookOpen, Camera, MagnifyingGlass, PaperPlaneTilt, Plus, PushPin, Shuffle, User } from '@phosphor-icons/react';
 import CodeScanner from './CodeScanner';
 import SendSheet from './SendSheet';
 import { carrySender, journalUrl, tidyJournal } from '../../library/return_address';
@@ -928,7 +928,12 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null }
                       rel="noopener noreferrer"
                     >
                       <BookOpen size={22} weight="regular" aria-hidden="true" />
-                      Journal
+                      {/* Visit, from 2026-09-21. It said Journal, which named
+                          the thing rather than what pressing it does — and
+                          every door in this row is a journal, so the word
+                          separated it from none of them. This is the one that
+                          leaves for their copy. */}
+                      Visit
                     </a>
                     <Link className="fr-door" href={`/dashboard/people/${mine.id}`}>
                       {/* Shuffle, settled 2026-09-20 (Miyel). It was

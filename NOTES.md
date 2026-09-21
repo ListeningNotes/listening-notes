@@ -1549,6 +1549,100 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**A ResizeObserver says nothing about a transform, 2026-09-21.** The beacon's
+morph re-measures whenever the pane, the bar or floor one changes size. Start a
+listen and the crown folds away — height and padding to nothing, *and* a scale
+down to a quarter. The observer hears the height and not the scale, so its last
+word came while the box was still a fraction of itself, and `getBoundingClientRect`
+on a scaled ancestor returns a scaled rect. The mark's resting place was written
+down as the collapsed one and never revisited: 48px too high, after every
+session. Two halves to the cure — **do not measure a thing that is folded away**
+(read the class off the DOM, not a state the effect closed over), and **measure
+again on `transitionend` for `transform`**, which is the one frame the observer
+cannot give you.
+
+The folded test is not enough on its own: `hn--choosing` comes off the moment a
+session ends and the crown then takes 0.7s to grow back, so there is most of a
+second in which nothing is folded and nothing is settled either. The half-grown
+answers taken in that window landed the mark on the header's line, where it sat
+for a beat before dropping the last 48px into place — one arrival read as two.
+**A transform on the crown means it is still moving, and a rect read off a
+moving box is not a measurement.**
+
+**Holding the last good measurement means holding what it wrote, 2026-09-21.**
+Straight out of the above: skipping the measurement left `--ground` — the height
+of the opaque band behind the header, written from the mark's foot — at its
+full-size value, so 173px of header stood over the picker's search field. It was
+still hit-testable, which is why it took a screenshot rather than a click to
+find: the band is `pointer-events: none`, so `elementFromPoint` reported the
+field on top while the band was painting over it. **When a guard stops a
+calculation, ask what that calculation was writing.**
+
+**iOS opens the keyboard only inside the tap, 2026-09-21.** A `focus()` that
+runs in a `useEffect` is run *after the browser has painted*, which is past the
+moment Safari grants for raising the keyboard — the cursor lands in the field,
+the field looks ready, and nothing comes up until it is tapped again.
+`useLayoutEffect` runs inside the same turn as the press that caused it, so the
+focus is still the tap's. One word, in SendSheet.js.
+
+**A stylesheet can go stale without a build, 2026-09-21.** The known trap was
+`npm run build` while the dev server is up. This time nothing was built: five
+sheets were edited in one sitting (a sweep, then a block moved from entry.css to
+base.css) and the served bundle came out as a *mix* — entry.css fresh (the moved
+block gone from it), base.css stale (the moved block not in it). So `.ln-word`
+was in no sheet at all and every quiet word on the site rendered as 24px
+Nunito. (A first reading also blamed forms.css and nav.css, on seeing `.bk-` and
+`.edge-caret` selectors still served; those were live ones the sweep never
+touched, `.bk-scan`, `.bk-send`, `.edge-caret-mark`. Check the disk before
+calling a served rule stale.) The
+HMR socket had dropped in the meantime (`webpack-hmr ... failed`,
+`ERR_CONNECTION_REFUSED` in the console), which is the tell. **The diagnostic
+that settles it in one call:** fetch the served chunk from the page
+(`document.styleSheets[n].href`, `cache: 'no-store'`) and count selectors you
+know you added and ones you know you removed. Fresh and stale in the same file
+means the dev server, not the CSS. Restart it. The same dropped socket also
+produced a React warning that looked like a real bug — "the final argument
+passed to useEffect changed size between renders" on the send sheet, its old
+three-item deps against the new five — which is what a hot-swapped module says
+about a mounted instance. Reproduced only until a cold load: then zero errors.
+**A hook-order warning that names old code is HMR, not you; test it cold.**
+
+**Do not truncate the evidence, 2026-09-21.** Checking whether
+`.idc-count--masterpieces` was still used, the grep was piped through `head -4`.
+Four lines of RecordContents came back, none of them building the modifier, so
+it went in the dead pile — and IdentityCard, which builds it as
+`'idc-count idc-count--' + c.word`, was on line five. The rule that colours the
+card's masterpiece count was deleted and had to be put back. **A `head` on a
+verification grep is how a live rule gets deleted.** The pattern to keep: a
+class that never appears literally anywhere is not dead until you have checked
+what the code *builds*, with the whole output in front of you.
+
+**A flag on the cross written from outside HomeNav must be an attribute,
+2026-09-21.** The cross's `class` attribute is React's and is rewritten whole on
+every render, so `classList.add` from another component survives only until
+anything else on it moves. HomeNav learned this for the morph on 2026-09-20 and
+its note says the cure is to put the flag in the list React renders — which is
+not available from outside. `data-*` is: React never touches an attribute it
+does not render. `data-sending` and `data-editing` are that; **`hn--editing` had
+been a class since 2026-09-20 and had been failing silently the whole time**,
+which nobody saw because it only shows when a re-render and an open editing bar
+coincide. Measured: with the send sheet open the class was already gone.
+
+**Focus events do not fire in a window that is not focused, 2026-09-21.** A
+`focusin` handler looked dead in the Browser pane — `element.focus()` set
+`document.activeElement` and fired nothing at all, so a `hn--typing` flag that
+works perfectly on a tap looked like it had never been wired. Same family as the
+click below: **anything keyed on focus or on a gesture has to be tested with a
+real click through the pane, not a scripted one.**
+
+**A programmatic `.click()` is not a tap, 2026-09-21.** Testing the above from
+a script said the focus was still arriving late *after* it had been fixed. A
+click fired from an async script does not go through React's synchronous flush
+for a discrete event, so the layout effect really did run late — in the test
+only. Driving a real click through the browser pane told the truth. **When a
+fix depends on the timing of a user gesture, the test has to be a user
+gesture.**
+
 **No backticks inside a tagged template, 2026-09-20.** Including in an SQL
 comment inside a `database\`...\`` call. A backtick ends the template wherever
 it is, and the error points at the word after it rather than at the quote —
@@ -2875,6 +2969,233 @@ current.
 ---
 
 ## Complete
+
+**2026-09-21 — Words instead of pills, and one send flow by either door.**
+Save and Cancel on the editing bar are plain uppercase words with a hairline
+under the one that commits (`.ln-word`), no tick and no cross. Four screens
+share that band by design and all four changed together: an entry, the
+identity card, crediting a send, and the session preview. The band is exactly
+the height it was — the new line-height is pinned to the old number — and the
+error band's Close keeps its pill, since that is not editing.
+
+The send sheet is the same flow whichever door you come in by. Whichever half
+is still a question gets the whole sheet: a wall of covers from a friend's
+row, a wall of faces from a record's tools. Then the identical screen either
+way — the cover centred over its name, the message, the credit switch, and a
+button with a name in it. The strip of faces inside the form is gone, and the
+record is the centred stack on both routes rather than a left-aligned row on
+one, with **Change** under it only when the record was the half you picked.
+
+The four doors step down off the screen while the sheet is up and come back
+when it closes (`hn--sending`, kept separate from the card's `hn--editing`,
+her call). The cross sizes itself to the part of the window you can see, so a
+keyboard was walking the nav row up into the gap between the sheet and the
+keys. And choosing a person now brings the keyboard with it — see the first
+gotcha.
+
+Loose end: coming from an album, once a face is picked there is no way to
+change it short of closing the sheet. The message is kept, so nothing is lost;
+whether it wants a Change of its own is open.
+
+**The comments, rebuilt.** Miyel: "I feel like they are so outdated. The box is
+old. It's a thing that has not been touched since we have basically designed
+every new aspect of this site." It was the last corner of the entry still
+carrying its styling inline — a hand-drawn speech bubble, 6px fields on a
+frosted panel, a filled `--accent` button with its text colour written out in
+hex, a reply form that opened as a modal over a dimmed screen. All three files
+are class-only now (`.ln-say-*` in entry.css) and nothing in them is a value
+that is not a token.
+
+Two of those were not just old, they contradicted things written down since.
+**The reply modal** went: CommentBubble had already argued, in its own file,
+that a comment belongs under the note it answers rather than in a box on a
+dimmed screen — and CommentThread two screens below was still doing exactly
+that, quoting a clamped copy of the comment so you could read what you were
+answering *once it had been covered over*. The cure for hiding the thing is not
+to reprint it. **And the filled accent button** went: the words that commit are
+`.ln-word` now, the same pair the editing bar carries.
+
+**And then the form lost most of itself.** The heading went — ADD A COMMENT, and
+under it the name of the track: "we know what song we're on, that's extra bulk."
+It opens under the note it answers, and where a thing opens is what it is about.
+The same goes for the reply form's REPLY TO <name>, with the name on the row
+directly above it.
+
+**A keeper signs with their face.** "We don't need name if you're commenting
+from a journal — it can just put your keeper name and pfp bubble." Where both a
+name and an address are known, the two fields become a portrait and a name, with
+`Not you` as the way out; the portrait is `.ln-sender-portrait`, served from the
+visitor's own journal, the same object the address book draws. Both or neither:
+an address with no name is a face with nothing to call it, and the fields come
+back for anything short of both, prefilled, so there is at most one thing left
+to type. **A stranger still just types a name**, which is the whole of what the
+field was ever for.
+
+**Does it work on somebody else's copy?** Yes, if they got there from their own
+— the address book's, the feed's, the person's page's and the inbox's links all
+carry `?from=` and `?as=` (`carrySender`), and the journal landed on keeps them
+and clears the bar (`noteArrival`, called from Bookplate on every page). Proved
+end to end: arriving at an entry as `?from=userone-silk.vercel.app&as=June` put
+June's name and her own journal's portrait on the form with one field left.
+**Arriving any other way — a typed URL, a text, a scanned code, a shared card —
+carries nothing**, and that is the honest limit: storage is per origin, which is
+also the reason nobody can be followed from one journal to the next. Then it is
+one name, once, and remembered on that journal after.
+
+**The placeholder is "Leave a comment"** ("Leave a reply" inside a branch), and
+the form takes the cursor as it opens, so the keyboard is already up — a layout
+effect, inside the tap, for the reason in the gotcha above. No `preventScroll`
+here, which is where it differs from the send sheet: the sheet places itself
+against the visible window and has nowhere to scroll, and this wants the
+browser to carry the field up over the keys. What lets it is 96px of floor
+while a form is open (`.ln-saying`, written from NewCommentForm, which is
+mounted exactly when one is) — the same floor a correction and a credit already
+ask for. Measured with the last track's form open: the Post row sits ~100px
+below the window and there are 365px of scroll left under it.
+
+**The four doors step down while you are typing** (`hn--typing`, HomeNav's own
+state). Miyel, filtering her journal: "I shouldn't see the footer between the
+keyboard again." Same cause as the send sheet's: the cross is made as tall as
+the part of the window you can see — which is what stops everything sliding up
+when a keyboard opens — and the band is held against its bottom edge, so a
+keyboard walks the four doors up into the middle of the screen. This one is the
+general answer rather than a third named case: any field the cross contains,
+which covers the journal's filter, the book's, the picker's and whatever comes
+next. It also turned up the attribute gotcha below.
+
+And the gap it left. The wall's search bar sticks at `bottom: var(--hn-foot-h)`
+— it stands *on* the band, deliberately, so a wall parked over the band does not
+leave somebody with no way to the card. With the band gone for the keyboard it
+was standing on nothing, 54px of it. The offset is for the band, so no band, no
+offset (`.hn--typing .arc-bar-wrap`), which is the same sentence the standalone
+wall's fallback already makes. Then the wall's own floor went with it, on her
+ask: that padding is the home indicator's room, and the home indicator is not at
+the bottom of what you can see while a keyboard is over it. Both phone-only and
+both only while a field has the focus. Measured: the bar's bottom edge lands on
+the keyboard line exactly, and goes back to standing on the band on blur.
+
+**Tried and reverted: the journal's filter as an editable block.** Miyel: "is it
+possible (site wide) to have it JUST be a keyboard here and not a keyboard with
+up down and checkmark options." That strip is **iOS's own form bar**, hung over
+the keyboard for any focused `<input>`, and **no attribute, meta tag or
+stylesheet rule takes it off** — that part is worth keeping, because it is the
+answer every time the question comes up. The one thing known to dodge it is to
+stop using a form field: `contentEditable` is rich-text editing as far as iOS is
+concerned.
+
+Built on the filter alone (never sitewide — an editable block cannot be
+autofilled, and the comment and send forms live on the return address coming
+back by itself). It passed everything in the pane: caret stayed put while
+typing, placeholder came back on empty, `?q=` filled it, paste forced to plain
+text. **On a real phone it was worse than the bar** — "it broke it more than
+help" — and it came straight back out.
+
+**So: do not try this again.** The form bar is iOS's and it stays. What is
+salvageable from the attempt, if something like it is ever needed: React must
+never render an editable block's text (a re-render on a keystroke puts the caret
+back at the start), the placeholder has to be drawn in CSS, and paste has to be
+forced to plain text. All three are in the git history of this day.
+
+**A sweep of the stylesheets before merging.** Sixty-odd class names that
+nothing in the tree referenced, mostly whole families left behind by things that
+were replaced: `.bk-*` (an old address-book panel), most of `.idc-*`, `.pp-*`,
+the session's pre-overhaul `.ses-album*`/`.ses-source*`/`.ses-chip`/`.ses-pulse`,
+`.fd-view*` (the feed's old toggle, now `.fd-dense`), and `.sn-label`, which only
+died that morning when the send sheet's To row became a step. About 300 lines.
+`EdgeCaret.js` went with its rules — nothing had imported it.
+
+Every one was checked against class names the code *builds* rather than spells
+out, which is the only way this is safe: `.ln-mark--fav`, `.ses-mark--formative`
+and `.ln-flag--fav` all look unreferenced and are live. One was got wrong anyway
+— see the first gotcha. **`session_components/backgrounds/` was left alone**:
+eleven files and 2,040 lines that nothing imports, but this project parks things
+on disk on purpose and that is Miyel's call, not a sweep's.
+
+**And a second, tidier pass.** Nine imports nothing used (an entry still
+importing the address book and `Link`, the session page a bookplate hook, the
+finder two glyphs, the plate an `ellipsize`, the book an `X`) — each verified by
+counting mentions with the whole output in front of me, after the morning's
+lesson; four flagged in IdentityCard turned out to be live and were left. One
+rule declared twice word for word (`.lay--settling .lay-content`). `data-typing`
+in LayerEntry, set on every focus and read by nothing, is gone — the trap it was
+written around now lives beside the one place that test is actually used,
+HomeNav's typing effect. And `.ln-word` moved from entry.css to base.css, where
+the shared pieces live: it stopped being the entry's the moment it went on the
+card, the credit, the preview and every comment.
+
+**Not touched, on purpose:** twenty-one library exports nothing imports. Some are
+kept by decision (`pull_briefing`/`save_briefing` — NOTES says the `briefings`
+table stayed), some are used inside their own file with a needless `export`,
+some are the printer's and the code's helpers. Deleting a library function is
+removing a capability, not cleaning, and that is a decision per function.
+Thirty inline `style={{}}` objects remain on the entry page — the last real "old
+box" — and converting them is a job of its own, after the merge.
+
+**The editing bar is one component.** It was the same fifteen lines written out
+by hand in three files — an entry being corrected, the card being corrected, a
+send being credited — sharing a stylesheet and nothing else, and it cost twice
+in one day: turning the pills into words was the same edit made three times, and
+the session preview had already drifted into having no glyphs while the other
+three still did. `EditingBar` owns the band, the word for what you are in the
+middle of, and Save and Cancel, because all three said exactly that and said it
+identically; a bar that only lent out its band would have left the two words to
+drift the way the glyphs did. Each call site is one line now.
+
+It does **not** own the session preview's foot. That borrows the look on purpose
+and says so in its own file, but it is a different class at a different height
+over a different surface, and its words are Go back and Save to journal — a
+different act, deliberately worded differently. Borrowing the look is not being
+the thing. The editing *state* stays two hooks, `useEntryEditor` and
+`useIdentificationCardEditor`, which is a decision already recorded in the first
+one's own opening note.
+
+**And a stale note corrected while in there.** `.ln-screen-two-scroll` is *not*
+the element that scrolls, though the note on the editing rule still said so —
+`.ln-screens` is, and has been since the entry became one page instead of two
+snapped screens on 2026-09-20. The padding works either way, because room at
+the end of the content is room the scroller can use; it was the reasoning that
+had gone stale, and anybody "fixing" it would have moved the rule onto the
+element it is already on.
+
+Two behaviours changed on the way, both small. The form imported `keepSender`
+and never called it, so a reader's name was read back on the next journal but
+only ever *written* by the send form — someone who comments and never sends a
+record was asked who they are every time, under a comment promising otherwise.
+And the reply half never sent `author_url` at all, so answering somebody cost
+you the link to your own journal that commenting did not. Both gone, because the
+two forms are now one component with a `parentId`: there is no second copy left
+to drift.
+
+And three in the beacon's mark, found from one report (Miyel: "when starting a
+session the LN. large logo is on the screen blocking minibeacon"). The mark the
+*bar* draws — the phone's copy, newer than the pane's — had never been told to
+stand down while a record is being chosen, so it sat at full strength over the
+mini beacon, which is centred on the same pixels of the same row. It leaves out
+of the top of the screen now and comes back down from it — it faded for an hour
+first, and Miyel: "i dont like fade outs." The movement is on the svg rather
+than on its box, because the box's transform is the morph's and written every
+frame; the mark inside had none, which made it the free surface. 0.7s each way,
+which is the crown's own clock: the sinking curve out, the arriving curve back.
+
+**And on the way in they take turns — `MAKE_ROOM_MS`, 300.** The press starts two
+movements through the same strip of screen: the mark leaving out of the top, and
+the record flying out of the card into the bar (`TO_THE_BAR_MS`). On their own
+clocks they collided — measured, the cover slid through the logo from 220ms to
+520ms (Miyel: "i dont want them overlapping"). **It is not a race the mark can
+win by hurrying**, because the cover is faster and starts below it; matching the
+mark to the flight's curve cleared it, but cost the exit any chance of being
+slower. So the cover waits instead: it holds at the card for 300ms while the
+mark sweeps out, then travels. The card is standing down through all of it (its
+own 0.7s), so nothing is left hanging anywhere. The whole way in is 920ms,
+measured, with no overlap at any frame.
+
+The record's *name* flies on its own transform, separately from its cover — give
+one the wait and not the other and the two halves of one object arrive apart.
+Traced together: both hold to 300, both set off at 360, both land at 900. The beacon
+carries its own z-index, because an explicit 1 on the mark beats a later
+sibling's auto. Behind all that: the mark parked 48px high after every session,
+the header's backing then stood over the search field, and the return landed in
+two stages. All three in the gotchas — they are one root.
 
 **2026-09-20 — The record becomes the entry's header, and a screen is two
 stops.** On a phone an entry is one page rather than two snapped screens.

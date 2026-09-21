@@ -572,3 +572,55 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 .ln-switch:checked { background: var(--ink); border-color: var(--ink); }
 .ln-switch:checked::after { transform: translateX(16px); background: var(--bg); }
 .ln-switch:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+/* Moved here from entry.css on 2026-09-21, the day it stopped being the
+   entry's: it is on the identity card, on crediting a send, on the session
+   preview and under every comment now. Shared pieces live in this sheet. The
+   note below still says "that bar" — it means the editing bar (EditingBar.js). */
+/* ── The word ───────────────────────────────────────────────────────────────
+   What Save and Cancel are on that bar, since 2026-09-20. They were pills —
+   an outline and a filled one — and a pill is the shape this site uses for a
+   thing you could turn on: a filter, a pin, a keeper. Editing is not a thing
+   you turn on from here. You are already in it, the bar exists to say so, and
+   the only question left is which of two words ends it. Miyel picked this out
+   of five, 2026-09-20: words on a rule.
+
+   The rule under the live word is the whole of the state, the way the pill's
+   fill was — underlined is the one that commits, and colour is the only other
+   thing separating them.
+
+   No glyph. A tick and a cross earn their place on a control you meet in a row
+   of other controls; here there are two words and a label, and the words are
+   quicker to read than the shapes are. SessionPreview.js made that argument
+   for its own bar in September and it holds for all four of them.
+
+   line-height is set by hand, and set to exactly the height the pills came out
+   at: 4px either side of a 13px glyph, plus the two borders. The editing bar,
+   the trouble band and the preview band are deliberately one band, and the
+   height is what makes them read as one. Changing the controls inside it is
+   not a licence to move it. */
+.ln-word {
+  display: inline-block;
+  padding: 0 8px;
+  border: 0;
+  background: transparent;
+  font-family: var(--font-label);
+  font-size: 9px;
+  line-height: 23px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.ln-word:hover:not(:disabled) { color: var(--ink); }
+/* The one that commits. */
+.ln-word--on {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 5px;
+}
+.ln-word:disabled { opacity: 0.45; cursor: default; }
+.ln-word:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; }

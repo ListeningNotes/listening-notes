@@ -15,12 +15,20 @@
 // ── One sheet, two ways in ────────────────────────────────────────────────
 // It opens knowing one of the two things it needs and asks for the other:
 //
-//   from a row in the book   the person is chosen, so it opens on the search
+//   from a row in the book   the person is chosen, so it opens on the records
 //   from a record's tools    the record is chosen, so it opens on the faces
 //
-// Which is why neither half is a step. Both are on screen at once and one of
-// them is already answered — a wizard would make the known half a page you
-// press through.
+// And the asking is a step either way, which is what makes the two ways in
+// the same flow. Miyel, 2026-09-21: "let's get send flow to look uniform from
+// here or sending an album from toolbar, only thing is the selection of
+// recipient will be an added step sending from an album."
+//
+// The known half is never a step — a wizard that makes you press through an
+// answer you have already given is the thing this is not. What is a step is
+// the half that is still a question, and it gets the whole sheet while it is
+// one: a wall of covers, or a wall of faces. Then the same second screen
+// either way — the record, a message, the switch, and a button with a name in
+// it. Nothing about which door you came in by is visible from there.
 //
 // ── Why this one is allowed to be a sheet ─────────────────────────────────
 // DECISIONS is clear that a control opens where it belongs rather than
@@ -38,7 +46,7 @@
 // whether you meant it taxes every deliberate dismiss to catch a rare
 // accident. A send that fails keeps everything too, and says so.
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { EnvelopeSimple } from '@phosphor-icons/react';
 import AlbumFinder from './AlbumFinder';
 import MiniAddressBook from './MiniAddressBook';
@@ -144,6 +152,34 @@ export default function SendSheet({ open, onClose, person = null, record = null 
 
   const shut = useCallback(() => { setError(''); onClose?.(); }, [onClose]);
 
+  // ── The band steps down while this is up ────────────────────────────────
+  // Miyel, 2026-09-21, on the sheet opened from the book with a keyboard up:
+  // "we need to make the [band] not shown between keyboard and send flow."
+  // The cross sizes itself to the part of the window you can see, so a
+  // keyboard walks the four doors up the screen until they are sitting in the
+  // gap between this sheet and the keys — a row of somewhere-else, wedged
+  // into the middle of writing to somebody.
+  //
+  // Same cure as a correction on the card, and the same class of thing: one
+  // row at the foot of the screen at a time. The band belongs to the cross
+  // and this sheet does not, so they are joined by a class on `.hn` rather
+  // than by threading state through a pane — see About.js, which does this
+  // for the editing bar, and .hn-foot in nav.css for the other half.
+  useEffect(() => {
+    if (!open) return undefined;
+    const cross = document.querySelector('.hn');
+    // An attribute and not a class, 2026-09-21. It *was* a class, for about an
+    // hour, and it did not survive: the cross's class attribute is React's, and
+    // it is rewritten whole on every render of HomeNav — which the opening of
+    // this sheet is quite enough to cause. Measured with the sheet open and the
+    // flag already gone. HomeNav's own note on the morph records the same
+    // lesson from 2026-09-20 and says the cure is to put the flag in the list
+    // React renders; that is not available from out here, and an attribute
+    // React does not render is never touched.
+    cross?.toggleAttribute('data-sending', true);
+    return () => cross?.removeAttribute('data-sending');
+  }, [open]);
+
   // ── The keyboard, and where the visible window actually is ──────────────
   // Miyel, 2026-09-19: "it's also doing that thing where when the keyboard
   // opens and closes the screen moves all over." It is the same thing the
@@ -241,18 +277,39 @@ export default function SendSheet({ open, onClose, person = null, record = null 
     return () => window.removeEventListener('keydown', key);
   }, [open, shut]);
 
-  // The note takes the cursor the moment the sheet stops being a search.
-  // Once per opening, so coming back from Change does not steal it while you
-  // are still reading the covers. Above the early return, because a hook
-  // cannot be called on only some renders — `record || pick` is the same
-  // fact `picking` is read from a few lines down, said before the component
-  // is allowed to bail out.
-  useEffect(() => {
+  // The note takes the cursor the moment the sheet stops asking, and the
+  // keyboard comes up with it. Once per opening, so coming back from Change
+  // does not steal it while you are still reading the covers. Above the early
+  // return, because a hook cannot be called on only some renders — the two
+  // tests here are the same two facts `picking` is read from a few lines down,
+  // said before the component is allowed to bail out. Both halves, not just
+  // the record: coming in from a record's tools the record was never a
+  // question, and the cursor landing in the message while you are still
+  // choosing a face would be the sheet hurrying you past the only thing it
+  // asked.
+  //
+  // ── Why this one is a layout effect ─────────────────────────────────────
+  // Miyel, 2026-09-21: "make sure when person is selected the keyboard is
+  // already ready for typing, shouldn't have to click it."
+  //
+  // iOS will only raise the keyboard for a focus() that happens while a tap
+  // is still being handled — press a face, and the browser gives the page a
+  // moment in which it is allowed to open the keyboard, and then takes it
+  // away. A plain useEffect is run *after the browser has painted*, which is
+  // outside that moment: the cursor lands in the note, the field looks ready,
+  // and nothing comes up until you tap it yourself. A layout effect is run
+  // inside the same turn as the press that caused it, so the focus is still
+  // the tap's.
+  //
+  // preventScroll because this sheet places itself against visualViewport
+  // (see above) and does not need Safari scrolling the page to chase a field
+  // that is already on screen.
+  useLayoutEffect(() => {
     if (!open) { wrote.current = false; return; }
-    if (!(record || pick) || wrote.current) return;
+    if (!(record || pick) || !(person?.address || form.to) || wrote.current) return;
     wrote.current = true;
-    noteRef.current?.focus();
-  }, [open, record, pick]);
+    noteRef.current?.focus({ preventScroll: true });
+  }, [open, record, pick, person?.address, form.to]);
 
   if (!open) return null;
 
@@ -282,9 +339,21 @@ export default function SendSheet({ open, onClose, person = null, record = null 
   //
   // Which is the same two-states argument as before, taken the rest of the
   // way: it was two states of one form, and the form was still standing
-  // behind the search. Choosing a record and writing to somebody are two
-  // different jobs and they get the screen one at a time.
-  const picking = !chosen;
+  // behind the search. Choosing and writing are two different jobs and they
+  // get the screen one at a time.
+  //
+  // 2026-09-21: and the same is true of choosing a person. Coming in from a
+  // record's tools, who it was for had been a strip of faces inside the form,
+  // above a message written to nobody in particular — the identical complaint
+  // about the identical shape, on the other half. So whichever half is still
+  // a question takes the whole sheet, and the screen you write on is the same
+  // screen whichever door you came in by.
+  //
+  // '' means nothing is left to ask. `person` rather than `to` for the face,
+  // because the book is fetched after the sheet opens and `to` is found in
+  // it — reading `to` alone would flash the picker for a person who was
+  // chosen before it ever opened.
+  const picking = !chosen ? 'record' : (!(person || to) ? 'who' : '');
 
   async function send(event) {
     event.preventDefault();
@@ -368,7 +437,7 @@ export default function SendSheet({ open, onClose, person = null, record = null 
             </div>
           </div>
         ) : (
-          picking ? (
+          picking === 'record' ? (
           // ── Step one: the record, and nothing else ──────────────────────
           // No message, no switch, no send button. There is nothing to write
           // to until there is something to write about, and a form standing
@@ -382,69 +451,88 @@ export default function SendSheet({ open, onClose, person = null, record = null 
               wants
             />
           </div>
+        ) : picking === 'who' ? (
+          // ── Step one, coming the other way ──────────────────────────────
+          // The record was never a question — you pressed Send on it — so the
+          // question is the face, and it gets the screen the covers get. Same
+          // strip of faces the entry's Sent by and the inbox draw, laid out as
+          // a wall here because a sideways row inside a screenful of nothing
+          // is a row hiding most of your book off the right edge.
+          //
+          // Picking does not toggle. In the form this was a strip you could
+          // press twice to unsay; here it is the step, and a press is the
+          // answer that ends it.
+          <div className="sn-pick sn-who">
+            {people.length === 0 ? (
+              <p className="sn-empty">Nobody in your address book yet. Add somebody first — then you can send to them from here.</p>
+            ) : (
+              <>
+                {people.length > 6 && (
+                  <input
+                    className="sn-find"
+                    value={findWho}
+                    onChange={e => setFindWho(e.target.value)}
+                    placeholder="Find someone"
+                    aria-label="Find someone in your address book"
+                    autoComplete="off"
+                  />
+                )}
+                <MiniAddressBook
+                  people={people}
+                  linked={form.to}
+                  narrow={findWho}
+                  onPick={p => { setForm(f => ({ ...f, to: p.address })); setError(''); }}
+                  label="Who it is for"
+                  verb="send"
+                />
+              </>
+            )}
+          </div>
         ) : (
           <form className="sn-form" onSubmit={send}>
-            {/* The record. Fixed when the send started on one — you pressed
-                Send on this record and the sheet is not going to ask you which
-                — and the finder's own small row when it started on a person
-                and one has since been chosen. */}
-            {record ? (
-              <div className="sn-record">
-                {chosen.art
-                  ? <img className="sn-record-art" src={chosen.art} alt="" />
-                  : <span className="sn-record-art sn-record-art--none" aria-hidden="true" />}
-                <span className="sn-record-who">
-                  <span className="sn-record-album">{chosen.album}</span>
-                  <span className="sn-record-artist">{chosen.artist}</span>
-                </span>
-              </div>
-            ) : (
-              <AlbumFinder picked={pick} onPick={p => { setPick(p); setError(''); }} onClear={() => setPick(null)} />
-            )}
+            {/* ── The record, one shape either way ────────────────────────
+                Centred, with the art over its name: it is the object being
+                handed across (Miyel, 2026-09-17).
 
-            {/* ── Who it is for, only when it is a question ────────────────
-                Opened from a record's tools, nobody has been chosen yet and
-                this is the strip of faces — the same one the entry's Sent by
-                and the inbox draw, three surfaces asking who and answering
-                in one shape.
+                Until 2026-09-21 that was only true of a send that started on
+                a record. One that started on a person kept the finder's own
+                held row — small art on the left, the name beside it, Change on
+                the right — which is the right shape inside a search and the
+                wrong one here, and it meant the screen you write on looked
+                like two different screens depending on which door you came in
+                by. That is the whole of what Miyel asked to be uniform.
 
-                Opened from a face in the book there is nothing to ask, and
-                nothing is drawn. It showed the picker with that person
-                ringed, then a stated To with their face, and then Miyel,
-                2026-09-19: "I don't even think To is needed — it already
-                says Send to June and we literally chose him." Which is
-                right: the sheet was answering a question nobody had asked,
-                twice, above a button that names the person. What tells you
-                where this is going is the button, and it always did. */}
-            {!person && (
-              <div className="sn-group">
-                <span className="sn-label">To</span>
-                {people.length === 0 ? (
-                  <p className="sn-empty">Nobody in your address book yet. Add somebody first — then you can send to them from here.</p>
-                ) : (
-                  <>
-                    {people.length > 6 && (
-                      <input
-                        className="sn-find"
-                        value={findWho}
-                        onChange={e => setFindWho(e.target.value)}
-                        placeholder="Find someone"
-                        aria-label="Find someone in your address book"
-                        autoComplete="off"
-                      />
-                    )}
-                    <MiniAddressBook
-                      people={people}
-                      linked={form.to}
-                      narrow={findWho}
-                      onPick={p => setForm(f => ({ ...f, to: p.address === f.to ? '' : p.address }))}
-                      label="Who it is for"
-                      verb="send"
-                    />
-                  </>
-                )}
-              </div>
-            )}
+                Change only when there is something to change back to. Coming
+                from a record's tools the record was never a question; coming
+                from the book it was step one, and this is the way back to it.
+                It is a .ln-word, the same quiet uppercase word Save and Cancel
+                are on the editing bar. */}
+            <div className="sn-record">
+              {chosen.art
+                ? <img className="sn-record-art" src={chosen.art} alt="" />
+                : <span className="sn-record-art sn-record-art--none" aria-hidden="true" />}
+              <span className="sn-record-who">
+                <span className="sn-record-album">{chosen.album}</span>
+                <span className="sn-record-artist">{chosen.artist}</span>
+              </span>
+              {!record && (
+                <button type="button" className="ln-word" onClick={() => { setPick(null); setError(''); }}>
+                  Change
+                </button>
+              )}
+            </div>
+
+            {/* ── And no row for who it is for ─────────────────────────────
+                There was a strip of faces here, drawn whenever the sheet had
+                been opened from a record's tools. It is the step above now,
+                and by the time this form is on screen the question has been
+                answered either way.
+
+                Nothing states the answer, on purpose. Miyel, 2026-09-19, when
+                it was a stated To under the faces: "I don't even think To is
+                needed — it already says Send to June and we literally chose
+                him." What tells you where this is going is the button at the
+                foot, and it always did. */}
 
             {/* ── The note, with no label over it ─────────────────────────
                 A NOTE stood above this field and said what the field is,
