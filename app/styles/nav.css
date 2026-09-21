@@ -729,12 +729,18 @@
   z-index: 0;
 }
 .hn[data-pane="1"] .hn-bar-ground { height: var(--ground, var(--hn-bar-h)); }
-/* Only the two static ones need lifting; everything else in this row is
-   absolute already and later in the order, which is enough. Written as the
-   two names rather than as `> :not(.hn-bar-ground)`, which was a wider net
-   than it looked: it set `position: relative` on the big mark as well and
-   dropped it back into the flex row at the far right. */
+/* Only the static ones need lifting; everything else in this row is absolute
+   already and later in the order, which is enough. Written as names rather
+   than as `> :not(.hn-bar-ground)`, which was a wider net than it looked: it
+   set `position: relative` on the big mark as well and dropped it back into
+   the flex row at the far right.
+
+   **The list is the whole list.** The feed's density toggle was missed for a
+   day because it is only in this row on one floor of one pane, so it is the
+   one you will not see go — and it did go, straight behind the floor, the
+   same way the moon did. Anything put in this row from now on goes here. */
 .hn-lights,
+.fd-dense,
 .hn-bar-tools { position: relative; z-index: 1; }
 
 /* The big mark, drawn by the header rather than by the pane — see the note
