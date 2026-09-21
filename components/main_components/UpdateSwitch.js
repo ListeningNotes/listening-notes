@@ -41,6 +41,16 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 // build is a minute or two; past four the wait is worse than the not
 // knowing, and Carry on has been sitting there the whole time.
 const LOOK_EVERY = 5000;
+// The turning ring: eight dots on a circle, fading round it, so the ring
+// reads as moving even before the rotation is noticed.
+const RING = Array.from({ length: 8 }, (unused, i) => {
+  const at = (i / 8) * Math.PI * 2;
+  return {
+    x: Number((Math.cos(at) * 10).toFixed(2)),
+    y: Number((Math.sin(at) * 10).toFixed(2)),
+    o: Number((0.22 + (i / 8) * 0.78).toFixed(2)),
+  };
+});
 const GIVE_UP_AFTER = 4 * 60 * 1000;
 
 export default function UpdateSwitch({ centered = false, onDone = null }) {
@@ -91,45 +101,55 @@ export default function UpdateSwitch({ centered = false, onDone = null }) {
 
   // Proven on: this very deployment was pushed by the updater.
   const on = Boolean(state?.byUpdater) || landed;
-  const lamp = on ? 'on' : (watching ? 'waiting' : 'off');
-  // Short, and none of it about how the machinery works. That it is
-  // automatic is the whole point; how often it checks is not theirs to
-  // carry.
-  const said = on
-    ? (landed ? 'It worked.' : 'On — your journal updates itself.')
-    : watching
-      ? 'Waiting for GitHub…'
-      : state?.stalled
-        ? 'Your journal has stopped updating itself.'
-        : 'Keep your journal up to date automatically.';
 
   return (
     <div className={'usw' + (centered ? ' usw--centered' : '')}>
-      <p className="usw-line">
-        <span className={'usw-lamp usw-lamp--' + lamp} aria-hidden="true" />
-        <span>{said}</span>
-      </p>
+      {/* Kept whether or not it is showing anything, so nothing below it
+          moves when the signal arrives. */}
+      <div className="usw-signal" aria-hidden="true">
+        {on && (
+          <svg className="usw-tick" viewBox="0 0 26 26"><path d="M5 13.6l5.2 5.2L21 7.6" /></svg>
+        )}
+        {watching && !on && (
+          <span className="usw-ring">
+            {RING.map((at, i) => (
+              <i key={i} style={{ transform: `translate(${at.x}px, ${at.y}px)`, opacity: at.o }} />
+            ))}
+          </span>
+        )}
+      </div>
 
-      {/* Nothing to press where the link cannot be built — a copy not
-          running on Vercel, or a dev server. A dead button with a
-          paragraph apologising for itself is worse than no button. */}
-      {!on && state?.install && (
+      {on ? (
         <>
-          {/* Said before the press, not after: a new tab nobody expected is
-              a new tab nobody trusts. */}
-          <p className="usw-how">
-            This opens a GitHub link for you in a new tab. Press the green
-            <strong> Commit changes</strong>, then <strong>Commit changes</strong> again.
-          </p>
-          <button type="button" className="usw-go" onClick={press} disabled={watching}>
-            {watching ? 'Waiting…' : 'Turn on updates'}
-          </button>
+          <p className="usw-said" role="status">{landed ? 'It worked.' : 'On — your journal updates itself.'}</p>
+          {landed && <p className="usw-how">Your journal will keep itself up to date from now on.</p>}
         </>
-      )}
+      ) : state?.install ? (
+        <>
+          {/* The sentence is the button: the offer and the action are one
+              thing, not a label with a switch beside it. */}
+          <button type="button" className="usw-switch" onClick={press} disabled={watching}>
+            Keep your journal up to date automatically
+          </button>
+          {/* Under it, because it describes what pressing does rather than
+              competing with it. Said before the press, not after: a new tab
+              nobody expected is a new tab nobody trusts. And only ever
+              alongside the button — an instruction to press something that
+              is not there is worse than saying nothing. */}
+          <p className="usw-how">
+            {watching ? 'Waiting for GitHub…' : (
+              <>
+                {state?.stalled && <>Your journal has stopped updating itself. </>}
+                This opens a GitHub link for you in a new tab. Press the green
+                <strong> Commit changes</strong>, then <strong>Commit changes</strong> again.
+              </>
+            )}
+          </p>
+        </>
+      ) : null}
 
       {/* Only once it is on. Before that the way past is the setup page's
-          own Skip, the same one every screen before this has, rather than a
-          second word for it sitting here. */}
+          own Skip, the same one every screen before this has. */}
       {onDone && on && (
         <button type="button" className="usw-go" onClick={onDone}>Next</button>
       )}
