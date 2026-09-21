@@ -257,16 +257,20 @@
    The content follows the finger while held, settles when let go, and a
    neighbour enters from the side it was on. */
 .lay-content { min-height: 100%; }
-.lay--settling .lay-content { transition: transform 0.16s cubic-bezier(0.22, 0.61, 0.36, 1); }
+.lay--settling .lay-content { transition: transform 0.36s cubic-bezier(0.22, 0.61, 0.36, 1); }
 /* A layer that arrived by swipe does not grow or fade; its content comes in
    from the side the finger sent the last one away from. The exit is the
    settling transition above, run to a full width. */
 .lay--swiped { animation: none; }
 /* Returned to, not arrived at: the sheet under a closed one draws at rest. */
 .lay--still { animation: none; }
-.lay--settling .lay-content { transition: transform 0.24s cubic-bezier(0.22, 0.61, 0.36, 1); }
-.lay-content--from-right { animation: layFromRight 0.26s cubic-bezier(0.22, 0.61, 0.36, 1); }
-.lay-content--from-left  { animation: layFromLeft  0.26s cubic-bezier(0.22, 0.61, 0.36, 1); }
+.lay--settling .lay-content { transition: transform 0.36s cubic-bezier(0.22, 0.61, 0.36, 1); }
+/* The page turn, and it is TURN_MS in LayerEntry — the two have to agree or
+   the sheet commits before the leaf has landed. Slowed on 2026-09-20: "it
+   can be slowed down a little so it reads smoother, like you're really
+   flipping through pages of a book." */
+.lay-content--from-right { animation: layFromRight 0.36s cubic-bezier(0.22, 0.61, 0.36, 1); }
+.lay-content--from-left  { animation: layFromLeft  0.36s cubic-bezier(0.22, 0.61, 0.36, 1); }
 @keyframes layFromRight { from { transform: translateX(100%); } to { transform: none; } }
 @keyframes layFromLeft  { from { transform: translateX(-100%); } to { transform: none; } }
 
@@ -473,6 +477,11 @@
   border-radius: 6px;
   background: var(--border);
 }
+/* The reading version: a page of notes rather than a record. Left-aligned
+   and starting under the header, which is where the writing starts. */
+.lay-wait--read { align-items: stretch; padding: calc(var(--ln-band) + 40px) 24px 0; gap: 22px; }
+.lay-wait-line--read { height: 0.8rem; }
+.lay-wait-line--short { width: 58%; }
 .lay-wait-line--title { width: min(62%, 300px); height: 1.9rem; margin-top: 6px; }
 .lay-wait-line--byline { width: min(38%, 190px); height: 0.9rem; }
 /* Breathing rather than sweeping. A shimmer that travels reads as a progress
@@ -1340,9 +1349,16 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
     from { clip-path: inset(0 0 100% 0); }
     to   { clip-path: inset(0 0 0 0); }
   }
-  .ln-crown--in { animation: ln-crown-in 220ms cubic-bezier(0.22, 0.61, 0.36, 1); }
+  /* And the same shutter closing, for the way back up. */
+  @keyframes ln-crown-out {
+    from { clip-path: inset(0 0 0 0); }
+    to   { clip-path: inset(0 0 100% 0); }
+  }
+  .ln-crown--in  { animation: ln-crown-in  320ms cubic-bezier(0.22, 0.61, 0.36, 1); }
+  .ln-crown--out { animation: ln-crown-out 320ms cubic-bezier(0.22, 0.61, 0.36, 1); }
   @media (prefers-reduced-motion: reduce) {
-    .ln-crown--in { animation: none; }
+    .ln-crown--in,
+    .ln-crown--out { animation: none; }
   }
 
   /* The record's own art stays on the page and scrolls away with it. It was

@@ -124,7 +124,19 @@ export default function LayerWaiting({ slug, authed = false }) {
             headerSlot,
           )
         : null}
-      <div className="ln-screens" aria-hidden="true" />
+      {/* Not an empty page. The turn slides whatever is on the sheet out to
+          one side and the next thing in from the other, and with nothing
+          here it was sliding a blank in — so the record arriving in the
+          header looked right and the page under it appeared out of nowhere
+          (Miyel, asking for the turn in the mini state too). Three ruled
+          lines is what a page of notes is from across the room. */}
+      <div className="ln-screens" aria-hidden="true">
+        <div className="lay-wait lay-wait--read">
+          <div className="lay-wait-line lay-wait-line--read" />
+          <div className="lay-wait-line lay-wait-line--read" />
+          <div className="lay-wait-line lay-wait-line--read lay-wait-line--short" />
+        </div>
+      </div>
     </>);
   }
 

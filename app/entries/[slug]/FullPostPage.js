@@ -1004,6 +1004,15 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       if (screens.scrollTop < aim - 1) screens.scrollTop = aim;
       if (screens.scrollTop >= aim - 1) want = null;
     };
+    // How long the shutter takes, and how far ahead of the last words the
+    // changeover starts. The lead is there for a fast thumb: at speed the
+    // line arrives and is gone before the eye has caught up with it, and
+    // sixty pixels of warning reads as the header getting there first rather
+    // than late (Miyel: "when you're scrolling fast it should happen a
+    // little quicker, or maybe sooner").
+    const SHUTTER = 320;
+    const LEAD = 60;
+    let closing = null;
     let base = null;
     // Whether the record has finished becoming the header. Kept from the
     // last frame drawn, because the question gets asked at moments when
@@ -1055,7 +1064,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
         // happen — "maybe when you hit the caret, or the submitted-by, or
         // that blank space." Past that line the album screen is a caret and
         // air, so there is nothing left up there for the header to be about.
-        turns: Math.max(1, (last || one).getBoundingClientRect().bottom + gone - row.getBoundingClientRect().bottom),
+        turns: Math.max(1, (last || one).getBoundingClientRect().bottom + gone - row.getBoundingClientRect().bottom - LEAD),
       };
       draw();
     };
@@ -1095,16 +1104,31 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       // mark goes the instant it starts, because the whole point of not
       // fading is that they are never both there.
       if (on !== done && crown) {
-        crown.classList.remove('ln-crown--in');
-        if (on) { void crown.offsetWidth; crown.classList.add('ln-crown--in'); }
+        // ── And it undoes itself on the way back, 2026-09-20 ────────────
+        // Miyel: "when you go back up it needs to undo — it needs to reverse
+        // back to the logo, not just disappear." So the shutter runs the
+        // other way and the mark waits for it: the record is covered from
+        // its foot up, and only once it has gone does the row go back to
+        // being the journal's.
+        clearTimeout(closing);
+        crown.classList.remove('ln-crown--in', 'ln-crown--out');
+        void crown.offsetWidth;
+        crown.classList.add(on ? 'ln-crown--in' : 'ln-crown--out');
+        // Both said on the document rather than on the elements: the row is
+        // a portal and its nodes are replaced out from under anything
+        // holding one, and a number written here as an inline style would
+        // also beat the rule that gets the record out of the tools' way.
+        if (on) {
+          document.documentElement.style.setProperty('--ln-crown', '1');
+          lede('0');
+        } else {
+          closing = setTimeout(() => {
+            document.documentElement.style.setProperty('--ln-crown', '0');
+            lede('1');
+          }, SHUTTER);
+        }
       }
       done = on;
-      // Both said on the document rather than on the elements: the row is a
-      // portal and its nodes are replaced out from under anything holding
-      // one, and a number written here as an inline style would also beat
-      // the rule that gets the record out of the tools' way.
-      document.documentElement.style.setProperty('--ln-crown', on ? '1' : '0');
-      lede(on ? '0' : '1');
       // And now it can be drawn: there is a number for it.
       setLedeDrawn(true);
     };
@@ -1165,8 +1189,9 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       narrow.removeEventListener('change', measure);
       window.removeEventListener('resize', measure);
       watch.disconnect();
+      clearTimeout(closing);
       document.documentElement.style.removeProperty('--ln-crown');
-      if (crown) crown.classList.remove('ln-crown--in');
+      if (crown) crown.classList.remove('ln-crown--in', 'ln-crown--out');
       // Not taken away. The record arriving sets it for itself, and a
       // leaving one that cleared it was clearing the new one's answer.
       setCrowning(false);
