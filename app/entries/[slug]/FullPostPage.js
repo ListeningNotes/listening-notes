@@ -1188,11 +1188,27 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     // anybody has stopped.
     let held = false;
     let idle = null;
+    let lift = null;
     let ours = false;
     let wentDown = true;
     let wasAt = 0;
-    const onHold = () => { held = true; clearTimeout(idle); };
-    const onLetGo = () => { held = false; };
+    const onHold = () => { held = true; clearTimeout(idle); clearTimeout(lift); };
+    // ── It catches a record still moving, 2026-09-20 ─────────────────────
+    // Waiting for the scrolling to stop meant a light throw carried on for
+    // most of a second and settled wherever it ran out — Miyel: "even if the
+    // album is lightly scrolling it should still catch it and push it the
+    // rest of the way, not wait for a full stop."
+    //
+    // So a finger leaving the glass is the signal, not the scrolling
+    // stopping. On a timer of its own, which the scroll events cannot
+    // postpone the way they postpone the idle one below — that is the whole
+    // of what was holding it back, since momentum is a stream of scroll
+    // events and every one of them was pushing the answer further away.
+    const onLetGo = () => {
+      held = false;
+      clearTimeout(lift);
+      lift = setTimeout(rest, 40);
+    };
     const rest = () => {
       if (!base || held || ours) return;
       const at = screens.scrollTop;
@@ -1215,6 +1231,8 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       if (to - from < 80) return;              // no gap worth crossing
       if (at <= from + 8 || at >= to - 8) return;
       ours = true;
+      clearTimeout(idle);
+      clearTimeout(lift);
       // Whichever way you were already going, not whichever edge is nearer.
       // The gap is crossed on the way to something; being put back where you
       // came from because you stopped an inch early is the opposite of
@@ -1269,6 +1287,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       screens.removeEventListener('touchend', onLetGo);
       screens.removeEventListener('touchcancel', onLetGo);
       clearTimeout(idle);
+      clearTimeout(lift);
       screens.removeEventListener('load', measure, true);
       narrow.removeEventListener('change', measure);
       window.removeEventListener('resize', measure);
