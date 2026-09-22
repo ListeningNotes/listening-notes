@@ -69,6 +69,7 @@ import { BIO_PROMPTS, BIO_LIMIT } from '../../library/bioprompt';
 import PasswordGate from '../../components/session_components/PasswordGate';
 import { shrink } from '../../components/main_components/IdentificationCardEditor';
 import AddToHomeScreen from '../../components/main_components/AddToHomeScreen';
+import UpdateSwitch from '../../components/main_components/UpdateSwitch';
 import { useJournalHost } from '../../hooks/useJournalHost';
 
 // The password claims the journal; the home screen comes after, because it is
@@ -78,7 +79,13 @@ import { useJournalHost } from '../../hooks/useJournalHost';
 // now — see About.js. Last.fm and the Anthropic key followed the rig until
 // 2026-09-13 and were asked in Settings after that; Last.fm went altogether
 // on 2026-09-16 and the key is still there — the note at the top.
-const STEPS = ['name', 'photo', 'prompts', 'rig', 'password', 'homescreen'];
+// Updates sits with the other housekeeping, before the password: the
+// password is the weight of the flow — it is the moment the journal becomes
+// theirs — and the home screen is the door closing behind them, so those two
+// stay together at the end. A copy in setup already carries a wristband
+// issued against its claim code, which is what lets this screen ask the
+// server anything before the password exists.
+const STEPS = ['name', 'photo', 'prompts', 'rig', 'updates', 'password', 'homescreen'];
 const PASSWORD_FLOOR = 8;
 
 async function patchSettings(fields) {
@@ -507,6 +514,12 @@ export default function WelcomeScreen() {
                   {busy ? 'Claiming…' : 'Claim the journal'}
                 </button>
               </form>
+            )}
+
+            {current === 'updates' && (
+              <div className="su-fields">
+                <UpdateSwitch centered onDone={() => advance()} />
+              </div>
             )}
 
             {current === 'homescreen' && (

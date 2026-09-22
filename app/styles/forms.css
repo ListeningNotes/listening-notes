@@ -1882,3 +1882,68 @@ a.pn-item-album:hover { text-decoration: underline; text-underline-offset: 3px; 
   background: var(--panel); color: var(--ink-soft); cursor: pointer;
 }
 .bk-send:hover { color: var(--ink); border-color: var(--ink-faint); }
+
+/* ── from components/main_components/UpdateSwitch.js ───────────────────────
+   Turning on the thing that keeps a journal current. The sentence is the
+   button — the offer and the action are one object — with the instruction
+   under it and the signal in reserved space above, so nothing moves when
+   the signal appears. `--centered` is the setup screen, which is centred
+   top to bottom; Settings is a left-aligned page. */
+.usw { display: flex; flex-direction: column; gap: 14px; align-items: flex-start; }
+.usw--centered { align-items: center; text-align: center; }
+
+/* Empty at rest, and it keeps its room either way. */
+.usw-signal { height: 34px; display: grid; place-items: center; align-self: center; }
+
+.usw-ring { position: relative; width: 26px; height: 26px; animation: usw-turn 1.1s linear infinite; }
+.usw-ring i {
+  position: absolute; left: 50%; top: 50%; margin: -1.75px;
+  width: 3.5px; height: 3.5px; border-radius: 50%; background: var(--ink);
+}
+@keyframes usw-turn { to { transform: rotate(360deg); } }
+
+.usw-tick { width: 26px; height: 26px; }
+.usw-tick path {
+  fill: none; stroke: #4c9a70; stroke-width: 2.4;
+  stroke-linecap: round; stroke-linejoin: round;
+  stroke-dasharray: 30; stroke-dashoffset: 30;
+  animation: usw-draw 0.42s ease-out forwards;
+}
+@keyframes usw-draw { to { stroke-dashoffset: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .usw-ring { animation-duration: 3s; }
+  .usw-tick path { animation: none; stroke-dashoffset: 0; }
+}
+
+/* DM Mono, by way of --font-label. Not --font-mono, which every other
+   button on the site uses and which is an alias for Nunito — the name says
+   monospace and the value has been the body face since the serif came out.
+   The label face is what the small caps elsewhere are actually set in. */
+.usw-switch {
+  padding: 11px 20px; border-radius: 999px; cursor: pointer;
+  background: var(--ink); color: var(--bg); border: 1px solid var(--ink);
+  font-family: var(--font-label); font-size: 10px;
+  letter-spacing: 0.14em; text-transform: uppercase;
+}
+.usw-switch:disabled { opacity: 0.45; cursor: default; }
+.usw--centered .usw-switch { align-self: center; }
+
+.usw-said { margin: 0; font-size: 14.5px; font-weight: 600; color: var(--ink); }
+.usw-how { margin: 0; font-size: 12px; line-height: 1.55; color: var(--ink-faint); max-width: 28ch; }
+.usw--centered .usw-how { margin-inline: auto; }
+.usw-said + .usw-how { color: var(--ink-faint); }
+.usw-how strong { color: var(--ink); font-weight: 600; }
+
+.usw-go {
+  padding: 10px 20px; border-radius: 999px; cursor: pointer;
+  background: var(--ink); color: var(--bg); border: 1px solid var(--ink);
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+}
+.usw--centered .usw-go { align-self: center; }
+
+/* What Settings says and setup does not: how the thing works, and which
+   version will wait to be asked for. */
+.usw-told { display: flex; flex-direction: column; gap: 10px; margin-top: 2px; }
+.usw-told p {
+  margin: 0; font-size: 13px; line-height: 1.7; color: var(--ink-soft); max-width: 58ch;
+}
