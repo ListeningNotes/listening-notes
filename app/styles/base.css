@@ -96,7 +96,13 @@
   --r-lg: 20px;
   --r-xl: 28px;
   --font-serif: var(--font-nunito), sans-serif;
-  --font-mono:  var(--font-nunito), sans-serif;
+  /* DM Mono, and the name is true again. It was an alias for Nunito from
+     the day the serif came out, so every button on the site — Save, Next,
+     Send it, Change password, the pills — was the body face in small caps
+     with its letters pushed apart, pretending. The label face is what the
+     small caps everywhere else are set in, and what the buttons were always
+     meant to match. Miyel's call, 2026-09-22, off a mockup drawn in it. */
+  --font-mono:  var(--font-dm-mono), 'DM Mono', monospace;
   --font-sans:  var(--font-nunito), sans-serif;
   /* The title face. Nunito at 700 — the weight the listening beacon already
      sets a song title in — rather than the DM Serif Display this used to be.
