@@ -319,9 +319,6 @@ export default function WelcomeScreen() {
               aria-valuenow={step + 1}
               aria-valuetext={`Step ${step + 1} of ${STEPS.length}`}
             >
-              <span className="su-track" aria-hidden="true">
-                <span className="su-fill" style={{ width: `${(step / (STEPS.length - 1)) * 100}%` }} />
-              </span>
               {STEPS.map((name, i) => (
                 <span
                   key={name}
@@ -330,23 +327,29 @@ export default function WelcomeScreen() {
                 />
               ))}
             </div>
-            <div className="su-line">
-              {rehearsing && <span className="su-count">Rehearsal — nothing is saved</span>}
-              {{
-                name: 'Whose journal is this?',
-                photo: 'A photo',
-                prompts: 'Three openings',
-                rig: 'What you listen on',
-                password: 'A password',
-                homescreen: 'One more thing',
-              }[current]}
-            </div>
+            {rehearsing && <div className="su-line"><span className="su-count">Rehearsal — nothing is saved</span></div>}
+
+            {/* One sentence per screen, in the reading face, where a small-caps
+                label and a why-line used to sit as a pair. The pair was two
+                things to read where one would do; the second line survives
+                only where a screen genuinely needs a second thought. */}
+            {current !== 'updates' && (
+              <p className="su-ask">
+                {{
+                  name: 'Whose journal is this?',
+                  photo: 'A picture of you.',
+                  prompts: 'Three sentences a visitor reads about you.',
+                  rig: 'What you listen on.',
+                  password: 'What you’ll type to get back in.',
+                  homescreen: 'It’s yours. Put it on your home screen.',
+                }[current]}
+              </p>
+            )}
 
             {current === 'name' && (
               <form className="su-fields" onSubmit={e => { e.preventDefault(); if (name.trim()) advance(); }}>
                 <div>
-                  <span className="su-label">Your name</span>
-                  <input className="su-field" value={name} onChange={e => setName(e.target.value)} autoFocus autoComplete="name" />
+                  <input className="su-field" value={name} onChange={e => setName(e.target.value)} autoFocus autoComplete="name" placeholder="Your name" aria-label="Your name" />
                 </div>
                 <button type="submit" className="su-go" disabled={busy || !name.trim()}>Next</button>
               </form>
@@ -367,7 +370,7 @@ export default function WelcomeScreen() {
 
             {current === 'prompts' && (
               <div className="su-fields">
-                <p className="su-why">Three sentences a visitor reads about you. Pick an opening and finish it. Any number of the three can stay empty.</p>
+                <p className="su-why">Any of them can stay empty.</p>
                 {/* The About pane's picker, wearing the same classes: press
                     the line, the list opens under it, press a line to take
                     it. A native select was here for a day and drew the
@@ -455,7 +458,7 @@ export default function WelcomeScreen() {
                 const clean = gear.map(g => ({ name: g.name.trim(), role: g.role.trim() })).filter(g => g.name);
                 if (clean.length) await patchSettings({ rig: clean });
               }); }}>
-                <p className="su-why">The setup you listen on, as rows: the thing, and what it does. Speakers, an amp, a turntable, a pair of headphones.</p>
+                <p className="su-why">The thing, and what it does.</p>
                 {gear.map((g, i) => (
                   <div className="su-pair" key={i}>
                     <input className="su-field" value={g.name} placeholder="KEF LS50" onChange={e => setGear(rows => rows.map((r, j) => (j === i ? { ...r, name: e.target.value } : r)))} />
@@ -469,7 +472,7 @@ export default function WelcomeScreen() {
 
             {current === 'password' && (
               <form className="su-fields" onSubmit={e => { e.preventDefault(); advance(claim); }}>
-                <p className="su-why">What you’ll type to reach the writing side of your journal.</p>
+
                 {/* The address the password is filed under — the same value
                     the sign-in form and Settings use, so the entry saved here
                     is the one offered later. Visible and writable, because a
@@ -477,7 +480,6 @@ export default function WelcomeScreen() {
                     Safari skips a read-only one. Typing into it does nothing.
                     See hooks/useJournalHost.js. */}
                 <div>
-                  <span className="su-label">Journal</span>
                   <input className="su-field su-who" type="text" name="username" autoComplete="username" value={host} onChange={() => {}} aria-label="Journal" tabIndex={-1} />
                 </div>
                 {/* The eye, 2026-09-13: a password typed once on a phone
@@ -490,9 +492,8 @@ export default function WelcomeScreen() {
                     plain text, so the phone's autocorrect and capitals are
                     off or it would rewrite a password it can now see. */}
                 <div>
-                  <span className="su-label">Password</span>
                   <div className="su-peek">
-                    <input className="su-field" type={peeking ? 'text' : 'password'} name="new-password" autoComplete="new-password" autoCapitalize="none" autoCorrect="off" spellCheck={false} value={password} onChange={e => setPassword(e.target.value)} minLength={PASSWORD_FLOOR} />
+                    <input className="su-field" type={peeking ? 'text' : 'password'} name="new-password" autoComplete="new-password" autoCapitalize="none" autoCorrect="off" spellCheck={false} value={password} onChange={e => setPassword(e.target.value)} minLength={PASSWORD_FLOOR} placeholder="Password" aria-label="Password" />
                     <button
                       type="button"
                       className="su-eye"
@@ -507,8 +508,7 @@ export default function WelcomeScreen() {
                   <div className="su-hint">At least {PASSWORD_FLOOR} characters.</div>
                 </div>
                 <div>
-                  <span className="su-label">Again</span>
-                  <input className="su-field" type={peeking ? 'text' : 'password'} name="confirm-password" autoComplete="new-password" autoCapitalize="none" autoCorrect="off" spellCheck={false} value={confirm} onChange={e => setConfirm(e.target.value)} />
+                  <input className="su-field" type={peeking ? 'text' : 'password'} name="confirm-password" autoComplete="new-password" autoCapitalize="none" autoCorrect="off" spellCheck={false} value={confirm} onChange={e => setConfirm(e.target.value)} placeholder="Again" aria-label="Again" />
                 </div>
                 <button type="submit" className="su-go" disabled={busy || !password || !confirm}>
                   {busy ? 'Claiming…' : 'Claim the journal'}
@@ -524,7 +524,7 @@ export default function WelcomeScreen() {
 
             {current === 'homescreen' && (
               <div className="su-fields">
-                <p className="su-why" style={{ textAlign: 'center' }}>It’s yours. Put it on your home screen.</p>
+                <p className="su-why">It opens without the browser around it, and reads as an app.</p>
                 <AddToHomeScreen centered />
                 <button type="button" className="su-go" disabled={busy} onClick={() => advance()}>Open the journal</button>
               </div>
