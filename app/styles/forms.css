@@ -163,35 +163,25 @@ textarea.sb-field {
   color: var(--ink-faint); text-align: center; margin-bottom: 26px;
 }
 .su-count { display: block; margin-bottom: 6px; }
-/* The lights. Dots sit on a hairline track; the fill runs along the
-   track to the current dot. Both animate, so pressing Next is seen
-   as movement rather than as a different picture. */
+/* The lights. Seven dots, spaced by the row rather than strung on a
+   line — the hairline between them was a progress bar, and a progress bar
+   says how far through you are when what matters is which screen you are
+   on. Miyel's call, 2026-09-22, off a mockup with the line taken out. */
 .su-lights {
-  position: relative; display: flex; justify-content: space-between; align-items: center;
-  margin: 0 auto 22px; width: 220px; height: 14px;
+  display: flex; justify-content: center; align-items: center;
+  gap: 7px; margin: 0 auto 22px;
 }
-.su-track {
-  position: absolute; left: 3px; right: 3px; top: 50%; height: 1px;
-  background: var(--border); transform: translateY(-50%);
-}
-.su-fill {
-  display: block; height: 100%; background: var(--ink);
-  transition: width 0.45s cubic-bezier(0.4, 0, 0.2, 1);
-}
+/* Every dot the same quiet grey but the one you are on, which is solid
+   and a size larger. Nothing marks the screens already behind you: this
+   says where you are, not how much is left. */
 .su-light {
-  position: relative; width: 6px; height: 6px; border-radius: 50%;
-  background: var(--bg); border: 1px solid var(--ink-faint); box-sizing: border-box;
-  transition: background 0.3s, border-color 0.3s, transform 0.3s;
+  width: 4px; height: 4px; border-radius: 50%;
+  background: var(--ink-faint); opacity: 0.4;
 }
-.su-light--past { background: var(--ink); border-color: var(--ink); }
-.su-light--current {
-  background: var(--ink); border-color: var(--ink); transform: scale(1.35);
-  box-shadow: 0 0 0 3px var(--bg), 0 0 0 4px var(--ink-faint);
-}
+.su-light--current { width: 6px; height: 6px; background: var(--ink); opacity: 1; }
 @media (prefers-reduced-motion: reduce) {
-  .su-fill, .su-light { transition: none; }
-}
-.su-fields { display: flex; flex-direction: column; gap: 18px; }
+  }
+.su-fields { display: flex; flex-direction: column; gap: 22px; }
 .su-label {
   display: block; font-family: var(--font-label); font-size: 10px;
   letter-spacing: 0.12em; text-transform: uppercase;
@@ -201,8 +191,23 @@ textarea.sb-field {
   font-family: var(--font-label); font-size: 10px;
   color: var(--ink-faint); margin-top: 6px; line-height: 1.5;
 }
+/* The one sentence a screen carries, in the reading face. It replaced a
+   small-caps label and a why-line sitting as a pair. */
+.su-ask {
+  margin: 26px 0 22px; text-align: center; text-wrap: balance;
+  font-size: 16px; font-weight: 700; line-height: 1.4; color: var(--ink);
+  max-width: 24ch; margin-inline: auto;
+}
+/* A second line belongs to the sentence above it, so where one leads the
+   stack it closes most of the gap the sentence opened. Not :has() — this
+   build drops those rules without saying so (NOTES, Gotchas). */
+.su-fields > .su-why:first-child { margin-top: -14px; }
+/* The second thought, where a screen needs one. Quieter and narrower than
+   the sentence above it, so the two never read as equals. */
 .su-why {
-  font-size: 13px; line-height: 1.65; color: var(--ink-soft); margin: 0 0 4px;
+  font-size: 13px; line-height: 1.6; color: var(--ink-faint);
+  margin: 0 0 4px; text-align: center; text-wrap: balance;
+  max-width: 28ch; margin-inline: auto;
 }
 .su-why a { color: var(--ink); }
 .su-field {
@@ -214,7 +219,20 @@ textarea.sb-field {
 }
 .su-field:focus { border-color: var(--ink-faint); }
 .su-field::placeholder { color: var(--ink-faint); }
-.su-who { background: none; border-color: transparent; padding-left: 0; color: var(--ink-faint); font-family: var(--font-label); font-size: 12px; letter-spacing: 0.08em; }
+/* The journal's address, which is a fact rather than a field: no box, no
+   border, centred under the sentence. It stays a real, visible, writable
+   input all the same — a password manager files a password under a
+   username and skips a field it considers hidden or read-only, and that
+   cost an afternoon to learn (NOTES, Gotchas). It is writable in markup
+   and inert in practice: the change handler does nothing, so nothing a
+   person types into it survives a keystroke. Changing it for real is a
+   Settings job. */
+.su-who {
+  width: 100%; box-sizing: border-box; text-align: center;
+  background: none; border: 0; outline: none; padding: 0;
+  font-family: var(--font-label); font-size: 12px; letter-spacing: 0.08em;
+  color: var(--ink-faint); cursor: default;
+}
 textarea.su-field { resize: vertical; min-height: 64px; }
 /* The eye on the password field, 2026-09-13: the switch sits inside the
    field's right edge and the field leaves room for it. */
@@ -254,7 +272,10 @@ textarea.su-field { resize: vertical; min-height: 64px; }
   font-family: var(--font-mono); font-size: 10px;
   letter-spacing: 0.14em; text-transform: uppercase; cursor: pointer;
 }
-.su-go:disabled { opacity: 0.5; cursor: not-allowed; }
+/* Still black, 2026-09-22. Half opacity turned the one black thing on a
+   pale screen grey, and a grey pill reads as a different button rather
+   than the same one waiting. The text dims instead. */
+.su-go:disabled { cursor: not-allowed; color: var(--ink-faint); }
 .su-under { display: flex; justify-content: space-between; margin-top: 14px; }
 .su-skip, .su-back {
   background: none; border: 0; padding: 0; cursor: pointer;
@@ -266,15 +287,18 @@ textarea.su-field { resize: vertical; min-height: 64px; }
 .su-skip:disabled, .su-back:disabled { opacity: 0.4; cursor: default; }
 .su-error { font-size: 13px; color: #e05555; margin-top: 14px; }
 .su-photo {
-  width: 132px; height: 132px; border-radius: 26px; margin: 0 auto 4px;
+  width: 132px; height: 132px; border-radius: 26px; margin: 0 auto;
   background: var(--panel); border: 1px solid var(--border);
   display: flex; align-items: center; justify-content: center; overflow: hidden;
   cursor: pointer;
 }
 .su-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* The same voice as the sentence above it — it is the screen's one
+   instruction, not a field label. */
 .su-photo span {
-  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.1em;
-  text-transform: uppercase; color: var(--ink-faint);
+  font-family: inherit; font-size: 15px; font-weight: 700;
+  letter-spacing: 0; text-transform: none; color: var(--ink-faint);
+  text-align: center; padding: 0 14px; line-height: 1.35;
 }
 .su-file { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 
@@ -1889,11 +1913,16 @@ a.pn-item-album:hover { text-decoration: underline; text-underline-offset: 3px; 
    under it and the signal in reserved space above, so nothing moves when
    the signal appears. `--centered` is the setup screen, which is centred
    top to bottom; Settings is a left-aligned page. */
-.usw { display: flex; flex-direction: column; gap: 14px; align-items: flex-start; }
+.usw { display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
 .usw--centered { align-items: center; text-align: center; }
 
-/* Empty at rest, and it keeps its room either way. */
+/* Kept only while it has something to show. It used to hold its room at
+   rest so nothing moved when the ring arrived, and the cost was a 34px
+   hole between the sentence and the button on a screen with three things
+   on it. The shift now happens on the press, which is the one moment
+   movement reads as the page answering rather than as a jump. */
 .usw-signal { height: 34px; display: grid; place-items: center; align-self: center; }
+.usw-signal:empty { display: none; }
 
 .usw-ring { position: relative; width: 26px; height: 26px; animation: usw-turn 1.1s linear infinite; }
 .usw-ring i {
@@ -1925,13 +1954,17 @@ a.pn-item-album:hover { text-decoration: underline; text-underline-offset: 3px; 
   font-family: var(--font-label); font-size: 10px;
   letter-spacing: 0.14em; text-transform: uppercase;
 }
-.usw-switch:disabled { opacity: 0.45; cursor: default; }
+/* Still black while it waits, like every other button here. */
+.usw-switch:disabled { cursor: default; color: var(--ink-faint); }
 .usw--centered .usw-switch { align-self: center; }
 
 .usw-said { margin: 0; font-size: 14.5px; font-weight: 600; color: var(--ink); }
-.usw-how { margin: 0; font-size: 12px; line-height: 1.55; color: var(--ink-faint); max-width: 28ch; }
+.usw-how {
+  margin: -8px 0 10px; font-size: 12px; line-height: 1.55;
+  color: var(--ink-faint); max-width: 28ch;
+}
 .usw--centered .usw-how { margin-inline: auto; }
-.usw-said + .usw-how { color: var(--ink-faint); }
+.usw-said + .usw-how { color: var(--ink-faint); margin-top: 0; }
 .usw-how strong { color: var(--ink); font-weight: 600; }
 
 .usw-go {
@@ -1946,4 +1979,24 @@ a.pn-item-album:hover { text-decoration: underline; text-underline-offset: 3px; 
 .usw-told { display: flex; flex-direction: column; gap: 10px; margin-top: 2px; }
 .usw-told p {
   margin: 0; font-size: 13px; line-height: 1.7; color: var(--ink-soft); max-width: 58ch;
+}
+
+/* One opening at a time on the openings screen: the one leaving goes, and
+   the one arriving comes in from the side you are travelling — right when
+   Next walks you on, left when Back walks you home. Keyed remount, so only
+   the arrival is animated; an exit would mean holding both on screen for
+   the length of it, which is furniture for a quarter of a second. */
+.su-slide { animation: su-in-right 0.26s cubic-bezier(0.32, 0.72, 0, 1) both; }
+.su-slide--left { animation-name: su-in-left; }
+.su-slide--on { animation: none; }
+@keyframes su-in-right {
+  from { opacity: 0; transform: translateX(26px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes su-in-left {
+  from { opacity: 0; transform: translateX(-26px); }
+  to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .su-slide { animation: none; }
 }
