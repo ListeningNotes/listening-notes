@@ -1283,6 +1283,59 @@
   transform: translateY(calc(-1 * (var(--hn-crown, 200px) + 120px)));
 }
 
+/* ── And the pane waits with the record, 2026-09-22 ───────────────────────
+   The handover above made the record wait at the card for MAKE_ROOM_MS, and
+   nothing else waited with it: the crown's room, the card and the picker all
+   set off at once, so for that third of a second the search and the covers
+   rose up underneath a cover standing still where the card had been. The
+   flier is fixed to the window and does not move with the card it came from.
+   Miyel: "a tiny overlap when starting to log a listen where the beacon art
+   overlaps the album chooser. It should never do that."
+
+   So the only thing that moves in the beat is the big mark leaving by the
+   top. Then the record flies and the pane settles under it on the same 0.7s,
+   and the record, starting higher and on a shorter clock, stays ahead of
+   the picker the whole way up. The fades are not delayed: the flier and the
+   bar's travelling name stand over the card's cover and name from the first
+   frame, so those can go at once and nothing is drawn twice.
+
+   Going in only. On the way back there is no flight to wait for. 0.3s is
+   MAKE_ROOM_MS in HomeNav.js; change one and change the other. */
+@media (prefers-reduced-motion: no-preference) {
+  .hn--choosing .hn-crown {
+    transition: min-height 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) 0.3s,
+                height 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) 0.3s,
+                padding 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) 0.3s,
+                opacity 0.3s ease,
+                transform 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) 0.3s,
+                visibility 0s linear 1s;
+  }
+  .hn--choosing .hn-screen {
+    transition: min-height 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) 0.3s,
+                padding 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) 0.3s,
+                gap 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) 0.3s;
+  }
+  .hn--choosing .beacon-art-wrap {
+    transition: width 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) 0.3s,
+                height 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) 0.3s,
+                opacity 0.5s ease,
+                box-shadow 0.5s ease;
+  }
+  .hn--choosing .beacon-card { transition-delay: 0.3s; }
+  .hn--choosing .beacon-stage {
+    transition: max-height 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) 0.3s,
+                opacity 0.4s ease;
+  }
+  .hn--choosing .beacon-meta {
+    transition: max-height 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) 0.3s,
+                opacity 0.34s ease,
+                gap 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) 0.3s;
+  }
+  /* Doubled, because `.hn .ses-picker` further down sets the whole
+     animation shorthand at the same weight and would put the delay back. */
+  .hn.hn--choosing .ses-picker { animation-delay: 0.3s; }
+}
+
 .hn--choosing .hn-pane--home { scroll-snap-type: none; }
 .hn--choosing .hn-pane--home > .hn-floor:nth-of-type(2) { display: none; }
 /* ── The cutaway ──────────────────────────────────────────────────────────
