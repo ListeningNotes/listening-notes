@@ -2755,11 +2755,25 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
    re-measures, so nothing moves between the two states.
 
    Standalone only. In a browser `lvh` is the viewport with the toolbars
-   retracted, and the band would be under Safari's own bar. */
+   retracted, and the band would be under Safari's own bar.
+
+   ── And the sheet is standalone too, 2026-09-22 ─────────────────────────
+   A link out of the installed app opens in a sheet inside it, and that sheet
+   answers `display-mode: standalone` — it inherits it from the app. Measured
+   in the sheet on Miyel's phone: inner 682, dvh 682, lvh 787, safe-area top
+   0. So the frame took 787 of a 682 window and the band stood at 733–787,
+   under the sheet's toolbar and off the page. Miyel: "visiting a friend's
+   journal looks too far down ... cannot even see their nav tab."
+
+   What the installed app is missing is exactly its top inset, so that is
+   what gets added back: dvh plus the inset, and never more than lvh. The
+   installed app gets 812 + 62 = 874, the same as before; after iOS
+   re-measures, lvh caps it at 874 again; the sheet has no inset and gets its
+   682. */
 @media (display-mode: standalone) and (max-width: 768px) {
   .hn {
-    --hn-h: 100lvh;
-    margin-bottom: calc(100dvh - 100lvh);
+    --hn-h: min(100lvh, calc(100dvh + env(safe-area-inset-top, 0px)));
+    margin-bottom: calc(100dvh - var(--hn-h));
   }
 }
 
