@@ -58,6 +58,26 @@ deploy a copy — and none of it is anything they need.
 
 ## Pending
 
+**WHAT CHANGED, IN THE APP — pinned 2026-09-21, not now.** Miyel, having read
+the 1.26.0 notes: "I want to design a custom popup in app that shows when your
+copy moved version and tells it what happened, stylized by the site, that is
+more bulletpoint and user friendly. Not now but I want to do it."
+
+So: a notice, once, the first time a copy opens on a version its keeper has not
+seen — what is new, as a short list a person would actually read, drawn in the
+site's own vocabulary (words, hairlines, in the page rather than over it; see
+DECISIONS). The GitHub release notes are the record, not the notice: they are
+prose, and they are for whoever reads GitHub.
+
+What is already there to build on: the version is `package.json`, baked in at
+build, and shown on the desk line and on the pitch pane beside Source; the
+desk's update line already asks GitHub for the latest release to compare
+against it; `scripts/update_copy.mjs` is how a copy moves. What is not decided:
+where the bullets come from (a marked-up block in each release body the app can
+read, or a file in the repo that ships with the version), and what "seen"
+means (per browser, in storage, is the honest limit without accounts — same as
+the return address). Ask before choosing either.
+
 **MANUAL ENTRY — pinned 2026-09-18, and the door is shut.** Miyel, having
 looked at what is built: "we will have to return to working out manual entry —
 I don't think it works the way I envision, but it's not crucial right now."
@@ -188,11 +208,6 @@ conditional as the horizon chart (`list.length > 0 && hasRatings`). Log a
 record, rate no tracks, and there is no way to give the album a score at all.
 One line to pull the stars out of that block; the question is whether the
 horizon should keep its own gate.
-
-**Branch `four-tabs` is unmerged.** ID · Beacon · Friends · Inbox, Miyel's
-names, with the address book at the head of the Friends pane. Her verdict:
-*"now it's not good. I need it to be more of a page then the feed under"* —
-she is writing the brief for it herself.
 
 **Pinned for later, 2026-09-18:** merging `SiteNav` and `.idc-head` into one
 header, so the LN mark disappears the way it does on an entry. Miyel: *"is this
