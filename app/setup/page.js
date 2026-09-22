@@ -183,6 +183,14 @@ export default function WelcomeScreen() {
 
   const current = STEPS[step];
   const last = step === STEPS.length - 1;
+  // Which of the three openings the prompts screen is showing. One at a
+  // time on one screen, rather than three screens: separate screens lost
+  // the thread — you could not tell a new question from a new step, or how
+  // many were coming. One screen keeps it one task, and the count says how
+  // far in you are. `promptWay` is which way the next one arrives from.
+  const [promptIndex, setPromptIndex] = useState(0);
+  const [promptWay, setPromptWay] = useState('on');
+  const PROMPTS_HERE = 3;
   // The journal is claimed on the password screen; the screen after it only
   // leaves. Once claimed, Back is no longer offered — there is nothing behind
   // it that could still be changed here.
@@ -319,9 +327,6 @@ export default function WelcomeScreen() {
               aria-valuenow={step + 1}
               aria-valuetext={`Step ${step + 1} of ${STEPS.length}`}
             >
-              <span className="su-track" aria-hidden="true">
-                <span className="su-fill" style={{ width: `${(step / (STEPS.length - 1)) * 100}%` }} />
-              </span>
               {STEPS.map((name, i) => (
                 <span
                   key={name}
@@ -330,23 +335,27 @@ export default function WelcomeScreen() {
                 />
               ))}
             </div>
-            <div className="su-line">
-              {rehearsing && <span className="su-count">Rehearsal — nothing is saved</span>}
+
+            {/* One sentence per screen, in the reading face, where a small-caps
+                label and a why-line used to sit as a pair. The pair was two
+                things to read where one would do; the second line survives
+                only where a screen genuinely needs a second thought. */}
+            <p className="su-ask">
               {{
-                name: 'Whose journal is this?',
-                photo: 'A photo',
-                prompts: 'Three openings',
-                rig: 'What you listen on',
-                password: 'A password',
-                homescreen: 'One more thing',
+                  name: 'Whose journal is this?',
+                  photo: 'A picture of you.',
+                  prompts: 'A little about yourself.',
+                  rig: 'What you listen on.',
+                  updates: 'Keep your journal up to date automatically.',
+                  password: 'What you’ll type to get back in.',
+                  homescreen: 'It’s yours. Put it on your home screen.',
               }[current]}
-            </div>
+            </p>
 
             {current === 'name' && (
               <form className="su-fields" onSubmit={e => { e.preventDefault(); if (name.trim()) advance(); }}>
                 <div>
-                  <span className="su-label">Your name</span>
-                  <input className="su-field" value={name} onChange={e => setName(e.target.value)} autoFocus autoComplete="name" />
+                  <input className="su-field" value={name} onChange={e => setName(e.target.value)} autoFocus autoComplete="name" placeholder="Your name" aria-label="Your name" />
                 </div>
                 <button type="submit" className="su-go" disabled={busy || !name.trim()}>Next</button>
               </form>
@@ -358,16 +367,13 @@ export default function WelcomeScreen() {
                   <input ref={fileRef} className="su-file" type="file" accept="image/*" onChange={choosePhoto} disabled={busy} />
                   {portrait ? <img src={portrait} alt="" /> : <span>{busy ? 'Working…' : 'Choose a photo'}</span>}
                 </label>
-                <div className="su-hint" style={{ textAlign: 'center' }}>
-                  It goes on the card. You can reframe or replace it there later.
-                </div>
                 <button type="button" className="su-go" disabled={busy || !portrait} onClick={() => advance()}>Next</button>
               </div>
             )}
 
             {current === 'prompts' && (
               <div className="su-fields">
-                <p className="su-why">Three sentences a visitor reads about you. Pick an opening and finish it. Any number of the three can stay empty.</p>
+                <p className="su-why">{promptIndex + 1} of {PROMPTS_HERE}</p>
                 {/* The About pane's picker, wearing the same classes: press
                     the line, the list opens under it, press a line to take
                     it. A native select was here for a day and drew the
@@ -377,10 +383,14 @@ export default function WelcomeScreen() {
                     rather than refusing. */}
                 <div className="su-prompts">
                   {bio.map((row, i) => {
+                    if (i !== promptIndex) return null;
+                    /* Keyed on the index so React remounts it and the
+                       animation runs: the one leaving goes and the one
+                       arriving slides in from the side you are travelling. */
                     const chosen = BIO_PROMPTS.find(p => p.key === row.key) || null;
                     const open = picking === i;
                     return (
-                      <div className="ab-prompt-edit" key={i}>
+                      <div className={'ab-prompt-edit su-slide su-slide--' + promptWay} key={i}>
                         <button
                           type="button"
                           className={'ab-prompt-pick' + (open ? ' ab-prompt-pick--on' : '')}
@@ -442,10 +452,17 @@ export default function WelcomeScreen() {
                 </div>
                 <button
                   type="button" className="su-go" disabled={busy}
-                  onClick={() => advance(async () => {
-                    const clean = bio.map(r => ({ key: r.key, answer: r.answer.trim() })).filter(r => r.key && r.answer);
-                    if (clean.length) await patchSettings({ bioanswers: clean });
-                  })}
+                  onClick={() => {
+                    if (promptIndex < PROMPTS_HERE - 1) {
+                      setPromptWay('right');
+                      setPromptIndex(i => i + 1);
+                      return;
+                    }
+                    advance(async () => {
+                      const clean = bio.map(r => ({ key: r.key, answer: r.answer.trim() })).filter(r => r.key && r.answer);
+                      if (clean.length) await patchSettings({ bioanswers: clean });
+                    });
+                  }}
                 >Next</button>
               </div>
             )}
@@ -455,11 +472,11 @@ export default function WelcomeScreen() {
                 const clean = gear.map(g => ({ name: g.name.trim(), role: g.role.trim() })).filter(g => g.name);
                 if (clean.length) await patchSettings({ rig: clean });
               }); }}>
-                <p className="su-why">The setup you listen on, as rows: the thing, and what it does. Speakers, an amp, a turntable, a pair of headphones.</p>
+                <p className="su-why">Device name, and type.</p>
                 {gear.map((g, i) => (
                   <div className="su-pair" key={i}>
-                    <input className="su-field" value={g.name} placeholder="KEF LS50" onChange={e => setGear(rows => rows.map((r, j) => (j === i ? { ...r, name: e.target.value } : r)))} />
-                    <input className="su-field" value={g.role} placeholder="Speakers" onChange={e => setGear(rows => rows.map((r, j) => (j === i ? { ...r, role: e.target.value } : r)))} />
+                    <input className="su-field" value={g.name} placeholder="Sennheiser HD600" onChange={e => setGear(rows => rows.map((r, j) => (j === i ? { ...r, name: e.target.value } : r)))} />
+                    <input className="su-field" value={g.role} placeholder="Headphones" onChange={e => setGear(rows => rows.map((r, j) => (j === i ? { ...r, role: e.target.value } : r)))} />
                   </div>
                 ))}
                 <button type="button" className="su-add" onClick={() => setGear(rows => [...rows, { name: '', role: '' }])}>+ Another</button>
@@ -469,7 +486,7 @@ export default function WelcomeScreen() {
 
             {current === 'password' && (
               <form className="su-fields" onSubmit={e => { e.preventDefault(); advance(claim); }}>
-                <p className="su-why">What you’ll type to reach the writing side of your journal.</p>
+
                 {/* The address the password is filed under — the same value
                     the sign-in form and Settings use, so the entry saved here
                     is the one offered later. Visible and writable, because a
@@ -477,7 +494,6 @@ export default function WelcomeScreen() {
                     Safari skips a read-only one. Typing into it does nothing.
                     See hooks/useJournalHost.js. */}
                 <div>
-                  <span className="su-label">Journal</span>
                   <input className="su-field su-who" type="text" name="username" autoComplete="username" value={host} onChange={() => {}} aria-label="Journal" tabIndex={-1} />
                 </div>
                 {/* The eye, 2026-09-13: a password typed once on a phone
@@ -490,9 +506,8 @@ export default function WelcomeScreen() {
                     plain text, so the phone's autocorrect and capitals are
                     off or it would rewrite a password it can now see. */}
                 <div>
-                  <span className="su-label">Password</span>
                   <div className="su-peek">
-                    <input className="su-field" type={peeking ? 'text' : 'password'} name="new-password" autoComplete="new-password" autoCapitalize="none" autoCorrect="off" spellCheck={false} value={password} onChange={e => setPassword(e.target.value)} minLength={PASSWORD_FLOOR} />
+                    <input className="su-field" type={peeking ? 'text' : 'password'} name="new-password" autoComplete="new-password" autoCapitalize="none" autoCorrect="off" spellCheck={false} value={password} onChange={e => setPassword(e.target.value)} minLength={PASSWORD_FLOOR} placeholder="Password" aria-label="Password" />
                     <button
                       type="button"
                       className="su-eye"
@@ -507,8 +522,7 @@ export default function WelcomeScreen() {
                   <div className="su-hint">At least {PASSWORD_FLOOR} characters.</div>
                 </div>
                 <div>
-                  <span className="su-label">Again</span>
-                  <input className="su-field" type={peeking ? 'text' : 'password'} name="confirm-password" autoComplete="new-password" autoCapitalize="none" autoCorrect="off" spellCheck={false} value={confirm} onChange={e => setConfirm(e.target.value)} />
+                  <input className="su-field" type={peeking ? 'text' : 'password'} name="confirm-password" autoComplete="new-password" autoCapitalize="none" autoCorrect="off" spellCheck={false} value={confirm} onChange={e => setConfirm(e.target.value)} placeholder="Re-type password" aria-label="Re-type password" />
                 </div>
                 <button type="submit" className="su-go" disabled={busy || !password || !confirm}>
                   {busy ? 'Claiming…' : 'Claim the journal'}
@@ -524,7 +538,7 @@ export default function WelcomeScreen() {
 
             {current === 'homescreen' && (
               <div className="su-fields">
-                <p className="su-why" style={{ textAlign: 'center' }}>It’s yours. Put it on your home screen.</p>
+                <p className="su-why">It opens without the browser around it, and reads as an app.</p>
                 <AddToHomeScreen centered />
                 <button type="button" className="su-go" disabled={busy} onClick={() => advance()}>Open the journal</button>
               </div>
@@ -534,7 +548,21 @@ export default function WelcomeScreen() {
 
             {step > 0 && !claimed && (
               <div className="su-under">
-                <button type="button" className="su-back" disabled={busy} onClick={() => { setError(''); setStep(s => s - 1); }}>Back</button>
+                <button
+                  type="button"
+                  className="su-back"
+                  disabled={busy}
+                  onClick={() => {
+                    setError('');
+                    // Inside the openings, Back walks them before it leaves.
+                    if (current === 'prompts' && promptIndex > 0) {
+                      setPromptWay('left');
+                      setPromptIndex(i => i - 1);
+                      return;
+                    }
+                    setStep(s => s - 1);
+                  }}
+                >Back</button>
                 {/* No Skip on the password screen. Under this flow nobody
                     typed one at deploy, so there is nothing to keep; a
                     developer who set SESSION_PASSWORD by hand can find
