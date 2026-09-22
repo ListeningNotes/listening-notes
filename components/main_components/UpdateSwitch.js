@@ -105,40 +105,42 @@ export default function UpdateSwitch({ centered = false, onDone = null, explain 
   // Proven on: this very deployment was pushed by the updater.
   const on = Boolean(state?.byUpdater) || landed;
 
+  const signal = (
+    <div className="usw-signal" aria-hidden="true">
+      {on && <svg className="usw-tick" viewBox="0 0 26 26"><path d="M5 13.6l5.2 5.2L21 7.6" /></svg>}
+      {watching && !on && (
+        <span className="usw-ring">
+          {RING.map((at, i) => (
+            <i key={i} style={{ transform: `translate(${at.x}px, ${at.y}px)`, opacity: at.o }} />
+          ))}
+        </span>
+      )}
+    </div>
+  );
+
+  // The order every other setup screen keeps: what this is, then what it
+  // asks of you, then the thing you press. The instruction sat under the
+  // button for a while and made the button the middle of the screen
+  // rather than the end of it.
   return (
     <div className={'usw' + (centered ? ' usw--centered' : '')}>
-      {/* Kept whether or not it is showing anything, so nothing below it
-          moves when the signal arrives. */}
-      <div className="usw-signal" aria-hidden="true">
-        {on && (
-          <svg className="usw-tick" viewBox="0 0 26 26"><path d="M5 13.6l5.2 5.2L21 7.6" /></svg>
-        )}
-        {watching && !on && (
-          <span className="usw-ring">
-            {RING.map((at, i) => (
-              <i key={i} style={{ transform: `translate(${at.x}px, ${at.y}px)`, opacity: at.o }} />
-            ))}
-          </span>
-        )}
-      </div>
+      {/* Settings has no screen sentence above it, so the component says it
+          there. In setup the screen's own sentence says it and this would
+          be the same words twice. */}
+      {explain && !on && <p className="usw-said">Keep your journal up to date automatically.</p>}
 
       {on ? (
         <>
+          {signal}
           <p className="usw-said" role="status">{landed ? 'It worked.' : 'On — your journal updates itself.'}</p>
           {landed && <p className="usw-how">Your journal will keep itself up to date from now on.</p>}
         </>
       ) : state?.install ? (
         <>
-          {/* The sentence is the button: the offer and the action are one
-              thing, not a label with a switch beside it. */}
-          <button type="button" className="usw-switch" onClick={press} disabled={watching}>
-            Turn on automatic updates
-          </button>
-          {/* Under it, because it describes what pressing does rather than
-              competing with it. Said before the press, not after: a new tab
-              nobody expected is a new tab nobody trusts. And only ever
-              alongside the button — an instruction to press something that
-              is not there is worse than saying nothing. */}
+          {/* Said before the press, not after: a new tab nobody expected is
+              a new tab nobody trusts. And only ever alongside the button —
+              an instruction to press something that is not there is worse
+              than saying nothing. */}
           <p className="usw-how">
             {watching ? 'Waiting for GitHub…' : (
               <>
@@ -147,6 +149,10 @@ export default function UpdateSwitch({ centered = false, onDone = null, explain 
               </>
             )}
           </p>
+          {signal}
+          <button type="button" className="usw-switch" onClick={press} disabled={watching}>
+            Turn on auto updates
+          </button>
         </>
       ) : null}
 
