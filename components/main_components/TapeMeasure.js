@@ -12,21 +12,22 @@
 // So this holds a tape measure up to the screen from inside the sheet.
 //
 // Two halves, one per place it can be standing:
-//   installed (standalone)  a button that opens this same dev server under the
-//                           laptop's other address — a different site, so iOS
-//                           opens it in the sheet, the way it opens a friend's
-//   anywhere else           the readout, in the middle of the screen where no
+//   the installed dev app   a button that opens this branch's preview, which
+//                           iOS opens in the sheet, the way it opens a friend's
+//   the preview             the readout, in the middle of the screen where no
 //                           toolbar can cover it, for a screenshot
 //
-// Nothing here renders in a production build.
+// Nothing here renders on any other address.
 
 import { useEffect, useState } from 'react';
 
-// The laptop answers to both of these on the home network, and to iOS they
-// are two different sites. Whichever one the installed app lives at, the
-// button goes to the other. Next is told to allow both (next.config.mjs).
-const BY_NAME = 'Miyels-Laptop.local';
-const BY_NUMBER = '192.168.1.154';
+// Where the readout is drawn: this branch's Vercel preview, a real https
+// site. The laptop's second address was tried first and iOS kept it inside
+// the installed app rather than opening the sheet — plain http on a home
+// network is not "another site" to it the way a friend's journal is. The
+// preview is behind Vercel's login; the sheet shares Safari's.
+const PREVIEW = 'https://listening-notes-git-visit-notes-listeningnotes-projects.vercel.app/';
+const onPreview = () => location.hostname.includes('-git-visit-notes-');
 
 // A box sized in one unit, measured in pixels. How tall 100dvh or an env()
 // inset really is can only be read off something drawn with it.
@@ -76,7 +77,7 @@ export default function TapeMeasure() {
   const [installed, setInstalled] = useState(false);
 
   useEffect(() => {
-    if (process.env.NODE_ENV !== 'development') return;
+    if (process.env.NODE_ENV !== 'development' && !onPreview()) return;
     const read = () => {
       setInstalled(window.matchMedia('(display-mode: standalone)').matches || !!navigator.standalone);
       setRows(measure());
@@ -97,13 +98,12 @@ export default function TapeMeasure() {
     };
   }, []);
 
-  if (process.env.NODE_ENV !== 'development' || !rows) return null;
+  if (!rows) return null;
 
-  if (installed) {
-    const other = location.hostname === BY_NAME ? BY_NUMBER : BY_NAME;
+  if (installed && !onPreview()) {
     return (
       <a
-        href={`${location.protocol}//${other}:${location.port}/`}
+        href={PREVIEW}
         target="_blank"
         rel="noopener noreferrer"
         style={{
