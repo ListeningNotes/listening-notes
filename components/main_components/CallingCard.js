@@ -58,8 +58,8 @@ export default function CallingCard({ onOpenCard }) {
   // there is nobody here with nothing to add themselves to.
   const address = site_address ? site_address.replace(/^https?:\/\//, '') : null;
 
-  // Hidden from a visitor whose own copy said, arriving, that this journal is
-  // already in their book. Cold, it shows — the journal has no way to know and
+  // The whole row is hidden from a visitor whose own copy said, arriving, that
+  // this journal is already in their book (below). Cold, it shows — the journal has no way to know and
   // does not go looking.
   const known = useSyncExternalStore(subscribeSender, knownHere, readNothing);
   // ── Where this reader keeps their own journal, if this one has been told ──
@@ -84,6 +84,15 @@ export default function CallingCard({ onOpenCard }) {
       addedTimer.current = setTimeout(() => setAdded(false), 2600);
     }).catch(() => {});
   }
+
+  // ── Nothing, for somebody who already has this journal, 2026-09-22 ────
+  // Miyel: "If I'm coming to visit from my journal ... I already have him
+  // added, I already know who he is. I don't need to see this." A reader
+  // whose own copy said, arriving, that this address is in their book has no
+  // use for Add, sends from their own copy, and knows the face. The row is
+  // for everybody else — including a keeper who has not added this one yet,
+  // who still gets Add (her call, the same day).
+  if (known) return null;
 
   return (
     <div className="calling">
@@ -181,7 +190,7 @@ export default function CallingCard({ onOpenCard }) {
             A plain <a> and not a Link: the destination is somebody else's
             copy at another address, which is not this app's router's to
             prefetch or own. */}
-        {address && !known && (home ? (
+        {address && (home ? (
           <a
             className="ln-onward"
             href={`${journalUrl(home)}/dashboard/people?add=${encodeURIComponent(address)}`}

@@ -203,7 +203,12 @@
   letter-spacing: 0.16em;
   white-space: nowrap;
 }
-.calling > .ln-onward:first-child { right: calc(50% + 66px); }
+/* By order among the words, never among the row's children. The face is the
+   row's first child, so `:first-child` never matched Add: it sat at the far
+   left end of the rule with a stretch of line inside it and none outside, and
+   Send, hung correctly, left a stub of rule beyond itself. Miyel, 2026-09-22:
+   "those hairlines should be the same on each side." */
+.calling > .ln-onward:not(:last-child) { right: calc(50% + 66px); }
 .calling > .ln-onward:last-child { left: calc(50% + 66px); }
 
 /* ── Three counts ───────────────────────────────────────────────────────────
