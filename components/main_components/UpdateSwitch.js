@@ -143,8 +143,7 @@ export default function UpdateSwitch({ centered = false, onDone = null, explain 
             {watching ? 'Waiting for GitHub…' : (
               <>
                 {state?.stalled && <>Your journal has stopped updating itself. </>}
-                This opens a GitHub link for you in a new tab. Press the green
-                <strong> Commit changes</strong>, then <strong>Commit changes</strong> again.
+                Opens a GitHub link in a new tab. Press <strong>Commit changes</strong>, twice.
               </>
             )}
           </p>

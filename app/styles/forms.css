@@ -1915,20 +1915,21 @@ a.pn-item-album:hover { text-decoration: underline; text-underline-offset: 3px; 
   .usw-tick path { animation: none; stroke-dashoffset: 0; }
 }
 
-/* The label face every other button on the site wears. It was the body
-   face while it carried a whole sentence; four words belong with Save,
-   Next and Change password. */
+/* DM Mono, by way of --font-label. Not --font-mono, which every other
+   button on the site uses and which is an alias for Nunito — the name says
+   monospace and the value has been the body face since the serif came out.
+   The label face is what the small caps elsewhere are actually set in. */
 .usw-switch {
   padding: 11px 20px; border-radius: 999px; cursor: pointer;
   background: var(--ink); color: var(--bg); border: 1px solid var(--ink);
-  font-family: var(--font-mono); font-size: 10px;
+  font-family: var(--font-label); font-size: 10px;
   letter-spacing: 0.14em; text-transform: uppercase;
 }
 .usw-switch:disabled { opacity: 0.45; cursor: default; }
 .usw--centered .usw-switch { align-self: center; }
 
 .usw-said { margin: 0; font-size: 14.5px; font-weight: 600; color: var(--ink); }
-.usw-how { margin: 0; font-size: 12.5px; line-height: 1.6; color: var(--ink-soft); max-width: 34ch; }
+.usw-how { margin: 0; font-size: 12px; line-height: 1.55; color: var(--ink-faint); max-width: 28ch; }
 .usw--centered .usw-how { margin-inline: auto; }
 .usw-said + .usw-how { color: var(--ink-faint); }
 .usw-how strong { color: var(--ink); font-weight: 600; }
