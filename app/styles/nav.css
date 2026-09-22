@@ -2998,9 +2998,16 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
      there is no mark drawn over these two to run through. The book gets the
      difference: about forty pixels, which is most of another row of faces on
      a tall phone. */
+  /* ── Clear of the whole bar again, 2026-09-22 ─────────────────────────
+     The status-bar clearance above was right until the header grew an
+     opaque ground of its own (.hn-bar-ground, 2026-09-20), which is the
+     bar's full height on every pane — so the inbox's folder tabs started
+     under it, cut off at the top, with an empty band standing over them.
+     Ethan saw it first: "a false header at the top of his screen and cannot
+     see tops of tabs." The book already clears the bar on its own floor. */
   .hn-pane--inbox,
   .hn-pane--friends {
-    padding: calc(36px + var(--safe-top)) 0 calc(var(--hn-foot-h) + 20px);
+    padding: var(--hn-bar-h) 0 calc(var(--hn-foot-h) + 20px);
     box-sizing: border-box;
   }
   /* ── The book's two floors ─────────────────────────────────────────
@@ -3720,10 +3727,26 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
      A border rather than a child, because the row already spans exactly the
      width the line wants: the record's left edge to the right edge of the
      past column. */
-  border-top: 1px solid var(--border);
+  /* ── Only as long as the words, 2026-09-22 ─────────────────────────────
+     Miyel: "remove extra little hairline after send." Full width, the rule
+     ran on past both words, and a word ends a line better than a stub of
+     line does. So it is drawn as a child and stops under Add and under Send:
+     40px into each, which the words' own ground covers (both are wider than
+     that), so what shows is the two equal stretches between them and the
+     face and nothing outside. The row keeps its width for the grid. */
+  border-top: 0;
   /* And the bottom half under it. The circle is out of the flow, so this is
      the whole of what the row occupies below the rule — half of 72. */
   padding-top: 36px;
+}
+.hn-pane--home .calling::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: calc(2 * (66px + 40px));
+  transform: translate(-50%, -50%);
+  border-top: 1px solid var(--border);
 }
 /* The empty beacon has neither a cover nor a name — it has one quiet line, and
    it spans. */

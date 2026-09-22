@@ -2317,10 +2317,13 @@ export default function HomeNav() {
   // one under the artist in bold and moving the other would be two controls
   // wearing different clothes for the same job.
   const theWayIn = authed && (inHand ? (
-    <Link href="/session" className="ln-onward" title={`Back to ${inHand.album}`} aria-label="Back to the listen">
+    // Resume listen, 2026-09-22. It said Back to the listen, and Miyel: "Back
+    // to the listen text is rough. Resume listen is better." Two short words
+    // in the ring, the shape Log a listen already has.
+    <Link href="/session" className="ln-onward" title={`Resume ${inHand.album}`} aria-label="Resume listen">
       <span className="hn-go" aria-hidden="true">
-        <span className="hn-go-say">Back to</span>
-        <span className="hn-go-say">the listen</span>
+        <span className="hn-go-say">Resume</span>
+        <span className="hn-go-say">listen</span>
       </span>
     </Link>
   ) : (
@@ -2674,7 +2677,7 @@ export default function HomeNav() {
                       brief, 2026-09-17). Text and an arrow: no pill and no
                       tile, the voice the session already uses to move you on.
 
-                      It says Back to the listen for as long as there is a
+                      It says Resume listen for as long as there is a
                       record in hand, because that is what pressing it does —
                       a door you can return through has to say so. The desk
                       says "Listening now" in the same state and should: it is
