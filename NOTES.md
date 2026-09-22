@@ -2985,6 +2985,69 @@ current.
 
 ## Complete
 
+**2026-09-22 — updates a keeper can see and turn on, 1.27.0, on main**
+
+Released v1.27.0. Branches `stalled-updates` → `buttons-dm-mono` →
+`calm-setup`, merged in that order, then deleted.
+
+- [x] **The desk tells three states apart.** Behind by minutes (silent —
+      the copy takes it within the hour), stalled (behind >3h, so its
+      hourly check is dead and only a person can restart it), and a major
+      waiting (never crossed automatically, so not a fault). Before this
+      it said "a newer version is available" in all three, which taught
+      people to ignore it. `GRACE` is 3h in `app/api/update/route.js`: the
+      check runs on the hour, Vercel takes a couple of minutes, and the
+      route's own answer can be an hour stale.
+- [x] **Turning updates on is a screen in setup and a section in
+      Settings** (`components/main_components/UpdateSwitch.js`). It builds
+      a GitHub new-file link pre-filled with the workflow, from
+      `VERCEL_GIT_REPO_OWNER`/`SLUG` plus the raw file fetched from
+      upstream, and proves the file landed by watching
+      `VERCEL_GIT_COMMIT_SHA` change — their commit rebuilds the site, so
+      the tick is a fact. Afterwards `byUpdater` (commit author is
+      `github-actions[bot]`) is definitive proof updates work.
+- [x] **Setup reads calmly.** One sentence a screen in the reading face,
+      replacing a small-caps label and a why-line that said one thing
+      twice. Step dots no longer draw a progress line. The three openings
+      are one screen, one at a time, sliding in from the way you are
+      travelling, counted "1 of 3". Rig asks "Device name, and type" with
+      Sennheiser HD600 / Headphones. Password shows the address as a fact,
+      not a field, and says "Re-type password". The rehearsal banner is
+      gone, so `?rehearse` now looks exactly like a first run.
+- [x] **Every button is DM Mono.** `--font-mono` had been an alias for
+      Nunito since the serif came out — see Gotchas.
+
+**Still owed**
+
+- [ ] **The in-app "what changed" notice** is pinned separately (see the
+      other NOTES entry).
+- [ ] **Three things seen walking the flow on a phone, not fixed:**
+      "Sennheiser HD600" clips in its half-width box; the home-screen
+      screen is far longer than any other (heading, second line, the same
+      thing again as prose, then five numbered steps); and the two prompt
+      turns look identical until something is picked, so only the count
+      changes.
+
+**Gotchas from this session**
+
+- **`--font-mono` was an alias for Nunito**, not DM Mono, from the day the
+  serif was removed. Every button wearing it was the body face in small
+  caps with its letters spread. `--font-label` was the real one. Fixed by
+  making the name true; it also reaches the password field, the album
+  picker's artist line and the holding page, and suits all three.
+- **An archived GitHub repo 404s `/new/BRANCH`** for everyone, admin
+  included. A scratch repo left archived made a pre-filled new-file link
+  look unsupported and made the GitHub phone app dump us on its home
+  screen — an hour chasing the wrong thing. Also: a signed-out request to
+  that path 302s to sign-in *before* routing, so a 302 proves nothing.
+- **The pre-filled link works**, desktop and iPhone: `https://github.com/
+  OWNER/REPO/new/BRANCH?filename=<path>&value=<file>`, ~2,000 chars. On a
+  phone the GitHub app hands it to Safari and it works there.
+- **Temporary hacks get committed.** A fake `install` link forced in so the
+  button would draw on localhost went into a commit and had to be amended
+  out. Localhost has no Vercel git vars, so that button cannot draw there
+  at all — expect it.
+
 **2026-09-21 — Words instead of pills, and one send flow by either door.**
 Save and Cancel on the editing bar are plain uppercase words with a hairline
 under the one that commits (`.ln-word`), no tick and no cross. Four screens
