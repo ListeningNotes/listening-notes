@@ -58,13 +58,6 @@ deploy a copy — and none of it is anything they need.
 
 ## Pending
 
-**REPLIES TO YOUR COMMENTS, IN YOUR INBOX — 1.28.0, on main,
-2026-09-22.** `/api/public/replies` + `pull_replies_to`, a Replies tab (the
-book asked from the browser), keeper comments stamped with the journal's
-address, Reports moved to a line at the foot of Submissions. Proved in a
-rolled-back transaction; nothing real to show until friends' copies take
-1.28.0. Ethan's answer on *I'm In Your Mind Fuzz* is the test case.
-
 **WHAT CHANGED, IN THE APP — pinned 2026-09-21, not now.** Miyel, having read
 the 1.26.0 notes: "I want to design a custom popup in app that shows when your
 copy moved version and tells it what happened, stylized by the site, that is
@@ -3011,6 +3004,16 @@ current.
 ---
 
 ## Complete
+
+**2026-09-22 — replies to your comments, 1.28.0, on main.** Released v1.28.0;
+branch `replies` merged, then deleted.
+
+**REPLIES TO YOUR COMMENTS, IN YOUR INBOX — 1.28.0, on main,
+2026-09-22.** `/api/public/replies` + `pull_replies_to`, a Replies tab (the
+book asked from the browser), keeper comments stamped with the journal's
+address, Reports moved to a line at the foot of Submissions. Proved in a
+rolled-back transaction; nothing real to show until friends' copies take
+1.28.0. Ethan's answer on *I'm In Your Mind Fuzz* is the test case.
 
 **2026-09-22 — notes from the 1.27.0 round, 1.27.1, on main**
 
