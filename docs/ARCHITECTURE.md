@@ -224,7 +224,7 @@ The rooms — full pages assembled from furniture
     submit/page.js             Send the keeper an album
     shuffle/page.js            Redirect to a random entry
     get/page.js                Get your copy: nine steps, then the deploy button. 404s while the long note is unwritten
-    get/story/page.js          The keeper's long note. 404s when unwritten
+    get/story/page.js          The keeper's long note. 404s when unwritten. Linked from nowhere for now
     about/page.js              Redirect to / — the identity card is the about page
     session/page.js            The listen — picker, then four screens under one header
     printer/page.js            The share printer — the press on a record for the keeper (?entry=slug); the sentence for everyone else and for the card, whose plate is still to come

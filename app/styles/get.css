@@ -127,23 +127,6 @@
   text-transform: uppercase; color: var(--ink-faint);
 }
 
-/* ── The very foot ── the story, as a tile the whole width of the column:
-   the steps' panel, hairline and type, its words centred like the button
-   above it. Flat like the steps; it is a link, so it keeps .ln-tile's hover. */
-.ln-tile.get-story {
-  flex-direction: column;
-  gap: 3px;
-  margin: 34px 0 0;
-  padding: 16px 18px 17px;
-  box-shadow: none;
-  font-family: inherit;
-  font-size: inherit;
-  letter-spacing: normal;
-  text-transform: none;
-  text-align: center;
-}
-.get-story .get-text { margin: 0; }
-.get-story:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; }
 
 /* The essay. */
 .get-subhead {

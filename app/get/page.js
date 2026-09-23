@@ -16,10 +16,11 @@
 //
 // It replaced a door with three links — the steps at /get/install, the story,
 // and "It didn't work". The steps are this page now and /get/install is gone.
-// The story keeps its own address because it is long-form reading, and waits
-// quietly at the very foot. "It didn't work" came off the same day, on
-// Miyel's call; the holding pages a new copy can stop on still carry it
-// (ComingSoon.js), which is where somebody is when it has not worked.
+// The other two came off the same day, on Miyel's call. The story keeps its
+// own address, /get/story, and is linked from nowhere for now — bringing it
+// back is a link at the foot of this page. The holding pages a new copy can
+// stop on still carry "It didn't work" (ComingSoon.js), which is where
+// somebody is when it has not worked.
 //
 // Screenshot slots read from public/install/ and draw only when the file
 // exists, so the page reads correctly before the pictures are taken and they
@@ -30,7 +31,6 @@
 // than serving a door to somebody else's software under its own address.
 // `/get` is Miyel's page on Miyel's copy.
 
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
@@ -74,15 +74,6 @@ export default async function GetPage() {
         <a href={DEPLOY_URL} className="get-cta">Make your own copy</a>
         <p className="get-expect">Opens Vercel · nothing to pay</p>
       </div>
-
-      {/* The story, the one other place this page goes: a tile like the
-          steps, the whole width, its words centred like the button above
-          it — "more unified with the page", Miyel, 2026-09-22, over a small
-          link and an arrow at the left. */}
-      <Link href="/get/story" className="ln-tile get-story">
-        <span className="get-head">Our story</span>
-        <span className="get-text">Why this exists, and what changed along the way.</span>
-      </Link>
     </main>
   );
 }

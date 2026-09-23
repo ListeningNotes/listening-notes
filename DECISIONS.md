@@ -659,8 +659,9 @@ one table**, the same label-and-answer shape for all four.
 
 **The long note is at `/get/story`, and `/why` is retired.** The essay
 answers *how did you get this*, which is asked at `/get`, where every copy's
-About pane sends people — so it waits at the foot of the steps rather than
-standing between a person and the button.
+About pane sends people — so it never stands between a person and the
+button. **Linked from nowhere for now, 2026-09-22** (Miyel's call); it comes
+back as a link at the foot of the steps.
 
 **The bar is page colour and nothing else, 2026-09-06 / 2026-09-20.** Once a
 pane has scrolled its crown away the row becomes a bar: page colour, flush,
@@ -1576,7 +1577,7 @@ dropped the rule over.
 there has decided, and About carries it. Nine tiles, and the deploy button
 after the ninth: a button at the top is pressed before step five is read,
 and step five is where installs break. `/get/install` is gone with no stub
-(Miyel's call); the story keeps `/get/story`, a quiet link at the foot. The
+(Miyel's call); the story keeps `/get/story`, unlinked for now. The
 three-address door of 2026-09-03 is what this replaced.
 
 **"At your own address" is architecture, not a benefit.** The line that says
