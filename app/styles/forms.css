@@ -737,12 +737,19 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 }
 .ib-tab:hover { color: var(--ink-soft); }
 .ib-tab--on { padding: 11px 24px 13px; margin-bottom: -1px; background: var(--panel); border-color: var(--border); color: var(--ink); z-index: 2; }
-/* Three tabs since Reports (2026-09-13): on a phone they fit by giving up
-   side padding, not by folding their words. */
+/* Three tabs: on a phone they fit by giving up side padding, not by folding
+   their words. Submissions, Comments, Replies since 2026-09-22 — Reports
+   left the row for a line at the foot of the sends — and measured then:
+   exactly the 327px a 375px phone has at 12/14, so 10/12 for some air, and
+   the spine's smaller type on the narrowest phones, where 327 is 272. */
 @media (max-width: 640px) {
-  .ib-tabs { gap: 3px; padding-left: 8px; }
-  .ib-tab { padding-left: 12px; padding-right: 12px; white-space: nowrap; }
-  .ib-tab--on { padding-left: 14px; padding-right: 14px; }
+  .ib-tabs { gap: 2px; padding-left: 6px; }
+  .ib-tab { padding-left: 10px; padding-right: 10px; white-space: nowrap; }
+  .ib-tab--on { padding-left: 12px; padding-right: 12px; }
+}
+@media (max-width: 359px) {
+  .ib-tab { font-size: 10px; letter-spacing: 0.06em; padding-left: 7px; padding-right: 7px; }
+  .ib-tab--on { padding-left: 9px; padding-right: 9px; }
 }
 /* And on the spine, where the sheet is 300 to 520px in a window far wider
    than either — so the rule above, which is a viewport query, never fires and
@@ -909,6 +916,9 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 .ib-comment-where { font-family: var(--font-label); font-size: 10px; }
 .ib-comment-when { font-family: var(--font-label); font-size: 10px; color: var(--ink-faint); margin-left: auto; }
 .ib-comment-text { font-size: 14px; color: var(--ink); line-height: 1.7; margin: 0 0 12px; }
+/* The line a reply answers, under the name and over the reply: quieter than
+   either, because it is your own words and you are reading for theirs. */
+.ib-answering { font-size: 12.5px; color: var(--ink-faint); line-height: 1.55; margin: -4px 0 8px; font-style: italic; overflow-wrap: anywhere; }
 .ib-comment-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .ib-comment-row .own-link { font-family: var(--font-label); font-size: 10px; margin-left: auto; }
 /* A send that carried a journal, once filed, says so where the button was. */
