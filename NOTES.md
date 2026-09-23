@@ -3023,6 +3023,14 @@ current.
 
 ## Complete
 
+**2026-09-22 — the mini card every time, 1.29.1, on main.** Released v1.29.1;
+branch `mini-card` merged, then deleted.
+
+- [x] **The collapse measures once the sheet lands**, on every record. It was a
+      race (Gotchas); checked on four records opened the awkward way, old code
+      failing and new passing. Swiping between records while reading was
+      checked by Miyel on her phone.
+
 **2026-09-22 — Put on by, 1.29.0, on main.** Released v1.29.0; branch
 `put-on` merged, then deleted.
 
