@@ -12,6 +12,7 @@ import { carrySender, journalUrl, tidyJournal } from '../../../library/return_ad
 import { useBookplate } from '../../../components/main_components/Bookplate';
 import { albumKey } from '../../../hooks/useListeningBeacon';
 import { lookup_key } from '../../../library/entry_formatter';
+import { REPORTS_URL } from '../../../library/version';
 
 // ── What became of a send ──────────────────────────────────────────────────
 // Four outcomes in the database: pending, reviewed (a listen was started
@@ -108,8 +109,12 @@ export default function Inbox({ layered = false, inPane = false }) {
   const [comLoading, setComLoading] = useState(true);
 
   // Problems keepers wrote in from their desks (library/report_actions.js).
-  // Only the copy the software comes from ever receives any; on every other
-  // copy the tab shows nothing and says so.
+  // Only the copy the software comes from ever receives any, so only that
+  // copy has the tab — on every other one it was a folder that could never
+  // hold anything (Miyel, 2026-09-22). Known by whether this copy's own
+  // address is where REPORTS_URL points, www or not.
+  const bare = value => (value || '').replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, '').toLowerCase();
+  const takesReports = !!myAddress && bare(myAddress) === bare(REPORTS_URL);
   const [reports, setReports] = useState([]);
   const [repLoading, setRepLoading] = useState(true);
 
@@ -148,8 +153,12 @@ export default function Inbox({ layered = false, inPane = false }) {
     fetch('/api/submissions').then(r => r.json()).then(d => { setSubmissions(d.submissions || []); setSubLoading(false); }).catch(() => setSubLoading(false));
     fetch('/api/comments/pending').then(r => r.json()).then(d => { setComments(d.comments || []); setComLoading(false); }).catch(() => setComLoading(false));
     fetch('/api/people').then(r => r.json()).then(d => setPeople(d.people || [])).catch(() => {});
-    fetch('/api/reports').then(r => r.json()).then(d => { setReports(d.reports || []); setRepLoading(false); }).catch(() => setRepLoading(false));
   }, [authed]);
+
+  useEffect(() => {
+    if (!authed || !takesReports) return;
+    fetch('/api/reports').then(r => r.json()).then(d => { setReports(d.reports || []); setRepLoading(false); }).catch(() => setRepLoading(false));
+  }, [authed, takesReports]);
 
   async function settleReport(id, status) {
     await fetch(`/api/reports/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }) });
@@ -484,7 +493,7 @@ export default function Inbox({ layered = false, inPane = false }) {
         <div className="ib-tabs">
           <FolderTab id="submissions" tab={tab} onSelect={setTab}>Submissions{subCounts.pending > 0 ? ` (${subCounts.pending})` : ''}</FolderTab>
           <FolderTab id="comments" tab={tab} onSelect={setTab}>Comments{comments.length > 0 ? ` (${comments.length})` : ''}</FolderTab>
-          {(() => { const open = reports.filter(r => r.status === 'pending').length; return (
+          {takesReports && (() => { const open = reports.filter(r => r.status === 'pending').length; return (
             <FolderTab id="reports" tab={tab} onSelect={setTab}>Reports{open > 0 ? ` (${open})` : ''}</FolderTab>
           ); })()}
         </div>
