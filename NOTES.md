@@ -80,9 +80,11 @@ the return address). Ask before choosing either.
 
 **/GET, REBUILT — on `get-page`, 2026-09-22, waiting on a real phone and
 the screenshots.** The steps are the page now: GET YOUR COPY, one line, nine
-flat tiles, the deploy button after the ninth, and Our story at the foot.
-`/get/install` is deleted with no stub, the phone/laptop switch is gone, and
-"It didn't work" is off `/get` (all three Miyel's calls). The pictures come
+flat tiles, the deploy button after the ninth, and nothing under it.
+`/get/install` is deleted with no stub, the phone/laptop switch is gone,
+"It didn't work" is off `/get`, and so is Our story for now — the page is
+still at `/get/story`, one caret at its top, linked from nowhere (all
+Miyel's calls). The pictures come
 from one real install on a phone — the names are under **Screenshots for
 `/get`** below.
 
