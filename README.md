@@ -53,8 +53,8 @@ code into your account, which is the point.
 4. The last screen shows how to put the journal on your home screen, where it
    opens like an app. Skippable; it is in Settings too.
 
-The same steps, with what to expect at each and roughly how long, are written
-out on the canonical copy at [listeningnotes.blog/get/install](https://listeningnotes.blog/get/install).
+The same steps, with what to expect at each, are written out on the canonical
+copy at [listeningnotes.blog/get](https://listeningnotes.blog/get).
 If it did not work, [say so here](https://github.com/ListeningNotes/listening-notes/issues)
 — what you pressed and what you saw.
 
