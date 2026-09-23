@@ -171,7 +171,7 @@ export default function SenderTool({ entry, barSlot = null, onDone }) {
       {picking ? (
         <>
           <label className="ln-sender-row">
-            <span className="ln-sender-label">Sent by</span>
+            <span className="ln-sender-label">Put on by</span>
             <input
               className="ln-field ln-field--sender"
               value={name}
@@ -179,7 +179,7 @@ export default function SenderTool({ entry, barSlot = null, onDone }) {
               placeholder={ready ? 'Start typing a name' : 'Reading…'}
               disabled={!ready}
               autoComplete="off"
-              aria-label="Sent by"
+              aria-label="Put on by"
             />
           </label>
           {/* Free text stays for somebody who sent a record and keeps no copy;
@@ -241,7 +241,7 @@ export default function SenderTool({ entry, barSlot = null, onDone }) {
               somebody sent it to you, they sent it to you, and this is here
               for the credit added by hand and added wrong. */}
           <button type="button" className="ln-sender-change" onClick={() => setChanging(true)}>
-            Edit sender
+            Edit
           </button>
         </>
       )}
