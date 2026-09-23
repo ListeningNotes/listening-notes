@@ -148,6 +148,14 @@ export default function SenderTool({ entry, barSlot = null, onDone }) {
           // could clear the name and leave an entry claiming to be a
           // submission from nobody.
           entry_type: said ? 'Submission' : 'Personal Library',
+          // ── By hand, 2026-09-22 ──────────────────────────────────────
+          // Naming somebody on an entry that was not already a Submission is
+          // a credit with no send behind it — through the grapevine, Miyel's
+          // word — and it keeps the Put on by line but not the envelope,
+          // which says only that somebody actually sent it. Changing the name
+          // on one that was already a Submission leaves this as it was, and
+          // clearing the credit clears it.
+          ...(!said ? { credit_by_hand: false } : surelyCredited ? {} : { credit_by_hand: true }),
         }),
       });
       const data = await res.json().catch(() => null);

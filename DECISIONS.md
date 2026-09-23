@@ -1174,6 +1174,9 @@ the same, and a person's page says what they have put you onto. The inbox,
 the send sheet, the quiet toggle, the ··· tool's *Credit* and every column
 keep their words: a send is an event, a put-on is the credit it leaves. Why:
 a tester credited a record he found on a journal, and nothing had been sent.
+**The envelope is for a real send only**: a credit added by hand keeps the
+line and loses the mark (`entries.credit_by_hand`, migration 022), so the
+outside tells the grapevine from the post. Existing credits stayed envelopes.
 
 **The sender is picked off the address book, and a backfill carries no
 date, 2026-09-14.** Crediting an old entry links the name to a journal in

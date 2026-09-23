@@ -66,6 +66,7 @@ export function handOff(entry) {
     masterpiece: entry.masterpiece === true,
     favorite: entry.favorite === true || entry.favorite === 'true',
     entry_type: entry.entry_type || '',
+    credit_by_hand: entry.credit_by_hand === true,
     listen_total: entry.listen_total ?? 0,
     posted_at: entry.posted_at || null,
     // Who sent it, 2026-09-15: the first screen prints a Sent by line now
@@ -127,6 +128,7 @@ function firstScreen(entry) {
     masterpiece: entry.masterpiece === true,
     favorite: entry.favorite === true || entry.favorite === 'true',
     entry_type: entry.entry_type || '',
+    credit_by_hand: entry.credit_by_hand === true,
     listen_total: entry.listen_total ?? 0,
     posted_at: entry.posted_at || null,
     // The credit too, for the same reason handOff keeps it.

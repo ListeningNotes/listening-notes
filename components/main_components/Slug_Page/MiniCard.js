@@ -44,7 +44,8 @@ export default function MiniCard({ entry, coverSrc, rating = 0, masterpiece = fa
   // A record that was sent wears the envelope, in faint ink — the fourth
   // mark, site-wide since 2026-09-13 (DECISIONS, Structure). It says who
   // when the entry knows; screen one has the link.
-  const sent = entry.entry_type === 'Submission';
+  // Sent, not credited by hand (credit_by_hand, 2026-09-22).
+  const sent = entry.entry_type === 'Submission' && entry.credit_by_hand !== true;
   const sentBy = sent && entry.received_from ? `From ${entry.received_from}` : 'Submission';
 
   return (
