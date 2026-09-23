@@ -657,11 +657,10 @@ things a screen below it were a form filled in blind.
 face, a name, four facts and the ways to reach somebody. **The four facts are
 one table**, the same label-and-answer shape for all four.
 
-**The long note is at `/get`, and `/why` is retired.** The essay answers
-*how did you get this*, which is asked at `/get`, where every copy's pitch
-pane sends people; the About pane carries a short paragraph. `/get` is not
-linked from the About pane, because it does not exist on a copy that has not
-written one.
+**The long note is at `/get/story`, and `/why` is retired.** The essay
+answers *how did you get this*, which is asked at `/get`, where every copy's
+About pane sends people — so it waits at the foot of the steps rather than
+standing between a person and the button.
 
 **The bar is page colour and nothing else, 2026-09-06 / 2026-09-20.** Once a
 pane has scrolled its crown away the row becomes a bar: page colour, flush,
@@ -1573,19 +1572,22 @@ gets the share-sheet steps; Chrome gets its real prompt. No service worker —
 a fetch handler that exists to satisfy a prompt is the anti-pattern Chrome
 dropped the rule over.
 
-**`/get` is three addresses, 2026-09-03.** Everyone arriving has already seen
-a journal working, so the door is one screen — a hero line, the button, what
-to expect — and three links. The steps live at `/get/install` because a
-person stuck at step four needs a link that opens there; the essay at
-`/get/story` because it is long-form reading. No demo, no feature list. The
-two sub-pages rise as layers from the door and are standalone when opened cold.
+**`/get` is the steps, then the button, 2026-09-22.** No pitch — anybody
+there has decided, and About carries it. Nine tiles, and the deploy button
+after the ninth: a button at the top is pressed before step five is read,
+and step five is where installs break. `/get/install` is gone with no stub
+(Miyel's call); the story keeps `/get/story`, a quiet link at the foot. The
+three-address door of 2026-09-03 is what this replaced.
 
-**The hero line is "a music journal you actually OWN."** "At your own
-address" is architecture, not a benefit.
+**"At your own address" is architecture, not a benefit.** The line that says
+what this is reads *a music journal you own* — on the About pane now, and
+as `/get`'s hero line before that.
 
 **"It didn't work" goes to the issues, not a troubleshooting page.** A
 troubleshooting page would be guesses; the issues people file become it once
 three people have hit the same thing. The line promises they are read.
+**It is not on `/get`, 2026-09-22** (Miyel's call): the holding pages a new
+copy can stop on carry it, which is where somebody is when it has not worked.
 **The bug button is a box on the desk that sends to the one copy the
 software comes from, 2026-09-13.** Report a problem opens a sheet: one box,
 Send, and what was written lands in that copy's inbox beside the sends,
@@ -1600,8 +1602,8 @@ pane's Get one, with an environment variable for a fork.
 it.** The run found what a summary skipped: the Neon panel's "Auth" toggle is
 on by default and must go off, and the Claude in-app browser cannot complete
 the Neon step, so tests run in Safari. Nine steps, one or two sentences each.
-The phone/laptop toggle is in the address (`?on=phone`) so a copied link opens
-on the same set.
+**One set, from a phone, 2026-09-22:** the phone/laptop switch is gone —
+the people handed `/get` are holding a phone, and only the pictures differed.
 
 **The password is filed under the journal's address, in a visible field.**
 Managers pair a password with a username and stay silent without one, and

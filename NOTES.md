@@ -78,6 +78,14 @@ read, or a file in the repo that ships with the version), and what "seen"
 means (per browser, in storage, is the honest limit without accounts — same as
 the return address). Ask before choosing either.
 
+**/GET, REBUILT — on `get-page`, 2026-09-22, waiting on a real phone and
+the screenshots.** The steps are the page now: GET YOUR COPY, one line, nine
+flat tiles, the deploy button after the ninth, and Our story at the foot.
+`/get/install` is deleted with no stub, the phone/laptop switch is gone, and
+"It didn't work" is off `/get` (all three Miyel's calls). The pictures come
+from one real install on a phone — the names are under **Screenshots for
+`/get`** below.
+
 **MANUAL ENTRY — pinned 2026-09-18, and the door is shut.** Miyel, having
 looked at what is built: "we will have to return to working out manual entry —
 I don't think it works the way I envision, but it's not crucial right now."
@@ -234,17 +242,17 @@ only, writing nothing (added 2026-09-02 to look at the screens without a
 fresh database). Next moves on without saving; the photo previews locally.
 The header says so. On a real first run the flag does nothing.
 
-**Screenshots for `/get/install`** — nine per device, drawn only when
-present, so the page reads fine until they exist. Two sets, because the page
-has a phone/laptop toggle: `public/install/phone/` and
-`public/install/laptop/`, same nine names in each: `01-button.png` (Vercel's
-clone screen), `02-github.png` (Vercel's sign-in with Continue with GitHub),
-`03-connect.png` (GitHub's permission screen), `04-name.png` (Git Scope and
-Private Repository Name), `05-neon.png` (the Neon panel with the Auth toggle),
-`06-build.png` (the build log or the Congratulations screen),
-`07-holding.png` (the "isn't ready yet" page with Set it up), `08-setup.png`
-(the name screen), `09-homescreen.png` (the last setup screen on a phone; the
-browser's add-to-Dock on a laptop).
+**Screenshots for `/get`** — nine, taken on a phone during a real install,
+drawn only when present, so the page reads fine until they exist. One set
+since 2026-09-22, when the phone/laptop switch went: `public/install/`,
+`01-button.png` (Vercel's clone screen), `02-github.png` (Vercel's sign-in
+with Continue with GitHub), `03-connect.png` (GitHub's permission screen),
+`04-name.png` (Git Scope and Private Repository Name), `05-neon.png` (the Neon
+panel with the Auth toggle), `06-build.png` (the build log or the
+Congratulations screen), `07-holding.png` (the "isn't ready yet" page with Set
+it up), `08-setup.png` (the name screen), `09-homescreen.png` (the last setup
+screen). Any step can go without: the brief put pictures on naming, Neon and
+the Auth toggle first, because those are where installs break.
 
 **A copy with no updater is a copy whose keeper did not grant one permission —
 diagnosed 2026-09-17, and it replaces the date rule written here on
@@ -283,7 +291,7 @@ on. It cannot arrive any other way, because arriving is the thing that copy
 cannot do.
 
 **Still wanted, and now clearly worth it:**
-- A line where a keeper will find it — `/get/install`, or the README — saying
+- A line where a keeper will find it — `/get`, or the README — saying
   to check for the Actions tab after deploying, and what to do if it is not
   there.
 - A second file in `.github/` would keep the folder alive when the workflow is
@@ -1027,7 +1035,7 @@ person's page the next (Complete). Left: the printer, and the chain.
       summary listing the release notes 1.6.0–1.10.1; his site answered the
       new routes about four minutes later. Nothing about the mechanism is
       unproved now. He can remove the collaborator whenever he likes.
-- [ ] **The install page (`/get/install`) says nothing about updating.**
+- [ ] **The install steps (`/get`) say nothing about updating.**
       The README does; the page is Miyel's copy's and can carry the same
       paragraph when the screenshots land.
 - [ ] **Names to confirm, 2026-09-11 (update)** — branch

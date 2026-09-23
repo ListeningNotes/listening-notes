@@ -32,10 +32,10 @@ Think of it like a house.
 - `/submit` — send the keeper an album
 - `/shuffle` — redirect to a random entry
 - `/feed.xml` — the journal as a feed another copy can read
-- `/get` — the long note about why somebody keeps a listening journal, and
-  under it the way to get one: the button, the steps, the screenshots, where
-  to say it did not work. Only on the canonical copy; blank on a fresh one,
-  and blank means it does not render
+- `/get` — the way to get a copy: nine steps with their screenshots, and the
+  button after the ninth. `/get/story` is the long note about why somebody
+  keeps a listening journal. Only on the canonical copy; blank on a fresh
+  one, and blank means neither renders
 
 There is no `/about` route of its own. The identity card on the landing page
 *is* the about page; `/about` stays only as a redirect, so old links land
@@ -211,7 +211,7 @@ The rooms — full pages assembled from furniture
       entry.css                The layer, the stand-in, the entry page, comments, corrections
       idcard.css               The identity card, its editor, the About pane writing
       session.css              The listen: picker, header, four screens, the reference
-      get.css                  /get — the door, the steps, the story
+      get.css                  /get — the steps and the button, and the story
       forms.css                Send, setup, settings, the password gate, compare, key
     manifest.js                PWA manifest — force-dynamic, so the name is not baked in
     feed.xml/route.js          The journal as an RSS feed
@@ -223,7 +223,8 @@ The rooms — full pages assembled from furniture
     key/page.js                What the stars and the three marks mean
     submit/page.js             Send the keeper an album
     shuffle/page.js            Redirect to a random entry
-    get/page.js                The keeper's long note. 404s when unwritten
+    get/page.js                Get your copy: nine steps, then the deploy button. 404s while the long note is unwritten
+    get/story/page.js          The keeper's long note. 404s when unwritten
     about/page.js              Redirect to / — the identity card is the about page
     session/page.js            The listen — picker, then four screens under one header
     printer/page.js            The share printer — the press on a record for the keeper (?entry=slug); the sentence for everyone else and for the card, whose plate is still to come
