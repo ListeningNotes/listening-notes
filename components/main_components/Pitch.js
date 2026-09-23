@@ -17,10 +17,17 @@
 // that could point this button somewhere else is a copy that could quietly
 // substitute itself for the original.
 //
-// The pane deliberately does not scroll. The three sentences are the whole
-// pitch and there is no more of it — HomeNav measures the pane rather than
-// being told, so no down caret is drawn and nothing promises a second screen
-// that is not there.
+// ── For strangers, 2026-09-22 ───────────────────────────────────────────────
+// The small mark, three lines, six tiles and GET ONE (Miyel's brief, About,
+// /get and Give, §1). The reader here has no one to show them and needs the
+// pitch; a keeper never sees this pane — they give through a sheet instead.
+// It replaces three sentences and a pill. A tile is one line and a glyph,
+// never a heading over a description: one line is the whole of it. The
+// three social lines sit in the middle and ownership comes last, so the page
+// ends on the promise right above the link.
+//
+// It scrolls on a short phone, as any pane does — the caret is measured on
+// the beacon only, so nothing promises a second screen here either way.
 //
 // ── The source line ─────────────────────────────────────────────────────────
 // It sat at the foot of the About pane and belongs here instead: that pane is
@@ -38,6 +45,7 @@
 
 const HOME = 'https://www.listeningnotes.blog/get';
 
+import { ArrowRight, BookOpen, Broadcast, Disc, HardDrives, PaperPlaneTilt, Shuffle } from '@phosphor-icons/react';
 import WritingAccess from './WritingAccess';
 // The version this copy is running, beside the source line. A version used
 // to be ruled out here as a line that goes stale; releases keep it true now
@@ -70,30 +78,41 @@ export default function Pitch({ onSignedIn }) {
   return (
     <div className="pt-pane">
       <div className="pt-body">
-        <h1 className="pt-title">What is this?</h1>
+        {/* What it is, in one breath: free, theirs, and the writing does not
+            go anywhere. The mark above says whose software this is. */}
+        <p className="pt-blurb">
+          A music journal you own. The software is free, you run your own copy,
+          and what you write stays in your database.
+        </p>
 
-        {/* Three sentences, and the count is the design. Everything true about
-            this software that a stranger needs in the ten seconds they are
-            holding somebody else's phone: it is free, it is theirs, and the
-            writing does not go anywhere. A fourth sentence is a pitch; three
-            is an answer. */}
-        <div className="pt-prose">
-          <p>A listening journal you keep yourself.</p>
-          <p>The software is free and you run your own copy of it, at your own address.</p>
-          <p>You host your own, nobody counts your readers, and what you write stays in your own database.</p>
-        </div>
+        {/* Six things it does, as the tile the rest of the site uses, made
+            flat: these say what the software does and open nothing, and a
+            tile that lifts under a finger is a door. Every glyph is the one
+            the site already uses for that thing — the beacon's, the send's,
+            Compare's shuffle — so none has to be learned twice. Hosting is
+            HardDrives rather than the mock's key, because the key under GET
+            ONE is the way in, and two keys on one pane would mean two things. */}
+        <ul className="pt-tiles">
+          <li className="ln-tile pt-tile"><Broadcast size={25} aria-hidden="true" />Show what you have on</li>
+          <li className="ln-tile pt-tile"><Disc size={25} aria-hidden="true" />Rate every track, not just the album</li>
+          <li className="ln-tile pt-tile"><PaperPlaneTilt size={25} aria-hidden="true" />Send music to friends</li>
+          <li className="ln-tile pt-tile"><Shuffle size={25} aria-hidden="true" />Compare ratings side by side</li>
+          <li className="ln-tile pt-tile"><BookOpen size={25} aria-hidden="true" />Look back on every listen</li>
+          <li className="ln-tile pt-tile"><HardDrives size={25} aria-hidden="true" />Host it yourself, for free</li>
+        </ul>
 
-        <a className="ln-pill pt-cta" href={HOME} target="_blank" rel="noopener noreferrer">
-          Get one
-        </a>
-
-        {/* Stacked and set well below the button, 2026-09-03: the two lines
-            used to sit side by side under it and the pane read as a button
-            with a caption. The lock first because it is the one the keeper
-            is looking for; the source line last, smallest, where a colophon
-            goes. The lock is a key, 2026-09-10, and the field opens under it
-            in place — see WritingAccess. */}
+        {/* The foot, pushed to the bottom of a tall screen and following the
+            tiles on a short one. GET ONE is a word and an arrow in the
+            caption face, not a pill (2026-09-22) — the rest of the site has
+            been taking its pills away. Under it the lock, because it is the
+            one the keeper is looking for, and the source line last, smallest,
+            where a colophon goes. The lock is a key, 2026-09-10, and the
+            field opens under it in place — see WritingAccess. */}
         <div className="pt-foot">
+          <a className="pt-get" href={HOME} target="_blank" rel="noopener noreferrer">
+            Get one
+            <ArrowRight size={17} aria-hidden="true" />
+          </a>
           <WritingAccess onSignedIn={onSignedIn} />
           {/* The colophon: where the code is, and which version this is.
               Smallest type on the site, one line. */}
