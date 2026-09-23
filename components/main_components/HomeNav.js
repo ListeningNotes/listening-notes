@@ -67,7 +67,7 @@
 // layout — the stylesheet does all of it above 769px.
 
 'use client';
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { startTransition, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ArrowsLeftRight, CaretDown, X } from '@phosphor-icons/react';
@@ -973,7 +973,15 @@ export default function HomeNav() {
       // the wall does not have to be found or aimed at, because it is what you
       // are looking at. Journal does the filing (see its own note); this is
       // the going and the coming back.
-      dropTimers.current.push(setTimeout(() => setFiling(record), LAYER_OUT_MS));
+      //
+      // Filed now, under the sheet that is still going down, and the drop
+      // waits for the sheet (below). Miyel, 2026-09-22, after a full session:
+      // "drop down into journal, cutaway didn't feel smooth." Measured: the
+      // wall's floor is display: none while a record is chosen, and opening it
+      // laid out every cover on the wall in the same frame the drop set off —
+      // a 33ms stall on a laptop at the very start of the move, several times
+      // that on a phone. Opened here, that work happens behind the sheet.
+      setFiling(record);
     };
     window.addEventListener(SAVED_EVENT, onSaved);
     return () => window.removeEventListener(SAVED_EVENT, onSaved);
@@ -1022,10 +1030,12 @@ export default function HomeNav() {
 
     const clocks = [];
     let stop = null;
-    clocks.push(requestAnimationFrame(() => {
-      // One frame first, so the floor is on the page before it is scrolled to:
-      // it is display: none under the picker until .hn--filing opens it, and a
-      // hidden floor has no offsetTop to aim at.
+    clocks.push(setTimeout(() => {
+      // The sheet's length first. The floor opened at the save, under the
+      // sheet going down (see onSaved), so by now it is laid out and on the
+      // page — it is display: none under the picker until .hn--filing opens
+      // it, and a hidden floor has no offsetTop to aim at — and the drop sets
+      // off with nothing left to do but move.
       stop = slide(pane, secondFloorTop(pane), DOWN_MS, () => {
         // Now. The wall was asked for at the moment of the save and has most
         // likely already answered; this is where the answer is put on screen,
@@ -1034,7 +1044,10 @@ export default function HomeNav() {
         // its own note.
         const waiting = onTheWay.current || fetchEntries().catch(() => null);
         onTheWay.current = null;
-        waiting.then(list => { if (list) { setEntries(list); setLoading(false); } });
+        // Not urgent, 2026-09-22: the new list redraws the whole cross, and
+        // done in one piece it stalled the moment the pane arrived (61ms on a
+        // laptop). As a transition React can do it in pieces between frames.
+        waiting.then(list => { if (list) startTransition(() => { setEntries(list); setLoading(false); }); });
 
         // And the wall is held from the moment the record is *on* it, not from
         // the moment the pane got here. Asking for it is a fetch: it took about
@@ -1057,7 +1070,7 @@ export default function HomeNav() {
         };
         watchFor(0);
       });
-    }));
+    }, LAYER_OUT_MS));
 
     return () => {
       if (stop) stop();
