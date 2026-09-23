@@ -3041,7 +3041,8 @@ current.
 
 ## Complete
 
-**2026-09-22 — notes from a full session, branch `session-cleanups`, UNMERGED**
+**2026-09-22 — notes from a full session, 1.29.2, on main.** Released v1.29.2;
+branch `session-cleanups` merged, then deleted.
 
 - [x] **Selecting words in a note stays on the page.** A drag in the note you
       are writing, or one that leaves a selection, is not a swipe — on the
