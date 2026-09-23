@@ -86,6 +86,169 @@ export default function SessionPage() {
 
   const s = useListeningSession({ step });
 
+  // ── The note comes up to meet the keyboard, 2026-09-22 ──────────────────
+  // Miyel: "it still feels weird when I open the keyboard — it glitches just
+  // for a split second." Measured on her phone with the tape measure: about
+  // 95ms after a tap, in a single frame, iOS slid the whole screen up so the
+  // note box sat in the middle of what the keyboard leaves — 278pt the first
+  // time, 300 the second, which is to the half point what centres the box
+  // *where it was at the tap*. The sheet is pinned to the part of the screen
+  // you can see (LayerEntry), so it pulled everything straight back down: a
+  // frame or two up, then back. iOS moves the screen itself, ahead of any
+  // page code, so no pin can be quick enough to hide it.
+  //
+  // And lifting the note once it has the focus is too late — that was the
+  // second try, and iOS centred the box it had been shown at the tap. So the
+  // tap on a note you are not already writing in is the listen's to handle:
+  // it reads which letter the finger landed on, lifts the page until the
+  // track's name sits just under the header (her ask: "have the track name
+  // stay so it doesn't feel like it's going as far"), and only then puts the
+  // cursor there and asks for the keyboard. iOS is shown a note already in
+  // view and has nothing to slide. The lift glides up with the keyboard
+  // rather than jumping. When the keyboard goes, the page goes back down.
+  //
+  // A long press is left to the browser — it is how words get selected — and
+  // is still lifted once it has the focus, after iOS has had its slide.
+  // Touch screens only: a mouse focuses the note on arrival and there is no
+  // keyboard to make room for.
+  useEffect(() => {
+    // How much of the screen a keyboard leaves, once one has been seen — a
+    // guess at a little over half before that.
+    let room = null;
+    let lifted = null;
+    let settle = null;
+    let press = null;
+    const vv = window.visualViewport;
+    const touchy = () => window.matchMedia('(pointer: coarse)').matches;
+    const onViewport = () => { if (vv && vv.height < screen.height * 0.8) room = vv.height; };
+    const notes = target => {
+      const field = target?.closest?.('.ses-grow')?.querySelector('textarea');
+      return field && field.closest('.ses') ? field : null;
+    };
+
+    // Lifts the page so the line above the note — the track's name, or
+    // "Album notes" — sits just under the header, and further only if the
+    // place you tapped would otherwise be under the keyboard. Returns how far
+    // it actually went, which the scroll range can make less than asked.
+    const raise = (field, tapY) => {
+      const root = field.closest('.ses');
+      const scroller = field.closest('.lay') || document.scrollingElement;
+      const head = root.querySelector('.ses-head');
+      const under = head ? head.getBoundingClientRect().bottom : 0;
+      const above = field.closest('.ses-grow').previousElementSibling || field;
+      const space = room || Math.round(window.innerHeight * 0.55);
+      const at = tapY ?? field.getBoundingClientRect().top + 20;
+      let by = above.getBoundingClientRect().top - (under + 10);
+      if (at - by > space - 64) by = at - (space - 64);
+      if (by < 4) return 0;
+      // Room to go up into: a listen with little written has nowhere to
+      // scroll to, so the page is given a screen of blank below while a note
+      // is open, and it is taken away again once the page is back down.
+      root.style.paddingBottom = '100vh';
+      if (!lifted) lifted = { scroller, root, from: scroller.scrollTop };
+      const was = scroller.scrollTop;
+      scroller.scrollTop = was + by;
+      return scroller.scrollTop - was;
+    };
+
+    // Which letter a point is over, read off a copy of the writing laid over
+    // the box for the length of one question. The box itself cannot be asked
+    // — the browser keeps its text out of reach — and the copy wraps exactly
+    // where it does, because it takes the same type, width and padding.
+    const letterAt = (field, x, y) => {
+      const box = field.getBoundingClientRect();
+      const look = getComputedStyle(field);
+      const copy = document.createElement('div');
+      copy.style.cssText = [
+        'position:fixed', `left:${box.left}px`, `top:${box.top}px`, `width:${box.width}px`,
+        'box-sizing:border-box', 'margin:0', 'border:0',
+        `padding:${look.paddingTop} ${look.paddingRight} ${look.paddingBottom} ${look.paddingLeft}`,
+        `font:${look.font}`, `letter-spacing:${look.letterSpacing}`, `word-spacing:${look.wordSpacing}`,
+        'white-space:pre-wrap', 'overflow-wrap:break-word',
+        'opacity:0', 'z-index:2147483647', 'pointer-events:auto',
+      ].join(';');
+      copy.textContent = field.value + ' ';
+      document.body.appendChild(copy);
+      let at = field.value.length;
+      const range = document.caretRangeFromPoint?.(x, y);
+      if (range && copy.contains(range.startContainer)) at = Math.min(range.startOffset, field.value.length);
+      copy.remove();
+      return at;
+    };
+
+    const onStart = e => {
+      const field = notes(e.target);
+      if (!field || field === document.activeElement || e.touches.length !== 1 || !touchy()) { press = null; return; }
+      const t = e.touches[0];
+      press = { field, x: t.clientX, y: t.clientY, t: performance.now() };
+    };
+    const onMove = e => {
+      if (!press) return;
+      const t = e.touches[0];
+      if (Math.abs(t.clientX - press.x) > 10 || Math.abs(t.clientY - press.y) > 10) press = null;
+    };
+    const onEnd = e => {
+      const p = press;
+      press = null;
+      // A press held long enough to select a word is the browser's.
+      if (!p || performance.now() - p.t > 450) return;
+      const { field } = p;
+      const at = letterAt(field, p.x, p.y);
+      // The browser's own focus goes, and the slide iOS would have made with it.
+      e.preventDefault();
+      clearTimeout(settle);
+      const went = raise(field, p.y);
+      field.setSelectionRange(at, at);
+      field.focus({ preventScroll: true });
+      if (went <= 0) return;
+      // The page is already up — that is what iOS was shown. What you see
+      // is drawn where it was and let go, on the site's curve, so it rises
+      // with the keyboard instead of jumping ahead of it. The header is not
+      // in it: only the listen under the header moves.
+      const body = field.closest('.ses-body');
+      if (!body) return;
+      body.style.transition = 'none';
+      body.style.transform = `translateY(${went}px)`;
+      body.getBoundingClientRect();
+      body.style.transition = 'transform 0.32s cubic-bezier(0.22, 0.61, 0.36, 1)';
+      body.style.transform = '';
+      setTimeout(() => { body.style.transition = ''; }, 380);
+    };
+
+    // A note that got the focus some other way — a long press, a keyboard —
+    // is still lifted, after whatever iOS has done.
+    const onIn = e => {
+      const field = notes(e.target);
+      if (!field || !touchy()) return;
+      clearTimeout(settle);
+      raise(field, null);
+    };
+    const onOut = e => {
+      if (!lifted) return;
+      const next = e.relatedTarget;
+      if (notes(next) && lifted.root.contains(next)) return;
+      const { scroller, root, from } = lifted;
+      lifted = null;
+      scroller.scrollTo({ top: from, behavior: 'smooth' });
+      settle = setTimeout(() => { if (!lifted) root.style.paddingBottom = ''; }, 500);
+    };
+    document.addEventListener('touchstart', onStart, { capture: true, passive: true });
+    document.addEventListener('touchmove', onMove, { capture: true, passive: true });
+    document.addEventListener('touchend', onEnd, { capture: true, passive: false });
+    document.addEventListener('focusin', onIn);
+    document.addEventListener('focusout', onOut);
+    vv?.addEventListener('resize', onViewport);
+    return () => {
+      document.removeEventListener('touchstart', onStart, true);
+      document.removeEventListener('touchmove', onMove, true);
+      document.removeEventListener('touchend', onEnd, true);
+      document.removeEventListener('focusin', onIn);
+      document.removeEventListener('focusout', onOut);
+      vv?.removeEventListener('resize', onViewport);
+      clearTimeout(settle);
+    };
+  }, []);
+
   // Puts a record on the desk — or clears it, with null — and lands on the
   // step it was left at. Called from whatever caused the change: the door
   // opening on a record already there, a tap in the picker, the back caret.
@@ -306,6 +469,10 @@ export default function SessionPage() {
     // `data-slide`, because a tablist cannot claim to be a slider — sliding
     // along it moves through the tracks (Strip in steps/TrackNotes.js).
     if (e.target?.closest?.('[role="slider"], [data-slide]')) { swipe.current = null; return; }
+    // And a drag in the note you are writing is selecting words, not turning
+    // the page (Miyel, 2026-09-22: "I cannot highlight text without changing
+    // screens"). The tracks screen keeps the same rule for its own swipe.
+    if (e.target === document.activeElement && e.target.closest?.('textarea, input')) { swipe.current = null; return; }
     const t = e.touches[0];
     // Where the page was when the finger landed: a pull down means leave only
     // from the top, the same rule the sheet's own pull follows.
@@ -315,6 +482,9 @@ export default function SessionPage() {
     const from = swipe.current;
     swipe.current = null;
     if (!from) return;
+    // A long press that selected a word on the way is not a swipe either.
+    const field = document.activeElement;
+    if (field?.matches?.('textarea, input') && field.selectionStart !== field.selectionEnd) return;
     const t = e.changedTouches[0];
     const dx = t.clientX - from.x;
     const dy = t.clientY - from.y;

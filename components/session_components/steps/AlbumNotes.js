@@ -187,23 +187,18 @@ export default function AlbumNotes({
       <hr className="ses-rule" style={{ margin: '30px 0 24px' }} />
 
       <div className="ses-label" style={{ marginBottom: 12 }}>Album notes</div>
-      <textarea
-        ref={el => {
-          // Size on mount too, so returning to this step doesn't clip long notes.
-          if (!el) return;
-          el.style.height = 'auto';
-          el.style.height = el.scrollHeight + 'px';
-        }}
-        className="ses-textarea"
-        value={overallNotes}
-        onChange={e => {
-          setOverallNotes(e.target.value);
-          e.target.style.height = 'auto';
-          e.target.style.height = e.target.scrollHeight + 'px';
-        }}
-        placeholder="How does this album feel as a whole? Themes, impressions, context…"
-        rows={7}
-      />
+      {/* Grown by layout, not by script — the same fix as the track note, and
+          this one needed it more: its sizing ran on every render of the
+          screen, not only on a keystroke. See .ses-grow in session.css. */}
+      <div className="ses-grow" data-said={(overallNotes || '') + ' '}>
+        <textarea
+          className="ses-textarea"
+          value={overallNotes}
+          onChange={e => setOverallNotes(e.target.value)}
+          placeholder="How does this album feel as a whole? Themes, impressions, context…"
+          rows={7}
+        />
+      </div>
       {/* A character count sat under here until 2026-09-18. Nothing in this
           software has ever had a limit to count towards, so it was a number
           that only ever went up — and a number going up beside something you

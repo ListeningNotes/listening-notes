@@ -1564,6 +1564,24 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**iOS centres a focused field where it was *at the tap*, and a pin cannot beat
+it, 2026-09-22.** Measured on Miyel's phone in a listen: ~95ms after tapping a
+note, in one frame, the visible part of the screen slid 278pt, then 300 on a
+second try — each to the half point what centres the box in the 498pt the
+keyboard leaves, *using the box's position at the moment of focus*. The second
+try lifted the note in `focusin`, and iOS still centred the pre-lift box: it
+takes the element's rect as focus happens and never asks again. LayerEntry's
+pin to `visualViewport` then pulls the sheet back, but iOS moves the screen in
+its own process first — "it glitches for a split second". So the listen takes
+the tap on a note that is not already focused (app/session/page.js): reads the
+letter under the finger off a copy of the writing (`caretRangeFromPoint`),
+lifts the page so the track's name sits under the header, sets the selection,
+and only then calls `focus()` — iOS is shown a note already in view. A long
+press is left to the browser. In a PWA innerHeight shrinks with the keyboard
+too (874 → 596), and the slide shows in both vv.offsetTop and scrollY. The
+keyboard's floating bar is see-through, so the sheet paints its ground down
+behind it (a box-shadow dropped by --lay-bottom).
+
 **A measurement refused while the sheet moves must be asked again, 2026-09-22.**
 The entry's collapse (the mini card in the header, and the auto-scroll across
 the gap) measures nothing while its sheet is landing and waited for an event to
@@ -3022,6 +3040,31 @@ current.
 ---
 
 ## Complete
+
+**2026-09-22 — notes from a full session, branch `session-cleanups`, UNMERGED**
+
+- [x] **Selecting words in a note stays on the page.** A drag in the note you
+      are writing, or one that leaves a selection, is not a swipe — on the
+      tracks screen and on the steps' own swipe.
+- [x] **The note grows by layout** (`.ses-grow`: an invisible copy of the
+      writing in the same grid cell). It was set to auto and measured on
+      every keystroke, and on every render for the album note — each collapse
+      made iOS re-scroll to the cursor. Checked with a copy of the box: fits
+      to the pixel from 1 line to 14, scroll position untouched. The sheet's
+      pin to the visual viewport is left as it is; if the bounce survives on
+      a phone, that is the next suspect.
+- [x] **Track numbers are back** on the tracks screen, in front of the name.
+- [x] **The cutaway drops smoother.** The wall opens at the save, under the
+      sinking sheet, instead of in the frame the drop starts (33ms stall
+      there, on a laptop); the landing's redraw is a transition (61ms →
+      ~20ms).
+- [x] **No journal link on a person's page** — the friends pane is the way.
+- [x] **Opening the keyboard does not jump.** See the Gotcha: a tap on a note
+      is the listen's — the track's name lifts under the header before the
+      focus, so iOS has nothing to slide, and the lift glides. Proved on a
+      stand-in sheet (name 393 → 179, caret in "milit|ant"), then on
+      Miyel's phone: "seems to work now." The journal's band no longer shows
+      round the keyboard's bar.
 
 **2026-09-22 — the mini card every time, 1.29.1, on main.** Released v1.29.1;
 branch `mini-card` merged, then deleted.
