@@ -1098,31 +1098,35 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 
 /* One glyph that turns. A plus at forty-five degrees is a cross, so this
    control becomes the other thing rather than being swapped for it. */
-/* A glyph over a word since 2026-09-22, when Give arrived beside it — the
-   same box and word the ··· tools wear (.kt-tool--said, .kt-word), so Add
-   and Give read as the card's tools do. */
 .fr-plus {
-  display: inline-flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 2px;
+  display: inline-flex; align-items: center; justify-content: center;
   flex: 0 0 auto;
-  width: 46px; min-height: 46px;
-  border: 0; background: none; padding: 5px 0;
+  width: 40px; height: 40px;
+  border: 0; background: none; padding: 0;
   color: var(--ink-soft); cursor: pointer;
   transition: color 0.15s;
 }
 .fr-plus:hover { color: var(--ink); }
 .fr-plus svg { transition: transform 0.34s cubic-bezier(0.22, 0.61, 0.36, 1); }
 .fr-plus--shut svg { transform: rotate(45deg); }
-.fr-plus .kt-word { transition: opacity 0.2s ease; }
-.fr-plus--shut .kt-word { opacity: 0; }
-/* Give steps aside while the address field is open, and back as it goes:
-   its width folds to nothing on the curve the + turns on, so the × slides
-   into the corner rather than Give blinking out. */
+/* ── Give, the left-hand control, 2026-09-22 ── the + faced by the gift: one
+   bare mark each side, as every header here has. It steps aside while the
+   address field is open, when the left is the camera's — its width folds to
+   nothing on the curve the + turns on, so it goes rather than blinks. */
 .fr-give {
+  display: inline-flex; align-items: center; justify-content: center;
+  flex: 0 0 auto;
+  width: 40px; height: 40px;
+  border: 0; background: none; padding: 0;
+  color: var(--ink-soft); cursor: pointer;
   overflow: hidden;
-  transition: color 0.15s, width 0.34s cubic-bezier(0.22, 0.61, 0.36, 1), opacity 0.22s ease;
+  transition: color 0.15s, width 0.34s cubic-bezier(0.22, 0.61, 0.36, 1),
+              margin 0.34s cubic-bezier(0.22, 0.61, 0.36, 1), opacity 0.22s ease;
 }
-.fr-give--away { width: 0; opacity: 0; pointer-events: none; }
+.fr-give:hover { color: var(--ink); }
+/* Folded, it gives back the row's 8px gap as well, so the camera stands
+   exactly where it did before Give was here. */
+.fr-give--away { width: 0; margin-right: -8px; opacity: 0; pointer-events: none; }
 
 /* ── Add and Scan moved into the header, 2026-09-20 ───────────────────────
    `.fr-add-acts` and everything that dressed it are gone. They were a row of
@@ -1389,7 +1393,7 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 .fr-cut:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 2px; border-radius: 4px; }
 
 @media (prefers-reduced-motion: reduce) {
-  .fr-one, .fr-face, .fr-door, .fr-plus, .fr-doors { transition: none; }
+  .fr-one, .fr-face, .fr-door, .fr-plus, .fr-give, .fr-doors { transition: none; }
 }
 
 /* ── The shelf, and the line off the end of it ─────────────────────────────

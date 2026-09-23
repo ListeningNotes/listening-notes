@@ -604,29 +604,28 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null }
       aria-label={adding ? 'Never mind' : 'Add a journal'}
       title={adding ? 'Never mind' : 'Add a journal'}
     >
-      <Plus size={22} weight="regular" aria-hidden="true" />
-      {/* The word goes while it is a ×: the cross says never mind itself. */}
-      <span className="kt-word" aria-hidden="true">Add</span>
+      <Plus size={18} weight="regular" aria-hidden="true" />
     </button>
   );
 
-  // ── Give, beside Add, 2026-09-22 ────────────────────────────────────────
+  // ── Give, opposite Add, 2026-09-22 ──────────────────────────────────────
   // Add is for people who have a journal; Give is for the ones who do not
-  // (Miyel's brief, About, /get and Give). A glyph over a word, as every
-  // tool on this site now is, and the + took its word at the same time. It
-  // steps aside while the address field is open — the row is the field and
-  // its × then — and comes back as the field goes, rather than blinking.
+  // (Miyel's brief, About, /get and Give). The left-hand control where Add is
+  // the right: one each side, as every header on this site has — a pair of
+  // them side by side in one corner was a toolbar, and "we don't do that on
+  // any other page" (Miyel). A bare mark, like the + it faces. It steps aside
+  // while the address field is open, when the left is the camera's, and
+  // comes back as the field goes rather than blinking.
   const give = (
     <button
       type="button"
-      className={'fr-plus fr-give' + (adding ? ' fr-give--away' : '')}
+      className={'fr-give' + (adding ? ' fr-give--away' : '')}
       onClick={() => setGiving(true)}
       inert={adding ? true : undefined}
       aria-label="Gift someone a journal"
       title="Gift someone a journal"
     >
-      <Gift size={22} weight="regular" aria-hidden="true" />
-      <span className="kt-word" aria-hidden="true">Give</span>
+      <Gift size={18} weight="regular" aria-hidden="true" />
     </button>
   );
 
@@ -648,7 +647,8 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null }
           camera, and the camera is the thing the sentence is there for.
 
           Only while the field is open: a camera on a page of faces is a
-          camera pointed at nothing. */}
+          camera pointed at nothing. The rest of the time the left is Give's. */}
+      {give}
       {adding && (
         <button
           type="button"
@@ -762,7 +762,6 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null }
           an address into the box above it is a page quietly lying about
           how many people are in it. */}
       {plus}
-      {give}
     </div>
   );
 

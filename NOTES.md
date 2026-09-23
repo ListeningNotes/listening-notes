@@ -61,8 +61,8 @@ deploy a copy — and none of it is anything they need.
 **GIVE — built on `give-sheet`, 2026-09-22, waiting on a real phone.** Step
 3 of the About, /get and Give brief: a sheet with a code to
 `listeningnotes.blog/get?gift=<this journal>`, Copy link, and Share where the
-phone has a share sheet. It opens from the Friends header beside Add and
-nowhere else, and Add took its word at the same time (DECISIONS). Until the
+phone has a share sheet. It opens from the gift at the left of the Friends
+header, opposite Add, and nowhere else (DECISIONS). Until the
 first friend (step 4) is built, the sheet says a plain line rather than
 "you'll be the first person in their book" — a new copy cannot know its giver
 yet. The lid-lifting flourish in the brief is not built. The brief and

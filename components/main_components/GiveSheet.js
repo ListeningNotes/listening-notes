@@ -10,9 +10,10 @@
 // the pitch — their own journal, in their hand — and what they need is a fast
 // way to hand /get to somebody who is looking at it. So this is a sheet, not
 // a tab and not a pane, and the band stays four for keepers. It opens from
-// the book's header beside Add, and only there: the brief put a second door
-// on the card, and Miyel kept the one (2026-09-22) — Add and Give are the
-// same errand, putting somebody in touch, and they stand together.
+// the gift at the left of the book's header, opposite Add, and only there:
+// the brief put a second door on the card, and Miyel kept the one
+// (2026-09-22) — Add and Give are the same errand, putting somebody in
+// touch, and they face each other across the book's name.
 //
 // ── What the code carries ─────────────────────────────────────────────────
 // listeningnotes.blog/get, because there is exactly one place the software
