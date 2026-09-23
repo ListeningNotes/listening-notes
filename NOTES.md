@@ -1564,6 +1564,21 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**iOS centres a focused field it cannot show whole, and a pin cannot beat it,
+2026-09-22.** Measured on Miyel's phone in a listen: 93ms after tapping a note,
+in one frame, the visible part of the screen slid 278pt — exactly what puts the
+157pt box in the middle of the 498pt the keyboard leaves. WebKit does this when
+the whole focused element will not fit above the keyboard (and the caret is not
+already showing). LayerEntry's pin to `visualViewport` then pulled the sheet
+back, but iOS moves the screen in its own process, ahead of any page code: a
+frame or two up, then down — "it glitches for a split second". The cure is to
+leave iOS nothing to reveal: the listen lifts a note to just under its header
+on `focusin`, before iOS decides, and puts the page back on `focusout`
+(app/session/page.js). The tape measure that found it logged vv.offsetTop,
+vv.height, innerHeight, scrollY and the sheet's, header's and field's boxes
+every frame from focus; in a PWA innerHeight shrinks with the keyboard too
+(874 → 596 here), and the slide shows up in both vv.offsetTop and scrollY.
+
 **A measurement refused while the sheet moves must be asked again, 2026-09-22.**
 The entry's collapse (the mini card in the header, and the auto-scroll across
 the gap) measures nothing while its sheet is landing and waited for an event to
@@ -3041,6 +3056,9 @@ current.
       there, on a laptop); the landing's redraw is a transition (61ms →
       ~20ms).
 - [x] **No journal link on a person's page** — the friends pane is the way.
+- [x] **Opening the keyboard does not jump.** See the Gotcha: the note lifts
+      under the header on focus, so iOS never slides the screen. Proved on a
+      stand-in sheet (449 → 181 → back to 449); on Miyel's phone next.
 
 **2026-09-22 — the mini card every time, 1.29.1, on main.** Released v1.29.1;
 branch `mini-card` merged, then deleted.
