@@ -1836,37 +1836,87 @@
 }
 
 /* ── Right, logged out: Pitch ───────────────────────────────────────────── */
+/* The About pane, 2026-09-22: the small mark, three lines, six tiles and GET
+   ONE. A column that fills the face, so the foot can sit at the bottom of a
+   tall screen and follow the tiles on a short one. */
+.hn-face--colophon { display: flex; flex-direction: column; }
+/* The crown, at the size every other page's mark is (28px, .hn-bar-svg).
+   Under the bar rather than in it: the bar's ground is opaque, 80px plus the
+   notch, and the face starts 36px down — so 52 stands the mark eight pixels
+   under the bar, on the line the card's portrait starts on next door. */
+.hn-face--colophon .hn-crown { flex: none; min-height: 0; padding: 52px 16px 0; }
+.hn-face--colophon .hn-crown-svg { height: 28px; }
 .pt-pane {
-  min-height: calc(var(--hn-h) - var(--hn-crown));
+  flex: 1 0 auto;
   box-sizing: border-box;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 var(--hn-gutter) 84px;
+  flex-direction: column;
+  padding: 20px var(--page-gutter) 8px;
 }
 .pt-body {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  align-items: center;
   width: 100%;
-  max-width: 360px;
+  max-width: 380px;
+  margin: 0 auto;
 }
-.pt-title {
+.pt-blurb {
   margin: 0;
-  font-family: var(--font-display);
-  font-weight: var(--font-display-weight);
-  font-size: 1.6rem;
-  letter-spacing: -0.01em;
-  color: var(--ink);
-}
-.pt-prose { display: flex; flex-direction: column; gap: 12px; }
-.pt-prose p {
-  margin: 0;
-  font-size: 0.95rem;
+  max-width: 300px;
+  text-align: center;
+  font-size: 1rem;
   line-height: 1.65;
   color: var(--ink-soft);
 }
-.pt-cta { align-self: center; margin-top: 4px; }
+.pt-tiles {
+  list-style: none;
+  width: 100%;
+  margin: 28px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+/* .ln-tile's panel, hairline and radius, laid flat: no shadow and no lift,
+   because these open nothing. One bold line under the glyph, in the display
+   face rather than the door's mono caps. */
+.ln-tile.pt-tile {
+  flex-direction: column;
+  gap: 14px;
+  min-height: 120px;
+  padding: 18px 14px;
+  box-shadow: none;
+  font-family: var(--font-display);
+  font-weight: var(--font-display-weight);
+  font-size: 0.875rem;
+  line-height: 1.4;
+  letter-spacing: 0;
+  text-transform: none;
+  text-align: center;
+  /* Two even lines rather than a full one and a word left over — "Show
+     what you have" over a lone "on". */
+  text-wrap: balance;
+  transition: none;
+}
+.ln-tile.pt-tile:hover { border-color: var(--border); transform: none; }
+.pt-tile svg { flex: none; }
+/* GET ONE: a word and an arrow in the caption face, 48px tall for a thumb. */
+.pt-get {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 0 4px;
+  font-family: var(--font-label);
+  font-size: 0.75rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink);
+  text-decoration: none;
+}
+.pt-get:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; }
 /* The smallest type on the site. AGPL §13, satisfied once, quietly. */
 .pt-source {
   margin: 0;
@@ -3401,25 +3451,27 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .hn-under .arc-bar-wrap { margin-top: 14px; }
   /* No beacon, no band: the wall is the first thing, under the bar's row. */
 
-  /* ── The colophon face ── the mark, three sentences, Get one, the key and
-     the source line, centred on an otherwise empty page and deliberately
-     quiet: a stranger presses it and somebody who already has a copy glances
-     past. The one place in this layout with vertical centring, because it is
-     the one page with nothing else on it.
+  /* ── The colophon face ── the mark, three lines, six tiles, GET ONE, the
+     key and the source line, centred on an otherwise empty page and
+     deliberately quiet: a stranger presses it and somebody who already has a
+     copy glances past. The one place in this layout with vertical centring,
+     because it is the one page with nothing else on it.
 
      It is also the only face that keeps the crown. Every other page carries
      the mark in the bar over the journal; this one is a page about the
      software rather than about the journal, and a colophon without the mark
      on it is a paragraph. `safe` so a short window scrolls from the top
-     rather than clipping the mark off it. */
-  .hn-face--colophon { display: flex; flex-direction: column; justify-content: safe center; }
+     rather than clipping the mark off it.
+
+     The whole width of the spine, said outright, 2026-09-22. `.hn-pane` is
+     `width: auto` above, and this face stands at `left: 100%` of the leaf
+     with nothing to its right — so auto shrank it to its narrowest content,
+     212px of a 320px spine once the tiles came, a word to a line. */
+  .hn-face--colophon { display: flex; flex-direction: column; justify-content: safe center; width: 100%; }
   .hn-face--colophon .hn-crown { display: flex; min-height: 0; flex: none; padding: 0 16px 26px; }
   .hn-face--colophon .hn-crown-svg { height: 52px; }
-  .pt-pane { min-height: auto; flex: none; align-items: center; padding: 0 var(--hn-gutter) 12px; }
-  .pt-body { gap: 16px; }
-  .pt-title { font-size: 1.2rem; }
-  .pt-prose p { font-size: 0.86rem; line-height: 1.62; }
-  .pt-foot { margin-top: 30px; }
+  .pt-pane { flex: none; padding: 0 var(--hn-gutter) 12px; }
+  .pt-foot { padding-top: 26px; }
 
   /* ── The desk face ── Start a listen is the one large control and is a wide
      tile rather than a square: a square at the spine's width is a third of the
@@ -3457,15 +3509,16 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .fd-cmp-bars { height: 52px; }
 }
 
-/* The foot of the pitch pane: the source link, and the way in. Two quiet lines
-   that belong together — one says where the software came from, the other is
-   for the one person who keeps this copy of it. */
+/* The foot of the pitch pane: GET ONE, the way in, and the source link.
+   `margin-top: auto` sends it to the bottom of a tall screen; the padding is
+   the least air it keeps under the tiles on a short one. */
 .pt-foot {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 18px;
-  margin-top: 36px;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 24px;
 }
 /* ── The lock ── a small key where the Sign in line sat, 2026-09-10. Press
    it and the password field opens under it, in place: no page, no heading,

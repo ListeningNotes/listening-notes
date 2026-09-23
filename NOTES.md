@@ -58,6 +58,15 @@ deploy a copy — and none of it is anything they need.
 
 ## Pending
 
+**THE ABOUT PANE, REBUILT — on `about-pane`, 2026-09-22, waiting on a real
+phone.** The visitor's third pane is the small mark, three lines, six flat
+tiles and GET ONE as a word and an arrow; the key and Source · version stay
+under it. Checked at 390, 320 and on a desk, in both themes. Open: the tile
+wording, which Miyel changes on sight — two lines were chosen for her ("Rate
+every track, not just the album"; "Look back on every listen", because "at
+your address" is architecture). On merge, DECISIONS' *The pitch pane is three
+sentences and a button* (2026-09-03) is rewritten to the new shape.
+
 **WHAT CHANGED, IN THE APP — pinned 2026-09-21, not now.** Miyel, having read
 the 1.26.0 notes: "I want to design a custom popup in app that shows when your
 copy moved version and tells it what happened, stylized by the site, that is
@@ -1563,6 +1572,23 @@ Project → Settings → Environment Variables.
 ---
 
 ## Gotchas
+
+**A face on the spine at `left: 100%` shrinks to its narrowest content,
+2026-09-22.** `.hn-pane { width: auto }` in the desktop block outranks the
+faces' `width: 100%` — every face is also an `.hn-pane` — and the desk face
+stands at the leaf's right edge with nothing to its right, so auto resolves
+to min-content. The About face came out 212px of a 320px spine once it had
+tiles, a word to a line; three sentences had hidden it. The colophon now says
+`width: 100%` in the desktop block. The desk face has the same arithmetic and
+was not looked at.
+
+**To see a copy signed out, open the dev server at the Mac's LAN address,
+2026-09-22.** The Claude browser carries Miyel's wristband on `localhost`, so
+it shows the keeper's four panes; signing it out would sign out her session.
+`127.0.0.1` has no wristband but is not in `allowedDevOrigins`, so the page
+renders and never comes alive. `http://<ipconfig getifaddr en0>:3000` is
+allowed, carries no cookie, and is a visitor. Each new host asks for its own
+browser permission.
 
 **iOS centres a focused field where it was *at the tap*, and a pin cannot beat
 it, 2026-09-22.** Measured on Miyel's phone in a listen: ~95ms after tapping a
