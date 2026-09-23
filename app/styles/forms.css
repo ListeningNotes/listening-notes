@@ -1513,7 +1513,6 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 }
 .pn-face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .pn-name { font-family: var(--font-display); font-weight: var(--font-display-weight, 700); font-size: 28px; line-height: 1.1; margin: 6px 0 0; color: var(--ink); overflow-wrap: anywhere; }
-.pn-row { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
 .pn-panel { border-radius: 24px; }
 .pn-scroll { position: relative; z-index: 1; flex: 1; padding: 22px 26px 28px; }
 /* The counted facts, one table: the card's label-and-answer shape. */

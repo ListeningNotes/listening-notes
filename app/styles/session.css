@@ -337,6 +337,31 @@
    start is most of the reason somebody writes a listen up on a laptop. It
    still grows as you type; this is only where it begins. */
 @media (min-width: 769px) { .ses-textarea { min-height: 168px; } }
+/* ── A note that grows without being measured, 2026-09-22 ────────────────
+   The textarea and an invisible copy of what is written in it share one grid
+   cell, and the cell is as tall as the taller of the two — the box's own rows
+   at first, the writing once there is more of it. The box stretches to the
+   cell. Nothing is ever set to auto and read back, which is what made iOS
+   scroll on every keystroke (see TrackNotes.js).
+
+   The copy has to wrap exactly where the box does, so it takes the box's
+   type, padding and border line for line; a trailing space keeps a final
+   empty line counted. */
+.ses-grow { display: grid; }
+.ses-grow > .ses-textarea,
+.ses-grow::after { grid-area: 1 / 1 / 2 / 2; }
+.ses-grow::after {
+  content: attr(data-said);
+  visibility: hidden;
+  pointer-events: none;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  box-sizing: border-box;
+  font-family: var(--font-nunito), sans-serif; font-size: 15px; line-height: 1.8;
+  padding: 6px 0;
+  border-bottom: 1px solid transparent;
+}
+@media (pointer: coarse) { .ses-grow::after { font-size: 16px; } }
 .ses-field { display: flex; flex-direction: column; gap: 7px; }
 .ses-field--year { max-width: 150px; }
 
@@ -878,6 +903,13 @@
   margin: 0 0 22px;
 }
 .ses-track-head .ses-title { flex: 1 1 auto; min-width: 0; }
+/* The track's number, the way an entry's tracklist prints it — DM Mono in
+   faint ink ahead of the name — a size up to sit beside a title. */
+.ses-track-no {
+  font-family: var(--font-label); font-size: 12px; font-weight: 400;
+  letter-spacing: 0.06em; color: var(--ink-faint);
+  margin-right: 10px; vertical-align: 0.1em;
+}
 /* Smaller than a title elsewhere in the listen, because it is now sharing a
    line rather than owning one. */
 .ses-title--track {

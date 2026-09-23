@@ -220,8 +220,6 @@ export default function TrackNotes({
   useEffect(() => {
     const el = textRef.current;
     if (!el) return;
-    el.style.height = 'auto';
-    el.style.height = el.scrollHeight + 'px';
     if (window.matchMedia?.('(pointer: fine)').matches) el.focus({ preventScroll: true });
   }, [i, count]);
 
@@ -236,6 +234,13 @@ export default function TrackNotes({
   // stars until it is let go.
   function onTouchStart(e) {
     if (e.target.closest?.('[role="slider"]')) { touch.current = null; return; }
+    // ── And in the note, while you are writing it, 2026-09-22 ────────────
+    // Miyel, after a full session: "I cannot highlight text without changing
+    // screens." Dragging across words to select them is a sideways drag of
+    // exactly the kind this listens for, so it turned the page. A drag that
+    // begins in the note you are writing belongs to the note; a swipe on it
+    // before you have tapped into it still turns the page.
+    if (e.target === document.activeElement && e.target.closest?.('textarea, input')) { touch.current = null; return; }
     const p = e.touches[0];
     touch.current = { x: p.clientX, y: p.clientY };
   }
@@ -243,6 +248,11 @@ export default function TrackNotes({
     const start = touch.current;
     touch.current = null;
     if (!start) return;
+    // A long press on a note you had not tapped into yet selects a word and
+    // focuses it on the way — by the time the finger lifts, there is a
+    // selection, and a selection is not a swipe.
+    const field = document.activeElement;
+    if (field?.matches?.('textarea, input') && field.selectionStart !== field.selectionEnd) return;
     const p = e.changedTouches[0];
     const dx = p.clientX - start.x;
     const dy = p.clientY - start.y;
@@ -326,7 +336,17 @@ export default function TrackNotes({
             is still about thirteen pixels, which is a thumb's width of
             travel per half star. */}
         <div className="ses-track-head">
-          <h2 className="ses-title ses-title--track">{t.title}</h2>
+          {/* The number is back, 2026-09-22, and only the number. "Track 3
+              of 10" went on 2026-09-18 because the strip already says where
+              you are; what it cannot say is which song is seven, and that is
+              how people write about a record — Miyel: "sometimes I want to
+              write on track seven instead of the name, and I don't know off
+              the bat which one it is." Set the way an entry's tracklist sets
+              it: small, mono, faint, in front of the name. */}
+          <h2 className="ses-title ses-title--track">
+            <span className="ses-track-no">{t.number || i + 1}</span>
+            {t.title}
+          </h2>
 
           <div className="ses-track-marks">
             <StarRating value={trackRatings[i] || 0} onChange={v => setTrackRatings(prev => ({ ...prev, [i]: v }))} size={20} roomy />
@@ -347,18 +367,28 @@ export default function TrackNotes({
           </div>
         </div>
 
-        <textarea
-          ref={textRef}
-          className="ses-textarea"
-          value={trackNotes[i] || ''}
-          onChange={e => {
-            setTrackNotes(prev => ({ ...prev, [i]: e.target.value }));
-            e.target.style.height = 'auto';
-            e.target.style.height = e.target.scrollHeight + 'px';
-          }}
-          placeholder="Notes for this track…"
-          rows={5}
-        />
+        {/* ── The note grows by layout, 2026-09-22 ────────────────────────
+            Miyel: "the keyboard isn't smooth, the screen bounces around so
+            much as I'm typing." It was grown by script on every keystroke —
+            height to auto, then to what the text needed — and for the moment
+            it was auto the box was five lines tall, the page under it got
+            shorter, and iOS scrolled to keep the cursor in sight, then
+            scrolled again once it grew back. A bounce a keystroke, worse the
+            longer the note.
+
+            Now a copy of the writing sits in the same grid cell, invisible,
+            and the box takes the cell's height. It is never shrunk to be
+            measured, so there is nothing to scroll after. See .ses-grow. */}
+        <div className="ses-grow" data-said={(trackNotes[i] || '') + ' '}>
+          <textarea
+            ref={textRef}
+            className="ses-textarea"
+            value={trackNotes[i] || ''}
+            onChange={e => setTrackNotes(prev => ({ ...prev, [i]: e.target.value }))}
+            placeholder="Notes for this track…"
+            rows={5}
+          />
+        </div>
       </div>
 
       {/* The carets, bare. They sat in a bordered circle each until

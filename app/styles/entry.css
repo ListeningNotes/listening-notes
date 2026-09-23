@@ -449,6 +449,17 @@
   overflow-y: auto;
   overscroll-behavior: contain;
 }
+/* ── The page carries on behind the keyboard, 2026-09-22 ─────────────────
+   With a keyboard up the sheet stops at the keyboard's edge (--lay-bottom,
+   LayerEntry), and the keyboard's floating bar has a clear gap round it and
+   a see-through middle — so whatever was under the sheet showed through, the
+   journal's four doors included. Miyel: "I'm seeing the navigation bar
+   underneath." A copy of the sheet's own ground, dropped straight down by
+   the keyboard's height, fills everything below it; with no keyboard the
+   drop is zero and the copy sits behind the sheet, where nobody sees it. */
+@media (max-width: 768px) {
+  .lay { box-shadow: 0 var(--lay-bottom, 0px) 0 0 var(--bg); }
+}
 
 /* The strip the back-pull starts in. Invisible, full height, a thumb's width,
    pinned to the left edge — the same place and the same idea as the system
