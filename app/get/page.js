@@ -1,24 +1,30 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // app/get/page.js
-// The door. One screen: what it is, the button, and three ways onward.
+// Get your copy: nine steps, then the button.
 //
-// This is the address every copy's pitch pane sends people to. Somebody asks
-// how you got this, the owner swipes right and hands over the phone, and this
-// is where they land — which means everyone arriving has already seen a
-// journal working, from a friend's copy or from a post showing one. They are
-// not being convinced. They are trying to get from wanting it to having it,
-// and this page's only job is not losing them between those two states.
+// This is the address every copy's About pane sends people to. Anybody here
+// has already decided — they have seen a journal working, on a friend's phone
+// or in a post — so there is no pitch on this page; About carries it. What is
+// left is instructions and a button.
 //
-// So no demo, no screenshots of the journal, no feature list. A hero line, a
-// button, a line under the button that sets expectations before anybody
-// starts, and a short table of contents: the steps (/get/install), the story
-// (/get/story), and where to say it did not work. Everything fits without
-// scrolling at phone width.
+// ── The button is at the foot, 2026-09-22 ──────────────────────────────────
+// After step nine, not at the top. People read what is above a button before
+// they reach it: a button at the top gets pressed before step five is read,
+// and step five is where installs break. Step one says where it is, so nobody
+// hunts for it (Miyel's brief, About, /get and Give, §2).
 //
-// It used to be one long page — the essay first, then the steps under it —
-// and the essay was the thing between a person and the button. Each of the
-// three errands has its own address now; see layout.js for why.
+// It replaced a door with three links — the steps at /get/install, the story,
+// and "It didn't work". The steps are this page now and /get/install is gone.
+// The story keeps its own address because it is long-form reading, and waits
+// quietly at the very foot. "It didn't work" came off the same day, on
+// Miyel's call; the holding pages a new copy can stop on still carry it
+// (ComingSoon.js), which is where somebody is when it has not worked.
+//
+// Screenshot slots read from public/install/ and draw only when the file
+// exists, so the page reads correctly before the pictures are taken and they
+// can be added without touching this file. The filenames are in NOTES. This
+// is the one part of the page that has to happen on the server.
 //
 // The drawer rule: a copy that has not written the essay 404s here rather
 // than serving a door to somebody else's software under its own address.
@@ -26,55 +32,59 @@
 
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
+// The server's own set: the plain import reaches for React context, which a
+// server component does not have.
+import { ArrowRight, ArrowUp } from '@phosphor-icons/react/ssr';
 import { pull_settings, titleName } from '../../library/settings_actions';
-import { DEPLOY_URL, SOURCE_URL } from '../../library/install_guide';
+import { DEPLOY_URL, STEPS } from '../../library/install_guide';
+import InstallSteps from '../../components/main_components/InstallSteps';
 
 export async function generateMetadata() {
   const settings = await pull_settings();
   if (!settings.why_essay?.trim()) return {};
-  return { title: `Getting one · ${titleName(settings)}` };
+  return { title: `Get your copy · ${titleName(settings)}` };
 }
 
 export default async function GetPage() {
   const settings = await pull_settings();
   if (!settings.why_essay?.trim()) notFound();
 
-  return (
-    <main className="get-wrap">
-      {/* One word carries the weight. The line is the promise, and "own" is
-          the whole of it; setting every word bold says nothing louder. */}
-      <h1 className="get-title get-title--door">A music journal you actually <strong>own</strong>.</h1>
-      <p className="get-lede">
-        A free software that allows you to log what you listen to, rate it
-        track by track, write about it. It runs on your own hosting, in your
-        own database.
-      </p>
+  // Which pictures exist, in step order.
+  const shots = STEPS.map(step =>
+    existsSync(join(process.cwd(), 'public', 'install', `${step.shot}.png`)));
 
+  return (
+    <main className="get-wrap get-wrap--steps">
+      {/* The mark is in the nav row above; see SiteNav. */}
+      <header className="get-top">
+        <p className="get-kicker">Get your copy</p>
+        <p className="get-lede">
+          Nine steps, about ten minutes, on a phone or a laptop. Read them
+          first; the button is at the foot.
+        </p>
+      </header>
+
+      <InstallSteps shots={shots} />
+
+      {/* Square corners and filled, the one thing on this page a person came
+          to press. The same tab: a phone mid-install should not be juggling
+          two, and back returns here. */}
       <div className="get-act">
-        <a href={DEPLOY_URL} className="get-cta">Make your own copy</a>
-        <p className="get-expect">About ten minute set up</p>
+        <a href={DEPLOY_URL} className="get-cta">
+          <ArrowUp size={18} aria-hidden="true" />
+          Make your own copy
+        </a>
+        <p className="get-expect">Opens Vercel · nothing to pay</p>
       </div>
 
-      <ul className="get-index">
-        <li>
-          <Link href="/get/install">
-            <p className="get-index-head">How to install →</p>
-            <p className="get-index-line">Nine steps with pictures, on a phone or a laptop.</p>
-          </Link>
-        </li>
-        <li>
-          <Link href="/get/story">
-            <p className="get-index-head">Our story →</p>
-            <p className="get-index-line">Why this exists, and what changed along the way.</p>
-          </Link>
-        </li>
-        <li>
-          <a href={`${SOURCE_URL}/issues`}>
-            <p className="get-index-head">It didn’t work →</p>
-            <p className="get-index-line">Tell me what happened. I read these.</p>
-          </a>
-        </li>
-      </ul>
+      <nav className="get-onward" aria-label="More about getting your copy">
+        <Link href="/get/story" className="get-onward-link">
+          Our story
+          <ArrowRight size={16} aria-hidden="true" />
+        </Link>
+      </nav>
     </main>
   );
 }
