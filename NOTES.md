@@ -3013,6 +3013,19 @@ current.
 
 ## Complete
 
+**2026-09-22 — Put on by, 1.29.0, on main.** Released v1.29.0; branch
+`put-on` merged, then deleted.
+
+- [x] **Put on by** is the public phrase for a credit — on the entry, in the
+      correction panel, and "What Ethan has put you onto" on a person's page.
+      Send and credit stay in the machinery (DECISIONS). The ··· tool keeps
+      Credit, Miyel's call.
+- [x] **The envelope is for a real send.** A credit added by hand sets
+      `entries.credit_by_hand` (migration 022) and wears the line without the
+      mark. The 18 existing credits kept theirs, by Miyel's reading.
+- [x] **Credit's Save sticks** — the tool opened in both of the page's
+      slots and the hidden one's Save won (Gotchas). HAN is credited to Ethan.
+
 **2026-09-22 — replies to your comments, 1.28.0, on main.** Released v1.28.0;
 branch `replies` merged, then deleted.
 
