@@ -1088,20 +1088,28 @@ the downloaded file. The moment somebody needs a restore is the worst moment
 to learn their backup is the wrong sort.
 
 **The feed is pull-based.** Every copy publishes `/feed.xml`; each copy goes
-and checks. Nobody learns they were read. **Two views: submissions and
-recent** — submissions is the warmer default and cannot become a scroll. **A
-shelf, not a river:** no counts, no badges, no unread state.
+and checks. Nobody learns they were read. **One feed** — the two views of
+2026-09-12 retired with the friends brief. **A shelf, not a river:** no
+counts, no badges, no unread state.
 
 **The feed is entries, not people, 2026-09-12; built 2026-09-13.** The
-desk's second floor: entry-shaped rows with a small face and a name — what
-the people in the address book logged, not a list of who exists — read from
-each journal's public feed in the browser, never stored. Recent is everyone
-in the book, newest first, forty at most; Submissions is who logged what you
-sent them and how they rated it, and is the default. A row offers Compare
+Friends pane's second floor: entry-shaped rows with a small face and a name —
+what the people in the address book logged, not a list of who exists — read
+from each journal's public feed in the browser, never stored. Everyone in the
+book, newest first, forty at most; what came back from a send is an arrival
+in the inbox now, not a view of the feed (2026-09-22). A row offers Compare
 only when it is a record you also have — this album, their rating against
 yours and the two horizons; the track notes stay on the journals until an
 entry can be read across origins. Compare arrives because something
 happened; it is not a place you navigate to.
+
+**A returned send is an arrival, and this copy keeps it, 2026-09-22.** When
+somebody in the book logs a record this journal put them onto, the feed's
+match hands it to this copy's server and the inbox shows it among the sends —
+"Came back", the dot until opened, no count. A table of its own (`came_back`),
+because a copy keeps no record of what it sends. **The first write of its
+kind:** the browser telling its own server what it read on somebody else's
+public journal — within the model, since everything social lives on your copy.
 
 **Everything social lives on the visitor's own copy, 2026-09-12.** Their
 copy holds their addresses and does their comparing; other people's journals
