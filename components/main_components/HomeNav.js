@@ -2625,7 +2625,10 @@ export default function HomeNav() {
               <>
                 {/* The colophon keeps the crown. Every other page carries the
                     mark small; this one is the page *about* the mark, and a
-                    colophon without it is a paragraph. */}
+                    colophon without it is a paragraph. Small here too since
+                    2026-09-22 — the large one is the beacon's — so the crown
+                    is kept for its link home and its place under the bar,
+                    and the stylesheet sizes the mark (.hn-face--colophon). */}
                 {crown}
                 <Pitch onSignedIn={letIn} />
               </>
