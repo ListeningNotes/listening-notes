@@ -95,7 +95,7 @@ const WORDS = {
     all:    'What you can do with this entry',
     edit:     ['Edit',      'Edit this entry'],
     print:    ['Share',     'Make a picture of this entry to share'],
-    sender:   ['Credit',    'Say who sent you this record'],
+    sender:   ['Credit',    'Say who put you on to this record'],
     send:     ['Send',      'Send this record to somebody in your address book'],
     relisten: ['Relisten',  'Log another listen of this album'],
     remove:   ['Delete',    'Delete this entry'],

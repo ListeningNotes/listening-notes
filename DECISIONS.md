@@ -1168,6 +1168,13 @@ no pill. The Submission chip stands down wherever a name is printed and stays
 where one cannot be. This reverses *the sender opens; it does not display*
 of 2026-09-14, one day old; the argument it replaced is in the archive.
 
+**Send and credit in the machinery; "put on" where a reader sees it,
+2026-09-22.** The entry prints *Put on by Ethan*, the correction panel asks
+the same, and a person's page says what they have put you onto. The inbox,
+the send sheet, the quiet toggle, the ··· tool's *Credit* and every column
+keep their words: a send is an event, a put-on is the credit it leaves. Why:
+a tester credited a record he found on a journal, and nothing had been sent.
+
 **The sender is picked off the address book, and a backfill carries no
 date, 2026-09-14.** Crediting an old entry links the name to a journal in
 the book, so the person's page counts it at once; free text stays for
