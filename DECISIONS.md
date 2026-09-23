@@ -765,10 +765,11 @@ right swipe: the pitch and a link to listeningnotes.blog/get. A keeper's
 phone has no pitch pane, so a keeper hands over the way in with Give — a
 sheet, never a tab: the band stays four for keepers and three for visitors.
 
-**Give opens from the Friends header and the card's ···, 2026-09-22** — not
-the card's foot, which Settings left for the ··· on 09-20 so there is one
-place to look. **Nothing counts gifts:** no totals, no "3 friends joined",
-nothing reported back to the giver. A gift is a gift, not a referral scheme.
+**Give opens from the Friends header, beside Add, and nowhere else,
+2026-09-22.** The brief put a second door on the card; Miyel kept the one —
+Add and Give are the same errand and stand together. **Nothing counts
+gifts:** no totals, no "3 friends joined", nothing reported back to the
+giver. A gift is a gift, not a referral scheme.
 
 **A gift link says `?gift=`, never `?from=`, 2026-09-22.** Give's code points
 at `listeningnotes.blog/get?gift=<the giver's journal>`. Every page already

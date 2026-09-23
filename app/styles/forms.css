@@ -1098,17 +1098,31 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 
 /* One glyph that turns. A plus at forty-five degrees is a cross, so this
    control becomes the other thing rather than being swapped for it. */
+/* A glyph over a word since 2026-09-22, when Give arrived beside it — the
+   same box and word the ··· tools wear (.kt-tool--said, .kt-word), so Add
+   and Give read as the card's tools do. */
 .fr-plus {
-  display: inline-flex; align-items: center; justify-content: center;
+  display: inline-flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 2px;
   flex: 0 0 auto;
-  width: 40px; height: 40px;
-  border: 0; background: none; padding: 0;
+  width: 46px; min-height: 46px;
+  border: 0; background: none; padding: 5px 0;
   color: var(--ink-soft); cursor: pointer;
   transition: color 0.15s;
 }
 .fr-plus:hover { color: var(--ink); }
 .fr-plus svg { transition: transform 0.34s cubic-bezier(0.22, 0.61, 0.36, 1); }
 .fr-plus--shut svg { transform: rotate(45deg); }
+.fr-plus .kt-word { transition: opacity 0.2s ease; }
+.fr-plus--shut .kt-word { opacity: 0; }
+/* Give steps aside while the address field is open, and back as it goes:
+   its width folds to nothing on the curve the + turns on, so the × slides
+   into the corner rather than Give blinking out. */
+.fr-give {
+  overflow: hidden;
+  transition: color 0.15s, width 0.34s cubic-bezier(0.22, 0.61, 0.36, 1), opacity 0.22s ease;
+}
+.fr-give--away { width: 0; opacity: 0; pointer-events: none; }
 
 /* ── Add and Scan moved into the header, 2026-09-20 ───────────────────────
    `.fr-add-acts` and everything that dressed it are gone. They were a row of
@@ -1776,6 +1790,44 @@ a.pn-item-album:hover { text-decoration: underline; text-underline-offset: 3px; 
   animation: snRise 0.4s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 @keyframes snRise { from { transform: translateY(100%); } to { transform: none; } }
+
+/* ── The give sheet, 2026-09-22 ─────────────────────────────────────────────
+   The send sheet's sheet (.sn-*), with a code on it: the gift glyph, one
+   heading, one line, the code large on a white plate, then Copy link and
+   Share in the caption face. GiveSheet.js says what it is for. */
+.gv-sheet { align-items: center; text-align: center; padding-top: 30px; }
+.gv-glyph { flex-shrink: 0; color: var(--ink); }
+.gv-head {
+  margin: 14px 0 0;
+  font-family: var(--font-display); font-weight: var(--font-display-weight);
+  font-size: 21px; line-height: 1.25; color: var(--ink);
+}
+.gv-line {
+  margin: 8px auto 0; max-width: 310px;
+  font-size: 15px; line-height: 1.5; color: var(--ink-soft);
+  text-wrap: balance;
+}
+/* White in both themes: a camera looks for dark on light, and the plate is
+   what makes the code the same object on a dark page. */
+.gv-code {
+  flex-shrink: 0;
+  width: min(210px, 58vw);
+  margin: 24px auto 0; padding: 14px;
+  background: #fff;
+  border: 1px solid var(--border); border-radius: 18px;
+}
+.gv-code svg { display: block; width: 100%; height: auto; }
+.gv-acts { display: flex; justify-content: center; gap: 26px; margin: 20px 0 2px; flex-shrink: 0; }
+.gv-act {
+  display: inline-flex; align-items: center; gap: 10px;
+  min-height: 44px; padding: 0 4px;
+  border: 0; background: none; cursor: pointer;
+  font-family: var(--font-label); font-size: 11.5px;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--ink);
+}
+.gv-act:hover { color: var(--ink-soft); }
+.gv-act:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; border-radius: 6px; }
 /* The close, in a corner. It was centred at the top for a day, which read as
    part of the sheet's own content and sat over the record you came to look at
    — every other close on this site is in a corner (Miyel, 2026-09-17). Right,
