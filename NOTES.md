@@ -1564,6 +1564,14 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**A panel drawn in two slots puts two Saves in one bar, 2026-09-22.** The
+entry page draws the credit line twice — under the chips for a phone, in the
+hero for a wide window — and hides one with CSS. The Credit tool opened in
+both, each portalled its own Save into the shared editing bar, and the hidden
+copy's landed on top: pick Ethan in the visible one, press Save, and the other
+saved nobody. Hidden is still mounted. Anything that portals into a shared
+slot must be drawn once; `sendering` now says which slot ('phone' | 'desk').
+
 **The in-app sheet is `display-mode: standalone` too, 2026-09-22.** A link
 out of the installed app opens in a sheet inside it, and that sheet inherits
 standalone from the app — so every standalone-only fix applies there as well.

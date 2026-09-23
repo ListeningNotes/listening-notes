@@ -304,7 +304,12 @@ export default function SentBy({ entry, trail = null, keeper = '', mine = false,
   return (
     <div className="ln-sent">
       <p className="ln-sent-line">
-        <span className="ln-sent-lbl">Sent by</span>
+        {/* Put on by, 2026-09-22. Miyel's brief: credit was never really about
+            the send — a tester found a record on another keeper's journal,
+            logged it and wanted to credit him with nothing sent. "Put on" is
+            what people say for both, and it is the only public phrase; the
+            machinery still says send and credit (DECISIONS, The network). */}
+        <span className="ln-sent-lbl">Put on by</span>
         <Face src={there ? `${there}/api/portrait` : ''} />
         {there
           ? <a className="ln-sent-name" href={there} target="_blank" rel="noopener noreferrer">{credit.name}</a>

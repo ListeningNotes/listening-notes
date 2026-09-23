@@ -152,7 +152,7 @@ const WALL_FIELDS = [
   'id', 'slug', 'album', 'artist', 'year', 'genre', 'album_key',
   'rating', 'rating_value', 'entry_type', 'favorite', 'masterpiece',
   'formative', 'horizon', 'album_art', 'posted_at',
-  'listen_number', 'listen_total',
+  'listen_number', 'listen_total', 'credit_by_hand',
 ];
 
 // One slug, chosen by the database. /shuffle used to read every entry and pick
@@ -227,7 +227,7 @@ const PUBLIC_FIELDS = [
   'slug', 'album', 'artist', 'year', 'genre',
   'album_key', 'rating', 'rating_value', 'entry_type',
   'favorite', 'masterpiece', 'formative', 'horizon', 'album_art', 'posted_at',
-  'listen_number', 'listen_total',
+  'listen_number', 'listen_total', 'credit_by_hand',
 ];
 
 export async function pull_public_entries() {
@@ -444,6 +444,7 @@ export async function update_entry(slug, fields) {
   const set_date = touched('received_date');
   const set_url = touched('received_from_url');
   const set_quiet = touched('credit_private');
+  const set_hand = touched('credit_by_hand');
   // source_entry_id is not among them, 2026-09-15: nothing writes it and the
   // rules that used to guard it are gone (see the note above the slugs).
   // A caller sending the key is ignored rather than refused.
@@ -530,7 +531,8 @@ export async function update_entry(slug, fields) {
       received_from = CASE WHEN ${set_from} THEN ${set_from ? blankToNull(fields.received_from) : null}::text ELSE received_from END,
       received_date = CASE WHEN ${set_date} THEN ${set_date ? blankToNull(fields.received_date) : null}::date ELSE received_date END,
       received_from_url = CASE WHEN ${set_url} THEN ${set_url ? blankToNull(tidyJournal(fields.received_from_url)) : null}::text ELSE received_from_url END,
-      credit_private = CASE WHEN ${set_quiet} THEN ${set_quiet ? fields.credit_private === true : false}::boolean ELSE credit_private END
+      credit_private = CASE WHEN ${set_quiet} THEN ${set_quiet ? fields.credit_private === true : false}::boolean ELSE credit_private END,
+      credit_by_hand = CASE WHEN ${set_hand} THEN ${set_hand ? fields.credit_by_hand === true : false}::boolean ELSE credit_by_hand END
     WHERE slug = ${slug}
     RETURNING *
   `;

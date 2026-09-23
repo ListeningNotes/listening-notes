@@ -181,7 +181,7 @@ export default function LayerWaiting({ slug, authed = false }) {
               rule the entry itself follows — both ask creditOn, so the two
               can never disagree and the row cannot change shape when the
               entry lands (SentBy.js, 2026-09-15). */}
-          {known.entry_type === 'Submission' && !creditOn(known) && <Chip>Submission</Chip>}
+          {known.entry_type === 'Submission' && known.credit_by_hand !== true && !creditOn(known) && <Chip>Submission</Chip>}
           {known.favorite && <Chip tone="fav">Favorite</Chip>}
           {isMasterpiece && <Chip tone="mp">Masterpiece</Chip>}
         </div>

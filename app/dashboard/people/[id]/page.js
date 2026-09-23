@@ -259,7 +259,7 @@ export default function PersonPage({ layered = false }) {
             <div className="own-panel pn-panel">
               <div className="pn-scroll">
                 {theirs?.failed && (
-                  <p className="pn-note">{name}&rsquo;s journal isn&rsquo;t answering just now, so only what they sent you is here.</p>
+                  <p className="pn-note">{name}&rsquo;s journal isn&rsquo;t answering just now, so only what they&rsquo;ve put you onto is here.</p>
                 )}
 
                 <dl className="pn-facts">
@@ -320,9 +320,9 @@ export default function PersonPage({ layered = false }) {
                     same filter. So the shelf answers "what did they send me
                     and what have I got to" before anything is pressed. */}
                 <Section
-                  title={`What ${name} has sent you`}
+                  title={`What ${name} has put you onto`}
                   rows={facts.sends}
-                  empty={`${name} hasn't sent you anything yet.`}
+                  empty={`${name} hasn't put you onto anything yet.`}
                   all={chunk(facts.sends, SENT_ACROSS).map((row, i) => {
                     const here = row.find(x => x.id === openSend) || null;
                     return (
