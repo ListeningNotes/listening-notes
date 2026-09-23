@@ -58,13 +58,15 @@ deploy a copy — and none of it is anything they need.
 
 ## Pending
 
-**GIVE — step 3 of the About, /get and Give brief, next.** The sheet a keeper
-opens to hand a friend the code to `/get`. Decided 2026-09-22 and in
-DECISIONS: the link says `?gift=`, never `?from=`; it opens from the Friends
-header beside Add and from the card's ···; the file is `GiveSheet.js`. Until
-the first friend (step 4) is built, the sheet says a plain line rather than
+**GIVE — built on `give-sheet`, 2026-09-22, waiting on a real phone.** Step
+3 of the About, /get and Give brief: a sheet with a code to
+`listeningnotes.blog/get?gift=<this journal>`, Copy link, and Share where the
+phone has a share sheet. It opens from the gift at the left of the Friends
+header, opposite Add, and nowhere else (DECISIONS). Until the
+first friend (step 4) is built, the sheet says a plain line rather than
 "you'll be the first person in their book" — a new copy cannot know its giver
-yet. The brief and mock-ups are on Miyel's machine (`about-get-give.zip`).
+yet. The lid-lifting flourish in the brief is not built. The brief and
+mock-ups are on Miyel's machine (`about-get-give.zip`).
 
 **WHAT CHANGED, IN THE APP — pinned 2026-09-21, not now.** Miyel, having read
 the 1.26.0 notes: "I want to design a custom popup in app that shows when your

@@ -39,9 +39,10 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
-import { ArrowRight, BookOpen, Camera, MagnifyingGlass, PaperPlaneTilt, Plus, PushPin, Shuffle, User } from '@phosphor-icons/react';
+import { ArrowRight, BookOpen, Camera, Gift, MagnifyingGlass, PaperPlaneTilt, Plus, PushPin, Shuffle, User } from '@phosphor-icons/react';
 import CodeScanner from './CodeScanner';
 import SendSheet from './SendSheet';
+import GiveSheet from './GiveSheet';
 import { carrySender, journalUrl, tidyJournal } from '../../library/return_address';
 import { useBookplate } from './Bookplate';
 
@@ -236,6 +237,8 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null }
   const [filing, setFiling] = useState(false);
   const [said, setSaid] = useState('');
   const [sendingTo, setSendingTo] = useState(null);
+  // Give's sheet, opened from beside the +. See GiveSheet.js.
+  const [giving, setGiving] = useState(false);
   // An address that arrived in a link, held rather than filed — see the note
   // in the offer below.
   const [offered, setOffered] = useState('');
@@ -605,6 +608,27 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null }
     </button>
   );
 
+  // ── Give, opposite Add, 2026-09-22 ──────────────────────────────────────
+  // Add is for people who have a journal; Give is for the ones who do not
+  // (Miyel's brief, About, /get and Give). The left-hand control where Add is
+  // the right: one each side, as every header on this site has — a pair of
+  // them side by side in one corner was a toolbar, and "we don't do that on
+  // any other page" (Miyel). A bare mark, like the + it faces. It steps aside
+  // while the address field is open, when the left is the camera's, and
+  // comes back as the field goes rather than blinking.
+  const give = (
+    <button
+      type="button"
+      className={'fr-give' + (adding ? ' fr-give--away' : '')}
+      onClick={() => setGiving(true)}
+      inert={adding ? true : undefined}
+      aria-label="Gift someone a journal"
+      title="Gift someone a journal"
+    >
+      <Gift size={18} weight="regular" aria-hidden="true" />
+    </button>
+  );
+
   // ── The book's whole header, drawn in one of two places ─────────────────
   // On the cross it is the cross's bar: the name is already up there and a
   // field that opens has to open in the same row, not seventy pixels under it
@@ -623,7 +647,8 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null }
           camera, and the camera is the thing the sentence is there for.
 
           Only while the field is open: a camera on a page of faces is a
-          camera pointed at nothing. */}
+          camera pointed at nothing. The rest of the time the left is Give's. */}
+      {give}
       {adding && (
         <button
           type="button"
@@ -1046,6 +1071,7 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null }
           so that closing it does not depend on the face surviving a refresh
           of the book. */}
       <SendSheet open={Boolean(sendingTo)} person={sendingTo} onClose={() => setSendingTo(null)} />
+      <GiveSheet open={giving} onClose={() => setGiving(false)} />
     </>
   );
 }
