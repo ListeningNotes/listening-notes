@@ -1,0 +1,14 @@
+-- A credit added by hand, 2026-09-22.
+--
+-- Miyel: a record credited because you heard about it through the grapevine
+-- — seen on somebody's journal, played in their car — is not a record
+-- somebody sent you, and the envelope should say only the second. Until now
+-- naming a sender by hand made an entry a Submission, and a Submission wears
+-- the envelope, so a found record claimed a send that never happened.
+--
+-- True when the credit panel names somebody on an entry that was not already
+-- a Submission. A send never sets it. Every row that exists is false, which is
+-- right for all of them on the canonical copy by Miyel's own reading (every
+-- older credit there was a real send), and is the safe answer everywhere
+-- else: an envelope that stays is a claim already being made.
+ALTER TABLE entries ADD COLUMN IF NOT EXISTS credit_by_hand boolean NOT NULL DEFAULT false;

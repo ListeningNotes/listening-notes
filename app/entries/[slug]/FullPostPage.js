@@ -814,7 +814,9 @@ export default function FullPostPage({ entry, references = [], authed = false, l
         : `Listen ${entry.listen_number} of ${entry.listen_total}`)
     : null;
 
-  const isSubmission = entry.entry_type === 'Submission';
+  // A record somebody actually sent. A credit added by hand is a Submission
+  // underneath and is not one of these (credit_by_hand, 2026-09-22).
+  const isSubmission = entry.entry_type === 'Submission' && entry.credit_by_hand !== true;
   // Who sent a record is a line under the chips now rather than a panel
   // behind them (SentBy.js, 2026-09-15), so the chip's only remaining job is
   // the entries that line cannot draw: a credit the sender asked to keep
@@ -1347,7 +1349,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
           {/* The envelope, the fourth mark. A record somebody sent wears it
               everywhere else on this site and was the one thing the header
               dropped. Faint ink, like the rest of them. */}
-          {entry.entry_type === 'Submission' && (
+          {isSubmission && (
             <span className="ln-crown-flag" style={{ color: 'var(--ink-faint)' }}><Envelope size={12} weight="regular" /></span>
           )}
           {(entry.favorite === true || entry.favorite === 'true') && (
