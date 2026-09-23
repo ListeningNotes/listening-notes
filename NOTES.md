@@ -3013,7 +3013,9 @@ current.
 
 ## Complete
 
-**2026-09-22 — notes from the 1.27.0 round, branch `visit-notes`, UNMERGED**
+**2026-09-22 — notes from the 1.27.0 round, 1.27.1, on main**
+
+Released v1.27.1. Branch `visit-notes` merged, then deleted.
 
 - [x] **A visitor's row is centred.** Add was never hung on the rule — the
       face is the row's first child, so `:first-child` missed it — and the
