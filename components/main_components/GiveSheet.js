@@ -100,6 +100,42 @@ export default function GiveSheet({ open, onClose }) {
     return () => window.removeEventListener('keydown', key);
   }, [open, shut]);
 
+  // ── The band steps down while this is up ────────────────────────────────
+  // One row at the foot of the screen at a time, as for the send sheet: on a
+  // phone the band was standing over Copy link (Miyel, 2026-09-22). An
+  // attribute and not a class, because the cross's class list is React's and
+  // is rewritten whole on every render (SendSheet.js has the history).
+  useEffect(() => {
+    if (!open) return undefined;
+    const cross = document.querySelector('.hn');
+    cross?.toggleAttribute('data-giving', true);
+    return () => cross?.removeAttribute('data-giving');
+  }, [open]);
+
+  // ── Where the visible window actually is ────────────────────────────────
+  // The send sheet's, for the same reason: a fixed sheet is fixed to the
+  // layout viewport, and in a home-screen install that is not the part of
+  // the screen you can see. visualViewport says where that part is, so the
+  // sheet is inset to match it — zero whenever nothing is in the way.
+  useEffect(() => {
+    if (!open) return undefined;
+    const vv = window.visualViewport;
+    const sheet = sheetRef.current;
+    if (!vv || !sheet) return undefined;
+    const sync = () => {
+      const room = document.documentElement.clientHeight || window.innerHeight;
+      sheet.style.setProperty('--sn-bottom', `${Math.max(0, Math.round(room - vv.offsetTop - vv.height))}px`);
+      sheet.style.setProperty('--sn-room', `${Math.round(vv.height)}px`);
+    };
+    sync();
+    vv.addEventListener('resize', sync);
+    vv.addEventListener('scroll', sync);
+    return () => {
+      vv.removeEventListener('resize', sync);
+      vv.removeEventListener('scroll', sync);
+    };
+  }, [open]);
+
   if (!open) return null;
 
   // The phone's own share sheet where there is one; a laptop without it
@@ -114,7 +150,7 @@ export default function GiveSheet({ open, onClose }) {
         className="sn-sheet gv-sheet"
         role="dialog"
         aria-modal="true"
-        aria-label="Give someone their own"
+        aria-label="Gift someone a journal"
         style={dragY ? { transform: `translateY(${dragY}px)`, transition: held ? 'none' : undefined } : undefined}
       >
         <div
@@ -126,7 +162,9 @@ export default function GiveSheet({ open, onClose }) {
           aria-hidden="true"
         />
         <Gift size={30} weight="regular" className="gv-glyph" aria-hidden="true" />
-        <h2 className="gv-head">Give someone their own</h2>
+        {/* Miyel, 2026-09-22: "have the header simply say 'Gift someone a
+            journal'" — over the brief's "Give someone their own". */}
+        <h2 className="gv-head">Gift someone a journal</h2>
         {/* A plain line until the first friend is built. The brief's line —
             "when they set it up, you'll be the first person in their book" —
             is a promise a new copy cannot keep yet: nothing reads the gift. */}

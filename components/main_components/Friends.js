@@ -622,8 +622,8 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null }
       className={'fr-plus fr-give' + (adding ? ' fr-give--away' : '')}
       onClick={() => setGiving(true)}
       inert={adding ? true : undefined}
-      aria-label="Give someone their own"
-      title="Give someone their own"
+      aria-label="Gift someone a journal"
+      title="Gift someone a journal"
     >
       <Gift size={22} weight="regular" aria-hidden="true" />
       <span className="kt-word" aria-hidden="true">Give</span>
