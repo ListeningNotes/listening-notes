@@ -20,6 +20,9 @@
 
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+// The server's own set: the plain import reaches for React context, which a
+// server component does not have.
+import { CaretLeft } from '@phosphor-icons/react/ssr';
 import { pull_settings, titleName } from '../../../library/settings_actions';
 
 // The stored text uses one convention and no more: a line starting with "## "
@@ -52,7 +55,16 @@ export default async function StoryPage() {
 
   return (
     <article className="get-wrap">
-      <Link href="/get" className="get-back">← Get one</Link>
+      {/* One way back, and it is a caret at the top, 2026-09-22. The foot
+          carried two pills as well — back to /get and to the journal — and
+          the story rises as a sheet a pull down closes, so they were a third
+          and a fourth way out of one page (Miyel). On the sheet it closes the
+          sheet the way the pull does (data-layer-back, LayerEntry); opened
+          cold it is a link to /get. On a desk the sheet draws its own caret
+          and this one stands down (get.css). */}
+      <Link href="/get" data-layer-back className="get-back" aria-label="Back to Get your copy" title="Back">
+        <CaretLeft size={18} aria-hidden="true" />
+      </Link>
       {written && <p className="get-kicker">{written}</p>}
       <h1 className="get-title">Our story</h1>
 
@@ -61,11 +73,6 @@ export default async function StoryPage() {
           ? <h2 key={i} className="get-subhead">{b.text}</h2>
           : <p key={i} className="get-para">{b.text}</p>
         )}
-      </div>
-
-      <div className="get-foot">
-        <Link href="/get" className="ln-pill">← Get one</Link>
-        <Link href="/" className="ln-pill">The journal</Link>
       </div>
     </article>
   );
