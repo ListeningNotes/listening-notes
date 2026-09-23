@@ -3062,8 +3062,9 @@ current.
 - [x] **Opening the keyboard does not jump.** See the Gotcha: a tap on a note
       is the listen's — the track's name lifts under the header before the
       focus, so iOS has nothing to slide, and the lift glides. Proved on a
-      stand-in sheet (name 393 → 179, caret in "milit|ant"); on Miyel's phone
-      next. The journal's band no longer shows round the keyboard's bar.
+      stand-in sheet (name 393 → 179, caret in "milit|ant"), then on
+      Miyel's phone: "seems to work now." The journal's band no longer shows
+      round the keyboard's bar.
 
 **2026-09-22 — the mini card every time, 1.29.1, on main.** Released v1.29.1;
 branch `mini-card` merged, then deleted.
