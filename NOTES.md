@@ -58,7 +58,7 @@ deploy a copy — and none of it is anything they need.
 
 ## Pending
 
-**REPLIES TO YOUR COMMENTS, IN YOUR INBOX — branch `replies`, UNMERGED,
+**REPLIES TO YOUR COMMENTS, IN YOUR INBOX — 1.28.0, on main,
 2026-09-22.** `/api/public/replies` + `pull_replies_to`, a Replies tab (the
 book asked from the browser), keeper comments stamped with the journal's
 address, Reports moved to a line at the foot of Submissions. Proved in a
