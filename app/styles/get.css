@@ -57,6 +57,44 @@
 /* ── The head of the steps: a caption and one line, centred under the mark
    in the nav row. No heading and no pitch — anybody here has decided. */
 .get-top { text-align: center; }
+
+/* ── A gift, 2026-09-22 ── the giver's card, when the link came from Give:
+   a tile as wide as what is on it, centred over the caption — a face, "A
+   gift from" and the name, and the gift at the far end. Flat, because it
+   opens nothing. */
+.ln-tile.get-gift {
+  justify-content: flex-start;
+  gap: 14px;
+  width: fit-content; max-width: 100%;
+  margin: 0 auto 26px;
+  padding: 12px 20px 12px 12px;
+  box-shadow: none;
+  font-family: inherit; font-size: inherit;
+  letter-spacing: normal; text-transform: none;
+  text-align: left;
+  transition: none;
+}
+.ln-tile.get-gift:hover { border-color: var(--border); transform: none; }
+/* The face over a plain mark: a journal without a portrait answers 404, the
+   picture draws nothing, and the mark underneath is what shows. */
+.get-gift-face {
+  position: relative; flex: none;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px; border-radius: 10px; overflow: hidden;
+  background: var(--panel); color: var(--ink-faint);
+}
+.get-gift-face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.get-gift-words { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.get-gift-from {
+  font-family: var(--font-label); font-size: 10px;
+  letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-faint);
+}
+.get-gift-name {
+  font-family: var(--font-display); font-weight: var(--font-display-weight);
+  font-size: 17px; line-height: 1.2; color: var(--ink);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.get-gift-glyph { flex: none; margin-left: 10px; color: var(--ink); }
 .get-top .get-kicker { margin: 0; letter-spacing: 0.2em; }
 .get-lede {
   margin: 14px auto 0; max-width: 340px;
