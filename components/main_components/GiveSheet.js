@@ -33,7 +33,7 @@
 // sheet's keyboard machinery.
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Copy, Export, Gift } from '@phosphor-icons/react';
+import { Check, Copy, Export, Gift } from '@phosphor-icons/react';
 import { useBookplate } from './Bookplate';
 import AddressCode from './AddressCode';
 import { tidyJournal } from '../../library/return_address';
@@ -51,12 +51,13 @@ export default function GiveSheet({ open, onClose }) {
   const journal = tidyJournal(site_address);
   const link = journal ? `${GET}?gift=${encodeURIComponent(journal)}` : GET;
 
-  // "Copied" in place of the words for a moment — a silent clipboard write
-  // reads as a button that did nothing (DECISIONS).
+  // A tick and "Link copied" in place of the glyph and the words for a
+  // moment (Miyel, 2026-09-22) — a silent clipboard write reads as a button
+  // that did nothing (DECISIONS). Back after two seconds, for a second copy.
   const [copied, setCopied] = useState(false);
   useEffect(() => {
     if (!copied) return undefined;
-    const t = setTimeout(() => setCopied(false), 1600);
+    const t = setTimeout(() => setCopied(false), 2000);
     return () => clearTimeout(t);
   }, [copied]);
 
@@ -185,8 +186,10 @@ export default function GiveSheet({ open, onClose }) {
               navigator.clipboard?.writeText(link).then(() => setCopied(true), () => {});
             }}
           >
-            <Copy size={18} weight="regular" aria-hidden="true" />
-            {copied ? 'Copied' : 'Copy link'}
+            {copied
+              ? <Check size={18} weight="regular" aria-hidden="true" />
+              : <Copy size={18} weight="regular" aria-hidden="true" />}
+            <span aria-live="polite">{copied ? 'Link copied' : 'Copy link'}</span>
           </button>
           {canShare && (
             <button
