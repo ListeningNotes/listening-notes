@@ -90,70 +90,160 @@ export default function SessionPage() {
 
   // ── The note comes up to meet the keyboard, 2026-09-22 ──────────────────
   // Miyel: "it still feels weird when I open the keyboard — it glitches just
-  // for a split second." Measured on her phone with the tape measure: 93ms
-  // after a tap, in a single frame, iOS slid the whole screen up 278 points,
-  // which is exactly what centres the note box in what the keyboard leaves
-  // (498 tall, box 157 tall, top at 171). It does that whenever the whole
-  // box will not fit above the keyboard, and a five-line box starting at 449
-  // runs to 606. The sheet is pinned to the part of the screen you can see
-  // (LayerEntry), so it pulled everything straight back down — a frame or
-  // two up, then back: the split second. iOS moves the screen itself, ahead
-  // of anything a page can do, so no pin can be quick enough to hide it.
+  // for a split second." Measured on her phone with the tape measure: about
+  // 95ms after a tap, in a single frame, iOS slid the whole screen up so the
+  // note box sat in the middle of what the keyboard leaves — 278pt the first
+  // time, 300 the second, which is to the half point what centres the box
+  // *where it was at the tap*. The sheet is pinned to the part of the screen
+  // you can see (LayerEntry), so it pulled everything straight back down: a
+  // frame or two up, then back. iOS moves the screen itself, ahead of any
+  // page code, so no pin can be quick enough to hide it.
   //
-  // So iOS is given nothing to do. The moment a note takes the focus — before
-  // iOS decides, which it does about 90ms later — the listen lifts the box to
-  // just under its header, where it fits whole above the keyboard, and the
-  // screen stays where it is. A long note tapped low down lifts only as far
-  // as keeps the line you tapped in view. When the keyboard goes, it goes
-  // back down to where you were. Touch screens only: a mouse focuses the note
-  // on arrival and there is no keyboard to make room for.
+  // And lifting the note once it has the focus is too late — that was the
+  // second try, and iOS centred the box it had been shown at the tap. So the
+  // tap on a note you are not already writing in is the listen's to handle:
+  // it reads which letter the finger landed on, lifts the page until the
+  // track's name sits just under the header (her ask: "have the track name
+  // stay so it doesn't feel like it's going as far"), and only then puts the
+  // cursor there and asks for the keyboard. iOS is shown a note already in
+  // view and has nothing to slide. The lift glides up with the keyboard
+  // rather than jumping. When the keyboard goes, the page goes back down.
+  //
+  // A long press is left to the browser — it is how words get selected — and
+  // is still lifted once it has the focus, after iOS has had its slide.
+  // Touch screens only: a mouse focuses the note on arrival and there is no
+  // keyboard to make room for.
   useEffect(() => {
-    // Where the finger last went down, and how much of the screen a keyboard
-    // leaves once one has been seen — a guess at half the screen before that.
-    let tapY = null;
+    // How much of the screen a keyboard leaves, once one has been seen — a
+    // guess at a little over half before that.
     let room = null;
     let lifted = null;
     let settle = null;
+    let press = null;
     const vv = window.visualViewport;
-    const onDown = e => { tapY = e.clientY; };
+    const touchy = () => window.matchMedia('(pointer: coarse)').matches;
     const onViewport = () => { if (vv && vv.height < screen.height * 0.8) room = vv.height; };
-    const onIn = e => {
-      const field = e.target;
-      const root = field?.closest?.('.ses');
-      if (!root || !field.matches('textarea') || !window.matchMedia('(pointer: coarse)').matches) return;
-      clearTimeout(settle);
+    const notes = target => {
+      const field = target?.closest?.('.ses-grow')?.querySelector('textarea');
+      return field && field.closest('.ses') ? field : null;
+    };
+
+    // Lifts the page so the line above the note — the track's name, or
+    // "Album notes" — sits just under the header, and further only if the
+    // place you tapped would otherwise be under the keyboard. Returns how far
+    // it actually went, which the scroll range can make less than asked.
+    const raise = (field, tapY) => {
+      const root = field.closest('.ses');
       const scroller = field.closest('.lay') || document.scrollingElement;
       const head = root.querySelector('.ses-head');
       const under = head ? head.getBoundingClientRect().bottom : 0;
-      const box = field.getBoundingClientRect();
+      const above = field.closest('.ses-grow').previousElementSibling || field;
       const space = room || Math.round(window.innerHeight * 0.55);
-      const at = tapY ?? box.top + 20;
-      let lift = box.top - (under + 12);
-      if (at - lift > space - 72) lift = at - (space - 72);
-      if (at - lift < under + 24) lift = at - (under + 24);
-      if (lift < 4) return;
+      const at = tapY ?? field.getBoundingClientRect().top + 20;
+      let by = above.getBoundingClientRect().top - (under + 10);
+      if (at - by > space - 64) by = at - (space - 64);
+      if (by < 4) return 0;
       // Room to go up into: a listen with little written has nowhere to
       // scroll to, so the page is given a screen of blank below while a note
       // is open, and it is taken away again once the page is back down.
       root.style.paddingBottom = '100vh';
       if (!lifted) lifted = { scroller, root, from: scroller.scrollTop };
-      scroller.scrollTop += lift;
+      const was = scroller.scrollTop;
+      scroller.scrollTop = was + by;
+      return scroller.scrollTop - was;
+    };
+
+    // Which letter a point is over, read off a copy of the writing laid over
+    // the box for the length of one question. The box itself cannot be asked
+    // — the browser keeps its text out of reach — and the copy wraps exactly
+    // where it does, because it takes the same type, width and padding.
+    const letterAt = (field, x, y) => {
+      const box = field.getBoundingClientRect();
+      const look = getComputedStyle(field);
+      const copy = document.createElement('div');
+      copy.style.cssText = [
+        'position:fixed', `left:${box.left}px`, `top:${box.top}px`, `width:${box.width}px`,
+        'box-sizing:border-box', 'margin:0', 'border:0',
+        `padding:${look.paddingTop} ${look.paddingRight} ${look.paddingBottom} ${look.paddingLeft}`,
+        `font:${look.font}`, `letter-spacing:${look.letterSpacing}`, `word-spacing:${look.wordSpacing}`,
+        'white-space:pre-wrap', 'overflow-wrap:break-word',
+        'opacity:0', 'z-index:2147483647', 'pointer-events:auto',
+      ].join(';');
+      copy.textContent = field.value + ' ';
+      document.body.appendChild(copy);
+      let at = field.value.length;
+      const range = document.caretRangeFromPoint?.(x, y);
+      if (range && copy.contains(range.startContainer)) at = Math.min(range.startOffset, field.value.length);
+      copy.remove();
+      return at;
+    };
+
+    const onStart = e => {
+      const field = notes(e.target);
+      if (!field || field === document.activeElement || e.touches.length !== 1 || !touchy()) { press = null; return; }
+      const t = e.touches[0];
+      press = { field, x: t.clientX, y: t.clientY, t: performance.now() };
+    };
+    const onMove = e => {
+      if (!press) return;
+      const t = e.touches[0];
+      if (Math.abs(t.clientX - press.x) > 10 || Math.abs(t.clientY - press.y) > 10) press = null;
+    };
+    const onEnd = e => {
+      const p = press;
+      press = null;
+      // A press held long enough to select a word is the browser's.
+      if (!p || performance.now() - p.t > 450) return;
+      const { field } = p;
+      const at = letterAt(field, p.x, p.y);
+      // The browser's own focus goes, and the slide iOS would have made with it.
+      e.preventDefault();
+      clearTimeout(settle);
+      const went = raise(field, p.y);
+      field.setSelectionRange(at, at);
+      field.focus({ preventScroll: true });
+      if (went <= 0) return;
+      // The page is already up — that is what iOS was shown. What you see
+      // is drawn where it was and let go, on the site's curve, so it rises
+      // with the keyboard instead of jumping ahead of it. The header is not
+      // in it: only the listen under the header moves.
+      const body = field.closest('.ses-body');
+      if (!body) return;
+      body.style.transition = 'none';
+      body.style.transform = `translateY(${went}px)`;
+      body.getBoundingClientRect();
+      body.style.transition = 'transform 0.32s cubic-bezier(0.22, 0.61, 0.36, 1)';
+      body.style.transform = '';
+      setTimeout(() => { body.style.transition = ''; }, 380);
+    };
+
+    // A note that got the focus some other way — a long press, a keyboard —
+    // is still lifted, after whatever iOS has done.
+    const onIn = e => {
+      const field = notes(e.target);
+      if (!field || !touchy()) return;
+      clearTimeout(settle);
+      raise(field, null);
     };
     const onOut = e => {
       if (!lifted) return;
       const next = e.relatedTarget;
-      if (next?.matches?.('textarea') && lifted.root.contains(next)) return;
+      if (notes(next) && lifted.root.contains(next)) return;
       const { scroller, root, from } = lifted;
       lifted = null;
       scroller.scrollTo({ top: from, behavior: 'smooth' });
       settle = setTimeout(() => { if (!lifted) root.style.paddingBottom = ''; }, 500);
     };
-    document.addEventListener('pointerdown', onDown, true);
+    document.addEventListener('touchstart', onStart, { capture: true, passive: true });
+    document.addEventListener('touchmove', onMove, { capture: true, passive: true });
+    document.addEventListener('touchend', onEnd, { capture: true, passive: false });
     document.addEventListener('focusin', onIn);
     document.addEventListener('focusout', onOut);
     vv?.addEventListener('resize', onViewport);
     return () => {
-      document.removeEventListener('pointerdown', onDown, true);
+      document.removeEventListener('touchstart', onStart, true);
+      document.removeEventListener('touchmove', onMove, true);
+      document.removeEventListener('touchend', onEnd, true);
       document.removeEventListener('focusin', onIn);
       document.removeEventListener('focusout', onOut);
       vv?.removeEventListener('resize', onViewport);
