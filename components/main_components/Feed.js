@@ -436,14 +436,12 @@ export default function Feed({ entries = [], density = DEFAULT_DENSITY }) {
   // when the credit carries one, by the name the send carried when it does
   // not (an entry from before the address travelled).
   //
-  // **Nothing reads this today and that is on purpose.** It drove a filter in
-  // the corner of the feed for one evening and she took the filter off; what
-  // it finds belongs in the inbox as an arrival, which is the third item of
-  // the friends brief, and the brief's own instruction for building that is
-  // to reuse this match rather than write a second one. Deleting it would
-  // mean writing it again in a fortnight, subtly differently, against the
-  // same two cases. It costs one pass over a list that is already in memory.
-  // eslint-disable-next-line no-unused-vars
+  // It drove a filter in the corner of the feed for one evening and she took
+  // the filter off; what it finds belongs in the inbox as an arrival, the
+  // friends brief's third item — and since 2026-09-22 it goes there: the
+  // effect below hands it to this copy, which keeps it as a row in the inbox
+  // (library/came_back_actions.js). The brief's instruction was to reuse this
+  // match rather than write a second one, which is why it waited here.
   const submissions = useMemo(() => rows.filter(({ entry }) => {
     if (entry.entry_type !== 'Submission') return false;
     const url = tidyJournal(entry.received_from_url);
@@ -455,6 +453,38 @@ export default function Feed({ entries = [], density = DEFAULT_DENSITY }) {
   const recent = useMemo(() => rows.slice(0, RECENT_MOST), [rows]);
   const shown = recent;
   const stillAsking = Boolean(people?.some(p => !journals[p.address]));
+
+  // ── Telling this copy what came back, 2026-09-22 ────────────────────────
+  // Once every journal in the book has answered, the match above goes to
+  // this copy's own server, which writes down what it has not seen before as
+  // a row for the inbox. The first write of its kind: the browser telling its
+  // own server something it read on somebody else's public journal (DECISIONS).
+  // Once per set — a feed that draws again does not post the same rows again.
+  const told = useRef('');
+  useEffect(() => {
+    if (!people || stillAsking || submissions.length === 0) return;
+    const said = submissions.map(({ person, entry }) => `${person.address}/${entry.slug}`).join(' ');
+    if (said === told.current) return;
+    told.current = said;
+    fetch('/api/came-back', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        rows: submissions.map(({ person, entry }) => ({
+          journal: person.address,
+          name: person.name,
+          slug: entry.slug,
+          album: entry.album,
+          artist: entry.artist,
+          album_art: entry.album_art,
+          rating: entry.rating_value,
+          masterpiece: entry.masterpiece === true || entry.masterpiece === 'true',
+          by_hand: entry.credit_by_hand === true,
+          posted_at: entry.posted_at,
+        })),
+      }),
+    }).catch(() => {});
+  }, [people, stillAsking, submissions]);
 
   let body;
   if (people === null || (stillAsking && shown.length === 0)) {

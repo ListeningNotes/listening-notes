@@ -58,6 +58,16 @@ deploy a copy — and none of it is anything they need.
 
 ## Pending
 
+**CAME BACK — on `came-back`, 2026-09-22, waiting on a real phone.** The
+friends brief's third item: when somebody in the book logs a record you put
+them onto, the inbox's Submissions folder shows "Ethan logged …" / "Came back
+· three stars", with the envelope on the cover for a real send, the dot until
+opened, and no count. Noticed by the feed — so only once the Friends pane has
+been visited in a session, which is when it loads — and kept in `came_back`
+(migration 023, already applied to the live database on 2026-09-22 for the
+dev test; it is additive and nothing live reads it until this merges). On the
+very first sweep, anything logged more than a fortnight ago comes in seen.
+
 **THE FIRST FRIEND — step 4 of the About, /get and Give brief, not started.**
 Give's code already carries `?gift=<the giver's journal>`; nothing reads it
 yet. What is owed: `/get` asks that address's public settings for a name and
