@@ -1218,6 +1218,14 @@ filing an address already asks — and a second, loose limit on the address
 exists only so one machine cannot make a copy fetch a thousand made-up
 journals. Do not put the IP keying back.
 
+**Replies come home by asking, and a journal will say which comments came
+from a given journal, 2026-09-22.** `/api/public/replies?to=` answers with the
+approved replies to comments left from that address, and the keeper's own
+later comments on the same entry — Miyel's call, on seeing Ethan answer with a
+comment of his own. The commenter's journal was the keeper's to see until
+then; the name was already public. A keeper is known by the address the
+wristband stamps on their comment, or by name before that.
+
 **A cross-copy reference is a journal and a slug, never an id, 2026-09-16.**
 `submissions.sender_entry` holds the entry a send came from, beside the
 `sender_url` that holds the journal; together they are a URL, which is the one
