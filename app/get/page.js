@@ -34,9 +34,6 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-// The server's own set: the plain import reaches for React context, which a
-// server component does not have.
-import { ArrowRight } from '@phosphor-icons/react/ssr';
 import { pull_settings, titleName } from '../../library/settings_actions';
 import { DEPLOY_URL, STEPS } from '../../library/install_guide';
 import InstallSteps from '../../components/main_components/InstallSteps';
@@ -78,12 +75,14 @@ export default async function GetPage() {
         <p className="get-expect">Opens Vercel · nothing to pay</p>
       </div>
 
-      <nav className="get-onward" aria-label="More about getting your copy">
-        <Link href="/get/story" className="get-onward-link">
-          Our story
-          <ArrowRight size={16} aria-hidden="true" />
-        </Link>
-      </nav>
+      {/* The story, the one other place this page goes: a tile like the
+          steps, the whole width, its words centred like the button above
+          it — "more unified with the page", Miyel, 2026-09-22, over a small
+          link and an arrow at the left. */}
+      <Link href="/get/story" className="ln-tile get-story">
+        <span className="get-head">Our story</span>
+        <span className="get-text">Why this exists, and what changed along the way.</span>
+      </Link>
     </main>
   );
 }

@@ -26,15 +26,23 @@
   .get-wrap--steps { padding-left: 22px; padding-right: 22px; }
 }
 
-/* The way back to the door, above the heading on the story. A link and not
-   the browser's back button, because the link the reader arrived by may
-   have been a text message. */
+/* The way back to the steps, above the heading on the story: a caret and
+   nothing else, 2026-09-22. A link and not the browser's back button,
+   because the link the reader arrived by may have been a text message. The
+   mark is the control — its touch target is padding, paid back with a
+   negative margin, so the glyph lines up with the heading's edge. */
 .get-back {
-  display: inline-block; margin: 0 0 22px;
-  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.14em;
-  text-transform: uppercase; color: var(--ink-soft); text-decoration: none;
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 13px; margin: -13px 0 9px -13px;
+  color: var(--ink-soft); text-decoration: none;
 }
 .get-back:hover { color: var(--ink); }
+.get-back:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: -4px; border-radius: 10px; }
+/* On a desk the sheet the story rises on draws its own caret (.lay-back in
+   entry.css), so this one stands down there and there is still only one. */
+@media (min-width: 769px) {
+  .get-layered .get-back { display: none; }
+}
 .get-kicker {
   font-family: var(--font-label);
   font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
@@ -119,18 +127,23 @@
   text-transform: uppercase; color: var(--ink-faint);
 }
 
-/* ── The very foot ── the story, as a quiet link: a word and an arrow. */
-.get-onward {
+/* ── The very foot ── the story, as a tile the whole width of the column:
+   the steps' panel, hairline and type, its words centred like the button
+   above it. Flat like the steps; it is a link, so it keeps .ln-tile's hover. */
+.ln-tile.get-story {
+  flex-direction: column;
+  gap: 3px;
   margin: 34px 0 0;
-  display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
+  padding: 16px 18px 17px;
+  box-shadow: none;
+  font-family: inherit;
+  font-size: inherit;
+  letter-spacing: normal;
+  text-transform: none;
+  text-align: center;
 }
-.get-onward-link {
-  display: inline-flex; align-items: center; gap: 9px;
-  min-height: 44px; padding: 0 2px;
-  font-family: var(--font-display); font-weight: var(--font-display-weight);
-  font-size: 15px; color: var(--ink); text-decoration: none;
-}
-.get-onward-link:hover { text-decoration: underline; text-underline-offset: 4px; }
+.get-story .get-text { margin: 0; }
+.get-story:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; }
 
 /* The essay. */
 .get-subhead {
@@ -141,11 +154,6 @@
 .get-subhead:first-of-type { margin-top: 0; }
 .get-para { font-size: 15px; line-height: 1.95; color: var(--ink); margin: 0 0 22px; }
 .get-prose { margin-top: 40px; }
-
-.get-foot {
-  margin-top: 56px; padding-top: 28px; border-top: 1px solid var(--border);
-  display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center;
-}
 
 /* Opened as a layer over the door there is no nav row above the content, so
    the room reserved for it goes. */

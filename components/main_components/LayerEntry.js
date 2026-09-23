@@ -693,10 +693,23 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
           enters from the side it was on. */}
       <LayerLeaving.Provider value={held}>
       <LayerHeaderSlot.Provider value={headerSlot}>
+      {/* ── A link that means back, 2026-09-22 ──────────────────────────
+          A page marks its way back with data-layer-back — the story's caret.
+          Opened cold it is an ordinary link. On the sheet it has to close the
+          sheet instead: a link to the page underneath changes the address
+          and leaves the layer standing, because a slot keeps what it was
+          showing through a soft navigation. So here it goes out the way the
+          pull does, through leave(). */}
       <div
         className={'lay-content'
           + (arrival.swiped === 1 ? ' lay-content--from-right' : arrival.swiped === -1 ? ' lay-content--from-left' : '')}
         style={shift !== 0 ? { transform: `translateX(${shift}px)` } : undefined}
+        onClickCapture={event => {
+          if (!event.target.closest?.('[data-layer-back]')) return;
+          event.preventDefault();
+          event.stopPropagation();
+          leave();
+        }}
       >
         {children}
       </div>
