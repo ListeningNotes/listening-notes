@@ -88,6 +88,79 @@ export default function SessionPage() {
 
   const s = useListeningSession({ step });
 
+  // ── The note comes up to meet the keyboard, 2026-09-22 ──────────────────
+  // Miyel: "it still feels weird when I open the keyboard — it glitches just
+  // for a split second." Measured on her phone with the tape measure: 93ms
+  // after a tap, in a single frame, iOS slid the whole screen up 278 points,
+  // which is exactly what centres the note box in what the keyboard leaves
+  // (498 tall, box 157 tall, top at 171). It does that whenever the whole
+  // box will not fit above the keyboard, and a five-line box starting at 449
+  // runs to 606. The sheet is pinned to the part of the screen you can see
+  // (LayerEntry), so it pulled everything straight back down — a frame or
+  // two up, then back: the split second. iOS moves the screen itself, ahead
+  // of anything a page can do, so no pin can be quick enough to hide it.
+  //
+  // So iOS is given nothing to do. The moment a note takes the focus — before
+  // iOS decides, which it does about 90ms later — the listen lifts the box to
+  // just under its header, where it fits whole above the keyboard, and the
+  // screen stays where it is. A long note tapped low down lifts only as far
+  // as keeps the line you tapped in view. When the keyboard goes, it goes
+  // back down to where you were. Touch screens only: a mouse focuses the note
+  // on arrival and there is no keyboard to make room for.
+  useEffect(() => {
+    // Where the finger last went down, and how much of the screen a keyboard
+    // leaves once one has been seen — a guess at half the screen before that.
+    let tapY = null;
+    let room = null;
+    let lifted = null;
+    let settle = null;
+    const vv = window.visualViewport;
+    const onDown = e => { tapY = e.clientY; };
+    const onViewport = () => { if (vv && vv.height < screen.height * 0.8) room = vv.height; };
+    const onIn = e => {
+      const field = e.target;
+      const root = field?.closest?.('.ses');
+      if (!root || !field.matches('textarea') || !window.matchMedia('(pointer: coarse)').matches) return;
+      clearTimeout(settle);
+      const scroller = field.closest('.lay') || document.scrollingElement;
+      const head = root.querySelector('.ses-head');
+      const under = head ? head.getBoundingClientRect().bottom : 0;
+      const box = field.getBoundingClientRect();
+      const space = room || Math.round(window.innerHeight * 0.55);
+      const at = tapY ?? box.top + 20;
+      let lift = box.top - (under + 12);
+      if (at - lift > space - 72) lift = at - (space - 72);
+      if (at - lift < under + 24) lift = at - (under + 24);
+      if (lift < 4) return;
+      // Room to go up into: a listen with little written has nowhere to
+      // scroll to, so the page is given a screen of blank below while a note
+      // is open, and it is taken away again once the page is back down.
+      root.style.paddingBottom = '100vh';
+      if (!lifted) lifted = { scroller, root, from: scroller.scrollTop };
+      scroller.scrollTop += lift;
+    };
+    const onOut = e => {
+      if (!lifted) return;
+      const next = e.relatedTarget;
+      if (next?.matches?.('textarea') && lifted.root.contains(next)) return;
+      const { scroller, root, from } = lifted;
+      lifted = null;
+      scroller.scrollTo({ top: from, behavior: 'smooth' });
+      settle = setTimeout(() => { if (!lifted) root.style.paddingBottom = ''; }, 500);
+    };
+    document.addEventListener('pointerdown', onDown, true);
+    document.addEventListener('focusin', onIn);
+    document.addEventListener('focusout', onOut);
+    vv?.addEventListener('resize', onViewport);
+    return () => {
+      document.removeEventListener('pointerdown', onDown, true);
+      document.removeEventListener('focusin', onIn);
+      document.removeEventListener('focusout', onOut);
+      vv?.removeEventListener('resize', onViewport);
+      clearTimeout(settle);
+    };
+  }, []);
+
   // Puts a record on the desk — or clears it, with null — and lands on the
   // step it was left at. Called from whatever caused the change: the door
   // opening on a record already there, a tap in the picker, the back caret.
