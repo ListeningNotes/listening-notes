@@ -1564,6 +1564,16 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**A measurement refused while the sheet moves must be asked again, 2026-09-22.**
+The entry's collapse (the mini card in the header, and the auto-scroll across
+the gap) measures nothing while its sheet is landing and waited for an event to
+try again. The grow out of a tile is a Web Animation and fires no
+`animationend`; a record arriving by swipe is `done`, so a touch did not ask
+either. Whether the record drew before or after the sheet was still decided it
+— random from the outside, "only on some albums." Now it retries every 100ms
+until landed, and draw/rest measure when they find nothing. To reproduce:
+finish the animations by hand (`getAnimations()…finish()`) with no event after.
+
 **A panel drawn in two slots puts two Saves in one bar, 2026-09-22.** The
 entry page draws the credit line twice — under the chips for a phone, in the
 hero for a wide window — and hides one with CSS. The Credit tool opened in
