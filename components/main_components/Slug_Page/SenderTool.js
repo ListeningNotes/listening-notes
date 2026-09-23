@@ -148,6 +148,14 @@ export default function SenderTool({ entry, barSlot = null, onDone }) {
           // could clear the name and leave an entry claiming to be a
           // submission from nobody.
           entry_type: said ? 'Submission' : 'Personal Library',
+          // ── By hand, 2026-09-22 ──────────────────────────────────────
+          // Naming somebody on an entry that was not already a Submission is
+          // a credit with no send behind it — through the grapevine, Miyel's
+          // word — and it keeps the Put on by line but not the envelope,
+          // which says only that somebody actually sent it. Changing the name
+          // on one that was already a Submission leaves this as it was, and
+          // clearing the credit clears it.
+          ...(!said ? { credit_by_hand: false } : surelyCredited ? {} : { credit_by_hand: true }),
         }),
       });
       const data = await res.json().catch(() => null);
@@ -171,7 +179,7 @@ export default function SenderTool({ entry, barSlot = null, onDone }) {
       {picking ? (
         <>
           <label className="ln-sender-row">
-            <span className="ln-sender-label">Sent by</span>
+            <span className="ln-sender-label">Put on by</span>
             <input
               className="ln-field ln-field--sender"
               value={name}
@@ -179,7 +187,7 @@ export default function SenderTool({ entry, barSlot = null, onDone }) {
               placeholder={ready ? 'Start typing a name' : 'Reading…'}
               disabled={!ready}
               autoComplete="off"
-              aria-label="Sent by"
+              aria-label="Put on by"
             />
           </label>
           {/* Free text stays for somebody who sent a record and keeps no copy;
@@ -241,7 +249,7 @@ export default function SenderTool({ entry, barSlot = null, onDone }) {
               somebody sent it to you, they sent it to you, and this is here
               for the credit added by hand and added wrong. */}
           <button type="button" className="ln-sender-change" onClick={() => setChanging(true)}>
-            Edit sender
+            Edit
           </button>
         </>
       )}

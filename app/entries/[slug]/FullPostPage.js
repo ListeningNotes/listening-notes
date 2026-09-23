@@ -449,7 +449,14 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       onPrint={() => { setPrinting(true); setLearned(false); }}
       /* Sent by unfolds where its answer prints, in the slot under the chips,
          rather than turning the whole page into a form for one field. */
-      onSender={() => setSendering(true)}
+      // Which of the two slots is on screen, decided once, at the press. The
+      // line is drawn twice — under the chips on a phone, in the hero's column
+      // on a wide window — and one of them is hidden. The tool must open in
+      // only the one you can see: two copies each put their own Save in the
+      // shared bar, the hidden copy's landed on top, and it saved nobody over
+      // the name you had just picked. Miyel, 2026-09-22, crediting HAN to
+      // Ethan: "when I click and click save it just doesn't stick."
+      onSender={() => setSendering(window.matchMedia('(max-width: 768px)').matches ? 'phone' : 'desk')}
       /* And Send opens the same sheet a row in the address book opens, with
          this record already in it — the two ways in differ only in which
          half is answered before the sheet arrives. */
@@ -814,7 +821,9 @@ export default function FullPostPage({ entry, references = [], authed = false, l
         : `Listen ${entry.listen_number} of ${entry.listen_total}`)
     : null;
 
-  const isSubmission = entry.entry_type === 'Submission';
+  // A record somebody actually sent. A credit added by hand is a Submission
+  // underneath and is not one of these (credit_by_hand, 2026-09-22).
+  const isSubmission = entry.entry_type === 'Submission' && entry.credit_by_hand !== true;
   // Who sent a record is a line under the chips now rather than a panel
   // behind them (SentBy.js, 2026-09-15), so the chip's only remaining job is
   // the entries that line cannot draw: a credit the sender asked to keep
@@ -846,9 +855,10 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   // It takes the slot whether or not there is a line there yet, because the
   // place the answer prints is the place to answer it — and an entry with no
   // sender is exactly when somebody reaches for this.
-  const sentLine = sendering && authed ? (
+  const creditTool = authed && (
     <SenderTool key={`sender-${entry.slug}`} entry={entry} barSlot={barSlot} onDone={() => setSendering(false)} />
-  ) : credit && !edit.editing && !printing && (
+  );
+  const plainLine = credit && !edit.editing && !printing && (
     <SentBy
       key={`sent-${entry.slug}`}
       entry={entry}
@@ -859,6 +869,9 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       onOpen={setTrailOpen}
     />
   );
+  // One tool, in whichever slot the press was made from (see onSender).
+  const sentLine = sendering === 'phone' && creditTool ? creditTool : plainLine;
+  const sentLineDesk = sendering === 'desk' && creditTool ? creditTool : plainLine;
   // The flag is the only source now. Nine older entries carried this as
   // relationship = 'Formative'; they were migrated onto the flag and the
   // column is gone, so there is nothing else left to read.
@@ -1347,7 +1360,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
           {/* The envelope, the fourth mark. A record somebody sent wears it
               everywhere else on this site and was the one thing the header
               dropped. Faint ink, like the rest of them. */}
-          {entry.entry_type === 'Submission' && (
+          {isSubmission && (
             <span className="ln-crown-flag" style={{ color: 'var(--ink-faint)' }}><Envelope size={12} weight="regular" /></span>
           )}
           {(entry.favorite === true || entry.favorite === 'true') && (
@@ -1659,7 +1672,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
                   behind the mark, and it went under the hero instead. A line
                   is the weight of the posted date already below it, and the
                   column runs to about 150px of the 354 it has. */}
-              <div className="ln-sent-desk">{sentLine}</div>
+              <div className="ln-sent-desk">{sentLineDesk}</div>
               <div style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink-faint)', marginTop: '12px' }}>
                 Posted {postedOn}
               </div>

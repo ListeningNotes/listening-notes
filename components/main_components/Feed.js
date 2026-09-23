@@ -187,7 +187,9 @@ function Marks({ entry, size = 12 }) {
   const fav = entry.favorite === true || entry.favorite === 'true';
   const mp = entry.masterpiece === true || entry.masterpiece === 'true';
   const formative = entry.formative === true || entry.formative === 'true';
-  const sent = entry.entry_type === 'Submission';
+  // Sent, not credited by hand: the envelope is for a record somebody
+  // actually sent (credit_by_hand, 2026-09-22).
+  const sent = entry.entry_type === 'Submission' && entry.credit_by_hand !== true;
   if (!fav && !mp && !formative && !sent) return null;
   return (
     <span className="ln-mini-flags fd-marks">
