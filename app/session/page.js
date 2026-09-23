@@ -48,6 +48,8 @@ import AlbumNotes from '../../components/session_components/steps/AlbumNotes';
 import SessionPreview from '../../components/session_components/steps/SessionPreview';
 import Trouble from '../../components/session_components/Trouble';
 import { useBeforeLeaving } from '../../components/main_components/LayerEntry';
+// TEMPORARY — the keyboard's frames, dev only. Out before merging.
+import TapeMeasure from '../../components/main_components/TapeMeasure';
 
 // How long the picked cover takes to reach the header. The step body slides in
 // on the same curve at nearly the same length, so the two read as one move.
@@ -376,6 +378,7 @@ export default function SessionPage() {
 
   return (
     <div className="ses">
+      <TapeMeasure />
 
       {!open ? (
         <AlbumPicker onPick={pick} onResume={resume} />
