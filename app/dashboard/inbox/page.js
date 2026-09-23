@@ -100,6 +100,9 @@ export default function Inbox({ layered = false, inPane = false }) {
   // and two of them is a list of controls again.
   const [openRow, setOpenRow] = useState(null);
   const [showArchived, setShowArchived] = useState(false);
+  // Problem reports sit behind a line at the foot of the sends, the way the
+  // archived ones do, on the one copy that receives any (takesReports).
+  const [showReports, setShowReports] = useState(false);
   // Unfinished listens, read once the first row opens: a row needs to know
   // whether there is a draft behind it to offer, and most visits to the
   // inbox never open anything.
@@ -122,7 +125,22 @@ export default function Inbox({ layered = false, inPane = false }) {
   // offers to file it only once. A send is one of the ways an address gets
   // in (app/dashboard/people/page.js); this is that way.
   const [people, setPeople] = useState([]);
+  // Whether the book has answered yet. An empty list is also what it is
+  // before it has, and Replies must not say "none" on the strength of that.
+  const [bookIn, setBookIn] = useState(false);
   const filed = new Set(people.map(p => p.address));
+
+  // ── Replies to what you said on other journals, 2026-09-22 ─────────────
+  // Miyel: "replies should show up in inbox" — meaning answers to the
+  // comments she leaves on friends' journals. Those comments live on their
+  // copies and this one never hears of them, so it goes and asks each
+  // journal in the book (GET /api/public/replies), in this browser, the way
+  // the feed reads their entries. Nothing is kept; a copy from before 1.28.0
+  // answers 404 and simply adds nothing. No count on the tab: a reply is not
+  // waiting on you the way a comment to approve is, and this site does not
+  // do unread (DECISIONS, The model).
+  const [replies, setReplies] = useState(null);
+  const myJournal = tidyJournal(myAddress);
 
   // ── Saying a send was already logged ─────────────────────────────────────
   // Which row has its picker open, and what has been typed into it. The
@@ -152,8 +170,24 @@ export default function Inbox({ layered = false, inPane = false }) {
     if (!authed) return;
     fetch('/api/submissions').then(r => r.json()).then(d => { setSubmissions(d.submissions || []); setSubLoading(false); }).catch(() => setSubLoading(false));
     fetch('/api/comments/pending').then(r => r.json()).then(d => { setComments(d.comments || []); setComLoading(false); }).catch(() => setComLoading(false));
-    fetch('/api/people').then(r => r.json()).then(d => setPeople(d.people || [])).catch(() => {});
+    fetch('/api/people').then(r => r.json()).then(d => setPeople(d.people || [])).catch(() => {}).finally(() => setBookIn(true));
   }, [authed]);
+
+  useEffect(() => {
+    if (!authed || !myJournal || !bookIn) return;
+    let gone = false;
+    const found = [];
+    Promise.allSettled(people.map(p =>
+      fetch(`${journalUrl(p.address)}/api/public/replies?to=${encodeURIComponent(myJournal)}`, { signal: AbortSignal.timeout(8000) })
+        .then(r => (r.ok ? r.json() : { replies: [] }))
+        .then(d => { for (const r of d.replies || []) found.push({ ...r, journal: p.address, whose: p.name || '' }); })
+    )).then(() => {
+      if (gone) return;
+      found.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      setReplies(found);
+    });
+    return () => { gone = true; };
+  }, [authed, myJournal, people, bookIn]);
 
   useEffect(() => {
     if (!authed || !takesReports) return;
@@ -493,9 +527,7 @@ export default function Inbox({ layered = false, inPane = false }) {
         <div className="ib-tabs">
           <FolderTab id="submissions" tab={tab} onSelect={setTab}>Submissions{subCounts.pending > 0 ? ` (${subCounts.pending})` : ''}</FolderTab>
           <FolderTab id="comments" tab={tab} onSelect={setTab}>Comments{comments.length > 0 ? ` (${comments.length})` : ''}</FolderTab>
-          {takesReports && (() => { const open = reports.filter(r => r.status === 'pending').length; return (
-            <FolderTab id="reports" tab={tab} onSelect={setTab}>Reports{open > 0 ? ` (${open})` : ''}</FolderTab>
-          ); })()}
+          <FolderTab id="replies" tab={tab} onSelect={setTab}>Replies</FolderTab>
         </div>
 
         {/* The open folder */}
@@ -771,16 +803,22 @@ export default function Inbox({ layered = false, inPane = false }) {
               </>
             )}
 
-            {/* ── REPORTS ── */}
-            {tab === 'reports' && (
+            {/* ── REPORTS, 2026-09-22 ──────────────────────────────────
+                A tab of their own until Replies arrived and four tabs would
+                not fit a phone. Miyel: "most people won't have a reports
+                tab. maybe my reports tab can go somewhere else" — so they
+                are a line at the foot of the sends, the archived rows'
+                shape, and only on the copy they are sent to. */}
+            {tab === 'submissions' && takesReports && !repLoading && (() => {
+              const kept = reports.filter(r => r.status !== 'dismissed');
+              const fresh = kept.filter(r => r.status === 'pending').length;
+              if (kept.length === 0) return null;
+              return (
               <>
-                {repLoading ? (
-                  <div className="ib-list" style={{ gap: 14 }}>
-                    {[...Array(2)].map((_, i) => <div key={i} className="own-skeleton" style={{ height: 70 }} />)}
-                  </div>
-                ) : reports.filter(r => r.status !== 'dismissed').length === 0 ? (
-                  <div className="own-empty">No problems reported.</div>
-                ) : (
+                <button className="ib-showarch" onClick={() => setShowReports(v => !v)}>
+                  {showReports ? 'Hide' : 'Show'} {kept.length} problem {kept.length === 1 ? 'report' : 'reports'}{fresh > 0 ? ` · ${fresh} new` : ''}
+                </button>
+                {showReports && (
                   <div>
                     {reports.filter(r => r.status !== 'dismissed').map(r => (
                       <div key={r.id} className={'ib-comment' + (r.status === 'read' ? ' ib-report--read' : '')}>
@@ -801,6 +839,36 @@ export default function Inbox({ layered = false, inPane = false }) {
                           )}
                           <button onClick={() => settleReport(r.id, 'dismissed')} className="own-act own-act--danger">Dismiss</button>
                         </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+              );
+            })()}
+
+            {/* ── REPLIES ── */}
+            {tab === 'replies' && (
+              <>
+                {replies === null ? (
+                  <div className="ib-list" style={{ gap: 14 }}>
+                    {[...Array(2)].map((_, i) => <div key={i} className="own-skeleton" style={{ height: 70 }} />)}
+                  </div>
+                ) : replies.length === 0 ? (
+                  <div className="own-empty">No replies to your comments yet.</div>
+                ) : (
+                  <div>
+                    {replies.map(r => (
+                      <div key={`${r.journal}-${r.id}`} className="ib-comment">
+                        <div className="ib-comment-head">
+                          <span className="ib-comment-who">{r.author_name}</span>
+                          <a href={carrySender(`${journalUrl(r.journal)}/entries/${r.entry_slug}`, me, { known: true })} target="_blank" rel="noopener noreferrer" className="own-link ib-comment-where">
+                            on {r.album || r.entry_slug}{r.track_index >= 0 ? ` · track ${r.track_index + 1}` : ''}{r.whose ? ` · ${r.whose}` : ''} ↗
+                          </a>
+                          <span className="ib-comment-when">{new Date(r.created_at).toLocaleDateString()}</span>
+                        </div>
+                        {r.answering && <p className="ib-answering">You said: {r.answering}</p>}
+                        <p className="ib-comment-text">{r.content}</p>
                       </div>
                     ))}
                   </div>

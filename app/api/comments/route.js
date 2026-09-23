@@ -3,7 +3,8 @@
 import { nest_comments, save_comment } from '@/library/comment_actions';
 import { tidyAddress } from '@/library/return_address';
 import { mayKnock, tooSoon, whoIsKnocking } from '@/library/doorman';
-import { issue_receipt } from '@/library/wristband';
+import { checkWristband, issue_receipt } from '@/library/wristband';
+import { pull_settings } from '@/library/settings_actions';
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
@@ -33,9 +34,21 @@ export async function POST(request) {
     // Tidied server-side for the same reason the send flow's is: the inbox
     // turns this into a link somebody clicks, and a bare host cannot carry a
     // scheme of its own. See library/return_address.js.
+    // ── The keeper, known by this journal's own address, 2026-09-22 ──────
+    // A keeper commenting on their own journal is answering somebody, and a
+    // commenter's copy asks this one for exactly that (pull_replies_to). The
+    // wristband says it is the keeper; the address is what the question
+    // matches on. Before this the comment carried whatever the form had, often
+    // nothing, and the keeper could only be recognised by name.
+    let from = tidyAddress(author_url);
+    if (await checkWristband(request)) {
+      const own = tidyAddress((await pull_settings())?.site_address);
+      if (own) from = own;
+    }
+
     const comment = await save_comment({
       slug, track_index, parent_id, author_name,
-      author_url: tidyAddress(author_url), content,
+      author_url: from, content,
     });
 
     // The receipt goes back with the comment so the writer's browser can keep

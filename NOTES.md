@@ -58,13 +58,12 @@ deploy a copy — and none of it is anything they need.
 
 ## Pending
 
-**REPLIES TO YOUR COMMENTS, IN YOUR INBOX — asked 2026-09-22, not started.**
-Miyel means: she comments on a friend's journal, they reply, and the reply
-should show in *her* inbox. Her copy never hears of the comment — it lives on
-theirs. Proposed, pull-based like the feed: their journal lists public
-replies to comments left from a given journal address, and her copy asks the
-people in her book. Needs a new route and function (hers to name), and only
-works against copies that have updated.
+**REPLIES TO YOUR COMMENTS, IN YOUR INBOX — branch `replies`, UNMERGED,
+2026-09-22.** `/api/public/replies` + `pull_replies_to`, a Replies tab (the
+book asked from the browser), keeper comments stamped with the journal's
+address, Reports moved to a line at the foot of Submissions. Proved in a
+rolled-back transaction; nothing real to show until friends' copies take
+1.28.0. Ethan's answer on *I'm In Your Mind Fuzz* is the test case.
 
 **WHAT CHANGED, IN THE APP — pinned 2026-09-21, not now.** Miyel, having read
 the 1.26.0 notes: "I want to design a custom popup in app that shows when your
