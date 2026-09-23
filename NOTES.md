@@ -58,11 +58,12 @@ deploy a copy — and none of it is anything they need.
 
 ## Pending
 
-**THE FIRST FRIEND — step 4 of the About, /get and Give brief, not started.**
-Give's code already carries `?gift=<the giver's journal>`; nothing reads it
-yet. What is owed: `/get` asks that address's public settings for a name and
-a portrait and shows "A gift from" them, or nothing if it does not answer;
-the giver's address has to reach the new copy's setup through the deploy —
+**THE FIRST FRIEND — step 4 of the About, /get and Give brief, half built.**
+Give's code carries `?gift=<the giver's journal>`, and since `get-gift`
+(2026-09-22) `/get` reads it: it asks that journal its keeper's name through
+the doorman's relay door and shows "A gift from" them with their face, or
+nothing if it does not answer. What is still owed: the giver's address has to
+reach the new copy's setup through the deploy —
 not as an environment variable set by the button, which Vercel's sign-in
 loses (DECISIONS) — and the end of setup offers, ticked, to put the giver in
 the new book. Then Give's sheet trades its plain line for "when they set it
