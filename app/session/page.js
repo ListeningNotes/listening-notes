@@ -306,6 +306,10 @@ export default function SessionPage() {
     // `data-slide`, because a tablist cannot claim to be a slider — sliding
     // along it moves through the tracks (Strip in steps/TrackNotes.js).
     if (e.target?.closest?.('[role="slider"], [data-slide]')) { swipe.current = null; return; }
+    // And a drag in the note you are writing is selecting words, not turning
+    // the page (Miyel, 2026-09-22: "I cannot highlight text without changing
+    // screens"). The tracks screen keeps the same rule for its own swipe.
+    if (e.target === document.activeElement && e.target.closest?.('textarea, input')) { swipe.current = null; return; }
     const t = e.touches[0];
     // Where the page was when the finger landed: a pull down means leave only
     // from the top, the same rule the sheet's own pull follows.
@@ -315,6 +319,9 @@ export default function SessionPage() {
     const from = swipe.current;
     swipe.current = null;
     if (!from) return;
+    // A long press that selected a word on the way is not a swipe either.
+    const field = document.activeElement;
+    if (field?.matches?.('textarea, input') && field.selectionStart !== field.selectionEnd) return;
     const t = e.changedTouches[0];
     const dx = t.clientX - from.x;
     const dy = t.clientY - from.y;
