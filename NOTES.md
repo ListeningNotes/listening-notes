@@ -58,15 +58,16 @@ deploy a copy — and none of it is anything they need.
 
 ## Pending
 
-**GIVE — built on `give-sheet`, 2026-09-22, waiting on a real phone.** Step
-3 of the About, /get and Give brief: a sheet with a code to
-`listeningnotes.blog/get?gift=<this journal>`, Copy link, and Share where the
-phone has a share sheet. It opens from the gift at the left of the Friends
-header, opposite Add, and nowhere else (DECISIONS). Until the
-first friend (step 4) is built, the sheet says a plain line rather than
-"you'll be the first person in their book" — a new copy cannot know its giver
-yet. The lid-lifting flourish in the brief is not built. The brief and
-mock-ups are on Miyel's machine (`about-get-give.zip`).
+**THE FIRST FRIEND — step 4 of the About, /get and Give brief, not started.**
+Give's code already carries `?gift=<the giver's journal>`; nothing reads it
+yet. What is owed: `/get` asks that address's public settings for a name and
+a portrait and shows "A gift from" them, or nothing if it does not answer;
+the giver's address has to reach the new copy's setup through the deploy —
+not as an environment variable set by the button, which Vercel's sign-in
+loses (DECISIONS) — and the end of setup offers, ticked, to put the giver in
+the new book. Then Give's sheet trades its plain line for "when they set it
+up, you'll be the first person in their book". The brief and mock-ups are on
+Miyel's machine (`about-get-give.zip`).
 
 **WHAT CHANGED, IN THE APP — pinned 2026-09-21, not now.** Miyel, having read
 the 1.26.0 notes: "I want to design a custom popup in app that shows when your
@@ -3072,6 +3073,17 @@ current.
 ---
 
 ## Complete
+
+**2026-09-22 — Give, 1.31.0, on main.** Branch `give-sheet` merged; no
+release cut yet. Step 3 of the About, /get and Give brief.
+
+- [x] **Gift someone a journal.** The gift at the left of the Friends
+      header, opposite Add (one bare mark each side), opens a sheet with a
+      code to `listeningnotes.blog/get?gift=<this journal>`, Copy link — a
+      tick and "Link copied" for two seconds — and Share where the phone
+      has a share sheet. The sheet is the page's colour and the code sits on
+      a tile; the band steps down while it is up. Copy link cannot work in
+      the dev app, which is http: a phone keeps the clipboard for https.
 
 **2026-09-22 — About and `/get`, 1.30.0, on main.** Branches `about-pane`
 and `get-page` merged; no release cut yet. Steps 1 and 2 of the About, /get
