@@ -39,9 +39,10 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
-import { ArrowRight, BookOpen, Camera, MagnifyingGlass, PaperPlaneTilt, Plus, PushPin, Shuffle, User } from '@phosphor-icons/react';
+import { ArrowRight, BookOpen, Camera, Gift, MagnifyingGlass, PaperPlaneTilt, Plus, PushPin, Shuffle, User } from '@phosphor-icons/react';
 import CodeScanner from './CodeScanner';
 import SendSheet from './SendSheet';
+import GiveSheet from './GiveSheet';
 import { carrySender, journalUrl, tidyJournal } from '../../library/return_address';
 import { useBookplate } from './Bookplate';
 
@@ -236,6 +237,8 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null }
   const [filing, setFiling] = useState(false);
   const [said, setSaid] = useState('');
   const [sendingTo, setSendingTo] = useState(null);
+  // Give's sheet, opened from beside the +. See GiveSheet.js.
+  const [giving, setGiving] = useState(false);
   // An address that arrived in a link, held rather than filed — see the note
   // in the offer below.
   const [offered, setOffered] = useState('');
@@ -601,7 +604,29 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null }
       aria-label={adding ? 'Never mind' : 'Add a journal'}
       title={adding ? 'Never mind' : 'Add a journal'}
     >
-      <Plus size={18} weight="regular" aria-hidden="true" />
+      <Plus size={22} weight="regular" aria-hidden="true" />
+      {/* The word goes while it is a ×: the cross says never mind itself. */}
+      <span className="kt-word" aria-hidden="true">Add</span>
+    </button>
+  );
+
+  // ── Give, beside Add, 2026-09-22 ────────────────────────────────────────
+  // Add is for people who have a journal; Give is for the ones who do not
+  // (Miyel's brief, About, /get and Give). A glyph over a word, as every
+  // tool on this site now is, and the + took its word at the same time. It
+  // steps aside while the address field is open — the row is the field and
+  // its × then — and comes back as the field goes, rather than blinking.
+  const give = (
+    <button
+      type="button"
+      className={'fr-plus fr-give' + (adding ? ' fr-give--away' : '')}
+      onClick={() => setGiving(true)}
+      inert={adding ? true : undefined}
+      aria-label="Give someone their own"
+      title="Give someone their own"
+    >
+      <Gift size={22} weight="regular" aria-hidden="true" />
+      <span className="kt-word" aria-hidden="true">Give</span>
     </button>
   );
 
@@ -737,6 +762,7 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null }
           an address into the box above it is a page quietly lying about
           how many people are in it. */}
       {plus}
+      {give}
     </div>
   );
 
@@ -1046,6 +1072,7 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null }
           so that closing it does not depend on the face surviving a refresh
           of the book. */}
       <SendSheet open={Boolean(sendingTo)} person={sendingTo} onClose={() => setSendingTo(null)} />
+      <GiveSheet open={giving} onClose={() => setGiving(false)} />
     </>
   );
 }
