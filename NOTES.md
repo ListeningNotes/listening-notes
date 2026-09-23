@@ -58,14 +58,13 @@ deploy a copy — and none of it is anything they need.
 
 ## Pending
 
-**THE ABOUT PANE, REBUILT — on `about-pane`, 2026-09-22, waiting on a real
-phone.** The visitor's third pane is the small mark, three lines, six flat
-tiles and GET ONE as a word and an arrow; the key and Source · version stay
-under it. Checked at 390, 320 and on a desk, in both themes. Open: the tile
-wording, which Miyel changes on sight — two lines were chosen for her ("Rate
-every track, not just the album"; "Look back on every listen", because "at
-your address" is architecture). On merge, DECISIONS' *The pitch pane is three
-sentences and a button* (2026-09-03) is rewritten to the new shape.
+**GIVE — step 3 of the About, /get and Give brief, next.** The sheet a keeper
+opens to hand a friend the code to `/get`. Decided 2026-09-22 and in
+DECISIONS: the link says `?gift=`, never `?from=`; it opens from the Friends
+header beside Add and from the card's ···; the file is `GiveSheet.js`. Until
+the first friend (step 4) is built, the sheet says a plain line rather than
+"you'll be the first person in their book" — a new copy cannot know its giver
+yet. The brief and mock-ups are on Miyel's machine (`about-get-give.zip`).
 
 **WHAT CHANGED, IN THE APP — pinned 2026-09-21, not now.** Miyel, having read
 the 1.26.0 notes: "I want to design a custom popup in app that shows when your
@@ -87,15 +86,10 @@ read, or a file in the repo that ships with the version), and what "seen"
 means (per browser, in storage, is the honest limit without accounts — same as
 the return address). Ask before choosing either.
 
-**/GET, REBUILT — on `get-page`, 2026-09-22, waiting on a real phone and
-the screenshots.** The steps are the page now: GET YOUR COPY, one line, nine
-flat tiles, the deploy button after the ninth, and nothing under it.
-`/get/install` is deleted with no stub, the phone/laptop switch is gone,
-"It didn't work" is off `/get`, and so is Our story for now — the page is
-still at `/get/story`, one caret at its top, linked from nowhere (all
-Miyel's calls). The pictures come
-from one real install on a phone — the names are under **Screenshots for
-`/get`** below.
+**/GET'S SCREENSHOTS — owed since 1.30.0, 2026-09-22.** The page is live
+without them and reads fine; each picture appears inside its step once the
+file exists. They come from one real install on a phone — a throwaway copy,
+deleted after — and the names are under **Screenshots for `/get`** below.
 
 **MANUAL ENTRY — pinned 2026-09-18, and the door is shut.** Miyel, having
 looked at what is built: "we will have to return to working out manual entry —
@@ -3076,6 +3070,22 @@ current.
 ---
 
 ## Complete
+
+**2026-09-22 — About and `/get`, 1.30.0, on main.** Branches `about-pane`
+and `get-page` merged; no release cut yet. Steps 1 and 2 of the About, /get
+and Give brief.
+
+- [x] **The About pane is for strangers.** The small mark, three lines, six
+      flat tiles, GET ONE, then the key and Source · version. On a desk the
+      colophon face had been shrinking to its narrowest content (see
+      Gotchas); it takes the spine's width now.
+- [x] **`/get` is the steps, then the button.** GET YOUR COPY, one line,
+      nine tiles, and Make your own copy after the ninth. `/get/install`,
+      the phone/laptop switch, "It didn't work" and Our story are off it;
+      the story stays at `/get/story`, unlinked, with one caret at its top.
+- [x] **A link marked `data-layer-back` closes the sheet it is on**
+      (LayerEntry), the way the pull does. A plain link to the page under a
+      sheet changed the address and left the sheet standing.
 
 **2026-09-22 — notes from a full session, 1.29.2, on main.** Released v1.29.2;
 branch `session-cleanups` merged, then deleted.

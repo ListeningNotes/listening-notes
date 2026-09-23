@@ -753,14 +753,29 @@ found only by whoever already knows which. The one exception is ComingSoon,
 which must draw when nothing else does. Import order in `layout.js` is the
 cascade and follows the order the rules had in the one file they came from.
 
-**The pitch pane is three sentences and a button, 2026-09-03.** A fourth
-sentence saying what a copy looks like was cut: the reader just swiped away
-from one. "Get one" is centred; Sign in and Source stack under it, smallest
-last — side by side they read as a caption on the button.
+**The pitch is for strangers: three lines and six tiles, 2026-09-22.** The
+About pane is visitor-only; a keeper never sees a pitch. The small mark, a
+blurb, six one-line tiles, GET ONE as a word and an arrow, then the key and
+Source · version. A tile is a glyph and one bold line, flat because it opens
+nothing, and ownership is last so the page ends on the promise. It replaced
+three sentences and a pill (2026-09-03).
 
-**The pitch pane ships on every copy.** Logged out, right swipe: the pitch and
-a button to listeningnotes.blog/get. This is the growth mechanic — someone
-asks how to get one, the owner swipes right and hands over the phone.
+**The pitch pane ships on every copy, and only visitors see it.** Logged out,
+right swipe: the pitch and a link to listeningnotes.blog/get. A keeper's
+phone has no pitch pane, so a keeper hands over the way in with Give — a
+sheet, never a tab: the band stays four for keepers and three for visitors.
+
+**Give opens from the Friends header and the card's ···, 2026-09-22** — not
+the card's foot, which Settings left for the ··· on 09-20 so there is one
+place to look. **Nothing counts gifts:** no totals, no "3 friends joined",
+nothing reported back to the giver. A gift is a gift, not a referral scheme.
+
+**A gift link says `?gift=`, never `?from=`, 2026-09-22.** Give's code points
+at `listeningnotes.blog/get?gift=<the giver's journal>`. Every page already
+reads `?from=` as the reader's *own* journal and files it as their return
+address (`noteArrival`), so a friend who scanned a `?from=` gift would be
+signed as the giver on their next send — and a giver's own gifts pass on
+their own copy, which is how it would have shipped.
 
 **Source link on every copy** — one faint line at the foot of the pitch pane,
 under "Get one" (it left the About pane 2026-08-28). §13 is owed to visitors,
