@@ -1072,15 +1072,30 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       const r = el.getBoundingClientRect();
       return { cx: r.left + r.width / 2, cy: r.top + r.height / 2, h: r.height };
     };
+    // ── Asked again until the sheet is still, 2026-09-22 ──────────────────
+    // Miyel: "sometimes when I click on an album and I go to scroll, it
+    // doesn't do the mini card ... it doesn't do the auto scroll. On some of
+    // them it does though." Whether it did was a race. A record that drew
+    // while its sheet was still moving measured nothing and waited to be
+    // asked again — and the grow out of a tile is a Web Animation, which
+    // fires no animationend, and a record arriving by swipe counts as done,
+    // so a finger on the glass did not ask either. It stayed a card with no
+    // way down for as long as it was open.
+    //
+    // So a measurement the landing refused is tried again, every tenth of a
+    // second, until the sheet has landed. And anything that needs the numbers
+    // and finds none asks for them (draw, rest).
+    let again = null;
     const measure = () => {
       settle();
-      if (!parts()) return;
+      clearTimeout(again);
+      if (!parts()) { again = setTimeout(measure, 100); return; }
       if (!window.matchMedia('(max-width: 768px)').matches) {
         base = null;
         setCrowning(false);
         return;
       }
-      if (landing()) { base = null; setCrowning(false); return; }
+      if (landing()) { base = null; setCrowning(false); again = setTimeout(measure, 100); return; }
       const gone = screens.scrollTop;
       if (!middle(art).h) { base = null; setCrowning(false); return; }
       // The last words on the album screen: the posted line, or the chips if
@@ -1110,7 +1125,8 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       draw();
     };
     const draw = () => {
-      if (!base || !parts()) return;
+      if (!base) { measure(); return; }
+      if (!parts()) return;
       // ── The handover is under your thumb, 2026-09-20 ──────────────────
       // It was a clip that played when the scroll crossed a line, and Miyel's
       // read of it was that a played animation is the wrong idea however it
@@ -1222,6 +1238,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       lift = setTimeout(rest, 40);
     };
     const rest = () => {
+      if (!base) measure();
       if (!base || held || ours) return;
       const at = screens.scrollTop;
       // ── The album screen is one stop, 2026-09-20 ───────────────────────
@@ -1300,6 +1317,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       screens.removeEventListener('touchcancel', onLetGo);
       clearTimeout(idle);
       clearTimeout(lift);
+      clearTimeout(again);
       screens.removeEventListener('load', measure, true);
       narrow.removeEventListener('change', measure);
       window.removeEventListener('resize', measure);
