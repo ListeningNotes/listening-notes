@@ -1795,7 +1795,9 @@ a.pn-item-album:hover { text-decoration: underline; text-underline-offset: 3px; 
    The send sheet's sheet (.sn-*), with a code on it: the gift glyph, one
    heading, one line, the code large on a white plate, then Copy link and
    Share in the caption face. GiveSheet.js says what it is for. */
-.gv-sheet { align-items: center; text-align: center; padding-top: 30px; }
+/* The page's own colour rather than the send sheet's plain white (Miyel,
+   2026-09-22: "can the white match the white of the site"). */
+.gv-sheet { align-items: center; text-align: center; padding-top: 30px; background: var(--bg); }
 .gv-glyph { flex-shrink: 0; color: var(--ink); }
 .gv-head {
   margin: 14px 0 0;
@@ -1807,15 +1809,18 @@ a.pn-item-album:hover { text-decoration: underline; text-underline-offset: 3px; 
   font-size: 15px; line-height: 1.5; color: var(--ink-soft);
   text-wrap: balance;
 }
-/* White in both themes: a camera looks for dark on light, and the plate is
-   what makes the code the same object on a dark page. */
+/* The tile's colour — the panel over the page, as the steps on /get and
+   About's tiles are — with the tile's hairline and radius. */
 .gv-code {
   flex-shrink: 0;
   width: min(210px, 58vw);
   margin: 24px auto 0; padding: 14px;
-  background: #fff;
+  background: var(--panel);
   border: 1px solid var(--border); border-radius: 18px;
 }
+/* Light on a dark page too: a camera looks for dark on light, so the plate
+   keeps the paper every other code on the site is printed on (AddressCode). */
+[data-theme='dark'] .gv-code { background: #f5f4ef; }
 .gv-code svg { display: block; width: 100%; height: auto; }
 .gv-acts { display: flex; justify-content: center; gap: 26px; margin: 20px 0 2px; flex-shrink: 0; }
 .gv-act {
