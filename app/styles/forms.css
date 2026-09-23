@@ -1109,6 +1109,24 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 .fr-plus:hover { color: var(--ink); }
 .fr-plus svg { transition: transform 0.34s cubic-bezier(0.22, 0.61, 0.36, 1); }
 .fr-plus--shut svg { transform: rotate(45deg); }
+/* ── Give, the left-hand control, 2026-09-22 ── the + faced by the gift: one
+   bare mark each side, as every header here has. It steps aside while the
+   address field is open, when the left is the camera's — its width folds to
+   nothing on the curve the + turns on, so it goes rather than blinks. */
+.fr-give {
+  display: inline-flex; align-items: center; justify-content: center;
+  flex: 0 0 auto;
+  width: 40px; height: 40px;
+  border: 0; background: none; padding: 0;
+  color: var(--ink-soft); cursor: pointer;
+  overflow: hidden;
+  transition: color 0.15s, width 0.34s cubic-bezier(0.22, 0.61, 0.36, 1),
+              margin 0.34s cubic-bezier(0.22, 0.61, 0.36, 1), opacity 0.22s ease;
+}
+.fr-give:hover { color: var(--ink); }
+/* Folded, it gives back the row's 8px gap as well, so the camera stands
+   exactly where it did before Give was here. */
+.fr-give--away { width: 0; margin-right: -8px; opacity: 0; pointer-events: none; }
 
 /* ── Add and Scan moved into the header, 2026-09-20 ───────────────────────
    `.fr-add-acts` and everything that dressed it are gone. They were a row of
@@ -1375,7 +1393,7 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 .fr-cut:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 2px; border-radius: 4px; }
 
 @media (prefers-reduced-motion: reduce) {
-  .fr-one, .fr-face, .fr-door, .fr-plus, .fr-doors { transition: none; }
+  .fr-one, .fr-face, .fr-door, .fr-plus, .fr-give, .fr-doors { transition: none; }
 }
 
 /* ── The shelf, and the line off the end of it ─────────────────────────────
@@ -1776,6 +1794,49 @@ a.pn-item-album:hover { text-decoration: underline; text-underline-offset: 3px; 
   animation: snRise 0.4s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 @keyframes snRise { from { transform: translateY(100%); } to { transform: none; } }
+
+/* ── The give sheet, 2026-09-22 ─────────────────────────────────────────────
+   The send sheet's sheet (.sn-*), with a code on it: the gift glyph, one
+   heading, one line, the code large on a white plate, then Copy link and
+   Share in the caption face. GiveSheet.js says what it is for. */
+/* The page's own colour rather than the send sheet's plain white (Miyel,
+   2026-09-22: "can the white match the white of the site"). */
+.gv-sheet { align-items: center; text-align: center; padding-top: 30px; background: var(--bg); }
+.gv-glyph { flex-shrink: 0; color: var(--ink); }
+.gv-head {
+  margin: 14px 0 0;
+  font-family: var(--font-display); font-weight: var(--font-display-weight);
+  font-size: 21px; line-height: 1.25; color: var(--ink);
+}
+.gv-line {
+  margin: 8px auto 0; max-width: 310px;
+  font-size: 15px; line-height: 1.5; color: var(--ink-soft);
+  text-wrap: balance;
+}
+/* The tile's colour — the panel over the page, as the steps on /get and
+   About's tiles are — with the tile's hairline and radius. */
+.gv-code {
+  flex-shrink: 0;
+  width: min(210px, 58vw);
+  margin: 24px auto 0; padding: 14px;
+  background: var(--panel);
+  border: 1px solid var(--border); border-radius: 18px;
+}
+/* Light on a dark page too: a camera looks for dark on light, so the plate
+   keeps the paper every other code on the site is printed on (AddressCode). */
+[data-theme='dark'] .gv-code { background: #f5f4ef; }
+.gv-code svg { display: block; width: 100%; height: auto; }
+.gv-acts { display: flex; justify-content: center; gap: 26px; margin: 20px 0 2px; flex-shrink: 0; }
+.gv-act {
+  display: inline-flex; align-items: center; gap: 10px;
+  min-height: 44px; padding: 0 4px;
+  border: 0; background: none; cursor: pointer;
+  font-family: var(--font-label); font-size: 11.5px;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--ink);
+}
+.gv-act:hover { color: var(--ink-soft); }
+.gv-act:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; border-radius: 6px; }
 /* The close, in a corner. It was centred at the top for a day, which read as
    part of the sheet's own content and sat over the record you came to look at
    — every other close on this site is in a corner (Miyel, 2026-09-17). Right,
