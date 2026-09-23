@@ -58,6 +58,14 @@ deploy a copy — and none of it is anything they need.
 
 ## Pending
 
+**REPLIES TO YOUR COMMENTS, IN YOUR INBOX — asked 2026-09-22, not started.**
+Miyel means: she comments on a friend's journal, they reply, and the reply
+should show in *her* inbox. Her copy never hears of the comment — it lives on
+theirs. Proposed, pull-based like the feed: their journal lists public
+replies to comments left from a given journal address, and her copy asks the
+people in her book. Needs a new route and function (hers to name), and only
+works against copies that have updated.
+
 **WHAT CHANGED, IN THE APP — pinned 2026-09-21, not now.** Miyel, having read
 the 1.26.0 notes: "I want to design a custom popup in app that shows when your
 copy moved version and tells it what happened, stylized by the site, that is
@@ -1564,6 +1572,26 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**The in-app sheet is `display-mode: standalone` too, 2026-09-22.** A link
+out of the installed app opens in a sheet inside it, and that sheet inherits
+standalone from the app — so every standalone-only fix applies there as well.
+The 09-15 fix for the installed app's missing 62px (`--hn-h: 100lvh`) made the
+cross 787 tall in a 682 window and hid the band under the sheet's toolbar on
+every friend's journal. Measured in the sheet: dvh 682, lvh 787, safe-area
+top 0. The cure keys on the inset rather than the mode:
+`min(100lvh, 100dvh + env(safe-area-inset-top))`. **A LAN address will not
+open the sheet** — iOS kept `http://Miyels-Laptop.local` inside the app — so
+measuring it took a Vercel preview of the branch (behind Vercel's login, which
+the sheet shares with Safari).
+
+**A fixed-position flier does not move with the layout it left, 2026-09-22.**
+The record waits MAKE_ROOM_MS at the card before flying, but the flier is
+fixed to the window: the card, the crown's room and the picker all set off at
+t=0 and the search rose under a cover standing still. Anything that holds a
+flier must hold the layout under it for the same beat (nav.css, "the pane
+waits with the record"). To see it, `document.getAnimations()`, pause them
+all and scrub `currentTime` — works with the pane hidden, where rAF does not.
+
 **A ResizeObserver says nothing about a transform, 2026-09-21.** The beacon's
 morph re-measures whenever the pane, the bar or floor one changes size. Start a
 listen and the crown folds away — height and padding to nothing, *and* a scale
@@ -2984,6 +3012,25 @@ current.
 ---
 
 ## Complete
+
+**2026-09-22 — notes from the 1.27.0 round, branch `visit-notes`, UNMERGED**
+
+- [x] **A visitor's row is centred.** Add was never hung on the rule — the
+      face is the row's first child, so `:first-child` missed it — and the
+      rule ran past both words. Add and Send now stand 66px either side of
+      the face and the rule stops under them.
+- [x] **A reader who already has this journal sees no row at all** — no
+      face, Add or Send (`known`). A keeper who has not added them still
+      gets Add (Miyel's call).
+- [x] **The inbox clears the header.** Its tabs started 36px down under the
+      bar's opaque ground (added 09-20); Ethan saw "a false header."
+- [x] **Resume listen** replaces Back to the listen in the ring.
+- [x] **Reports only where reports arrive** — the tab and the fetch only on
+      the copy whose address is `REPORTS_URL`.
+- [x] **The picker never rises under the cover in the air** — the pane waits
+      MAKE_ROOM_MS with the record. The picker arrives 0.3s later than it did.
+- [x] **A friend's journal fits the in-app sheet** — see Gotchas. Checked on
+      Miyel's phone in the sheet: band 622→676 of a 676 window.
 
 **2026-09-22 — updates a keeper can see and turn on, 1.27.0, on main**
 

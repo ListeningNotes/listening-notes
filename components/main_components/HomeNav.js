@@ -78,8 +78,6 @@ import { useTheme } from './Lightswitch';
 import { useBookplate } from './Bookplate';
 import ListeningBeacon from './ListeningBeacon';
 import CallingCard from './CallingCard';
-// TEMPORARY — the in-app sheet's measurements, dev only. Out before merging.
-import TapeMeasure from './TapeMeasure';
 import Journal from './Journal';
 import Footer from './Footer';
 import About from './About';
@@ -2904,7 +2902,6 @@ export default function HomeNav() {
       )}
 
       <Footer pane={pane} goTo={goTo} authed={authed} />
-      <TapeMeasure />
     </div>
   );
 }
