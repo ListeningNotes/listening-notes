@@ -3023,6 +3023,25 @@ current.
 
 ## Complete
 
+**2026-09-22 — notes from a full session, branch `session-cleanups`, UNMERGED**
+
+- [x] **Selecting words in a note stays on the page.** A drag in the note you
+      are writing, or one that leaves a selection, is not a swipe — on the
+      tracks screen and on the steps' own swipe.
+- [x] **The note grows by layout** (`.ses-grow`: an invisible copy of the
+      writing in the same grid cell). It was set to auto and measured on
+      every keystroke, and on every render for the album note — each collapse
+      made iOS re-scroll to the cursor. Checked with a copy of the box: fits
+      to the pixel from 1 line to 14, scroll position untouched. The sheet's
+      pin to the visual viewport is left as it is; if the bounce survives on
+      a phone, that is the next suspect.
+- [x] **Track numbers are back** on the tracks screen, in front of the name.
+- [x] **The cutaway drops smoother.** The wall opens at the save, under the
+      sinking sheet, instead of in the frame the drop starts (33ms stall
+      there, on a laptop); the landing's redraw is a transition (61ms →
+      ~20ms).
+- [x] **No journal link on a person's page** — the friends pane is the way.
+
 **2026-09-22 — the mini card every time, 1.29.1, on main.** Released v1.29.1;
 branch `mini-card` merged, then deleted.
 

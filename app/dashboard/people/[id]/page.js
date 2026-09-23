@@ -219,7 +219,6 @@ export default function PersonPage({ layered = false }) {
   const there = person ? journalUrl(person.address) : '';
   // Every link to their journal carries who this copy belongs to.
   const theirEntry = e => carrySender(`${there}/entries/${e.slug}`, me, { known: true });
-  const theirJournal = carrySender(there, me, { known: true });
 
   return (
     <div className={'own-screen' + (layered ? ' own-screen--layered' : '')}>
@@ -251,9 +250,10 @@ export default function PersonPage({ layered = false }) {
             <header className="pn-head">
               <Face address={person.address} />
               <h1 className="pn-name">{name}</h1>
-              <div className="pn-row">
-                <a href={theirJournal} target="_blank" rel="noopener noreferrer" className="own-act">Visit their journal &#8599;</a>
-              </div>
+              {/* "Visit their journal" stood here until 2026-09-22. Miyel: "we
+                  can remove the link to their journal on the compare page
+                  because you can just simply go to their journal from the
+                  actual friends page." One way there, from the faces. */}
             </header>
 
             <div className="own-panel pn-panel">
