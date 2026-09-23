@@ -96,17 +96,18 @@
 }
 .get-shot img { display: block; width: 100%; height: auto; }
 
-/* ── The button, after step nine ── square corners, filled, mono caps: the
-   one thing on this page a person came to press, which is also why it is
-   the one filled thing on it. */
+/* ── The button, after step nine ── square corners and filled: the one thing
+   on this page a person came to press, which is also why it is the one
+   filled thing on it. Set like the steps' titles, in the page's own face
+   rather than mono caps, and with no arrow (Miyel, 2026-09-22). */
 .get-act { margin: 26px 0 0; text-align: center; }
 .get-cta {
-  display: flex; align-items: center; justify-content: center; gap: 12px;
+  display: flex; align-items: center; justify-content: center;
   width: 100%; min-height: 58px; box-sizing: border-box; padding: 0 20px;
   border: 1px solid var(--ink); border-radius: 4px;
   background: var(--ink); color: var(--bg);
-  font-family: var(--font-label); font-size: 12.5px;
-  letter-spacing: 0.2em; text-transform: uppercase;
+  font-family: var(--font-display); font-weight: var(--font-display-weight);
+  font-size: 16px;
   text-decoration: none;
   transition: opacity 0.15s;
 }

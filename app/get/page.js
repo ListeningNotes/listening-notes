@@ -36,7 +36,7 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 // The server's own set: the plain import reaches for React context, which a
 // server component does not have.
-import { ArrowRight, ArrowUp } from '@phosphor-icons/react/ssr';
+import { ArrowRight } from '@phosphor-icons/react/ssr';
 import { pull_settings, titleName } from '../../library/settings_actions';
 import { DEPLOY_URL, STEPS } from '../../library/install_guide';
 import InstallSteps from '../../components/main_components/InstallSteps';
@@ -69,13 +69,12 @@ export default async function GetPage() {
       <InstallSteps shots={shots} />
 
       {/* Square corners and filled, the one thing on this page a person came
-          to press. The same tab: a phone mid-install should not be juggling
-          two, and back returns here. */}
+          to press, in the page's own words and face — no arrow (Miyel,
+          2026-09-22). The same tab: a phone mid-install should not be
+          juggling two, and back returns here. The caption says Vercel
+          because Vercel is what opens; GitHub is the screen after it. */}
       <div className="get-act">
-        <a href={DEPLOY_URL} className="get-cta">
-          <ArrowUp size={18} aria-hidden="true" />
-          Make your own copy
-        </a>
+        <a href={DEPLOY_URL} className="get-cta">Make your own copy</a>
         <p className="get-expect">Opens Vercel · nothing to pay</p>
       </div>
 
