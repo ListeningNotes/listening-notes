@@ -87,7 +87,8 @@ Give's code carries `?gift=<the giver's journal>`, and since `get-gift`
 the doorman's relay door and shows "A gift from" them with their face, or
 nothing if it does not answer. **Since `first-friend` (2026-09-23, local,
 on top of `waves`):** a setup screen after the claim — "A gift from June",
-"Add June to your book and wave" ticked, then Next — fed by `GIFT_FROM` when
+"Add June to your address book and wave" ticked, "Let June see your name
+and journal address", then Next — fed by `GIFT_FROM` when
 the deploy set it, and otherwise "Did someone give you this journal?" with
 the camera. Seen on Miyel's phone in rehearsal 2026-09-23, "A gift from
 June" with the box ticked: "amazing looks good" (`/setup?rehearse&gift=

@@ -1119,7 +1119,7 @@ take a wave says so and the add stands — it never waits on the wave.
 **A new journal learns its giver from the deploy, or from a scan, and never
 from our server, 2026-09-23.** The deploy button can pre-fill `GIFT_FROM` on
 the new project (`env` + `envDefaults`); setup reads it after the claim and
-offers "Add them to your book and wave", ticked. Where it did not survive,
+offers "Add them to your address book and wave", ticked. Where it did not survive,
 setup offers the camera: the Give code carries `?gift=`. Vercel's
 `redirect-url` is ruled out — it would hand the canonical server every
 gifted install's address and repository, the log a phone-home keeps.
