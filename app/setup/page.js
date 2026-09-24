@@ -599,7 +599,7 @@ export default function WelcomeScreen() {
                       <span className="su-gift-name">{giver.name}</span>
                       <label className="su-gift-check">
                         <input type="checkbox" checked={giverWave} onChange={e => setGiverWave(e.target.checked)} />
-                        <span>Add {giver.name} to your address book and wave hello</span>
+                        <span>Add {giver.name} to your address book and wave</span>
                       </label>
                       {/* Miyel's words, 2026-09-23, over the brief's "They'll see
                           your name and where your journal is, and nothing else." */}
