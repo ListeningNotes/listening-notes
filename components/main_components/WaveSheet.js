@@ -124,7 +124,7 @@ export default function WaveSheet({ person, onClose }) {
         className="sn-sheet wv-sheet"
         role="dialog"
         aria-modal="true"
-        aria-label={name ? `${name} is in your book` : 'Added to your book'}
+        aria-label={name ? `${name} is in your address book` : 'Added to your address book'}
         style={dragY ? { transform: `translateY(${dragY}px)`, transition: held ? 'none' : undefined } : undefined}
       >
         <div
@@ -141,12 +141,10 @@ export default function WaveSheet({ person, onClose }) {
           <img src={`${journalUrl(person.address)}/api/portrait`} alt="" onError={e => { e.currentTarget.style.display = 'none'; }} />
         </span>
         <p className="wv-kicker">Added</p>
-        <h2 className="wv-head">{name ? `${name} is in your book` : "They're in your book"}</h2>
-        <p className="wv-line">
-          Wave to let them know you&rsquo;re keeping their journal. They&rsquo;ll see your
-          name and where your journal is, and nothing else.
-        </p>
-        <p className="wv-small">You won&rsquo;t find out whether they add you back.</p>
+        <h2 className="wv-head">{name ? `${name} is in your address book` : "They're in your address book"}</h2>
+        {/* Miyel's words, 2026-09-23, the same as the gift screen's in setup. */}
+        <p className="wv-line">Let {name || 'them'} see your name and journal address.</p>
+        <p className="wv-small">You won&rsquo;t find out whether {name ? `${name} adds` : 'they add'} you back.</p>
 
         {state === 'failed' ? (
           <p className="wv-said" role="status">{said}</p>
@@ -165,10 +163,10 @@ export default function WaveSheet({ person, onClose }) {
                 });
                 const d = await r.json().catch(() => ({}));
                 if (d.ok) { setState('waved'); return; }
-                setSaid(d.error || 'The wave did not go. They are still in your book.');
+                setSaid(d.error || 'The wave did not go. They are still in your address book.');
                 setState('failed');
               } catch {
-                setSaid('The wave did not go. They are still in your book.');
+                setSaid('The wave did not go. They are still in your address book.');
                 setState('failed');
               }
             }}
