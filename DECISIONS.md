@@ -1118,6 +1118,9 @@ Adding stays silent; the wave is an extra press and Not now is not a lesser
 path. No Wave back (the brief had one; Miyel cut it): adding somebody from
 their wave brings up the same offer, which is the reply. A copy too old to
 take a wave says so and the add stands — it never waits on the wave.
+**The inbox says "June waved" and never "added you"** (Miyel, 2026-09-23):
+the wave is the quiet codeword for "I added you, add me back", and spelling
+it out was offered and turned down.
 
 **A new journal learns its giver from the deploy, or from a scan, and never
 from our server, 2026-09-23.** `/get`'s button pre-fills `GIFT_FROM` on the
