@@ -3123,9 +3123,10 @@ current.
 
 ## Complete
 
-**2026-09-24 — Settings in the quiet design: branch `settings-quiet`, not
-merged.** Started from `backups-every-table`, so merging this brings both;
-that one can still go in on its own.
+**2026-09-24 — Settings in the quiet design: 1.34.0, on main.** Branch
+`settings-quiet` merged, carrying `backups-every-table` with it. Not pushed
+yet, and no release cut — the note has to say the beacon is always on
+(Pending).
 
 - [x] **Settings looks like setup and `/get`.** A caption and one line
       centred at the top (SETTINGS, "The machinery behind your journal.")
@@ -3149,9 +3150,8 @@ that one can still go in on its own.
       stays in the table, unread. Checked: the public beacon answers, and the
       home page's beacon polls once the tab is visible.
 
-**2026-09-23 — Backups take every table, and Settings has the button: branch
-`backups-every-table`, not merged.** Waiting on Miyel's review. Something new
-for every copy — the button — so 1.34.0 when it merges.
+**2026-09-23 — Backups take every table, and Settings has the button: 1.34.0,
+on main.** Merged on 2026-09-24 inside `settings-quiet`.
 
 - [x] **Every table, asked of the database.** `scripts/backup.mjs`,
       `/api/export` and `scripts/restore.mjs` each kept a hand-written list of
