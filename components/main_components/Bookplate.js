@@ -50,16 +50,9 @@ const EMPTY = {
   // three one-line answers, which is a few hundred bytes and belongs in the
   // context the way the rig rows do.
   bioanswers: null,
-  // Whether this journal broadcasts. Also not a setting in the ordinary sense
-  // — the layout works it out and hands it down. It does not decide whether
-  // there is a beacon *screen*: there always is one. It decides whether
-  // anything polls for what is on it, so a journal that has asked to be quiet
-  // never asks.
-  //
-  // True by default, deliberately: a copy that has never opened Settings
-  // broadcasts, and a falsy default would have every journal start silent
-  // until its settings arrived.
-  beacon_on: true,
+  // `beacon_on` was here until 2026-09-24: whether anything polled for the
+  // beacon, false only on a journal switched to Quiet. Every journal
+  // broadcasts now, so there is nothing to hand down.
 };
 
 const BookplateContext = createContext(EMPTY);

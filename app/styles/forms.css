@@ -1869,32 +1869,6 @@ a.pn-item-album:hover { text-decoration: underline; text-underline-offset: 3px; 
    a name in a different shape, and the one a stranger sees. */
 .sb-quiet:hover { color: var(--ink); }
 
-/* ── Which beacon this journal runs ─────────────────────────────────────────
-   Two choices, each a whole row you can hit with a thumb rather than a dot
-   with a label beside it. The name is the line the cover actually prints, so
-   the chosen row is a preview of the journal's own front — which is why the
-   name is set in the label type the beacon's caption uses and the sentence
-   under it is ordinary prose.
-
-   The native radio is kept and hidden rather than replaced by a drawn circle:
-   arrow keys, the form, and every assistive technology go on working, and
-   :has() cannot be used to style the row from it (the build drops those rules
-   silently — see NOTES), so the chosen row carries its own class. */
-.st-choice { display: flex; flex-direction: column; gap: 8px; }
-.st-pick {
-  display: block; cursor: pointer;
-  background: transparent; border: 1px solid var(--border); border-radius: 10px;
-  padding: 12px 14px;
-}
-.st-pick input { position: absolute; opacity: 0; width: 0; height: 0; }
-.st-pick--on { border-color: var(--ink-faint); background: var(--panel-strong); }
-.st-pick-name {
-  display: block; font-family: var(--font-label); font-size: 10px;
-  letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-faint);
-}
-.st-pick--on .st-pick-name { color: var(--ink); }
-.st-pick-said { display: block; margin-top: 5px; font-size: 13px; line-height: 1.5; color: var(--ink-soft); }
-.st-pick:focus-within { border-color: var(--ink-faint); }
 
 /* ── The send sheet ────────────────────────────────────────────────────────
    Handing a record to somebody in the book, from a row in it or from a

@@ -6,9 +6,10 @@
 // ── What belongs here and what does not ───────────────────────────────────
 // Setup offers to skip almost everything, and Skip has to mean later rather
 // than never — so every field it can skip needs a home. This is that home
-// for the things that are not printed anywhere: the key, the password, the
-// address, and whether the beacon broadcasts. Last.fm was one of them until
-// 2026-09-16, when it came out of the software altogether. The starting theme and the wording of the key
+// for the things that are not printed anywhere: the key, the password and the
+// address. Whether the beacon broadcasts was one of them from 2026-09-16 until
+// 2026-09-24, when every journal came to broadcast and the switch came out;
+// Last.fm was one until 2026-09-16, when it came out of the software altogether. The starting theme and the wording of the key
 // were here for an afternoon and came off (2026-09-01) — parked, not
 // rejected; the theme column and the definitions column both still exist.
 // Light or dark came back for an hour on 2026-09-15 and went again the same
@@ -106,12 +107,6 @@ export default function SettingsPage({ layered = false }) {
   const [secrets, setSecrets] = useState(null);
 
   const [address, setAddress] = useState('');
-  // Whether this journal broadcasts. 'on' is the default and what a copy that
-  // never touches this row keeps; the column it saves to is `beacon_source`,
-  // which used to say which of two beacons ran here and carries the switch
-  // instead now that there is one — the schema is additive-only, so a column
-  // cannot be dropped, and it was that or leave it dead.
-  const [beaconSource, setBeaconSource] = useState('on');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
 
@@ -124,10 +119,6 @@ export default function SettingsPage({ layered = false }) {
     setSettings(row);
     setSecrets(k);
     setAddress(row.site_address || '');
-    // Anything that is not 'quiet' is on, which is how a copy that never chose,
-    // and a copy still holding the retired 'session' or 'lastfm', both land on
-    // the same row without anything having to be rewritten.
-    setBeaconSource(row.beacon_source === 'quiet' ? 'quiet' : 'on');
   }, []);
 
   useEffect(() => {
@@ -170,42 +161,9 @@ export default function SettingsPage({ layered = false }) {
           <input className="st-field" value={address} onChange={e => setAddress(e.target.value)} placeholder="yourname.example.com" inputMode="url" autoCapitalize="none" autoComplete="off" />
         </Section>
 
-        {/* Whether the journal broadcasts at all. The two rows keep the shape
-            the beacon picker had when there were two beacons to pick between:
-            the top one is the line the cover actually prints, so choosing is
-            seeing what your journal will say rather than learning a word for
-            it (Miyel, 2026-09-15).
-
-            The screen does not go anywhere when this is off — there is always
-            a beacon screen (Miyel, 2026-09-16) — it simply says nothing on it,
-            which is the same thing a copy on its first afternoon says.
-
-            One Save, like every other section — the choice is a field, not a
-            switch that acts the moment it is touched. */}
-        <Section
-          title="Your beacon"
-          note="The line on the front of your journal."
-          onSave={async () => { await send('/api/settings', { beacon_source: beaconSource }); }}
-        >
-          <div className="st-choice">
-            {[
-              { value: 'on', name: 'Now logging', said: 'the track you’re writing about' },
-              { value: 'quiet', name: 'Quiet', said: 'your journal says nothing' },
-            ].map(pick => (
-              <label key={pick.value} className={'st-pick' + (beaconSource === pick.value ? ' st-pick--on' : '')}>
-                <input
-                  type="radio"
-                  name="beacon_source"
-                  value={pick.value}
-                  checked={beaconSource === pick.value}
-                  onChange={() => setBeaconSource(pick.value)}
-                />
-                <span className="st-pick-name">{pick.name}</span>
-                <span className="st-pick-said">{pick.said}</span>
-              </label>
-            ))}
-          </div>
-        </Section>
+        {/* "Your beacon" was here from 2026-09-16 to 2026-09-24: Now logging
+            or Quiet. Every journal broadcasts now (Miyel), and a copy that
+            had chosen Quiet broadcasts again after the update. */}
 
         {/* "Optional: AI assistance" was here until 2026-09-18 — an Anthropic
             key, and a paragraph describing the two things it turned on inside
