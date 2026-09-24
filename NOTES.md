@@ -58,6 +58,21 @@ deploy a copy — and none of it is anything they need.
 
 ## Pending
 
+**THE NEXT RELEASE NOTE MUST SAY THE BEACON IS ALWAYS ON — 2026-09-24.**
+Branch `settings-quiet` takes out the beacon's Quiet switch, and a copy that
+had chosen Quiet starts broadcasting what its keeper logs as soon as the
+update reaches it (Miyel's call, DECISIONS). The release note is the only
+place those keepers are told. Say it plainly, near the top, in the release
+that carries it.
+
+**THREE BEACON POLLS AT ONCE — seen 2026-09-24, not looked into.** In the
+Claude browser on the dev server, the home page asked `/api/public/beacon`
+three times in the same millisecond when the tab became visible. The hook is
+meant to run one timer for every caller (DECISIONS: one beacon poll per page),
+and only the hook fetches it, so three at once looks like three copies of the
+module. Could be the dev server only. Check on the live site before believing
+it.
+
 **WHAT CHANGED, WHERE A KEEPER CAN SEE IT — later, Miyel's call,
 2026-09-23.** A release's note reaches a keeper only on GitHub: the release
 page, and the summary of the update run in their own repository. Nothing
@@ -3124,6 +3139,15 @@ that one can still go in on its own.
       short sentences. Checked on a copy of the page drawn with the real
       stylesheets, at phone and computer width, light and dark — the real
       page is behind the password, so it has not been seen signed in yet.
+- [x] **The confirm words stand at the right of their tiles** (Miyel), with
+      Saved or Ready just to their left.
+- [x] **The beacon is always on** (Miyel; DECISIONS, and the archive for the
+      switch it replaced). The Your beacon tile is gone, the public beacon no
+      longer reads the switch — one read fewer on the most-asked route — and
+      nothing stops a browser polling. A copy set to Quiet broadcasts again
+      after the update; see Pending for the release note. `beacon_source`
+      stays in the table, unread. Checked: the public beacon answers, and the
+      home page's beacon polls once the tab is visible.
 
 **2026-09-23 — Backups take every table, and Settings has the button: branch
 `backups-every-table`, not merged.** Waiting on Miyel's review. Something new

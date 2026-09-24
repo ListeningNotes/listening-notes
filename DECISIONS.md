@@ -63,8 +63,8 @@ it is the only form the address takes. Scanning someone's face to reach
 their journal is the native gesture, not a workaround.
 
 **No follower counts, no notifications, no unread badges.** Presence is
-outbound and opt-in. A journal can show what is playing; it never shows who is
-reading.
+outbound: a journal shows what its keeper is logging, and it never shows who
+is reading. It was opt-in until 2026-09-24 (the archive has why it stopped).
 
 **The schema is additive-only, from 2026-09-06.** Migrations add columns and
 tables and never rename or drop them: copies in the wild have to survive every
@@ -510,12 +510,12 @@ connect one, Apple Music on an iPhone being unable to at all. It went while it
 was still true that nobody had one set up, which is the cheapest moment a
 removal ever has. The argument for keeping it is in the archive.
 
-**The beacon is switched on or quiet, in Settings, and `beacon_source` carries
-it, 2026-09-16.** Presence is opt-in and there was no way to decline. Quiet
-says nothing to anybody, owner included: a beacon that checked who was asking
-could not be answered once and handed round. The column used to say which of
-two beacons ran here; the schema is additive-only, so it carries the switch
-rather than sitting dead, and anything that is not `quiet` is on.
+**The beacon is always on, 2026-09-24, Miyel's call.** No switch: every
+journal broadcasts what its keeper is logging, and a copy that had chosen
+Quiet broadcasts again after the update — chosen over leaving them quiet or
+offering a way back, and said in the release note, the only place they are
+told. `settings.beacon_source` stays, unread. The Quiet switch of 2026-09-16,
+and the argument for it, are in the archive.
 
 **The needle lifts; it is not thrown away, 2026-09-15.** Closing a record you
 spent an evening with used to erase that listen and drop the beacon past it.
@@ -1576,7 +1576,7 @@ not reopen** once claimed, rather than showing a form that appears to save
 `serial` and `founded_at` and silently drops both.
 
 **Settings is the machinery, reached from the desk.** The address, the
-beacon's switch, the Anthropic key, the password, the home-screen step. The card's own fields
+password, the backup, keeping up to date, the home-screen step. The card's own fields
 are *not* edited there: everything editable is edited where it prints, and
 two editors for one field means neither is canonical. No gear on the card;
 `/?edit=card` opens the card editing for anything that wants to point there.
@@ -1773,8 +1773,9 @@ when the entry opens. The rule for anything that shows many records and then
 one.
 
 **A query on a timer gets its own narrow reader, and it is never widened.**
-`pull_beacon_settings` returns one column because the beacon asks every
-fifteen seconds in every open tab. A general reader on a short timer is
+`pull_beacon_settings` was one — a single column, because the beacon asks every
+fifteen seconds in every open tab — until the switch it read came out
+(2026-09-24). A general reader on a short timer is
 exactly how the allowance got spent; give the next hot-path field its own.
 
 **Nothing that reads settings gets the portrait.** `portrait_data` and

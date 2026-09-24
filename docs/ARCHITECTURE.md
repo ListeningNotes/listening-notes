@@ -62,8 +62,8 @@ publicly):
 - `/dashboard/people/[id]` — your page about one person: what you both have,
   where you agree and disagree hardest, what they sent you and how it landed
 - `/dashboard/submissions` — a redirect into the inbox, kept for old links
-- `/settings` — the machinery: address, the beacon's on/quiet switch, the
-  the password, the home-screen step, and Sign out. Reached from the Settings door on
+- `/settings` — the machinery: address, the password, Back up your journal,
+  keeping up to date, the home-screen step, and Sign out. Reached from the Settings door on
   the desk. The card's own fields are
   edited on the card, behind its pencil
 
