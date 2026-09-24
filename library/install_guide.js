@@ -54,7 +54,8 @@ export const STEPS = [
     links: [
       { label: 'GitHub', href: 'https://github.com/signup' },
       { label: 'Vercel', href: 'https://vercel.com/signup' },
-    ] },
+    ],
+    rings: [[5.4, 42.8, 88.5, 7.7]] },
   { shot: '02-button', head: 'Press the button at the foot of this page',
     text: 'It opens Vercel in a new tab, and this page stays open behind it.' },
   { shot: '03-github', head: 'Continue with GitHub',

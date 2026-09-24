@@ -154,8 +154,8 @@
 /* Where to press, 2026-09-23 — a ring over the picture, placed by the step's
    numbers. Drawn on the page rather than into the picture, so it stays sharp
    at any size and can move without retaking anything. The site's red, fixed
-   rather than themed: the pictures are Vercel's light screens whichever
-   theme the page is in. */
+   rather than themed: a picture keeps the theme it was taken in, light or
+   dark, whichever theme the page is in. */
 .get-ring {
   position: absolute; box-sizing: border-box; pointer-events: none;
   border: 2.5px solid #f0484f; border-radius: 10px;
