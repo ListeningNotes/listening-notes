@@ -417,10 +417,18 @@ textarea.su-field { resize: vertical; min-height: 64px; }
 .st-who { background: none; border-color: transparent; padding: 0; color: var(--ink-faint); font-family: var(--font-label); font-size: 12px; letter-spacing: 0.08em; }
 textarea.st-field { resize: vertical; min-height: 96px; }
 @media (pointer: coarse) { .st-field { font-size: 16px; } }
-.st-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; margin-top: 2px; }
+/* The word that commits stands at the right of its tile, where the editing
+   bar keeps Save (Miyel, 2026-09-24), and what it says back — Saved, Ready —
+   sits just to its left. Reversed rather than reordered in the markup, so the
+   button is still the first thing a keyboard reaches. */
+.st-foot {
+  display: flex; flex-direction: row-reverse; flex-wrap: wrap;
+  justify-content: flex-start; align-items: center;
+  gap: 4px 12px; margin-top: 2px;
+}
 /* The word is .ln-word--on (base.css). Its padding is paid back so it lines
-   up with the words above it, and grown so a thumb gets its 44px. */
-.st-save { padding: 10px 8px; margin: -10px 0 -10px -8px; }
+   up with the tile's right edge, and grown so a thumb gets its 44px. */
+.st-save { padding: 10px 8px; margin: -10px -8px -10px 0; }
 .st-said, .st-trouble { font-family: var(--font-label); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; }
 .st-said { color: var(--ink-faint); }
 .st-trouble { color: #e05555; }
