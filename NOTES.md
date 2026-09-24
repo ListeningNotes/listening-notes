@@ -105,8 +105,9 @@ unseen; the first real gift shows it, and the camera is there if not.)
 **Since the same evening** `/get` builds the gift version of the button
 when the gift card shows — only then, so the button carries exactly whose
 gift the page said; it ships with this branch, since on main nothing reads
-the variable. **Still owed:** Give's sheet trades its plain line for "when
-they set it up, you'll be the first person in their book". The brief and mock-ups are on Miyel's machine
+the variable. Give's sheet says so: "Point their camera here. When they set
+it up, you'll be the first person in their address book." Nothing of the
+brief's step four is owed now but shipping it. The brief and mock-ups are on Miyel's machine
 (`about-get-give.zip`).
 
 **WHAT CHANGED, IN THE APP — pinned 2026-09-21, not now.** Miyel, having read
