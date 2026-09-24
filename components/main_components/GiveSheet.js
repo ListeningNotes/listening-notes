@@ -140,8 +140,10 @@ export default function GiveSheet({ open, onClose }) {
 
   if (!open) return null;
 
-  // The phone's own share sheet where there is one; a laptop without it
-  // gets Copy link alone rather than a button that does nothing.
+  // One button, 2026-09-23: the phone's own share sheet, which already holds
+  // Copy and Messages and the rest, so a Copy link beside it said the same
+  // thing twice (Miyel). Where there is no share sheet — a laptop, mostly —
+  // Copy link stands in, rather than a button that does nothing.
   const canShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
 
   return (
@@ -179,19 +181,7 @@ export default function GiveSheet({ open, onClose }) {
         </div>
 
         <div className="gv-acts">
-          <button
-            type="button"
-            className="gv-act"
-            onClick={() => {
-              navigator.clipboard?.writeText(link).then(() => setCopied(true), () => {});
-            }}
-          >
-            {copied
-              ? <Check size={18} weight="regular" aria-hidden="true" />
-              : <Copy size={18} weight="regular" aria-hidden="true" />}
-            <span aria-live="polite">{copied ? 'Link copied' : 'Copy link'}</span>
-          </button>
-          {canShare && (
+          {canShare ? (
             <button
               type="button"
               className="gv-act"
@@ -199,6 +189,19 @@ export default function GiveSheet({ open, onClose }) {
             >
               <Export size={18} weight="regular" aria-hidden="true" />
               Share
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="gv-act"
+              onClick={() => {
+                navigator.clipboard?.writeText(link).then(() => setCopied(true), () => {});
+              }}
+            >
+              {copied
+                ? <Check size={18} weight="regular" aria-hidden="true" />
+                : <Copy size={18} weight="regular" aria-hidden="true" />}
+              <span aria-live="polite">{copied ? 'Link copied' : 'Copy link'}</span>
             </button>
           )}
         </div>
