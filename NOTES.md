@@ -67,18 +67,6 @@ today brings back the journal with an empty address book. Whether an export
 somebody downloads should carry `secrets` is a question for Miyel, not a
 default. Its own branch.
 
-**THE FIRST FRIEND — step 4 of the About, /get and Give brief, half built.**
-Give's code carries `?gift=<the giver's journal>`, and since `get-gift`
-(2026-09-22) `/get` reads it: it asks that journal its keeper's name through
-the doorman's relay door and shows "A gift from" them with their face, or
-nothing if it does not answer. What is still owed: the giver's address has to
-reach the new copy's setup through the deploy —
-not as an environment variable set by the button, which Vercel's sign-in
-loses (DECISIONS) — and the end of setup offers, ticked, to put the giver in
-the new book. Then Give's sheet trades its plain line for "when they set it
-up, you'll be the first person in their book". The brief and mock-ups are on
-Miyel's machine (`about-get-give.zip`).
-
 **WHAT CHANGED, IN THE APP — pinned 2026-09-21, not now.** Miyel, having read
 the 1.26.0 notes: "I want to design a custom popup in app that shows when your
 copy moved version and tells it what happened, stylized by the site, that is
@@ -1596,6 +1584,14 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**An older copy answers a route it does not have with 200, not 404,
+2026-09-23.** A POST to `/api/waves` on a 1.29.2 copy came back `200` with
+the not-found *page* (HTML, `x-matched-path: /_not-found`): the root layout
+has begun streaming before the page learns it has nothing to serve, so the
+status is already sent. `send_wave` read that as a wave that landed. Anything
+that talks to another copy's newer route must check for JSON and its own
+`ok`, never the status alone — `library/outbox.js` has the pattern.
+
 **A face on the spine at `left: 100%` shrinks to its narrowest content,
 2026-09-22.** `.hn-pane { width: auto }` in the desktop block outranks the
 faces' `width: 100%` — every face is also an `.hn-pane` — and the desk face
@@ -3089,6 +3085,35 @@ current.
 ---
 
 ## Complete
+
+**2026-09-23 — Waves, and the first friend: 1.33.0, on main.** Branches
+`waves` and `first-friend` merged; the release waits on Miyel's word for its
+note.
+
+- [x] **Waves.** One-way (DECISIONS): adding somebody new — a paste, a scan,
+      the Add from another journal, a send's sender, a note's author,
+      somebody who waved — brings up "June is in your address book", "Let
+      June see your name and journal address", and Wave to June or Not now
+      (WaveSheet.js). It is also the sign that the add worked, which Miyel
+      and June found missing, testing in a car. The wave goes server to
+      server (`send_wave`, `/api/outbox` with `wave`, `/api/waves`) and
+      lands among the sends as "June waved" — never "added you"; it is the
+      quiet codeword — with Add on the row, and Their journal / Add / Leave
+      it when opened. A copy without the route says it is on an older
+      version and nothing is sent (it answers 200 with a page, not 404 —
+      Gotchas). `waves` table, migration 024. Seen on a phone as a drawing
+      with the real styles; the first wave between two journals waits for
+      the release.
+- [x] **The first friend** — step four of the About, /get and Give brief.
+      After the claim, setup says "Your journal is ready!" over A GIFT
+      FROM, the giver's face and name, and "Add June to your address book
+      and wave", ticked — fed by `GIFT_FROM`, which `/get`'s button sets
+      when its gift card shows, and otherwise "Did someone give you this
+      journal?" and the camera. Give's sheet promises it: "you'll be the
+      first person in their address book". Seen in rehearsal on Miyel's
+      phone; the real install showed the box above Deploy, filled in.
+- [x] **A rehearsal checks the passwords** the way a claim does; two that
+      did not match used to move on.
 
 **2026-09-23 — Give has one button: on main.** Branch `give-share`
 merged; the version stays at 1.32.0 and no release cut.

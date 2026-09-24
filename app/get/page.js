@@ -45,6 +45,16 @@
 // made-up journals — and is given two and a half seconds rather than six: a
 // stranger is looking at a page that waits on it. A gift from this journal
 // itself is answered from its own settings, with no request at all.
+//
+// ── The gift rides in the button, 2026-09-23 ───────────────────────────────
+// When the card shows, the deploy button carries the giver too: Vercel puts
+// a GIFT_FROM box on its database screen, above Deploy, already filled in,
+// and the new journal's setup reads it after the claim and offers to add
+// them (DECISIONS). Only when the card shows — a journal that answered — so
+// the button carries exactly whose gift the page said it was, and a made-up
+// address never reaches somebody's deploy. Seen through a real install on
+// Miyel's phone the same evening. A sign-in partway drops the whole link, and
+// pressing the button again brings the gift back with it.
 
 import { notFound } from 'next/navigation';
 import { headers } from 'next/headers';
@@ -116,6 +126,13 @@ export default async function GetPage({ searchParams }) {
   } else if (giver && mayKnock('relay', whoIsKnocking({ headers: await headers() })).allowed) {
     giverName = await ask_journal_name(giver, 2500);
   }
+  // The button, with the giver in it when there is one. The description is
+  // the line under the box on Vercel's screen, and the words were read there.
+  const deployUrl = giverName
+    ? `${DEPLOY_URL}&env=GIFT_FROM`
+      + `&envDefaults=${encodeURIComponent(JSON.stringify({ GIFT_FROM: giver }))}`
+      + `&envDescription=${encodeURIComponent('Who gave you this journal. Leave it as it is, and your journal will offer to add them when you set it up.')}`
+    : DEPLOY_URL;
 
   return (
     <main className="get-wrap get-wrap--steps">
@@ -165,7 +182,7 @@ export default async function GetPage({ searchParams }) {
           In a tab of its own, this page is still here to press again, and
           the line under the caption says so. */}
       <div className="get-act">
-        <a href={DEPLOY_URL} className="get-cta" target="_blank" rel="noopener">Make your own copy</a>
+        <a href={deployUrl} className="get-cta" target="_blank" rel="noopener">Make your own copy</a>
         <p className="get-expect">Opens Vercel · nothing to pay</p>
         <p className="get-lost">Lost your place? Come back to this tab and press it again — you’ll go straight through.</p>
       </div>

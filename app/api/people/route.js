@@ -41,9 +41,13 @@ export async function POST(request) {
     if (own && address === own) {
       return Response.json({ error: 'That is this journal.' }, { status: 400 });
     }
+    // Whether this is somebody new to the book, so the page knows to offer a
+    // wave: that is offered when you add a person and at no other time, and
+    // filing an address already here is not adding anybody (2026-09-23).
+    const fresh = !(await pull_people()).some(p => p.address === address);
     const name = await ask_journal_name(address);
     const person = await save_person({ address, name });
-    return Response.json({ person, reached: name !== null });
+    return Response.json({ person, reached: name !== null, fresh });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
