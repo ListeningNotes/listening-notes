@@ -365,24 +365,28 @@ export default function WelcomeScreen() {
                 as a loading bar as much as a row of lights — and it moves
                 when you press Next, which is the moment a person looks at it.
                 Not buttons here, unlike the session's: the screens are in
-                order and Back is underneath. */}
-            <div
-              className="su-lights"
-              role="progressbar"
-              aria-label="Setup progress"
-              aria-valuemin={1}
-              aria-valuemax={STEPS.length}
-              aria-valuenow={step + 1}
-              aria-valuetext={`Step ${step + 1} of ${STEPS.length}`}
-            >
-              {STEPS.map((name, i) => (
-                <span
-                  key={name}
-                  aria-hidden="true"
-                  className={'su-light' + (i < step ? ' su-light--past' : '') + (i === step ? ' su-light--current' : '')}
-                />
-              ))}
-            </div>
+                order and Back is underneath. None on the last screen
+                (Miyel, 2026-09-23): the journal is made by then, and the
+                mark above has become its icon. */}
+            {current !== 'homescreen' && (
+              <div
+                className="su-lights"
+                role="progressbar"
+                aria-label="Setup progress"
+                aria-valuemin={1}
+                aria-valuemax={STEPS.length}
+                aria-valuenow={step + 1}
+                aria-valuetext={`Step ${step + 1} of ${STEPS.length}`}
+              >
+                {STEPS.map((name, i) => (
+                  <span
+                    key={name}
+                    aria-hidden="true"
+                    className={'su-light' + (i < step ? ' su-light--past' : '') + (i === step ? ' su-light--current' : '')}
+                  />
+                ))}
+              </div>
+            )}
 
             {/* One sentence per screen, in the reading face, where a small-caps
                 label and a why-line used to sit as a pair. The pair was two
