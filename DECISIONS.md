@@ -1599,11 +1599,18 @@ a fetch handler that exists to satisfy a prompt is the anti-pattern Chrome
 dropped the rule over.
 
 **`/get` is the steps, then the button, 2026-09-22.** No pitch — anybody
-there has decided, and About carries it. Nine tiles, and the deploy button
-after the ninth: a button at the top is pressed before step five is read,
-and step five is where installs break. `/get/install` is gone with no stub
+there has decided, and About carries it. Ten tiles (nine until 2026-09-23),
+and the deploy button after the last: a button at the top is pressed before
+the Neon step is read, and the Neon step is where installs break. `/get/install` is gone with no stub
 (Miyel's call); the story keeps `/get/story`, unlinked for now. The
 three-address door of 2026-09-03 is what this replaced.
+
+**`/get` asks for the accounts first, and its button opens a new tab,
+2026-09-23.** A new account's sign-up, GitHub's or Vercel's, ends on that
+site's own home page and never back on the deploy link, and every free host
+needs one — so step one makes both, each in its own tab, and `/get` stays
+open behind the button to press again. There is no redirect to be had:
+looked for, on every provider, the day this was decided.
 
 **"At your own address" is architecture, not a benefit.** The line that says
 what this is reads *a music journal you own* — on the About pane now, and
@@ -1627,7 +1634,7 @@ pane's Get one, with an environment variable for a fork.
 **The steps are written from the fresh-account run, never from a summary of
 it.** The run found what a summary skipped: the Neon panel's "Auth" toggle is
 on by default and must go off, and the Claude in-app browser cannot complete
-the Neon step, so tests run in Safari. Nine steps, one or two sentences each.
+the Neon step, so tests run in Safari. Ten steps, one or two sentences each.
 **One set, from a phone, 2026-09-22:** the phone/laptop switch is gone —
 the people handed `/get` are holding a phone, and only the pictures differed.
 
