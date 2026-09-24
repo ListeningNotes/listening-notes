@@ -254,23 +254,12 @@ export default async function RootLayout({ children, layer }) {
   // Research button out rather than show one that fails. Nothing asks any
   // more: the research and the question mark came out of the software (see
   // docs/RETIRED-PROMPTS.md), and the key they needed has no other reader.
-  // Whether this journal broadcasts at all, which is the only question the
-  // beacon has left to ask before paint.
-  //
-  // It is not whether there is a beacon *screen*: there always is one
-  // (Miyel, 2026-09-16). A beacon showing a record from months ago is not a
-  // beacon failing, it is the signal — and a journal on its first afternoon
-  // gets a blank one standing in rather than no screen at all. This used to
-  // ask whether anything had ever been listened to here, and hid the whole
-  // floor when nothing had; the wall went straight under the crown and the
-  // pane quietly changed shape. Two EXISTS subqueries over entries and drafts
-  // came off the most-read query in the app with that question.
-  //
-  // What is left is the switch in Settings. A quiet journal still draws the
-  // screen and still says nothing on it — the same thing a new copy says —
-  // and this is what stops the hook subscribing at all, so a copy that has
-  // asked not to broadcast never polls.
-  settings.beacon_on = all.beacon_source !== 'quiet';
+  // `beacon_on` was here until 2026-09-24 — whether this journal broadcast at
+  // all, so that a copy switched to Quiet never polled. The switch came out
+  // (Miyel): every journal broadcasts, and there is nothing left to ask before
+  // paint. There is always a beacon *screen* as well (Miyel, 2026-09-16): a
+  // record from months ago is the signal, not a failure, and a journal on its
+  // first afternoon gets a blank one standing in.
 
   // The owner's chosen starting theme, on the document from the server so the
   // first paint is already the right colour. A reader who has pressed the

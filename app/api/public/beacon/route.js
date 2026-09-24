@@ -20,17 +20,12 @@
 // scrobble dependably at all. What is left is a beacon every copy has from
 // its first listen, made of the thing the copy is already doing.
 //
-// ── Quiet ─────────────────────────────────────────────────────────────────
-// A journal can decline to broadcast: Settings has the switch and it is the
-// same answer this route gives a copy on its first day, which is nothing. It
-// is deliberately the same answer for everybody, owner included — a beacon
-// that checked who was asking could not be cached, and a reader who is not
-// broadcasting has nothing to be told privately anyway.
-//
-// It is kept in `settings.beacon_source`, which is the column that used to
-// say which of the two beacons this journal ran. The schema is additive-only,
-// so that column could not go when Last.fm did; it carries the switch instead
-// of sitting dead, and no migration was needed.
+// ── No Quiet ──────────────────────────────────────────────────────────────
+// Every journal broadcasts (Miyel, 2026-09-24). From 2026-09-16 Settings had
+// a switch that made this route answer nothing, carried in
+// `settings.beacon_source`; the switch is gone, and so is the read of it that
+// came with every answer. The column stays, unread — the schema is
+// additive-only.
 //
 // ── What the browser used to do, and why it stopped ───────────────────────
 // It asked Last.fm directly, which had two problems. The API key was written
@@ -59,7 +54,6 @@
 // the fifteen it already took to show up on somebody's screen. Writes are
 // untouched: the needle goes in through /api/needle, which is nobody's cache.
 
-import { pull_beacon_settings } from '@/library/settings_actions';
 import { pull_needle, pull_recent_listens, sameRecord } from '@/library/needle';
 
 const BEFORE_THAT = 3;     // covers drawn under the beacon
@@ -69,10 +63,8 @@ const CACHED = {
   'Cache-Control': `public, s-maxage=${EDGE_TTL}, stale-while-revalidate=${EDGE_STALE}`,
 };
 
-// A journal with nothing to say. A copy on its first day, before a record has
-// been picked up — and a journal that has asked to be quiet, which is the same
-// answer on purpose: there is no state that means "switched off" as distinct
-// from "nothing yet", because a visitor is owed neither.
+// A journal with nothing to say: a copy on its first day, before a record has
+// been picked up.
 const NOTHING = { state: 'none', album: '', artist: '', art: '', track: '', before: [] };
 
 // "Before that" — never the record on the beacon, which is already the largest
@@ -87,21 +79,10 @@ const beforeThat = (recent, album) => {
 
 export async function GET() {
   try {
-    // All three at once. The covers under the beacon are wanted whichever
-    // state wins, and in the quiet state the first of them IS the beacon, so
-    // one read answers both questions.
-    //
-    // A journal that is switched off still pays for all three, because they
-    // leave together and one round trip beats three. Asking the switch first
-    // would save a quiet copy two reads and cost every other copy a trip, and
-    // the common case is the one to protect — especially now that the cache in
-    // front means this whole function runs at most six times a minute however
-    // many people are watching.
-    const [beacon, needle, recent] = await Promise.all([
-      pull_beacon_settings(), pull_needle(), pull_recent_listens(),
-    ]);
-
-    if (beacon.quiet) return Response.json(NOTHING, { headers: CACHED });
+    // Both at once. The covers under the beacon are wanted whichever state
+    // wins, and in the quiet state the first of them IS the beacon, so one
+    // read answers both questions.
+    const [needle, recent] = await Promise.all([pull_needle(), pull_recent_listens()]);
 
     // ── A listen is open ──────────────────────────────────────────────────
     // Whether one IS open is decided where the listen lives

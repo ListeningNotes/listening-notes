@@ -6,9 +6,8 @@
 // Returns:
 // - state: which line the beacon prints — 'logging' while a listen is open,
 //   'logged' for the last record sat down with. 'none' is a journal with
-//   nothing to say at all: a copy on its first afternoon, or one that has asked
-//   to be quiet. The server decides which; a visitor's browser cannot know
-//   whether a listen is open. There were two more until 2026-09-16, when
+//   nothing to say at all: a copy on its first afternoon. The server decides
+//   which; a visitor's browser cannot know whether a listen is open. There were two more until 2026-09-16, when
 //   Last.fm came out — see app/api/public/beacon/route.js.
 // - album, artist, art, track — what to draw. `track` is empty when the last
 //   thing logged is a whole record rather than a song.
@@ -30,8 +29,7 @@
 
 'use client';
 
-import { useMemo, useSyncExternalStore } from 'react';
-import { useBookplate } from '../components/main_components/Bookplate';
+import { useSyncExternalStore } from 'react';
 
 // ── The two words ─────────────────────────────────────────────────────────
 // What each state is called, wherever the beacon is drawn. Here rather than in
@@ -275,23 +273,15 @@ function subscribe(listener) {
   };
 }
 
-// A journal that has asked to be quiet never subscribes, so nothing is ever
-// polled and the snapshot stays empty — which is exactly what its beacon screen
-// draws anyway.
-//
-// This used to be "does this copy have a beacon at all", answered by whether
-// anything had ever been logged here. It is not that question any more: there
-// is always a beacon screen, blank on a copy's first afternoon (Miyel,
-// 2026-09-16), so a new journal polls like any other and lights up the moment
-// it has something to say. The only journal that stays silent is one whose
-// keeper asked for it.
-const NEVER = () => () => {};
-
+// Every journal polls. It used to be skipped for a journal whose keeper had
+// switched the beacon to Quiet, and before that for a copy that had never
+// logged anything; neither is a question any more. There is always a beacon
+// screen, blank on a copy's first afternoon (Miyel, 2026-09-16), and the
+// switch came out on 2026-09-24 — so a new journal polls like any other and
+// lights up the moment it has something to say.
 export function useListeningBeacon() {
-  const { beacon_on } = useBookplate();
-  const subscribeIf = useMemo(() => (beacon_on ? subscribe : NEVER), [beacon_on]);
   return useSyncExternalStore(
-    subscribeIf,
+    subscribe,
     () => beacon.snapshot,
     // The server renders a journal with nothing on the beacon. Anything else
     // would be a hydration mismatch, since the browser has not polled yet
