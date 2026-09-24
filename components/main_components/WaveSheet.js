@@ -175,7 +175,7 @@ export default function WaveSheet({ person, onClose }) {
           >
             {state === 'waved'
               ? <><Check size={20} weight="regular" aria-hidden="true" /> Waved</>
-              : <><HandWaving size={22} weight="regular" aria-hidden="true" /> {state === 'waving' ? 'Waving…' : (name ? `Wave hello to ${name}` : 'Wave hello')}</>}
+              : <><HandWaving size={22} weight="regular" aria-hidden="true" /> {state === 'waving' ? 'Waving…' : (name ? `Wave to ${name}` : 'Wave')}</>}
           </button>
         )}
         <button type="button" className="wv-not" onClick={shut}>
