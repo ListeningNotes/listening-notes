@@ -163,7 +163,7 @@ export async function send_wave({ to }) {
       body: JSON.stringify({ journal: mine, name }),
     });
   } catch {
-    return { ok: false, error: "Their copy did not answer. They're still in your book — nothing was sent." };
+    return { ok: false, error: "Their copy did not answer. They're still in your address book — nothing was sent." };
   }
 
   const json = (answer.headers.get('content-type') || '').includes('application/json');
