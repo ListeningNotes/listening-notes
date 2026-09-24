@@ -58,6 +58,15 @@ deploy a copy — and none of it is anything they need.
 
 ## Pending
 
+**BACKUPS SKIP HALF THE TABLES — found 2026-09-22, pinned, not fixed.**
+`scripts/backup.mjs`, `/api/export` and `scripts/restore.mjs` each keep a
+hand-written list of seven tables, and nobody added to it as tables arrived:
+`people` (the address book and its pins), `sat_with`, `reports`, `came_back`,
+`needle`, `builds` and `secrets` are in no backup and no export. A restore
+today brings back the journal with an empty address book. Whether an export
+somebody downloads should carry `secrets` is a question for Miyel, not a
+default. Its own branch.
+
 **THE FIRST FRIEND — step 4 of the About, /get and Give brief, half built.**
 Give's code carries `?gift=<the giver's journal>`, and since `get-gift`
 (2026-09-22) `/get` reads it: it asks that journal its keeper's name through
