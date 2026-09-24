@@ -123,10 +123,14 @@ read, or a file in the repo that ships with the version), and what "seen"
 means (per browser, in storage, is the honest limit without accounts — same as
 the return address). Ask before choosing either.
 
-**/GET'S SCREENSHOTS — owed since 1.30.0, 2026-09-22.** The page is live
-without them and reads fine; each picture appears inside its step once the
-file exists. They come from one real install on a phone — a throwaway copy,
-deleted after — and the names are under **Screenshots for `/get`** below.
+**/GET'S SCREENSHOTS — three of ten in, 2026-09-23.** From Miyel's install
+that evening, cropped, with a ring drawn by the page over what to press:
+`05-name`, `06-neon` (the Neon row's Add over the Auth toggle, two crops in
+one picture) and `07-build`. Still owed: `01-accounts` (Vercel's sign-up,
+from a private tab), and `03-github` and `04-connect`, which only a
+signed-out or brand-new install shows — a friend's. Steps eight to ten go
+without, on Miyel's call: from the holding page on, the journal explains
+itself. The names are under **Screenshots for `/get`** below.
 
 **MANUAL ENTRY — pinned 2026-09-18, and the door is shut.** Miyel, having
 looked at what is built: "we will have to return to working out manual entry —
