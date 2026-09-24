@@ -58,13 +58,6 @@ deploy a copy — and none of it is anything they need.
 
 ## Pending
 
-**THE NEXT RELEASE NOTE MUST SAY THE BEACON IS ALWAYS ON — 2026-09-24.**
-Branch `settings-quiet` takes out the beacon's Quiet switch, and a copy that
-had chosen Quiet starts broadcasting what its keeper logs as soon as the
-update reaches it (Miyel's call, DECISIONS). The release note is the only
-place those keepers are told. Say it plainly, near the top, in the release
-that carries it.
-
 **THREE BEACON POLLS AT ONCE — seen 2026-09-24, not looked into.** In the
 Claude browser on the dev server, the home page asked `/api/public/beacon`
 three times in the same millisecond when the tab became visible. The hook is
@@ -3123,10 +3116,11 @@ current.
 
 ## Complete
 
-**2026-09-24 — Settings in the quiet design: 1.34.0, on main.** Branch
-`settings-quiet` merged, carrying `backups-every-table` with it. Not pushed
-yet, and no release cut — the note has to say the beacon is always on
-(Pending).
+**2026-09-24 — Settings in the quiet design: 1.34.0, released.** Branch
+`settings-quiet` merged, carrying `backups-every-table` with it; pushed, and
+release v1.34.0 cut the same morning once the live site was serving it. The
+note leads with the beacon being always on, and says a journal that had
+turned it off is on again — the only place those keepers are told.
 
 - [x] **Settings looks like setup and `/get`.** A caption and one line
       centred at the top (SETTINGS, "The machinery behind your journal.")
@@ -3151,7 +3145,7 @@ yet, and no release cut — the note has to say the beacon is always on
       home page's beacon polls once the tab is visible.
 
 **2026-09-23 — Backups take every table, and Settings has the button: 1.34.0,
-on main.** Merged on 2026-09-24 inside `settings-quiet`.
+released.** Merged on 2026-09-24 inside `settings-quiet`, released as v1.34.0.
 
 - [x] **Every table, asked of the database.** `scripts/backup.mjs`,
       `/api/export` and `scripts/restore.mjs` each kept a hand-written list of
