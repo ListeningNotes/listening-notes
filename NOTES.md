@@ -58,6 +58,13 @@ deploy a copy — and none of it is anything they need.
 
 ## Pending
 
+**WHAT CHANGED, WHERE A KEEPER CAN SEE IT — later, Miyel's call,
+2026-09-23.** A release's note reaches a keeper only on GitHub: the release
+page, and the summary of the update run in their own repository. Nothing
+inside a journal says what an update changed. Miyel wants a way to show it,
+made alongside the slides she posts for each update so the two match. Not
+before those slides exist.
+
 **BACKUPS SKIP HALF THE TABLES — found 2026-09-22, pinned, not fixed.**
 `scripts/backup.mjs`, `/api/export` and `scripts/restore.mjs` each keep a
 hand-written list of seven tables, and nobody added to it as tables arrived:
@@ -3087,8 +3094,8 @@ current.
 ## Complete
 
 **2026-09-23 — Waves, and the first friend: 1.33.0, on main.** Branches
-`waves` and `first-friend` merged; the release waits on Miyel's word for its
-note.
+`waves` and `first-friend` merged; release v1.33.0 cut the same night, its
+note covering everything since 1.29.2 (none was cut for 1.30 to 1.32).
 
 - [x] **Waves.** One-way (DECISIONS): adding somebody new — a paste, a scan,
       the Add from another journal, a send's sender, a note's author,
