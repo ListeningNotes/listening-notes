@@ -3108,6 +3108,23 @@ current.
 
 ## Complete
 
+**2026-09-24 — Settings in the quiet design: branch `settings-quiet`, not
+merged.** Started from `backups-every-table`, so merging this brings both;
+that one can still go in on its own.
+
+- [x] **Settings looks like setup and `/get`.** A caption and one line
+      centred at the top (SETTINGS, "The machinery behind your journal.")
+      where a large title and a kicker stood; each section one of `/get`'s
+      tiles, with a bold line and a grey one; placeholders where the
+      password's capital labels were; Save as the editing bar's underlined
+      word (DECISIONS); Sign out a word under the tiles. The home-screen steps
+      lose their own tiles inside Settings', so it is never a card inside a
+      card. **Words cut for Miyel to read:** every section's note is one line
+      now (the beacon's was a paragraph), and the update explanation is two
+      short sentences. Checked on a copy of the page drawn with the real
+      stylesheets, at phone and computer width, light and dark — the real
+      page is behind the password, so it has not been seen signed in yet.
+
 **2026-09-23 — Backups take every table, and Settings has the button: branch
 `backups-every-table`, not merged.** Waiting on Miyel's review. Something new
 for every copy — the button — so 1.34.0 when it merges.
