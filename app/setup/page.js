@@ -321,8 +321,11 @@ export default function WelcomeScreen() {
       <div className="su-card">
         {/* The mark, matching the holding page a visitor sees on the same
             copy — the words there and the mark here would read as two
-            different sites. */}
-        <div className="su-mark" aria-label="Listening Notes" role="img">
+            different sites. On the last screen it turns into the app icon
+            (Miyel, 2026-09-23): the icon under the question repeated the
+            mark right above it, so the mark becomes the thing you are about
+            to put on your home screen. */}
+        <div className={'su-mark' + (current === 'homescreen' ? ' su-mark--icon' : '')} aria-label="Listening Notes" role="img">
           <svg viewBox="76 96 241 140" className="su-logo" xmlns="http://www.w3.org/2000/svg">
           <path
           transform="translate(73.734177, 220.794814)"
@@ -707,11 +710,12 @@ export default function WelcomeScreen() {
                 )}
               </div>
             )}
-            {claimed && (
+            {/* Skip on the gift screen only. The home screen's was "Later —
+                it's in Settings", which did what Open the journal does
+                (Miyel, 2026-09-23: not necessary). */}
+            {current === 'gift' && (
               <div className="su-under" style={{ justifyContent: 'flex-end' }}>
-                <button type="button" className="su-skip" disabled={busy} onClick={() => advance()}>
-                  {current === 'gift' ? 'Skip' : 'Later — it’s in Settings'}
-                </button>
+                <button type="button" className="su-skip" disabled={busy} onClick={() => advance()}>Skip</button>
               </div>
             )}
           </>

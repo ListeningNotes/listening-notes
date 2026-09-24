@@ -154,9 +154,37 @@ textarea.sb-field {
   padding: 32px 24px;
 }
 .su-card { width: 100%; max-width: 380px; }
-.su-mark { line-height: 0; display: flex; justify-content: center; margin-bottom: 10px; }
-.su-logo { width: 78px; height: auto; display: block; fill: var(--ink); }
-.su-dot { fill: var(--ink); }
+/* The mark sized in numbers rather than left to the logo, so that on the
+   last screen it can grow into the app icon and be seen doing it: a box
+   that was only ever as big as its logo cannot be animated to a square. */
+.su-mark {
+  display: flex; align-items: center; justify-content: center; line-height: 0;
+  width: 78px; height: calc(78px * 140 / 241); margin: 0 auto 10px;
+  border-radius: 0; background-color: transparent;
+  transition:
+    width 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+    height 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+    border-radius 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+    background-color 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.su-logo {
+  width: 78px; height: auto; display: block; fill: var(--ink); flex: none;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1), fill 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.su-dot { fill: var(--ink); transition: fill 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+/* ── The mark as the app icon, 2026-09-23 ── on the home-screen step. The
+   colours are the icon's own, read off public/icon-192.png, and not the
+   theme's: the icon does not change with the page. The logo takes the same
+   share of the square it does in the icon (64% across). The hairline is for
+   the dark page, which is the icon's own black and would swallow it. */
+.su-mark--icon {
+  width: 72px; height: 72px; border-radius: 16px;
+  background-color: #0e0e0e;
+  box-shadow: 0 0 0 1px var(--border), 0 1px 3px rgba(0, 0, 0, 0.18);
+}
+.su-mark--icon .su-logo { width: 48.5px; fill: #eef0ec; }
+.su-mark--icon .su-dot { fill: #eef0ec; }
 .su-line {
   font-family: var(--font-label); font-size: 10px;
   letter-spacing: 0.14em; text-transform: uppercase;
@@ -180,7 +208,8 @@ textarea.sb-field {
 }
 .su-light--current { width: 6px; height: 6px; background: var(--ink); opacity: 1; }
 @media (prefers-reduced-motion: reduce) {
-  }
+  .su-mark, .su-logo, .su-dot { transition: none; }
+}
 .su-fields { display: flex; flex-direction: column; gap: 22px; }
 .su-label {
   display: block; font-family: var(--font-label); font-size: 10px;
@@ -452,6 +481,8 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 .a2h-row { display: flex; align-items: center; gap: 14px; }
 .a2h--centered .a2h-row { justify-content: center; }
 .a2h--centered .a2h-why { text-align: center; }
+.a2h--centered .a2h-go { align-self: center; }
+.a2h--centered .a2h-done { text-align: center; }
 .a2h-icon {
   width: 56px; height: 56px; border-radius: 13px; overflow: hidden; flex: none;
   box-shadow: 0 1px 3px rgba(0,0,0,0.18);
