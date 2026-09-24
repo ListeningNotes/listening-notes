@@ -94,13 +94,18 @@ and journal address", then Next — fed by `GIFT_FROM` when
 the deploy set it, and otherwise "Did someone give you this journal?" with
 the camera. Seen on Miyel's phone in rehearsal 2026-09-23, "A gift from
 June" with the box ticked: "amazing looks good" (`/setup?rehearse&gift=
-<address>` stands in for GIFT_FROM; signed in at the LAN address first). **Still owed:**
-(1) the real install, through the gift version of the deploy button, to see
-whether GIFT_FROM survives a new person's sign-up — and what its box looks
-like on Vercel's database screen; (2) if it does, `/get` builds that button
-when `?gift=` is present (not yet — nothing ships it); (3) Give's sheet
-trades its plain line for "when they set it up, you'll be the first person
-in their book". The brief and mock-ups are on Miyel's machine
+<address>` stands in for GIFT_FROM; signed in at the LAN address first).
+**The real install, 2026-09-23, in a private tab:** the GIFT_FROM box sits
+on the same screen as the Neon database, just above Deploy, already filled
+with the giver's address and our line under it, and the journal built.
+Signing in partway dropped the whole link — gift and all — onto Vercel's
+dashboard; pasting it again brought both back. (The project was deleted
+before its settings were opened, so the saved variable itself went
+unseen; the first real gift shows it, and the camera is there if not.)
+**Still owed:** (1) `/get` builds the gift version of the button when
+`?gift=` is present — ships with this branch, since on main nothing reads
+the variable; (2) Give's sheet trades its plain line for "when they set it
+up, you'll be the first person in their book". The brief and mock-ups are on Miyel's machine
 (`about-get-give.zip`).
 
 **WHAT CHANGED, IN THE APP — pinned 2026-09-21, not now.** Miyel, having read
