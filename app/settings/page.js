@@ -254,7 +254,7 @@ export default function SettingsPage({ layered = false }) {
 
         <div className="st-section">
           <h2 className="st-h">On your home screen</h2>
-          <AddToHomeScreen />
+          <AddToHomeScreen explain />
         </div>
 
         {/* The only way out. The route has existed since the wristband did

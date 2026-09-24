@@ -428,17 +428,53 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 .a2h-icon img { width: 100%; height: 100%; display: block; }
 .a2h-name { font-size: 14px; color: var(--ink); }
 .a2h-why { font-size: 13px; line-height: 1.65; color: var(--ink-soft); margin: 0; }
-.a2h-steps { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
-.a2h-steps li {
-  font-size: 13px; line-height: 1.6; color: var(--ink);
-  display: flex; gap: 10px; align-items: baseline;
+/* The steps, 2026-09-23 — /get's tiles (get.css, .get-step): the panel, the
+   hairline, the number in the caption face and what to press in bold, so the
+   two sets of instructions read as one voice. Flat, because nothing here
+   opens. */
+.a2h-steps {
+  list-style: none; margin: 4px 0 0; padding: 0;
+  display: flex; flex-direction: column; gap: 10px;
 }
-.a2h-steps li::before {
-  content: counter(a2h) '.'; counter-increment: a2h;
-  font-family: var(--font-label); font-size: 10px; color: var(--ink-faint);
+.ln-tile.a2h-step {
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 14px;
+  padding: 16px 16px 17px;
+  box-shadow: none;
+  font-family: inherit;
+  font-size: inherit;
+  letter-spacing: normal;
+  text-transform: none;
+  text-align: left;
+  transition: none;
 }
-.a2h-steps { counter-reset: a2h; }
-.a2h-steps svg { width: 14px; height: 14px; vertical-align: -2px; margin: 0 2px; }
+.ln-tile.a2h-step:hover { border-color: var(--border); transform: none; }
+.a2h-num {
+  flex: none; padding-top: 3px;
+  font-family: var(--font-label); font-size: 11px; color: var(--ink-faint);
+}
+.a2h-words { flex: 1; min-width: 0; }
+.a2h-head {
+  margin: 0;
+  font-family: var(--font-display); font-weight: var(--font-display-weight);
+  font-size: 15px; line-height: 1.35; color: var(--ink);
+}
+.a2h-text { margin: 8px 0 0; font-size: 13px; line-height: 1.5; color: var(--ink-soft); }
+/* The button itself, drawn: a glyph on a key, or the row the way a share
+   sheet or a menu lists it. Raised off the tile the way a button sits on a
+   phone's screen. */
+.a2h-look { display: flex; margin-top: 10px; }
+.a2h-key {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px; box-sizing: border-box; border-radius: 12px;
+  background: var(--panel-strong); border: 1px solid var(--border);
+  color: var(--ink);
+}
+.a2h-key--row {
+  width: auto; gap: 10px; padding: 0 16px 0 12px;
+  font-size: 15px; white-space: nowrap;
+}
 .a2h-go {
   align-self: flex-start; display: inline-flex; align-items: center;
   padding: 11px 20px; border-radius: 999px;
