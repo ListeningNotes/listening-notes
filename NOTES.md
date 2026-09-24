@@ -3100,8 +3100,9 @@ current.
       anything else keeps the plain preview. The first cut floated the card
       small under the mark and over GET YOUR COPY; seen in Messages that
       evening, it read as a card inside a card, and Miyel had it fill the
-      picture. Checked with gifts from this journal, from June's, from a
-      made-up address and with none.
+      picture, with the mark small in the bottom right corner (tried over
+      the words and at the top first). Checked with gifts from this
+      journal, from June's, from a made-up address and with none.
 - [x] **The gift card opens the giver's journal**, in a new tab: somebody
       handed a gift by text may never have seen one, and the best pitch is
       the giver's own journal. `/get` itself stays the steps (Miyel's call).
