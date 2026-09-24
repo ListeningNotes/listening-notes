@@ -284,16 +284,18 @@ only, writing nothing (added 2026-09-02 to look at the screens without a
 fresh database). Next moves on without saving; the photo previews locally.
 The header says so. On a real first run the flag does nothing.
 
-**Screenshots for `/get`** — nine, taken on a phone during a real install,
+**Screenshots for `/get`** — ten, taken on a phone during a real install,
 drawn only when present, so the page reads fine until they exist. One set
-since 2026-09-22, when the phone/laptop switch went: `public/install/`,
-`01-button.png` (Vercel's clone screen), `02-github.png` (Vercel's sign-in
-with Continue with GitHub), `03-connect.png` (GitHub's permission screen),
-`04-name.png` (Git Scope and Private Repository Name), `05-neon.png` (the Neon
-panel with the Auth toggle), `06-build.png` (the build log or the
-Congratulations screen), `07-holding.png` (the "isn't ready yet" page with Set
-it up), `08-setup.png` (the name screen), `09-homescreen.png` (the last setup
-screen). Any step can go without: the brief put pictures on naming, Neon and
+since 2026-09-22, when the phone/laptop switch went; renumbered 2026-09-23
+when the accounts became step one: `public/install/`, `01-accounts.png`
+(Vercel's sign-up with Continue with GitHub), `02-button.png` (Vercel's clone
+screen), `03-github.png` (Vercel's sign-in with Continue with GitHub),
+`04-connect.png` (GitHub's permission screen), `05-name.png` (Git Scope and
+Private Repository Name), `06-neon.png` (the Neon panel with the Auth toggle),
+`07-build.png` (the build log or the Congratulations screen),
+`08-holding.png` (the "isn't ready yet" page with Set it up), `09-setup.png`
+(the name screen), `10-homescreen.png` (the last setup screen). Each gets a
+ring drawn on the page over what to press (Miyel, 2026-09-23). Any step can go without: the brief put pictures on naming, Neon and
 the Auth toggle first, because those are where installs break.
 
 **A copy with no updater is a copy whose keeper did not grant one permission —
