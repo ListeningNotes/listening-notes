@@ -41,6 +41,7 @@ import SiteNav from '../../components/main_components/SiteNav';
 import PasswordGate from '../../components/session_components/PasswordGate';
 import AddToHomeScreen from '../../components/main_components/AddToHomeScreen';
 import UpdateSwitch from '../../components/main_components/UpdateSwitch';
+import JournalCopy from '../../components/main_components/JournalCopy';
 import { useJournalHost } from '../../hooks/useJournalHost';
 
 const PASSWORD_FLOOR = 8;
@@ -243,6 +244,13 @@ export default function SettingsPage({ layered = false }) {
             <input className="st-field" type="password" autoComplete="new-password" value={confirm} onChange={e => setConfirm(e.target.value)} />
           </div>
         </Section>
+
+        {/* The export, which nothing led to until 2026-09-23. Two presses —
+            make a copy, then hand it over — and JournalCopy says why. */}
+        <div className="st-section">
+          <h2 className="st-h">Back up your journal</h2>
+          <JournalCopy />
+        </div>
 
         {/* Here as well as in setup, for anyone who skipped it there, and
             for a copy whose updater was switched off or never arrived. It
