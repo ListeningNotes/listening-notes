@@ -102,10 +102,11 @@ Signing in partway dropped the whole link — gift and all — onto Vercel's
 dashboard; pasting it again brought both back. (The project was deleted
 before its settings were opened, so the saved variable itself went
 unseen; the first real gift shows it, and the camera is there if not.)
-**Still owed:** (1) `/get` builds the gift version of the button when
-`?gift=` is present — ships with this branch, since on main nothing reads
-the variable; (2) Give's sheet trades its plain line for "when they set it
-up, you'll be the first person in their book". The brief and mock-ups are on Miyel's machine
+**Since the same evening** `/get` builds the gift version of the button
+when the gift card shows — only then, so the button carries exactly whose
+gift the page said; it ships with this branch, since on main nothing reads
+the variable. **Still owed:** Give's sheet trades its plain line for "when
+they set it up, you'll be the first person in their book". The brief and mock-ups are on Miyel's machine
 (`about-get-give.zip`).
 
 **WHAT CHANGED, IN THE APP — pinned 2026-09-21, not now.** Miyel, having read

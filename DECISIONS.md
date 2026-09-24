@@ -1117,8 +1117,9 @@ their wave brings up the same offer, which is the reply. A copy too old to
 take a wave says so and the add stands — it never waits on the wave.
 
 **A new journal learns its giver from the deploy, or from a scan, and never
-from our server, 2026-09-23.** The deploy button can pre-fill `GIFT_FROM` on
-the new project (`env` + `envDefaults`); setup reads it after the claim and
+from our server, 2026-09-23.** `/get`'s button pre-fills `GIFT_FROM` on the
+new project (`env` + `envDefaults`) when its gift card shows — only then, so
+it carries whose gift the page said; setup reads it after the claim and
 offers "Add them to your address book and wave", ticked. Where it did not survive,
 setup offers the camera: the Give code carries `?gift=`. Vercel's
 `redirect-url` is ruled out — it would hand the canonical server every
