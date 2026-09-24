@@ -3090,6 +3090,20 @@ current.
 
 ## Complete
 
+**2026-09-23 — Pictures on `/get`, and Set it up as a button: on main.**
+Branch `install-pictures` merged; the version stays at 1.32.0 and no release
+cut.
+
+- [x] **`/get`'s pictures.** Four steps have one, from Miyel's install that
+      evening, with a red ring the page draws over what to press: Vercel's
+      sign-up (Continue with GitHub), naming it (the name box and Create),
+      the database (Neon's Add over the Auth toggle) and Congratulations
+      (the picture of the site). The account names are blurred — everyone
+      sees their own there. Seen in the preview.
+- [x] **The holding page's Set it up is setup's black button**, bigger and
+      bolder, where it was the smallest type on the page. Checked by drawing
+      the same button in the browser; only a brand-new copy shows the page.
+
 **2026-09-23 — `/get` asks for the accounts first: on main.** Branch
 `accounts-first` merged; the version stays at 1.32.0 and no release cut.
 
