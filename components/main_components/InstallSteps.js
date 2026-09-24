@@ -6,7 +6,7 @@
 // Each is the tile the About pane uses, laid on its side: the number in the
 // caption face, the action in bold, one line of detail, a step's own doors
 // where it has any (the accounts, 2026-09-23), and a picture where one has
-// been taken. Flat, like About's — nothing here opens anything.
+// been taken, with a ring over what to press. Flat, like About's — nothing here opens anything.
 //
 // Not a client component any more, 2026-09-22. It was one for the
 // phone/laptop switch, which is gone, so the steps are plain HTML in the
@@ -37,6 +37,14 @@ export default function InstallSteps({ shots = [] }) {
             {shots[i] && (
               <figure className="get-shot">
                 <img src={`/install/${step.shot}.png`} alt={step.head} loading="lazy" />
+                {step.rings?.map(([left, top, width, height]) => (
+                  <span
+                    key={`${left} ${top}`}
+                    className="get-ring"
+                    aria-hidden="true"
+                    style={{ left: `${left}%`, top: `${top}%`, width: `${width}%`, height: `${height}%` }}
+                  />
+                ))}
               </figure>
             )}
           </div>
