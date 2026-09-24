@@ -33,20 +33,21 @@
 // straightforward way to get one. The migrations are copied in beside the data, so
 // the pair is a complete description: structure from one, contents from the
 // other. scripts/restore.mjs puts them back.
+//
+// Every table the database has, asked of the database each run — there is no
+// list here, because the list that used to be here fell seven tables behind
+// (library/whole_journal.mjs has that story). That includes `secrets`: the
+// password hash and the key that signs the wristband, so a restore brings the
+// way in back with the writing (Miyel, 2026-09-23). The export leaves that
+// table out, because a download travels; this folder does not, and it is as
+// private as .env.local on the same machine — keep it that way.
 
 import { neon } from '@neondatabase/serverless';
-import { readFileSync, writeFileSync, mkdirSync, copyFileSync, readdirSync, rmSync, cpSync} from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, readdirSync, rmSync, cpSync } from 'node:fs';
 import { join } from 'node:path';
+import { every_table, pull_table } from '../library/whole_journal.mjs';
 
 const KEEP = 30;   // a month of nights; older ones are pruned
-
-// Every table the migrations build. A table missing from this list is one that
-// silently does not get backed up, so adding one here is part of adding one
-// there — see the note in scripts/restore.mjs about the order.
-const TABLES = [
-  'users', 'entries', 'settings', 'comments',
-  'submissions', 'drafts', 'briefings',
-];
 
 // The connection string, from the environment when there is one — which is how
 // a scheduled run gets it — and otherwise out of .env.local, which is how a
@@ -87,22 +88,35 @@ function stamp() {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}`;
 }
 
-const sql = neon(connectionString());
+const url = connectionString();
+const host = url.replace(/^[^@]*@/, '').split(/[/?]/)[0];
+// sql.query, not the tagged template, is what the reads below are handed: the
+// tagged form throws on a plain string. This cost a run that produced nine
+// empty files and called itself a backup, which is worse than no backup at all.
+const sql = neon(url);
+
+// Said before anything is written, and kept in the manifest. For four nights
+// around the start of September every backup was of a stray copy .env.local
+// had been pointed at, and nothing said so.
+console.log(`  from ${host}`);
+const tables = await every_table(sql.query);
+if (!tables.includes('entries')) {
+  console.error(`\n  ${host} has no entries table — that is not a journal's database, or its`);
+  console.error('  migrations have not run. Nothing was written.');
+  process.exit(1);
+}
+
 const root = destination();
 const dir = join(root, stamp());
 mkdirSync(dir, { recursive: true });
 console.log(`  into ${root}\n`);
 
-const manifest = { taken_at: new Date().toISOString(), tables: {}, total_rows: 0 };
+const manifest = { taken_at: new Date().toISOString(), host, tables: {}, total_rows: 0 };
 let failed = false;
 
-for (const table of TABLES) {
+for (const table of tables) {
   try {
-    // sql.query, not the tagged template: a table name is an identifier and
-    // cannot be a bound parameter, and the tagged form throws on a plain
-    // string. This cost a run that produced nine empty files and called itself
-    // a backup, which is worse than no backup at all.
-    const rows = await sql.query(`SELECT * FROM ${table}`);
+    const rows = await pull_table(sql.query, table);
     writeFileSync(join(dir, `${table}.json`), JSON.stringify(rows, null, 2));
     manifest.tables[table] = rows.length;
     manifest.total_rows += rows.length;
