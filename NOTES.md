@@ -65,12 +65,6 @@ inside a journal says what an update changed. Miyel wants a way to show it,
 made alongside the slides she posts for each update so the two match. Not
 before those slides exist.
 
-**THE EXPORT HAS NO BUTTON — found 2026-09-23.** `/api/export` works, and
-nothing on the site links to it: a keeper has to type the address into a
-browser where they are signed in, and a journal on a phone's home screen has
-no address bar. Every copy's only backup is a thing nobody can find. Where
-the button goes — Settings is the obvious drawer — is Miyel's call.
-
 **A RESTORE WITHOUT `DATABASE_URL` GOES TO `.env.local` — found 2026-09-23.**
 `scripts/restore.mjs` falls back to the database in `.env.local`, which on
 this machine is the live journal, so a practice run that forgets the
@@ -3114,8 +3108,9 @@ current.
 
 ## Complete
 
-**2026-09-23 — Backups take every table: branch `backups-every-table`, not
-merged.** Waiting on Miyel's review. A fix, so 1.33.1 when it merges.
+**2026-09-23 — Backups take every table, and Settings has the button: branch
+`backups-every-table`, not merged.** Waiting on Miyel's review. Something new
+for every copy — the button — so 1.34.0 when it merges.
 
 - [x] **Every table, asked of the database.** `scripts/backup.mjs`,
       `/api/export` and `scripts/restore.mjs` each kept a hand-written list of
@@ -3161,10 +3156,25 @@ merged.** Waiting on Miyel's review. A fix, so 1.33.1 when it merges.
         each refused, with nothing changed;
       - a counter behind the file's ids moved forward (people to 501), and
         stayed there when the ordinary backup went back in.
-- [x] **OPERATIONS corrected.** The export is an address, not a button (see
-      Pending); what a restore does; restoring into a brand-new database; and
-      Locked out, which said a cleared password brings the claim code back —
-      it locks everybody out (Gotchas).
+- [x] **Back up your journal, in Settings** (`JournalCopy.js`, `makeCopy` and
+      `handOver` — Miyel's names). Nothing on the site led to `/api/export`,
+      so no keeper could find their one backup, and a journal on a home
+      screen has no address bar to type it into. Two presses, the printer's
+      shape and Miyel's picture of it — "it copies it, holds it and you can
+      export it wherever": **Make a copy** fetches the export and says what it
+      holds (entries, people, size); then **Share** on a phone opens the share
+      sheet — Mail, Save to Files, AirDrop — and **Download** on a computer
+      saves it. The journal never emails it itself; the phone does. Checked:
+      it compiles, the export still refuses anyone signed out. **Not yet
+      pressed by a person** — Settings is behind the password — and **the
+      share sheet needs https**, so on the phone's dev app it says Download;
+      the Share half waits for a preview link or the live site. Whether
+      Safari's share sheet takes a `.json` file is the open question: if it
+      will not, the phone gets Download too, which Safari saves to Files.
+- [x] **OPERATIONS corrected.** The export is a button in Settings now; what a
+      restore does; restoring into a brand-new database; and Locked out, which
+      said a cleared password brings the claim code back — it locks everybody
+      out (Gotchas).
 
 **2026-09-23 — Waves, and the first friend: 1.33.0, on main.** Branches
 `waves` and `first-friend` merged; release v1.33.0 cut the same night, its

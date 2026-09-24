@@ -170,6 +170,7 @@ The furniture — visual pieces
       WritingAccess.js         The lock at the foot of the pitch pane — a key, and the password field it opens in place
       ComingSoon.js            What a held copy shows instead of a site — unclaimed, no database, or database unreachable
       AddToHomeScreen.js       The one step the software cannot do: the last screen of setup, and a Settings section
+      JournalCopy.js           Back up your journal, in Settings: Make a copy fetches the export and holds it, then Share (a phone) or Download (a computer)
       AlbumFinder.js           Type, see covers, pick one — the send flow's search
       MiniAddressBook.js       The address book as a strip of faces, for picking one person — the entry editor's Sent by, and the inbox's send whose sender has since got a copy
       LayerEntry.js            The sheet a page arrives on over the journal — from the side for forms, expanding from the cover for an entry, with swipes to the neighbours; on a desk it is either the right page (an entry, a listen) or a sheet on the spine (the owner's rooms), with a back caret
