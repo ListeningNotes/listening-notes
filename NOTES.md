@@ -3090,6 +3090,20 @@ current.
 
 ## Complete
 
+**2026-09-23 — A gift link says whose gift it is: on main.** Branch
+`gift-preview` merged; the version stays at 1.32.0 and no release cut.
+
+- [x] **The texting card.** A gift link pasted into a message unfurls as
+      "A gift from Miyel" over a picture of `/get`'s header — the mark, the
+      card with the giver's face, A GIFT FROM, the name and the present,
+      and GET YOUR COPY — drawn per request by `/get/gift-preview`, only
+      when the giver's journal answers; anything else keeps the plain
+      preview. Checked with gifts from this journal, from June's, from a
+      made-up address and with none.
+- [x] **The gift card opens the giver's journal**, in a new tab: somebody
+      handed a gift by text may never have seen one, and the best pitch is
+      the giver's own journal. `/get` itself stays the steps (Miyel's call).
+
 **2026-09-23 — Pictures on `/get`, and Set it up as a button: on main.**
 Branch `install-pictures` merged; the version stays at 1.32.0 and no release
 cut.
