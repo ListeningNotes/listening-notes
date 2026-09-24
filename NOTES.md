@@ -73,6 +73,14 @@ inside a journal says what an update changed. Miyel wants a way to show it,
 made alongside the slides she posts for each update so the two match. Not
 before those slides exist.
 
+**FRIENDS' COPIES HAVE NO AUTOMATIC BACKUP — asked 2026-09-24, not decided.**
+Only this copy backs itself up (the nightly LaunchAgent); every other keeper
+has the Settings button and only when they press it, so a friend who never
+does has Neon's six hours and nothing else. One route within the rules: their
+copies already run an hourly GitHub workflow, and a nightly one could keep a
+backup in their own GitHub account. Offered to Miyel, not taken up yet — ask
+before building.
+
 **A RESTORE WITHOUT `DATABASE_URL` GOES TO `.env.local` — found 2026-09-23.**
 `scripts/restore.mjs` falls back to the database in `.env.local`, which on
 this machine is the live journal, so a practice run that forgets the
@@ -1524,12 +1532,24 @@ before that deploy would break saving an entry on the live site.
   Vercel currently holds both as plain config values, which means anyone with
   dashboard access can read them.
 
-  1. Neon → reset password
-  2. Copy the new connection string
-  3. Vercel → edit the variable, paste, **mark as Secret**
-  4. Update local `.env.local` (from a terminal — VS Code will not save it)
-  5. Redeploy
-  6. Confirm entries still load
+  **Pinned 2026-09-24, Miyel's call: low risk, do it on a calm afternoon.**
+  The password also left the vault that day, so rotating it retires that copy
+  too. The steps as Neon labels them now:
+
+  1. Neon → the sidebar's **BRANCH** selector → the main/production branch
+     (not a test branch) → **Postgres database → Roles** → `neondb_owner`'s
+     menu → **Reset password** → **Reset**. The old password stops working
+     on the next connection, so the site is down from here to step 4.
+  2. **Connect** → check the branch → **Connection pooling** on → copy.
+  3. Vercel → Settings → Environment Variables → edit `DATABASE_URL` (and
+     any other variable holding the old string), paste, switch on
+     **Sensitive**.
+  4. **Deployments** → the latest → ⋯ → **Redeploy**.
+  5. `.env.local`, from the terminal with the string still copied — this
+     swaps the one line straight from the clipboard:
+     `cd ~/listening-notes && NEW="$(pbpaste)" && case "$NEW" in postgresql://*) awk -v u="$NEW" '/^DATABASE_URL=/{print "DATABASE_URL=" u; next} {print}' .env.local > .env.local.new && mv .env.local.new .env.local && echo "updated .env.local";; *) echo "Nothing changed";; esac`
+  6. Confirm entries still load, here and live. Then delete any Neon test
+     branch — resets are per branch, and a branch keeps the old password.
 
   **A daylight task.** A wrong edit takes the live site down: with a bad
   connection string the site cannot reach its database, and every page that
@@ -3059,6 +3079,13 @@ plist points at `~/.nvm/versions/node/v24.14.0/bin/node`. Upgrade node and that
 path stops existing, the nightly backup silently stops running, and nothing
 says so. Re-point the plist after any node upgrade — this is exactly the silent
 failure the stale badge in Pending is meant to catch.
+
+**A Neon branch's connection string carries the live password.** Neon copies
+the parent's roles into a branch, password included, so a test branch's
+address is the key to production too — confirmed 2026-09-24 by comparing the
+two without printing either. Save a connection string into a file with
+`pbpaste` rather than pasting it into a chat, and delete test branches when
+the test is done.
 
 **The driver reads a time with no zone as the laptop's time.** `SELECT *`
 through `@neondatabase/serverless` hands a `timestamp without time zone` back
