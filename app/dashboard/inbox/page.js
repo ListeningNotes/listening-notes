@@ -4,7 +4,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Archive, ArrowUpRight, Check, PencilSimple, Plus, User } from '@phosphor-icons/react';
+import { Archive, ArrowUpRight, Check, Envelope, PencilSimple, Plus, User } from '@phosphor-icons/react';
 import Link from 'next/link';
 import SiteNav from '../../../components/main_components/SiteNav';
 import MiniAddressBook from '../../../components/main_components/MiniAddressBook';
@@ -39,6 +39,15 @@ import { REPORTS_URL } from '../../../library/version';
 // the state as a word in the row's own subtitle.
 const UNOPENED = 'pending';
 const ARCHIVED = 'dismissed';
+
+// A score said in words, for what came back: "Came back · four and a half
+// stars". Words rather than drawn stars because the line under an inbox
+// row's title is the caption face, and the mock-up says it this way.
+const STARS_SAID = {
+  0: 'no stars', 0.5: 'half a star', 1: 'one star', 1.5: 'one and a half stars',
+  2: 'two stars', 2.5: 'two and a half stars', 3: 'three stars', 3.5: 'three and a half stars',
+  4: 'four stars', 4.5: 'four and a half stars', 5: 'five stars',
+};
 
 // What the subtitle says on an opened row. A date only where there is one
 // worth printing: a logged send carries its record's own posted date, and
@@ -96,6 +105,13 @@ export default function Inbox({ layered = false, inPane = false }) {
 
   const [submissions, setSubmissions] = useState([]);
   const [subLoading, setSubLoading] = useState(true);
+  // ── What came back, 2026-09-22 ─────────────────────────────────────────
+  // Records this journal put somebody onto, logged on theirs: the friends
+  // brief's third item, "a returned send is an arrival". The feed notices
+  // them and this copy keeps them (library/came_back_actions.js); here they
+  // sit among the sends by date, with the dot until opened and no count on
+  // the folder — nothing about them is waiting on you.
+  const [cameBack, setCameBack] = useState([]);
   // Which row is open. One at a time — an open row is a decision being made,
   // and two of them is a list of controls again.
   const [openRow, setOpenRow] = useState(null);
@@ -169,6 +185,7 @@ export default function Inbox({ layered = false, inPane = false }) {
   useEffect(() => {
     if (!authed) return;
     fetch('/api/submissions').then(r => r.json()).then(d => { setSubmissions(d.submissions || []); setSubLoading(false); }).catch(() => setSubLoading(false));
+    fetch('/api/came-back').then(r => (r.ok ? r.json() : { cameBack: [] })).then(d => setCameBack(d.cameBack || [])).catch(() => {});
     fetch('/api/comments/pending').then(r => r.json()).then(d => { setComments(d.comments || []); setComLoading(false); }).catch(() => setComLoading(false));
     fetch('/api/people').then(r => r.json()).then(d => setPeople(d.people || [])).catch(() => {}).finally(() => setBookIn(true));
   }, [authed]);
@@ -485,7 +502,14 @@ export default function Inbox({ layered = false, inPane = false }) {
   const live = submissions.filter(s => s.status !== ARCHIVED);
   const archivedRows = submissions.filter(s => s.status === ARCHIVED);
   const archivedCount = archivedRows.length;
-  const shown = showArchived ? [...live, ...archivedRows] : live;
+  // What came back goes in among the live sends, newest first: a send by
+  // when it arrived, a return by when they logged it. `backed` is how the
+  // list below tells the two apart.
+  const liveWithReturns = [
+    ...live.map(s => ({ ...s, at: s.created_at })),
+    ...cameBack.map(row => ({ ...row, backed: true, at: row.posted_at || row.noticed_at })),
+  ].sort((a, b) => new Date(b.at) - new Date(a.at));
+  const shown = showArchived ? [...liveWithReturns, ...archivedRows] : liveWithReturns;
   const counts = { new: submissions.filter(unopened).length };
   // The folder tab still counts what is waiting, which is the number worth
   // interrupting anybody with.
@@ -541,17 +565,73 @@ export default function Inbox({ layered = false, inPane = false }) {
                   <div className="ib-list" style={{ gap: 10 }}>
                     {[...Array(4)].map((_, i) => <div key={i} className="own-skeleton" style={{ height: 46 }} />)}
                   </div>
-                ) : submissions.length === 0 ? (
+                ) : submissions.length === 0 && cameBack.length === 0 ? (
                   <div className="own-empty">Nothing has been sent to you yet.</div>
                 ) : (
                   <>
-                    <div className="ib-count">
-                      {counts.new > 0 && <>{counts.new} new &middot; </>}
-                      {submissions.length} in all
-                    </div>
+                    {/* The count is of sends: what came back is not waiting
+                        on anybody, so it adds nothing to either number. */}
+                    {submissions.length > 0 && (
+                      <div className="ib-count">
+                        {counts.new > 0 && <>{counts.new} new &middot; </>}
+                        {submissions.length} in all
+                      </div>
+                    )}
 
                     <div className="ib-list">
                       {shown.map(sent => {
+                        // ── A record that came back ──────────────────────
+                        // "Blue logged MAGDALENE", then "Came back" and how
+                        // they rated it; the envelope on the cover when it
+                        // was a real send and not a credit added by hand
+                        // (DECISIONS: the envelope is for a real send only).
+                        // It opens their entry, on their journal, in a new
+                        // window like every link to another journal, and
+                        // opening it is what puts the dot out.
+                        if (sent.backed) {
+                          const row = sent;
+                          const who = row.name || tidyJournal(row.journal);
+                          const rated = row.rating === null || row.rating === undefined ? null : STARS_SAID[Number(row.rating)];
+                          return (
+                            <div key={`back-${row.id}`} className="ib-r ib-r--back">
+                              <a
+                                className="ib-rhead"
+                                href={carrySender(`${journalUrl(row.journal)}/entries/${row.slug}`, me, { known: filed.has(row.journal) })}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={() => {
+                                  if (row.seen_at) return;
+                                  fetch('/api/came-back', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: row.id }) }).catch(() => {});
+                                  setCameBack(prev => prev.map(r => (r.id === row.id ? { ...r, seen_at: new Date().toISOString() } : r)));
+                                }}
+                              >
+                                <span className={'ib-newdot' + (row.seen_at ? ' ib-newdot--off' : '')} aria-hidden="true" />
+                                <span className="ib-rart ib-rart--back">
+                                  {row.album_art
+                                    ? <img src={row.album_art} alt="" loading="lazy" />
+                                    : <span className="ib-nocover" aria-hidden="true">&#9834;</span>}
+                                  {!row.by_hand && (
+                                    <span className="ib-rart-sent" aria-hidden="true">
+                                      <Envelope size={10} weight="regular" />
+                                    </span>
+                                  )}
+                                </span>
+                                <span className="ib-rsaid">
+                                  <span className="ib-rttl">{who} logged {row.album}</span>
+                                  <span className="ib-rsub">
+                                    Came back
+                                    {rated ? ` · ${rated}` : ''}
+                                    {row.masterpiece ? ', and a masterpiece' : ''}
+                                  </span>
+                                </span>
+                                <span className="ib-rface" aria-hidden="true">
+                                  <User size={13} weight="regular" />
+                                  <img src={`${journalUrl(row.journal)}/api/portrait`} alt="" loading="lazy" onError={e => { e.currentTarget.style.display = 'none'; }} />
+                                </span>
+                              </a>
+                            </div>
+                          );
+                        }
                         const archived = sent.status === ARCHIVED;
                         const open = openRow === sent.id;
                         const host = tidyJournal(sent.sender_url);

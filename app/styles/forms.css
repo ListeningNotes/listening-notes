@@ -810,6 +810,18 @@ textarea.st-field { resize: vertical; min-height: 96px; }
   display: inline-flex; align-items: center; justify-content: center; color: var(--ink-faint);
 }
 .ib-rart img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* ── What came back, 2026-09-22 ── the envelope a sent record wears
+   everywhere else, in the cover's corner: this record went out from here and
+   came back. Inside the corner, because the cover clips what overhangs it. */
+.ib-rart--back { position: relative; }
+.ib-rart-sent {
+  position: absolute; right: 3px; bottom: 3px;
+  width: 16px; height: 16px; border-radius: 999px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--bg); color: var(--ink-soft);
+  box-shadow: 0 0 0 1px var(--border);
+}
+a.ib-rhead { text-decoration: none; }
 .ib-rsaid { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 .ib-rttl {
   font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
