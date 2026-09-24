@@ -89,8 +89,9 @@ nothing if it does not answer. **Since `first-friend` (2026-09-23, local,
 on top of `waves`):** a setup screen after the claim — "A gift from June",
 "Add June to your book and wave" ticked, then Next — fed by `GIFT_FROM` when
 the deploy set it, and otherwise "Did someone give you this journal?" with
-the camera. Seen by nobody yet: it needs the keeper's sign-in to rehearse
-(`/setup?rehearse&gift=<address>` stands in for GIFT_FROM). **Still owed:**
+the camera. Seen on Miyel's phone in rehearsal 2026-09-23, "A gift from
+June" with the box ticked: "amazing looks good" (`/setup?rehearse&gift=
+<address>` stands in for GIFT_FROM; signed in at the LAN address first). **Still owed:**
 (1) the real install, through the gift version of the deploy button, to see
 whether GIFT_FROM survives a new person's sign-up — and what its box looks
 like on Vercel's database screen; (2) if it does, `/get` builds that button
