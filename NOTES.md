@@ -1618,6 +1618,41 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**A child's layout effect runs before its parent's, so a portal slot the
+parent attaches is not on the page yet, 2026-09-24.** LayerEntry makes the
+header slot in a state initializer and appends it to the sheet in its own
+`useLayoutEffect`; FullPostPage portals its header into it and looked for
+that header with `document.querySelector` in *its* layout effect. When the
+two mount in the same commit — the record ready the moment the sheet is,
+because the phone was busy while the page downloaded or the page was cached —
+React runs the entry's effect first, the slot is detached, the query finds
+nothing and the collapse gave up for good. From the outside: the mini card
+"random", worst right after a save. **To reproduce:** press a tile and hold
+the main thread for two seconds (`while (performance.now() < t) {}`) so the
+whole answer is in before React draws. **The cure:** ask `slot.isConnected`
+and set state from the layout effect to run it again — a state change made
+in a layout effect is drawn before the frame is.
+
+**A wall that is `display: none` measures every tile at 0, 0, 2026-09-24.**
+The save's filing measured the wall at the moment of the save, and a save from
+the picker happens over a hidden wall — the picker is standing on its floor.
+Every cover was recorded in the top-left corner and the whole wall sprang out
+of it when the record landed. Journal now measures once `getClientRects()`
+says the grid is on the page. And **`offsetTop` counts from the first
+positioned ancestor, which on the cross is `.hn`, not the grid** — a note in
+Journal.js said otherwise for a week — so positions are taken from the grid's
+own corner.
+
+**Testing a save without writing to the live journal, 2026-09-24.** The dev
+server writes to production, and a listen lights the beacon two seconds after
+it opens. In the page: wrap `window.fetch` so every non-GET to `/api/` answers
+`{ ok: true }` without leaving the browser (nothing here uses `sendBeacon` or
+XHR — checked), and have `GET /api/entries` prepend a copy of the first entry
+with a made-up slug. Open a draft from the picker, open its preview, then
+`window.dispatchEvent(new CustomEvent('ln-listen-saved', { detail: { slug,
+album, artist, art } }))` — the whole drop runs with nothing written. Reload
+afterwards and clear `ln_pending_session` from the test browser's storage.
+
 **An older copy answers a route it does not have with 200, not 404,
 2026-09-23.** A POST to `/api/waves` on a 1.29.2 copy came back `200` with
 the not-found *page* (HTML, `x-matched-path: /_not-found`): the root layout
@@ -3142,6 +3177,59 @@ current.
 ---
 
 ## Complete
+
+**2026-09-24 — notes from a full session: on branch `session-fixes`, not
+merged.** Miyel's list after logging a record on her phone, with three
+screenshots. Checked in the Claude browser at phone size; nothing of it has
+been on a real phone yet. No version bump until the merge (1.34.1, a fix).
+
+- [x] **The album search shows everything it found.** "I can't see the third
+      row of text in a session when I'm searching for albums." The beacon's
+      floor stayed one screen tall while it was the picker, and the picker
+      hid whatever did not fit — measured at 375x812, 742px of drafts in a
+      610px box, and with the keyboard up (the floor shrinks with it in the
+      installed app) only the tops of the first row. The floor grows with
+      the picker now and the pane scrolls it; the picker's opening animation
+      no longer leaves a 200vh cap on it; the chevron down to the journal
+      stays hidden while you choose. Both readings of "third row" are
+      covered — the grid, and the header's third line (below).
+- [x] **The search holds still sideways.** "Don't let the album search scroll
+      left and right." A sideways drag on the picker was the rail's, and
+      backed you out of the picker onto the next pane — on purpose. The rail
+      is locked while you choose; the × is the way out (DECISIONS).
+- [x] **A long artist stops at "…" in the header.** Her third screenshot:
+      "Katamari Damacy Series SOUND TEAM & Bandai Namco Game Music" ran out
+      both sides of the small beacon, over the cover and under the moon. The
+      ellipsis had always been declared and never worked, because a centred
+      line in a column is as wide as its words. The session's header draws
+      the same classes, so it is fixed there too.
+- [x] **A saved listen drops onto the journal.** "Down to the journal still
+      isn't smooth… maybe it just drops down." Offered three shapes, she
+      took this one (DECISIONS). Behind the sheet the picker folds and the
+      pane goes to the wall; then the listen and its preview drop together
+      in 420ms, and the record files into the top of the wall. You stay on
+      the journal. Measured in the browser with every write blocked (see
+      Gotchas): pane on the wall 66ms after the save, sheets off the screen
+      at 450ms, the record growing in at 700ms, the wall's bar back at 3s. A
+      listen started from the inbox drops back onto the inbox and leaves the
+      beacon's pane alone.
+- [x] **The wall steps over by one.** It measured itself for the filing while
+      display: none, so every cover was written down in the top-left corner
+      and the whole wall sprang out of it when a record landed (Gotchas).
+      Measured after: −119px across, and the end of each row down from the
+      one above.
+- [x] **End puts the beacon back at the top.** With the picker scrollable,
+      ending a session from half way down left the beacon 119px up the
+      screen.
+- [x] **The mini card every time, this time for the other reason.** "The mini
+      card glitches, especially on new posts… it seems random which ones
+      will and which ones won't." Not the race fixed on 2026-09-22: whenever
+      the record was ready the moment its sheet was — a busy phone, a cached
+      page — the entry looked for its header before the sheet had put it on
+      the page, and gave up for as long as it was open (Gotchas).
+      Reproduced by holding the page for two seconds after pressing a tile,
+      failing before and passing after; swiping between records while
+      reading still lands each one at its notes.
 
 **2026-09-24 — Settings in the quiet design: 1.34.0, released.** Branch
 `settings-quiet` merged, carrying `backups-every-table` with it; pushed, and
