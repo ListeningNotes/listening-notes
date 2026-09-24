@@ -82,7 +82,7 @@ function Section({ title, note, onSave, children, saveLabel = 'Save' }) {
       {note && <p className="st-note">{note}</p>}
       {children}
       <div className="st-foot">
-        <button type="submit" className="st-save" disabled={busy}>{busy ? 'Saving…' : saveLabel}</button>
+        <button type="submit" className="st-save ln-word ln-word--on" disabled={busy}>{busy ? 'Saving…' : saveLabel}</button>
         {said && <span className="st-said" role="status">{said}</span>}
         {trouble && <span className="st-trouble" role="alert">{trouble}</span>}
       </div>
@@ -151,12 +151,14 @@ export default function SettingsPage({ layered = false }) {
       <SiteNav />
 
       <main className="st-main">
-        <h1 className="st-title">Settings</h1>
-        <p className="st-kicker">The machinery</p>
+        <header className="st-top">
+          <h1 className="st-title">Settings</h1>
+          <p className="st-kicker">The machinery behind your journal.</p>
+        </header>
 
         <Section
           title="This journal’s address"
-          note="Where the card’s scannable code points. Filled in from wherever the copy was first opened; change it if you have since put the journal on a domain of your own."
+          note="Where your card’s code points. Change it if you move the journal to a domain of your own."
           onSave={async () => {
             await send('/api/settings', { site_address: address });
             // The code on the card encodes the address, so it is pressed
@@ -182,7 +184,7 @@ export default function SettingsPage({ layered = false }) {
             switch that acts the moment it is touched. */}
         <Section
           title="Your beacon"
-          note={<>The line on the front of your journal. <strong>Now logging</strong> follows the listen you are writing: the track you are on while you are on it, and the last record you sat down with when you are not. <strong>Quiet</strong> says nothing to anybody — the screen is still there, it is simply blank, the way it is on a journal that has not logged anything yet. Everyone has this from their first listen; there is nothing to set up.</>}
+          note="The line on the front of your journal."
           onSave={async () => { await send('/api/settings', { beacon_source: beaconSource }); }}
         >
           <div className="st-choice">
@@ -219,7 +221,7 @@ export default function SettingsPage({ layered = false }) {
 
         <Section
           title="Password"
-          note="Change the password you sign in with. At least eight characters."
+          note="The one you sign in with. At least eight characters."
           saveLabel="Change password"
           onSave={async () => {
             if (password.length < PASSWORD_FLOOR) throw new Error(`At least ${PASSWORD_FLOOR} characters.`);
@@ -228,21 +230,13 @@ export default function SettingsPage({ layered = false }) {
             setPassword(''); setConfirm('');
           }}
         >
-          <div>
-            <span className="st-label">Journal</span>
-            {/* The address the password is filed under — a real, visible,
-                writable input, because that is what a password manager will
-                pair the password with. Typing into it changes nothing. */}
-            <input className="st-field st-who" type="text" name="username" autoComplete="username" value={host} onChange={() => {}} aria-label="Journal" tabIndex={-1} />
-          </div>
-          <div>
-            <span className="st-label">New password</span>
-            <input className="st-field" type="password" autoComplete="new-password" value={password} onChange={e => setPassword(e.target.value)} />
-          </div>
-          <div>
-            <span className="st-label">Again</span>
-            <input className="st-field" type="password" autoComplete="new-password" value={confirm} onChange={e => setConfirm(e.target.value)} />
-          </div>
+          {/* The address the password is filed under — a real, visible,
+              writable input, because that is what a password manager will
+              pair the password with. Typing into it changes nothing. */}
+          <input className="st-field st-who" type="text" name="username" autoComplete="username" value={host} onChange={() => {}} aria-label="Journal" tabIndex={-1} />
+          {/* Placeholders where labels were, the way setup asks. */}
+          <input className="st-field" type="password" autoComplete="new-password" value={password} onChange={e => setPassword(e.target.value)} placeholder="New password" aria-label="New password" />
+          <input className="st-field" type="password" autoComplete="new-password" value={confirm} onChange={e => setConfirm(e.target.value)} placeholder="Re-type password" aria-label="Re-type password" />
         </Section>
 
         {/* The export, which nothing led to until 2026-09-23. Two presses —
