@@ -682,6 +682,12 @@
   font-family: var(--font-nunito), sans-serif; font-weight: 400;
   font-size: 8.5px; letter-spacing: 0.08em;
   color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  /* The ellipsis only works on a box narrower than its words, and a centred
+     item in a column is as wide as its words — so a long name ran out both
+     sides of the column, over the cover and under the lights (Miyel's
+     screenshot, 2026-09-24: "Katamari Damacy Series SOUND TEAM & Bandai
+     Namco Game Music"). Held to the column, it stops at the dots. */
+  max-width: 100%;
 }
 .ses-theme { width: 32px; height: 32px; flex-shrink: 0; color: var(--ink-soft); }
 .ses-theme:hover { color: var(--ink); }
