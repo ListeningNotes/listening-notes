@@ -15,20 +15,40 @@
 // The last screen of setup, right after the journal has started working —
 // the moment somebody has just named the thing and it is in front of them —
 // and again in Settings for whoever tapped past it. Same component both
-// places; only the words around it differ.
+// places; only the words around it differ. The why is Settings' alone
+// (`explain`), the way UpdateSwitch does it: setup's question says enough —
+// the screen once said the why twice, and then once, and now not at all.
+//
+// The emblem is Settings' too. In setup the mark at the top of the page
+// turns into the app icon on this screen (app/setup/page.js), and an icon
+// here as well said it twice. It stands alone where it shows: it had the
+// keeper's name beside it, which was the ornamented name off the card — not
+// the label a phone actually puts under the icon, which is the plain one
+// (app/manifest.js) — and it read as a signature rather than a preview
+// (Miyel, 2026-09-23).
 //
 // ── What it detects ───────────────────────────────────────────────────────
 // Already installed: nothing to say, and it says so. iOS: the share-sheet
-// instructions, with the icon that will land on the screen. Anything else:
-// Chrome's `beforeinstallprompt`, captured if it fires — it does not fire on
-// every Chrome, and it needs a fetch handler in a service worker for the
-// browser's own prompt, which this site does not ship — and otherwise the
-// menu route, which works without one since Chrome 108.
+// steps, under the icon that will land on the screen. Samsung Internet: its
+// own menu, which is not Chrome's. Anything else: Chrome's
+// `beforeinstallprompt`, captured if it fires — it does not fire on every
+// Chrome, and it needs a fetch handler in a service worker for the browser's
+// own prompt, which this site does not ship — and otherwise the menu route,
+// which works without one since Chrome 108.
+//
+// ── How it says it, 2026-09-23 ────────────────────────────────────────────
+// Three tiles in the shape of /get's install steps — a number, what to press
+// in bold, a line at most — where there were five paragraphs (Miyel: calmer,
+// like the install steps). Where a button is hard to find by its name, the
+// tile draws it: the share glyph, the row in the share sheet, the menu's
+// dots. Drawn rather than photographed, because a screenshot is one phone's
+// theme on one version of iOS, and a drawing takes the page's light or dark
+// and does not go out of date.
 
 'use client';
 
 import { useEffect, useState, useSyncExternalStore } from 'react';
-import { useBookplate } from './Bookplate';
+import { DeviceMobile, DotsThreeVertical, Export, List, Plus, PlusSquare } from '@phosphor-icons/react';
 
 function detect() {
   if (typeof navigator === 'undefined') return 'unknown';
@@ -38,14 +58,63 @@ function detect() {
   // iPadOS reports itself as a Mac; the touch points give it away.
   const apple = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
   if (apple) return 'ios';
+  // Before Android, because it is Android too, and its menu is its own.
+  if (/SamsungBrowser/.test(ua)) return 'samsung';
   if (/Android/.test(ua)) return 'android';
   return 'desktop';
 }
 
-// `centered` lines the icon, the name and the why up in the middle — the
-// setup screen is centred top to bottom; Settings is a left-aligned page.
-export default function AddToHomeScreen({ centered = false }) {
-  const { cover_name } = useBookplate();
+// Each browser's steps. `look` is the drawing of the thing to press, where
+// its name alone would leave somebody hunting for it.
+const STEPS = {
+  ios: [
+    { head: 'Press Share',
+      look: <span className="a2h-key"><Export size={21} /></span>,
+      text: 'At the bottom of Safari. Only see ···? Press that first.' },
+    { head: 'Press Add to Home Screen',
+      look: <span className="a2h-key a2h-key--row"><PlusSquare size={21} />Add to Home Screen</span>,
+      text: 'Scroll down if you can’t see it.' },
+    { head: 'Press Add',
+      text: 'Top right. Open it as an app from now on.' },
+  ],
+  android: [
+    { head: 'Press the menu',
+      look: <span className="a2h-key"><DotsThreeVertical size={21} weight="bold" /></span>,
+      text: 'Beside the address bar.' },
+    { head: 'Press Add to home screen',
+      look: <span className="a2h-key a2h-key--row"><DeviceMobile size={21} />Add to home screen</span>,
+      text: 'Some phones say Install app.' },
+    { head: 'Press Install',
+      text: 'Or Add. Open it as an app from now on.' },
+  ],
+  samsung: [
+    { head: 'Press the menu',
+      look: <span className="a2h-key"><List size={21} /></span>,
+      text: 'Bottom right.' },
+    { head: 'Press Add page to',
+      look: <span className="a2h-key a2h-key--row"><Plus size={21} />Add page to</span> },
+    { head: 'Press Home screen',
+      text: 'Then Add. Open it as an app from now on.' },
+  ],
+  desktop: [
+    { head: 'In Chrome or Edge',
+      look: <span className="a2h-key"><DotsThreeVertical size={21} weight="bold" /></span>,
+      text: 'Open the menu and look for Install.' },
+    { head: 'In Safari on a Mac',
+      text: 'File, then Add to Dock.' },
+    // The phone's two buttons, drawn, for somebody finishing on a computer
+    // (Miyel, 2026-09-23).
+    { head: 'On your phone',
+      look: <><span className="a2h-key"><Export size={21} /></span><span className="a2h-key a2h-key--row"><PlusSquare size={21} />Add to Home Screen</span></>,
+      text: 'Share, then Add to Home Screen — or on Android, the ⋮\u00a0menu.' },
+  ],
+};
+
+// `centered` lines what is left up in the middle — the setup screen is
+// centred top to bottom; Settings is a left-aligned page. `explain` is
+// Settings, which has no line of its own saying why and no mark above it
+// to turn into the icon.
+export default function AddToHomeScreen({ centered = false, explain = false }) {
   // Read off the browser rather than copied into state on mount: the server
   // has no navigator and renders 'unknown', the client answers for itself,
   // and nothing re-renders to get there. Same shape Lightswitch uses.
@@ -75,66 +144,49 @@ export default function AddToHomeScreen({ centered = false }) {
     setPrompt(null);
   }
 
-  const icon = (
-    <span className="a2h-icon" aria-hidden="true">
-      <img src="/icon-192.png" alt="" />
-    </span>
-  );
+  const home = where === 'installed' || done;
+  // A real prompt, where Chrome gave one, stands in for the menu route; iOS
+  // never gives one.
+  const steps = where === 'ios' ? STEPS.ios : (prompt ? null : STEPS[where]);
+  // A computer's tiles are one way each, not one after another, so they are
+  // not numbered.
+  const numbered = where !== 'desktop';
 
   return (
     <div className={'a2h' + (centered ? ' a2h--centered' : '')}>
 
-      <div className="a2h-row">
-        {icon}
-        <span className="a2h-name">{cover_name}</span>
-      </div>
+      {explain && !home && (
+        <p className="a2h-why">It opens without the browser around it, and reads as an app.</p>
+      )}
 
-      {where === 'installed' || done ? (
+      {explain && (
+        <div className="a2h-row">
+          <span className="a2h-icon" aria-hidden="true">
+            <img src="/icon-192.png" alt="" />
+          </span>
+        </div>
+      )}
+
+      {home ? (
         <p className="a2h-done">Already on your home screen.</p>
       ) : (
         <>
-          <p className="a2h-why">
-            On the home screen it opens without the browser around it, and
-            reads as an app. That is when it starts feeling like yours.
-          </p>
-
-          {where === 'ios' && (
-            <ol className="a2h-steps">
-              <li>
-                <span>
-                  In Safari, press the share button
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-label="share"><path d="M12 3v12"/><path d="M8 7l4-4 4 4"/><path d="M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/></svg>
-                  — the square with an arrow pointing up. On an iPhone it is in
-                  the bar at the bottom of the screen, in the middle; on an iPad
-                  it is at the top right, beside the address.
-                </span>
-              </li>
-              <li><span>A sheet slides up. Scroll its list down past the apps until you see <strong>Add to Home Screen</strong>, with a small plus in a square. Press it.</span></li>
-              <li><span>It shows the icon above and the name. Press <strong>Add</strong>, top right.</span></li>
-              <li><span>The icon lands on your home screen, on the last page. Open it from there from now on — it opens without Safari around it.</span></li>
-              <li><span>In Chrome on an iPhone the share button is at the top right instead, in the address bar; the rest is the same.</span></li>
-            </ol>
-          )}
-
           {where !== 'ios' && prompt && (
             <button type="button" className="a2h-go" onClick={install}>Add to home screen</button>
           )}
 
-          {where === 'android' && !prompt && (
+          {steps && (
             <ol className="a2h-steps">
-              <li><span>In Chrome, press the menu button — the three dots at the top right, beside the address bar.</span></li>
-              <li><span>In the list that opens, press <strong>Add to Home screen</strong>. On some phones it says <strong>Install app</strong> instead; it is the same thing.</span></li>
-              <li><span>A small panel shows the icon above and the name. Press <strong>Add</strong>, or <strong>Install</strong>.</span></li>
-              <li><span>The icon lands on your home screen. Open it from there from now on — it opens without Chrome around it.</span></li>
-              <li><span>In Samsung Internet the menu is the three lines at the bottom right, and the item is <strong>Add page to</strong>, then <strong>Home screen</strong>.</span></li>
-            </ol>
-          )}
-
-          {where === 'desktop' && !prompt && (
-            <ol className="a2h-steps">
-              <li><span>In Chrome or Edge, open the menu — the three dots, top right — and choose <strong>Install</strong> or <strong>Add to dock</strong>.</span></li>
-              <li><span>In Safari on a Mac, use <strong>File → Add to Dock</strong>.</span></li>
-              <li><span>On a phone it goes on the home screen the same way; open this page there.</span></li>
+              {steps.map((step, i) => (
+                <li className="ln-tile a2h-step" key={step.head}>
+                  {numbered && <span className="a2h-num" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>}
+                  <div className="a2h-words">
+                    <h3 className="a2h-head">{step.head}</h3>
+                    {step.look && <div className="a2h-look" aria-hidden="true">{step.look}</div>}
+                    {step.text && <p className="a2h-text">{step.text}</p>}
+                  </div>
+                </li>
+              ))}
             </ol>
           )}
         </>
