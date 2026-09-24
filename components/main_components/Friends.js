@@ -43,6 +43,7 @@ import { ArrowRight, BookOpen, Camera, Gift, MagnifyingGlass, PaperPlaneTilt, Pl
 import CodeScanner from './CodeScanner';
 import SendSheet from './SendSheet';
 import GiveSheet from './GiveSheet';
+import WaveSheet from './WaveSheet';
 import { carrySender, journalUrl, tidyJournal } from '../../library/return_address';
 import { useBookplate } from './Bookplate';
 
@@ -239,6 +240,8 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null }
   const [sendingTo, setSendingTo] = useState(null);
   // Give's sheet, opened from beside the +. See GiveSheet.js.
   const [giving, setGiving] = useState(false);
+  // Somebody just added, and the offer to wave at them (WaveSheet.js).
+  const [wavingTo, setWavingTo] = useState(null);
   // An address that arrived in a link, held rather than filed — see the note
   // in the offer below.
   const [offered, setOffered] = useState('');
@@ -352,6 +355,10 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null }
       setTyped('');
       setAdding(false);
       setSaid(d.reached ? '' : "Added, but that journal isn't answering just now, so there's no name yet.");
+      // Somebody new to the book, however they arrived — a paste, a scan, the
+      // offer from a link home — so the wave is offered. Only somebody new:
+      // filing an address already here is not adding anybody (2026-09-23).
+      if (d.fresh) setWavingTo(d.person);
     } catch {
       setSaid('That could not be added.');
     } finally {
@@ -1072,6 +1079,7 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null }
           of the book. */}
       <SendSheet open={Boolean(sendingTo)} person={sendingTo} onClose={() => setSendingTo(null)} />
       <GiveSheet open={giving} onClose={() => setGiving(false)} />
+      <WaveSheet person={wavingTo} onClose={() => setWavingTo(null)} />
     </>
   );
 }

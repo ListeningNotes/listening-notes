@@ -29,7 +29,7 @@
 
 import { requireWristband } from '@/library/wristband';
 import { pull_person } from '@/library/people_actions';
-import { send_record } from '@/library/outbox';
+import { send_record, send_wave } from '@/library/outbox';
 
 export async function POST(request) {
   const blocked = await requireWristband(request);
@@ -37,6 +37,23 @@ export async function POST(request) {
 
   const body = await request.json().catch(() => null);
   if (!body) return Response.json({ error: 'Nothing readable was sent.' }, { status: 400 });
+
+  // ── A wave, 2026-09-23 ──────────────────────────────────────────────────
+  // Somebody just added, told so: `wave` and who, and nothing else. The same
+  // answer shape as a send, for the same reason — the sheet says what
+  // happened either way — plus `old` when their journal is too old to take
+  // one, which the sheet says in its own words.
+  if (body.wave === true) {
+    try {
+      const person = body.person_id ? await pull_person(body.person_id) : null;
+      if (!person) return Response.json({ error: 'They are not in your address book.' }, { status: 404 });
+      const result = await send_wave({ to: person.address });
+      if (!result.ok) return Response.json({ ok: false, old: result.old === true, error: result.error });
+      return Response.json({ ok: true });
+    } catch (error) {
+      return Response.json({ ok: false, error: error.message }, { status: 500 });
+    }
+  }
 
   const { person_id, album, artist, year, note, album_art, collection_id, quiet, sender_entry } = body;
 

@@ -58,6 +58,20 @@ deploy a copy — and none of it is anything they need.
 
 ## Pending
 
+**WAVES — on `waves`, 2026-09-23, local only until Miyel says ship.** The
+waves brief, one-way (DECISIONS): adding somebody new — a paste, a scan, the
+offer from a link home, a send's sender, a commenter, somebody who waved —
+brings up "June is in your book" with Wave to June and Not now
+(WaveSheet.js); the wave goes from this copy's server to theirs
+(`send_wave`, `/api/outbox` with `wave`), and lands in their inbox among the
+sends as "June waved", with Add on the row when they are not in the book,
+and Their journal / Add / Leave it when opened. `waves` table (migration
+024, applied to the live database 2026-09-23 for the dev test). **One test
+row is in it** — a wave from June's address, sent by hand to check the
+route; it is not June. Leave it before this ships. Not yet seen on a phone:
+the sheet after a real add, and a wave landing on a second copy that has the
+route (no other copy has it until a release).
+
 **BACKUPS SKIP HALF THE TABLES — found 2026-09-22, pinned, not fixed.**
 `scripts/backup.mjs`, `/api/export` and `scripts/restore.mjs` each keep a
 hand-written list of seven tables, and nobody added to it as tables arrived:
@@ -1589,6 +1603,14 @@ Project → Settings → Environment Variables.
 ---
 
 ## Gotchas
+
+**An older copy answers a route it does not have with 200, not 404,
+2026-09-23.** A POST to `/api/waves` on a 1.29.2 copy came back `200` with
+the not-found *page* (HTML, `x-matched-path: /_not-found`): the root layout
+has begun streaming before the page learns it has nothing to serve, so the
+status is already sent. `send_wave` read that as a wave that landed. Anything
+that talks to another copy's newer route must check for JSON and its own
+`ok`, never the status alone — `library/outbox.js` has the pattern.
 
 **A face on the spine at `left: 100%` shrinks to its narrowest content,
 2026-09-22.** `.hn-pane { width: auto }` in the desktop block outranks the

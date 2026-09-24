@@ -104,6 +104,7 @@ The library — logic, no visuals
     settings_actions.js        The settings row: read, write, the name, the beacon's narrow reader
     people_actions.js          The address book: the people table, and asking a journal its keeper's name
     came_back_actions.js       What came back: records this journal put somebody onto, logged on theirs — noticed by the feed, kept for the inbox
+    wave_actions.js            The waves that arrived here: one row per waving journal, replaced not stacked, deleted when left
     report_actions.js          Problems keepers wrote in from their desks — the reports table
     submission_actions.js      Albums other people sent you: saving one, its four outcomes, the record a send became, and naming its sender once they have a copy
     return_address.js          The back of the envelope — a sender's name and journal kept in their own browser — and the one spelling an address is kept in
@@ -125,6 +126,7 @@ The front doors — receive requests, hand them off, send back responses
     settings/route.js          The settings row — public to read, owner-only to write
     people/route.js            The address book — owner-only: the list, and filing an address
     came-back/route.js         What came back — owner-only: the inbox's list, what the feed noticed, and a row opened
+    waves/route.js             Waves — POST is public, from another copy's server: a journal and a name, nothing else, checked and counted; GET, PATCH and DELETE are the keeper's
     people/[id]/route.js       One person: reading them, crossing them out
     reports/route.js           A problem written in — POST from any copy (rate-limited, cross-origin), GET for the owner
     reports/[id]/route.js      Marking one read or dismissed
@@ -156,6 +158,7 @@ The furniture — visual pieces
       AddressCode.js           A plain code for an address, drawn in the browser — what CodeSlot shows when no pressed picture can be had
       CodeScanner.js           The camera pointed at a code — the address book's way in for a card's or a cover's code
       GiveSheet.js             Give: a code to listeningnotes.blog/get?gift=<this journal>, for a friend who has no copy — the gift at the left of the address book's header, opposite Add
+      WaveSheet.js             Just added somebody: "June is in your book", Wave to June or Not now — the one moment a wave is offered
       Dashboard.js             The desk, for the owner — Start a listen as a band, then Inbox, Feed, Address book and Settings as rows; the header holds the mark alone
       Feed.js                  What the people in the address book logged, read off their public feeds; Submissions and Recent; Compare on a row you also have. Its own page at /dashboard/feed since 2026-09-15
       Pitch.js                 The other face, for everybody else — the colophon
@@ -307,6 +310,7 @@ than what anyone remembers building.
 | `users` | The owner. One row, written at setup. |
 | `comments` | Replies on entries and on individual tracks, with a moderation queue. |
 | `submissions` | Albums other people have sent you. `status` is pending, reviewed (a listen was started from the row), logged, or dismissed; `entry_id` is the record a send became, set by hand on the row and never by matching. |
+| `waves` | Somebody added this journal and said so: one row per waving address, the name their journal gave when asked, when it arrived, and `seen_at`. No message column, now or later; Leave it deletes the row. |
 | `came_back` | Records this journal put somebody onto, logged on their journal: one row per entry, keyed by their journal and slug, with what their feed said about it and `seen_at` for the inbox's dot. Written by the keeper's own browser, from the feed's match. |
 | `drafts` | A listening session in progress, so closing the tab does not lose it. |
 | `briefings` | Cached album research. Nothing reads or writes it since 2026-09-18 — the research came out of the software and the schema is additive-only, so the table stays with whatever is in it (docs/RETIRED-PROMPTS.md). |

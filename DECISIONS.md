@@ -1103,6 +1103,19 @@ yours and the two horizons; the track notes stay on the journals until an
 entry can be read across origins. Compare arrives because something
 happened; it is not a place you navigate to.
 
+**A wave is the second thing one journal may put in another's inbox,
+2026-09-23.** Sends and waves are the only two, and a wave carries a name and
+an address, never words — the route refuses any body with more. The
+recipient asks the journal its name and keeps that, not the one handed; a
+second wave replaces the first; Leave it deletes. **Nothing is reported
+back:** a waver never learns what the other copy did.
+
+**One-way: you wave when you add somebody, and at no other time, 2026-09-22.**
+Adding stays silent; the wave is an extra press and Not now is not a lesser
+path. No Wave back (the brief had one; Miyel cut it): adding somebody from
+their wave brings up the same offer, which is the reply. A copy too old to
+take a wave says so and the add stands — it never waits on the wave.
+
 **A returned send is an arrival, and this copy keeps it, 2026-09-22.** When
 somebody in the book logs a record this journal put them onto, the feed's
 match hands it to this copy's server and the inbox shows it among the sends —
