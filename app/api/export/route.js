@@ -18,18 +18,23 @@
 // Owner-only, and not because the writing is secret — most of it is on the
 // public pages already. It is that this hands over the whole table in one
 // request, including the drafts nobody has published, the comments still in
-// moderation, and the email addresses people left with their submissions.
+// moderation, the address book, and the return addresses people left with
+// their submissions.
 
 import { requireWristband } from '@/library/wristband';
 import database from '@/library/database_connection';
+import { every_table, pull_table } from '@/library/whole_journal.mjs';
 
-// The same tables scripts/backup.mjs takes, in the same order, so a file from
-// here and a folder from there describe the same thing. scripts/restore.mjs
-// reads either.
-const TABLES = [
-  'users', 'entries', 'settings', 'comments',
-  'submissions', 'drafts', 'briefings',
-];
+// Every table the database has, read the way scripts/backup.mjs reads them,
+// so a file from here and a folder from there describe the same thing —
+// except the vault. `secrets` holds the key that signs the wristband, and
+// whoever has that key can make a wristband of their own and walk in without
+// the password. A backup stays on its keeper's own machine; a download goes
+// wherever downloads go — an email, a shared folder, a friend asked for help —
+// and nothing in a journal lets its keeper change the key afterwards. So the
+// file is the writing and never the keys (Miyel, 2026-09-23). The file says
+// what it left out, and scripts/restore.mjs leaves that table as it finds it.
+const LEFT_OUT = ['secrets'];
 
 function today() {
   const d = new Date();
@@ -41,13 +46,20 @@ export async function GET(request) {
   const blocked = await requireWristband(request);
   if (blocked) return blocked;
 
-  const out = { taken_at: new Date().toISOString(), tables: {} };
+  const out = { taken_at: new Date().toISOString(), tables: {}, left_out: [] };
 
-  for (const table of TABLES) {
-    // A table name is an identifier and cannot be a bound parameter, so this
-    // is built as text — safe because the list above is fixed and nothing from
-    // the request reaches it.
-    out.tables[table] = await database.query(`SELECT * FROM ${table}`);
+  try {
+    for (const table of await every_table(database.query)) {
+      if (LEFT_OUT.includes(table)) out.left_out.push(table);
+      else out.tables[table] = await pull_table(database.query, table);
+    }
+  } catch (error) {
+    // Nothing rather than most of it. A file missing a table looks exactly
+    // like a complete one until the day it is restored.
+    return Response.json(
+      { error: `The journal could not be read in full (${error?.message || error}), so nothing was downloaded.` },
+      { status: 500, headers: { 'Cache-Control': 'no-store' } },
+    );
   }
 
   // Content-Disposition is what makes this a download rather than a wall of
