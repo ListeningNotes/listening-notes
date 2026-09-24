@@ -294,15 +294,23 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
   // Offsets and not getBoundingClientRect, which is what this used until
   // 2026-09-18. A rect is measured from the viewport, so anything that scrolls
   // between the two measurements shows up as every tile having moved by the
-  // scroll — and the cutaway scrolls the whole pane down to the wall between
-  // the record being saved and the record arriving. Offsets are measured from
-  // the grid and do not care. The delete path was always within one frame and
-  // is unaffected either way.
+  // scroll — and a save puts the pane on the wall between the record being
+  // saved and the record arriving. Offsets do not care about a scroll. The
+  // delete path was always within one frame and is unaffected either way.
+  //
+  // And from the grid's own corner, 2026-09-24. They were not, whatever this
+  // note said: a tile's offsets are counted from the first positioned thing
+  // above it, which on the cross is the whole cross (measured), so they
+  // carried the height of everything over the wall — the beacon's floor among
+  // it, which is still settling for most of a second after a listen is saved.
+  // Two readings either side of that are the whole wall sliding by the
+  // difference. The tiles and the grid are counted from the same thing, so
+  // taking the grid's own offsets off leaves only where a tile is in the grid.
   const positions = () => {
     const found = new Map();
     const box = grid.current;
     if (box) for (const tile of box.querySelectorAll('[data-tile-slug]')) {
-      found.set(tile.dataset.tileSlug, { left: tile.offsetLeft, top: tile.offsetTop });
+      found.set(tile.dataset.tileSlug, { left: tile.offsetLeft - box.offsetLeft, top: tile.offsetTop - box.offsetTop });
     }
     return found;
   };
@@ -316,8 +324,9 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
     for (const tile of box.querySelectorAll('[data-tile-slug]')) {
       const then = was.get(tile.dataset.tileSlug);
       if (!then) continue;
-      const dx = then.left - tile.offsetLeft;
-      const dy = then.top - tile.offsetTop;
+      // From the grid's corner, the way positions() took them.
+      const dx = then.left - (tile.offsetLeft - box.offsetLeft);
+      const dy = then.top - (tile.offsetTop - box.offsetTop);
       // A tile that has not moved is left entirely alone: everything before
       // the gap in the grid, which is most of the wall.
       if (!dx && !dy) continue;
@@ -385,8 +394,8 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
   //
   // Miyel, 2026-09-18: "have the screen show the journal during the save
   // process and just show the album file into the grid." The screen is
-  // HomeNav's half of it — the pane goes down to the wall, waits here, and
-  // comes back. This half is what there is to see when it arrives.
+  // HomeNav's half of it — since 2026-09-24 the sheet drops onto the wall and
+  // you stay. This half is what there is to see when the record arrives.
   //
   // Keyed on the slug and not on a count, because the wall re-sorts, filters
   // and pages: "the list is one longer" is true of a page turn as well.
@@ -397,11 +406,24 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
       const slug = event.detail?.slug;
       if (!slug) return;
       if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
-      // Measured now, while the wall is still the wall it was. The entries
-      // arrive from a fetch a moment later and there is no frame in between
-      // in which to catch the old positions.
       arriving.current = slug;
-      wasRef.current = positions();
+      wasRef.current = null;
+      // Measured while the wall is still the wall it was — the entries arrive
+      // from a fetch a moment later — and only once the wall is on the page.
+      // A listen saved from the picker is saved over a wall that is
+      // display: none, because the picker is standing on its floor, and a
+      // tile that is not laid out measures 0, 0. Every cover was written down
+      // as sitting in the grid's top-left corner, and when the record landed
+      // the whole wall sprang out of that corner rather than stepping over by
+      // one (2026-09-24). The picker folds a frame or two after this, so the
+      // wall is asked again until it is there — and never once the new list
+      // has landed, which is what `arriving` going back to null says.
+      const measure = tries => {
+        if (arriving.current !== slug) return;
+        if (grid.current?.getClientRects().length) { wasRef.current = positions(); return; }
+        if (tries < 40) clocks.current.push(setTimeout(() => measure(tries + 1), 25));
+      };
+      measure(0);
     };
     window.addEventListener(SAVED_EVENT, onSaved);
     return () => window.removeEventListener(SAVED_EVENT, onSaved);

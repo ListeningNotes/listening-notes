@@ -1338,17 +1338,47 @@
 
 .hn--choosing .hn-pane--home { scroll-snap-type: none; }
 .hn--choosing .hn-pane--home > .hn-floor:nth-of-type(2) { display: none; }
-/* ── The cutaway ──────────────────────────────────────────────────────────
-   Except while a record is filing into it. The wall is floor two and the
-   picker is floor one, so the picker is *standing where the wall is* — and a
-   record saved from a listen had nowhere on screen to go.
+@media (max-width: 768px) {
+  /* ── The picker is as long as what it found, 2026-09-24 ──────────────────
+     Floor one is one screen tall, and while a record is being chosen the
+     picker is all of it — so whatever the search found past the foot of
+     that screen was cut off there, with nothing to scroll to. With the
+     keyboard up the floor is half a screen, and Miyel saw the tops of the
+     first row of covers and nothing else: "I can't see the third row of
+     text in a session when I'm searching for albums." Measured at 375x812
+     with the drafts showing: 742px of grid in a 610px box.
 
-   So the floor opens, the pane goes down to it, the record files in, and the
-   pane comes back up to the drafts it left. Miyel, 2026-09-18: "it's like a
-   cutaway but not fully leaving." Nothing is unmounted and the picker keeps
-   its search: the pane simply scrolls, which is what a pane does. */
-.hn--filing .hn-pane--home > .hn-floor:nth-of-type(2) { display: block; }
-/* And the wall arrives with nothing on it but records. The filter bar is a
+     So the floor grows with the picker and the pane scrolls it, the way any
+     long page does. Floor two is display: none for as long as this lasts,
+     so there is nothing under it to scroll into. */
+  .hn--choosing .hn-pane--home .hn-floor--beacon { height: auto; }
+
+  /* ── And it holds still sideways ─────────────────────────────────────────
+     Miyel, the same list: "don't let the album search scroll left and
+     right." A sideways drag on the picker was the rail's, and backed out of
+     the picker onto the next pane — on purpose, as the other way out besides
+     the ×. The × is the way out now, and nothing moves sideways under a
+     search you are scrolling through.
+
+     Not the rail lock ruled out in DECISIONS: that one changed the rail's
+     overflow in the middle of a vertical scroll, every time a pane crossed a
+     line, and stopped the scroll dead. This one changes when a button is
+     pressed — Log a listen puts it on and End takes it off — and never while
+     anything is moving. */
+  .hn--choosing .hn-rail { overflow-x: hidden; }
+}
+/* ── A saved listen drops onto the journal, 2026-09-24 ────────────────────
+   It was a cutaway until today: the wall opened under the picker, the pane
+   scrolled down to it, the record filed in and the pane scrolled back up to
+   the drafts. Miyel: "if it's not going to be seamless, I would rather not
+   have it for now." Now the picker folds behind the sheet, the pane is put on
+   the wall, and the sheet drops — see the drop in HomeNav.js. The floor
+   needs no opening of its own any more: with the picker folded it is simply
+   there, so the rule that held it open under the picker has gone, and so has
+   the one that took the pane's fingers and its snap for a scroll run from
+   JavaScript.
+
+   The wall still arrives with nothing on it but records. The filter bar is a
    thing you use when you are looking for something, and nobody filing a record
    is looking for one — Miyel, 2026-09-18: "don't show the filter bar when
    adding, it should all be clear since there's no footer either." The footer
@@ -1360,22 +1390,6 @@
   pointer-events: none;
 }
 .arc-bar-wrap { transition: opacity 0.7s cubic-bezier(0.22, 0.61, 0.36, 1); }
-/* And the pane is driven from JavaScript for the length of it, which means
-   the snap has to stand down.
-   
-   This pane snaps to a floor, and a snapping scroller does not hold an
-   in-between position: every frame the cutaway set was pulled to the nearest
-   floor, so what looked like a slow slide was the pane sitting at 0 and then
-   jumping to the wall as the halfway point went past. Measured 2026-09-18 —
-   asked for 221, got 0; asked for 514, got 987.
-   
-   `overflow-y: hidden` with it, so a stray touch cannot leave the pane between
-   two floors while the snap is off. It stays a scroll container and scrollTop
-   still moves it; it simply does not take fingers. */
-.hn--filing .hn-pane--home {
-  scroll-snap-type: none;
-  overflow-y: hidden;
-}
 /* On the one clock with everything else. Choosing hands this screen a 90px
    padding-top where it had none — the room the bar needs once the crown is
    not holding it — and it arrived in a single frame, which put the cover 59px
@@ -1466,13 +1480,17 @@
    over the same 0.7s everything else is using, and the cover's whole journey
    becomes one climb. Only in the cross: the session's own picker is the whole
    screen and has nothing to push. */
+/* `backwards`, not `both`, 2026-09-24. Held at the end, the 200vh stayed on
+   the picker for as long as it was open, and a search is not always shorter
+   than that: two screens of covers is eight rows, and an artist with a long
+   catalogue has more. Let go at the end, it is as tall as what it holds. */
 .hn .ses-picker {
   overflow: hidden;
-  animation: hnPickerOpen 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  animation: hnPickerOpen 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) backwards;
 }
 @keyframes hnPickerOpen {
   from { max-height: 0; opacity: 0; }
-  /* Far past anything it can be, so nothing is ever clipped once it is open. */
+  /* Far past anything it will be while it grows. */
   to   { max-height: 200vh; opacity: 1; }
 }
 @media (prefers-reduced-motion: reduce) { .hn .ses-picker { animation: none; } }
@@ -3194,6 +3212,12 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
      jump, and not tappable while it is gone. */
   .hn-down { transition: opacity 0.18s linear; }
   .hn--moved .hn-down { opacity: 0; pointer-events: none; }
+  /* And while a record is being chosen, 2026-09-24. The journal is not under
+     the picker — floor two is display: none — so there is nothing down there
+     to point at. It never showed before only because the floor could not
+     outgrow the screen; now that it grows with the picker, the pane is deep
+     and the chevron was measured in at the foot of the covers. */
+  .hn--choosing .hn-down { opacity: 0; pointer-events: none; }
   .hn-down:hover { color: var(--ink-soft); }
   .hn-down:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; border-radius: 6px; }
   /* ── The chevron, larger, and breathing, 2026-09-20 ──────────────────
