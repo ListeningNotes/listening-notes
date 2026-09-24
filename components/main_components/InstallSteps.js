@@ -1,11 +1,12 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // components/main_components/InstallSteps.js
-// The nine steps, as tiles.
+// The ten steps, as tiles.
 //
 // Each is the tile the About pane uses, laid on its side: the number in the
-// caption face, the action in bold, one line of detail, and a picture where
-// one has been taken. Flat, like About's — nothing here opens anything.
+// caption face, the action in bold, one line of detail, a step's own doors
+// where it has any (the accounts, 2026-09-23), and a picture where one has
+// been taken. Flat, like About's — nothing here opens anything.
 //
 // Not a client component any more, 2026-09-22. It was one for the
 // phone/laptop switch, which is gone, so the steps are plain HTML in the
@@ -26,6 +27,13 @@ export default function InstallSteps({ shots = [] }) {
           <div className="get-step-words">
             <h2 className="get-head">{step.head}</h2>
             <p className="get-text">{step.text}</p>
+            {step.links && (
+              <p className="get-links">
+                {step.links.map(link => (
+                  <a key={link.href} href={link.href} className="ln-pill" target="_blank" rel="noopener">{link.label}</a>
+                ))}
+              </p>
+            )}
             {shots[i] && (
               <figure className="get-shot">
                 <img src={`/install/${step.shot}.png`} alt={step.head} loading="lazy" />
