@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // app/get/page.js
-// Get your copy: nine steps, then the button.
+// Get your copy: ten steps, then the button.
 //
 // This is the address every copy's About pane sends people to. Anybody here
 // has already decided — they have seen a journal working, on a friend's phone
@@ -9,10 +9,10 @@
 // left is instructions and a button.
 //
 // ── The button is at the foot, 2026-09-22 ──────────────────────────────────
-// After step nine, not at the top. People read what is above a button before
-// they reach it: a button at the top gets pressed before step five is read,
-// and step five is where installs break. Step one says where it is, so nobody
-// hunts for it (Miyel's brief, About, /get and Give, §2).
+// After step ten, not at the top. People read what is above a button before
+// they reach it: a button at the top gets pressed before the Neon step is
+// read, and the Neon step is where installs break. Step two says where it
+// is, so nobody hunts for it (Miyel's brief, About, /get and Give, §2).
 //
 // It replaced a door with three links — the steps at /get/install, the story,
 // and "It didn't work". The steps are this page now and /get/install is gone.
@@ -106,7 +106,7 @@ export default async function GetPage({ searchParams }) {
         )}
         <p className="get-kicker">Get your copy</p>
         <p className="get-lede">
-          Nine steps, about ten minutes, on a phone or a laptop. Read them
+          Ten steps, about fifteen minutes, on a phone or a laptop. Read them
           first; the button is at the foot.
         </p>
       </header>
@@ -115,12 +115,16 @@ export default async function GetPage({ searchParams }) {
 
       {/* Square corners and filled, the one thing on this page a person came
           to press, in the page's own words and face — no arrow (Miyel,
-          2026-09-22). The same tab: a phone mid-install should not be
-          juggling two, and back returns here. The caption says Vercel
-          because Vercel is what opens; GitHub is the screen after it. */}
+          2026-09-22). The caption says Vercel because Vercel is what opens.
+          A new tab since 2026-09-23 — it was the same tab, so that a phone
+          mid-install would not juggle two, but a sign-up can end on GitHub's
+          or Vercel's own home page and Back does not always find the way.
+          In a tab of its own, this page is still here to press again, and
+          the line under the caption says so. */}
       <div className="get-act">
-        <a href={DEPLOY_URL} className="get-cta">Make your own copy</a>
+        <a href={DEPLOY_URL} className="get-cta" target="_blank" rel="noopener">Make your own copy</a>
         <p className="get-expect">Opens Vercel · nothing to pay</p>
+        <p className="get-lost">Lost your place? Come back to this tab and press it again — you’ll go straight through.</p>
       </div>
     </main>
   );
