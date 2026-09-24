@@ -312,7 +312,8 @@ desk even that goes, because the bar over the journal already has it and two
 marks on screen is two marks.
 
 **The beacon floor's movements are named, and share one clock, 2026-09-19.**
-`landing` is a record's flight into a session, `filing` is the save cutaway,
+`landing` is a record's flight into a session, `filing` is a saved listen
+filing into the wall (the cutaway until 2026-09-24, the drop since),
 `passing` is a record leaving the big slot for the top of the column while the
 rest step down and the oldest goes. All 0.7s on the site's curve, except the
 flight, which is crossing into somewhere else. A fourth movement on that floor
@@ -827,6 +828,13 @@ was three changes at once with the rail lock live; on its own the shape works.
 **The vertical half of that came off on 2026-09-20** — see "No vertical snap
 anywhere on the cross" — and none of the rest changed: the rail's own
 `x mandatory` is untouched, and it was never the thing being argued about.
+
+**The picker holds the rail still, 2026-09-24.** Miyel: "don't let the album
+search scroll left and right." While a record is being chosen the rail's
+overflow-x is hidden and the × is the only way out; a sideways drag used to
+back out of the picker onto the next pane. Not the lock ruled out above —
+that changed the rail's overflow in the middle of a scroll, every time a pane
+crossed a line. This one is set by a press and cleared by one.
 
 **An entry is a layer over the journal, not a fourth pane, 2026-08-29.** Left
 and right meaning different things depending on which row you are in is ruled
@@ -1866,6 +1874,13 @@ picture twice.
 **The draft saves itself.** Three seconds after the last change, and on the
 way out; a Save draft button was a thing to remember on a phone that locks
 mid-sentence. Saving the entry waits for any draft write still in the air.
+
+**A saved listen drops onto the journal, 2026-09-24, Miyel's call.** The
+sheet goes down the way it came up, the journal already under it with the
+record filing into the top, and you stay there. The cutaway — down to the
+wall, file in, back up to the drafts — is parked until it can be seamless
+("I do love the cutaway, but if it's not going to be seamless, I would rather
+not have it for now"). What changes under a sheet changes while it covers.
 
 **The whole listen is one swipe.** Album → tracks → notes → preview, and back.
 Nothing on the way forward is gated; only the save waits for an album note.
