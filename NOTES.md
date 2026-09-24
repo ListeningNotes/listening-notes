@@ -85,13 +85,19 @@ default. Its own branch.
 Give's code carries `?gift=<the giver's journal>`, and since `get-gift`
 (2026-09-22) `/get` reads it: it asks that journal its keeper's name through
 the doorman's relay door and shows "A gift from" them with their face, or
-nothing if it does not answer. What is still owed: the giver's address has to
-reach the new copy's setup through the deploy —
-not as an environment variable set by the button, which Vercel's sign-in
-loses (DECISIONS) — and the end of setup offers, ticked, to put the giver in
-the new book. Then Give's sheet trades its plain line for "when they set it
-up, you'll be the first person in their book". The brief and mock-ups are on
-Miyel's machine (`about-get-give.zip`).
+nothing if it does not answer. **Since `first-friend` (2026-09-23, local,
+on top of `waves`):** a setup screen after the claim — "A gift from June",
+"Add June to your book and wave" ticked, then Next — fed by `GIFT_FROM` when
+the deploy set it, and otherwise "Did someone give you this journal?" with
+the camera. Seen by nobody yet: it needs the keeper's sign-in to rehearse
+(`/setup?rehearse&gift=<address>` stands in for GIFT_FROM). **Still owed:**
+(1) the real install, through the gift version of the deploy button, to see
+whether GIFT_FROM survives a new person's sign-up — and what its box looks
+like on Vercel's database screen; (2) if it does, `/get` builds that button
+when `?gift=` is present (not yet — nothing ships it); (3) Give's sheet
+trades its plain line for "when they set it up, you'll be the first person
+in their book". The brief and mock-ups are on Miyel's machine
+(`about-get-give.zip`).
 
 **WHAT CHANGED, IN THE APP — pinned 2026-09-21, not now.** Miyel, having read
 the 1.26.0 notes: "I want to design a custom popup in app that shows when your
