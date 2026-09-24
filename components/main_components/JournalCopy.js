@@ -102,16 +102,16 @@ export default function JournalCopy() {
     <>
       <p className="st-note">
         Everything you’ve written, your card and your address book, in one
-        file. Keep it somewhere other than your journal: email it to yourself,
-        or save it to your phone or computer. Your password isn’t in it.
+        file — email it to yourself, or keep it somewhere safe. Your password
+        isn’t in it.
       </p>
       <div className="st-foot">
         {copy ? (
-          <button type="button" className="st-save" onClick={handOver}>
+          <button type="button" className="st-save ln-word ln-word--on" onClick={handOver}>
             {copy.share ? 'Share' : 'Download'}
           </button>
         ) : (
-          <button type="button" className="st-save" onClick={makeCopy} disabled={busy}>
+          <button type="button" className="st-save ln-word ln-word--on" onClick={makeCopy} disabled={busy}>
             {busy ? 'Copying…' : 'Make a copy'}
           </button>
         )}
