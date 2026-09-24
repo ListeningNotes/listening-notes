@@ -729,6 +729,9 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   // Whether the header is standing in for the record — see the collapse
   // further down, which is what turns it on.
   const [crowning, setCrowning] = useState(false);
+  // How many times the collapse has had to wait for the header to be put on
+  // the page. Counted so that asking again re-runs it — see the collapse.
+  const [slotWaits, setSlotWaits] = useState(0);
   // ── Did this record arrive already reading, 2026-09-20 ──────────────────
   // Asked once, in the first render, and never again. It was asked in the
   // layout effect off the sheet's class, and that is a race: the class says
@@ -939,6 +942,28 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     // sheet of paper and editing makes it a form; in both the art is a
     // control you are using, not a thing on its way somewhere.
     if (printing || edit.editing) { setCrowning(false); return undefined; }
+    // ── Not before the header is on the page, 2026-09-24 ──────────────────
+    // Miyel, after a full session: "the mini card glitches, especially on
+    // new posts … it seems random when I'm scrolling which ones will and
+    // which ones won't." It was not random. The header is a portal into a
+    // slot the layer makes, and the layer puts that slot on the page in a
+    // layout effect of its own — which React runs *after* this one whenever
+    // the two arrive in the same frame, because a parent's effects run after
+    // its children's. They arrive together whenever the record is ready the
+    // moment the layer is: the phone busy with something else while the page
+    // came in (a record just saved, the wall redrawing), or the page already
+    // cached, so the waiting card was never drawn. This then looked for the header, found it nowhere and
+    // gave up for as long as the record was open — no mini card, and no
+    // carry across the gap.
+    //
+    // Reproduced by holding the main thread for two seconds after pressing a
+    // tile: the record opened with no collapse at all. A state change made in
+    // a layout effect is drawn before the frame is, so asking again here
+    // costs nothing anybody can see; by then the layer has put the slot out.
+    if (headerSlot && !headerSlot.isConnected) {
+      if (slotWaits < 3) setSlotWaits(n => n + 1);
+      return undefined;
+    }
     const screens = document.querySelector('.ln-screens');
     const art = document.querySelector('.ln-screen-one-art');
     const row = document.querySelector('.sitenav-row');
@@ -1332,7 +1357,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       // leaving one that cleared it was clearing the new one's answer.
       setCrowning(false);
     };
-  }, [printing, edit.editing, coverSrc, entry.slug, arrivesReading]);
+  }, [printing, edit.editing, coverSrc, entry.slug, arrivesReading, headerSlot, slotWaits]);
 
   // What the header carries on this page. A press goes back to the record,
   // which is the job MiniCard used to do at the head of the notes — and the
