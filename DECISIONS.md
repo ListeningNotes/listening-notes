@@ -1103,6 +1103,12 @@ keys in `.env.local`; a download travels, and no keeper can change the key
 after. The cost: restoring an export into a new database means setting the
 copy up first, with a new password.
 
+**Back up your journal is two presses in Settings, 2026-09-23.** Make a copy,
+then hand it over: the share sheet on a phone, Downloads on a computer. The
+copy is held in the page and never kept on the server — a backup kept inside
+the journal goes down with it — and the journal never emails it; the phone
+does (no email anywhere, below).
+
 **A restore leaves alone every table its file does not hold, and never writes
 `schema_migrations`, 2026-09-23.** A table a file does not mention is not an
 empty one, and emptying it would lose the address book to an old backup. The
