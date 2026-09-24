@@ -127,6 +127,12 @@ export const DOORS = {
   // solely so that one machine cannot make this one fetch faster than that.
   // The counting that means anything is `send` above.
   relay:      { tries: 60, windowMs: 60_000 },
+  // ── A wave, 2026-09-23 ──────────────────────────────────────────────────
+  // The second thing one journal may put in another's inbox, and it arrives
+  // the way a send from home does: from a server, from the same few machines
+  // every copy leaves from. So it is counted like `send`, against the journal
+  // it says it is from — five in ten minutes is more hello than anybody means.
+  wave:       { tries: 5,  windowMs: 10 * 60_000 },
 };
 
 // Ask whether this caller may try this door.

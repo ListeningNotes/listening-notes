@@ -1106,6 +1106,31 @@ yours and the two horizons; the track notes stay on the journals until an
 entry can be read across origins. Compare arrives because something
 happened; it is not a place you navigate to.
 
+**A wave is the second thing one journal may put in another's inbox,
+2026-09-23.** Sends and waves are the only two, and a wave carries a name and
+an address, never words — the route refuses any body with more. The
+recipient asks the journal its name and keeps that, not the one handed; a
+second wave replaces the first; Leave it deletes. **Nothing is reported
+back:** a waver never learns what the other copy did.
+
+**One-way: you wave when you add somebody, and at no other time, 2026-09-22.**
+Adding stays silent; the wave is an extra press and Not now is not a lesser
+path. No Wave back (the brief had one; Miyel cut it): adding somebody from
+their wave brings up the same offer, which is the reply. A copy too old to
+take a wave says so and the add stands — it never waits on the wave.
+**The inbox says "June waved" and never "added you"** (Miyel, 2026-09-23):
+the wave is the quiet codeword for "I added you, add me back", and spelling
+it out was offered and turned down.
+
+**A new journal learns its giver from the deploy, or from a scan, and never
+from our server, 2026-09-23.** `/get`'s button pre-fills `GIFT_FROM` on the
+new project (`env` + `envDefaults`) when its gift card shows — only then, so
+it carries whose gift the page said; setup reads it after the claim and
+offers "Add them to your address book and wave", ticked. Where it did not survive,
+setup offers the camera: the Give code carries `?gift=`. Vercel's
+`redirect-url` is ruled out — it would hand the canonical server every
+gifted install's address and repository, the log a phone-home keeps.
+
 **A returned send is an arrival, and this copy keeps it, 2026-09-22.** When
 somebody in the book logs a record this journal put them onto, the feed's
 match hands it to this copy's server and the inbox shows it among the sends —

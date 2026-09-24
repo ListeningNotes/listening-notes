@@ -8,6 +8,7 @@ import { Archive, ArrowUpRight, Check, Envelope, PencilSimple, Plus, User } from
 import Link from 'next/link';
 import SiteNav from '../../../components/main_components/SiteNav';
 import MiniAddressBook from '../../../components/main_components/MiniAddressBook';
+import WaveSheet from '../../../components/main_components/WaveSheet';
 import { carrySender, journalUrl, tidyJournal } from '../../../library/return_address';
 import { useBookplate } from '../../../components/main_components/Bookplate';
 import { albumKey } from '../../../hooks/useListeningBeacon';
@@ -112,6 +113,16 @@ export default function Inbox({ layered = false, inPane = false }) {
   // sit among the sends by date, with the dot until opened and no count on
   // the folder — nothing about them is waiting on you.
   const [cameBack, setCameBack] = useState([]);
+  // ── Waves, 2026-09-23 ──────────────────────────────────────────────────
+  // Somebody added this journal and said so (the waves brief). A wave sits
+  // among the sends by when it arrived, opens where it sits like any row,
+  // and offers their journal, Add when they are not in the book, and Leave
+  // it — which deletes it. Nothing is ever sent back: not whether it was
+  // read, not whether they were added. `wavingTo` is the other direction:
+  // somebody just added from here, and the offer to wave at them.
+  const [waves, setWaves] = useState([]);
+  const [openWave, setOpenWave] = useState(null);
+  const [wavingTo, setWavingTo] = useState(null);
   // Which row is open. One at a time — an open row is a decision being made,
   // and two of them is a list of controls again.
   const [openRow, setOpenRow] = useState(null);
@@ -186,6 +197,7 @@ export default function Inbox({ layered = false, inPane = false }) {
     if (!authed) return;
     fetch('/api/submissions').then(r => r.json()).then(d => { setSubmissions(d.submissions || []); setSubLoading(false); }).catch(() => setSubLoading(false));
     fetch('/api/came-back').then(r => (r.ok ? r.json() : { cameBack: [] })).then(d => setCameBack(d.cameBack || [])).catch(() => {});
+    fetch('/api/waves').then(r => (r.ok ? r.json() : { waves: [] })).then(d => setWaves(d.waves || [])).catch(() => {});
     fetch('/api/comments/pending').then(r => r.json()).then(d => { setComments(d.comments || []); setComLoading(false); }).catch(() => setComLoading(false));
     fetch('/api/people').then(r => r.json()).then(d => setPeople(d.people || [])).catch(() => {}).finally(() => setBookIn(true));
   }, [authed]);
@@ -226,6 +238,9 @@ export default function Inbox({ layered = false, inPane = false }) {
     });
     const d = await r.json().catch(() => ({}));
     if (r.ok && d.person) setPeople(prev => [...prev.filter(p => p.id !== d.person.id), d.person]);
+    // Somebody new to the book — from a send's row or from their wave — so
+    // the wave is offered, which is also how a wave is answered (2026-09-23).
+    if (r.ok && d.person && d.fresh) setWavingTo(d.person);
   }
 
   async function updateStatus(id, status) {
@@ -508,6 +523,7 @@ export default function Inbox({ layered = false, inPane = false }) {
   const liveWithReturns = [
     ...live.map(s => ({ ...s, at: s.created_at })),
     ...cameBack.map(row => ({ ...row, backed: true, at: row.posted_at || row.noticed_at })),
+    ...waves.map(w => ({ ...w, waved: true, at: w.arrived_at })),
   ].sort((a, b) => new Date(b.at) - new Date(a.at));
   const shown = showArchived ? [...liveWithReturns, ...archivedRows] : liveWithReturns;
   const counts = { new: submissions.filter(unopened).length };
@@ -565,7 +581,7 @@ export default function Inbox({ layered = false, inPane = false }) {
                   <div className="ib-list" style={{ gap: 10 }}>
                     {[...Array(4)].map((_, i) => <div key={i} className="own-skeleton" style={{ height: 46 }} />)}
                   </div>
-                ) : submissions.length === 0 && cameBack.length === 0 ? (
+                ) : submissions.length === 0 && cameBack.length === 0 && waves.length === 0 ? (
                   <div className="own-empty">Nothing has been sent to you yet.</div>
                 ) : (
                   <>
@@ -588,6 +604,80 @@ export default function Inbox({ layered = false, inPane = false }) {
                         // It opens their entry, on their journal, in a new
                         // window like every link to another journal, and
                         // opening it is what puts the dot out.
+                        // ── A wave ──────────────────────────────────────
+                        // "Omar waved", and whether they are in the book.
+                        // Add sits on the row itself when they are not —
+                        // beside the row's own button rather than inside
+                        // it, since a button cannot hold a button — and
+                        // pressing the row opens it where it sits, which is
+                        // also what puts its dot out.
+                        if (sent.waved) {
+                          const w = sent;
+                          const inBook = filed.has(w.address);
+                          const isOpen = openWave === w.id;
+                          const who = w.name || tidyJournal(w.address);
+                          return (
+                            <div key={`wave-${w.id}`} className={'ib-r ib-r--wave' + (isOpen ? ' ib-r--open' : '')}>
+                              <div className="ib-rline">
+                                <button
+                                  className="ib-rhead"
+                                  aria-expanded={isOpen}
+                                  onClick={() => {
+                                    setOpenWave(isOpen ? null : w.id);
+                                    if (w.seen_at) return;
+                                    fetch('/api/waves', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: w.id }) }).catch(() => {});
+                                    setWaves(prev => prev.map(x => (x.id === w.id ? { ...x, seen_at: new Date().toISOString() } : x)));
+                                  }}
+                                >
+                                  <span className={'ib-newdot' + (w.seen_at ? ' ib-newdot--off' : '')} aria-hidden="true" />
+                                  <span className="ib-rart ib-rart--face" aria-hidden="true">
+                                    <User size={18} weight="regular" />
+                                    <img src={`${journalUrl(w.address)}/api/portrait`} alt="" loading="lazy" onError={e => { e.currentTarget.style.display = 'none'; }} />
+                                  </span>
+                                  <span className="ib-rsaid">
+                                    <span className="ib-rttl">{who} waved</span>
+                                    <span className="ib-rsub">{inBook ? 'Already in your book' : 'Not in your book'}</span>
+                                  </span>
+                                </button>
+                                {!inBook && (
+                                  <button className="ib-radd" onClick={() => file(w.address)}>Add</button>
+                                )}
+                              </div>
+                              {isOpen && (
+                                <div className="ib-open">
+                                  <div className="ib-acts">
+                                    <a
+                                      className="ib-act"
+                                      href={carrySender(journalUrl(w.address), me, { known: inBook })}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                    >
+                                      <span className="ib-act-ic" aria-hidden="true"><ArrowUpRight size={13} weight="bold" /></span>
+                                      Their journal
+                                    </a>
+                                    {!inBook && (
+                                      <button className="ib-act" onClick={() => file(w.address)}>
+                                        <span className="ib-act-ic" aria-hidden="true"><Plus size={13} weight="bold" /></span>
+                                        Add to your book
+                                      </button>
+                                    )}
+                                    <button
+                                      className="ib-act"
+                                      onClick={() => {
+                                        fetch('/api/waves', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: w.id }) }).catch(() => {});
+                                        setWaves(prev => prev.filter(x => x.id !== w.id));
+                                        setOpenWave(null);
+                                      }}
+                                    >
+                                      <span className="ib-act-ic" aria-hidden="true" />
+                                      Leave it
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        }
                         if (sent.backed) {
                           const row = sent;
                           const who = row.name || tidyJournal(row.journal);
@@ -1000,6 +1090,10 @@ export default function Inbox({ layered = false, inPane = false }) {
           </div>
         </div>
       </div>
+
+      {/* Somebody just added from here — a send's sender, a commenter, or
+          somebody who waved — and the offer to wave at them. */}
+      <WaveSheet person={wavingTo} onClose={() => setWavingTo(null)} />
     </div>
   );
 }

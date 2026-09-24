@@ -315,6 +315,37 @@ textarea.su-field { resize: vertical; min-height: 64px; }
 .su-skip:hover, .su-back:hover { color: var(--ink-soft); }
 .su-skip:disabled, .su-back:disabled { opacity: 0.4; cursor: default; }
 .su-error { font-size: 13px; color: #e05555; margin-top: 14px; }
+/* ── Who gave it, 2026-09-23 ── the giver's card on the setup screen after
+   the claim: A GIFT FROM, their face, the name under it, the one choice
+   ticked, and what it tells them. The fields' panel and hairline, so it reads as the
+   same stock as every other screen of setup. */
+.su-gift {
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  padding: 18px;
+  background: var(--panel); border: 1px solid var(--border); border-radius: 18px;
+}
+.su-gift-face {
+  position: relative; display: inline-flex; align-items: center; justify-content: center;
+  width: 84px; height: 84px; border-radius: 20px; overflow: hidden;
+  background: var(--panel); border: 1px solid var(--border); color: var(--ink-faint);
+}
+.su-gift-face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.su-gift-from {
+  display: inline-flex; align-items: center; gap: 6px; margin-bottom: 20px;
+  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--ink-faint);
+}
+.su-gift-name {
+  margin-top: 12px;
+  font-family: var(--font-display); font-weight: var(--font-display-weight);
+  font-size: 20px; color: var(--ink);
+}
+.su-gift-check {
+  display: flex; align-items: center; gap: 10px; margin-top: 16px;
+  font-size: 14px; line-height: 1.4; color: var(--ink); text-align: left; cursor: pointer;
+}
+.su-gift-check input { width: 18px; height: 18px; margin: 0; flex: none; accent-color: var(--ink); }
+.su-gift-line { margin: 10px 0 0; font-size: 12.5px; line-height: 1.5; color: var(--ink-faint); max-width: 30ch; }
 .su-photo {
   width: 132px; height: 132px; border-radius: 26px; margin: 0 auto;
   background: var(--panel); border: 1px solid var(--border);
@@ -888,6 +919,24 @@ textarea.st-field { resize: vertical; min-height: 96px; }
   box-shadow: 0 0 0 1px var(--border);
 }
 a.ib-rhead { text-decoration: none; }
+/* ── A wave, 2026-09-23 ── a person rather than a record, so the face is
+   round where a cover is square; and Add on the row itself when they are not
+   in the book, beside the row's button rather than inside it. */
+.ib-rline { display: flex; align-items: center; }
+.ib-rline .ib-rhead { flex: 1; min-width: 0; }
+.ib-rart--face {
+  position: relative; border-radius: 999px;
+  border: 1px solid var(--border);
+}
+.ib-rart--face img { position: absolute; inset: 0; }
+.ib-radd {
+  flex-shrink: 0; min-height: 44px; padding: 0 4px 0 12px;
+  border: 0; background: none; cursor: pointer;
+  font-family: var(--font-display); font-weight: var(--font-display-weight);
+  font-size: 15px; color: var(--ink);
+}
+.ib-radd:hover { color: var(--ink-soft); }
+a.ib-act { text-decoration: none; }
 .ib-rsaid { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 .ib-rttl {
   font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
@@ -1914,6 +1963,56 @@ a.pn-item-album:hover { text-decoration: underline; text-underline-offset: 3px; 
   color: var(--ink);
 }
 .gv-act:hover { color: var(--ink-soft); }
+
+/* ── The wave sheet, 2026-09-23 ─────────────────────────────────────────────
+   Just after somebody is added: their face, ADDED, "June is in your book",
+   the two lines that say what a wave does and does not do, then Wave to June
+   and a quiet Not now. The send sheet's sheet on the page's colour, as Give's
+   is. WaveSheet.js says what it is for. */
+.wv-sheet { align-items: center; text-align: center; padding-top: 30px; background: var(--bg); }
+.wv-face {
+  position: relative; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 96px; height: 96px; border-radius: 22px; overflow: hidden;
+  background: var(--panel); border: 1px solid var(--border); color: var(--ink-faint);
+}
+.wv-face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.wv-kicker {
+  margin: 18px 0 0;
+  font-family: var(--font-label); font-size: 10px;
+  letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-faint);
+}
+.wv-head {
+  margin: 8px 0 0;
+  font-family: var(--font-display); font-weight: var(--font-display-weight);
+  font-size: 22px; line-height: 1.25; color: var(--ink);
+  text-wrap: balance;
+}
+.wv-line {
+  margin: 12px auto 0; max-width: 320px;
+  font-size: 15px; line-height: 1.55; color: var(--ink-soft);
+  text-wrap: balance;
+}
+.wv-small { margin: 10px auto 0; max-width: 320px; font-size: 13px; line-height: 1.5; color: var(--ink-faint); }
+/* The wave itself: the hand and the words, no box — a control that is the
+   mark (DECISIONS). */
+.wv-go {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  min-height: 48px; margin: 22px auto 0; padding: 0 12px;
+  border: 0; background: none; cursor: pointer;
+  font-family: var(--font-display); font-weight: var(--font-display-weight);
+  font-size: 17px; color: var(--ink);
+}
+.wv-go:disabled { cursor: default; }
+.wv-go:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; border-radius: 8px; }
+.wv-said { margin: 22px auto 0; max-width: 300px; font-size: 14px; line-height: 1.5; color: var(--ink-soft); }
+.wv-not {
+  min-height: 44px; margin: 4px auto 0; padding: 0 12px;
+  border: 0; background: none; cursor: pointer;
+  font-family: var(--font-display); font-weight: var(--font-display-weight);
+  font-size: 15px; color: var(--ink-faint);
+}
+.wv-not:hover { color: var(--ink-soft); }
 .gv-act:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; border-radius: 6px; }
 /* The close, in a corner. It was centred at the top for a day, which read as
    part of the sheet's own content and sat over the record you came to look at

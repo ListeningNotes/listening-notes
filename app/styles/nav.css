@@ -2740,6 +2740,7 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .hn[data-editing] .hn-foot,
   .hn[data-sending] .hn-foot,
   .hn[data-giving] .hn-foot,
+  .hn[data-waving] .hn-foot,
   .hn--typing .hn-foot { transform: translateY(100%); transition-delay: 0s; }
 
   /* Except over the book and its feed (Miyel, 2026-09-20). A dissolve is for
