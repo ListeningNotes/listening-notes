@@ -276,8 +276,11 @@ export default function WelcomeScreen() {
       <div className="su-card">
         {/* The mark, matching the holding page a visitor sees on the same
             copy — the words there and the mark here would read as two
-            different sites. */}
-        <div className="su-mark" aria-label="Listening Notes" role="img">
+            different sites. On the last screen it turns into the app icon
+            (Miyel, 2026-09-23): the icon under the question repeated the
+            mark right above it, so the mark becomes the thing you are about
+            to put on your home screen. */}
+        <div className={'su-mark' + (current === 'homescreen' ? ' su-mark--icon' : '')} aria-label="Listening Notes" role="img">
           <svg viewBox="76 96 241 140" className="su-logo" xmlns="http://www.w3.org/2000/svg">
           <path
           transform="translate(73.734177, 220.794814)"
@@ -317,24 +320,28 @@ export default function WelcomeScreen() {
                 as a loading bar as much as a row of lights — and it moves
                 when you press Next, which is the moment a person looks at it.
                 Not buttons here, unlike the session's: the screens are in
-                order and Back is underneath. */}
-            <div
-              className="su-lights"
-              role="progressbar"
-              aria-label="Setup progress"
-              aria-valuemin={1}
-              aria-valuemax={STEPS.length}
-              aria-valuenow={step + 1}
-              aria-valuetext={`Step ${step + 1} of ${STEPS.length}`}
-            >
-              {STEPS.map((name, i) => (
-                <span
-                  key={name}
-                  aria-hidden="true"
-                  className={'su-light' + (i < step ? ' su-light--past' : '') + (i === step ? ' su-light--current' : '')}
-                />
-              ))}
-            </div>
+                order and Back is underneath. None on the last screen
+                (Miyel, 2026-09-23): the journal is made by then, and the
+                mark above has become its icon. */}
+            {current !== 'homescreen' && (
+              <div
+                className="su-lights"
+                role="progressbar"
+                aria-label="Setup progress"
+                aria-valuemin={1}
+                aria-valuemax={STEPS.length}
+                aria-valuenow={step + 1}
+                aria-valuetext={`Step ${step + 1} of ${STEPS.length}`}
+              >
+                {STEPS.map((name, i) => (
+                  <span
+                    key={name}
+                    aria-hidden="true"
+                    className={'su-light' + (i < step ? ' su-light--past' : '') + (i === step ? ' su-light--current' : '')}
+                  />
+                ))}
+              </div>
+            )}
 
             {/* One sentence per screen, in the reading face, where a small-caps
                 label and a why-line used to sit as a pair. The pair was two
@@ -538,7 +545,8 @@ export default function WelcomeScreen() {
 
             {current === 'homescreen' && (
               <div className="su-fields">
-                <p className="su-why">It opens without the browser around it, and reads as an app.</p>
+                {/* The question and nothing under it (Miyel, 2026-09-23): the
+                    emblem and three tiles say the rest. */}
                 <AddToHomeScreen centered />
                 <button type="button" className="su-go" disabled={busy} onClick={() => advance()}>Open the journal</button>
               </div>
@@ -572,11 +580,9 @@ export default function WelcomeScreen() {
                 )}
               </div>
             )}
-            {claimed && (
-              <div className="su-under" style={{ justifyContent: 'flex-end' }}>
-                <button type="button" className="su-skip" disabled={busy} onClick={() => advance()}>Later — it’s in Settings</button>
-              </div>
-            )}
+            {/* Nothing under Open the journal. There was "Later — it's in
+                Settings", which did what the button does (Miyel,
+                2026-09-23: not necessary). */}
           </>
         )}
       </div>
