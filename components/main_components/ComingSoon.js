@@ -82,17 +82,22 @@ export default function ComingSoon({ reason = 'setup', said = '' }) {
           font-size: 15px; line-height: 1.7; color: var(--ink-soft);
           max-width: 34ch;
         }
-        /* The way in for the one person who needs it, in the smallest type on
-           the page — the same weight the source link gets on the pitch pane.
-           A visitor reads past it; an owner is looking for it. */
+        /* The way in, as setup's own button (.su-go in forms.css): the pill,
+           black, the mono caps — so the first press of setup looks like
+           every press after it. It was the smallest type on the page, a
+           link a visitor would read past; but the one person who reaches a
+           copy this new is its owner, and the install's step says to press
+           it (Miyel, 2026-09-23: bolder and bigger, like the others). */
         .cs-door {
+          display: inline-flex; align-items: center; justify-content: center;
+          width: 100%; max-width: 320px; box-sizing: border-box;
+          margin-top: 10px; padding: 13px 0; border-radius: 999px;
+          background: var(--ink); color: var(--bg); border: 1px solid var(--ink);
           font-family: var(--font-mono); font-size: 10px;
-          letter-spacing: 0.08em; color: var(--ink-faint);
+          letter-spacing: 0.14em; text-transform: uppercase;
           text-decoration: none;
-          border-bottom: 1px solid var(--border);
-          margin-top: 6px;
         }
-        .cs-door:hover { color: var(--ink-soft); }
+        .cs-door:hover { opacity: 0.85; }
         .cs-how {
           font-family: var(--font-mono); font-size: 11px; line-height: 1.8;
           color: var(--ink-faint); max-width: 40ch; text-align: left;
