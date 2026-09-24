@@ -3086,6 +3086,18 @@ current.
 
 ## Complete
 
+**2026-09-23 — `/get` asks for the accounts first: on main.** Branch
+`accounts-first` merged; the version stays at 1.32.0 and no release cut.
+
+- [x] **Ten steps, the accounts first.** Step one makes the GitHub and
+      Vercel accounts, each opening in its own tab, because a new account's
+      sign-up lands on that site's home page and drops people out of the
+      deploy — Miyel walked every beta tester back to the button by hand.
+      "Make your own copy" opens a new tab, with "Lost your place? Come back
+      to this tab and press it again" under it. The screenshot names moved
+      up by one (Screenshots for `/get`, above). Seen in the preview; not
+      yet on a phone.
+
 **2026-09-23 — The home screen, calmer: on main.** Branch
 `home-screen-steps` merged; the version stays at 1.32.0 and no release cut.
 
