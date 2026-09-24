@@ -3178,8 +3178,12 @@ current.
 
 ## Complete
 
-**2026-09-24 — notes from a full session: 1.34.1, on main and pushed.**
-Branch `session-fixes` merged, then deleted; no release cut. Miyel's list
+**2026-09-24 — notes from a full session: 1.34.1, released.** Branch
+`session-fixes` merged, then deleted; pushed, live on the site within the
+minute, and release v1.34.1 cut the same afternoon with no note — Miyel:
+"no notes needed, this is just bug fixes." Two of the seven change what a
+keeper sees rather than fixing it (a save lands on the journal; the search
+holds still sideways), and nothing tells a friend's copy so. Miyel's list
 after logging a record on her phone, with three screenshots. Checked in the
 Claude browser at phone size, then by Miyel on her phone: "seems to work."
 
