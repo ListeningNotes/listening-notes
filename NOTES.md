@@ -3094,11 +3094,13 @@ current.
 `gift-preview` merged; the version stays at 1.32.0 and no release cut.
 
 - [x] **The texting card.** A gift link pasted into a message unfurls as
-      "A gift from Miyel" over a picture of `/get`'s header — the mark, the
-      card with the giver's face, A GIFT FROM, the name and the present,
-      and GET YOUR COPY — drawn per request by `/get/gift-preview`, only
-      when the giver's journal answers; anything else keeps the plain
-      preview. Checked with gifts from this journal, from June's, from a
+      "A gift from Miyel" over the gift card itself, edge to edge — the
+      giver's face, A GIFT FROM, the name large and the present — drawn per
+      request by `/get/gift-preview`, only when the giver's journal answers;
+      anything else keeps the plain preview. The first cut floated the card
+      small under the mark and over GET YOUR COPY; seen in Messages that
+      evening, it read as a card inside a card, and Miyel had it fill the
+      picture. Checked with gifts from this journal, from June's, from a
       made-up address and with none.
 - [x] **The gift card opens the giver's journal**, in a new tab: somebody
       handed a gift by text may never have seen one, and the best pitch is
