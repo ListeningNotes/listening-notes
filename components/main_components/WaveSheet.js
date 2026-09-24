@@ -12,8 +12,9 @@
 // same sheet, which is the reply.
 //
 // The sheet confirms the add first, then sets the two expectations the brief
-// asked for: they see your name and where your journal is and nothing else,
-// and you will not find out whether they add you back. Not now is quiet and
+// asked for, in the gift screen's words (Miyel, 2026-09-23): a wave lets them
+// see your name and journal address, and you will not find out whether they
+// add you back. Not now is quiet and
 // costs nothing — skipping the wave is not a lesser path.
 //
 // A journal too old to take a wave says so in a line and the sheet stays: the

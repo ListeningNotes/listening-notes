@@ -287,12 +287,12 @@ textarea.su-field { resize: vertical; min-height: 64px; }
 .su-skip:disabled, .su-back:disabled { opacity: 0.4; cursor: default; }
 .su-error { font-size: 13px; color: #e05555; margin-top: 14px; }
 /* ── Who gave it, 2026-09-23 ── the giver's card on the setup screen after
-   the claim: their face, A GIFT FROM, the name, the one choice ticked, and
-   what it tells them. The fields' panel and hairline, so it reads as the
+   the claim: A GIFT FROM, their face, the name under it, the one choice
+   ticked, and what it tells them. The fields' panel and hairline, so it reads as the
    same stock as every other screen of setup. */
 .su-gift {
   display: flex; flex-direction: column; align-items: center; text-align: center;
-  padding: 22px 18px 18px;
+  padding: 18px;
   background: var(--panel); border: 1px solid var(--border); border-radius: 18px;
 }
 .su-gift-face {
@@ -302,12 +302,12 @@ textarea.su-field { resize: vertical; min-height: 64px; }
 }
 .su-gift-face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .su-gift-from {
-  display: inline-flex; align-items: center; gap: 6px; margin-top: 14px;
+  display: inline-flex; align-items: center; gap: 6px; margin-bottom: 12px;
   font-family: var(--font-label); font-size: 10px; letter-spacing: 0.2em;
   text-transform: uppercase; color: var(--ink-faint);
 }
 .su-gift-name {
-  margin-top: 4px;
+  margin-top: 12px;
   font-family: var(--font-display); font-weight: var(--font-display-weight);
   font-size: 20px; color: var(--ink);
 }

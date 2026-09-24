@@ -61,9 +61,10 @@ deploy a copy — and none of it is anything they need.
 **WAVES — on `waves`, 2026-09-23, local only until Miyel says ship.** The
 waves brief, one-way (DECISIONS): adding somebody new — a paste, a scan, the
 offer from a link home, a send's sender, a commenter, somebody who waved —
-brings up "June is in your book" with Wave to June and Not now
-(WaveSheet.js); the wave goes from this copy's server to theirs
-(`send_wave`, `/api/outbox` with `wave`), and lands in their inbox among the
+brings up "June is in your address book" — "Let June see your name and
+journal address" — with Wave to June and Not now (WaveSheet.js); the wave
+goes from this copy's server to theirs (`send_wave`, `/api/outbox` with
+`wave`), and lands in their inbox among the
 sends as "June waved", with Add on the row when they are not in the book,
 and Their journal / Add / Leave it when opened. `waves` table (migration
 024, applied to the live database 2026-09-23 for the dev test). **One test
@@ -86,8 +87,9 @@ Give's code carries `?gift=<the giver's journal>`, and since `get-gift`
 (2026-09-22) `/get` reads it: it asks that journal its keeper's name through
 the doorman's relay door and shows "A gift from" them with their face, or
 nothing if it does not answer. **Since `first-friend` (2026-09-23, local,
-on top of `waves`):** a setup screen after the claim — "A gift from June",
-"Add June to your address book and wave" ticked, "Let June see your name
+on top of `waves`):** a setup screen after the claim — "Your journal is
+ready!", then A GIFT FROM, June's face and the name under it, "Add June to
+your address book and wave" ticked, "Let June see your name
 and journal address", then Next — fed by `GIFT_FROM` when
 the deploy set it, and otherwise "Did someone give you this journal?" with
 the camera. Seen on Miyel's phone in rehearsal 2026-09-23, "A gift from

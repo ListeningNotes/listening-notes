@@ -395,7 +395,7 @@ export default function WelcomeScreen() {
                   rig: 'What you listen on.',
                   updates: 'Keep your journal up to date automatically.',
                   password: 'What you’ll type to get back in.',
-                  gift: giver ? 'Your journal is ready.' : 'Did someone give you this journal?',
+                  gift: giver ? 'Your journal is ready!' : 'Did someone give you this journal?',
                   homescreen: 'It’s yours. Put it on your home screen.',
               }[current]}
             </p>
@@ -588,14 +588,16 @@ export default function WelcomeScreen() {
               <div className="su-fields">
                 {giver ? (
                   <>
-                    {/* Their face over the plain mark, A GIFT FROM, the name,
-                        and the one choice — ticked, visible, one tap to undo. */}
+                    {/* A GIFT FROM, their face over the plain mark, the name
+                        under it (Miyel, 2026-09-23: the picture sandwiched
+                        between the two), and the one choice — ticked,
+                        visible, one tap to undo. */}
                     <div className="su-gift">
+                      <span className="su-gift-from"><Gift size={12} aria-hidden="true" /> A gift from</span>
                       <span className="su-gift-face" aria-hidden="true">
                         <User size={34} weight="regular" />
                         <img src={`${journalUrl(giver.address)}/api/portrait`} alt="" onError={e => { e.currentTarget.style.display = 'none'; }} />
                       </span>
-                      <span className="su-gift-from"><Gift size={12} aria-hidden="true" /> A gift from</span>
                       <span className="su-gift-name">{giver.name}</span>
                       <label className="su-gift-check">
                         <input type="checkbox" checked={giverWave} onChange={e => setGiverWave(e.target.checked)} />
