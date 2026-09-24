@@ -116,3 +116,61 @@ export async function send_record({
 
   return { ok: true, sent: { to: host, album, artist } };
 }
+
+// ── A wave, 2026-09-23 ──────────────────────────────────────────────────────
+// The other thing this copy may put in another's inbox: a name and an
+// address, and never words. Sent when its keeper has just added somebody and
+// chose to say so — the only time there is (Miyel, 2026-09-22: one-way, no
+// wave back). The same road as a send: this server to theirs, nothing asked
+// of anybody's browser.
+//
+// What comes back is only whether it landed. Nothing says what the other
+// copy did with it, and nothing ever will: a waver never learns whether they
+// were added back.
+//
+// A journal too old to have the route says so plainly rather than as a
+// failure — they are in the book either way, and the add never depended on
+// the wave landing.
+//
+// **Too old is not a 404.** Measured 2026-09-23 against a 1.29.2 copy: a POST
+// to a route it does not have answers 200 with the not-found *page* — HTML,
+// `x-matched-path: /_not-found` — because the root layout has already begun
+// streaming by the time the page finds it has nothing to serve. A check on
+// the status alone called that a wave that landed. So a wave has landed only
+// when their copy answers in JSON with `ok: true`; anything that is not JSON
+// is a journal without the route.
+const TOO_OLD = "Their journal is on an older version and can't take a wave yet.";
+const OWN = "That's your own journal.";
+
+export async function send_wave({ to }) {
+  const host = tidyJournal(to);
+  if (!host) return { ok: false, error: NO_ADDRESS };
+
+  const settings = await pull_settings();
+  const name = String(settings?.keeper_name || '').trim();
+  const mine = tidyJournal(settings?.site_address);
+  if (!mine) return { ok: false, error: NO_JOURNAL };
+  if (host === mine) return { ok: false, error: OWN };
+
+  let answer;
+  try {
+    answer = await fetch(`${journalUrl(host)}/api/waves`, {
+      method: 'POST',
+      signal: AbortSignal.timeout(WAIT_MS),
+      headers: { 'content-type': 'application/json', accept: 'application/json' },
+      // These two and nothing else: their route refuses a body that carries
+      // more, rather than quietly dropping it.
+      body: JSON.stringify({ journal: mine, name }),
+    });
+  } catch {
+    return { ok: false, error: "Their copy did not answer. They're still in your book — nothing was sent." };
+  }
+
+  const json = (answer.headers.get('content-type') || '').includes('application/json');
+  if (answer.status === 404 || !json) return { ok: false, old: true, error: TOO_OLD };
+  let body = null;
+  try { body = await answer.json(); } catch { /* said it was JSON and was not */ }
+  if (answer.ok && body?.ok === true) return { ok: true };
+  const said = String(body?.error || '').trim();
+  return { ok: false, error: said || 'Their copy would not take the wave.' };
+}
