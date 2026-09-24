@@ -457,7 +457,6 @@ textarea.st-field { resize: vertical; min-height: 96px; }
   box-shadow: 0 1px 3px rgba(0,0,0,0.18);
 }
 .a2h-icon img { width: 100%; height: 100%; display: block; }
-.a2h-name { font-size: 14px; color: var(--ink); }
 .a2h-why { font-size: 13px; line-height: 1.65; color: var(--ink-soft); margin: 0; }
 /* The steps, 2026-09-23 — /get's tiles (get.css, .get-step): the panel, the
    hairline, the number in the caption face and what to press in bold, so the
@@ -495,7 +494,7 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 /* The button itself, drawn: a glyph on a key, or the row the way a share
    sheet or a menu lists it. Raised off the tile the way a button sits on a
    phone's screen. */
-.a2h-look { display: flex; margin-top: 10px; }
+.a2h-look { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 .a2h-key {
   display: inline-flex; align-items: center; justify-content: center;
   width: 40px; height: 40px; box-sizing: border-box; border-radius: 12px;
