@@ -3090,6 +3090,14 @@ current.
 
 ## Complete
 
+**2026-09-23 — Give has one button: on main.** Branch `give-share`
+merged; the version stays at 1.32.0 and no release cut.
+
+- [x] **Share, or Copy link where there is no share sheet.** The phone's
+      share sheet already holds Copy and Messages, so the two buttons said
+      the same thing twice (Miyel). A laptop without a share sheet gets
+      Copy link, with its tick, instead.
+
 **2026-09-23 — A gift link says whose gift it is: on main.** Branch
 `gift-preview` merged; the version stays at 1.32.0 and no release cut.
 
