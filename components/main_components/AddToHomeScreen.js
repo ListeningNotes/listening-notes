@@ -15,13 +15,18 @@
 // The last screen of setup, right after the journal has started working —
 // the moment somebody has just named the thing and it is in front of them —
 // and again in Settings for whoever tapped past it. Same component both
-// places; only the words around it differ. Setup says why in its own line
-// under its question, so the why in here is Settings' (`explain`), the way
-// UpdateSwitch does it — the screen said it twice before.
+// places; only the words around it differ. The why is Settings' alone
+// (`explain`), the way UpdateSwitch does it: setup's question says enough —
+// the screen once said the why twice, and then once, and now not at all.
+//
+// The emblem stands alone. It had the keeper's name beside it, which was the
+// ornamented name off the card — not the label a phone actually puts under
+// the icon, which is the plain one (app/manifest.js) — and it read as a
+// signature rather than a preview (Miyel, 2026-09-23).
 //
 // ── What it detects ───────────────────────────────────────────────────────
 // Already installed: nothing to say, and it says so. iOS: the share-sheet
-// steps, with the icon that will land on the screen. Samsung Internet: its
+// steps, under the icon that will land on the screen. Samsung Internet: its
 // own menu, which is not Chrome's. Anything else: Chrome's
 // `beforeinstallprompt`, captured if it fires — it does not fire on every
 // Chrome, and it needs a fetch handler in a service worker for the browser's
@@ -41,7 +46,6 @@
 
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { DeviceMobile, DotsThreeVertical, Export, List, Plus, PlusSquare } from '@phosphor-icons/react';
-import { useBookplate } from './Bookplate';
 
 function detect() {
   if (typeof navigator === 'undefined') return 'unknown';
@@ -95,16 +99,18 @@ const STEPS = {
       text: 'Open the menu and look for Install.' },
     { head: 'In Safari on a Mac',
       text: 'File, then Add to Dock.' },
-    { head: 'On a phone',
-      text: 'Settings on your phone has the steps for it.' },
+    // The phone's two buttons, drawn, for somebody finishing on a computer
+    // (Miyel, 2026-09-23).
+    { head: 'On your phone',
+      look: <><span className="a2h-key"><Export size={21} /></span><span className="a2h-key a2h-key--row"><PlusSquare size={21} />Add to Home Screen</span></>,
+      text: 'Share, then Add to Home Screen — or on Android, the ⋮\u00a0menu.' },
   ],
 };
 
-// `centered` lines the icon and the name up in the middle — the setup screen
-// is centred top to bottom; Settings is a left-aligned page. `explain` is
+// `centered` lines the icon up in the middle — the setup screen is centred
+// top to bottom; Settings is a left-aligned page. `explain` is
 // Settings, which has no line of its own saying why.
 export default function AddToHomeScreen({ centered = false, explain = false }) {
-  const { cover_name } = useBookplate();
   // Read off the browser rather than copied into state on mount: the server
   // has no navigator and renders 'unknown', the client answers for itself,
   // and nothing re-renders to get there. Same shape Lightswitch uses.
@@ -138,6 +144,9 @@ export default function AddToHomeScreen({ centered = false, explain = false }) {
   // A real prompt, where Chrome gave one, stands in for the menu route; iOS
   // never gives one.
   const steps = where === 'ios' ? STEPS.ios : (prompt ? null : STEPS[where]);
+  // A computer's tiles are one way each, not one after another, so they are
+  // not numbered.
+  const numbered = where !== 'desktop';
 
   return (
     <div className={'a2h' + (centered ? ' a2h--centered' : '')}>
@@ -150,7 +159,6 @@ export default function AddToHomeScreen({ centered = false, explain = false }) {
         <span className="a2h-icon" aria-hidden="true">
           <img src="/icon-192.png" alt="" />
         </span>
-        <span className="a2h-name">{cover_name}</span>
       </div>
 
       {home ? (
@@ -165,7 +173,7 @@ export default function AddToHomeScreen({ centered = false, explain = false }) {
             <ol className="a2h-steps">
               {steps.map((step, i) => (
                 <li className="ln-tile a2h-step" key={step.head}>
-                  <span className="a2h-num" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+                  {numbered && <span className="a2h-num" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>}
                   <div className="a2h-words">
                     <h3 className="a2h-head">{step.head}</h3>
                     {step.look && <div className="a2h-look" aria-hidden="true">{step.look}</div>}
