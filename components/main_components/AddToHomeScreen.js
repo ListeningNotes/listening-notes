@@ -19,10 +19,13 @@
 // (`explain`), the way UpdateSwitch does it: setup's question says enough —
 // the screen once said the why twice, and then once, and now not at all.
 //
-// The emblem stands alone. It had the keeper's name beside it, which was the
-// ornamented name off the card — not the label a phone actually puts under
-// the icon, which is the plain one (app/manifest.js) — and it read as a
-// signature rather than a preview (Miyel, 2026-09-23).
+// The emblem is Settings' too. In setup the mark at the top of the page
+// turns into the app icon on this screen (app/setup/page.js), and an icon
+// here as well said it twice. It stands alone where it shows: it had the
+// keeper's name beside it, which was the ornamented name off the card — not
+// the label a phone actually puts under the icon, which is the plain one
+// (app/manifest.js) — and it read as a signature rather than a preview
+// (Miyel, 2026-09-23).
 //
 // ── What it detects ───────────────────────────────────────────────────────
 // Already installed: nothing to say, and it says so. iOS: the share-sheet
@@ -107,9 +110,10 @@ const STEPS = {
   ],
 };
 
-// `centered` lines the icon up in the middle — the setup screen is centred
-// top to bottom; Settings is a left-aligned page. `explain` is
-// Settings, which has no line of its own saying why.
+// `centered` lines what is left up in the middle — the setup screen is
+// centred top to bottom; Settings is a left-aligned page. `explain` is
+// Settings, which has no line of its own saying why and no mark above it
+// to turn into the icon.
 export default function AddToHomeScreen({ centered = false, explain = false }) {
   // Read off the browser rather than copied into state on mount: the server
   // has no navigator and renders 'unknown', the client answers for itself,
@@ -155,11 +159,13 @@ export default function AddToHomeScreen({ centered = false, explain = false }) {
         <p className="a2h-why">It opens without the browser around it, and reads as an app.</p>
       )}
 
-      <div className="a2h-row">
-        <span className="a2h-icon" aria-hidden="true">
-          <img src="/icon-192.png" alt="" />
-        </span>
-      </div>
+      {explain && (
+        <div className="a2h-row">
+          <span className="a2h-icon" aria-hidden="true">
+            <img src="/icon-192.png" alt="" />
+          </span>
+        </div>
+      )}
 
       {home ? (
         <p className="a2h-done">Already on your home screen.</p>
