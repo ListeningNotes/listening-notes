@@ -270,8 +270,6 @@ export default function WelcomeScreen() {
   // ── The claim ─────────────────────────────────────────────────────────────
   async function claim() {
     const chosen = password;
-    if (chosen.length < PASSWORD_FLOOR) throw new Error(`At least ${PASSWORD_FLOOR} characters.`);
-    if (chosen !== confirm) throw new Error('The two passwords do not match.');
     const res = await fetch('/api/setup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -533,7 +531,20 @@ export default function WelcomeScreen() {
             )}
 
             {current === 'password' && (
-              <form className="su-fields" onSubmit={e => { e.preventDefault(); advance(claim); }}>
+              <form
+                className="su-fields"
+                onSubmit={e => {
+                  e.preventDefault();
+                  // Checked here and not in claim(), because a rehearsal
+                  // skips claim() whole and the checks went with it: two
+                  // passwords that did not match moved on (Miyel,
+                  // 2026-09-23). A rehearsal now refuses what a real claim
+                  // would; only the saving is skipped.
+                  if (password.length < PASSWORD_FLOOR) { setError(`At least ${PASSWORD_FLOOR} characters.`); return; }
+                  if (password !== confirm) { setError('The two passwords do not match.'); return; }
+                  advance(claim);
+                }}
+              >
 
                 {/* The address the password is filed under — the same value
                     the sign-in form and Settings use, so the entry saved here
