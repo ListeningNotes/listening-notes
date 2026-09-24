@@ -363,18 +363,40 @@ textarea.su-field { resize: vertical; min-height: 64px; }
 .su-file { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 
 /* ── from app/settings/page.js ─────────────────────────────────────────── */
+/* The quiet design, 2026-09-24 — what setup and /get already look like. A
+   caption and one line, centred, where a large title and a kicker stood;
+   each section one of /get's tiles (the panel, the hairline, the 18px
+   radius, flat, because nothing here opens) with a bold line and a grey one;
+   the fields on setup's stock; and Save as the editing bar's underlined word
+   rather than a black pill, because a page of four sections would otherwise
+   be four black bars. */
 .st-page { min-height: 100dvh; background: var(--bg); color: var(--ink); padding-top: calc(80px + var(--safe-top)); }
 /* On the sheet the nav row sits in the flow and has taken its space already. */
 .st-page--layered { padding-top: 0; min-height: 0; }
-.st-main { max-width: 560px; margin: 0 auto; padding: 40px 24px 120px; }
-.st-title { font-family: var(--font-display); font-weight: var(--font-display-weight, 700); font-size: 28px; margin: 0 0 4px; letter-spacing: -0.01em; }
-.st-kicker {
-  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.14em;
-  text-transform: uppercase; color: var(--ink-faint); margin: 0 0 36px;
+.st-main { max-width: 480px; margin: 0 auto; padding: 36px 22px 120px; }
+.st-top { text-align: center; margin: 0 0 26px; }
+/* The page's name set as /get's caption. Still the page's h1. */
+.st-title {
+  margin: 0; font-family: var(--font-label); font-size: 10px; font-weight: 400;
+  letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-faint);
 }
-.st-section { padding: 26px 0; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 14px; }
-.st-h { font-family: var(--font-label); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-faint); margin: 0; }
-.st-note { font-size: 13px; line-height: 1.65; color: var(--ink-soft); margin: 0; }
+.st-kicker {
+  margin: 14px auto 0; max-width: 340px;
+  font-size: 16px; line-height: 1.6; color: var(--ink-soft); text-wrap: balance;
+}
+.st-section {
+  display: flex; flex-direction: column; gap: 12px;
+  margin: 0 0 10px; padding: 16px 16px 17px;
+  background: var(--panel); border: 1px solid var(--border); border-radius: 18px;
+}
+.st-h {
+  margin: 0;
+  font-family: var(--font-display); font-weight: var(--font-display-weight);
+  font-size: 15px; line-height: 1.35; color: var(--ink);
+}
+/* The grey line belongs to the bold one above it, so it closes most of the
+   gap — /get's step text sits 5px under its title. */
+.st-note { margin: -7px 0 0; font-size: 13px; line-height: 1.5; color: var(--ink-soft); }
 .st-note a { color: var(--ink); }
 .st-label {
   display: block; font-family: var(--font-label); font-size: 10px;
@@ -384,20 +406,29 @@ textarea.su-field { resize: vertical; min-height: 64px; }
 .st-field {
   display: block; width: 100%; box-sizing: border-box;
   background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
-  color: var(--ink); padding: 10px 13px; font-family: var(--font-sans); font-size: 14px; line-height: 1.6; outline: none;
+  color: var(--ink); padding: 11px 13px; font-family: var(--font-sans); font-size: 14px; line-height: 1.6; outline: none;
+  transition: border-color 0.15s;
 }
 .st-field:focus { border-color: var(--ink-faint); }
 .st-field::placeholder { color: var(--ink-faint); }
-.st-who { background: none; border-color: transparent; padding-left: 0; color: var(--ink-faint); font-family: var(--font-label); font-size: 12px; letter-spacing: 0.08em; }
+/* The journal's address over the password fields: a fact, not a field, the
+   way setup draws it (.su-who) — still a real input for the password
+   manager's sake. */
+.st-who { background: none; border-color: transparent; padding: 0; color: var(--ink-faint); font-family: var(--font-label); font-size: 12px; letter-spacing: 0.08em; }
 textarea.st-field { resize: vertical; min-height: 96px; }
 @media (pointer: coarse) { .st-field { font-size: 16px; } }
-.st-foot { display: flex; align-items: center; gap: 14px; margin-top: 4px; }
-.st-save {
-  display: inline-flex; align-items: center; padding: 9px 18px; border-radius: 999px;
-  background: var(--ink); color: var(--bg); border: 1px solid var(--ink);
-  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; cursor: pointer;
+/* The word that commits stands at the right of its tile, where the editing
+   bar keeps Save (Miyel, 2026-09-24), and what it says back — Saved, Ready —
+   sits just to its left. Reversed rather than reordered in the markup, so the
+   button is still the first thing a keyboard reaches. */
+.st-foot {
+  display: flex; flex-direction: row-reverse; flex-wrap: wrap;
+  justify-content: flex-start; align-items: center;
+  gap: 4px 12px; margin-top: 2px;
 }
-.st-save:disabled { opacity: 0.5; cursor: default; }
+/* The word is .ln-word--on (base.css). Its padding is paid back so it lines
+   up with the tile's right edge, and grown so a thumb gets its 44px. */
+.st-save { padding: 10px 8px; margin: -10px -8px -10px 0; }
 .st-said, .st-trouble { font-family: var(--font-label); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; }
 .st-said { color: var(--ink-faint); }
 .st-trouble { color: #e05555; }
@@ -407,8 +438,29 @@ textarea.st-field { resize: vertical; min-height: 96px; }
   color: var(--ink-faint); border-bottom: 1px solid var(--border);
 }
 .st-clear:hover { color: var(--ink-soft); }
-.st-section--out { align-items: flex-start; }
+/* Sign out is not a section: a word under the tiles, where setup keeps Back. */
+.st-section--out {
+  align-items: center; margin: 16px 0 0; padding: 14px 0 0;
+  background: none; border: 0; border-radius: 0;
+}
 .st-section--out .st-clear { margin-left: 0; }
+/* The home-screen steps are /get's tiles on their own; inside a tile they
+   lose the tile, so it is never a card inside a card, and a hairline
+   separates one step from the next instead. */
+.st-section .ln-tile.a2h-step {
+  padding: 12px 0 0; background: none; border: 0; border-radius: 0;
+}
+.st-section .ln-tile.a2h-step + .ln-tile.a2h-step { border-top: 1px solid var(--border); }
+.st-section .a2h-steps { gap: 12px; }
+/* The two sections drawn by components setup shares say their first line
+   the way every other tile does: grey, close under the bold one, and on the
+   left — the tick included, which setup centres. */
+.st-section .a2h, .st-section .usw { margin-top: -7px; }
+.st-section .a2h-why { line-height: 1.5; }
+.st-section .usw { gap: 10px; }
+.st-section .usw-signal { align-self: flex-start; height: auto; }
+.st-section .usw-said { font-size: 13px; font-weight: 400; line-height: 1.5; color: var(--ink-soft); }
+.st-section .usw-told p { line-height: 1.5; }
 
 /* ── from app/key/page.js ─────────────────────────────────────────── */
 .pp-page { --pp-nav-bottom: calc(80px + var(--safe-top)); padding-top: var(--pp-nav-bottom); }
@@ -1817,32 +1869,6 @@ a.pn-item-album:hover { text-decoration: underline; text-underline-offset: 3px; 
    a name in a different shape, and the one a stranger sees. */
 .sb-quiet:hover { color: var(--ink); }
 
-/* ── Which beacon this journal runs ─────────────────────────────────────────
-   Two choices, each a whole row you can hit with a thumb rather than a dot
-   with a label beside it. The name is the line the cover actually prints, so
-   the chosen row is a preview of the journal's own front — which is why the
-   name is set in the label type the beacon's caption uses and the sentence
-   under it is ordinary prose.
-
-   The native radio is kept and hidden rather than replaced by a drawn circle:
-   arrow keys, the form, and every assistive technology go on working, and
-   :has() cannot be used to style the row from it (the build drops those rules
-   silently — see NOTES), so the chosen row carries its own class. */
-.st-choice { display: flex; flex-direction: column; gap: 8px; }
-.st-pick {
-  display: block; cursor: pointer;
-  background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
-  padding: 12px 14px;
-}
-.st-pick input { position: absolute; opacity: 0; width: 0; height: 0; }
-.st-pick--on { border-color: var(--ink-faint); background: var(--panel-strong); }
-.st-pick-name {
-  display: block; font-family: var(--font-label); font-size: 10px;
-  letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-faint);
-}
-.st-pick--on .st-pick-name { color: var(--ink); }
-.st-pick-said { display: block; margin-top: 5px; font-size: 13px; line-height: 1.5; color: var(--ink-soft); }
-.st-pick:focus-within { border-color: var(--ink-faint); }
 
 /* ── The send sheet ────────────────────────────────────────────────────────
    Handing a record to somebody in the book, from a row in it or from a

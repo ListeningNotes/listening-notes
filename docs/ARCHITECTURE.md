@@ -62,8 +62,8 @@ publicly):
 - `/dashboard/people/[id]` — your page about one person: what you both have,
   where you agree and disagree hardest, what they sent you and how it landed
 - `/dashboard/submissions` — a redirect into the inbox, kept for old links
-- `/settings` — the machinery: address, the beacon's on/quiet switch, the
-  the password, the home-screen step, and Sign out. Reached from the Settings door on
+- `/settings` — the machinery: address, the password, Back up your journal,
+  keeping up to date, the home-screen step, and Sign out. Reached from the Settings door on
   the desk. The card's own fields are
   edited on the card, behind its pencil
 
@@ -109,6 +109,7 @@ The library — logic, no visuals
     submission_actions.js      Albums other people sent you: saving one, its four outcomes, the record a send became, and naming its sender once they have a copy
     return_address.js          The back of the envelope — a sender's name and journal kept in their own browser — and the one spelling an address is kept in
     migrator.js                Brings the database up to date — from instrumentation.js on start, and from scripts/prepare_database.mjs at build
+    whole_journal.mjs          Which tables the journal has, asked of the database, and one table's rows as Postgres writes them — shared by the nightly backup and the export, so neither keeps a list
     version.js                 Which version this copy is running (from package.json), where its release notes are, and where a report goes — read by the pitch pane, the desk and the report sheet
 
 The update button
@@ -169,6 +170,7 @@ The furniture — visual pieces
       WritingAccess.js         The lock at the foot of the pitch pane — a key, and the password field it opens in place
       ComingSoon.js            What a held copy shows instead of a site — unclaimed, no database, or database unreachable
       AddToHomeScreen.js       The one step the software cannot do: the last screen of setup, and a Settings section
+      JournalCopy.js           Back up your journal, in Settings: Make a copy fetches the export and holds it, then Share (a phone) or Download (a computer)
       AlbumFinder.js           Type, see covers, pick one — the send flow's search
       MiniAddressBook.js       The address book as a strip of faces, for picking one person — the entry editor's Sent by, and the inbox's send whose sender has since got a copy
       LayerEntry.js            The sheet a page arrives on over the journal — from the side for forms, expanding from the cover for an entry, with swipes to the neighbours; on a desk it is either the right page (an entry, a listen) or a sheet on the spine (the owner's rooms), with a back caret
@@ -313,8 +315,17 @@ than what anyone remembers building.
 | `submissions` | Albums other people have sent you. `status` is pending, reviewed (a listen was started from the row), logged, or dismissed; `entry_id` is the record a send became, set by hand on the row and never by matching. |
 | `waves` | Somebody added this journal and said so: one row per waving address, the name their journal gave when asked, when it arrived, and `seen_at`. No message column, now or later; Leave it deletes the row. |
 | `came_back` | Records this journal put somebody onto, logged on their journal: one row per entry, keyed by their journal and slug, with what their feed said about it and `seen_at` for the inbox's dot. Written by the keeper's own browser, from the feed's match. |
+| `people` | The address book: one row per journal address, the name that journal gave when it was filed, and `pinned_at` for the pinned row. The face is never stored. |
+| `reports` | Problems keepers wrote in from their desks. Every copy has the table; only the one in `REPORTS_URL` is written to. |
+| `needle` | What is on the desk right now, for the beacon. One row; it lifts itself when nothing has touched it for twenty minutes. |
+| `sat_with` | A listen whose post was deleted: the record and when it was on, and nothing written. |
 | `drafts` | A listening session in progress, so closing the tab does not lose it. |
 | `briefings` | Cached album research. Nothing reads or writes it since 2026-09-18 — the research came out of the software and the schema is additive-only, so the table stays with whatever is in it (docs/RETIRED-PROMPTS.md). |
+| `schema_migrations` | The migration runner's ledger: which files in `migrations/` have built this database. Backed up and exported, and never written back by a restore — it describes this database's shape, not the journal. |
+
+Nothing keeps a list of these tables. The backup, the export and the restore
+ask the database which it has (`library/whole_journal.mjs`), so a table a
+migration adds is in the next backup without anyone adding it anywhere.
 
 Two columns on `entries` are computed by Postgres and cannot be written to:
 `rating_value` (the numeric score, so sorting works) and `album_key` (a

@@ -165,13 +165,12 @@ export default function UpdateSwitch({ centered = false, onDone = null, explain 
       {explain && (
         <div className="usw-told">
           <p>
-            Your journal checks for a new version once an hour and takes it on its own. Nothing to
-            press, and nothing about you is sent anywhere — it reads the same public page anybody can.
+            It checks for a new version every hour and takes it by itself. Nothing about you is
+            sent anywhere.
           </p>
           <p>
-            A big version is the exception. Those are the ones that change how something works, so
-            they wait for you rather than arriving overnight. When one is ready your desk says so,
-            and you take it with the button above.
+            A big version, one that changes how something works, waits for you. Your desk says
+            when one is ready.
           </p>
         </div>
       )}
