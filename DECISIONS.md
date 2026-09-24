@@ -1090,6 +1090,25 @@ so the automatic one never ships and the manual one always does.
 the downloaded file. The moment somebody needs a restore is the worst moment
 to learn their backup is the wrong sort.
 
+**Nothing lists the tables, 2026-09-23.** The backup, the export and the
+restore ask the database which it has (`library/whole_journal.mjs`), and the
+restore reads its order off the foreign keys. Three hand-kept lists of seven
+fell seven tables behind, the address book among them. Do not put a list back:
+a table is left out by naming it where it is left out, never by forgetting it.
+
+**The export leaves `secrets` out and the backup takes it, 2026-09-23,
+Miyel's call.** Whoever holds the session secret can sign in as the keeper
+without the password. A backup stays on the keeper's machine beside the same
+keys in `.env.local`; a download travels, and no keeper can change the key
+after. The cost: restoring an export into a new database means setting the
+copy up first, with a new password.
+
+**A restore leaves alone every table its file does not hold, and never writes
+`schema_migrations`, 2026-09-23.** A table a file does not mention is not an
+empty one, and emptying it would lose the address book to an old backup. The
+ledger is this database's shape, not the journal; written back, it would
+re-run migrations over restored rows. It is read to refuse a newer backup.
+
 **The feed is pull-based.** Every copy publishes `/feed.xml`; each copy goes
 and checks. Nobody learns they were read. **One feed** — the two views of
 2026-09-12 retired with the friends brief. **A shelf, not a river:** no

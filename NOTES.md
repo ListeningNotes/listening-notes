@@ -65,14 +65,19 @@ inside a journal says what an update changed. Miyel wants a way to show it,
 made alongside the slides she posts for each update so the two match. Not
 before those slides exist.
 
-**BACKUPS SKIP HALF THE TABLES — found 2026-09-22, pinned, not fixed.**
-`scripts/backup.mjs`, `/api/export` and `scripts/restore.mjs` each keep a
-hand-written list of seven tables, and nobody added to it as tables arrived:
-`people` (the address book and its pins), `sat_with`, `reports`, `came_back`,
-`needle`, `builds` and `secrets` are in no backup and no export. A restore
-today brings back the journal with an empty address book. Whether an export
-somebody downloads should carry `secrets` is a question for Miyel, not a
-default. Its own branch.
+**THE EXPORT HAS NO BUTTON — found 2026-09-23.** `/api/export` works, and
+nothing on the site links to it: a keeper has to type the address into a
+browser where they are signed in, and a journal on a phone's home screen has
+no address bar. Every copy's only backup is a thing nobody can find. Where
+the button goes — Settings is the obvious drawer — is Miyel's call.
+
+**A RESTORE WITHOUT `DATABASE_URL` GOES TO `.env.local` — found 2026-09-23.**
+`scripts/restore.mjs` falls back to the database in `.env.local`, which on
+this machine is the live journal, so a practice run that forgets the
+`DATABASE_URL=` in front empties and refills the live one. The dry run's
+`target:` line is the only guard, and OPERATIONS now says to read it. A
+refusal to write through the fallback without the host named would close it;
+ask before building.
 
 **WHAT CHANGED, IN THE APP — pinned 2026-09-21, not now.** Miyel, having read
 the 1.26.0 notes: "I want to design a custom popup in app that shows when your
@@ -3053,6 +3058,22 @@ path stops existing, the nightly backup silently stops running, and nothing
 says so. Re-point the plist after any node upgrade — this is exactly the silent
 failure the stale badge in Pending is meant to catch.
 
+**The driver reads a time with no zone as the laptop's time.** `SELECT *`
+through `@neondatabase/serverless` hands a `timestamp without time zone` back
+as a JavaScript Date in the machine's own zone, and JSON writes that as UTC —
+so from 2026-08-27 to 2026-09-23 every nightly backup wrote `edited_at`,
+`entries.created_at`, `users.created_at` and both `updated_at`s seven hours
+late (it would be eight in winter). Vercel runs in UTC, where the same code is exact, which is why the
+export never showed it. Read rows for keeping with `to_jsonb`
+(`library/whole_journal.mjs`); the restore undoes the shift in the old
+folders, when it runs on the machine that took them.
+
+**A journal that is set up and has no password opens for nobody.** The login
+asks `isSetUp()` before it will look at a claim code, and a claimed copy never
+mints one, so clearing `password_hash` without `SESSION_PASSWORD` set locks
+out every device. OPERATIONS said the claim code came back until 2026-09-23.
+The restore warns before it leaves a journal like that.
+
 **`.gitignore` has `.env*`, which swallows `.env.example` too.** It needs the
 explicit `!.env.example` line below it, or the one file that is meant to be
 committed silently is not.
@@ -3092,6 +3113,58 @@ current.
 ---
 
 ## Complete
+
+**2026-09-23 — Backups take every table: branch `backups-every-table`, not
+merged.** Waiting on Miyel's review. A fix, so 1.33.1 when it merges.
+
+- [x] **Every table, asked of the database.** `scripts/backup.mjs`,
+      `/api/export` and `scripts/restore.mjs` each kept a hand-written list of
+      seven tables and had fallen seven behind: `people` (the address book and
+      its pins), `sat_with`, `reports`, `came_back`, `needle`, `waves` and
+      `secrets` were in no backup and no export. No list now:
+      `library/whole_journal.mjs` (`every_table`, `pull_table` — Miyel's
+      names) asks the database. The pinned item also named a `builds` table;
+      there is none — "builds" is a verb in a comment in 001 — and the
+      fifteenth table is `schema_migrations`, the migration runner's ledger.
+- [x] **`secrets` in the backup, out of the export** (DECISIONS). On this
+      copy it is empty anyway: the password and the session secret are
+      Vercel variables.
+- [x] **Times come out as they are stored.** The nightly backup had written
+      every time stored without a zone seven hours late (Gotchas). Rows are
+      read with `to_jsonb` now, and the restore undoes the shift in older
+      folders.
+- [x] **The restore.** Fill order read off the foreign keys; one transaction;
+      tables the file does not hold left alone and named; `schema_migrations`
+      read, never written, and a backup newer than the database refused; id
+      counters moved forward only, because a held comment's receipt names its
+      id and a reused id would open somebody else's; a damaged folder, or a
+      file with rows for a table the database lacks, refused before anything
+      is emptied; a warning when a set-up journal would be left with no
+      password.
+- [x] **Rehearsed on a Neon branch** (`TEST BRANCH`, `ep-old-bar-amjsgml2`),
+      never on the live journal:
+      - today's new backup and a new export each came back identical to the
+        live journal, all fifteen tables, count and contents, times to the
+        microsecond; eighteen seconds as one transaction;
+      - the 3am nightly and an old-style export (seven tables each) came back
+        equal to live to the millisecond, the seven-hour shift undone, and
+        the address book and the rest untouched;
+      - the oldest backup (31 August) restored: `conversations` and
+        `echo_memory` skipped as empty, the seven dropped columns named and
+        left behind. **Restoring anything from before 2026-09-06 dates every
+        entry to the day of the restore** — `posted_at` did not exist yet,
+        and the dry run lists it among the columns taking defaults. Those
+        backups leave the folder by early October;
+      - a bad row in `submissions`, filled after thirteen other tables, rolled
+        the whole restore back and left the branch exactly as it was;
+      - a newer backup, a missing file and a table the database lacks were
+        each refused, with nothing changed;
+      - a counter behind the file's ids moved forward (people to 501), and
+        stayed there when the ordinary backup went back in.
+- [x] **OPERATIONS corrected.** The export is an address, not a button (see
+      Pending); what a restore does; restoring into a brand-new database; and
+      Locked out, which said a cleared password brings the claim code back —
+      it locks everybody out (Gotchas).
 
 **2026-09-23 — Waves, and the first friend: 1.33.0, on main.** Branches
 `waves` and `first-friend` merged; release v1.33.0 cut the same night, its

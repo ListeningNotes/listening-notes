@@ -109,6 +109,7 @@ The library — logic, no visuals
     submission_actions.js      Albums other people sent you: saving one, its four outcomes, the record a send became, and naming its sender once they have a copy
     return_address.js          The back of the envelope — a sender's name and journal kept in their own browser — and the one spelling an address is kept in
     migrator.js                Brings the database up to date — from instrumentation.js on start, and from scripts/prepare_database.mjs at build
+    whole_journal.mjs          Which tables the journal has, asked of the database, and one table's rows as Postgres writes them — shared by the nightly backup and the export, so neither keeps a list
     version.js                 Which version this copy is running (from package.json), where its release notes are, and where a report goes — read by the pitch pane, the desk and the report sheet
 
 The update button
@@ -313,8 +314,17 @@ than what anyone remembers building.
 | `submissions` | Albums other people have sent you. `status` is pending, reviewed (a listen was started from the row), logged, or dismissed; `entry_id` is the record a send became, set by hand on the row and never by matching. |
 | `waves` | Somebody added this journal and said so: one row per waving address, the name their journal gave when asked, when it arrived, and `seen_at`. No message column, now or later; Leave it deletes the row. |
 | `came_back` | Records this journal put somebody onto, logged on their journal: one row per entry, keyed by their journal and slug, with what their feed said about it and `seen_at` for the inbox's dot. Written by the keeper's own browser, from the feed's match. |
+| `people` | The address book: one row per journal address, the name that journal gave when it was filed, and `pinned_at` for the pinned row. The face is never stored. |
+| `reports` | Problems keepers wrote in from their desks. Every copy has the table; only the one in `REPORTS_URL` is written to. |
+| `needle` | What is on the desk right now, for the beacon. One row; it lifts itself when nothing has touched it for twenty minutes. |
+| `sat_with` | A listen whose post was deleted: the record and when it was on, and nothing written. |
 | `drafts` | A listening session in progress, so closing the tab does not lose it. |
 | `briefings` | Cached album research. Nothing reads or writes it since 2026-09-18 — the research came out of the software and the schema is additive-only, so the table stays with whatever is in it (docs/RETIRED-PROMPTS.md). |
+| `schema_migrations` | The migration runner's ledger: which files in `migrations/` have built this database. Backed up and exported, and never written back by a restore — it describes this database's shape, not the journal. |
+
+Nothing keeps a list of these tables. The backup, the export and the restore
+ask the database which it has (`library/whole_journal.mjs`), so a table a
+migration adds is in the next backup without anyone adding it anywhere.
 
 Two columns on `entries` are computed by Postgres and cannot be written to:
 `rating_value` (the numeric score, so sorting works) and `album_key` (a
