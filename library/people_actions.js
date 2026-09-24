@@ -93,12 +93,16 @@ export async function remove_person(id) {
 // address does not answer as a journal, in a few seconds or at all; the
 // person is filed either way, since an address is an address whether or
 // not it is up this minute.
-export async function ask_journal_name(address) {
+//
+// `wait` is how long to give it. Six seconds for filing, where nobody is
+// watching; /get asks with less, because a stranger is looking at a page
+// that is waiting on the answer (2026-09-22).
+export async function ask_journal_name(address, wait = 6000) {
   const url = journalUrl(address);
   if (!url) return null;
   try {
     const answer = await fetch(`${url}/api/settings`, {
-      signal: AbortSignal.timeout(6000),
+      signal: AbortSignal.timeout(wait),
       headers: { accept: 'application/json' },
     });
     if (!answer.ok) return null;
