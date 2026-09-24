@@ -68,7 +68,7 @@ const STEPS = {
       look: <span className="a2h-key a2h-key--row"><PlusSquare size={21} />Add to Home Screen</span>,
       text: 'Scroll down if you can’t see it.' },
     { head: 'Press Add',
-      text: 'Top right. Open it from your home screen from now on.' },
+      text: 'Top right. Open it as an app from now on.' },
   ],
   android: [
     { head: 'Press the menu',
@@ -78,7 +78,7 @@ const STEPS = {
       look: <span className="a2h-key a2h-key--row"><DeviceMobile size={21} />Add to home screen</span>,
       text: 'Some phones say Install app.' },
     { head: 'Press Install',
-      text: 'Or Add. Open it from your home screen from now on.' },
+      text: 'Or Add. Open it as an app from now on.' },
   ],
   samsung: [
     { head: 'Press the menu',
@@ -87,7 +87,7 @@ const STEPS = {
     { head: 'Press Add page to',
       look: <span className="a2h-key a2h-key--row"><Plus size={21} />Add page to</span> },
     { head: 'Press Home screen',
-      text: 'Then Add. Open it from your home screen from now on.' },
+      text: 'Then Add. Open it as an app from now on.' },
   ],
   desktop: [
     { head: 'In Chrome or Edge',
