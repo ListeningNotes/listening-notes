@@ -140,9 +140,19 @@ export default async function GetPage({ searchParams }) {
       <header className="get-top">
         {/* The giver's card: their face over a plain mark, which is what
             shows if their journal has no portrait — the address book's
-            faces work the same way — then who it is from, and the gift. */}
+            faces work the same way — then who it is from, and the gift.
+            It opens their journal in a new tab, 2026-09-23: somebody handed
+            a gift by text may never have seen one, and the best pitch there
+            is is the giver's own journal — so the page stays the steps
+            (Miyel's call, over a pitch before them). */}
         {giverName && (
-          <div className="ln-tile get-gift">
+          <a
+            href={journalUrl(giver)}
+            className="ln-tile get-gift"
+            target="_blank"
+            rel="noopener"
+            aria-label={`A gift from ${giverName} — open their journal`}
+          >
             <span className="get-gift-face" aria-hidden="true">
               <User size={20} />
               <img src={`${journalUrl(giver)}/api/portrait`} alt="" />
@@ -152,7 +162,7 @@ export default async function GetPage({ searchParams }) {
               <span className="get-gift-name">{giverName}</span>
             </span>
             <Gift size={20} className="get-gift-glyph" aria-hidden="true" />
-          </div>
+          </a>
         )}
         <p className="get-kicker">Get your copy</p>
         <p className="get-lede">
