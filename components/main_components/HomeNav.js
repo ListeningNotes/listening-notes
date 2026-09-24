@@ -174,40 +174,23 @@ const MAKE_ROOM_MS = 300;
 // over it, and a pull down cannot arrive before the sheet it would be pulling
 // has finished coming up, let alone before this.
 const BEHIND_THE_SHEET_MS = 900;
-// ── And the way back down ─────────────────────────────────────────────────
-// A listen becomes an entry, the layer closes, and the record falls out of
-// the beacon into the journal underneath it — which is a real place on this
-// same pane, one floor down, and the whole reason the fall is worth animating
-// at all (Miyel's beacon brief, item 4).
-//
-// 420 is the layer's own GROW_MS: the sheet leaves, and then the cover falls.
-// Overlapping them would be two things moving over each other with nothing
-// saying which to watch.
-//
-// 560 for the fall, a little longer than the 520 it took to rise. Things fall
-// further than they climb here — the beacon is near the top of the screen and
-// the wall is below the fold — and a fall that finished as quickly as the
-// climb read as the cover being snatched rather than let go.
+// ── How long a saved listen takes to drop off the screen ──────────────────
+// 420 is the layer's own GROW_MS, and the time the sheet took to come up: it
+// goes back down the way it came, at the pace it came, onto the journal that
+// is already waiting under it. See the drop, below.
 const LAYER_OUT_MS = 420;
-// ── How slow the cutaway is ───────────────────────────────────────────────
-// Miyel, 2026-09-18: "sloooow it all down, it should feel intentional. Slow
-// swipe down into the journal, album files in slowly, then a slow swipe back
-// up into the session."
+// The cutaway's two long scrolls — DOWN_MS and UP_MS, 1200 each, run a frame
+// at a time by `slide` — went on 2026-09-24 with the round trip they drove.
+// See the drop.
 //
-// The scroll is run here rather than handed to `behavior: 'smooth'`, which was
-// what it used first. A smooth scroll's duration belongs to the browser and is
-// a function of how far it is going — about a second for a phone-sized pane
-// and a blink on a desk — so there was no number to slow down, and the same
-// save felt like two different things on two screens. These are that number.
-const DOWN_MS = 1200;
-const UP_MS = 1200;
 // The wall, once the record has landed on it. Journal's filing is 700ms and the
 // newcomer finishes growing around a second, so this is the stillness after
-// that — long enough to read what arrived rather than to catch it arriving.
+// that — the wall's own bar stays down until it is over, so nothing but the
+// records is on screen while one of them arrives.
 const WATCH_MS = 1300;
 // And how long to wait for the record to appear on the wall before giving up
 // and treating it as landed. Asking for the wall is a fetch, and a slow or
-// failed one must not leave the pane sitting on the journal for ever.
+// failed one must not leave the bar down for ever.
 const ARRIVE_MAX_MS = 4000;
 
 // ── passing ────────────────────────────────────────────────────────────────
@@ -406,44 +389,6 @@ function ease() {
 
 // Where a pane's second floor begins: the top of its second .hn-floor when it
 // has floors, one screen down when it does not (the no-beacon copy's wall).
-// ── Scrolling on purpose ─────────────────────────────────────────────────
-// The site's own curve, over a stated number of milliseconds, because the
-// cutaway has to feel deliberate and `behavior: 'smooth'` has no opinion to
-// offer about that. Returns a function that stops it.
-//
-// The frame loop has a way out that does not need frames: a tab the browser is
-// not painting runs no rAF callback, and this must not leave a pane stranded
-// halfway down. It lands where it was going and the cutaway carries on.
-function slide(pane, to, ms, done) {
-  const from = pane.scrollTop;
-  const span = to - from;
-  if (!span) { done(); return () => {}; }
-  const started = performance.now();
-  let frame = 0;
-  let over = false;
-  const finish = () => {
-    if (over) return;
-    over = true;
-    cancelAnimationFrame(frame);
-    clearTimeout(backstop);
-    pane.scrollTop = to;
-    done();
-  };
-  const step = now => {
-    if (over) return;
-    const t = Math.min(1, (now - started) / ms);
-    // The site's curve, as an easing rather than a bezier: slow out of the
-    // start, slow into the end, and most of the distance in the middle.
-    const e = t < 0.5 ? 4 * t * t * t : 1 - ((-2 * t + 2) ** 3) / 2;
-    pane.scrollTop = from + span * e;
-    if (t >= 1) { finish(); return; }
-    frame = requestAnimationFrame(step);
-  };
-  const backstop = setTimeout(finish, ms + 400);
-  frame = requestAnimationFrame(step);
-  return () => { if (!over) { over = true; cancelAnimationFrame(frame); clearTimeout(backstop); } };
-}
-
 function secondFloorTop(pane) {
   const floors = pane.querySelectorAll(':scope > .hn-floor, :scope > * > .hn-floor');
   return floors.length > 1 ? floors[1].offsetTop - floors[0].offsetTop : pane.clientHeight;
@@ -913,170 +858,148 @@ export default function HomeNav() {
     flightTimers.current.push(requestAnimationFrame(() => lookFor()));
   }, [landing]);
 
-  // ── The drop ──────────────────────────────────────────────────────────────
-  // The listen is an entry. The layer closes, the cover leaves the beacon and
-  // falls into the journal on floor two, and the slot refills with the record
-  // just posted, captioned Last logged.
+  // ── The drop, 2026-09-24 ─────────────────────────────────────────────────
+  // A listen becomes an entry, and the sheet it was written on goes back down
+  // the way it came up — onto the journal, which is already underneath it,
+  // with the record filing into the top of it.
   //
-  // Where it falls TO is measured and never assumed, which is the one rule
-  // this had to obey: the wall is below the fold unless somebody has scrolled
-  // down to it, and animating to coordinates off the bottom of the screen is
-  // an animation nobody sees and a cover that appears to be thrown away. So
-  // the first tile is used when it is actually on screen, and the down caret
-  // — which is pointing at the wall, and is the reader's own way to it —
-  // when it is not. The record still lands in the journal either way; only
-  // the drawing of it differs.
-  // The record being filed, and the whole of the cutaway's state: it opens the
-  // wall while the picker is over it, and the pane goes down to it and back.
+  // Miyel, after a full session: "Down to the journal still isn't smooth.
+  // Maybe rework it. We can make it simpler for now. Instead of a whole
+  // cutaway, maybe it just drops down. I do love the cutaway, but if it's
+  // not going to be seamless, I would rather not have it for now." Offered
+  // three shapes, she took this one.
+  //
+  // What it replaced was a round trip: the sheet cut out in a single frame,
+  // the pane scrolled a floor down over 1.2s, held the wall while the record
+  // filed in, and scrolled back up over another 1.2s to the drafts. Both
+  // scrolls were run a frame at a time from here, which a phone does
+  // unevenly — and the wall measured itself for the filing while it was
+  // still display: none, so every cover was recorded at the top-left corner
+  // and the whole wall sprang out of that corner when the record landed,
+  // rather than stepping over by one.
+  //
+  // Now nothing scrolls where anybody can see it. It is the rule picking a
+  // record already follows — "you don't see the transition" (2026-09-18) —
+  // run the other way: while the sheet still covers the screen the picker
+  // folds, the wall goes back to its own top and the pane goes to the wall,
+  // and then the sheet drops. What it uncovers is already the place you are
+  // going. The one thing left moving is the sheet, which is one transform
+  // and the same movement as pulling a listen down by hand.
+  //
+  // You stay on the journal. The drafts are one press of the beacon away.
+
+  // The record being filed. It keeps the wall's own bar down (.hn--filing)
+  // until the record is on the wall and has been there a moment.
   const [filing, setFiling] = useState(null);
   // The wall's next answer, in flight since the save.
   const onTheWay = useRef(null);
-  const dropTimers = useRef([]);
-  useEffect(() => () => {
-    dropTimers.current.forEach(id => { clearTimeout(id); cancelAnimationFrame(id); });
-  }, []);
 
   useEffect(() => {
     const onSaved = event => {
       const record = event.detail || {};
-      // Asked for now, applied later. It was asked for on arrival at the wall
-      // until 2026-09-18 and the pane sat there for about a second waiting for
-      // it — a stall in the middle of a cutaway, which is the one place there
-      // is nothing else to look at. The answer is held until the pane is there
-      // to watch it land; see the effect below.
+      // Asked for now, applied once the sheet is out of the way — see the
+      // effect below. It was asked for on arrival at the wall until
+      // 2026-09-18, and the pane sat there for about a second waiting.
       onTheWay.current = fetchEntries().catch(() => null);
-      // And the listen is over, so the sheet goes. router.back() because the
-      // layer is open by virtue of the address and closing it is going back —
-      // see the note at the top of LayerEntry.
-      router.back();
-      const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-      if (!record.art || still) {
-        // No cutaway. The record is simply on the beacon and in the wall,
-        // which is the brief's own answer for reduced motion.
-        onTheWay.current.then(list => { if (list) setEntries(list); });
-        onTheWay.current = null;
-        announce(record, 'logged');
-        return;
-      }
-      // ── The cutaway ───────────────────────────────────────────────────
-      // Miyel, 2026-09-18: "have the screen show the journal during the save
-      // process and just show the album file into the grid, then the screen
-      // returns to the session drafts. It's like a cutaway but not fully
-      // leaving."
-      //
-      // The cover used to fall out of the beacon toward the wall, which is one
-      // floor down and, while a record is being chosen, not on the screen at
-      // all — the picker is that floor. So it fell at a hidden target and what
-      // there was to see was a cover dropping off the bottom of the screen.
-      //
-      // Going to the wall instead answers it and is less machinery, not more:
-      // the wall does not have to be found or aimed at, because it is what you
-      // are looking at. Journal does the filing (see its own note); this is
-      // the going and the coming back.
-      //
-      // Filed now, under the sheet that is still going down, and the drop
-      // waits for the sheet (below). Miyel, 2026-09-22, after a full session:
-      // "drop down into journal, cutaway didn't feel smooth." Measured: the
-      // wall's floor is display: none while a record is chosen, and opening it
-      // laid out every cover on the wall in the same frame the drop set off —
-      // a 33ms stall on a laptop at the very start of the move, several times
-      // that on a phone. Opened here, that work happens behind the sheet.
+      // The picker folds now, behind the sheet. `choosing` stays on through
+      // a listen so that closing one lands back on the drafts; a saved one
+      // lands on the journal, and the journal is floor two, which is not on
+      // the page while the picker is floor one.
+      setEnding(false);
+      setChoosing(false);
       setFiling(record);
     };
     window.addEventListener(SAVED_EVENT, onSaved);
     return () => window.removeEventListener(SAVED_EVENT, onSaved);
-  }, [fetchEntries, router]);
+  }, [fetchEntries]);
 
-  // ── Down to the wall, and back ───────────────────────────────────────────
-  // The whole of the cutaway, and all of it on stated clocks. The floor opens,
-  // the pane goes down over DOWN_MS, the record files in *once the pane has
-  // got there*, the wall is held for WATCH_MS, and the pane comes back up over
-  // UP_MS to the drafts it left.
-  //
-  // The order is the part that had to be measured. Asking for the wall at the
-  // moment of the save — which is what this did first — meant the record filed
-  // itself in while the pane was still travelling, and what there was to see
-  // happened off-screen. Which is the same failure the falling cover it
-  // replaced had, one floor further on.
-  useEffect(() => {
+  // A layout effect, so everything that moves under the sheet has moved before
+  // the frame is drawn. The sheet is still over the whole screen at this point,
+  // and this is the last moment it is.
+  useLayoutEffect(() => {
     if (!filing) return undefined;
-    const pane = homeRef.current;
-    if (!pane) {
-      onTheWay.current?.then(list => { if (list) setEntries(list); });
-      onTheWay.current = null;
-      announce(filing, 'logged');
-      setFiling(null);
-      return undefined;
-    }
-
-    // The beacon takes the record now rather than at the end. By the time the
-    // pane is back this screen has been away and come again, and a beacon that
-    // changed on arrival would be the one thing on it that had not settled.
+    // The beacon takes the record now. It is a floor up and out of sight, and
+    // it says Last logged when you go back to it.
     announce(filing, 'logged');
 
-    // The wall goes back to its own top before anything moves. Floor two has a
-    // scroller of its own and the newest record is the first tile in it, so a
-    // wall left scrolled down means arriving in the middle of the journal with
-    // the record filing itself in somewhere above the fold. It is worst where
-    // the grid is widest: measured 2026-09-18, the same wall is 1464px tall at
-    // four columns across and 5928 at two, which is why Miyel saw it on the
-    // two-column view and not the others.
+    // The wall on its own top, then the pane on the wall — exactly where the
+    // chevron's press puts it. A wall left scrolled down would mean arriving
+    // in the middle of the journal with the record filing in somewhere above
+    // the fold (2026-09-18: the same wall is 1464px tall at four across and
+    // 5928 at two).
     //
-    // Instantly, and here rather than on arrival: the floor is behind the
-    // picker at this moment and nobody can see it happen. `goUp` does the same
-    // thing for the same reason on the way back from the wall by hand.
+    // Only when the beacon's pane is the one under the sheet. A listen started
+    // from the inbox opens over the inbox and drops back onto it, and the
+    // beacon's pane is left where it was — moving a pane nobody is looking at
+    // would only be found later, as the journal where the beacon should be.
+    const pane = homeRef.current;
     const wall = floorRef.current;
-    if (wall && getComputedStyle(wall).overflowY === 'auto') wall.scrollTop = 0;
+    const rail = railRef.current;
+    const onTheRail = window.matchMedia('(max-width: 768px)').matches && rail;
+    const underTheSheet = !onTheRail || Math.round(rail.scrollLeft / (rail.clientWidth || 1)) === HOME;
+    if (underTheSheet) {
+      if (wall && getComputedStyle(wall).overflowY === 'auto') wall.scrollTop = 0;
+      if (pane) pane.scrollTop = floorTwo(pane);
+    }
 
+    let alive = true;
     const clocks = [];
-    let stop = null;
-    clocks.push(setTimeout(() => {
-      // The sheet's length first. The floor opened at the save, under the
-      // sheet going down (see onSaved), so by now it is laid out and on the
-      // page — it is display: none under the picker until .hn--filing opens
-      // it, and a hidden floor has no offsetTop to aim at — and the drop sets
-      // off with nothing left to do but move.
-      stop = slide(pane, secondFloorTop(pane), DOWN_MS, () => {
-        // Now. The wall was asked for at the moment of the save and has most
-        // likely already answered; this is where the answer is put on screen,
-        // with the pane here to watch it. Journal has been holding the old
-        // positions since the save and files the record in against them — see
-        // its own note.
-        const waiting = onTheWay.current || fetchEntries().catch(() => null);
-        onTheWay.current = null;
-        // Not urgent, 2026-09-22: the new list redraws the whole cross, and
-        // done in one piece it stalled the moment the pane arrived (61ms on a
-        // laptop). As a transition React can do it in pieces between frames.
-        waiting.then(list => { if (list) startTransition(() => { setEntries(list); setLoading(false); }); });
+    // ── The sheet goes down ─────────────────────────────────────────────
+    // Both of them: the listen, and the preview standing on it — its own
+    // sheet at the top of the document (SessionPreview), and the one the
+    // Save was pressed on. Moved as one, on the site's curve, at the pace the
+    // listen came up. The address goes back once they are off the screen,
+    // which is what takes them out of the page.
+    const sheets = [...document.querySelectorAll('.lay--rises, .lay.ses-preview')];
+    const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    const gone = new Promise(resolve => {
+      let went = false;
+      const back = () => {
+        if (went) return;
+        went = true;
+        if (alive) router.back();
+        resolve();
+      };
+      if (!sheets.length || still) { back(); return; }
+      // A tab nobody is looking at runs no animation to its end, so a clock a
+      // beat longer is the other way out, whichever comes first.
+      clocks.push(setTimeout(back, LAYER_OUT_MS + 200));
+      const runs = sheets.map(sheet => sheet.animate([
+        { transform: 'none' },
+        { transform: `translateY(${sheet.offsetHeight || window.innerHeight}px)` },
+      ], { duration: LAYER_OUT_MS, easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)', fill: 'forwards' }));
+      runs[0].onfinish = back;
+      runs[0].oncancel = back;
+    });
 
-        // And the wall is held from the moment the record is *on* it, not from
-        // the moment the pane got here. Asking for it is a fetch: it took about
-        // 800ms on the dev server, so a watch started on the scroll's own end
-        // spent most of itself waiting for a tile that had not arrived and then
-        // left again half a second after it did. Measured exactly that.
-        const goUpAgain = () => {
-          stop = slide(pane, 0, UP_MS, () => {
-            // Cleared after the way back, not before: .hn--filing is what
-            // holds the floor open, and taking it off mid-scroll would shut
-            // the wall while the pane was still on it.
-            setFiling(null);
-          });
-        };
-        const landed = () => clocks.push(setTimeout(goUpAgain, WATCH_MS));
-        const watchFor = waited => {
-          if (document.querySelector(`[data-tile-slug="${CSS.escape(filing.slug || '')}"]`)
-            || waited >= ARRIVE_MAX_MS) { landed(); return; }
-          clocks.push(setTimeout(() => watchFor(waited + 80), 80));
-        };
-        watchFor(0);
-      });
-    }, LAYER_OUT_MS));
+    // ── And then the record files in ─────────────────────────────────────
+    // Once both are true: the sheet is off the screen, and the wall has
+    // answered. Journal measured the wall as it stood before the answer and
+    // files the record in against that — see its own note.
+    const waiting = onTheWay.current || fetchEntries().catch(() => null);
+    onTheWay.current = null;
+    Promise.all([waiting, gone]).then(([list]) => {
+      if (!alive) return;
+      // Not urgent, 2026-09-22: the new list redraws the whole cross, and in
+      // one piece it stalled a laptop for 61ms. As a transition React can do
+      // it between frames.
+      if (list) startTransition(() => { setEntries(list); setLoading(false); });
+      // The bar comes back once the record has been on the wall a moment.
+      const landed = () => clocks.push(setTimeout(() => { if (alive) setFiling(null); }, WATCH_MS));
+      const watchFor = waited => {
+        if (!alive) return;
+        if (document.querySelector(`[data-tile-slug="${CSS.escape(filing.slug || '')}"]`)
+          || waited >= ARRIVE_MAX_MS) { landed(); return; }
+        clocks.push(setTimeout(() => watchFor(waited + 80), 80));
+      };
+      watchFor(0);
+    });
 
     return () => {
-      if (stop) stop();
-      clocks.forEach(id => { clearTimeout(id); cancelAnimationFrame(id); });
+      alive = false;
+      clocks.forEach(id => clearTimeout(id));
     };
-  }, [filing, fetchEntries]);
+  }, [filing, fetchEntries, router]);
 
   // Where the flying cover is drawn this frame: at its start until it is told
   // to go, then translated and scaled onto the beacon's slot.
@@ -2127,7 +2050,15 @@ export default function HomeNav() {
             <button
               type="button"
               className="ses-shut-word"
-              onClick={() => { setEnding(false); setChoosing(false); }}
+              onClick={() => {
+                // Back to the top as the picker folds, 2026-09-24. The floor
+                // grows with the picker now (nav.css), so a search scrolled
+                // down to its fourth row left the beacon coming back half off
+                // the top of the screen — measured, 119px of it.
+                if (homeRef.current) homeRef.current.scrollTop = 0;
+                setEnding(false);
+                setChoosing(false);
+              }}
               tabIndex={ending ? 0 : -1}
               aria-hidden={!ending}
               title="End this session and go back to the beacon"
