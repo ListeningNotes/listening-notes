@@ -3084,6 +3084,21 @@ current.
 
 ## Complete
 
+**2026-09-23 — The home screen, calmer: on main.** Branch
+`home-screen-steps` merged; the version stays at 1.32.0 and no release cut.
+
+- [x] **Setup's last screen, and Settings' "On your home screen".** Five
+      paragraphs became three tiles in the shape of `/get`'s steps — Press
+      Share, Press Add to Home Screen, Press Add — each drawing the button
+      where its name alone would leave somebody hunting: the share glyph,
+      the share sheet's row. Android and Samsung Internet get three of their
+      own; a computer gets its ways unnumbered, with the phone's two buttons
+      drawn. On setup the mark at the top turns into the app icon, and the
+      line under the question, the dots, the keeper's name beside the icon
+      and "Later — it's in Settings" are gone. Checked in the browser as an
+      iPhone and as an Android phone, light and dark, and seen by Miyel in
+      the preview. Not yet on a real Android phone.
+
 **2026-09-23 — Came back, and whose gift it is: 1.32.0, on main.** Branches
 `came-back` and `get-gift` merged; no release cut yet.
 
