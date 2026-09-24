@@ -3178,10 +3178,10 @@ current.
 
 ## Complete
 
-**2026-09-24 — notes from a full session: on branch `session-fixes`, not
-merged.** Miyel's list after logging a record on her phone, with three
-screenshots. Checked in the Claude browser at phone size; nothing of it has
-been on a real phone yet. No version bump until the merge (1.34.1, a fix).
+**2026-09-24 — notes from a full session: 1.34.1, on main and pushed.**
+Branch `session-fixes` merged, then deleted; no release cut. Miyel's list
+after logging a record on her phone, with three screenshots. Checked in the
+Claude browser at phone size, then by Miyel on her phone: "seems to work."
 
 - [x] **The album search shows everything it found.** "I can't see the third
       row of text in a session when I'm searching for albums." The beacon's
