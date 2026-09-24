@@ -60,8 +60,10 @@
 
 /* ── A gift, 2026-09-22 ── the giver's card, when the link came from Give:
    a tile as wide as what is on it, centred over the caption — a face, "A
-   gift from" and the name, and the gift at the far end. Flat, because it
-   opens nothing. */
+   gift from" and the name, and the gift at the far end. A door since
+   2026-09-23 — it opens the giver's journal in a new tab — so it lifts on
+   hover as .ln-tile does; still no shadow, since it sits on the page's own
+   paper among the steps. */
 .ln-tile.get-gift {
   justify-content: flex-start;
   gap: 14px;
@@ -72,9 +74,8 @@
   font-family: inherit; font-size: inherit;
   letter-spacing: normal; text-transform: none;
   text-align: left;
-  transition: none;
 }
-.ln-tile.get-gift:hover { border-color: var(--border); transform: none; }
+.ln-tile.get-gift:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; }
 /* The face over a plain mark: a journal without a portrait answers 404, the
    picture draws nothing, and the mark underneath is what shows. */
 .get-gift-face {
