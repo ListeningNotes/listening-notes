@@ -63,14 +63,16 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { CaretDown, Check, Eye, EyeSlash } from '@phosphor-icons/react';
+import { CaretDown, Check, Eye, EyeSlash, Gift, User } from '@phosphor-icons/react';
 import { fonts } from '../../library/sitewide_visuals';
 import { BIO_PROMPTS, BIO_LIMIT } from '../../library/bioprompt';
 import PasswordGate from '../../components/session_components/PasswordGate';
 import { shrink } from '../../components/main_components/IdentificationCardEditor';
 import AddToHomeScreen from '../../components/main_components/AddToHomeScreen';
 import UpdateSwitch from '../../components/main_components/UpdateSwitch';
+import CodeScanner from '../../components/main_components/CodeScanner';
 import { useJournalHost } from '../../hooks/useJournalHost';
+import { tidyJournal, journalUrl } from '../../library/return_address';
 
 // The password claims the journal; the home screen comes after, because it is
 // the one step the software cannot perform and the moment right after the
@@ -85,7 +87,14 @@ import { useJournalHost } from '../../hooks/useJournalHost';
 // stay together at the end. A copy in setup already carries a wristband
 // issued against its claim code, which is what lets this screen ask the
 // server anything before the password exists.
-const STEPS = ['name', 'photo', 'prompts', 'rig', 'updates', 'password', 'homescreen'];
+// ── Who gave it, 2026-09-23 ───────────────────────────────────────────────
+// Straight after the claim, because only a claimed journal has a name and an
+// address to add somebody and wave with. A copy deployed from a gift knows
+// its giver already (GIFT_FROM, set by the deploy button) and opens on their
+// card with the box ticked; one that does not asks whether somebody gave it
+// and offers the camera — the Give code carries the giver in it, and a card's
+// code is their journal. Skip is always there: most copies are nobody's gift.
+const STEPS = ['name', 'photo', 'prompts', 'rig', 'updates', 'password', 'gift', 'homescreen'];
 const PASSWORD_FLOOR = 8;
 
 async function patchSettings(fields) {
@@ -132,6 +141,18 @@ export default function WelcomeScreen() {
   // thing a working journal does not have.
   const [rehearsing, setRehearsing] = useState(false);
 
+  // The giver, when there is one. `giftFrom` is the address the deploy
+  // carried (or, in a rehearsal, `?gift=`); `giver` is that or a scanned
+  // address once its journal has said what its keeper is called; `giverWave`
+  // is the box, ticked by default — they arrived through a named gift from
+  // this person, so filing them is the expected outcome, and one tap undoes
+  // it (Miyel's brief, About, /get and Give, §4).
+  const [giftFrom, setGiftFrom] = useState('');
+  const [giver, setGiver] = useState(null);
+  const [giverWave, setGiverWave] = useState(true);
+  const [scanningGift, setScanningGift] = useState(false);
+  const [giftTrouble, setGiftTrouble] = useState('');
+
   // The code, if the person arrived by the link in the build log. Tried
   // once, silently, before anything is drawn: if it opens the door the first
   // thing they see is the name screen, and the words "claim code" never come
@@ -152,6 +173,9 @@ export default function WelcomeScreen() {
       // Unless the owner asked to see it again.
       if (status?.claimed && !(rehearse && auth.authed)) { router.replace('/'); return; }
       setRehearsing(Boolean(status?.claimed && rehearse));
+      // The giver the deploy carried — or, rehearsing, one named in the
+      // address, so the gift screen can be looked at on a claimed copy.
+      setGiftFrom(status?.gift || (rehearse ? tidyJournal(query.get('gift') || '') : ''));
       setHasPassword(Boolean(status?.has_password));
       let admitted = !!auth.authed;
       const knock = async password => {
@@ -191,10 +215,33 @@ export default function WelcomeScreen() {
   const [promptIndex, setPromptIndex] = useState(0);
   const [promptWay, setPromptWay] = useState('on');
   const PROMPTS_HERE = 3;
-  // The journal is claimed on the password screen; the screen after it only
-  // leaves. Once claimed, Back is no longer offered — there is nothing behind
-  // it that could still be changed here.
-  const claimed = current === 'homescreen';
+  // The journal is claimed on the password screen; the screens after it only
+  // go forward. Once claimed, Back is no longer offered — there is nothing
+  // behind it that could still be changed here.
+  const claimed = current === 'gift' || current === 'homescreen';
+
+  // ── Finding the giver, on the gift screen ─────────────────────────────────
+  // Asked here and not when the page loads: on a real install the first
+  // question goes out before the door is opened, and only a request carrying
+  // this journal's wristband is told who gave it. By the gift screen the
+  // journal is claimed and the question can be asked. A giver whose journal
+  // does not say its name is not shown — never a card with an address on it —
+  // and the screen falls back to asking.
+  useEffect(() => {
+    if (current !== 'gift' || giver) return undefined;
+    let gone = false;
+    (async () => {
+      let from = giftFrom;
+      if (!from) {
+        const status = await fetch('/api/setup').then(r => r.json()).catch(() => ({}));
+        from = status?.gift || '';
+      }
+      if (!from || gone) return;
+      const answer = await fetch(`/api/setup?giver=${encodeURIComponent(from)}`).then(r => r.json()).catch(() => ({}));
+      if (!gone && answer?.giver?.name) setGiver(answer.giver);
+    })();
+    return () => { gone = true; };
+  }, [current, giftFrom, giver]);
 
   // Move on, after doing whatever this screen's Next does. Skip calls it with
   // nothing to do.
@@ -348,6 +395,7 @@ export default function WelcomeScreen() {
                   rig: 'What you listen on.',
                   updates: 'Keep your journal up to date automatically.',
                   password: 'What you’ll type to get back in.',
+                  gift: giver ? 'Your journal is ready.' : 'Did someone give you this journal?',
                   homescreen: 'It’s yours. Put it on your home screen.',
               }[current]}
             </p>
@@ -536,6 +584,77 @@ export default function WelcomeScreen() {
               </div>
             )}
 
+            {current === 'gift' && (
+              <div className="su-fields">
+                {giver ? (
+                  <>
+                    {/* Their face over the plain mark, A GIFT FROM, the name,
+                        and the one choice — ticked, visible, one tap to undo. */}
+                    <div className="su-gift">
+                      <span className="su-gift-face" aria-hidden="true">
+                        <User size={34} weight="regular" />
+                        <img src={`${journalUrl(giver.address)}/api/portrait`} alt="" onError={e => { e.currentTarget.style.display = 'none'; }} />
+                      </span>
+                      <span className="su-gift-from"><Gift size={12} aria-hidden="true" /> A gift from</span>
+                      <span className="su-gift-name">{giver.name}</span>
+                      <label className="su-gift-check">
+                        <input type="checkbox" checked={giverWave} onChange={e => setGiverWave(e.target.checked)} />
+                        <span>Add {giver.name} to your book and wave</span>
+                      </label>
+                      <p className="su-gift-line">They&rsquo;ll see your name and where your journal is, and nothing else.</p>
+                    </div>
+                    <button
+                      type="button"
+                      className="su-go"
+                      disabled={busy}
+                      onClick={() => advance(async () => {
+                        if (!giverWave) return;
+                        const r = await fetch('/api/people', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ address: giver.address }),
+                        });
+                        const d = await r.json().catch(() => ({}));
+                        if (!r.ok || !d.person) throw new Error(d.error || 'They could not be added just now. Untick the box to go on, and add them later from your book.');
+                        // The wave does not hold anything up: they are in the
+                        // book either way, and a journal too old to take one
+                        // is not this journal's problem to report here.
+                        await fetch('/api/outbox', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ wave: true, person_id: d.person.id }),
+                        }).catch(() => {});
+                      })}
+                    >Next</button>
+                  </>
+                ) : (
+                  <>
+                    <p className="su-why">If a friend handed you this, scan the code they showed you — the gift, or their card.</p>
+                    <button type="button" className="su-go" disabled={busy} onClick={() => { setGiftTrouble(''); setScanningGift(true); }}>Scan their code</button>
+                    {giftTrouble && <p className="su-why">{giftTrouble}</p>}
+                  </>
+                )}
+                {scanningGift && (
+                  <CodeScanner
+                    onClose={() => setScanningGift(false)}
+                    onRead={async text => {
+                      setScanningGift(false);
+                      setGiftTrouble('');
+                      // The Give code is /get?gift=<their journal>; a card's
+                      // code, or a cover's, is their journal itself.
+                      let address = '';
+                      try { address = tidyJournal(new URL(text).searchParams.get('gift') || '') || tidyJournal(text); } catch { address = tidyJournal(text); }
+                      if (!address) { setGiftTrouble('That code isn’t a journal.'); return; }
+                      if (address === tidyJournal(host)) { setGiftTrouble('That’s this journal’s own code.'); return; }
+                      const answer = await fetch(`/api/setup?giver=${encodeURIComponent(address)}`).then(r => r.json()).catch(() => ({}));
+                      if (answer?.giver?.name) setGiver(answer.giver);
+                      else setGiftTrouble('That journal isn’t answering just now. You can add them later from your book.');
+                    }}
+                  />
+                )}
+              </div>
+            )}
+
             {current === 'homescreen' && (
               <div className="su-fields">
                 <p className="su-why">It opens without the browser around it, and reads as an app.</p>
@@ -574,7 +693,9 @@ export default function WelcomeScreen() {
             )}
             {claimed && (
               <div className="su-under" style={{ justifyContent: 'flex-end' }}>
-                <button type="button" className="su-skip" disabled={busy} onClick={() => advance()}>Later — it’s in Settings</button>
+                <button type="button" className="su-skip" disabled={busy} onClick={() => advance()}>
+                  {current === 'gift' ? 'Skip' : 'Later — it’s in Settings'}
+                </button>
               </div>
             )}
           </>

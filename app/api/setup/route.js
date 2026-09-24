@@ -25,7 +25,9 @@ import { NextResponse } from 'next/server';
 import { requireWristband } from '@/library/wristband';
 import { isSetUp, save_settings } from '@/library/settings_actions';
 import { claim_journal } from '@/library/database_actions';
-import { tidyAddress } from '@/library/return_address';
+import { tidyAddress, tidyJournal } from '@/library/return_address';
+import { ask_journal_name } from '@/library/people_actions';
+import { mayKnock, whoIsKnocking } from '@/library/doorman';
 import { hashPassword, passwordSource, save_secrets, setupWindowOpen } from '@/library/secrets';
 
 // Eight is the floor. There is no strength meter — one password, chosen once,
@@ -37,14 +39,33 @@ const PASSWORD_FLOOR = 8;
 // copy is already somebody's, and whether it already has a password from the
 // environment. Public, and nothing in it is a secret — an unclaimed copy
 // already says so on its holding page.
-export async function GET() {
+//
+// ── Who gave it, 2026-09-23 ─────────────────────────────────────────────────
+// A copy deployed from a gift carries the giver's address in GIFT_FROM, set
+// by the deploy button (/get, when the link came from Give). Only somebody
+// holding this journal's wristband is told it — during setup that is the
+// person claiming it — because who gave whom a journal is not a public fact.
+// `?giver=<address>` asks that journal its keeper's name, for the card on
+// the setup screen: the address came from GIFT_FROM or from a scan of the
+// giver's code. The question goes through the relay door, like every
+// outbound request a page can make this copy send.
+export async function GET(request) {
   try {
     const claimed = await isSetUp();
     const password = await passwordSource();
     // Whether the door is open with nothing typed — the half hour after a
     // build. The page knocks first when it is.
     const open = !claimed && !password && (await setupWindowOpen());
-    return NextResponse.json({ claimed, has_password: Boolean(password), open });
+    const answer = { claimed, has_password: Boolean(password), open };
+    if (!(await requireWristband(request))) {
+      const gift = tidyJournal(process.env.GIFT_FROM || '');
+      if (gift) answer.gift = gift;
+      const asked = tidyJournal(new URL(request.url).searchParams.get('giver') || '');
+      if (asked && mayKnock('relay', whoIsKnocking(request)).allowed) {
+        answer.giver = { address: asked, name: await ask_journal_name(asked, 4000) };
+      }
+    }
+    return NextResponse.json(answer);
   } catch {
     // Cannot be answered: fail the same direction the hold does, and treat
     // the copy as claimed.

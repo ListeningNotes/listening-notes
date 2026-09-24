@@ -234,7 +234,7 @@ The rooms — full pages assembled from furniture
     about/page.js              Redirect to / — the identity card is the about page
     session/page.js            The listen — picker, then four screens under one header
     printer/page.js            The share printer — the press on a record for the keeper (?entry=slug); the sentence for everyone else and for the card, whose plate is still to come
-    setup/page.js              Claiming a copy: the code, the name, three skippable screens, the password
+    setup/page.js              Claiming a copy: the code, the name, three skippable screens, the password, and who gave it (GIFT_FROM, or a scan)
     settings/page.js           The machinery, owner-only
     @layer/(.)archive/page.js  The wall, opened as a layer over whatever you were on — what the ID card's counts press into, growing from the number pressed
     @layer/(.)session/page.js  The same listen, opened as a layer over the desk
