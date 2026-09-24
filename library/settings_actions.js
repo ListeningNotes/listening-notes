@@ -27,12 +27,9 @@ const EMPTY = {
   // it could not quietly become a second name.
   keeper_name: null,
   portrait_url: null,
-  // Whether this journal broadcasts at all: 'quiet' or anything else, which
-  // is on. Null is on, which is the default and what every copy gets without
-  // choosing. It held 'session' or 'lastfm' until 2026-09-16, when Last.fm
-  // came out and the column was given the off switch to carry rather than
-  // being left dead — the schema is additive-only and a column cannot go.
-  beacon_source: null,
+  // beacon_source was here: the beacon's off switch, 2026-09-16 to
+  // 2026-09-24. Every journal broadcasts now; the column stays in the table
+  // (additive-only) and nothing reads or writes it.
   site_address: null,
   founded_at: null,
   pinned_entry_id: null,
@@ -66,7 +63,7 @@ const EMPTY = {
 // query — and so adding a setting is a deliberate act in this file.
 const WRITABLE = [
   'keeper_name', 'display_name', 'portrait_url',
-  'beacon_source', 'site_address',
+  'site_address',
   'founded_at', 'pinned_entry_id', 'social_links',
   'hidden_fields', 'portrait_position', 'rig_icon', 'rig',
   'bioanswers',
@@ -188,7 +185,7 @@ export function titleName(settings) {
 // silent type change or a silently missing page. Add new columns to this list.
 const SETTINGS_FIELDS = [
   'id', 'keeper_name', 'portrait_url',
-  'beacon_source', 'site_address', 'founded_at',
+  'site_address', 'founded_at',
   'pinned_entry_id', 'updated_at', 'why_essay',
   'why_date', 'definitions', 'social_links', 'hidden_fields',
   'portrait_mime', 'portrait_position', 'rig_icon', 'rig',
@@ -266,40 +263,6 @@ export async function pull_keeper_name() {
     return String(row?.keeper_name || '').trim() || null;
   } catch {
     return null;
-  }
-}
-
-// ── One field, for the most-repeated query in the app ─────────────────────
-// Whether this journal is broadcasting. The beacon asks every fifteen seconds,
-// in every open tab, all day, and it used to get the whole settings row to find
-// out — 310 kB before the images came out of that read, 5.1 kB after, and about
-// 30 bytes now.
-//
-// It was three columns joined across two tables until 2026-09-16, because the
-// beacon had to know which of two sources to read and then carry the account
-// and the key to read it with. With one beacon there is one question left: is
-// this journal quiet?
-//
-// The name says "settings" and the temptation will be to add a second field to
-// it the next time something needs one on a hot path. Don't. The reason this
-// function exists is that a general reader on a fifteen-second timer is how the
-// transfer allowance was spent in the first place; a second field is how it
-// grows back. Give the next hot path its own narrow reader.
-//
-// Anything that is not 'quiet' is on, which is how a copy that never chose,
-// and a copy still holding the retired 'session' or 'lastfm', all answer the
-// same thing without a backfill.
-//
-// A read that throws answers *on*, deliberately. A database having a bad
-// minute must not look like somebody asking for privacy — the failure that
-// matters here is going quiet without being asked to, and the beacon has
-// nothing to say during an outage anyway.
-export async function pull_beacon_settings() {
-  try {
-    const [row] = await database`SELECT beacon_source FROM settings WHERE id = 1`;
-    return { quiet: row?.beacon_source === 'quiet' };
-  } catch {
-    return { quiet: false };
   }
 }
 

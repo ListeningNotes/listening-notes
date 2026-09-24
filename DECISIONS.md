@@ -63,8 +63,8 @@ it is the only form the address takes. Scanning someone's face to reach
 their journal is the native gesture, not a workaround.
 
 **No follower counts, no notifications, no unread badges.** Presence is
-outbound and opt-in. A journal can show what is playing; it never shows who is
-reading.
+outbound: a journal shows what its keeper is logging, and it never shows who
+is reading. It was opt-in until 2026-09-24 (the archive has why it stopped).
 
 **The schema is additive-only, from 2026-09-06.** Migrations add columns and
 tables and never rename or drop them: copies in the wild have to survive every
@@ -510,12 +510,12 @@ connect one, Apple Music on an iPhone being unable to at all. It went while it
 was still true that nobody had one set up, which is the cheapest moment a
 removal ever has. The argument for keeping it is in the archive.
 
-**The beacon is switched on or quiet, in Settings, and `beacon_source` carries
-it, 2026-09-16.** Presence is opt-in and there was no way to decline. Quiet
-says nothing to anybody, owner included: a beacon that checked who was asking
-could not be answered once and handed round. The column used to say which of
-two beacons ran here; the schema is additive-only, so it carries the switch
-rather than sitting dead, and anything that is not `quiet` is on.
+**The beacon is always on, 2026-09-24, Miyel's call.** No switch: every
+journal broadcasts what its keeper is logging, and a copy that had chosen
+Quiet broadcasts again after the update — chosen over leaving them quiet or
+offering a way back, and said in the release note, the only place they are
+told. `settings.beacon_source` stays, unread. The Quiet switch of 2026-09-16,
+and the argument for it, are in the archive.
 
 **The needle lifts; it is not thrown away, 2026-09-15.** Closing a record you
 spent an evening with used to erase that listen and drop the beacon past it.
@@ -1090,6 +1090,31 @@ so the automatic one never ships and the manual one always does.
 the downloaded file. The moment somebody needs a restore is the worst moment
 to learn their backup is the wrong sort.
 
+**Nothing lists the tables, 2026-09-23.** The backup, the export and the
+restore ask the database which it has (`library/whole_journal.mjs`), and the
+restore reads its order off the foreign keys. Three hand-kept lists of seven
+fell seven tables behind, the address book among them. Do not put a list back:
+a table is left out by naming it where it is left out, never by forgetting it.
+
+**The export leaves `secrets` out and the backup takes it, 2026-09-23,
+Miyel's call.** Whoever holds the session secret can sign in as the keeper
+without the password. A backup stays on the keeper's machine beside the same
+keys in `.env.local`; a download travels, and no keeper can change the key
+after. The cost: restoring an export into a new database means setting the
+copy up first, with a new password.
+
+**Back up your journal is two presses in Settings, 2026-09-23.** Make a copy,
+then hand it over: the share sheet on a phone, Downloads on a computer. The
+copy is held in the page and never kept on the server — a backup kept inside
+the journal goes down with it — and the journal never emails it; the phone
+does (no email anywhere, below).
+
+**A restore leaves alone every table its file does not hold, and never writes
+`schema_migrations`, 2026-09-23.** A table a file does not mention is not an
+empty one, and emptying it would lose the address book to an old backup. The
+ledger is this database's shape, not the journal; written back, it would
+re-run migrations over restored rows. It is read to refuse a newer backup.
+
 **The feed is pull-based.** Every copy publishes `/feed.xml`; each copy goes
 and checks. Nobody learns they were read. **One feed** — the two views of
 2026-09-12 retired with the friends brief. **A shelf, not a river:** no
@@ -1551,11 +1576,16 @@ not reopen** once claimed, rather than showing a form that appears to save
 `serial` and `founded_at` and silently drops both.
 
 **Settings is the machinery, reached from the desk.** The address, the
-beacon's switch, the Anthropic key, the password, the home-screen step. The card's own fields
+password, the backup, keeping up to date, the home-screen step. The card's own fields
 are *not* edited there: everything editable is edited where it prints, and
 two editors for one field means neither is canonical. No gear on the card;
 `/?edit=card` opens the card editing for anything that wants to point there.
 The starting theme is parked — its column exists; nothing writes it.
+
+**Settings wears the quiet design, and its Save is a word, 2026-09-24.**
+Each section is one of `/get`'s tiles with a bold line and a grey one. Save is
+the editing bar's underlined word, not setup's black pill: setup shows one
+screen at a time, and four sections at once would be four black bars.
 
 **The keys live in the database, in a table of their own.** A setup screen
 cannot set an environment variable, and a key nobody is prompted for is a key
@@ -1743,8 +1773,9 @@ when the entry opens. The rule for anything that shows many records and then
 one.
 
 **A query on a timer gets its own narrow reader, and it is never widened.**
-`pull_beacon_settings` returns one column because the beacon asks every
-fifteen seconds in every open tab. A general reader on a short timer is
+`pull_beacon_settings` was one — a single column, because the beacon asks every
+fifteen seconds in every open tab — until the switch it read came out
+(2026-09-24). A general reader on a short timer is
 exactly how the allowance got spent; give the next hot-path field its own.
 
 **Nothing that reads settings gets the portrait.** `portrait_data` and

@@ -6,9 +6,10 @@
 // ── What belongs here and what does not ───────────────────────────────────
 // Setup offers to skip almost everything, and Skip has to mean later rather
 // than never — so every field it can skip needs a home. This is that home
-// for the things that are not printed anywhere: the key, the password, the
-// address, and whether the beacon broadcasts. Last.fm was one of them until
-// 2026-09-16, when it came out of the software altogether. The starting theme and the wording of the key
+// for the things that are not printed anywhere: the key, the password and the
+// address. Whether the beacon broadcasts was one of them from 2026-09-16 until
+// 2026-09-24, when every journal came to broadcast and the switch came out;
+// Last.fm was one until 2026-09-16, when it came out of the software altogether. The starting theme and the wording of the key
 // were here for an afternoon and came off (2026-09-01) — parked, not
 // rejected; the theme column and the definitions column both still exist.
 // Light or dark came back for an hour on 2026-09-15 and went again the same
@@ -41,6 +42,7 @@ import SiteNav from '../../components/main_components/SiteNav';
 import PasswordGate from '../../components/session_components/PasswordGate';
 import AddToHomeScreen from '../../components/main_components/AddToHomeScreen';
 import UpdateSwitch from '../../components/main_components/UpdateSwitch';
+import JournalCopy from '../../components/main_components/JournalCopy';
 import { useJournalHost } from '../../hooks/useJournalHost';
 
 const PASSWORD_FLOOR = 8;
@@ -81,7 +83,7 @@ function Section({ title, note, onSave, children, saveLabel = 'Save' }) {
       {note && <p className="st-note">{note}</p>}
       {children}
       <div className="st-foot">
-        <button type="submit" className="st-save" disabled={busy}>{busy ? 'Saving…' : saveLabel}</button>
+        <button type="submit" className="st-save ln-word ln-word--on" disabled={busy}>{busy ? 'Saving…' : saveLabel}</button>
         {said && <span className="st-said" role="status">{said}</span>}
         {trouble && <span className="st-trouble" role="alert">{trouble}</span>}
       </div>
@@ -105,12 +107,6 @@ export default function SettingsPage({ layered = false }) {
   const [secrets, setSecrets] = useState(null);
 
   const [address, setAddress] = useState('');
-  // Whether this journal broadcasts. 'on' is the default and what a copy that
-  // never touches this row keeps; the column it saves to is `beacon_source`,
-  // which used to say which of two beacons ran here and carries the switch
-  // instead now that there is one — the schema is additive-only, so a column
-  // cannot be dropped, and it was that or leave it dead.
-  const [beaconSource, setBeaconSource] = useState('on');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
 
@@ -123,10 +119,6 @@ export default function SettingsPage({ layered = false }) {
     setSettings(row);
     setSecrets(k);
     setAddress(row.site_address || '');
-    // Anything that is not 'quiet' is on, which is how a copy that never chose,
-    // and a copy still holding the retired 'session' or 'lastfm', both land on
-    // the same row without anything having to be rewritten.
-    setBeaconSource(row.beacon_source === 'quiet' ? 'quiet' : 'on');
   }, []);
 
   useEffect(() => {
@@ -150,12 +142,14 @@ export default function SettingsPage({ layered = false }) {
       <SiteNav />
 
       <main className="st-main">
-        <h1 className="st-title">Settings</h1>
-        <p className="st-kicker">The machinery</p>
+        <header className="st-top">
+          <h1 className="st-title">Settings</h1>
+          <p className="st-kicker">The machinery behind your journal.</p>
+        </header>
 
         <Section
           title="This journal’s address"
-          note="Where the card’s scannable code points. Filled in from wherever the copy was first opened; change it if you have since put the journal on a domain of your own."
+          note="Where your card’s code points. Change it if you move the journal to a domain of your own."
           onSave={async () => {
             await send('/api/settings', { site_address: address });
             // The code on the card encodes the address, so it is pressed
@@ -167,42 +161,9 @@ export default function SettingsPage({ layered = false }) {
           <input className="st-field" value={address} onChange={e => setAddress(e.target.value)} placeholder="yourname.example.com" inputMode="url" autoCapitalize="none" autoComplete="off" />
         </Section>
 
-        {/* Whether the journal broadcasts at all. The two rows keep the shape
-            the beacon picker had when there were two beacons to pick between:
-            the top one is the line the cover actually prints, so choosing is
-            seeing what your journal will say rather than learning a word for
-            it (Miyel, 2026-09-15).
-
-            The screen does not go anywhere when this is off — there is always
-            a beacon screen (Miyel, 2026-09-16) — it simply says nothing on it,
-            which is the same thing a copy on its first afternoon says.
-
-            One Save, like every other section — the choice is a field, not a
-            switch that acts the moment it is touched. */}
-        <Section
-          title="Your beacon"
-          note={<>The line on the front of your journal. <strong>Now logging</strong> follows the listen you are writing: the track you are on while you are on it, and the last record you sat down with when you are not. <strong>Quiet</strong> says nothing to anybody — the screen is still there, it is simply blank, the way it is on a journal that has not logged anything yet. Everyone has this from their first listen; there is nothing to set up.</>}
-          onSave={async () => { await send('/api/settings', { beacon_source: beaconSource }); }}
-        >
-          <div className="st-choice">
-            {[
-              { value: 'on', name: 'Now logging', said: 'the track you’re writing about' },
-              { value: 'quiet', name: 'Quiet', said: 'your journal says nothing' },
-            ].map(pick => (
-              <label key={pick.value} className={'st-pick' + (beaconSource === pick.value ? ' st-pick--on' : '')}>
-                <input
-                  type="radio"
-                  name="beacon_source"
-                  value={pick.value}
-                  checked={beaconSource === pick.value}
-                  onChange={() => setBeaconSource(pick.value)}
-                />
-                <span className="st-pick-name">{pick.name}</span>
-                <span className="st-pick-said">{pick.said}</span>
-              </label>
-            ))}
-          </div>
-        </Section>
+        {/* "Your beacon" was here from 2026-09-16 to 2026-09-24: Now logging
+            or Quiet. Every journal broadcasts now (Miyel), and a copy that
+            had chosen Quiet broadcasts again after the update. */}
 
         {/* "Optional: AI assistance" was here until 2026-09-18 — an Anthropic
             key, and a paragraph describing the two things it turned on inside
@@ -218,7 +179,7 @@ export default function SettingsPage({ layered = false }) {
 
         <Section
           title="Password"
-          note="Change the password you sign in with. At least eight characters."
+          note="The one you sign in with. At least eight characters."
           saveLabel="Change password"
           onSave={async () => {
             if (password.length < PASSWORD_FLOOR) throw new Error(`At least ${PASSWORD_FLOOR} characters.`);
@@ -227,22 +188,21 @@ export default function SettingsPage({ layered = false }) {
             setPassword(''); setConfirm('');
           }}
         >
-          <div>
-            <span className="st-label">Journal</span>
-            {/* The address the password is filed under — a real, visible,
-                writable input, because that is what a password manager will
-                pair the password with. Typing into it changes nothing. */}
-            <input className="st-field st-who" type="text" name="username" autoComplete="username" value={host} onChange={() => {}} aria-label="Journal" tabIndex={-1} />
-          </div>
-          <div>
-            <span className="st-label">New password</span>
-            <input className="st-field" type="password" autoComplete="new-password" value={password} onChange={e => setPassword(e.target.value)} />
-          </div>
-          <div>
-            <span className="st-label">Again</span>
-            <input className="st-field" type="password" autoComplete="new-password" value={confirm} onChange={e => setConfirm(e.target.value)} />
-          </div>
+          {/* The address the password is filed under — a real, visible,
+              writable input, because that is what a password manager will
+              pair the password with. Typing into it changes nothing. */}
+          <input className="st-field st-who" type="text" name="username" autoComplete="username" value={host} onChange={() => {}} aria-label="Journal" tabIndex={-1} />
+          {/* Placeholders where labels were, the way setup asks. */}
+          <input className="st-field" type="password" autoComplete="new-password" value={password} onChange={e => setPassword(e.target.value)} placeholder="New password" aria-label="New password" />
+          <input className="st-field" type="password" autoComplete="new-password" value={confirm} onChange={e => setConfirm(e.target.value)} placeholder="Re-type password" aria-label="Re-type password" />
         </Section>
+
+        {/* The export, which nothing led to until 2026-09-23. Two presses —
+            make a copy, then hand it over — and JournalCopy says why. */}
+        <div className="st-section">
+          <h2 className="st-h">Back up your journal</h2>
+          <JournalCopy />
+        </div>
 
         {/* Here as well as in setup, for anyone who skipped it there, and
             for a copy whose updater was switched off or never arrived. It
