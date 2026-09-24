@@ -1582,6 +1582,11 @@ two editors for one field means neither is canonical. No gear on the card;
 `/?edit=card` opens the card editing for anything that wants to point there.
 The starting theme is parked — its column exists; nothing writes it.
 
+**Settings wears the quiet design, and its Save is a word, 2026-09-24.**
+Each section is one of `/get`'s tiles with a bold line and a grey one. Save is
+the editing bar's underlined word, not setup's black pill: setup shows one
+screen at a time, and four sections at once would be four black bars.
+
 **The keys live in the database, in a table of their own.** A setup screen
 cannot set an environment variable, and a key nobody is prompted for is a key
 nobody sets. `secrets` holds the session secret, the password hash, the claim
