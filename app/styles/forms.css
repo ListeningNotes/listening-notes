@@ -302,7 +302,7 @@ textarea.su-field { resize: vertical; min-height: 64px; }
 }
 .su-gift-face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .su-gift-from {
-  display: inline-flex; align-items: center; gap: 6px; margin-bottom: 12px;
+  display: inline-flex; align-items: center; gap: 6px; margin-bottom: 20px;
   font-family: var(--font-label); font-size: 10px; letter-spacing: 0.2em;
   text-transform: uppercase; color: var(--ink-faint);
 }
