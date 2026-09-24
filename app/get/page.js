@@ -60,10 +60,43 @@ import { mayKnock, whoIsKnocking } from '../../library/doorman';
 import { DEPLOY_URL, STEPS } from '../../library/install_guide';
 import InstallSteps from '../../components/main_components/InstallSteps';
 
-export async function generateMetadata() {
+export async function generateMetadata({ searchParams }) {
   const settings = await pull_settings();
   if (!settings.why_essay?.trim()) return {};
-  return { title: `Get your copy · ${titleName(settings)}` };
+  const title = `Get your copy · ${titleName(settings)}`;
+
+  // A gift link's preview, 2026-09-23: "A gift from" the giver, over the
+  // card /get shows, drawn by ./gift-preview. Asked the same way the page
+  // asks below, and only when the giver's journal answers — otherwise the
+  // plain preview, as every other address on the site has. Set whole,
+  // because a page's openGraph replaces the layout's rather than adding to
+  // it; and by the journal's own address, since there is no metadataBase.
+  const { gift } = await searchParams;
+  const giver = tidyJournal(typeof gift === 'string' ? gift : '');
+  let giverName = null;
+  if (giver && giver === tidyJournal(settings.site_address)) {
+    giverName = String(settings.keeper_name || '').trim() || null;
+  } else if (giver && mayKnock('relay', whoIsKnocking({ headers: await headers() })).allowed) {
+    giverName = await ask_journal_name(giver, 2500);
+  }
+  if (!giverName) return { title };
+
+  const home = journalUrl(settings.site_address) || '';
+  return {
+    title,
+    openGraph: {
+      title: `A gift from ${giverName}`,
+      siteName: titleName(settings),
+      description: 'A listening journal of your own.',
+      type: 'website',
+      images: [{
+        url: `${home}/get/gift-preview?gift=${encodeURIComponent(giver)}`,
+        width: 1200,
+        height: 630,
+        alt: `A gift from ${giverName}`,
+      }],
+    },
+  };
 }
 
 export default async function GetPage({ searchParams }) {
