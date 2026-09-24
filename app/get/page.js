@@ -30,11 +30,33 @@
 // The drawer rule: a copy that has not written the essay 404s here rather
 // than serving a door to somebody else's software under its own address.
 // `/get` is Miyel's page on Miyel's copy.
+//
+// ── A gift, 2026-09-22 ─────────────────────────────────────────────────────
+// Somebody who arrives through Give's code arrives with `?gift=<the giver's
+// journal>`, and the page asks that journal what its keeper is called — the
+// same question filing an address asks (ask_journal_name). If it answers, a
+// card under the mark says whose gift this is, with their face; if it does
+// not, nothing — never a broken card and never the raw address (Miyel's
+// brief, About, /get and Give, §4). Nothing here writes, logs or counts it.
+//
+// The question is an outbound request this copy makes because a link said
+// to, from a public page, so it goes through the doorman's relay door — the
+// one that exists so a script cannot make this server fetch a thousand
+// made-up journals — and is given two and a half seconds rather than six: a
+// stranger is looking at a page that waits on it. A gift from this journal
+// itself is answered from its own settings, with no request at all.
 
 import { notFound } from 'next/navigation';
+import { headers } from 'next/headers';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
+// The server's own set: the plain import reaches for React context, which a
+// server component does not have.
+import { Gift, User } from '@phosphor-icons/react/ssr';
 import { pull_settings, titleName } from '../../library/settings_actions';
+import { ask_journal_name } from '../../library/people_actions';
+import { tidyJournal, journalUrl } from '../../library/return_address';
+import { mayKnock, whoIsKnocking } from '../../library/doorman';
 import { DEPLOY_URL, STEPS } from '../../library/install_guide';
 import InstallSteps from '../../components/main_components/InstallSteps';
 
@@ -44,7 +66,7 @@ export async function generateMetadata() {
   return { title: `Get your copy · ${titleName(settings)}` };
 }
 
-export default async function GetPage() {
+export default async function GetPage({ searchParams }) {
   const settings = await pull_settings();
   if (!settings.why_essay?.trim()) notFound();
 
@@ -52,10 +74,36 @@ export default async function GetPage() {
   const shots = STEPS.map(step =>
     existsSync(join(process.cwd(), 'public', 'install', `${step.shot}.png`)));
 
+  // Whose gift this is, when the link came from Give. See the note above.
+  const { gift } = await searchParams;
+  const giver = tidyJournal(typeof gift === 'string' ? gift : '');
+  let giverName = null;
+  if (giver && giver === tidyJournal(settings.site_address)) {
+    giverName = String(settings.keeper_name || '').trim() || null;
+  } else if (giver && mayKnock('relay', whoIsKnocking({ headers: await headers() })).allowed) {
+    giverName = await ask_journal_name(giver, 2500);
+  }
+
   return (
     <main className="get-wrap get-wrap--steps">
       {/* The mark is in the nav row above; see SiteNav. */}
       <header className="get-top">
+        {/* The giver's card: their face over a plain mark, which is what
+            shows if their journal has no portrait — the address book's
+            faces work the same way — then who it is from, and the gift. */}
+        {giverName && (
+          <div className="ln-tile get-gift">
+            <span className="get-gift-face" aria-hidden="true">
+              <User size={20} />
+              <img src={`${journalUrl(giver)}/api/portrait`} alt="" />
+            </span>
+            <span className="get-gift-words">
+              <span className="get-gift-from">A gift from</span>
+              <span className="get-gift-name">{giverName}</span>
+            </span>
+            <Gift size={20} className="get-gift-glyph" aria-hidden="true" />
+          </div>
+        )}
         <p className="get-kicker">Get your copy</p>
         <p className="get-lede">
           Nine steps, about ten minutes, on a phone or a laptop. Read them
