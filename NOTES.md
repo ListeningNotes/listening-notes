@@ -3084,6 +3084,24 @@ current.
 
 ## Complete
 
+**2026-09-23 — Came back, and whose gift it is: 1.32.0, on main.** Branches
+`came-back` and `get-gift` merged; no release cut yet.
+
+- [x] **Came back.** The friends brief's third item: when somebody in the
+      book logs a record you put them onto, the inbox's Submissions folder
+      shows "Ethan logged I'm In Your Mind Fuzz" / "Came back · three
+      stars", the envelope on the cover for a real send, the dot until
+      opened, no count. Noticed by the feed — only once the Friends pane has
+      been visited in a session, which is when it loads — and kept in
+      `came_back` (migration 023, applied to the live database on 2026-09-22
+      for the dev test). On the first sweep, anything logged more than a
+      fortnight ago came in seen. Seen on Miyel's phone 2026-09-23.
+- [x] **`/get` says whose gift it is.** A link from Give carries
+      `?gift=<journal>`; `/get` asks that journal its keeper's name through
+      the doorman's relay door and shows "A gift from" them with their face,
+      or nothing. Checked with a gift from this journal, from June's, from a
+      made-up address and from junk.
+
 **2026-09-22 — Give, 1.31.0, on main.** Branch `give-sheet` merged; no
 release cut yet. Step 3 of the About, /get and Give brief.
 
