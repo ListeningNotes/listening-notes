@@ -43,13 +43,19 @@ export const DEPLOY_URL =
 // The second says where the button is, because it is at the foot of the page
 // rather than beside the step (see app/get/page.js). `links` are a step's own
 // doors, each opened in a new tab so this page stays put.
+//
+// `rings` are where to press, drawn over the picture by the page: left, top,
+// width and height, as percentages of it. The pictures are cropped from
+// Miyel's install of 2026-09-23, and the rings were measured on them — move
+// one only against the picture it sits on.
 export const STEPS = [
   { shot: '01-accounts', head: 'Make two free accounts',
     text: 'GitHub keeps your journal’s code, and Vercel runs it. Make GitHub first, then sign up to Vercel with Continue with GitHub. Already have both? Go on to step 2.',
     links: [
       { label: 'GitHub', href: 'https://github.com/signup' },
       { label: 'Vercel', href: 'https://vercel.com/signup' },
-    ] },
+    ],
+    rings: [[5.4, 42.8, 88.5, 7.7]] },
   { shot: '02-button', head: 'Press the button at the foot of this page',
     text: 'It opens Vercel in a new tab, and this page stays open behind it.' },
   { shot: '03-github', head: 'Continue with GitHub',
@@ -57,11 +63,14 @@ export const STEPS = [
   { shot: '04-connect', head: 'Let Vercel connect',
     text: 'The permissions look serious. It needs them to build your site and nothing else.' },
   { shot: '05-name', head: 'Name it',
-    text: '“Git Scope” is your GitHub account. “Private Repository Name” is any name you like — it becomes the first guess at your web address.' },
+    text: '“Git Scope” is your GitHub account. “Private Repository Name” is any name you like — it becomes the first guess at your web address.',
+    rings: [[4.9, 59.1, 90.3, 8.1], [4.9, 90.5, 90.3, 7.8]] },
   { shot: '06-neon', head: 'Add the database',
-    text: 'Press Add on the Neon row. Pick the region nearest you, switch Auth off, keep Free, then Create. No card needed. Then press Deploy.' },
+    text: 'Press Add on the Neon row. Pick the region nearest you, switch Auth off, keep Free, then Create. No card needed. Then press Deploy.',
+    rings: [[76.4, 17.6, 14.7, 12.3], [12.2, 74.5, 12, 10.2]] },
   { shot: '07-build', head: 'Wait for it to build',
-    text: 'Nothing to paste. When Vercel says Congratulations, press the picture of your site.' },
+    text: 'Nothing to paste. When Vercel says Congratulations, press the picture of your site.',
+    rings: [[4.9, 30.4, 90.2, 67.7]] },
   { shot: '08-holding', head: 'Press “Set it up”',
     text: 'It works for half an hour after the build. Came back later? Press Redeploy in Vercel and try again.' },
   { shot: '09-setup', head: 'Claim it',
