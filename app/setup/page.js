@@ -538,7 +538,8 @@ export default function WelcomeScreen() {
 
             {current === 'homescreen' && (
               <div className="su-fields">
-                <p className="su-why">It opens without the browser around it, and reads as an app.</p>
+                {/* The question and nothing under it (Miyel, 2026-09-23): the
+                    emblem and three tiles say the rest. */}
                 <AddToHomeScreen centered />
                 <button type="button" className="su-go" disabled={busy} onClick={() => advance()}>Open the journal</button>
               </div>
