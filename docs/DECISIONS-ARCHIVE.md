@@ -581,3 +581,32 @@ The old shape is in git on `desktop-columns` and at tag v1.10.0:
 `hooks/useColumnWidths.js` with two widths and the key `ln-columns`, the two
 grips, `--hn-left` / `--hn-right`, and `.lay--over-desk` as a panel at the
 right edge.
+
+## The beacon — the Quiet switch, 2026-09-16 to 2026-09-24
+
+What DECISIONS said while it stood:
+
+> **The beacon is switched on or quiet, in Settings, and `beacon_source`
+> carries it, 2026-09-16.** Presence is opt-in and there was no way to
+> decline. Quiet says nothing to anybody, owner included: a beacon that checked
+> who was asking could not be answered once and handed round. The column used
+> to say which of two beacons ran here; the schema is additive-only, so it
+> carries the switch rather than sitting dead, and anything that is not
+> `quiet` is on.
+
+And the founding line above it read *Presence is outbound and opt-in*.
+
+It came out on 2026-09-24, on Miyel's call while the Settings page was being
+made quiet: "i dont even think beacon should be an option to have on or off."
+The argument for keeping it was put to her first — that it was the opt-in the
+founding line promised, and that a friend who had already chosen Quiet would
+be switched on by an update — and she chose to remove it and to switch those
+copies back on, over leaving them quiet or offering a way back. The release
+that carries it says so, which is the only place those keepers are told.
+
+What it was made of, if it is ever wanted back: a Settings section with two
+rows, Now logging and Quiet (`st-choice`, `st-pick` in forms.css);
+`pull_beacon_settings` in library/settings_actions.js, the one-column reader the
+public beacon asked on every answer; `beacon_on` in the Bookplate, set by the
+layout, which stopped a quiet copy's browser from polling at all. All of it is
+in git before the commit that removed it on branch `settings-quiet`.
