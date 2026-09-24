@@ -229,7 +229,8 @@ The rooms — full pages assembled from furniture
     key/page.js                What the stars and the three marks mean
     submit/page.js             Send the keeper an album
     shuffle/page.js            Redirect to a random entry
-    get/page.js                Get your copy: nine steps, then the deploy button. 404s while the long note is unwritten
+    get/page.js                Get your copy: ten steps, then the deploy button. 404s while the long note is unwritten
+    get/gift-preview/route.js  The picture a gift link (/get?gift=) unfurls into — /get's "A gift from" card — when the giver's journal answers
     get/story/page.js          The keeper's long note. 404s when unwritten. Linked from nowhere for now
     about/page.js              Redirect to / — the identity card is the about page
     session/page.js            The listen — picker, then four screens under one header

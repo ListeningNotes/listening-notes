@@ -1071,6 +1071,9 @@ forty identical prints. Plain paper is not a look; the record is.
 request, from the row the page reads, never stored. This is the visitor's
 half of sharing; the printer is the owner's half. The journal's own address
 draws none yet: that picture is the card, and the card is the printer's job.
+A gift link to `/get` unfurls into `/get`'s gift card, "A gift from" the
+giver, 2026-09-23 — a route (`/get/gift-preview`), because the framework's
+image file never sees the query — and only when the giver's journal answers.
 
 ---
 
