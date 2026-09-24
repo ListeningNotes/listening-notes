@@ -167,10 +167,13 @@ export default function GiveSheet({ open, onClose }) {
         {/* Miyel, 2026-09-22: "have the header simply say 'Gift someone a
             journal'" — over the brief's "Give someone their own". */}
         <h2 className="gv-head">Gift someone a journal</h2>
-        {/* A plain line until the first friend is built. The brief's line —
-            "when they set it up, you'll be the first person in their book" —
-            is a promise a new copy cannot keep yet: nothing reads the gift. */}
-        <p className="gv-line">Point their camera here. It opens the steps to their own copy.</p>
+        {/* The brief's line, now that a new copy keeps it: the code carries
+            the gift to /get, /get's button carries it to the deploy, and
+            setup offers to add the giver, ticked. "Address book" and not the
+            brief's "book" (Miyel, 2026-09-23). It was a plain line — "It
+            opens the steps to their own copy" — until the first friend was
+            built, because nothing read the gift. */}
+        <p className="gv-line">Point their camera here. When they set it up, you&rsquo;ll be the first person in their address book.</p>
 
         {/* Large and on white, whatever the theme: a camera looks for dark on
             light (AddressCode). The plate is the white; the code draws none. */}
