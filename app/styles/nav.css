@@ -2288,6 +2288,22 @@
 }
 .fd-album:hover { text-decoration: underline; text-underline-offset: 4px; }
 .fd-artist { font-family: var(--font-label); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-soft); margin-top: 6px; }
+/* ── A friend's track note, 2026-09-24 ─────────────────────────────────────
+   Read as a song: a small line over the song saying so, the song as the
+   large line and the record under it (Feed.js). The cover carries the fold
+   (.ln-fold, base.css) in both densities. And the compare for a song is a
+   sentence rather than a panel — what you gave the same song yourself. */
+.fd-kind {
+  margin-bottom: 8px;
+  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.fd-yours {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  margin-top: 16px;
+  font-family: var(--font-label); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--ink-soft);
+}
 .fd-stars { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 16px; color: var(--ink); }
 /* The marks beside the stars — the strip's own marks, MiniCard's classes. */
 .fd-marks { display: inline-flex; align-items: center; gap: 10px; }
