@@ -103,10 +103,16 @@ const releaseYear = entry => {
 //
 // Each record carries its listens and its notes newest first; `face`, the
 // entry the tile draws and hands over, which is its newest listen, or its
-// newest note when it has no listen yet; and `newest`, which puts the record
-// on the wall — a song marked on a record logged months ago takes it to the
-// top, because that is the newest thing that happened to it (Miyel,
-// 2026-09-24).
+// newest note when it has no listen yet; and `first`, the entry it came into
+// the journal with, which is where it sits on the wall.
+//
+// ── And it stays there ────────────────────────────────────────────────────
+// A second listen or a song marked on it does not move a record (Miyel's
+// brief, the same day, reversing an afternoon of the opposite): the wall is a
+// shelf, not a feed, and its worth is scrolling to the bottom and finding the
+// first listen where you left it. Recency lives where recency belongs — the
+// beacon's last logged, the recents under it, and friends' feeds, all of
+// which treat the new entry as new.
 //
 // A record whose name is written wholly in a script the key folds away has
 // an empty key, and two of those are not the same record — so an entry with
@@ -125,7 +131,7 @@ function gatherAlbums(entries) {
     album.all.sort(newestFirst);
     album.listens.sort(newestFirst);
     album.notes.sort(newestFirst);
-    return { ...album, face: album.listens[0] || album.notes[0], newest: album.all[0] };
+    return { ...album, face: album.listens[0] || album.notes[0], first: album.all[album.all.length - 1] };
   });
 }
 
@@ -480,10 +486,11 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
     // class goes on by hand rather than through a render: React has already
     // drawn this tile and putting it in state would draw it a second time to
     // say something the stylesheet can say on its own.
-    // Found by any entry it holds: a note saved onto a record that already
-    // has a listen lands on that record's tile, which draws the listen.
+    // Found by any entry it holds — and only a record new to the wall grows
+    // in. A second listen or a song on a record already here lands on its
+    // tile, which stays exactly where it was and simply gains its fan.
     const tile = grid.current?.querySelector(`[data-tile-slugs~="${CSS.escape(slug)}"]`);
-    if (!tile) return;
+    if (!tile || was?.has(tile.dataset.tileKey)) return;
     tile.classList.add('ft--landing');
     clocks.current.push(setTimeout(() => tile.classList.remove('ft--landing'), FILE_MS + 400));
   }, [entries, closeTheGap]);
@@ -543,7 +550,9 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
         // Undated albums sort as year 0, which parks them at the far end
         // rather than scattering them through the middle.
         if (sortBy === 'year')   return dir * ((releaseYear(a.face) || 0) - (releaseYear(b.face) || 0));
-        return dir * (new Date(a.newest.posted_at) - new Date(b.newest.posted_at));
+        // By the day the record came into the journal, which never changes:
+        // the wall never reorders under anybody.
+        return dir * (new Date(a.first.posted_at) - new Date(b.first.posted_at));
       });
   }, [albums, search, sortBy, sortDir, genre, favoritesOnly, masterpiecesOnly, formativeOnly, yearActive, yearRange]);
 

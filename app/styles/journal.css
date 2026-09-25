@@ -67,15 +67,16 @@
 
 .ft-art { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-/* ── Fanned: more than one listen, 2026-09-24 ─────────────────────────────
-   Stacked edges on the right, the way the copies behind the first stand out
-   of a pile (the track-notes brief) — each a little shorter than the one in
+/* ── Fanned: more than one entry, 2026-09-24 ──────────────────────────────
+   A second listen, or a song marked on the record. Stacked edges on the
+   right, the way the pages behind the first stand out of a pile (the
+   track-notes brief) — each a little shorter than the one in
    front of it, in the page's own ink turned down. Drawn in the gap beside the
    tile, so the cover stays the size every other cover is, and only as far as
    that gap allows at each density: a fan never touches the next record.
    --fan is how far the nearer edge stands out; the farther one is twice it.
-   A record known only by its songs is dog-eared instead (.ln-fold in
-   base.css). */
+   A record known only by its songs is dog-eared as well (.ln-fold in
+   base.css), and wears both once it has more than one song. */
 .ft--fanned { --fan: 5px; }
 .ft--fanned .ft-face {
   box-shadow:

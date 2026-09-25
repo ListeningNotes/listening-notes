@@ -940,12 +940,18 @@ caller. Its ··· is Edit, Credit, Send, Delete. Nothing that numbers, counts o
 compares albums counts it. The brief's reason: one object doing both is one
 confusing object instead of two clear ones.
 
-**The wall holds one tile per record, 2026-09-24.** Plain is one listen,
-fanned more than one, dog-eared songs and no listen yet; the fold goes with the
-first listen. One thing behind a tile opens it; more open the record's page,
-`/albums/[record]` (Miyel: a page listing one thing is a step with nothing to
-choose). Records sit by the newest thing that happened to them, so a song
-marked on an old record takes it to the top.
+**The wall holds one tile per record, 2026-09-24.** Plain is one listen;
+fanned is more than one entry, a second listen or a song on it; dog-eared is
+songs and no listen yet, and the fold goes with the first listen. One thing
+behind a tile opens it; more open the record's page, `/albums/[record]`
+(Miyel: a page listing one thing is a step with nothing to choose).
+
+**The journal wall is ordered by a record's first entry, and never reorders,
+2026-09-24.** A second listen or a song marked on a record leaves its tile
+where it is: the wall is a shelf, not a feed, and its worth is finding your
+first listen where you left it. Recency lives on the beacon, the recents and
+the feed. A sort by latest would be a toggle beside the density control, not
+a new default — parked until it is missed. The reversal is in the archive.
 
 **Comments attach to writing, not to ratings, 2026-09-24.** A rated, unwritten
 track is one row with no way in — there is nothing to reply to. A word where

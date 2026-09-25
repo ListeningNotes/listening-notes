@@ -27,9 +27,13 @@
 // ── A record, not an entry, 2026-09-24 ───────────────────────────────────
 // One tile per record (gatherAlbums in Journal.js), and the tile says what is
 // inside it (the track-notes brief): plain for one album listen, fanned —
-// stacked edges on the right — for more than one, and dog-eared for a record
-// known only by its songs. When a dog-eared record gets its first listen the
-// fold goes and it is an album card, with the songs still behind it.
+// stacked edges on the right — once there is more than one entry behind it,
+// and dog-eared for a record known only by its songs. A second listen or a
+// song marked on a record gives it the fan, and a listen takes the fold away
+// (Miyel's brief of the same evening: "it gains the fan if it didn't have
+// one, and loses the dog-ear if the new entry is a full listen"). So the fan
+// says exactly what pressing it does — more than one thing, so the record's
+// page — and a songs-only record with two songs wears both.
 //
 // With one thing behind it a tile opens that thing, growing out of the cover
 // as an entry always has. With more, it opens the record's own page — every
@@ -44,7 +48,7 @@ import { handOff } from '../../library/handoff';
 export default function AlbumTile({ album, going = false }) {
   const face = album.face;
   const alone = album.all.length === 1;
-  const fanned = album.listens.length > 1;
+  const fanned = album.all.length > 1;
   const folded = album.listens.length === 0;
   // The record's page is at its key with hyphens for spaces: the key is
   // letters, digits and single spaces, so it comes back exactly.
@@ -58,8 +62,10 @@ export default function AlbumTile({ album, going = false }) {
          the space (closeTheGap in Journal.js). */
       className={'ft' + (going ? ' ft--going' : '') + (fanned ? ' ft--fanned' : '')}
       aria-label={face.album + (face.artist ? ' by ' + face.artist : '')
-        + (folded ? `, ${album.notes.length === 1 ? '1 song' : `${album.notes.length} songs`}` : '')
-        + (fanned ? `, ${album.listens.length} listens` : '')}
+        + (alone && !folded ? '' : ', ' + [
+          album.listens.length ? (album.listens.length === 1 ? '1 listen' : `${album.listens.length} listens`) : '',
+          album.notes.length ? (album.notes.length === 1 ? '1 song' : `${album.notes.length} songs`) : '',
+        ].filter(Boolean).join(' and '))}
       /* The entry it opens from, for the layer to grow out of (tileBoxOf);
          the record, for the wall to follow it by when it moves; and every
          entry behind it, so a listen or a note just saved finds the tile it
