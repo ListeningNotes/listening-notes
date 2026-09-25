@@ -77,6 +77,9 @@ export function handOff(entry) {
     // fields already in memory rather than a second request.
     received_from: entry.received_from || '',
     received_from_url: entry.received_from_url || '',
+    // A track note's song, 2026-09-24, so the wait knows it is not about to
+    // draw a record's first screen (LayerWaiting).
+    song: entry.song || '',
   };
 }
 
@@ -134,6 +137,7 @@ function firstScreen(entry) {
     // The credit too, for the same reason handOff keeps it.
     received_from: entry.received_from || '',
     received_from_url: entry.received_from_url || '',
+    song: entry.song || '',
   };
 }
 

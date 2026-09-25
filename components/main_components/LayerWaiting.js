@@ -135,6 +135,12 @@ export default function LayerWaiting({ slug, authed = false }) {
     </>);
   }
 
+  // A track note is a small card, not a record's first screen, 2026-09-24:
+  // drawing the album large while it loads would be a page that shrinks into
+  // a different page when it lands. The header holds still and the card
+  // arrives into an empty sheet.
+  if (known?.song) return header;
+
   if (!known) {
     return (<>
       {header}
