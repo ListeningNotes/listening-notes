@@ -1004,7 +1004,9 @@ export default function HomeNav() {
       const landed = () => clocks.push(setTimeout(() => { if (alive) setFiling(null); }, WATCH_MS));
       const watchFor = waited => {
         if (!alive) return;
-        if (document.querySelector(`[data-tile-slug="${CSS.escape(filing.slug || '')}"]`)
+        // Any tile holding the record: a track note saved onto a record that
+        // has a listen lands on that record's tile, which draws the listen.
+        if (document.querySelector(`[data-tile-slugs~="${CSS.escape(filing.slug || '')}"]`)
           || waited >= ARRIVE_MAX_MS) { landed(); return; }
         clocks.push(setTimeout(() => watchFor(waited + 80), 80));
       };

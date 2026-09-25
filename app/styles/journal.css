@@ -67,6 +67,23 @@
 
 .ft-art { width: 100%; height: 100%; object-fit: cover; display: block; }
 
+/* ── Fanned: more than one listen, 2026-09-24 ─────────────────────────────
+   Stacked edges on the right, the way the copies behind the first stand out
+   of a pile (the track-notes brief) — each a little shorter than the one in
+   front of it, in the page's own ink turned down. Drawn in the gap beside the
+   tile, so the cover stays the size every other cover is, and only as far as
+   that gap allows at each density: a fan never touches the next record.
+   --fan is how far the nearer edge stands out; the farther one is twice it.
+   A record known only by its songs is dog-eared instead (.ln-fold in
+   base.css). */
+.ft--fanned { --fan: 5px; }
+.ft--fanned .ft-face {
+  box-shadow:
+    calc(var(--fan) + 4px) 0 0 -4px color-mix(in srgb, var(--ink) 18%, var(--bg)),
+    calc(var(--fan) * 2 + 9px) 0 0 -9px color-mix(in srgb, var(--ink) 9%, var(--bg));
+}
+.arc-grid[data-density="small"] .ft--fanned { --fan: 4px; }
+
 .ft-placeholder {
   width: 100%; height: 100%;
   display: flex; align-items: center; justify-content: center;
@@ -498,6 +515,10 @@
   .arc-grid[data-density="large"]  { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
   .arc-grid[data-density="medium"] { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; }
   .arc-grid[data-density="small"]  { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+  /* The fan in each gap: 12, 9 and 6px across. */
+  .arc-grid[data-density="large"]  .ft--fanned { --fan: 5px; }
+  .arc-grid[data-density="medium"] .ft--fanned { --fan: 3.5px; }
+  .arc-grid[data-density="small"]  .ft--fanned { --fan: 2.5px; }
 
   .arc-scrim { background: rgba(0,0,0,0.28); animation: arcFade 0.18s ease; }
 

@@ -287,6 +287,26 @@ export async function pull_public_entries() {
   });
 }
 
+// ── One record: every listen and every track note, 2026-09-24 ────────────
+// What the record's own page lists (app/albums/[record]), newest first, each
+// with its own date and rating (the track-notes brief). The wall's fields and
+// no more: the page is a list of rows, and each row opens its entry, which
+// reads its own writing when it opens — the lean-list rule above.
+//
+// By album_key, the same key the wall gathers a tile on, so the page and the
+// tile it opened from can never disagree about what is behind it.
+export async function pull_album(album_key) {
+  if (!album_key) return [];
+  const rows = await database.query(
+    `SELECT ${[...WALL_FIELDS, ...CREDIT_FIELDS, CREDIT_GUARD].map(f => `"${f}"`).join(', ')}
+     FROM (${WITH_LISTEN_NUMBERS}) ranked
+     WHERE album_key = $1
+     ORDER BY posted_at DESC`,
+    [album_key]
+  );
+  return rows.map(row => withoutChain(withSizedArt(row, LIST_ART_PX)));
+}
+
 export async function pull_entry_by_slug(slug, { includeChain = false } = {}) {
   // The window has to run over the whole album before one row can be picked
   // out of it, so the filter goes outside rather than in the FROM.

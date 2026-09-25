@@ -93,6 +93,42 @@ const releaseYear = entry => {
   return m ? parseInt(m[0], 10) : null;
 };
 
+// ── One tile per record, 2026-09-24 ────────────────────────────────────────
+// The wall never shows a separate tile for a track note, and the tile says
+// what is inside it (the track-notes brief): plain for one album listen,
+// fanned for more than one, and dog-eared for a record known only by its
+// songs. So the wall draws records, not entries, gathered on album_key — the
+// key two journals already recognise one record by, and the one the listens
+// are numbered on.
+//
+// Each record carries its listens and its notes newest first; `face`, the
+// entry the tile draws and hands over, which is its newest listen, or its
+// newest note when it has no listen yet; and `newest`, which puts the record
+// on the wall — a song marked on a record logged months ago takes it to the
+// top, because that is the newest thing that happened to it (Miyel,
+// 2026-09-24).
+//
+// A record whose name is written wholly in a script the key folds away has
+// an empty key, and two of those are not the same record — so an entry with
+// no key is a record of its own.
+function gatherAlbums(entries) {
+  const byKey = new Map();
+  for (const e of entries) {
+    const key = e.album_key || `entry:${e.slug}`;
+    let album = byKey.get(key);
+    if (!album) { album = { key, listens: [], notes: [], all: [] }; byKey.set(key, album); }
+    album.all.push(e);
+    (e.song ? album.notes : album.listens).push(e);
+  }
+  const newestFirst = (a, b) => new Date(b.posted_at) - new Date(a.posted_at);
+  return [...byKey.values()].map(album => {
+    album.all.sort(newestFirst);
+    album.listens.sort(newestFirst);
+    album.notes.sort(newestFirst);
+    return { ...album, face: album.listens[0] || album.notes[0], newest: album.all[0] };
+  });
+}
+
 // Below this, a tile turns over to its metadata card instead of opening the
 // modal — the modal is a good desktop experience and a bad phone one. Same
 // number as the sitewide mobile breakpoint in styles/base.css.
@@ -306,11 +342,15 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
   // Two readings either side of that are the whole wall sliding by the
   // difference. The tiles and the grid are counted from the same thing, so
   // taking the grid's own offsets off leaves only where a tile is in the grid.
+  //
+  // By record, 2026-09-24: a tile is a record now, and the entry it draws can
+  // change under it — a new listen becomes its face — while it is still the
+  // same tile. Its key cannot.
   const positions = () => {
     const found = new Map();
     const box = grid.current;
-    if (box) for (const tile of box.querySelectorAll('[data-tile-slug]')) {
-      found.set(tile.dataset.tileSlug, { left: tile.offsetLeft - box.offsetLeft, top: tile.offsetTop - box.offsetTop });
+    if (box) for (const tile of box.querySelectorAll('[data-tile-key]')) {
+      found.set(tile.dataset.tileKey, { left: tile.offsetLeft - box.offsetLeft, top: tile.offsetTop - box.offsetTop });
     }
     return found;
   };
@@ -321,8 +361,8 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
     const box = grid.current;
     if (!box) return;
     const moved = [];
-    for (const tile of box.querySelectorAll('[data-tile-slug]')) {
-      const then = was.get(tile.dataset.tileSlug);
+    for (const tile of box.querySelectorAll('[data-tile-key]')) {
+      const then = was.get(tile.dataset.tileKey);
       if (!then) continue;
       // From the grid's corner, the way positions() took them.
       const dx = then.left - (tile.offsetLeft - box.offsetLeft);
@@ -440,19 +480,32 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
     // class goes on by hand rather than through a render: React has already
     // drawn this tile and putting it in state would draw it a second time to
     // say something the stylesheet can say on its own.
-    const tile = grid.current?.querySelector(`[data-tile-slug="${CSS.escape(slug)}"]`);
+    // Found by any entry it holds: a note saved onto a record that already
+    // has a listen lands on that record's tile, which draws the listen.
+    const tile = grid.current?.querySelector(`[data-tile-slugs~="${CSS.escape(slug)}"]`);
     if (!tile) return;
     tile.classList.add('ft--landing');
     clocks.current.push(setTimeout(() => tile.classList.remove('ft--landing'), FILE_MS + 400));
   }, [entries, closeTheGap]);
 
+  // Every record on the wall, before a filter is asked anything. Gathered
+  // after the deleted are taken out, so a record that loses its last entry
+  // goes with it and one that loses a listen simply changes its face.
+  const albums = useMemo(() => gatherAlbums(entries.filter(e => !gone.has(e.slug))), [entries, gone]);
+
   const filtered = useMemo(() => {
     const q = foldForSearch(search);
     const dir = sortDir === 'asc' ? 1 : -1;
-    return entries
-      .filter(e => !gone.has(e.slug))
-      .filter(e => {
-        // Names only — the album and the artist, nothing else.
+    // The marks are the record's listens' marks: a record is a Favorite, a
+    // Masterpiece or Formative when a listen of it says so. The heart is
+    // anybody's, a song's included — Favorite applies to tracks as well.
+    const marked = (album, test) => album.all.some(test);
+    return albums
+      .filter(album => {
+        const e = album.face;
+        // Names only — the album and the artist, nothing else — and, since
+        // 2026-09-24, the songs a record has notes on: somebody looking for
+        // the song they marked finds the record it is behind.
         //
         // This used to search the writing as well, on the reasoning that
         // finding a record by something you remember saying about it was what
@@ -463,15 +516,16 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
         // with it — there is a genre filter for that, sitting right there.
         if (q && !(
           foldForSearch(e.album).includes(q) ||
-          foldForSearch(e.artist).includes(q)
+          foldForSearch(e.artist).includes(q) ||
+          album.notes.some(n => foldForSearch(n.song).includes(q))
         )) return false;
         if (genre && (e.genre || '') !== genre) return false;
-        if (favoritesOnly && !(e.favorite === true || e.favorite === 'true')) return false;
-        if (masterpiecesOnly && e.rating !== 'Masterpiece' && e.masterpiece !== true) return false;
+        if (favoritesOnly && !marked(album, x => x.favorite === true || x.favorite === 'true')) return false;
+        if (masterpiecesOnly && !marked(album, x => x.rating === 'Masterpiece' || x.masterpiece === true)) return false;
         // The flag, which is now the only place this is recorded — the nine
         // rows that said so under the old relationship column were migrated
         // onto it before that column was dropped.
-        if (formativeOnly && !(e.formative === true || e.formative === 'true')) return false;
+        if (formativeOnly && !marked(album, x => x.formative === true || x.formative === 'true')) return false;
         if (yearActive) {
           const y = releaseYear(e);
           // An entry with no year can't be shown to fall inside a range, so
@@ -481,20 +535,24 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
         return true;
       })
       .sort((a, b) => {
-        if (sortBy === 'album')  return dir * (a.album  || '').localeCompare(b.album  || '');
-        if (sortBy === 'artist') return dir * (a.artist || '').localeCompare(b.artist || '');
-        if (sortBy === 'rating') return dir * ((parseRating(a.rating) || 0) - (parseRating(b.rating) || 0));
+        if (sortBy === 'album')  return dir * (a.face.album  || '').localeCompare(b.face.album  || '');
+        if (sortBy === 'artist') return dir * (a.face.artist || '').localeCompare(b.face.artist || '');
+        // The record's own score, which is its newest listen's. A record known
+        // only by its songs has no score of its own and sorts as none.
+        if (sortBy === 'rating') return dir * ((a.listens.length ? parseRating(a.face.rating) || 0 : 0) - (b.listens.length ? parseRating(b.face.rating) || 0 : 0));
         // Undated albums sort as year 0, which parks them at the far end
         // rather than scattering them through the middle.
-        if (sortBy === 'year')   return dir * ((releaseYear(a) || 0) - (releaseYear(b) || 0));
-        return dir * (new Date(a.posted_at) - new Date(b.posted_at));
+        if (sortBy === 'year')   return dir * ((releaseYear(a.face) || 0) - (releaseYear(b.face) || 0));
+        return dir * (new Date(a.newest.posted_at) - new Date(b.newest.posted_at));
       });
-  }, [entries, gone, search, sortBy, sortDir, genre, favoritesOnly, masterpiecesOnly, formativeOnly, yearActive, yearRange]);
+  }, [albums, search, sortBy, sortDir, genre, favoritesOnly, masterpiecesOnly, formativeOnly, yearActive, yearRange]);
 
   // What is on the wall right now, in this order, left where the layer can
   // read it — so a swipe on an entry goes to the record beside it here, not
   // the next one in the database. See library/handoff.js.
-  useEffect(() => { handOffOrder(filtered); }, [filtered]);
+  // One record, one place in the order: a swipe goes to the next record's
+  // face, the entry its tile draws.
+  useEffect(() => { handOffOrder(filtered.map(album => album.face)); }, [filtered]);
 
   const pages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
   // Clamped rather than reset in an effect: if the filters shrink the results
@@ -565,8 +623,16 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
           <div className="arc-empty">No entries match these filters.</div>
         ) : (
           <div className="arc-grid" data-density={density} ref={grid}>
-            {shown.map(e => (
-              <AlbumTile key={e.slug} entry={e} density={density} going={going === e.slug} />
+            {shown.map(album => (
+              <AlbumTile
+                key={album.key}
+                album={album}
+                density={density}
+                /* Only a record with nothing else behind it leaves the wall;
+                   deleting one listen of three changes the tile, not the
+                   wall. */
+                going={album.all.length === 1 && going === album.face.slug}
+              />
             ))}
           </div>
         )}
@@ -684,9 +750,9 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
               control is non-default — re-sorting changes no totals, and
               "34 of 34" reads like a filter that didn't work. */}
           <span className="arc-count">
-            {filtered.length === entries.length
-              ? `${entries.length} albums`
-              : `${filtered.length} of ${entries.length}`}
+            {filtered.length === albums.length
+              ? `${albums.length} albums`
+              : `${filtered.length} of ${albums.length}`}
           </span>
         </div>
       </div>

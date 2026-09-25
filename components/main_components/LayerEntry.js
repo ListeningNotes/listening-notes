@@ -205,7 +205,10 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
     if (reduced) return { swiped: 0, growFrom: null, alone };
     // An entry grows out of its tile; anything else grows out of whatever
     // declared this address in data-grows (a row, a face) — see handoff.js.
-    return { swiped: 0, growFrom: slug ? tileBoxOf(slug) : growBoxOf(pathname), alone };
+    // An entry that something declared first grows out of that, 2026-09-24:
+    // a row on a record's page is the thing pressed, and the wall's tile for
+    // the same record is underneath the page, out of sight.
+    return { swiped: 0, growFrom: slug ? (growBoxOf(pathname) || tileBoxOf(slug)) : growBoxOf(pathname), alone };
   });
   const rises = arrives === 'bottom';
   const growFrom = arrival.growFrom;
