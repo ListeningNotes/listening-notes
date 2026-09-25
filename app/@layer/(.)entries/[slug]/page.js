@@ -39,7 +39,7 @@
 
 import database from '@/library/database_connection';
 import { Suspense } from 'react';
-import { pull_entry_by_slug } from '@/library/database_actions';
+import { pull_entry_by_slug, pull_album } from '@/library/database_actions';
 import { wristbandOnHand } from '@/library/wristband';
 import LayerEntry from '@/components/main_components/LayerEntry';
 import LayerWaiting from '@/components/main_components/LayerWaiting';
@@ -57,13 +57,17 @@ async function Entry({ slug }) {
   const entry = await pull_entry_by_slug(slug);
   if (!entry) return null;
 
+  // The folder it is a page of, as on the standalone page.
+  const record = entry.album_key ? await pull_album(entry.album_key) : [];
+  const folder = record.length > 1 ? [...record].reverse() : null;
+
   // A track note is its own card (see the standalone page).
-  if (entry.song) return <TrackNotePage entry={entry} authed={await wristbandOnHand()} layered />;
+  if (entry.song) return <TrackNotePage entry={entry} authed={await wristbandOnHand()} layered folder={folder} />;
 
   const references = await sql`SELECT album, artist, slug FROM entries WHERE song IS NULL`;
   const authed = await wristbandOnHand();
 
-  return <PostClient entry={entry} references={references} authed={authed} layered />;
+  return <PostClient entry={entry} references={references} authed={authed} layered folder={folder} />;
 }
 
 // It grows out of the tile that was pressed, which is what this layer has

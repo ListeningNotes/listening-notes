@@ -51,7 +51,7 @@
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { CaretLeft, CaretRight } from '@phosphor-icons/react';
-import { tileBoxOf, neighboursOf, handOffNeighbour, arrivingBySwipe, tookASwipe, growBoxOf, arrivingBack, cameBack, cameAlone, carryReading, endReading } from '../../library/handoff';
+import { tileBoxOf, neighboursOf, handOffNeighbour, arrivingBySwipe, tookASwipe, growBoxOf, arrivingBack, cameBack, cameAlone, arrivingAlone, carryReading, endReading } from '../../library/handoff';
 
 // How long the sheet takes to grow to the screen. Unhurried, slowing as it
 // lands — the same curve the slide used.
@@ -130,6 +130,77 @@ export function useBeforeLeaving(fn) {
   // and so no pull to close — and it has to know, because it is then the one
   // that has to provide a way out.
   return !!holdRef;
+}
+
+// ── A folder, 2026-09-25 ──────────────────────────────────────────────────
+// A record with more than one entry is a folder on the wall, and a folder
+// opens to an entry, never to a list: you flip sideways for the rest, with a
+// row of dots in the header saying where you are (Miyel's brief, "three
+// shapes, and how a folder opens"). The entry knows its folder — the server
+// hands every entry page the record's entries, oldest first — and this is how
+// it says so.
+//
+// On a sheet it tells the sheet, which is what turns the page: from the wall
+// the wall's own run of pages already holds the folder (every record's
+// entries in a row, then the next record's — Miyel: the wall is one long run
+// of pages), and from anywhere else — the beacon's recents, the card, a link
+// — the folder is all there is either side. Opened as its own page, with no
+// sheet around it, it does the swiping itself: a friend reading your journal
+// from their feed can flip your folder too. It hands back the way to turn to
+// one entry of the folder, which the dots use.
+const LayerFolder = createContext(null);
+export function useFolder(folder, slug) {
+  const layer = useContext(LayerFolder);
+  const many = Array.isArray(folder) && folder.length > 1;
+  useEffect(() => {
+    if (!layer) return undefined;
+    layer.setFolder(many ? folder : null);
+    return () => layer.setFolder(null);
+  }, [layer, folder, many]);
+  // Its own page: a sideways swipe, and the arrows, move through the folder
+  // and stop at its ends. A whole-page load, not the router's: a soft move to
+  // /entries/… is the one the @layer slot intercepts, so it opened the next
+  // page as a sheet over this one, and closing that sheet found the old page
+  // still underneath. Replace rather than push, so back still leaves.
+  useEffect(() => {
+    if (layer || !many) return undefined;
+    const at = folder.findIndex(e => e.slug === slug);
+    const to = dir => {
+      const target = folder[at + dir];
+      if (target) window.location.replace(`/entries/${target.slug}`);
+    };
+    let start = null;
+    const down = event => {
+      const busy = event.target?.closest?.('input, textarea, [role="slider"], [data-slide], .ln-editing, .ln-printing, .ln-busy');
+      start = event.touches.length === 1 && !busy ? { x: event.touches[0].clientX, y: event.touches[0].clientY } : null;
+    };
+    const up = event => {
+      if (!start) return;
+      const touch = event.changedTouches[0];
+      const dx = touch.clientX - start.x;
+      const dy = touch.clientY - start.y;
+      start = null;
+      if (Math.abs(dx) < 56 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+      to(dx < 0 ? 1 : -1);
+    };
+    const key = event => {
+      if (event.key === 'ArrowLeft') to(-1);
+      if (event.key === 'ArrowRight') to(1);
+    };
+    window.addEventListener('touchstart', down, { passive: true });
+    window.addEventListener('touchend', up);
+    window.addEventListener('keydown', key);
+    return () => {
+      window.removeEventListener('touchstart', down);
+      window.removeEventListener('touchend', up);
+      window.removeEventListener('keydown', key);
+    };
+  }, [layer, many, folder, slug]);
+  return useCallback(target => {
+    if (!target || target.slug === slug) return;
+    if (layer) layer.turn(target);
+    else window.location.replace(`/entries/${target.slug}`);
+  }, [layer, slug]);
 }
 
 // `arrives` is 'tile' (grow from the pressed tile, with a fade where there is
@@ -244,7 +315,21 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
   // the ID pane's pinned record, a cover in one of its count windows. The
   // wall's order is still there for the wall; this arrival simply does not
   // read it (handoff.js, arrivingAlone).
-  const neighbours = slug && !arrival.alone ? neighboursOf(slug) : { prev: null, next: null };
+  // The folder this entry says it belongs to (useFolder, above), and a way
+  // for its dots to turn to any page of it. Held in a stable object so the
+  // page can tell the sheet without the telling turning into a loop.
+  const [folder, setFolder] = useState(null);
+  const turnRef = useRef(null);
+  const [folderLayer] = useState(() => ({ setFolder, turn: target => turnRef.current?.(target) }));
+  // From the wall, the wall's run of pages: every record's entries in a row,
+  // so a folder flips through itself and carries on to the next record.
+  // From anywhere else, or where the wall does not hold this entry, the
+  // folder alone — its ends are the ends.
+  const walled = slug && !arrival.alone ? neighboursOf(slug) : { prev: null, next: null };
+  const inFolder = folder && slug ? folder.findIndex(e => e.slug === slug) : -1;
+  const neighbours = walled.prev || walled.next ? walled
+    : inFolder >= 0 ? { prev: folder[inFolder - 1] || null, next: folder[inFolder + 1] || null }
+    : { prev: null, next: null };
   // Whether sideways means anything here. Only an entry with a record beside
   // it on the wall; everywhere else — a form, a cold-opened entry — a
   // sideways drag is the browser's, so a row that scrolls sideways can.
@@ -459,11 +544,16 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
   // after which back has nowhere to go, the faded sheet never leaves, and it
   // sits invisibly over the whole site. So the timer is kept where a close
   // can cancel it.
-  const go = useCallback(dir => {
-    const target = dir < 0 ? neighbours.prev : neighbours.next;
+  const go = useCallback((dir, pick = null) => {
+    const target = pick || (dir < 0 ? neighbours.prev : neighbours.next);
     if (!target || leaving.current || pendingTurn.current) return;
-    handOffNeighbour(target);
+    // A page of this same folder travels with the folder, so the dots hold
+    // still in the header while it loads.
+    handOffNeighbour(folder?.some(e => e.slug === target.slug) ? { ...target, folder } : target);
     arrivingBySwipe(dir);
+    // A folder flipped from somewhere that does not browse stays that
+    // folder: the next page arrives alone as this one did.
+    if (arrival.alone) arrivingAlone();
     // And where in the record you were, so the next one opens the same way.
     carryReading();
     setSettling(true);
@@ -472,8 +562,19 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
       pendingTurn.current = null;
       router.replace(`/entries/${target.slug}`);
     }, TURN_MS);
-  }, [neighbours.prev, neighbours.next, router]);
+  }, [neighbours.prev, neighbours.next, router, arrival.alone, folder]);
   useEffect(() => () => window.clearTimeout(pendingTurn.current), []);
+  // A dot pressed: straight to that page of the folder, turning the way it
+  // lies from this one.
+  useEffect(() => {
+    turnRef.current = target => {
+      if (!folder) return;
+      const from = folder.findIndex(e => e.slug === slug);
+      const to = folder.findIndex(e => e.slug === target.slug);
+      if (to < 0 || to === from) return;
+      go(to > from ? 1 : -1, target);
+    };
+  }, [folder, slug, go]);
 
   useEffect(() => {
     if (neighbours.prev) router.prefetch(`/entries/${neighbours.prev.slug}`);
@@ -696,6 +797,7 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
           enters from the side it was on. */}
       <LayerLeaving.Provider value={held}>
       <LayerHeaderSlot.Provider value={headerSlot}>
+      <LayerFolder.Provider value={folderLayer}>
       {/* ── A link that means back, 2026-09-22 ──────────────────────────
           A page marks its way back with data-layer-back — the story's caret.
           Opened cold it is an ordinary link. On the sheet it has to close the
@@ -716,6 +818,7 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
       >
         {children}
       </div>
+      </LayerFolder.Provider>
       </LayerHeaderSlot.Provider>
       </LayerLeaving.Provider>
 

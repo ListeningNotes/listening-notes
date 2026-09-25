@@ -44,7 +44,8 @@ import { parseRating, editStamp } from '../../../library/entry_formatter';
 import { kept_receipts } from '../../../library/receipts';
 import { tidyAddress } from '../../../library/return_address';
 import SiteNav from '../../../components/main_components/SiteNav';
-import { useLayerHeaderSlot } from '../../../components/main_components/LayerEntry';
+import { useLayerHeaderSlot, useFolder } from '../../../components/main_components/LayerEntry';
+import FolderDots from '../../../components/main_components/FolderDots';
 import KeeperTools from '../../../components/main_components/KeeperTools';
 import EditingBar from '../../../components/main_components/EditingBar';
 import CodeSlot from '../../../components/main_components/CodeSlot';
@@ -67,8 +68,11 @@ const NOTHING_WRITTEN = { rating: 0, favorite: false, note: '' };
 // `onSaved` hears the new row once a first write lands, and `onLeave` is the
 // way off the sheet without saving; both are the session page's, which owns
 // what happens to the sheet either way.
-export default function TrackNotePage({ entry, authed = false, layered = false, writing = false, onSaved = null, onLeave = null }) {
+// `folder` is the record's entries, oldest first, when it has more than one:
+// the note is then a page of a folder (FolderDots, useFolder).
+export default function TrackNotePage({ entry, authed = false, layered = false, writing = false, onSaved = null, onLeave = null, folder = null }) {
   const router = useRouter();
+  const turnTo = useFolder(writing ? null : folder, entry.slug);
   const edit = useEntryEditor(entry, { layered });
   const correcting = edit.editing;
   const headerSlot = useLayerHeaderSlot();
@@ -174,7 +178,12 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
     />
   );
 
-  const nav = <SiteNav tools={keeperTools} />;
+  const nav = (
+    <SiteNav
+      tools={keeperTools}
+      dots={!writing && folder?.length > 1 ? <FolderDots folder={folder} slug={entry.slug} onPick={turnTo} /> : null}
+    />
+  );
 
   return (
     <div className={'ln-entry tn' + (writing ? ' tn--writing' : '')}>

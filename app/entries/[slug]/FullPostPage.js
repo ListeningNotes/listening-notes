@@ -17,7 +17,8 @@ import { kept_receipts } from '../../../library/receipts';
 import { buildReferenceIndex, createReferenceLinker } from '../../../library/cross_references';
 import SiteNav from '../../../components/main_components/SiteNav';
 import { createPortal } from 'react-dom';
-import { useLayerHeaderSlot } from '../../../components/main_components/LayerEntry';
+import { useLayerHeaderSlot, useFolder } from '../../../components/main_components/LayerEntry';
+import FolderDots from '../../../components/main_components/FolderDots';
 import KeeperTools from '../../../components/main_components/KeeperTools';
 import EditingBar from '../../../components/main_components/EditingBar';
 import { entryPlate } from '../../../components/main_components/EntryPlate';
@@ -120,8 +121,13 @@ const COVER_LABELS = { toCode: 'Show the code for this entry', toPicture: 'Show 
 // listen in progress exactly as the page will print it. Nothing is fetched
 // for it (there is no slug to fetch by), nothing can be commented on, and the
 // footer's ways out are left off: the session is the way out.
-export default function FullPostPage({ entry, references = [], authed = false, layered = false, preview = false }) {
+// `folder` is the record's entries, oldest first, when it has more than one
+// (2026-09-25): the entry is then a page of a folder, with its dots in the
+// header and the rest a swipe away (useFolder, FolderDots).
+export default function FullPostPage({ entry, references = [], authed = false, layered = false, preview = false, folder = null }) {
   const router = useRouter();
+  const turnTo = useFolder(preview ? null : folder, entry.slug);
+  const folderDots = !preview && folder?.length > 1 ? <FolderDots folder={folder} slug={entry.slug} onPick={turnTo} /> : null;
   // ── Correcting what is written ────────────────────────────────────────────
   // The fields are drawn where the writing is, not in a form somewhere else:
   // the album note becomes a textarea in the album note's place, and a track's
@@ -1442,8 +1448,8 @@ export default function FullPostPage({ entry, references = [], authed = false, l
           beneath them changes. The slot wears this page's classes so the
           band behind the row keeps working — see the effect below. */}
       {headerSlot
-        ? createPortal(<SiteNav tools={keeperTools} mark={headerMark} lede={ledeDrawn} />, headerSlot)
-        : <SiteNav tools={keeperTools} mark={headerMark} lede={ledeDrawn} />}
+        ? createPortal(<SiteNav tools={keeperTools} mark={headerMark} lede={ledeDrawn} dots={folderDots} />, headerSlot)
+        : <SiteNav tools={keeperTools} mark={headerMark} lede={ledeDrawn} dots={folderDots} />}
 
       {/* A correction is open, and the page is long. The controls that started
           it are at the top of the entry, which is a screen and a half away by

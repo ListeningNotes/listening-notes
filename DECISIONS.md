@@ -354,8 +354,8 @@ and it was a column of facts, not an object.
 
 **You browse on the wall and nowhere else, 2026-09-15.** The ID pane is a
 snapshot of a person, not a second journal, so an entry opened from it — the
-pinned record, a cover in a count's window — is handed no neighbours and
-closes back to the card. It had the wall's order behind it and let you swipe
+pinned record, a cover in a count's window — is handed no neighbours beyond
+its own folder (2026-09-25) and closes back to the card. It had the wall's order behind it and let you swipe
 through the journal, which was the pane passing an order it has nothing to do
 with. One layer at a time, too: a cover closes its window before the entry
 opens.
@@ -842,13 +842,15 @@ out: that is a mode, and modes make gesture navigation unlearnable. **On a
 desk the layer is the right page, 2026-09-13, rewritten 2026-09-15,** with
 the spine still beside it; the whole screen is the phone's shape.
 
-**An entry expands from its cover, and sideways means the next record,
-2026-09-02.** The sheet grows out of the tapped tile, the way a photo viewer
-opens a picture; left and right are the previous and next record on the wall
-as it stands (search, filters, sort — `library/handoff.js`), stopping at the
-ends, by `router.replace` so back still means the wall. Closing is a pull
-down from the top of the first screen, Escape, or back. No edge pull:
-sideways cannot mean both next and leave.
+**An entry expands from its cover, and sideways means the next page,
+2026-09-02, amended 2026-09-25.** The sheet grows out of the tapped tile, the
+way a photo viewer opens a picture. From the wall, left and right move
+through the wall as one long run of pages — a folder's entries oldest first,
+then the next record's — as it stands (search, filters, sort —
+`library/handoff.js`), stopping at the ends, by `router.replace` so back
+still means the wall (Miyel chose the run over stopping at a folder's end).
+Closing is a pull down from the top of the first screen, Escape, or back. No
+edge pull: sideways cannot mean both next and leave.
 
 **The layer takes a sideways drag only where a record is beside this one,
 2026-09-03.** On a form, or an entry opened cold, sideways is the browser's.
@@ -940,12 +942,20 @@ caller. Its ··· is Edit, Credit, Send, Delete. Nothing that numbers, counts o
 compares albums counts it. The brief's reason: one object doing both is one
 confusing object instead of two clear ones.
 
-**The wall holds one tile per record, drawn like Finder's files,
-2026-09-24.** Plain is one listen; a page, its corner folded over, is songs
-and no listen yet; a folder is more than one entry, a second listen or a song
-on it. Flat — no shadow, no curl (Miyel chose it off a sheet of three) — and
-the folder's tab and the page's flap take the album's own colour. One thing
-behind a tile opens it; more open the record's page, `/albums/[record]`.
+**Three shapes, by count, drawn like Finder's files, 2026-09-24/25.** A
+card is one album listen; a page, its corner folded over, is one track note
+and no listen; a folder is more than one entry, whatever the mix. Nothing
+else is encoded in the shape — a page in a folder was tried and retired. Flat,
+no shadow or curl, and the folder's tab and the page's flap take the album's
+own colour (Miyel chose it off a sheet of three).
+
+**A folder opens to an entry and flips, 2026-09-25.** No index and no landing
+screen inside — the record's own page was built and taken out the same day.
+Each page is the entry as it renders anywhere; the only chrome is a row of
+same-size dots in the header, with the entry's month under them. From the
+wall a folder opens on its earliest entry; from anywhere else on the one
+pressed, with the rest of its folder either side and nothing beyond it.
+Entries carry no type label: the shape of the page says it.
 
 **The journal wall is ordered by a record's first entry, and never reorders,
 2026-09-24.** A second listen or a song marked on a record leaves its tile

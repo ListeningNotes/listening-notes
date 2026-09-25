@@ -314,6 +314,37 @@
   .kt-door-x { transform: none; }
 }
 .sitenav-logo { display: block; justify-self: center; }
+
+/* ── A folder's dots (FolderDots.js), 2026-09-25 ──────────────────────────
+   Where the journal's mark stands, on an entry that is a page of a folder,
+   and fading the way the mark does. One dot per entry, oldest first, all the
+   same size, the one you are on in ink; each is a thumb's width to press.
+   Under them the entry's month, the one line a folder's page carries. Past
+   ten they draw closer, so a long folder still fits between the corners. */
+.sitenav-dots { display: flex; justify-content: center; }
+.fdots { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.fdots-row { display: flex; align-items: center; }
+.fdots-dot {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 20px; height: 22px;
+  padding: 0; border: 0; background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.fdots-dot::before {
+  content: '';
+  width: 7px; height: 7px; border-radius: 50%;
+  background: color-mix(in srgb, var(--ink) 22%, transparent);
+  transition: background 0.18s;
+}
+.fdots-dot--here::before { background: var(--ink); }
+.fdots-dot:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: -3px; border-radius: 50%; }
+.fdots--many .fdots-dot { width: 13px; }
+.fdots--many .fdots-dot::before { width: 6px; height: 6px; }
+.fdots-when {
+  font-family: var(--font-label); font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
+  line-height: 1; color: var(--ink-faint);
+}
 .sitenav-logo-mark {
   height: 28px;
   width: auto;
@@ -2289,15 +2320,11 @@
 .fd-album:hover { text-decoration: underline; text-underline-offset: 4px; }
 .fd-artist { font-family: var(--font-label); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-soft); margin-top: 6px; }
 /* ── A friend's track note, 2026-09-24 ─────────────────────────────────────
-   Read as a song: a small line over the song saying so, the song as the
-   large line and the record under it (Feed.js). The cover carries the fold
-   and its flap (.ln-fold, base.css) in both densities. And the compare for a song is a
-   sentence rather than a panel — what you gave the same song yourself. */
-.fd-kind {
-  margin-bottom: 8px;
-  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
-  color: var(--ink-faint);
-}
+   Read as a song: the song as the large line and the record under it
+   (Feed.js), and no word saying it is a track — the page's shape says so.
+   The cover carries the fold and its flap (.ln-fold, base.css) in both
+   densities. And the compare for a song is a sentence rather than a panel —
+   what you gave the same song yourself. */
 .fd-yours {
   display: flex; align-items: center; justify-content: center; gap: 10px;
   margin-top: 16px;

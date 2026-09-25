@@ -110,7 +110,11 @@ export function growBoxOf(path) {
 
 export function tileBoxOf(slug) {
   if (typeof document === 'undefined') return null;
-  const tile = document.querySelector(`[data-tile-slug="${CSS.escape(slug)}"]`);
+  // The tile an entry opened from, or — once a folder has been flipped to
+  // another of its entries — the tile holding it (data-tile-slugs), so
+  // closing still puts the cover back where it came from.
+  const tile = document.querySelector(`[data-tile-slug="${CSS.escape(slug)}"]`)
+    || document.querySelector(`[data-tile-slugs~="${CSS.escape(slug)}"]`);
   if (!tile) return null;
   const box = tile.getBoundingClientRect();
   if (box.width === 0 || box.height === 0) return null;
@@ -138,6 +142,9 @@ function firstScreen(entry) {
     received_from: entry.received_from || '',
     received_from_url: entry.received_from_url || '',
     song: entry.song || '',
+    // And the folder it is a page of, when a page of a folder is being
+    // turned to, so the wait can keep the dots up (LayerWaiting).
+    folder: entry.folder || null,
   };
 }
 

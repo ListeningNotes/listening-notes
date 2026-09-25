@@ -37,6 +37,7 @@ import { createPortal } from 'react-dom';
 import { Fingerprint, Heart, SketchLogo } from '@phosphor-icons/react';
 import { handedOver, stillReadingOn } from '../../library/handoff';
 import SiteNav from './SiteNav';
+import FolderDots from './FolderDots';
 import KeeperTools from './KeeperTools';
 import { useLayerHeaderSlot } from './LayerEntry';
 import StarRating from './StarRating';
@@ -77,9 +78,14 @@ export default function LayerWaiting({ slug, authed = false }) {
     // the swipe that may leave from it.
     if (onward) document.documentElement.style.setProperty('--ln-turn', '1');
   }, [headerSlot, onward]);
+  // A page of a folder, turned to from the page beside it, carries the
+  // folder with it, so the dots stay in the header while it loads rather
+  // than the journal's mark blinking in for the length of the fetch
+  // (2026-09-25). Drawn still: the page itself makes them pressable.
+  const dots = known?.folder?.length > 1 ? <FolderDots folder={known.folder} slug={slug} /> : null;
   const header = headerSlot
     ? createPortal(
-        <SiteNav tools={authed ? <KeeperTools onEdit={() => {}} slug={slug} /> : null} />,
+        <SiteNav dots={dots} tools={authed ? <KeeperTools onEdit={() => {}} slug={slug} /> : null} />,
         headerSlot,
       )
     : null;

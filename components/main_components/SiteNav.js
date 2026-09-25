@@ -53,7 +53,10 @@ import { useBookplate } from './Bookplate';
 // a flag because this row should not know what a keeper is: it holds a slot
 // open and the page decides what belongs in it. On every other page the slot
 // is an empty grid column, which is the thing holding the mark in the middle.
-export default function SiteNav({ tools = null, mark = null, lede = true }) {
+// `dots` is a folder's row of dots (FolderDots), 2026-09-25: on an entry in
+// a folder they stand where the journal's mark stands, and come and go the
+// way it does — the one piece of chrome a folder adds.
+export default function SiteNav({ tools = null, mark = null, lede = true, dots = null }) {
   const { cover_name } = useBookplate();
   const { isLive } = useListeningBeacon();
   const here = usePathname();
@@ -104,7 +107,8 @@ export default function SiteNav({ tools = null, mark = null, lede = true }) {
           the mark on the middle of the row. */}
       <div className="sitenav-side sitenav-side--left" aria-hidden="true" />
 
-      {(onAnEntry || onGet) && lede && (
+      {(onAnEntry || onGet) && lede && dots && <div className="sitenav-logo sitenav-dots">{dots}</div>}
+      {(onAnEntry || onGet) && lede && !dots && (
       <Link href="/" className="sitenav-logo" aria-label={cover_name}>
         <svg viewBox="76 96 241 140" className="sitenav-logo-mark" xmlns="http://www.w3.org/2000/svg">
           <path

@@ -654,8 +654,8 @@ export default function Feed({ entries = [], density = DEFAULT_DENSITY }) {
                 {/* ── A friend's track note, 2026-09-24 ─────────────────
                     Like any other entry, and read as a song: the cover with
                     its fold, the song as the large line and `album · artist`
-                    under it (the track-notes brief). */}
-                {entry.song && <div className="fd-kind">A track</div>}
+                    under it (the track-notes brief). No word saying it is a
+                    track (2026-09-25): the page's own shape says that. */}
                 <a className="fd-album" href={there} target="_blank" rel="noopener noreferrer">{entry.song || entry.album}</a>
                 <div className="fd-artist">
                   {entry.song

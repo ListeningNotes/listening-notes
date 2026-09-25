@@ -26,22 +26,19 @@
 //
 // ── A record, not an entry, 2026-09-24 ───────────────────────────────────
 // One tile per record (gatherAlbums in Journal.js), and the tile says what is
-// inside it (the track-notes brief), the way Finder's icons do (Miyel, the
-// same evening, off a sheet of three): plain for one album listen; a page —
-// its corner folded over — for a record known only by its songs; and a
-// folder once there is more than one entry behind it, a second listen or a
-// song marked on the record. A new entry puts a record in a folder, and a
-// listen turns a page back into a cover. So the folder says exactly what
-// pressing it does — more than one thing, so the record's page — and a
-// songs-only record with two songs is a page in a folder. Flat, and the
-// folder's tab and the page's flap are the album's own colour: the cover,
-// blurred down (.ln-fold-flap and .ft-tab in base.css).
+// inside it, by count, the way Finder's icons do — three shapes and nothing
+// else encoded in them (Miyel's brief, 2026-09-25): a card is one album
+// listen; a page, its corner folded over, is one track note and no listen;
+// a folder is more than one entry, whatever the mix — two songs, two listens,
+// a listen and a song. Flat, and the folder's tab and the page's flap are the
+// album's own colour: the cover, blurred down (.ln-fold-flap and .ft-tab in
+// base.css). A page in a folder was tried for an evening and retired: it said
+// two things at once and broke the count.
 //
-// With one thing behind it a tile opens that thing, growing out of the cover
-// as an entry always has. With more, it opens the record's own page — every
-// listen and every note, newest first (app/albums/[record]) — which grows out
-// of the same cover (data-grows, library/handoff.js). Miyel, 2026-09-24: a
-// page listing one thing would be a step with nothing to choose.
+// Every tile opens an entry, growing out of the cover as an entry always
+// has. A folder opens its earliest — you are looking at history, so you start
+// at the beginning — and the rest are a swipe away, with dots in the header
+// (FolderDots, useFolder). There is no page listing a folder's entries.
 
 'use client';
 import Link from 'next/link';
@@ -50,11 +47,11 @@ import { handOff } from '../../library/handoff';
 export default function AlbumTile({ album, going = false }) {
   const face = album.face;
   const alone = album.all.length === 1;
-  const folder = album.all.length > 1;
-  const folded = album.listens.length === 0;
-  // The record's page is at its key with hyphens for spaces: the key is
-  // letters, digits and single spaces, so it comes back exactly.
-  const href = alone ? `/entries/${face.slug}` : `/albums/${album.key.replace(/ /g, '-')}`;
+  const folder = !alone;
+  const folded = alone && album.notes.length === 1;
+  // The entry the tile opens: its only one, or a folder's earliest.
+  const opens = album.all[album.all.length - 1];
+  const href = `/entries/${opens.slug}`;
 
   return (
     <Link
@@ -72,15 +69,14 @@ export default function AlbumTile({ album, going = false }) {
          the record, for the wall to follow it by when it moves; and every
          entry behind it, so a listen or a note just saved finds the tile it
          landed on. */
-      data-tile-slug={face.slug}
+      data-tile-slug={opens.slug}
       data-tile-key={album.key}
       data-tile-slugs={album.all.map(e => e.slug).join(' ')}
-      data-grows={alone ? undefined : href}
       /* On the way past, this leaves the cover and the two lines under it
          where the layer can pick them up — see library/handoff.js. The entry
          still has to be read from the database; this is only so the layer has
          something true to draw while that happens, instead of a grey square. */
-      onClick={alone ? () => handOff(face) : undefined}
+      onClick={() => handOff(opens)}
     >
       <div className="ft-inner">
         {/* The folder's tab, behind the cover: the same picture, blurred to

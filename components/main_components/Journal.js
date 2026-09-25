@@ -559,9 +559,11 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
   // What is on the wall right now, in this order, left where the layer can
   // read it — so a swipe on an entry goes to the record beside it here, not
   // the next one in the database. See library/handoff.js.
-  // One record, one place in the order: a swipe goes to the next record's
-  // face, the entry its tile draws.
-  useEffect(() => { handOffOrder(filtered.map(album => album.face)); }, [filtered]);
+  // The wall as one long run of pages (Miyel, 2026-09-25): every record's
+  // entries in a row, oldest first — a folder flips through itself — and
+  // then the next record's. So a swipe on an entry opened from here moves
+  // through its folder and carries on to the record beside it.
+  useEffect(() => { handOffOrder(filtered.flatMap(album => [...album.all].reverse())); }, [filtered]);
 
   const pages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
   // Clamped rather than reset in an effect: if the filters shrink the results

@@ -28,9 +28,6 @@ Think of it like a house.
   the window; the journal takes the rest
 - Individual entry pages where people can read your notes and leave comments
 - `/archive` — every entry, searchable and filterable
-- `/albums/[record]` — one record's own page: every listen of it and every
-  track note on it, newest first. What a tile with more than one thing behind
-  it opens; the address is the record's `album_key` with hyphens
 - `/key` — what the stars and the three marks mean
 - `/submit` — send the keeper an album
 - `/shuffle` — redirect to a random entry
@@ -157,7 +154,8 @@ The furniture — visual pieces
       ListeningBeacon.js       The beacon — what is playing, or last played
       Journal.js               The wall of covers, with its search, filters and sort
       JournalFilters.js        The filter sheet — a popover on a desk, a pull-down sheet on a phone — and the year range
-      AlbumTile.js             One record on that wall — plain for one listen, a folder for more than one entry, a page with its corner folded for songs only (Journal.js gathers entries into records)
+      AlbumTile.js             One record on that wall — a card for one listen, a page with its corner folded for one track note, a folder for more than one entry (Journal.js gathers entries into records)
+      FolderDots.js            A folder's row of dots, and the entry's month, where the header's mark stands — the one piece of chrome a folder adds; useFolder in LayerEntry.js does the flipping
       CodeSlot.js              A square that holds a picture and turns into that picture's code — the card's portrait and an entry's cover: the two faces, the copy and its pill, the corner mark, the wait
       AddressCode.js           A plain code for an address, drawn in the browser — what CodeSlot shows when no pressed picture can be had
       CodeScanner.js           The camera pointed at a code — the address book's way in for a card's or a cover's code
@@ -232,9 +230,6 @@ The rooms — full pages assembled from furniture
       TrackNotePage.js         A track note — an entry about one song: its card, read, corrected, and written for the first time on the listen's sheet
       opengraph-image.js       The picture an entry's link unfurls into — cover, title, score, marks — drawn on the server per request
     archive/page.js            Every entry — search, sort, filters
-    albums/[record]/
-      page.js                  One record's page at its own address — pull_album, then AlbumPage
-      AlbumPage.js             The record: its cover, what is here ("3 songs · no listen yet"), the keeper's Listen to the whole record, and a row per listen and note
     key/page.js                What the stars and the three marks mean
     submit/page.js             Send the keeper an album
     shuffle/page.js            Redirect to a random entry
@@ -247,7 +242,6 @@ The rooms — full pages assembled from furniture
     setup/page.js              Claiming a copy: the code, the name, three skippable screens, the password, and who gave it (GIFT_FROM, or a scan)
     settings/page.js           The machinery, owner-only
     @layer/(.)archive/page.js  The wall, opened as a layer over whatever you were on — what the ID card's counts press into, growing from the number pressed
-    @layer/(.)albums/[record]/page.js  A record's page, opened over the journal from its tile
     @layer/(.)session/page.js  The same listen, opened as a layer over the desk
     @layer/(.)dashboard/inbox/page.js  The inbox, opened as a sheet over the desk
     @layer/(.)dashboard/feed/page.js  The feed, on the same sheet

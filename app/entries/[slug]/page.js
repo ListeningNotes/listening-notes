@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import database from '@/library/database_connection';
-import { pull_entry_by_slug } from '@/library/database_actions';
+import { pull_entry_by_slug, pull_album } from '@/library/database_actions';
 import { pull_settings, titleName } from '@/library/settings_actions';
 import { wristbandOnHand } from '@/library/wristband';
 import PostClient from './FullPostPage';
@@ -73,8 +73,14 @@ export default async function PostPage({ params }) {
   // pull_entry_by_slug has already taken the chain off — a server component's
   // props are serialised into the HTML, so it has to come off before this point
   // rather than being left to whatever does the rendering.
+  // The folder this entry is a page of, when its record has more than one
+  // entry: the record's entries, oldest first, for the dots and the swipe
+  // (2026-09-25). A record whose key folds away to nothing is never one.
+  const record = entry.album_key ? await pull_album(entry.album_key) : [];
+  const folder = record.length > 1 ? [...record].reverse() : null;
+
   // A track note is its own card, not a shorter album entry (the track-notes
   // brief). Same address, same read, same owner check.
-  if (entry.song) return <TrackNotePage entry={entry} authed={authed} />;
-  return <PostClient entry={entry} references={references} authed={authed} />;
+  if (entry.song) return <TrackNotePage entry={entry} authed={authed} folder={folder} />;
+  return <PostClient entry={entry} references={references} authed={authed} folder={folder} />;
 }
