@@ -623,6 +623,15 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   // unwritten one.
   const said = t => t.stars > 0 || (t.note || '').trim() || t.favorite;
   const saidTracks = parsedTracks.filter(said).length;
+  // What the heading says is there, 2026-09-24 (the track-notes brief): the
+  // notes when anything was written, and how much was rated when nothing was
+  // — "2 notes", "5 of 5 rated". Never a count of what is missing. Numbers
+  // stay numbers, not words (Miyel, the same day: cleaner).
+  const notedTracks = parsedTracks.filter(t => (t.note || '').trim()).length;
+  const ratedTracks = parsedTracks.filter(t => t.stars > 0).length;
+  const tracksHold = notedTracks > 0 ? (notedTracks === 1 ? '1 note' : `${notedTracks} notes`)
+    : ratedTracks > 0 ? `${ratedTracks} of ${parsedTracks.length} rated`
+    : null;
 
   // The index only changes when the archive does; the linker is rebuilt every
   // render on purpose. It carries the "first mention on this page" tally, so
@@ -1798,12 +1807,15 @@ export default function FullPostPage({ entry, references = [], authed = false, l
           </section>
         )}
 
-        {/* Horizon lives under the Track Notes heading rather than on its own:
+        {/* Horizon lives under the Tracks heading rather than on its own:
             it is a map of the tracks, and clicking a bar jumps to one, so it
-            belongs to the same stretch of page they do. */}
+            belongs to the same stretch of page they do. The heading said
+            Track Notes until 2026-09-24: a track note is its own kind of
+            entry now, and this is the record's tracks. While a correction is
+            open the count stands down — it would change under every key. */}
         {(saidTracks > 0 || horizonBars.length > 0 || (edit.editing && parsedTracks.length > 0)) && (
           <section style={{ marginBottom: '48px' }}>
-            <MetadataLabel sticky>Track Notes</MetadataLabel>
+            <MetadataLabel sticky aside={edit.editing ? null : tracksHold}>Tracks</MetadataLabel>
 
             {/* The hint sits with the bars rather than in the heading: the
                 heading is sticky, and "click a bar to jump" makes no sense

@@ -1036,11 +1036,55 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
   color: var(--fav);
 }
 
+/* ── A track, read ──────────────────────────────────────────────────────────
+   2026-09-24, the track-notes brief. Rated and not written is one tight row —
+   number, title, marks, stars — and five of them fit where one used to sit,
+   because nothing under it is waiting for a note that may never come.
+   Written keeps the row and sets its note under the title, with the comment
+   glyph at the end of it (.ln-say-beside). The rule under a track is the
+   track's own, so it closes the note when there is one and the row when there
+   is not. The title is bold and a size up from where it was, as in the
+   brief's mock-up: in a column of rows the song is what you read down. */
+.ln-track { border-bottom: 1px solid var(--border); }
+.ln-track-row { display: flex; align-items: center; gap: 12px; padding: 13px 0; }
+.ln-track-row--open { padding-bottom: 6px; }
+.ln-track-num {
+  width: 16px;
+  flex-shrink: 0;
+  font-family: var(--font-label);
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+.ln-track-name {
+  min-width: 0;
+  font-size: 15px;
+  font-weight: var(--font-display-weight);
+  color: var(--ink);
+}
+.ln-track-marks { display: flex; align-items: center; gap: 10px; margin-left: auto; flex-shrink: 0; }
+/* Under the title rather than under the number — the note is the song's —
+   which is the number's 16px and the row's 12px gap. */
+.ln-track-note {
+  margin: 0 0 6px 28px;
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--ink-soft);
+  white-space: pre-wrap;
+}
+.ln-track-edited { margin-left: 28px; }
+/* The count at the far end of a section's heading (MetadataLabel's `aside`):
+   a step fainter than the heading's own name, which is what the line is. */
+.ln-meta-label-aside { opacity: 0.7; white-space: nowrap; }
+/* A correction keeps the room it had: every track has a field under it. */
+.ln-track--editing { padding-bottom: 18px; }
+.ln-track--editing .ln-track-row { padding: 12px 0; }
+
 /* A track's own row while it is being corrected: the title becomes a field in
    the title's place, and the heart is always drawn so it can be pressed. Read
    rather than edited, an empty heart on every track would be a column of
-   controls nobody asked for — so it only appears filled. */
-.ln-track-field { flex: 1; min-width: 0; font-size: 13px; }
+   controls nobody asked for — so it only appears filled. The field is set in
+   the title's own type, the way .ln-write is set in the note's. */
+.ln-track-field { flex: 1; min-width: 0; font-size: 15px; font-weight: var(--font-display-weight); }
 /* The heart is only drawn while a correction is open, so this is the editing
    size and there is no reading version to keep small. It carries a thumb-sized
    target on padding with a matching negative margin (2026-09-17): the hit area
@@ -1101,8 +1145,10 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
    this ever saying so. The album note keeps its rule: nothing else is
    underlining that one. */
 .ln-write--track {
-  font-size: 13px; line-height: 1.8; color: var(--ink-soft);
+  font-size: 14px; line-height: 1.75; color: var(--ink-soft);
   border-bottom: 0; margin-bottom: 0;
+  /* Where the note it becomes is read: under the title. */
+  margin-left: 28px; width: calc(100% - 28px);
 }
 
 /* An edit stamp, printed under the piece of writing it belongs to — a track's
@@ -1192,6 +1238,34 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
    three gaps for a control 23px tall. */
 .ln-say-way { display: flex; justify-content: flex-end; }
 .ln-say-way--open { margin-bottom: 10px; }
+/* The glyph, at the end of a track's note, 2026-09-24: a word when the way in
+   stands alone (the album note), a glyph when it is one of a column of them.
+   The note on the left and the glyph on the right, the glyph level with the
+   first line rather than floating halfway down a long paragraph. */
+.ln-say-beside { display: flex; align-items: flex-start; gap: 8px; padding-bottom: 8px; }
+.ln-say-beside--open { margin-bottom: 10px; }
+.ln-say-beside-text { flex: 1; min-width: 0; }
+/* The mark and not a mark in a container (DECISIONS): a thumb's target from
+   padding, paid back in negative margin so the glyph takes only its own 17px
+   and sits flush with the stars above it. Less given back on the left, so
+   the press never reaches across a link at the end of a line. */
+.ln-say-glyph {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  padding: 13px;
+  margin: -9px -13px -13px -5px;
+  border: 0;
+  background: none;
+  color: var(--ink-faint);
+  cursor: pointer;
+  transition: color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.ln-say-glyph:hover { color: var(--ink); }
+.ln-say-glyph:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: -6px; }
+.ln-say-glyph-count { font-family: var(--font-label); font-size: 10px; letter-spacing: 0.04em; }
 .ln-says { display: flex; flex-direction: column; gap: 22px; margin-bottom: 12px; }
 /* A hairline over each comment and none over the first: the gap is enough
    between the note and the first thing said about it, and a line there would

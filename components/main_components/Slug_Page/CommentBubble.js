@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 'use client';
 import { useState } from 'react';
+import { Chat } from '@phosphor-icons/react';
 import CommentThread from './CommentThread';
 import NewCommentForm from './NewCommentForm';
 
@@ -26,7 +27,16 @@ import NewCommentForm from './NewCommentForm';
 // site that no longer exists: a hand-drawn speech bubble, a frosted panel with
 // a 14px radius, a filled accent button with its text colour in hex. The
 // styles are .ln-say-* in entry.css now, with the reasoning beside them.
-export default function CommentBubble({ slug, trackIndex, comments = [], onRefresh }) {
+//
+// ── A word when it stands alone, a glyph when it is one of several ─────────
+// 2026-09-24, the track-notes brief. The album note has one way in and it
+// keeps the word. A track's note is one of a column of them, so it takes the
+// glyph — Phosphor's, not a drawn one — at the end of its own text: `glyph`,
+// with the note handed in as `children` so the two sit side by side. The same
+// rule the band and the entry's tools already keep. A track that was rated
+// and not written gets no way in at all (TrackThread): there is nothing to
+// reply to.
+export default function CommentBubble({ slug, trackIndex, comments = [], onRefresh, glyph = false, children = null }) {
   // Comments are simply there. Hiding them behind a control was solving a
   // volume problem this site doesn't have, and it's what made an approved
   // comment look like it had never posted.
@@ -35,28 +45,43 @@ export default function CommentBubble({ slug, trackIndex, comments = [], onRefre
   const count = comments.length;
   const open = count > 0 && showComments;
 
+  // The way in, at the end of the note you have just read. With comments it
+  // carries the count and folds the thread; with none it is the invitation,
+  // and pressing it opens the form.
+  //
+  // A word rather than the drawn bubble and a number that stood here for a
+  // year: a control is the mark or it is the word, and this site has no other
+  // hand-drawn glyph left in it. The count is in the word, so the row says
+  // what pressing it will do instead of leaving you to read a numeral beside a
+  // picture. As a glyph, the count stands beside it once there is one: folded,
+  // the thread is otherwise a mark with nothing to say it holds anything.
+  const way = (
+    <button
+      type="button"
+      className={glyph ? 'ln-say-glyph' : 'ln-word'}
+      onClick={() => (count > 0 ? setShowComments(v => !v) : setComposing(true))}
+      aria-expanded={count > 0 ? showComments : undefined}
+      aria-label={count === 0 ? 'Add the first comment' : showComments ? 'Hide comments' : 'Show comments'}
+    >
+      {glyph ? (
+        <>
+          <Chat size={17} />
+          {count > 0 && <span className="ln-say-glyph-count">{count}</span>}
+        </>
+      ) : count === 0 ? 'Comment' : count === 1 ? '1 comment' : `${count} comments`}
+    </button>
+  );
+
   return (
     <>
-      {/* The way in, at the end of the note you have just read. With comments
-          it carries the count and folds the thread; with none it is the
-          invitation, and pressing it opens the form.
-
-          A word rather than the drawn bubble and a number that stood here for
-          a year: a control is the mark or it is the word, and this site has no
-          other hand-drawn glyph left in it. The count is in the word, so the
-          row says what pressing it will do instead of leaving you to read a
-          numeral beside a picture. */}
-      <div className={'ln-say-way' + (open ? ' ln-say-way--open' : '')}>
-        <button
-          type="button"
-          className="ln-word"
-          onClick={() => (count > 0 ? setShowComments(v => !v) : setComposing(true))}
-          aria-expanded={count > 0 ? showComments : undefined}
-          aria-label={count === 0 ? 'Add the first comment' : showComments ? 'Hide comments' : 'Show comments'}
-        >
-          {count === 0 ? 'Comment' : count === 1 ? '1 comment' : `${count} comments`}
-        </button>
-      </div>
+      {glyph ? (
+        <div className={'ln-say-beside' + (open ? ' ln-say-beside--open' : '')}>
+          <div className="ln-say-beside-text">{children}</div>
+          {way}
+        </div>
+      ) : (
+        <div className={'ln-say-way' + (open ? ' ln-say-way--open' : '')}>{way}</div>
+      )}
 
       {open && (
         <div className="ln-says">

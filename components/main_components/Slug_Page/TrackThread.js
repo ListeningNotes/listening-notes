@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 'use client';
 import { Heart } from '@phosphor-icons/react';
-import { fonts } from '../../../library/sitewide_visuals';
 import StarRating from '../StarRating';
 import TrackDial from './TrackDial';
 import CommentBubble from './CommentBubble';
@@ -30,14 +29,41 @@ export default function TrackThread({
   const edited = editStamp(track.edited);
   const trackComments = commentsByTrack[String(trackIndex)] || [];
 
+  // ── Rated is a row; written is a row with its note under it ─────────────
+  // 2026-09-24, the track-notes brief. Every track used to reserve room for a
+  // note and a way to comment on it, so an entry that was rated and not
+  // written read as a form somebody abandoned — and rating without writing is
+  // a real way to keep a journal. So a track with nothing written is one
+  // tight row, number, title, marks, stars, and nothing under it: no note to
+  // read, and no comment, because there is nothing to reply to. A written one
+  // keeps the row and has its note underneath, with the glyph at the end of
+  // it (CommentBubble).
+  //
+  // Two things still open the space under a bare row: a thread somebody
+  // already started there, when every track had a way in (an approved comment
+  // going invisible is the one failure the comments exist to prevent), and an
+  // edit stamp left by a note that was taken out.
+  const written = !!(track.note || '').trim();
+  const thread = trackComments.length > 0;
+  const under = !editing && (written || thread || !!edited);
+  const noteRead = (
+    <>
+      {written && <p className="ln-track-note">{note ?? track.note}</p>}
+      {edited && <p className="ln-edited ln-track-edited">Edited {edited}</p>}
+    </>
+  );
+
   return (
-    // Padding lives on the track itself, so the gap above the divider is the
-    // same whether or not this track has a thread and a + comment under it.
-    <div id={'track-' + trackIndex} style={{ borderBottom: '1px solid var(--border)', paddingBottom: '18px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 0' }}>
+    // The rule under a track is the track's own, so it sits under the note
+    // when there is one and under the row when there is not — one line per
+    // song either way.
+    <div id={'track-' + trackIndex} className={'ln-track' + (editing ? ' ln-track--editing' : '')}>
+      <div className={'ln-track-row' + (under ? ' ln-track-row--open' : '')}>
         {/* Number reads left, flush with the page edge — right-aligning it in
-            a fixed box was what made the row look indented. */}
-        <span style={{ fontFamily: fonts.mono, fontSize: '10px', color: 'var(--ink-faint)', textAlign: 'left', flexShrink: 0 }}>{track.num}</span>
+            a fixed box was what made the row look indented. The box is
+            fixed-width and left-aligned, so the titles start on one line
+            whether a record has nine songs or nineteen. */}
+        <span className="ln-track-num">{track.num}</span>
         {editing ? (
           <input
             className="ln-field ln-track-field"
@@ -46,9 +72,9 @@ export default function TrackThread({
             aria-label={`Title of track ${track.num}`}
           />
         ) : (
-          <span className="ln-track-name" style={{ fontSize: '13px', color: 'var(--ink)', minWidth: 0 }}>{track.name}</span>
+          <span className="ln-track-name">{track.name}</span>
         )}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginLeft: 'auto', flexShrink: 0 }}>
+        <div className="ln-track-marks">
           {/* Editing, the heart is always there and is filled or not; reading,
               it appears only when it is filled. A row of empty hearts down a
               tracklist would be a column of controls nobody asked for. */}
@@ -112,13 +138,13 @@ export default function TrackThread({
         />
       )}
 
-      {/* The note carries no border of its own — the row's own bottom border
-          already closes the track off, and having both drew two lines a few
-          pixels apart. */}
+      {/* The note carries no border of its own — the track's own bottom border
+          already closes it off, and having both drew two lines a few pixels
+          apart. */}
       {/* While editing, every track gets a field whether or not it had a note:
           a track you never wrote about is exactly the one you might want to,
           and a row with nothing to type into is a row that says you cannot. */}
-      {editing ? (
+      {editing && (
         <textarea
           className="ln-write ln-write--track"
           value={draft?.note ?? track.note ?? ''}
@@ -128,20 +154,26 @@ export default function TrackThread({
           placeholder="No notes"
           aria-label={`Note on ${track.name}`}
         />
-      ) : track.note ? (
-        <p style={{ fontSize: '13px', lineHeight: 1.8, color: 'var(--ink-soft)', marginBottom: '6px', whiteSpace: 'pre-wrap' }}>{note ?? track.note}</p>
-      ) : null}
-      {edited && !editing && <p className="ln-edited">Edited {edited}</p>}
+      )}
+
+      {/* While a correction is open there is no way in to a new comment — it
+          is a correction, not a reply — but a thread already there stays in
+          view, so nothing seems to vanish the moment editing starts. */}
+      {editing && thread && !preview && (
+        <CommentBubble glyph slug={slug} trackIndex={trackIndex} comments={trackComments} onRefresh={onRefresh} />
+      )}
 
       {/* The way in, at the end of the note you've just read. Lives in
-          CommentBubble now, which the album notes share — see the note at the
-          top of that file for why. */}
-      {!preview && <CommentBubble
-        slug={slug}
-        trackIndex={trackIndex}
-        comments={trackComments}
-        onRefresh={onRefresh}
-      />}
+          CommentBubble, which the album notes share — see the note at the top
+          of that file for why. The session's preview has nothing to comment
+          on yet, so it draws the note in the same place and no glyph. */}
+      {under && (preview ? (
+        <div className="ln-say-beside"><div className="ln-say-beside-text">{noteRead}</div></div>
+      ) : (
+        <CommentBubble glyph slug={slug} trackIndex={trackIndex} comments={trackComments} onRefresh={onRefresh}>
+          {noteRead}
+        </CommentBubble>
+      ))}
     </div>
   );
 }
