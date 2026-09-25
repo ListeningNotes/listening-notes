@@ -2291,7 +2291,7 @@
 /* ── A friend's track note, 2026-09-24 ─────────────────────────────────────
    Read as a song: a small line over the song saying so, the song as the
    large line and the record under it (Feed.js). The cover carries the fold
-   (.ln-fold, base.css) in both densities. And the compare for a song is a
+   and its flap (.ln-fold, base.css) in both densities. And the compare for a song is a
    sentence rather than a panel — what you gave the same song yourself. */
 .fd-kind {
   margin-bottom: 8px;

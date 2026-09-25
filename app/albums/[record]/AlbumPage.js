@@ -13,9 +13,9 @@
 // on the wall and nowhere else (DECISIONS).
 //
 // A record known only by its songs says so — "3 songs · no listen yet" —
-// with its cover dog-eared, and the keeper gets the same line the track
-// note's card has: Listen to the whole record. A wall of dog-ears is a
-// legitimate journal; the fold is only a standing invitation.
+// with its cover a page, the corner folded over, and the keeper gets the
+// same line the track note's card has: Listen to the whole record. A wall of
+// pages is a legitimate journal; the fold is only a standing invitation.
 //
 // `entries` is the record's rows as the wall has them (pull_album), newest
 // first.
@@ -65,6 +65,13 @@ export default function AlbumPage({ entries, authed = false }) {
           <header className="alb-head">
             <span className={'alb-cover' + (songsOnly ? ' ln-fold' : '')}>
               {face.album_art ? <img src={face.album_art} alt={face.album} /> : null}
+              {/* A record known only by its songs is a page: its corner
+                  folded over, in the album's own colour (base.css). */}
+              {songsOnly && (
+                <span className="ln-fold-flap" aria-hidden="true">
+                  {face.album_art && <img src={face.album_art} alt="" />}
+                </span>
+              )}
             </span>
             <h1 className="alb-title">{face.album}</h1>
             <p className="alb-by">{[face.artist, face.year].filter(Boolean).join(' · ')}</p>

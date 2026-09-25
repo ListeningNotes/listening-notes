@@ -940,11 +940,12 @@ caller. Its ··· is Edit, Credit, Send, Delete. Nothing that numbers, counts o
 compares albums counts it. The brief's reason: one object doing both is one
 confusing object instead of two clear ones.
 
-**The wall holds one tile per record, 2026-09-24.** Plain is one listen;
-fanned is more than one entry, a second listen or a song on it; dog-eared is
-songs and no listen yet, and the fold goes with the first listen. One thing
-behind a tile opens it; more open the record's page, `/albums/[record]`
-(Miyel: a page listing one thing is a step with nothing to choose).
+**The wall holds one tile per record, drawn like Finder's files,
+2026-09-24.** Plain is one listen; a page, its corner folded over, is songs
+and no listen yet; a folder is more than one entry, a second listen or a song
+on it. Flat — no shadow, no curl (Miyel chose it off a sheet of three) — and
+the folder's tab and the page's flap take the album's own colour. One thing
+behind a tile opens it; more open the record's page, `/albums/[record]`.
 
 **The journal wall is ordered by a record's first entry, and never reorders,
 2026-09-24.** A second listen or a song marked on a record leaves its tile

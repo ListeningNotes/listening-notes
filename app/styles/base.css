@@ -356,32 +356,53 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 }
 .ln-turn-badge--drop { left: auto; right: 7px; cursor: pointer; }
 
-/* ── The fold, 2026-09-24 ──────────────────────────────────────────────────
-   A song rather than a record: the top right corner of the cover folded away,
-   the way a page is marked in a book (the track-notes brief). On a track
-   note's card, on a record the wall knows only by its songs, and on a friend's
-   track note in the feed — the same mark at every size, because it is sized
-   by the cover it is on.
+/* ── The page and the folder, 2026-09-24 ───────────────────────────────────
+   A song rather than a record is a page: the top right corner of the cover
+   folded over, the way a file looks in Finder. On a track note's card, on a
+   record the wall knows only by its songs, on the record's own page, and on
+   a friend's track note in the feed — the same mark at every size, sized by
+   the cover it is on. More than one entry is a folder (.ft-tab, journal.css).
 
-   Drawn over the art rather than cut out of it, so it works on any cover and
-   any radius: the page's own colour takes the corner, and a crease runs down
-   the fold. The notch — the corner cut clean off, the other of the two Miyel
-   kept — is .ln-notch, one class away, to be looked at on a wall of them. */
-.ln-fold { position: relative; }
-.ln-fold::after {
-  content: '';
+   Flat, on Miyel's call: a first version drew a curling corner with a crease
+   and a fan of shadowed edges, and it read as 3D and barely read at all. So
+   the corner is cut clean off the cover (.ln-fold) and the flap folded over
+   it is a flat triangle (.ln-fold-flap) — and the flap, like the folder's tab,
+   is the album's own colour: the cover itself, blurred down to its colours, a
+   shade darker, with a little of the page's ink over it so a black record's
+   flap still stands off a black page. The element holding the cover carries
+   .ln-fold; the flap is a span inside it holding the same picture. */
+.ln-fold { position: relative; clip-path: polygon(0 0, 68% 0, 100% 32%, 100% 100%, 0 100%); }
+.ln-fold-flap,
+.ft-tab {
+  overflow: hidden;
+  pointer-events: none;
+  /* A record with no picture still gets a flap and a tab, in the ink. */
+  background: color-mix(in srgb, var(--ink) 30%, var(--bg));
+}
+.ln-fold-flap {
   position: absolute;
   top: 0; right: 0;
-  width: 27%; height: 27%;
-  background: linear-gradient(225deg,
-    var(--bg) 50%,
-    color-mix(in srgb, var(--ink) 34%, transparent) 50%,
-    color-mix(in srgb, var(--ink) 12%, transparent) 54%,
-    transparent 58%);
-  pointer-events: none;
+  width: 32%; height: 32%;
   z-index: 1;
+  clip-path: polygon(0 0, 0 100%, 100% 100%);
 }
-.ln-notch { clip-path: polygon(0 0, 73% 0, 100% 27%, 100% 100%, 0 100%); }
+.ln-fold-flap img,
+.ft-tab img {
+  display: block;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  transform: scale(2.2);
+  filter: blur(9px) saturate(1.25) brightness(0.78);
+}
+[data-theme='dark'] .ln-fold-flap img,
+[data-theme='dark'] .ft-tab img { filter: blur(9px) saturate(1.25); }
+.ln-fold-flap::after,
+.ft-tab::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--ink) 18%, transparent);
+}
 
 /* ── .ln-slot — a picture that turns into its code (CodeSlot.js) ──────────
    The card's portrait and the entry's cover. The box's own size, frame and

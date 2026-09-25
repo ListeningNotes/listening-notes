@@ -26,14 +26,16 @@
 //
 // ── A record, not an entry, 2026-09-24 ───────────────────────────────────
 // One tile per record (gatherAlbums in Journal.js), and the tile says what is
-// inside it (the track-notes brief): plain for one album listen, fanned —
-// stacked edges on the right — once there is more than one entry behind it,
-// and dog-eared for a record known only by its songs. A second listen or a
-// song marked on a record gives it the fan, and a listen takes the fold away
-// (Miyel's brief of the same evening: "it gains the fan if it didn't have
-// one, and loses the dog-ear if the new entry is a full listen"). So the fan
-// says exactly what pressing it does — more than one thing, so the record's
-// page — and a songs-only record with two songs wears both.
+// inside it (the track-notes brief), the way Finder's icons do (Miyel, the
+// same evening, off a sheet of three): plain for one album listen; a page —
+// its corner folded over — for a record known only by its songs; and a
+// folder once there is more than one entry behind it, a second listen or a
+// song marked on the record. A new entry puts a record in a folder, and a
+// listen turns a page back into a cover. So the folder says exactly what
+// pressing it does — more than one thing, so the record's page — and a
+// songs-only record with two songs is a page in a folder. Flat, and the
+// folder's tab and the page's flap are the album's own colour: the cover,
+// blurred down (.ln-fold-flap and .ft-tab in base.css).
 //
 // With one thing behind it a tile opens that thing, growing out of the cover
 // as an entry always has. With more, it opens the record's own page — every
@@ -48,7 +50,7 @@ import { handOff } from '../../library/handoff';
 export default function AlbumTile({ album, going = false }) {
   const face = album.face;
   const alone = album.all.length === 1;
-  const fanned = album.all.length > 1;
+  const folder = album.all.length > 1;
   const folded = album.listens.length === 0;
   // The record's page is at its key with hyphens for spaces: the key is
   // letters, digits and single spaces, so it comes back exactly.
@@ -60,7 +62,7 @@ export default function AlbumTile({ album, going = false }) {
       /* `going` is this record being taken down: it shrinks where it stands
          for a third of a second and then the tiles after it file across into
          the space (closeTheGap in Journal.js). */
-      className={'ft' + (going ? ' ft--going' : '') + (fanned ? ' ft--fanned' : '')}
+      className={'ft' + (going ? ' ft--going' : '') + (folder ? ' ft--folder' : '') + (folded ? ' ft--page' : '')}
       aria-label={face.album + (face.artist ? ' by ' + face.artist : '')
         + (alone && !folded ? '' : ', ' + [
           album.listens.length ? (album.listens.length === 1 ? '1 listen' : `${album.listens.length} listens`) : '',
@@ -81,15 +83,27 @@ export default function AlbumTile({ album, going = false }) {
       onClick={alone ? () => handOff(face) : undefined}
     >
       <div className="ft-inner">
+        {/* The folder's tab, behind the cover: the same picture, blurred to
+            its colours. The browser already has it — it is the cover. */}
+        {folder && (
+          <span className="ft-tab" aria-hidden="true">
+            {face.album_art && <img src={face.album_art} alt="" loading="lazy" draggable={false} />}
+          </span>
+        )}
         {/* Nothing sits on top of the art at rest — the wall is just the album
             covers. The favourite and masterpiece marks used to float here and
             were moved off deliberately; they belong on the entry, not over
             somebody's artwork. The fold is not a mark on the art: it is the
-            corner of the page, turned down. */}
+            corner of the page, turned over. */}
         <div className={'ft-face ft-face--front' + (folded ? ' ln-fold' : '')}>
           {face.album_art
             ? <img src={face.album_art} alt="" className="ft-art" loading="lazy" draggable={false} />
             : <div className="ft-placeholder">{(face.album || '?')[0]}</div>}
+          {folded && (
+            <span className="ln-fold-flap" aria-hidden="true">
+              {face.album_art && <img src={face.album_art} alt="" loading="lazy" draggable={false} />}
+            </span>
+          )}
           <div className="ft-hover">
             <div className="ft-hover-album">{face.album}</div>
             <div className="ft-hover-artist">{face.artist}</div>

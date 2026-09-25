@@ -197,10 +197,19 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
                 onTurn={setCoverCode}
                 backGlyph={<VinylRecord size={12} weight="bold" />}
                 labels={COVER_LABELS}
-              />
+              >
+                {/* The page's folded corner, in the album's colour — off
+                    while the code shows, where it would cover a finder. */}
+                {!coverCode && (
+                  <span className="ln-fold-flap" aria-hidden="true"><img src={entry.album_art} alt="" /></span>
+                )}
+              </CodeSlot>
             ) : (
               <span className="tn-cover ln-fold">
                 {entry.album_art ? <img src={entry.album_art} alt={entry.album} /> : null}
+                <span className="ln-fold-flap" aria-hidden="true">
+                  {entry.album_art && <img src={entry.album_art} alt="" />}
+                </span>
               </span>
             )}
             <div className="tn-said">

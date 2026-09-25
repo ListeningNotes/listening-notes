@@ -591,6 +591,11 @@ export default function Feed({ entries = [], density = DEFAULT_DENSITY }) {
                     aria-label={`${entry.song || entry.album} on ${person.name || 'their'} journal`}
                   >
                     {entry.album_art && <img src={entry.album_art} alt="" loading="lazy" />}
+                    {entry.song && (
+                      <span className="ln-fold-flap" aria-hidden="true">
+                        {entry.album_art && <img src={entry.album_art} alt="" loading="lazy" />}
+                      </span>
+                    )}
                   </a>
                   <div className="fd-row-words">
                     {/* A track note keeps its fold at 56px, and is its song
@@ -638,6 +643,13 @@ export default function Feed({ entries = [], density = DEFAULT_DENSITY }) {
               <article className="fd-item">
                 <a className={'fd-art' + (shared ? ' fd-art--shared' : '') + (entry.song ? ' ln-fold' : '')} href={there} target="_blank" rel="noopener noreferrer" aria-label={`${entry.song || entry.album} on ${person.name || 'their'} journal`}>
                   {entry.album_art && <img src={entry.album_art} alt="" loading="lazy" />}
+                  {/* A song is a page, its corner folded over in the album's
+                      colour, the way it is on your own wall. */}
+                  {entry.song && (
+                    <span className="ln-fold-flap" aria-hidden="true">
+                      {entry.album_art && <img src={entry.album_art} alt="" loading="lazy" />}
+                    </span>
+                  )}
                 </a>
                 {/* ── A friend's track note, 2026-09-24 ─────────────────
                     Like any other entry, and read as a song: the cover with
