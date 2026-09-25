@@ -932,6 +932,27 @@ a single track.
 **An album has many listens, numbered.** The number is computed from existing
 entries, never chosen. Entries are never overwritten; a relisten is a new one.
 
+**A track note is its own entry, about one song, 2026-09-24.** Never a shorter
+album entry, never part of one, and it can never become one: `song` beside the
+record's `album` (migration 025), and no tracklist, horizon, album rating,
+Formative or Masterpiece — the writer drops them rather than trusting a
+caller. Its ··· is Edit, Credit, Send, Delete. Nothing that numbers, counts or
+compares albums counts it. The brief's reason: one object doing both is one
+confusing object instead of two clear ones.
+
+**The wall holds one tile per record, 2026-09-24.** Plain is one listen,
+fanned more than one, dog-eared songs and no listen yet; the fold goes with the
+first listen. One thing behind a tile opens it; more open the record's page,
+`/albums/[record]` (Miyel: a page listing one thing is a step with nothing to
+choose). Records sit by the newest thing that happened to them, so a song
+marked on an old record takes it to the top.
+
+**Comments attach to writing, not to ratings, 2026-09-24.** A rated, unwritten
+track is one row with no way in — there is nothing to reply to. A word where
+the way in stands alone (the album note), the round bubble where it is one of
+several. A heading says what is there in numerals — "2 notes", "5 of 5 rated"
+— and never what is missing.
+
 **Definitions ship as editable defaults, and custom listen types are ruled
 out.** Universal second-person text installs and the owner can edit any of
 it: stable keys, editable labels and bodies, one JSONB column. Fixing the
