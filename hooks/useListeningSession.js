@@ -44,6 +44,24 @@ export const SESSION_STEPS = ['Overview', 'Tracks', 'Album', 'Preview'];
 // picker, the inbox — and read by /session as it opens.
 export const PENDING_KEY = 'ln_pending_session';
 
+// ── A song, rather than a record, 2026-09-24 ────────────────────────────────
+// The picker's Songs section starts a track note, and /session is where it is
+// written — the same door, the same sheet. The song waits under this key the
+// way a record waits under PENDING_KEY, and while it is there /session is the
+// note rather than the listen. Kept by the tab (sessionStorage) rather than
+// the browser: it means "this sheet is up", which survives a reload and must
+// not survive the app being closed, or the next listen started from the inbox
+// would open on a song nobody was writing about. Starting a listen from the
+// picker clears it too.
+//
+// What has been written on a song is kept apart from that, per song, in the
+// browser, and outlives it: pulling a half-written note down puts the song
+// away and keeps the words, and pressing the same song again puts them back.
+// Nothing is confirmed and nothing is lost — the send form's rule — and the
+// words are cleared only by saving the note.
+export const TRACK_NOTE_KEY = 'ln_pending_track_note';
+export const TRACK_NOTE_WRITING = 'ln_track_note_writing';
+
 // And what is shouted when it changes. A `storage` event fires in every tab
 // EXCEPT the one that wrote the key, and the desk and the listen are always
 // the same tab — the listen opens as a layer over the desk. So the desk only

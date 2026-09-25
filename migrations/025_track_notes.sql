@@ -1,0 +1,20 @@
+-- Track notes, 2026-09-24.
+--
+-- A track note is a journal entry about one song rather than a record: a
+-- single, something a friend sent, one track played all week. A beta tester
+-- wrote a long piece about one song and had nowhere to put it (Miyel's
+-- track-notes brief). It is its own kind of entry and never a part of an
+-- album entry, and it can never become one.
+--
+-- So it lives with the others — its own id, date, slug, rating, heart, note,
+-- and the record it belongs to in `album` and `artist` — and one column says
+-- which song. Empty is an album listen, which is every entry written before
+-- this, so nothing already in a journal changes. A track note stores no
+-- tracklist, no horizon and no album rating, and is never a Masterpiece:
+-- those belong to a sitting with a record.
+--
+-- The record's `album_key` is the same as the album's, on purpose. It is what
+-- gathers a record's listens and its track notes onto one tile on the wall;
+-- everything that numbers listens or compares albums asks `song IS NULL`
+-- first (library/database_actions.js).
+ALTER TABLE entries ADD COLUMN IF NOT EXISTS song text;

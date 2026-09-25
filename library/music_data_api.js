@@ -411,3 +411,52 @@ export async function searchAlbums(searchQuery) {
     return matched.slice(0, 60).map(({ _score, _theirs, _title, ...album }) => album);
   } catch { return []; }
 }
+
+// ── Songs, 2026-09-24 ────────────────────────────────────────────────────
+// The picker's second section, under the records: a track note starts from a
+// song, and search is where people already look for one (the track-notes
+// brief). Apple's own song search, in Apple's order, which for a song title
+// or an artist's name is already the order anybody would want.
+//
+// One row per song per record. The same song comes back once for the clean
+// and once for the explicit version, and once more for every edition of the
+// same record, and those collapse on the record's key the way pressings do
+// in searchAlbums. A single and the album it is on are two records and stay
+// two rows — which one a note belongs to is the keeper's to say by pressing
+// it. A compilation is somebody else's record, so it is left out.
+//
+// Unlike searchAlbums, singles are the point here: "a single, something a
+// friend sent" is the reason a track note exists.
+const SONGS_SHOWN = 8;
+
+export async function searchSongs(searchQuery) {
+  const query = searchQuery.trim();
+  if (!query) return [];
+  try {
+    const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&limit=50`);
+    const data = await res.json();
+    const seen = new Set();
+    const songs = [];
+    for (const r of data.results || []) {
+      if (r.wrapperType !== 'track' || r.kind !== 'song') continue;
+      if (!r.trackName || !r.collectionName || !r.artworkUrl100) continue;
+      if (/^various artists$/i.test(r.collectionArtistName || '')) continue;
+      const key = `${norm(r.trackName)}|${norm(r.artistName)}|${albumKey(r.collectionName)}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      songs.push({
+        title: r.trackName,
+        // The record, under the names a record goes by everywhere else.
+        name: r.collectionName,
+        artist: r.artistName || '',
+        year: (r.releaseDate || '').slice(0, 4),
+        collectionId: r.collectionId || null,
+        genre: foldGenre(r.primaryGenreName),
+        art: r.artworkUrl100.replace(/\d+x\d+bb/, '600x600bb'),
+        artLarge: r.artworkUrl100.replace(/\d+x\d+bb/, '3000x3000bb'),
+      });
+      if (songs.length >= SONGS_SHOWN) break;
+    }
+    return songs;
+  } catch { return []; }
+}

@@ -122,7 +122,9 @@ async function walkBack(entry, here) {
       trail = [...trail.slice(0, -1), { ...last, state: 'silent' }];
       break;
     }
-    const theirs = newestFirst(read.entries.filter(e => e.album_key && e.album_key === entry.album_key));
+    // Their listens of the record, not their notes on a song off it: the
+    // trail is who passed the record along (2026-09-24).
+    const theirs = newestFirst(read.entries.filter(e => e.album_key && e.album_key === entry.album_key && !e.song));
     // The journal's own name fills in only where the entry that pointed here
     // carried none — the name on the entry is the one to print.
     const named = { ...last, name: last.name || read.name };

@@ -356,6 +356,33 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 }
 .ln-turn-badge--drop { left: auto; right: 7px; cursor: pointer; }
 
+/* ── The fold, 2026-09-24 ──────────────────────────────────────────────────
+   A song rather than a record: the top right corner of the cover folded away,
+   the way a page is marked in a book (the track-notes brief). On a track
+   note's card, on a record the wall knows only by its songs, and on a friend's
+   track note in the feed — the same mark at every size, because it is sized
+   by the cover it is on.
+
+   Drawn over the art rather than cut out of it, so it works on any cover and
+   any radius: the page's own colour takes the corner, and a crease runs down
+   the fold. The notch — the corner cut clean off, the other of the two Miyel
+   kept — is .ln-notch, one class away, to be looked at on a wall of them. */
+.ln-fold { position: relative; }
+.ln-fold::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  width: 27%; height: 27%;
+  background: linear-gradient(225deg,
+    var(--bg) 50%,
+    color-mix(in srgb, var(--ink) 34%, transparent) 50%,
+    color-mix(in srgb, var(--ink) 12%, transparent) 54%,
+    transparent 58%);
+  pointer-events: none;
+  z-index: 1;
+}
+.ln-notch { clip-path: polygon(0 0, 73% 0, 100% 27%, 100% 100%, 0 100%); }
+
 /* ── .ln-slot — a picture that turns into its code (CodeSlot.js) ──────────
    The card's portrait and the entry's cover. The box's own size, frame and
    radius come from the surface (.idc-portrait, .ln-screen-one-art, the

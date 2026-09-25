@@ -417,7 +417,17 @@ export default function Feed({ entries = [], density = DEFAULT_DENSITY }) {
 
   const me = tidyJournal(site_address);
   const myName = String(keeper_name || '').trim().toLowerCase();
-  const mineByKey = useMemo(() => new Map(entries.map(e => [e.album_key, e])), [entries]);
+  // Your listen of each record, to compare against: the most recent one
+  // (DECISIONS: never average across listens). It was a Map built straight
+  // off the list, which is newest first, so every later row overwrote the
+  // one before and what was kept was your *oldest* listen — found while
+  // mapping the feed for track notes, 2026-09-24. And album listens only: a
+  // track note rates one song, not the record.
+  const mineByKey = useMemo(() => {
+    const mine = new Map();
+    for (const e of entries) if (e.album_key && !e.song && !mine.has(e.album_key)) mine.set(e.album_key, e);
+    return mine;
+  }, [entries]);
 
   const rows = useMemo(() => {
     if (!people) return [];
@@ -444,6 +454,10 @@ export default function Feed({ entries = [], density = DEFAULT_DENSITY }) {
   // match rather than write a second one, which is why it waited here.
   const submissions = useMemo(() => rows.filter(({ entry }) => {
     if (entry.entry_type !== 'Submission') return false;
+    // A record came back when somebody logged it. A note on one song off it,
+    // credited, is not that, and the inbox's row says "logged" and names the
+    // album (2026-09-24; NOTES has it pending).
+    if (entry.song) return false;
     const url = tidyJournal(entry.received_from_url);
     if (url) return url === me;
     const name = String(entry.received_from || '').trim().toLowerCase();
@@ -513,7 +527,9 @@ export default function Feed({ entries = [], density = DEFAULT_DENSITY }) {
       <div className={'fd-list' + (asRows ? ' fd-list--rows' : '')}>
         {shown.map(({ person, entry }) => {
           const key = `${person.address}/${entry.slug}`;
-          const mine = mineByKey.get(entry.album_key);
+          // A friend's track note is not compared with your listen of the
+          // whole record — one song against a record's score.
+          const mine = entry.song ? null : mineByKey.get(entry.album_key);
           // Carrying who this copy belongs to — see carrySender.
           const there = carrySender(`${journalUrl(person.address)}/entries/${entry.slug}`, { name: keeper_name, address: site_address }, { known: true });
           const rated = entry.rating_value !== null && entry.rating_value !== undefined && entry.rating_value !== '';

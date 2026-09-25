@@ -44,6 +44,7 @@ import { wristbandOnHand } from '@/library/wristband';
 import LayerEntry from '@/components/main_components/LayerEntry';
 import LayerWaiting from '@/components/main_components/LayerWaiting';
 import PostClient from '../../../entries/[slug]/FullPostPage';
+import TrackNotePage from '../../../entries/[slug]/TrackNotePage';
 
 // The shared handle, opened on first use — see library/database_connection.js.
 // A neon() call at module load fails a build that has no DATABASE_URL.
@@ -56,7 +57,10 @@ async function Entry({ slug }) {
   const entry = await pull_entry_by_slug(slug);
   if (!entry) return null;
 
-  const references = await sql`SELECT album, artist, slug FROM entries`;
+  // A track note is its own card (see the standalone page).
+  if (entry.song) return <TrackNotePage entry={entry} authed={await wristbandOnHand()} layered />;
+
+  const references = await sql`SELECT album, artist, slug FROM entries WHERE song IS NULL`;
   const authed = await wristbandOnHand();
 
   return <PostClient entry={entry} references={references} authed={authed} layered />;

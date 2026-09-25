@@ -49,10 +49,13 @@ const num = v => (v === null || v === undefined || v === '' ? null : Number(v));
 const newestFirst = rows => [...rows].sort((a, b) => new Date(b.posted_at) - new Date(a.posted_at));
 
 // One entry per record, the most recent (DECISIONS: never average across
-// listens).
+// listens). Album listens only, 2026-09-24: a track note rates one song, and
+// set against somebody's whole-record score it would be a comparison of two
+// different things. An older copy sends no `song`, and its notes cannot be
+// told apart — which only happens once they have one.
 function latestPerKey(entries) {
   const latest = new Map();
-  for (const e of newestFirst(entries)) if (e.album_key && !latest.has(e.album_key)) latest.set(e.album_key, e);
+  for (const e of newestFirst(entries)) if (e.album_key && !e.song && !latest.has(e.album_key)) latest.set(e.album_key, e);
   return latest;
 }
 

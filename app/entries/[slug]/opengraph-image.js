@@ -100,7 +100,10 @@ export default async function Image({ params }) {
   const stars = isMasterpiece ? 5 : score;
   const marks = Object.entries(MARKS).filter(([key]) => key === 'masterpiece' ? isMasterpiece : entry[key] === true || entry[key] === 'true');
   const listen = entry.listen_total > 1 ? `Listen ${entry.listen_number}` : null;
-  const line = [entry.artist, entry.year].filter(Boolean).join('  ·  ');
+  // A track note unfurls as its song, with the record it is on under it
+  // (2026-09-24) — the same order the card itself prints them in.
+  const title = entry.song || entry.album;
+  const line = (entry.song ? [entry.album, entry.artist] : [entry.artist, entry.year]).filter(Boolean).join('  ·  ');
 
   return new ImageResponse(
     (
@@ -116,8 +119,8 @@ export default async function Image({ params }) {
           <div style={{ fontFamily: 'DM Mono', fontSize: 20, letterSpacing: 3, color: FAINT, textTransform: 'uppercase', display: 'flex' }}>
             {keeper}
           </div>
-          <div style={{ fontSize: entry.album.length > 28 ? 46 : 60, fontWeight: 700, lineHeight: 1.05, marginTop: 18, display: 'flex', letterSpacing: -1 }}>
-            {entry.album}
+          <div style={{ fontSize: title.length > 28 ? 46 : 60, fontWeight: 700, lineHeight: 1.05, marginTop: 18, display: 'flex', letterSpacing: -1 }}>
+            {title}
           </div>
           <div style={{ fontSize: 28, color: SOFT, marginTop: 14, display: 'flex' }}>
             {line}

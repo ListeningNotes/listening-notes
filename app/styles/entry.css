@@ -2158,3 +2158,79 @@ html[data-printing] .sitenav-row { display: none; }
 .td-act--yes { color: var(--ink); }
 .td-act--yes:hover { color: var(--ink); opacity: 0.75; }
 
+
+/* ── A track note (TrackNotePage.js), 2026-09-24 ───────────────────────────
+   One card, about a third the height of an album entry: the cover with its
+   fold and, beside it, the song, `album · artist`, the stars and the heart as
+   one block; the note under it with the comment glyph at its end; the
+   keeper's Listen to the whole record and the posted date at the foot. The
+   type is the entry's own: the song is a title, the note is the album note's
+   size, because on this card it is the only writing there is. */
+.tn { min-height: 100dvh; background: var(--bg); color: var(--ink); font-family: var(--font-sans); }
+.tn-card {
+  max-width: 560px;
+  margin: 0 auto;
+  box-sizing: border-box;
+  padding: calc(96px + var(--safe-top)) 26px calc(120px + env(safe-area-inset-bottom, 0px));
+}
+/* On the listen's sheet the sheet has its own top. */
+.lay--scrolls .tn--writing .tn-card { padding-top: 24px; }
+.tn-head { display: flex; align-items: center; gap: 16px; }
+/* Showing its code the cover grows, and the words go under it: a code the
+   size of a thumbnail is too fine to point a phone at. */
+.tn-head--code { flex-wrap: wrap; }
+.tn-cover {
+  display: block;
+  flex-shrink: 0;
+  width: 96px; height: 96px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--bg-warm);
+  box-shadow: var(--shadow-soft);
+  transition: width 0.26s ease, height 0.26s ease;
+}
+.tn-cover img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.tn-cover--code { width: 220px; height: 220px; }
+.tn-said { flex: 1; min-width: 0; }
+.tn-song {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: var(--font-display-weight);
+  font-size: 23px;
+  line-height: 1.15;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.tn-record { margin: 7px 0 0; font-size: 13px; line-height: 1.4; color: var(--ink-soft); }
+.tn-marks { display: flex; align-items: center; gap: 9px; margin-top: 12px; min-height: 22px; }
+.tn-heart { display: inline-flex; color: var(--fav); line-height: 1; }
+/* Who put you onto it, under the head, where an album entry's line sits
+   under its chips. */
+.tn-card .ln-sent { margin-top: 16px; }
+.tn-body { margin-top: 24px; }
+.tn-note {
+  margin: 0 0 6px;
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--ink);
+  white-space: pre-wrap;
+}
+/* The glyph at the end of the note, on the right: the note is the whole
+   width, so its way in waits under it rather than beside its first line. */
+.tn-body .ln-say-beside { padding-bottom: 0; }
+.tn-write { font-size: 15px; line-height: 1.75; }
+.tn-foot { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border); }
+.tn-whole {
+  display: inline-flex; align-items: center; gap: 9px;
+  min-height: 44px; padding: 0; border: 0; background: none;
+  font-family: var(--font-label); font-size: 10.5px; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--ink);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.tn-whole:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; }
+.tn-posted {
+  margin: 10px 0 0;
+  font-family: var(--font-label); font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--ink-faint);
+}

@@ -32,9 +32,9 @@
 
 'use client';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { MagnifyingGlass, Trash } from '@phosphor-icons/react';
+import { CaretRight, MagnifyingGlass, Trash } from '@phosphor-icons/react';
 import SiteNav from '../main_components/SiteNav';
-import { searchAlbums } from '../../library/music_data_api';
+import { searchAlbums, searchSongs } from '../../library/music_data_api';
 import { PENDING_EVENT, SAVED_EVENT } from '../../hooks/useListeningSession';
 
 // How long the grid takes to shuffle over, and how long the newcomer waits
@@ -75,9 +75,17 @@ function sinceLabel(iso) {
 // places for one bug to live, and the brief said so outright.
 //
 // NAME: `inline` is a placeholder for Miyel (AGENTS.md).
-export default function AlbumPicker({ onPick, onResume, inline = false }) {
+//
+// `onPickSong` is the second way out of a search, 2026-09-24: a song pressed
+// in the Songs section, which starts a track note rather than a listen (the
+// track-notes brief). Without it there is no Songs section, and the picker is
+// exactly what it was.
+export default function AlbumPicker({ onPick, onResume, onPickSong = null, inline = false }) {
   const [typed, setTyped]       = useState('');
   const [results, setResults]   = useState([]);
+  // The songs the same search found. Records above songs, always, so the
+  // default reading stays "an album journal that also lets you mark a song".
+  const [songs, setSongs]       = useState([]);
   const [looking, setLooking]   = useState(false);
   const [asked, setAsked]       = useState(false);   // a search has come back
   const [byHand, setByHand]     = useState(false);
@@ -239,7 +247,7 @@ export default function AlbumPicker({ onPick, onResume, inline = false }) {
   // the timer.
   function type(value) {
     setTyped(value);
-    if (!value.trim()) { setResults([]); setLooking(false); setAsked(false); }
+    if (!value.trim()) { setResults([]); setSongs([]); setLooking(false); setAsked(false); }
     else setLooking(true);
   }
 
@@ -248,13 +256,23 @@ export default function AlbumPicker({ onPick, onResume, inline = false }) {
     if (!query) return undefined;
     const id = setTimeout(async () => {
       askedFor.current = query;
-      const found = await searchAlbums(query);
+      // Both at once, and both land together: a Songs section arriving a beat
+      // after the covers would shove nothing — it is underneath them — but a
+      // "Nothing found" said before the songs had answered would be a lie.
+      const [found, heard] = await Promise.all([
+        searchAlbums(query),
+        onPickSong ? searchSongs(query) : Promise.resolve([]),
+      ]);
       if (askedFor.current !== query) return;
       setResults(found);
+      setSongs(heard);
       setLooking(false);
       setAsked(true);
     }, SETTLE_MS);
     return () => clearTimeout(id);
+  // onPickSong is a prop that says whether to ask at all; it does not change
+  // while a search is being typed.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [typed]);
 
   // The tile's cover is where the landing starts from, so its box goes along
@@ -278,6 +296,7 @@ export default function AlbumPicker({ onPick, onResume, inline = false }) {
   function chosen() {
     setTyped('');
     setResults([]);
+    setSongs([]);
     setLooking(false);
     setAsked(false);
     setConfirmDiscard(null);
@@ -323,7 +342,11 @@ export default function AlbumPicker({ onPick, onResume, inline = false }) {
     try { await fetch(`/api/drafts/${id}`, { method: 'DELETE' }); } catch { /* already gone */ }
   }
 
-  const nothing = asked && !looking && results.length === 0 && typed.trim();
+  const nothing = asked && !looking && results.length === 0 && songs.length === 0 && typed.trim();
+  // Records are named only when there are songs under them to be told apart
+  // from — a search that found only records is the picker it always was. The
+  // songs are always named: rows in a picker of covers need saying.
+  const twoKinds = results.length > 0 && songs.length > 0;
 
   return (
     <div className={'ses-picker' + (inline ? ' ses-picker--inline' : '')}>
@@ -457,8 +480,9 @@ export default function AlbumPicker({ onPick, onResume, inline = false }) {
             )}
           </div>
 
+          {results.length > 0 && twoKinds && <p className="ses-label ses-kind">Records</p>}
           {results.length > 0 && (
-            <div className="ses-grid">
+            <div className={'ses-grid' + (twoKinds ? ' ses-grid--named' : '')}>
               {results.map(album => (
                 <button
                   type="button"
@@ -474,6 +498,50 @@ export default function AlbumPicker({ onPick, onResume, inline = false }) {
                 </button>
               ))}
             </div>
+          )}
+
+          {/* ── Songs, under the records, 2026-09-24 ──────────────────────
+              A song pressed here is a track note: an entry about that one
+              song, never a listen and never part of one (the track-notes
+              brief). Rows rather than covers, because a row can say which
+              record the song is on, and a cover alone would read as the
+              record — two songs off Shrines are two copies of one picture.
+              Nothing new on the beacon and no second way to start: search is
+              where anybody already looks for a song. */}
+          {onPickSong && songs.length > 0 && (
+            <>
+              <p className="ses-label ses-kind">Songs</p>
+              <div className="ses-songs">
+                {songs.map(song => (
+                  <button
+                    type="button"
+                    key={`${song.collectionId}-${song.title}`}
+                    className="ses-song"
+                    onClick={e => {
+                      const img = e.currentTarget.querySelector('img');
+                      const from = img ? img.getBoundingClientRect() : null;
+                      chosen();
+                      onPickSong({
+                        song: song.title,
+                        album: song.name,
+                        artist: song.artist,
+                        year: song.year || '',
+                        artUrl: song.artLarge || song.art || '',
+                        collectionId: song.collectionId || null,
+                        genre: song.genre || '',
+                      }, from);
+                    }}
+                  >
+                    <span className="ses-song-art"><img src={song.art} alt="" loading="lazy" /></span>
+                    <span className="ses-song-said">
+                      <span className="ses-song-title">{song.title}</span>
+                      <span className="ses-song-record">{song.name}{song.year ? ` · ${song.year}` : ''}</span>
+                    </span>
+                    <CaretRight className="ses-song-go" size={16} weight="regular" aria-hidden="true" />
+                  </button>
+                ))}
+              </div>
+            </>
           )}
 
           {drafts.length > 0 && !typed.trim() && (

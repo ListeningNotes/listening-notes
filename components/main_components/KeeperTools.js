@@ -122,6 +122,11 @@ export default function KeeperTools({
   what = 'entry',
   onEdit,
   slug = null,
+  // Whether there is a Share at all. A track note has none, 2026-09-24: the
+  // printer knows how to print a record and not a song, and a tool that
+  // opened on the wrong thing is worse than no tool (the track-notes brief —
+  // a track note does not grow everything an album entry has).
+  printable = true,
   onPrint = null,
   onSender = null,
   onSend = null,
@@ -140,7 +145,7 @@ export default function KeeperTools({
   // How many tools there will be, worked out before anything needs it, so the
   // packing-up clock is the same number the animation uses. A plain value and
   // not a ref: it is decided by the props and read while closing.
-  const count = 2
+  const count = 1 + (printable ? 1 : 0)
     + (words.settings ? 1 : 0)
     + (onSender && words.sender ? 1 : 0)
     + (onSend && words.send ? 1 : 0)
@@ -261,15 +266,17 @@ export default function KeeperTools({
     <button key="edit" type="button" onClick={() => { shut(); onEdit(); }} {...box(...words.edit, <Pencil size={22} weight="regular" aria-hidden="true" />)} />
   );
 
-  tools.push(
-    onPrint ? (
-      <button key="print" type="button" onClick={() => { shut(); onPrint(); }} {...box(...words.print, <Export size={22} weight="regular" aria-hidden="true" />)} />
-    ) : (
-      /* The slug travels so the printer opens on this record rather than on
-         whichever one happens to be first in the list. */
-      <Link key="print" href={slug ? `/printer?entry=${encodeURIComponent(slug)}` : '/printer'} {...box(...words.print, <Export size={22} weight="regular" aria-hidden="true" />)} />
-    )
-  );
+  if (printable) {
+    tools.push(
+      onPrint ? (
+        <button key="print" type="button" onClick={() => { shut(); onPrint(); }} {...box(...words.print, <Export size={22} weight="regular" aria-hidden="true" />)} />
+      ) : (
+        /* The slug travels so the printer opens on this record rather than on
+           whichever one happens to be first in the list. */
+        <Link key="print" href={slug ? `/printer?entry=${encodeURIComponent(slug)}` : '/printer'} {...box(...words.print, <Export size={22} weight="regular" aria-hidden="true" />)} />
+      )
+    );
+  }
 
   // A room rather than an action, which is why it is last: the two above it
   // do something to the page you are looking at and this one leaves it.

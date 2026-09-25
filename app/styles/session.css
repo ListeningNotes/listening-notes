@@ -1027,6 +1027,38 @@
   font-family: var(--font-label); font-size: 9px; color: var(--ink-faint);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
+
+/* ── Songs, under the records ───────────────────────────────────────────────
+   2026-09-24, the track-notes brief. A song pressed here starts a track note.
+   It is a row — its cover, its title, and the record it is on — because a row
+   can say which record, and a cover alone would read as the record itself.
+   Records keep the grid above and are named only when songs are there too. */
+.ses-kind { margin: 24px 0 0; }
+.ses-grid--named { margin-top: 12px; }
+.ses-songs { display: flex; flex-direction: column; margin-top: 6px; }
+.ses-song {
+  display: flex; align-items: center; gap: 14px;
+  padding: 10px 0;
+  border: 0; border-bottom: 1px solid var(--border);
+  background: none; color: inherit; font: inherit; text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.ses-song-art {
+  width: 46px; height: 46px; flex-shrink: 0;
+  border-radius: 8px; overflow: hidden; background: var(--bg-warm);
+}
+.ses-song-art img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.ses-song-said { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; }
+.ses-song-title {
+  font-weight: var(--font-display-weight); font-size: 15px; line-height: 1.25; color: var(--ink);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ses-song-record {
+  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.06em; color: var(--ink-faint);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ses-song-go { flex-shrink: 0; color: var(--ink-faint); }
 .ses-hand { display: flex; flex-direction: column; gap: 16px; max-width: 440px; }
 /* What typing a record in by hand costs you, said on the form rather than on
    the screen after it. Prose and not a label: it is a sentence to read once,
