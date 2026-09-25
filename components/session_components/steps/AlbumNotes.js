@@ -186,7 +186,7 @@ export default function AlbumNotes({
 
       <hr className="ses-rule" style={{ margin: '30px 0 24px' }} />
 
-      <div className="ses-label" style={{ marginBottom: 12 }}>Album notes</div>
+      <div className="ses-label" style={{ marginBottom: 12 }}>Album note</div>
       {/* Grown by layout, not by script — the same fix as the track note, and
           this one needed it more: its sizing ran on every render of the
           screen, not only on a keystroke. See .ses-grow in session.css. */}

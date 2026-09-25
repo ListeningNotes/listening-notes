@@ -1780,7 +1780,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
             shows where it goes. */}
         {(albumNotes || albumComments.length > 0 || edit.editing) && (
           <section style={{ marginBottom: '48px' }}>
-            <MetadataLabel sticky>Album Notes</MetadataLabel>
+            <MetadataLabel sticky>Album note</MetadataLabel>
             {/* 6px, the same gap a track note leaves under itself before its
                 own bubble. */}
             {edit.editing ? (
@@ -1790,7 +1790,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
                 onChange={e => edit.set('notes', e.target.value)}
                 ref={growOnMount}
                 onInput={grow}
-                aria-label="Album notes"
+                aria-label="Album note"
               />
             ) : (
               <div style={{ lineHeight: 1.95, fontSize: '15px', whiteSpace: 'pre-wrap', color: 'var(--ink)', marginBottom: '6px' }}>{linkedAlbumNotes}</div>

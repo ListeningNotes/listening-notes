@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 'use client';
 import { useState } from 'react';
-import { Chat } from '@phosphor-icons/react';
+import { ChatCircle } from '@phosphor-icons/react';
 import CommentThread from './CommentThread';
 import NewCommentForm from './NewCommentForm';
 
@@ -31,7 +31,8 @@ import NewCommentForm from './NewCommentForm';
 // ── A word when it stands alone, a glyph when it is one of several ─────────
 // 2026-09-24, the track-notes brief. The album note has one way in and it
 // keeps the word. A track's note is one of a column of them, so it takes the
-// glyph — Phosphor's, not a drawn one — at the end of its own text: `glyph`,
+// glyph — Phosphor's round bubble, not a drawn one, and round because Miyel
+// did not like the square — at the end of its own text: `glyph`,
 // with the note handed in as `children` so the two sit side by side. The same
 // rule the band and the entry's tools already keep. A track that was rated
 // and not written gets no way in at all (TrackThread): there is nothing to
@@ -65,7 +66,7 @@ export default function CommentBubble({ slug, trackIndex, comments = [], onRefre
     >
       {glyph ? (
         <>
-          <Chat size={17} />
+          <ChatCircle size={18} />
           {count > 0 && <span className="ln-say-glyph-count">{count}</span>}
         </>
       ) : count === 0 ? 'Comment' : count === 1 ? '1 comment' : `${count} comments`}

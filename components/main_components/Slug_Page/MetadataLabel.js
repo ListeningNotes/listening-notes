@@ -4,7 +4,7 @@
 import { fonts } from '../../../library/sitewide_visuals';
 
 // `sticky` pins the label to the top of whatever is scrolling it, so on phones
-// the section you are reading names itself the whole time — Album Notes holds
+// the section you are reading names itself the whole time — Album note holds
 // until Tracks pushes it out of the way. The class does the pinning (see
 // FullPostPage), and only inside the phone layout; on desktop it is inert.
 //
