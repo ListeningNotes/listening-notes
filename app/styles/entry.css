@@ -2165,10 +2165,10 @@ html[data-printing] .sitenav-row { display: none; }
 
 /* ── A track note (TrackNotePage.js), 2026-09-24 ───────────────────────────
    One card, about a third the height of an album entry: the cover with its
-   fold and, under it, the song, `album · artist`, the stars and the heart
-   and the posted date, down the middle of the page at its top; the keeper's
-   Listen to the full album under them; the note under that, read left to
-   right, with the comment glyph at its end. The
+   fold and, beside it, the song, `album · artist`, the stars and the heart
+   and the posted date, the pair in the middle of the page; the keeper's
+   Listen to the full album under it; the note under that with the comment
+   glyph under it, all centred with the pair. The
    type is the entry's own: the song is a title, the note is the album note's
    size, because on this card it is the only writing there is. */
 .tn { min-height: 100dvh; background: var(--bg); color: var(--ink); font-family: var(--font-sans); }
@@ -2181,16 +2181,20 @@ html[data-printing] .sitenav-row { display: none; }
 /* On the listen's sheet the sheet has its own top. */
 .lay--scrolls .tn--writing .tn-card { padding-top: 24px; }
 
-/* ── Centred, at the top, 2026-09-25 ──
-   One column down the middle, the way an album entry's first screen stands:
-   the cover, then the words under it (Miyel). It was the cover with the words
-   beside it, which on a phone read as a card pushed to the left. Showing its
-   code, the cover grows where it is. */
-.tn-head { display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center; }
+/* ── Centred, 2026-09-25 ──
+   The cover on the left and the words on the right, as the brief drew them,
+   but the pair stands in the middle of the page rather than against its left
+   edge, and what is under it is centred with it — the listen, the note, its
+   way in (Miyel: "I didn't want that all to be left aligned"). The words keep
+   to the cover's side of their own column. Showing its code, the cover grows
+   and the words go under it, still on the middle: a code the size of a
+   thumbnail is too fine to point a phone at. */
+.tn-head { display: flex; align-items: center; justify-content: center; gap: 16px; }
+.tn-head--code { flex-wrap: wrap; }
 .tn-cover {
   display: block;
   flex-shrink: 0;
-  width: 112px; height: 112px;
+  width: 96px; height: 96px;
   border-radius: 10px;
   overflow: hidden;
   background: var(--bg-warm);
@@ -2199,7 +2203,7 @@ html[data-printing] .sitenav-row { display: none; }
 }
 .tn-cover img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .tn-cover--code { width: 220px; height: 220px; }
-.tn-said { min-width: 0; max-width: 100%; }
+.tn-said { flex: 0 1 auto; min-width: 0; }
 .tn-song {
   margin: 0;
   font-family: var(--font-display);
@@ -2210,7 +2214,7 @@ html[data-printing] .sitenav-row { display: none; }
   overflow-wrap: anywhere;
 }
 .tn-record { margin: 7px 0 0; font-size: 13px; line-height: 1.4; color: var(--ink-soft); }
-.tn-marks { display: flex; align-items: center; justify-content: center; gap: 9px; margin-top: 12px; min-height: 22px; }
+.tn-marks { display: flex; align-items: center; gap: 9px; margin-top: 12px; min-height: 22px; }
 .tn-heart { display: inline-flex; color: var(--fav); line-height: 1; }
 /* Who put you onto it, under the head, where an album entry's line sits
    under its chips. */
@@ -2222,19 +2226,31 @@ html[data-printing] .sitenav-row { display: none; }
   line-height: 1.75;
   color: var(--ink);
   white-space: pre-wrap;
+  text-align: center;
 }
-/* The glyph at the end of the note, on the right: the note is the whole
-   width, so its way in waits under it rather than beside its first line. */
-.tn-body .ln-say-beside { padding-bottom: 0; }
-.tn-write { font-size: 15px; line-height: 1.75; }
-/* Plain words and a play mark, in ink: the one thing on the card that starts
-   something. Under the head, so a long note cannot bury it (2026-09-25) — and
-   not a pill, which Miyel does not like. */
+.tn-body .ln-edited { text-align: center; }
+/* The glyph under the note, on the middle with it: the note is the whole
+   width, so its way in waits under it rather than beside its first line. The
+   column the glyph shares on a track row is empty here, and it goes, and the
+   glyph's thumb-room is given back evenly now that it has no edge to sit
+   flush with. */
+.tn-body .ln-say-beside { padding-bottom: 0; justify-content: center; }
+.tn-body .ln-say-beside-text { display: none; }
+.tn-body .ln-say-glyph { margin: -9px -13px -13px; }
+/* Written into, the note is where it will read: centred. */
+.tn-write { font-size: 15px; line-height: 1.75; text-align: center; }
+/* Plain words and a play mark, in ink, underlined so it reads as the link it
+   is: the one thing on the card that goes somewhere. Under the head, so a
+   long note cannot bury it (2026-09-25) — and not a pill, which Miyel does
+   not like. */
 .tn-whole {
   display: flex; align-items: center; gap: 9px;
   width: fit-content; min-height: 44px; margin: 10px auto 0; padding: 0; border: 0; background: none;
   font-family: var(--font-label); font-size: 10.5px; letter-spacing: 0.18em; text-transform: uppercase;
   color: var(--ink);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 5px;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }

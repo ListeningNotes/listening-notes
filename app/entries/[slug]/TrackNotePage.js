@@ -17,21 +17,21 @@
 //
 // ── One card ──────────────────────────────────────────────────────────────
 // About a third the height of an album entry: the cover with its folded
-// corner, and under it the song, `album · artist`, the stars and the heart,
-// and the date, one column down the middle at the top of the page, as an
-// album entry's first screen stands. Under them, for the keeper only,
-// Listen to the full album, which starts an ordinary listen of the album —
-// plain words and a play mark, never a pill (Miyel does not like them). Then
-// the note, with the comment glyph at its end. Send is not on the card —
+// corner, and beside it the song, `album · artist`, the stars and the heart,
+// and the date, the pair on the middle of the page. Under it, for the keeper
+// only, Listen to the full album, which starts an ordinary listen of the
+// album — plain words, underlined like the link it is, with a play mark;
+// never a pill (Miyel does not like them). Then the note, with the comment
+// glyph under it, centred with the rest. Send is not on the card —
 // it is behind the ···, with Edit, Credit and Delete. There is no Share: the
 // printer knows how to print a record and not a song.
 //
 // The date and the listen were at the foot until 2026-09-25, and Miyel moved
 // them up: a long note buried the way into the album, and in a folder the
 // date sat twice on the screen. It is said once now, at the top, where an
-// album entry says its own. And the words went under the cover rather than
-// beside it, centred, the same day (Miyel): beside it, on a phone, the card
-// read as pushed to the left.
+// album entry says its own. And the whole card stands on the middle of the
+// page, the same day (Miyel): set against its left edge, with the right half
+// of the head empty, it read as pushed aside.
 //
 // ── Three ways it is drawn ────────────────────────────────────────────────
 // Read, at its own address or as a layer over the journal — page.js and the
@@ -210,7 +210,7 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
           listen's sheet scrolls itself and this is plain. */}
       <div className={(writing ? 'tn-screens' : 'ln-screens tn-screens') + (correcting ? ' ln-editing' : '') + (crediting || sending ? ' ln-busy' : '')}>
         <article className="tn-card">
-          <div className="tn-head">
+          <div className={'tn-head' + (coverCode ? ' tn-head--code' : '')}>
             {canTurnCover ? (
               <CodeSlot
                 key={entry.slug}
