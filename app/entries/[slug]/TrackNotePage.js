@@ -21,17 +21,18 @@
 // and the date, the pair on the middle of the page. Under it, for the keeper
 // only, Listen to the full album, which starts an ordinary listen of the
 // album — plain words, underlined like the link it is, with a play mark;
-// never a pill (Miyel does not like them). Then the note, with the comment
-// glyph under it, centred with the rest. Send is not on the card —
+// never a pill (Miyel does not like them). Then the note, read left to right
+// as an album's notes are, with the comment glyph at its end. Send is not on the card —
 // it is behind the ···, with Edit, Credit and Delete. There is no Share: the
 // printer knows how to print a record and not a song.
 //
 // The date and the listen were at the foot until 2026-09-25, and Miyel moved
 // them up: a long note buried the way into the album, and in a folder the
 // date sat twice on the screen. It is said once now, at the top, where an
-// album entry says its own. And the whole card stands on the middle of the
-// page, the same day (Miyel): set against its left edge, with the right half
-// of the head empty, it read as pushed aside.
+// album entry says its own. And the head stands on the middle of the page,
+// the same day (Miyel): set against its left edge, with the right half of it
+// empty, it read as pushed aside. The note under it stays left to right —
+// the card is centred, the writing is not, as on an album entry.
 //
 // ── Three ways it is drawn ────────────────────────────────────────────────
 // Read, at its own address or as a layer over the journal — page.js and the
