@@ -17,17 +17,21 @@
 //
 // ── One card ──────────────────────────────────────────────────────────────
 // About a third the height of an album entry: the cover with its folded
-// corner, and beside it the song, `album · artist`, the stars and the heart,
-// and the date, all one block at the head. Under it, for the keeper only,
-// Listen to the whole album, which starts an ordinary listen of the album.
-// Then the note, with the comment glyph at its end. Send is not on the card —
+// corner, and under it the song, `album · artist`, the stars and the heart,
+// and the date, one column down the middle at the top of the page, as an
+// album entry's first screen stands. Under them, for the keeper only,
+// Listen to the full album, which starts an ordinary listen of the album —
+// plain words and a play mark, never a pill (Miyel does not like them). Then
+// the note, with the comment glyph at its end. Send is not on the card —
 // it is behind the ···, with Edit, Credit and Delete. There is no Share: the
 // printer knows how to print a record and not a song.
 //
 // The date and the listen were at the foot until 2026-09-25, and Miyel moved
 // them up: a long note buried the way into the album, and in a folder the
 // date sat twice on the screen. It is said once now, at the top, where an
-// album entry says its own.
+// album entry says its own. And the words went under the cover rather than
+// beside it, centred, the same day (Miyel): beside it, on a phone, the card
+// read as pushed to the left.
 //
 // ── Three ways it is drawn ────────────────────────────────────────────────
 // Read, at its own address or as a layer over the journal — page.js and the
@@ -172,7 +176,7 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
   const editedOn = editStamp(entry.edited_at);
 
   // Edit, Credit, Send and Delete — Miyel, 2026-09-24. Relisten is the card's
-  // own Listen to the whole album, and there is no Share (above).
+  // own Listen to the full album, and there is no Share (above).
   const keeperTools = authed && !writing && !correcting && (
     <KeeperTools
       printable={false}
@@ -206,7 +210,7 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
           listen's sheet scrolls itself and this is plain. */}
       <div className={(writing ? 'tn-screens' : 'ln-screens tn-screens') + (correcting ? ' ln-editing' : '') + (crediting || sending ? ' ln-busy' : '')}>
         <article className="tn-card">
-          <div className={'tn-head' + (coverCode ? ' tn-head--code' : '')}>
+          <div className="tn-head">
             {canTurnCover ? (
               <CodeSlot
                 key={entry.slug}
@@ -288,7 +292,7 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
           {authed && !writing && !correcting && !crediting && (
             <button
               type="button"
-              className="ln-pill tn-whole"
+              className="tn-whole"
               onClick={() => {
                 try {
                   localStorage.setItem(PENDING_KEY, JSON.stringify({
@@ -306,7 +310,7 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
               }}
             >
               <Play size={12} weight="fill" aria-hidden="true" />
-              <span>Listen to the whole album</span>
+              <span>Listen to the full album</span>
             </button>
           )}
 

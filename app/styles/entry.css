@@ -2165,9 +2165,10 @@ html[data-printing] .sitenav-row { display: none; }
 
 /* ── A track note (TrackNotePage.js), 2026-09-24 ───────────────────────────
    One card, about a third the height of an album entry: the cover with its
-   fold and, beside it, the song, `album · artist`, the stars and the heart
-   and the posted date as one block; the keeper's Listen to the whole album
-   under it; the note under that with the comment glyph at its end. The
+   fold and, under it, the song, `album · artist`, the stars and the heart
+   and the posted date, down the middle of the page at its top; the keeper's
+   Listen to the full album under them; the note under that, read left to
+   right, with the comment glyph at its end. The
    type is the entry's own: the song is a title, the note is the album note's
    size, because on this card it is the only writing there is. */
 .tn { min-height: 100dvh; background: var(--bg); color: var(--ink); font-family: var(--font-sans); }
@@ -2179,14 +2180,17 @@ html[data-printing] .sitenav-row { display: none; }
 }
 /* On the listen's sheet the sheet has its own top. */
 .lay--scrolls .tn--writing .tn-card { padding-top: 24px; }
-.tn-head { display: flex; align-items: center; gap: 16px; }
-/* Showing its code the cover grows, and the words go under it: a code the
-   size of a thumbnail is too fine to point a phone at. */
-.tn-head--code { flex-wrap: wrap; }
+
+/* ── Centred, at the top, 2026-09-25 ──
+   One column down the middle, the way an album entry's first screen stands:
+   the cover, then the words under it (Miyel). It was the cover with the words
+   beside it, which on a phone read as a card pushed to the left. Showing its
+   code, the cover grows where it is. */
+.tn-head { display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center; }
 .tn-cover {
   display: block;
   flex-shrink: 0;
-  width: 96px; height: 96px;
+  width: 112px; height: 112px;
   border-radius: 10px;
   overflow: hidden;
   background: var(--bg-warm);
@@ -2195,7 +2199,7 @@ html[data-printing] .sitenav-row { display: none; }
 }
 .tn-cover img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .tn-cover--code { width: 220px; height: 220px; }
-.tn-said { flex: 1; min-width: 0; }
+.tn-said { min-width: 0; max-width: 100%; }
 .tn-song {
   margin: 0;
   font-family: var(--font-display);
@@ -2206,7 +2210,7 @@ html[data-printing] .sitenav-row { display: none; }
   overflow-wrap: anywhere;
 }
 .tn-record { margin: 7px 0 0; font-size: 13px; line-height: 1.4; color: var(--ink-soft); }
-.tn-marks { display: flex; align-items: center; gap: 9px; margin-top: 12px; min-height: 22px; }
+.tn-marks { display: flex; align-items: center; justify-content: center; gap: 9px; margin-top: 12px; min-height: 22px; }
 .tn-heart { display: inline-flex; color: var(--fav); line-height: 1; }
 /* Who put you onto it, under the head, where an album entry's line sits
    under its chips. */
@@ -2223,16 +2227,18 @@ html[data-printing] .sitenav-row { display: none; }
    width, so its way in waits under it rather than beside its first line. */
 .tn-body .ln-say-beside { padding-bottom: 0; }
 .tn-write { font-size: 15px; line-height: 1.75; }
-/* The site's pill (base.css), in ink: it is the one thing on the card that
-   starts something, and it sits under the head so a long note cannot bury
-   it (2026-09-25). */
+/* Plain words and a play mark, in ink: the one thing on the card that starts
+   something. Under the head, so a long note cannot bury it (2026-09-25) — and
+   not a pill, which Miyel does not like. */
 .tn-whole {
-  gap: 9px;
-  margin-top: 22px;
-  padding: 11px 20px;
+  display: flex; align-items: center; gap: 9px;
+  width: fit-content; min-height: 44px; margin: 10px auto 0; padding: 0; border: 0; background: none;
+  font-family: var(--font-label); font-size: 10.5px; letter-spacing: 0.18em; text-transform: uppercase;
   color: var(--ink);
+  cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
+.tn-whole + .tn-body { margin-top: 12px; }
 .tn-whole svg { display: block; flex-shrink: 0; }
 .tn-whole:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; }
 /* The date, last in the head, once — as an album entry says its own. */

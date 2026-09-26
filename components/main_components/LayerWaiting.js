@@ -170,7 +170,6 @@ export default function LayerWaiting({ slug, authed = false }) {
   // The same three lines FullPostPage derives, off the same fields.
   const isMasterpiece = known.masterpiece || known.rating === 'Masterpiece';
   const displayRating = isMasterpiece ? 5 : parseFloat(known.rating) || 0;
-  const listenLabel = known.listen_total > 1 ? `Listen ${known.listen_total}` : null;
   const postedOn = known.posted_at
     ? new Date(known.posted_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
     : null;
@@ -195,7 +194,6 @@ export default function LayerWaiting({ slug, authed = false }) {
           <StarRating rating={displayRating} size={24} glow={isMasterpiece} />
         )}
         <div className="ln-screen-one-chips">
-          {listenLabel && <Chip>{listenLabel}</Chip>}
           {/* The chip only where the line below cannot be drawn, which is the
               rule the entry itself follows — both ask creditOn, so the two
               can never disagree and the row cannot change shape when the

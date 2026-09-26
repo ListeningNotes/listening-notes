@@ -833,6 +833,11 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   //
   // Nothing shows on an album played once: "First listen · 1 of 1" is noise on
   // an entry that has no sequence to be part of.
+  //
+  // And nothing shows on the page itself any more, 2026-09-25: a record played
+  // more than once is a folder, and its tabs already say Listen 1, Listen 2
+  // at the foot of the screen (FolderFooter). Miyel: "it's implied by the
+  // footer now." The chip is kept for the print, which has no footer.
   const listenLabel = entry.listen_total > 1
     ? (entry.listen_number === 1
         ? `First listen · 1 of ${entry.listen_total}`
@@ -1612,7 +1617,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
             </>
           ) : (
             <>
-              {!edit.editing && listenLabel && <Chip>{listenLabel}</Chip>}
+              {printing && listenLabel && <Chip>{listenLabel}</Chip>}
               {!edit.editing && !printing && sentChip}
               {!edit.editing && (entry.favorite === true || entry.favorite === 'true') && <Chip tone="fav">Favorite</Chip>}
               {!edit.editing && isMasterpiece && <Chip tone="mp">Masterpiece</Chip>}
@@ -1731,7 +1736,6 @@ export default function FullPostPage({ entry, references = [], authed = false, l
                 {edit.editing
                   ? flagFields
                   : displayRating > 0 && <StarRating rating={displayRating} size={15} glow={isMasterpiece} style={{ verticalAlign: 'middle' }} />}
-                {!edit.editing && listenLabel && <Chip>{listenLabel}</Chip>}
                 {!edit.editing && sentChip}
                 {!edit.editing && (entry.favorite === true || entry.favorite === 'true') && <Chip tone="fav">Favorite</Chip>}
               </div>
