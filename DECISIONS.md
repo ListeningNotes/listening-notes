@@ -942,6 +942,13 @@ caller. Its ··· is Edit, Credit, Send, Delete. Nothing that numbers, counts o
 compares albums counts it. The brief's reason: one object doing both is one
 confusing object instead of two clear ones.
 
+**No tool turns an album entry into a track note, 2026-09-25.** Briefed and
+dropped the same day: with Records and Songs in the picker nobody logs an
+album to write about one song, so a converter would sit in a menu nobody
+opens. The one entry already written that way is fixed by asking its
+keeper. The rule under the brief stands: nothing in a journal changes
+unless its keeper changes it — no update or migration edits an entry.
+
 **Three shapes, by count, drawn like Finder's files, 2026-09-24/25.** A
 card is one album listen; a page, its corner folded over, is one track note
 and no listen; a folder is more than one entry, whatever the mix. Nothing
