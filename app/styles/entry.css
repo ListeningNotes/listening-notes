@@ -52,6 +52,9 @@
   padding: 172px 24px 0;
   gap: 16px;
 }
+/* In a folder the screen ends where its tabs begin, so the caret down to the
+   notes sits above the band rather than under it. */
+.ln-entry--folder .ln-screen-one { padding-bottom: var(--ff-h); }
 .ln-screen-one-art {
   /* Sized off viewport HEIGHT as well as width. A width-only size
      overflowed once Safari's chrome was showing — the chips and the
@@ -357,7 +360,8 @@
      they can win; see the note there. */
   .lay--over-journal { left: var(--spine-w, var(--spine-rest)); right: 0; }
   .lay--over-journal .sitenav-row,
-  .lay--over-journal .sitenav-row::before { left: var(--spine-w, var(--spine-rest)); right: 0; }
+  .lay--over-journal .sitenav-row::before,
+  .lay--over-journal .ff { left: var(--spine-w, var(--spine-rest)); right: 0; }
   .lay--over-journal .lay-step--prev { left: calc(var(--spine-w, var(--spine-rest)) + 10px); }
   .lay--over-journal .lay-step--next { right: 10px; }
   /* The owner's own rooms — the inbox, the address book, a person, a report,
@@ -2161,9 +2165,9 @@ html[data-printing] .sitenav-row { display: none; }
 
 /* ── A track note (TrackNotePage.js), 2026-09-24 ───────────────────────────
    One card, about a third the height of an album entry: the cover with its
-   fold and, beside it, the song, `album · artist`, the stars and the heart as
-   one block; the note under it with the comment glyph at its end; the
-   keeper's Listen to the whole record and the posted date at the foot. The
+   fold and, beside it, the song, `album · artist`, the stars and the heart
+   and the posted date as one block; the keeper's Listen to the whole album
+   under it; the note under that with the comment glyph at its end. The
    type is the entry's own: the song is a title, the note is the album note's
    size, because on this card it is the only writing there is. */
 .tn { min-height: 100dvh; background: var(--bg); color: var(--ink); font-family: var(--font-sans); }
@@ -2219,16 +2223,19 @@ html[data-printing] .sitenav-row { display: none; }
    width, so its way in waits under it rather than beside its first line. */
 .tn-body .ln-say-beside { padding-bottom: 0; }
 .tn-write { font-size: 15px; line-height: 1.75; }
-.tn-foot { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border); }
+/* The site's pill (base.css), in ink: it is the one thing on the card that
+   starts something, and it sits under the head so a long note cannot bury
+   it (2026-09-25). */
 .tn-whole {
-  display: inline-flex; align-items: center; gap: 9px;
-  min-height: 44px; padding: 0; border: 0; background: none;
-  font-family: var(--font-label); font-size: 10.5px; letter-spacing: 0.18em; text-transform: uppercase;
+  gap: 9px;
+  margin-top: 22px;
+  padding: 11px 20px;
   color: var(--ink);
-  cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
+.tn-whole svg { display: block; flex-shrink: 0; }
 .tn-whole:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; }
+/* The date, last in the head, once — as an album entry says its own. */
 .tn-posted {
   margin: 10px 0 0;
   font-family: var(--font-label); font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase;

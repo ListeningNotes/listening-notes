@@ -143,7 +143,7 @@ function firstScreen(entry) {
     received_from_url: entry.received_from_url || '',
     song: entry.song || '',
     // And the folder it is a page of, when a page of a folder is being
-    // turned to, so the wait can keep the dots up (LayerWaiting).
+    // turned to, so the wait can keep the tabs up (LayerWaiting).
     folder: entry.folder || null,
   };
 }

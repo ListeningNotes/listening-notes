@@ -289,8 +289,9 @@ export async function pull_public_entries() {
 
 // ── One record: every listen and every track note, 2026-09-24 ────────────
 // The folder an entry is a page of: its record's entries, newest first, each
-// with the fields its first screen draws — for the dots in the header and for
-// the entry either side of it when you swipe (useFolder, FolderDots). The
+// with the fields its first screen draws — for the tabs at the foot of the
+// screen and for the entry either side of it when you swipe (useFolder,
+// FolderFooter). The
 // wall's fields and no more: each page reads its own writing when it opens —
 // the lean-list rule above. It listed the record's own page until that page
 // went, 2026-09-25: a folder opens to an entry, not to a list.

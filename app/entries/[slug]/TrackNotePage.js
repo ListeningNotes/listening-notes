@@ -18,11 +18,16 @@
 // ── One card ──────────────────────────────────────────────────────────────
 // About a third the height of an album entry: the cover with its folded
 // corner, and beside it the song, `album · artist`, the stars and the heart,
-// all one block at the head. The note under it, with the comment glyph at its
-// end. At the foot, for the keeper only, Listen to the whole record, which
-// starts an ordinary listen of the album; the posted date under that. Send is
-// not on the card — it is behind the ···, with Edit, Credit and Delete. There
-// is no Share: the printer knows how to print a record and not a song.
+// and the date, all one block at the head. Under it, for the keeper only,
+// Listen to the whole album, which starts an ordinary listen of the album.
+// Then the note, with the comment glyph at its end. Send is not on the card —
+// it is behind the ···, with Edit, Credit and Delete. There is no Share: the
+// printer knows how to print a record and not a song.
+//
+// The date and the listen were at the foot until 2026-09-25, and Miyel moved
+// them up: a long note buried the way into the album, and in a folder the
+// date sat twice on the screen. It is said once now, at the top, where an
+// album entry says its own.
 //
 // ── Three ways it is drawn ────────────────────────────────────────────────
 // Read, at its own address or as a layer over the journal — page.js and the
@@ -39,13 +44,13 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createPortal } from 'react-dom';
-import { Heart, VinylRecord } from '@phosphor-icons/react';
+import { Heart, Play, VinylRecord } from '@phosphor-icons/react';
 import { parseRating, editStamp } from '../../../library/entry_formatter';
 import { kept_receipts } from '../../../library/receipts';
 import { tidyAddress } from '../../../library/return_address';
 import SiteNav from '../../../components/main_components/SiteNav';
 import { useLayerHeaderSlot, useFolder } from '../../../components/main_components/LayerEntry';
-import FolderDots from '../../../components/main_components/FolderDots';
+import FolderFooter from '../../../components/main_components/FolderFooter';
 import KeeperTools from '../../../components/main_components/KeeperTools';
 import EditingBar from '../../../components/main_components/EditingBar';
 import CodeSlot from '../../../components/main_components/CodeSlot';
@@ -69,7 +74,8 @@ const NOTHING_WRITTEN = { rating: 0, favorite: false, note: '' };
 // way off the sheet without saving; both are the session page's, which owns
 // what happens to the sheet either way.
 // `folder` is the record's entries, oldest first, when it has more than one:
-// the note is then a page of a folder (FolderDots, useFolder).
+// the note is then a page of a folder, with its tabs at the foot of the
+// screen (FolderFooter, useFolder).
 export default function TrackNotePage({ entry, authed = false, layered = false, writing = false, onSaved = null, onLeave = null, folder = null }) {
   const router = useRouter();
   const turnTo = useFolder(writing ? null : folder, entry.slug);
@@ -166,7 +172,7 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
   const editedOn = editStamp(entry.edited_at);
 
   // Edit, Credit, Send and Delete — Miyel, 2026-09-24. Relisten is the card's
-  // own Listen to the whole record, and there is no Share (above).
+  // own Listen to the whole album, and there is no Share (above).
   const keeperTools = authed && !writing && !correcting && (
     <KeeperTools
       printable={false}
@@ -178,16 +184,22 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
     />
   );
 
-  const nav = (
-    <SiteNav
-      tools={keeperTools}
-      dots={!writing && folder?.length > 1 ? <FolderDots folder={folder} slug={entry.slug} onPick={turnTo} /> : null}
-    />
+  // The nav row, and a folder's tabs at the foot of the screen: both chrome,
+  // so on the layer both go in its header slot, outside what turns with a
+  // swipe. The tabs make way while a correction, the credit or the send
+  // sheet has the foot of the screen.
+  const chrome = (
+    <>
+      <SiteNav tools={keeperTools} />
+      {!writing && folder?.length > 1 && (
+        <FolderFooter folder={folder} slug={entry.slug} onPick={turnTo} away={correcting || crediting || sending} />
+      )}
+    </>
   );
 
   return (
     <div className={'ln-entry tn' + (writing ? ' tn--writing' : '')}>
-      {headerSlot ? createPortal(nav, headerSlot) : nav}
+      {headerSlot ? createPortal(chrome, headerSlot) : chrome}
 
       {/* The scroller the layer asks about before a pull closes it, the same
           class the entry page scrolls in. Written for the first time, the
@@ -249,6 +261,7 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
                   </>
                 )}
               </div>
+              {!writing && postedOn && <p className="tn-posted">Posted {postedOn}</p>}
             </div>
           </div>
 
@@ -267,6 +280,35 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
                 onOpen={setTrailOpen}
               />
             ))}
+
+          {/* An ordinary listen of the album, through the key every other
+              way into a listen uses — the song on the desk is put away
+              first, or the sheet would open on it. Up here rather than at
+              the foot, where a long note buried it. */}
+          {authed && !writing && !correcting && !crediting && (
+            <button
+              type="button"
+              className="ln-pill tn-whole"
+              onClick={() => {
+                try {
+                  localStorage.setItem(PENDING_KEY, JSON.stringify({
+                    album: entry.album,
+                    artist: entry.artist || '',
+                    year: entry.year || '',
+                    artUrl: entry.album_art_source || entry.album_art || '',
+                    collectionId: null,
+                    genre: entry.genre || '',
+                  }));
+                  sessionStorage.removeItem(TRACK_NOTE_KEY);
+                } catch { /* a private window still gets the picker, one tap further on */ }
+                saidSoAboutTheDesk();
+                router.push('/session');
+              }}
+            >
+              <Play size={12} weight="fill" aria-hidden="true" />
+              <span>Listen to the whole album</span>
+            </button>
+          )}
 
           <div className="tn-body">
             {writing || correcting ? (
@@ -289,39 +331,6 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
               </>
             )}
           </div>
-
-          {!writing && (
-            <div className="tn-foot">
-              {/* An ordinary listen of the album, through the key every other
-                  way into a listen uses — the song on the desk is put away
-                  first, or the sheet would open on it. */}
-              {authed && !correcting && (
-                <button
-                  type="button"
-                  className="tn-whole"
-                  onClick={() => {
-                    try {
-                      localStorage.setItem(PENDING_KEY, JSON.stringify({
-                        album: entry.album,
-                        artist: entry.artist || '',
-                        year: entry.year || '',
-                        artUrl: entry.album_art_source || entry.album_art || '',
-                        collectionId: null,
-                        genre: entry.genre || '',
-                      }));
-                      sessionStorage.removeItem(TRACK_NOTE_KEY);
-                    } catch { /* a private window still gets the picker, one tap further on */ }
-                    saidSoAboutTheDesk();
-                    router.push('/session');
-                  }}
-                >
-                  <VinylRecord size={16} weight="regular" aria-hidden="true" />
-                  <span>Listen to the whole record</span>
-                </button>
-              )}
-              {postedOn && <p className="tn-posted">Posted {postedOn}</p>}
-            </div>
-          )}
         </article>
       </div>
 

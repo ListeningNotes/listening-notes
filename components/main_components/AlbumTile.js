@@ -37,8 +37,9 @@
 //
 // Every tile opens an entry, growing out of the cover as an entry always
 // has. A folder opens its earliest — you are looking at history, so you start
-// at the beginning — and the rest are a swipe away, with dots in the header
-// (FolderDots, useFolder). There is no page listing a folder's entries.
+// at the beginning — and the rest are a swipe away, with a tab for each at
+// the foot of the screen (FolderFooter, useFolder). There is no page listing
+// a folder's entries.
 
 'use client';
 import Link from 'next/link';

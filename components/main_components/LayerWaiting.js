@@ -37,7 +37,7 @@ import { createPortal } from 'react-dom';
 import { Fingerprint, Heart, SketchLogo } from '@phosphor-icons/react';
 import { handedOver, stillReadingOn } from '../../library/handoff';
 import SiteNav from './SiteNav';
-import FolderDots from './FolderDots';
+import FolderFooter from './FolderFooter';
 import KeeperTools from './KeeperTools';
 import { useLayerHeaderSlot } from './LayerEntry';
 import StarRating from './StarRating';
@@ -79,13 +79,17 @@ export default function LayerWaiting({ slug, authed = false }) {
     if (onward) document.documentElement.style.setProperty('--ln-turn', '1');
   }, [headerSlot, onward]);
   // A page of a folder, turned to from the page beside it, carries the
-  // folder with it, so the dots stay in the header while it loads rather
-  // than the journal's mark blinking in for the length of the fetch
-  // (2026-09-25). Drawn still: the page itself makes them pressable.
-  const dots = known?.folder?.length > 1 ? <FolderDots folder={known.folder} slug={slug} /> : null;
+  // folder with it, so the tabs stay at the foot of the screen while it
+  // loads, already on the page they are turning to, rather than blinking out
+  // for the length of the fetch (2026-09-25). Drawn still: the page itself
+  // makes them pressable.
+  const tabs = known?.folder?.length > 1 ? <FolderFooter folder={known.folder} slug={slug} /> : null;
   const header = headerSlot
     ? createPortal(
-        <SiteNav dots={dots} tools={authed ? <KeeperTools onEdit={() => {}} slug={slug} /> : null} />,
+        <>
+          <SiteNav tools={authed ? <KeeperTools onEdit={() => {}} slug={slug} /> : null} />
+          {tabs}
+        </>,
         headerSlot,
       )
     : null;
@@ -129,7 +133,10 @@ export default function LayerWaiting({ slug, authed = false }) {
     return (<>
       {headerSlot
         ? createPortal(
-            <SiteNav mark={crown} lede={false} tools={authed ? <KeeperTools onEdit={() => {}} slug={slug} /> : null} />,
+            <>
+              <SiteNav mark={crown} lede={false} tools={authed ? <KeeperTools onEdit={() => {}} slug={slug} /> : null} />
+              {tabs}
+            </>,
             headerSlot,
           )
         : null}

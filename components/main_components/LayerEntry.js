@@ -135,10 +135,10 @@ export function useBeforeLeaving(fn) {
 // ── A folder, 2026-09-25 ──────────────────────────────────────────────────
 // A record with more than one entry is a folder on the wall, and a folder
 // opens to an entry, never to a list: you flip sideways for the rest, with a
-// row of dots in the header saying where you are (Miyel's brief, "three
-// shapes, and how a folder opens"). The entry knows its folder — the server
-// hands every entry page the record's entries, oldest first — and this is how
-// it says so.
+// tab for each entry at the foot of the screen saying where you are (Miyel's
+// brief, "three shapes, and how a folder opens", and FolderFooter.js). The
+// entry knows its folder — the server hands every entry page the record's
+// entries, oldest first — and this is how it says so.
 //
 // On a sheet it tells the sheet, which is what turns the page: from the wall
 // the wall's own run of pages already holds the folder (every record's
@@ -147,7 +147,7 @@ export function useBeforeLeaving(fn) {
 // — the folder is all there is either side. Opened as its own page, with no
 // sheet around it, it does the swiping itself: a friend reading your journal
 // from their feed can flip your folder too. It hands back the way to turn to
-// one entry of the folder, which the dots use.
+// one entry of the folder, which the tabs use.
 const LayerFolder = createContext(null);
 export function useFolder(folder, slug) {
   const layer = useContext(LayerFolder);
@@ -547,8 +547,8 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
   const go = useCallback((dir, pick = null) => {
     const target = pick || (dir < 0 ? neighbours.prev : neighbours.next);
     if (!target || leaving.current || pendingTurn.current) return;
-    // A page of this same folder travels with the folder, so the dots hold
-    // still in the header while it loads.
+    // A page of this same folder travels with the folder, so the tabs hold
+    // still at the foot while it loads.
     handOffNeighbour(folder?.some(e => e.slug === target.slug) ? { ...target, folder } : target);
     arrivingBySwipe(dir);
     // A folder flipped from somewhere that does not browse stays that
@@ -564,7 +564,7 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
     }, TURN_MS);
   }, [neighbours.prev, neighbours.next, router, arrival.alone, folder]);
   useEffect(() => () => window.clearTimeout(pendingTurn.current), []);
-  // A dot pressed: straight to that page of the folder, turning the way it
+  // A tab pressed: straight to that page of the folder, turning the way it
   // lies from this one.
   useEffect(() => {
     turnRef.current = target => {

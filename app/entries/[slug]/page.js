@@ -74,7 +74,7 @@ export default async function PostPage({ params }) {
   // props are serialised into the HTML, so it has to come off before this point
   // rather than being left to whatever does the rendering.
   // The folder this entry is a page of, when its record has more than one
-  // entry: the record's entries, oldest first, for the dots and the swipe
+  // entry: the record's entries, oldest first, for the tabs and the swipe
   // (2026-09-25). A record whose key folds away to nothing is never one.
   const record = entry.album_key ? await pull_album(entry.album_key) : [];
   const folder = record.length > 1 ? [...record].reverse() : null;

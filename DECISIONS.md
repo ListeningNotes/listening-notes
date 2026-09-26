@@ -950,12 +950,11 @@ no shadow or curl, and the folder's tab and the page's flap take the album's
 own colour (Miyel chose it off a sheet of three).
 
 **A folder opens to an entry and flips, 2026-09-25.** No index and no landing
-screen inside — the record's own page was built and taken out the same day.
-Each page is the entry as it renders anywhere; the only chrome is a row of
-same-size dots in the header, with the entry's month under them. From the
-wall a folder opens on its earliest entry; from anywhere else on the one
-pressed, with the rest of its folder either side and nothing beyond it.
-Entries carry no type label: the shape of the page says it.
+screen — the record's own page was built and taken out the same day. The only
+chrome is a band of tabs at the foot (Listen, Listen 2, or the song; the one
+you are on in ink), and the header keeps the mark — dots in its place were
+tried for a day. From the wall it opens on the earliest entry; from anywhere
+else on the one pressed, with only its folder either side. Dates show once.
 
 **The journal wall is ordered by a record's first entry, and never reorders,
 2026-09-24.** A second listen or a song marked on a record leaves its tile
