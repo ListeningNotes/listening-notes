@@ -79,6 +79,8 @@ opening, belonging to a person who cannot be helped.
 ## Before you send it
 
 `npm run build` and `npm run lint` clean, with the dev server stopped first (a
-build while it is up leaves stylesheets stale). The hard rules that protect
+build while it is up leaves stylesheets stale). Once per clone,
+`git config core.hooksPath .githooks` makes git run the lint before every
+commit and refuse one that fails. The hard rules that protect
 other people's journals are inline in [AGENTS.md](AGENTS.md), under *Never*;
 the reasoning behind them is in [DECISIONS.md](DECISIONS.md).

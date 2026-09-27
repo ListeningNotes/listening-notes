@@ -904,6 +904,13 @@ an entry landed over the journal.
 
 ---
 
+**Lint gates a commit as a git hook, opted into per clone, 2026-09-26.**
+`.githooks/pre-commit`, on after `git config core.hooksPath .githooks`. Not a
+documented shell chain: one was written wrongly under `set -e` and let a red
+lint through. Not switched on by `npm install` (a `prepare` script): that
+would run `git config` inside every keeper's Vercel build. Not with the build
+in it: the build cannot run beside the dev server, and a commit is seconds.
+
 ## The journal
 
 **Three flags: Masterpiece, Favorite, Formative.** Each answers a different

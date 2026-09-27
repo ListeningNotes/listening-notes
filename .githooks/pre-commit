@@ -1,0 +1,25 @@
+#!/bin/sh
+# Copyright (C) 2026 Miyel Brown
+# SPDX-License-Identifier: AGPL-3.0-or-later
+#
+# Runs before every commit, on a machine that has opted in once with
+#
+#   git config core.hooksPath .githooks
+#
+# and refuses the commit while `npm run lint` reports an error. Git runs it
+# itself, so it holds however the commit was typed: on 2026-09-26 a `set -e`
+# script ran the lint on the left of an `&&` and the commit on the next line,
+# and the failing lint went through, because `set -e` ignores a failure on the
+# left of `&&`. A hook cannot be chained wrongly. Warnings do not refuse a
+# commit; errors do. Nothing runs this in a copy whose keeper has not set the
+# line above.
+#
+# The file's name is git's (pre-commit); the folder's is ours.
+
+if npm run lint --silent; then
+  exit 0
+fi
+
+echo
+echo "Commit refused: lint reported an error (above). Fix it and commit again."
+exit 1

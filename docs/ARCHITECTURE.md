@@ -133,6 +133,9 @@ The other scripts — run by hand or by a machine, never by the site
   scripts/restore.mjs            Puts a backup or an export back — a dry run without --yes; empties only the tables the file holds
   scripts/prepare_database.mjs   Runs before next build: migrates and prints the claim notice; never fails the build
 
+The lint gate — git runs it, on a machine that has opted in
+  .githooks/pre-commit           Runs npm run lint before every commit and refuses the commit on an error; on only after git config core.hooksPath .githooks, once per clone (AGENTS.md, Commands)
+
 Before the first request — two files whose names are Next's, not ours
   instrumentation.js             The startup hook: migrates before the first request and prints the claim notice while the copy is unclaimed
   proxy.js                       Next's middleware under its new name: copies the pathname into a header for the layout and does nothing else

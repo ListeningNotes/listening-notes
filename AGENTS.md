@@ -47,6 +47,20 @@ a new numbered `.sql` file and nothing else; the ledger is the
 server first: `npm run build` while `next dev` is up leaves stylesheets and
 route headers stale, silently (NOTES.local.md, Gotchas).
 
+**Lint gates the commit through git, not through the shell.**
+`.githooks/pre-commit` runs `npm run lint` and refuses the commit while it
+reports an error, on any machine that has opted in once with
+`git config core.hooksPath .githooks`. The setting lives in that clone's
+`.git/config`, never in the repo, and reaches the clone's worktrees. Do not
+bypass it with `--no-verify`. It is a hook because a shell chain can be
+written wrongly, and was, 2026-09-26: under `set -e`, `npx eslint … && echo
+"lint clean"` on one line and `git commit` on the next let a failing lint
+through, since `set -e` ignores a failure on the left of `&&`. Where a chain
+is typed by hand anyway, the check and the commit share one statement,
+`npm run lint && git commit -s …`, so the commit is what a failure skips. The
+build stays out of the hook: it cannot run beside the dev server, and a
+commit should take seconds.
+
 # Never
 
 Hard constraints. Each one, broken, breaks a journal that is not this one — a
@@ -297,6 +311,9 @@ do not say what they hold.
 
 ## Elsewhere
 
+- `.githooks/pre-commit` — the lint gate: git runs it before a commit on a
+  machine that has pointed `core.hooksPath` at the folder, and refuses the
+  commit on a lint error (Commands).
 - `.agents/skills/neon-postgres/SKILL.md` — a vendor-written guide to Neon for
   coding agents. Not read for this index beyond its header.
 - `migrations/` — numbered SQL, applied in order; each file's header says why
