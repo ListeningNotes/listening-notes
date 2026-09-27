@@ -32,7 +32,7 @@
 
 'use client';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { CaretRight, MagnifyingGlass, Trash } from '@phosphor-icons/react';
+import { CaretRight, MagnifyingGlass, Trash, XCircle } from '@phosphor-icons/react';
 import SiteNav from '../main_components/SiteNav';
 import { searchAlbums, searchSongs } from '../../library/music_data_api';
 import { PENDING_EVENT, SAVED_EVENT } from '../../hooks/useListeningSession';
@@ -49,6 +49,23 @@ const BY_HAND_OFFERED = false;
 // Long enough that typing an artist's name is one search rather than eight,
 // short enough that it never feels like waiting.
 const SETTLE_MS = 420;
+
+// ── Pages, on a phone, 2026-09-26 ────────────────────────────────────────
+// A search is several screens of covers, and scrolling down through them
+// buried the tracks underneath. On a phone the albums come in pages you swipe
+// sideways — two rows to a page, three where the screen is tall enough that
+// the Tracks heading and a first track still show under them — and the
+// tracks come five at a time the same way, each list with its "1 of 3" under
+// it in the heading's own face (Miyel). A desk has the room and no swipe, so
+// it keeps the long grid and the first eight tracks.
+const ALBUM_COLUMNS = 3;
+const TRACKS_PER_PAGE = 5;
+const DESK_TRACKS = 8;
+// What has to fit under three rows before a page may hold three: the room
+// kept for the covers' shadows, the "1 of 3", the Tracks heading and one
+// whole track — 12, 24, 40, 6 and 67 pixels in session.css. At 150 a page
+// holds three rows on a 390 by 844 phone and larger, and two on an SE.
+const TRACKS_PEEK = 150;
 
 // How long a draft has been sitting there. Rounded hard on purpose — the point
 // is 'this morning' or 'last week', not a timestamp.
@@ -88,6 +105,18 @@ export default function AlbumPicker({ onPick, onResume, onPickSong = null, inlin
   const [songs, setSongs]       = useState([]);
   const [looking, setLooking]   = useState(false);
   const [asked, setAsked]       = useState(false);   // a search has come back
+  // Paged on a phone (the note over TRACKS_PER_PAGE): whether this screen
+  // pages at all, how many rows of albums a page holds, and which page of each
+  // list is showing. The rows are decided the first time covers land, from
+  // where they land.
+  const [paged, setPaged] = useState(() => typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches);
+  const [rows, setRows] = useState(2);
+  const rowsDecided = useRef(false);
+  const [albumPage, setAlbumPage] = useState(0);
+  const [trackPage, setTrackPage] = useState(0);
+  const albumPager = useRef(null);
+  const trackPager = useRef(null);
+  const field = useRef(null);
   const [byHand, setByHand]     = useState(false);
   const [hand, setHand]         = useState({ album: '', artist: '', year: '', art: '' });
 
@@ -264,6 +293,11 @@ export default function AlbumPicker({ onPick, onResume, onPickSong = null, inlin
         onPickSong ? searchSongs(query) : Promise.resolve([]),
       ]);
       if (askedFor.current !== query) return;
+      // A new search starts on its first page.
+      albumPager.current?.scrollTo({ left: 0 });
+      trackPager.current?.scrollTo({ left: 0 });
+      setAlbumPage(0);
+      setTrackPage(0);
       setResults(found);
       setSongs(heard);
       setLooking(false);
@@ -274,6 +308,31 @@ export default function AlbumPicker({ onPick, onResume, onPickSong = null, inlin
   // while a search is being typed.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [typed]);
+
+  // A phone turned into a desk, or back: the pages come and go with it. Either
+  // that or a turned screen means the rows are decided again, next search.
+  useEffect(() => {
+    const phone = window.matchMedia('(max-width: 768px)');
+    const quit = new AbortController();
+    phone.addEventListener('change', () => { rowsDecided.current = false; setPaged(phone.matches); }, { signal: quit.signal });
+    window.addEventListener('resize', () => { rowsDecided.current = false; }, { signal: quit.signal });
+    return () => quit.abort();
+  }, []);
+
+  // Three rows only where three still leave the tracks in sight: measured off
+  // the first cover to land and the room under the top of the grid, before
+  // the page is painted, so a page never shows two rows and then grows.
+  useLayoutEffect(() => {
+    if (!paged || rowsDecided.current || !results.length) return;
+    const pager = albumPager.current;
+    const tile = pager?.querySelector('.ses-tile');
+    if (!tile) return;
+    rowsDecided.current = true;
+    const gap = parseFloat(getComputedStyle(tile.parentElement).rowGap) || 0;
+    const row = tile.getBoundingClientRect().height + gap;
+    const top = pager.getBoundingClientRect().top + (parseFloat(getComputedStyle(pager).paddingTop) || 0);
+    setRows(window.innerHeight - top >= row * 3 - gap + TRACKS_PEEK ? 3 : 2);
+  }, [paged, results]);
 
   // The tile's cover is where the landing starts from, so its box goes along
   // with the record.
@@ -349,6 +408,18 @@ export default function AlbumPicker({ onPick, onResume, onPickSong = null, inlin
   // heading said Records until 2026-09-26; everywhere the session writes the
   // word it says album (Miyel).
   const twoKinds = results.length > 0 && songs.length > 0;
+  // The pages, cut from the lists as they stand. Not paged, each list is one
+  // page: the long grid and the first eight tracks, as a desk has them.
+  const perPage = rows * ALBUM_COLUMNS;
+  const albumPages = [];
+  if (paged) for (let i = 0; i < results.length; i += perPage) albumPages.push(results.slice(i, i + perPage));
+  else if (results.length) albumPages.push(results);
+  const trackPages = [];
+  if (paged) for (let i = 0; i < songs.length; i += TRACKS_PER_PAGE) trackPages.push(songs.slice(i, i + TRACKS_PER_PAGE));
+  else if (songs.length) trackPages.push(songs.slice(0, DESK_TRACKS));
+  // While a search is out, the old answer stays up and says nothing; the
+  // word is only for a screen that has nothing on it yet.
+  const lookingOnEmpty = looking && results.length === 0 && songs.length === 0;
 
   return (
     <div className={'ses-picker' + (inline ? ' ses-picker--inline' : '')}>
@@ -431,6 +502,7 @@ export default function AlbumPicker({ onPick, onResume, onPickSong = null, inlin
           <label className="ses-search">
             <MagnifyingGlass size={18} weight="regular" aria-hidden="true" />
             <input
+              ref={field}
               className="ses-input"
               value={typed}
               onChange={e => type(e.target.value)}
@@ -455,10 +527,27 @@ export default function AlbumPicker({ onPick, onResume, onPickSong = null, inlin
                  she just watched assemble is still there underneath it. */
               autoFocus={!inline}
             />
+            {/* A way back to an empty field without holding delete, 2026-09-26
+                (Miyel). It keeps the keyboard up: clearing is the start of
+                another search, not the end of this one. */}
+            {typed && (
+              <button
+                type="button"
+                className="ses-clear"
+                onClick={() => { type(''); field.current?.focus(); }}
+                aria-label="Clear the search"
+              >
+                <XCircle size={18} weight="fill" aria-hidden="true" />
+              </button>
+            )}
           </label>
 
+          {/* Only when there is something to say. It held a line open under the
+              field the whole time, which was the gap between the search and
+              the albums Miyel called too much (2026-09-26). */}
+          {(lookingOnEmpty || nothing || BY_HAND_OFFERED) && (
           <div className="ses-under">
-            {looking && <span className="ses-label">Looking…</span>}
+            {lookingOnEmpty && <span className="ses-label">Looking…</span>}
             {nothing && <span className="ses-label">Nothing found for that.</span>}
             {/* The door to it is shut. Miyel, 2026-09-18: "let's remove the
                 manual entry button from the session, juuuust until I build it
@@ -481,68 +570,106 @@ export default function AlbumPicker({ onPick, onResume, onPickSong = null, inlin
               </button>
             )}
           </div>
+          )}
 
           {results.length > 0 && twoKinds && <p className="ses-label ses-kind">Albums</p>}
           {results.length > 0 && (
-            <div className={'ses-grid' + (twoKinds ? ' ses-grid--named' : '')}>
-              {results.map(album => (
-                <button
-                  type="button"
-                  key={album.collectionId}
-                  className="ses-tile"
-                  onClick={e => take(album, e)}
-                >
-                  <span className="ses-tile-art">
-                    <img src={album.art} alt="" loading="lazy" />
-                  </span>
-                  <span className="ses-tile-name">{album.name}</span>
-                  <span className="ses-tile-year">{album.artist}{album.year ? ` · ${album.year}` : ''}</span>
-                </button>
-              ))}
-            </div>
+            <>
+              <div
+                ref={albumPager}
+                className={'ses-pages' + (paged ? ' ses-pages--paged' : '') + (twoKinds ? ' ses-pages--named' : '')}
+                onScroll={paged ? e => {
+                  const at = Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth);
+                  if (at !== albumPage) setAlbumPage(at);
+                } : undefined}
+              >
+                {albumPages.map((page, i) => (
+                  <div key={i} className="ses-grid ses-page">
+                    {page.map(album => (
+                      <button
+                        type="button"
+                        key={album.collectionId}
+                        className="ses-tile"
+                        onClick={e => take(album, e)}
+                      >
+                        <span className="ses-tile-art">
+                          <img src={album.art} alt="" loading="lazy" />
+                        </span>
+                        <span className="ses-tile-name">{album.name}</span>
+                        <span className="ses-tile-year">{album.artist}{album.year ? ` · ${album.year}` : ''}</span>
+                      </button>
+                    ))}
+                  </div>
+                ))}
+              </div>
+              {albumPages.length > 1 && (
+                <p className="ses-label ses-page-at" aria-live="polite">{albumPage + 1} of {albumPages.length}</p>
+              )}
+            </>
           )}
 
-          {/* ── Songs, under the records, 2026-09-24 ──────────────────────
+          {/* ── Tracks, under the albums, 2026-09-24 ──────────────────────
               A song pressed here is a track note: an entry about that one
               song, never a listen and never part of one (the track-notes
               brief). Rows rather than covers, because a row can say which
-              record the song is on, and a cover alone would read as the
-              record — two songs off Shrines are two copies of one picture.
+              album the song is on, and a cover alone would read as the
+              album — two songs off Shrines are two copies of one picture.
               Nothing new on the beacon and no second way to start: search is
-              where anybody already looks for a song. */}
+              where anybody already looks for a song.
+
+              Headed Tracks, not Songs, from 2026-09-26, and each cover wears
+              the folded corner a track note wears on the wall, so the row
+              already looks like what pressing it makes (Miyel). */}
           {onPickSong && songs.length > 0 && (
             <>
-              <p className="ses-label ses-kind">Songs</p>
-              <div className="ses-songs">
-                {songs.map(song => (
-                  <button
-                    type="button"
-                    key={`${song.collectionId}-${song.title}`}
-                    className="ses-song"
-                    onClick={e => {
-                      const img = e.currentTarget.querySelector('img');
-                      const from = img ? img.getBoundingClientRect() : null;
-                      chosen();
-                      onPickSong({
-                        song: song.title,
-                        album: song.name,
-                        artist: song.artist,
-                        year: song.year || '',
-                        artUrl: song.artLarge || song.art || '',
-                        collectionId: song.collectionId || null,
-                        genre: song.genre || '',
-                      }, from);
-                    }}
-                  >
-                    <span className="ses-song-art"><img src={song.art} alt="" loading="lazy" /></span>
-                    <span className="ses-song-said">
-                      <span className="ses-song-title">{song.title}</span>
-                      <span className="ses-song-record">{song.name}{song.year ? ` · ${song.year}` : ''}</span>
-                    </span>
-                    <CaretRight className="ses-song-go" size={16} weight="regular" aria-hidden="true" />
-                  </button>
+              <p className="ses-label ses-kind ses-kind--tracks">Tracks</p>
+              <div
+                ref={trackPager}
+                className={'ses-pages ses-pages--tracks' + (paged ? ' ses-pages--paged' : '')}
+                onScroll={paged ? e => {
+                  const at = Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth);
+                  if (at !== trackPage) setTrackPage(at);
+                } : undefined}
+              >
+                {trackPages.map((page, i) => (
+                  <div key={i} className="ses-songs ses-page">
+                    {page.map(song => (
+                      <button
+                        type="button"
+                        key={`${song.collectionId}-${song.title}`}
+                        className="ses-song"
+                        onClick={e => {
+                          const img = e.currentTarget.querySelector('img');
+                          const from = img ? img.getBoundingClientRect() : null;
+                          chosen();
+                          onPickSong({
+                            song: song.title,
+                            album: song.name,
+                            artist: song.artist,
+                            year: song.year || '',
+                            artUrl: song.artLarge || song.art || '',
+                            collectionId: song.collectionId || null,
+                            genre: song.genre || '',
+                          }, from);
+                        }}
+                      >
+                        <span className="ses-song-art ln-fold">
+                          <img src={song.art} alt="" loading="lazy" />
+                          <span className="ln-fold-flap" aria-hidden="true"><img src={song.art} alt="" loading="lazy" /></span>
+                        </span>
+                        <span className="ses-song-said">
+                          <span className="ses-song-title">{song.title}</span>
+                          <span className="ses-song-record">{song.name}{song.year ? ` · ${song.year}` : ''}</span>
+                        </span>
+                        <CaretRight className="ses-song-go" size={16} weight="regular" aria-hidden="true" />
+                      </button>
+                    ))}
+                  </div>
                 ))}
               </div>
+              {trackPages.length > 1 && (
+                <p className="ses-label ses-page-at" aria-live="polite">{trackPage + 1} of {trackPages.length}</p>
+              )}
             </>
           )}
 

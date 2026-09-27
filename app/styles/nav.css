@@ -1504,7 +1504,10 @@
      could have had. */
   padding-top: calc(env(safe-area-inset-top, 0px) + 80px);
   padding-bottom: 40px;
-  gap: 14px;
+  /* And no gap between the folded beacon and the search, 2026-09-26: the
+     field sits 12px under the bar's edge, the room the bar keeps under its
+     own row. */
+  gap: 0;
 }
 /* ── The cover goes straight up, and gets smaller on the way ───────────────
    Nothing changes position and no box is told a number. The cover's own
@@ -1547,11 +1550,13 @@
 /* The gap between the cover and whatever is under it is 28px, which is right
    under a full-size record and too much under a 132px one with a search
    below it. */
-/* Transitioned for the same reason the slot is: this closes from 28px to
-   10px as the picker opens and back as it goes, and a gap that jumps is a
-   record that hops. */
+/* Transitioned for the same reason the slot is: this closes from 28px as the
+   picker opens and back as it goes, and a gap that jumps is a record that
+   hops. It closes to nothing, 2026-09-26: while choosing, both the things it
+   sat between have folded away, and 10px of gap between two empty rows was
+   part of the space over the search Miyel called too much. */
 .beacon-card { transition: gap 0.7s cubic-bezier(0.22, 0.61, 0.36, 1); }
-.hn--choosing .beacon-card { gap: 10px; }
+.hn--choosing .beacon-card { gap: 0; }
 .hn--choosing .hp-dashboard { flex: 0 0 auto; }
 /* ── The picker opens rather than appearing ────────────────────────────────
    It mounted at its full height in one frame, under a cover that is centred

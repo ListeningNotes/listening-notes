@@ -386,6 +386,11 @@ export async function searchAlbums(searchQuery) {
         artLarge: r.artworkUrl100.replace(/\d+x\d+bb/, '3000x3000bb'),
         _theirs: theirs,
         _title: title,
+        // The artist's name and nothing else: a discography, which reads by
+        // date alone (below). And the whole date, not the year, so two
+        // records from one year still fall in the order they came out.
+        _bare: theirs && rest.length === 0,
+        _date: r.releaseDate || '',
         // 200 clears the highest a title can score (140), so once the query has
         // named an artist nobody else's record can outrank their own — which is
         // what put a covers album called Radiohead above Radiohead.
@@ -404,11 +409,15 @@ export async function searchAlbums(searchQuery) {
     // records were the ones being looked for. On a wall of covers the other
     // way round is the one that reads: the newest record at the top, scrolling
     // back through the years. With search terms present the score has already
-    // decided the order and the year is only a tiebreak.
-    matched.sort((a, b) => b._score - a._score || (b.year || '0').localeCompare(a.year || '0'));
-    // The grid pages at 15, so this is four pages deep — enough to hold a long
+    // decided the order and the date is only a tiebreak.
+    //
+    // A discography is the date and nothing else, 2026-09-26. The edition
+    // penalty was still ordering it, so a live record sank below the first
+    // album it followed; Miyel: "albums should be newest to oldest."
+    matched.sort((a, b) => (a._bare && b._bare ? 0 : b._score - a._score) || b._date.localeCompare(a._date));
+    // Sixty, which on a phone is seven pages of nine — enough to hold a long
     // discography without the old cliff at twenty.
-    return matched.slice(0, 60).map(({ _score, _theirs, _title, ...album }) => album);
+    return matched.slice(0, 60).map(({ _score, _theirs, _title, _bare, _date, ...album }) => album);
   } catch { return []; }
 }
 
@@ -416,7 +425,8 @@ export async function searchAlbums(searchQuery) {
 // The picker's second section, under the records: a track note starts from a
 // song, and search is where people already look for one (the track-notes
 // brief). Apple's own song search, in Apple's order, which for a song title
-// or an artist's name is already the order anybody would want.
+// or an artist's name is already the order anybody would want — the most
+// played first (Miyel, 2026-09-26: "tracks by popularity").
 //
 // One row per song per record. The same song comes back once for the clean
 // and once for the explicit version, and once more for every edition of the
@@ -427,7 +437,11 @@ export async function searchAlbums(searchQuery) {
 //
 // Unlike searchAlbums, singles are the point here: "a single, something a
 // friend sent" is the reason a track note exists.
-const SONGS_SHOWN = 8;
+//
+// Thirty, from 2026-09-26: the picker pages them on a phone, five at a time,
+// so a longer list costs nothing on screen. It was eight when eight was all
+// there was room to show.
+const SONGS_SHOWN = 30;
 
 export async function searchSongs(searchQuery) {
   const query = searchQuery.trim();
