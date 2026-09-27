@@ -593,6 +593,10 @@ export default function SessionPage() {
             year: song.year || '',
             genre: song.genre || '',
             album_art: song.artUrl || '',
+            collection_id: song.collectionId || '',
+            // What its draft already holds, when the song came from one —
+            // pressed as a draft, or found again in the search (AlbumPicker).
+            written: song.written || null,
           }}
           onSaved={saved => {
             try { sessionStorage.removeItem(TRACK_NOTE_KEY); } catch { /* nothing to clear */ }

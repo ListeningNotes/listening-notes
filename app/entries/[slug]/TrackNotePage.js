@@ -48,11 +48,11 @@
 // eats a note (TRACK_NOTE_WRITING).
 
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createPortal } from 'react-dom';
 import { Play, VinylRecord } from '@phosphor-icons/react';
-import { parseRating, editStamp } from '../../../library/entry_formatter';
+import { parseRating, editStamp, lookup_key } from '../../../library/entry_formatter';
 import { kept_receipts } from '../../../library/receipts';
 import { tidyAddress } from '../../../library/return_address';
 import SiteNav from '../../../components/main_components/SiteNav';
@@ -95,13 +95,22 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
   // ── A new one: what has been written, kept per song ─────────────────────
   // Read once, as the sheet opens — the session page is what decides a song
   // is being written, and it has already read the tab's copy of which one.
-  const songKey = [entry.album, entry.artist, entry.song].map(v => String(v || '').trim().toLowerCase()).join('|');
+  // Keyed as the song's draft is keyed (lookup_key), 2026-09-26, so the
+  // picker can throw the two away together.
+  //
+  // This browser's copy first: it is written on every keystroke, so on the
+  // device the note was started on it is never behind. Then the draft the
+  // picker handed over (`entry.written`), for a note started somewhere else.
+  const songKey = lookup_key(entry.album, entry.artist || '', entry.song);
   const [written, setWritten] = useState(() => {
     if (!writing || typeof window === 'undefined') return NOTHING_WRITTEN;
     try {
       const kept = JSON.parse(localStorage.getItem(TRACK_NOTE_WRITING) || '{}')[songKey];
-      return kept ? { ...NOTHING_WRITTEN, ...kept } : NOTHING_WRITTEN;
-    } catch { return NOTHING_WRITTEN; }
+      if (kept) return { ...NOTHING_WRITTEN, ...kept };
+    } catch { /* no browser copy; the draft, if there is one */ }
+    return entry.written
+      ? { ...NOTHING_WRITTEN, rating: Number(entry.written.rating) || 0, note: entry.written.note || '' }
+      : NOTHING_WRITTEN;
   });
   // Every change goes into the browser as it happens, and a note taken back
   // to nothing takes its place with it, so nothing is kept that is not there.
@@ -114,6 +123,38 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
       localStorage.setItem(TRACK_NOTE_WRITING, JSON.stringify(all));
     } catch { /* a private window keeps it for as long as the sheet is up */ }
   }, [writing, songKey, written]);
+  // ── And on the server, as a draft, 2026-09-26 ───────────────────────────
+  // So a note walked away from waits in the picker's drafts beside the album
+  // listens, on any device (Miyel). A beat after the typing stops, and once
+  // more on the way out if the last change had not gone yet. A note taken
+  // back to nothing is taken off the list by the same call (save_draft).
+  // Nothing is sent for the sheet merely opening: only a change is a draft.
+  // `inflight` is what Save waits on, so a draft cannot land after the note
+  // it was a draft of and put itself back on the list.
+  const draftBody = JSON.stringify({
+    song: entry.song, album: entry.album, artist: entry.artist || '',
+    year: entry.year || '', genre: entry.genre || '', album_art: entry.album_art || '',
+    collection_id: entry.collection_id || '', rating: written.rating, notes: written.note,
+  });
+  const openedWith = useRef(draftBody);
+  const unsent = useRef(null);
+  const inflight = useRef(null);
+  const finished = useRef(false);
+  useEffect(() => {
+    if (!writing || draftBody === openedWith.current) return undefined;
+    unsent.current = draftBody;
+    const id = setTimeout(() => {
+      if (finished.current || unsent.current !== draftBody) return;
+      unsent.current = null;
+      inflight.current = fetch('/api/drafts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: draftBody }).catch(() => {});
+    }, 700);
+    return () => clearTimeout(id);
+  }, [writing, draftBody]);
+  useEffect(() => () => {
+    if (finished.current || !unsent.current) return;
+    fetch('/api/drafts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: unsent.current, keepalive: true }).catch(() => {});
+  }, []);
+
   const [saving, setSaving] = useState(false);
   const [trouble, setTrouble] = useState(null);
   // Anything at all: stars or a word. A note with neither is an entry that
@@ -333,6 +374,11 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
           onSave={async () => {
             setSaving(true);
             setTrouble(null);
+            // No more drafts of this one: the note is being saved, and the
+            // save takes its draft off the list (save_new_entry).
+            finished.current = true;
+            unsent.current = null;
+            await inflight.current;
             try {
               const res = await fetch('/api/entries', {
                 method: 'POST',
@@ -365,6 +411,8 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
             } catch (err) {
               setTrouble(err.message);
               setSaving(false);
+              // Not saved, so still a draft: keep filing it.
+              finished.current = false;
             }
           }}
         />

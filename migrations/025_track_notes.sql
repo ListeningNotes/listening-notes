@@ -18,3 +18,15 @@
 -- everything that numbers listens or compares albums asks `song IS NULL`
 -- first (library/database_actions.js).
 ALTER TABLE entries ADD COLUMN IF NOT EXISTS song text;
+
+-- ── And a half-written one is a draft, 2026-09-26 ─────────────────────────
+-- A track note walked away from waits in the picker's drafts beside the
+-- album listens, the same as everything else (Miyel). One column says which
+-- song, as it does on entries; empty is an album listen's draft, which every
+-- draft before this is. Its lookup_key carries the song after a bar, so it
+-- never takes the place of its album's own draft (entry_formatter.js).
+--
+-- Added to this file rather than a new one because this file had not reached
+-- a journal yet: it ran only on the Neon test copy for track notes, which
+-- was given this column by hand.
+ALTER TABLE drafts ADD COLUMN IF NOT EXISTS song text;

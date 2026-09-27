@@ -35,7 +35,8 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { CaretRight, MagnifyingGlass, Trash, XCircle } from '@phosphor-icons/react';
 import SiteNav from '../main_components/SiteNav';
 import { searchAlbums, searchSongs } from '../../library/music_data_api';
-import { PENDING_EVENT, SAVED_EVENT } from '../../hooks/useListeningSession';
+import { PENDING_EVENT, SAVED_EVENT, TRACK_NOTE_WRITING } from '../../hooks/useListeningSession';
+import { lookup_key } from '../../library/entry_formatter';
 
 // How long the grid takes to shuffle over, and how long the newcomer waits
 // before growing into the slot the others are clearing.
@@ -396,6 +397,17 @@ export default function AlbumPicker({ onPick, onResume, onPickSong = null, inlin
   // Two taps, because there's no undo on the other side of this one.
   async function discardDraft(id) {
     if (confirmDiscard !== id) { setConfirmDiscard(id); return; }
+    // A track note's draft has a second copy, in this browser, which would
+    // bring the words straight back the next time the song was pressed. It
+    // goes too — the same key names both (lookup_key).
+    const gone = drafts.find(d => d.id === id);
+    if (gone?.song) {
+      try {
+        const all = JSON.parse(localStorage.getItem(TRACK_NOTE_WRITING) || '{}');
+        delete all[lookup_key(gone.album, gone.artist || '', gone.song)];
+        localStorage.setItem(TRACK_NOTE_WRITING, JSON.stringify(all));
+      } catch { /* no browser copy to clear */ }
+    }
     setDrafts(prev => prev.filter(d => d.id !== id));
     setConfirmDiscard(null);
     try { await fetch(`/api/drafts/${id}`, { method: 'DELETE' }); } catch { /* already gone */ }
@@ -646,6 +658,9 @@ export default function AlbumPicker({ onPick, onResume, onPickSong = null, inlin
                         onClick={e => {
                           const img = e.currentTarget.querySelector('img');
                           const from = img ? img.getBoundingClientRect() : null;
+                          // A draft of this song, if there is one, comes along:
+                          // found again in the search, it opens where it was left.
+                          const kept = drafts.find(d => d.song && d.lookup_key === lookup_key(song.name, song.artist, song.title));
                           chosen();
                           onPickSong({
                             song: song.title,
@@ -655,6 +670,7 @@ export default function AlbumPicker({ onPick, onResume, onPickSong = null, inlin
                             artUrl: song.artLarge || song.art || '',
                             collectionId: song.collectionId || null,
                             genre: song.genre || '',
+                            written: kept ? { rating: kept.rating, note: kept.notes || '' } : null,
                           }, from);
                         }}
                       >
@@ -706,7 +722,13 @@ export default function AlbumPicker({ onPick, onResume, onPickSong = null, inlin
                Only the discard is extra, and it sits on the art, so the tile's
                footprint is a search result's to the pixel. */
             <div className="ses-grid" ref={gridRef}>
-              {drafts.map(draft => {
+              {/* A track note's draft, 2026-09-26, is one of these too: in
+                  the same list, newest first, the same as everything else
+                  (Miyel — a view that sorts them apart is for later). It wears
+                  the folded corner a track note wears on the wall, is named
+                  by its song, and opens the track note rather than a listen.
+                  A picker that offers no songs shows none. */}
+              {drafts.filter(draft => onPickSong || !draft.song).map(draft => {
                 const armed = confirmDiscard === draft.id;
                 return (
                   <div key={draft.id} data-draft={draft.id} className={'ses-tile ses-tile--draft' + (armed ? ' ses-tile--armed' : '')}>
@@ -731,14 +753,30 @@ export default function AlbumPicker({ onPick, onResume, onPickSong = null, inlin
                         if (confirmDiscard !== null) { setConfirmDiscard(null); return; }
                         const img = e.currentTarget.querySelector('img');
                         chosen();
+                        if (draft.song) {
+                          onPickSong({
+                            song: draft.song,
+                            album: draft.album,
+                            artist: draft.artist || '',
+                            year: draft.year || '',
+                            artUrl: draft.album_art || '',
+                            collectionId: draft.collection_id || null,
+                            genre: draft.genre || '',
+                            written: { rating: draft.rating, note: draft.notes || '' },
+                          }, img ? img.getBoundingClientRect() : null);
+                          return;
+                        }
                         onResume(draft, img ? img.getBoundingClientRect() : null);
                       }}
                       aria-label={armed
-                        ? `Delete the draft of ${draft.album}`
-                        : `${draft.album}. Press and hold to delete.`}
+                        ? `Delete the draft of ${draft.song || draft.album}`
+                        : `${draft.song || draft.album}. Press and hold to delete.`}
                     >
-                      <span className="ses-tile-art">
+                      <span className={'ses-tile-art' + (draft.song ? ' ln-fold' : '')}>
                         {draft.album_art ? <img src={draft.album_art} alt="" loading="lazy" /> : null}
+                        {draft.song && draft.album_art && (
+                          <span className="ln-fold-flap" aria-hidden="true"><img src={draft.album_art} alt="" /></span>
+                        )}
                         {armed && (
                           <span className="ses-tile-sure">
                             <Trash size={20} weight="fill" aria-hidden="true" />
@@ -753,7 +791,7 @@ export default function AlbumPicker({ onPick, onResume, onPickSong = null, inlin
                           still its name while it is being asked. It said
                           "press again" here and the name went red with it,
                           which made the whole tile the question. */}
-                      <span className="ses-tile-name">{draft.album}</span>
+                      <span className="ses-tile-name">{draft.song || draft.album}</span>
                       <span className="ses-tile-year ses-split">
                         {draft.artist && <span className="ses-split-by">{draft.artist}</span>}
                         <span className="ses-split-end">{draft.artist ? '\u00a0·\u00a0' : ''}{sinceLabel(draft.updated_at)}</span>

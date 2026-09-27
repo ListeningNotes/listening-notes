@@ -478,6 +478,15 @@ export async function save_new_entry(body) {
     )
     RETURNING *
   `;
+  // A track note saved takes its draft with it, 2026-09-26, by the key the
+  // draft was filed under — whichever device wrote the draft. Quietly: the
+  // note is saved, and a draft left over is a tile to throw away, where a
+  // failure reported here would be a note written twice.
+  if (song) {
+    try {
+      await database`DELETE FROM drafts WHERE lookup_key = ${lookup_key(album, artist, song)}`;
+    } catch { /* a stale tile, not a lost note */ }
+  }
   return result[0];
 }
 
@@ -725,14 +734,25 @@ export async function save_draft(body) {
 
   if (!album) throw new Error('A draft needs an album');
 
+  // A track note's draft, 2026-09-26: the song, and its own key (lookup_key).
+  // One that says nothing any more — no stars and no words — is taken away
+  // rather than kept, as the browser's copy is: the picker should not hold a
+  // draft of nothing.
+  const song = String(body.song || '').trim() || null;
+  const key = lookup_key(album, artist, song || '');
+  if (song && !(Number(rating) > 0) && !String(notes || '').trim()) {
+    await database`DELETE FROM drafts WHERE lookup_key = ${key}`;
+    return null;
+  }
+
   const result = await database`
     INSERT INTO drafts (
-      lookup_key, album, artist, year, genre, entry_type,
+      lookup_key, song, album, artist, year, genre, entry_type,
       album_art, collection_id, step, elapsed, rating, masterpiece, formative,
       favorite, notes, tracks, received_from, received_date, received_from_url,
       credit_private, submission_id
     ) VALUES (
-      ${lookup_key(album, artist)}, ${album}, ${artist}, ${year}, ${genre},
+      ${key}, ${song}, ${album}, ${artist}, ${year}, ${genre},
       ${entry_type}, ${album_art}, ${String(collection_id || '')},
       ${step}, ${elapsed}, ${rating}, ${masterpiece}, ${formative}, ${favorite}, ${notes},
       ${tracks ? JSON.stringify(tracks) : null},
@@ -742,6 +762,7 @@ export async function save_draft(body) {
       ${Number.isInteger(submission_id) && submission_id > 0 ? submission_id : null}
     )
     ON CONFLICT (lookup_key) DO UPDATE SET
+      song = EXCLUDED.song,
       album = EXCLUDED.album, artist = EXCLUDED.artist, year = EXCLUDED.year,
       genre = EXCLUDED.genre, entry_type = EXCLUDED.entry_type,
       album_art = EXCLUDED.album_art,
