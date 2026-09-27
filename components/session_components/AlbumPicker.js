@@ -83,7 +83,7 @@ function sinceLabel(iso) {
 export default function AlbumPicker({ onPick, onResume, onPickSong = null, inline = false }) {
   const [typed, setTyped]       = useState('');
   const [results, setResults]   = useState([]);
-  // The songs the same search found. Records above songs, always, so the
+  // The songs the same search found. Albums above songs, always, so the
   // default reading stays "an album journal that also lets you mark a song".
   const [songs, setSongs]       = useState([]);
   const [looking, setLooking]   = useState(false);
@@ -343,9 +343,11 @@ export default function AlbumPicker({ onPick, onResume, onPickSong = null, inlin
   }
 
   const nothing = asked && !looking && results.length === 0 && songs.length === 0 && typed.trim();
-  // Records are named only when there are songs under them to be told apart
-  // from — a search that found only records is the picker it always was. The
-  // songs are always named: rows in a picker of covers need saying.
+  // Albums are named only when there are songs under them to be told apart
+  // from — a search that found only albums is the picker it always was. The
+  // songs are always named: rows in a picker of covers need saying. The
+  // heading said Records until 2026-09-26; everywhere the session writes the
+  // word it says album (Miyel).
   const twoKinds = results.length > 0 && songs.length > 0;
 
   return (
@@ -480,7 +482,7 @@ export default function AlbumPicker({ onPick, onResume, onPickSong = null, inlin
             )}
           </div>
 
-          {results.length > 0 && twoKinds && <p className="ses-label ses-kind">Records</p>}
+          {results.length > 0 && twoKinds && <p className="ses-label ses-kind">Albums</p>}
           {results.length > 0 && (
             <div className={'ses-grid' + (twoKinds ? ' ses-grid--named' : '')}>
               {results.map(album => (

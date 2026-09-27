@@ -1028,11 +1028,11 @@
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 
-/* ── Songs, under the records ───────────────────────────────────────────────
+/* ── Songs, under the albums ────────────────────────────────────────────────
    2026-09-24, the track-notes brief. A song pressed here starts a track note.
    It is a row — its cover, its title, and the record it is on — because a row
    can say which record, and a cover alone would read as the record itself.
-   Records keep the grid above and are named only when songs are there too. */
+   Albums keep the grid above and are named only when songs are there too. */
 .ses-kind { margin: 24px 0 0; }
 .ses-grid--named { margin-top: 12px; }
 .ses-songs { display: flex; flex-direction: column; margin-top: 6px; }

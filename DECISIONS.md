@@ -943,7 +943,7 @@ compares albums counts it. The brief's reason: one object doing both is one
 confusing object instead of two clear ones.
 
 **No tool turns an album entry into a track note, 2026-09-25.** Briefed and
-dropped the same day: with Records and Songs in the picker nobody logs an
+dropped the same day: with Albums and Songs in the picker nobody logs an
 album to write about one song, so a converter would sit in a menu nobody
 opens. The one entry already written that way is fixed by asking its
 keeper. The rule under the brief stands: nothing in a journal changes

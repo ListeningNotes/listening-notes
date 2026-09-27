@@ -278,7 +278,7 @@ export default function TrackNotes({
       <div>
         <span className="ses-label">Tracks</span>
         <p className="ses-prose" style={{ color: 'var(--ink-soft)', marginTop: 18 }}>
-          No tracklist found for this record. Go on to the album note.
+          No tracklist found for this album. Go on to the album note.
         </p>
         <div style={{ marginTop: 28 }}>
           <button type="button" className="ses-btn ses-btn--primary" onClick={onNext}>Continue →</button>
