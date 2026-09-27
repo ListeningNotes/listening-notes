@@ -64,7 +64,7 @@ const NO_ANSWER  = 'Their copy did not answer. It may be offline — nothing was
 // and the reason there is no outbox table to go stale.
 export async function send_record({
   to, album, artist, year = '', note,
-  album_art = '', collection_id = '', quiet = false, sender_entry = '',
+  album_art = '', collection_id = '', quiet = false, sender_entry = '', song = '',
 }) {
   const host = tidyJournal(to);
   if (!host) return { ok: false, error: NO_ADDRESS };
@@ -89,10 +89,13 @@ export async function send_record({
         album_art, collection_id,
         sender_url: mine,
         quiet: quiet === true,
-        // The only field the form never sends. An older copy ignores it and
+        // The two fields the form never sends. An older copy ignores them and
         // keeps everything else, which is what makes this safe to send to a
-        // journal that has not updated in months.
+        // journal that has not updated in months. `song` is a send that is a
+        // track rather than a record (migrations/026_track_sends.sql); a copy
+        // too old to know the word files it as the album.
         sender_entry,
+        song,
       }),
     });
   } catch {

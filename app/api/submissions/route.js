@@ -84,7 +84,7 @@ export async function POST(request) {
   try {
     const {
       album, artist, year, note, submitter_name,
-      album_art, collection_id, sender_url, quiet, sender_entry,
+      album_art, collection_id, sender_url, quiet, sender_entry, song,
     } = body;
 
     if (!album?.trim() || !artist?.trim() || !note?.trim()) {
@@ -121,6 +121,13 @@ export async function POST(request) {
       sender_entry: sender_url && typeof sender_entry === 'string'
         && /^[a-z0-9-]{1,200}$/i.test(sender_entry.trim())
         ? sender_entry.trim().toLowerCase()
+        : null,
+      // The song, when the send is one (migrations/026_track_sends.sql). A
+      // title and nothing more: anything longer than a title is not one, and
+      // is dropped rather than refused — the send is still a record with a
+      // note, which is the part that mattered.
+      song: typeof song === 'string' && song.trim() && song.trim().length <= 300
+        ? song.trim()
         : null,
     });
     return Response.json({ submission });

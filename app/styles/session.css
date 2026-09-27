@@ -948,6 +948,23 @@
   gap: 7px;
 }
 .ses-contents-heart { display: inline-flex; line-height: 1; color: var(--fav); }
+/* Send this song, 2026-09-26: the envelope at the end of a row, opening the
+   send sheet with the track in it (RecordContents). A control that is the
+   mark — faint, in the row's own ink on hover, 44px of thumb from padding
+   given back in margin so the row does not grow for it. */
+.ses-contents-send {
+  flex: 0 0 auto;
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 14px 4px 14px 10px;
+  margin: -14px -4px -14px -4px;
+  border: 0; background: none;
+  color: var(--ink-faint);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s;
+}
+.ses-contents-send:hover { color: var(--ink); }
+.ses-contents-send:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: -6px; border-radius: 8px; }
 
 .ses-strip-col--now .ses-strip-dot { background: var(--ink); border-color: var(--ink); transform: scale(1.3); }
 .ses-strip-label { position: relative; display: block; height: 100%; }

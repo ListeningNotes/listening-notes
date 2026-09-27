@@ -1,0 +1,24 @@
+-- Copyright (C) 2026 Miyel Brown
+-- SPDX-License-Identifier: AGPL-3.0-or-later
+-- migrations/026_track_sends.sql
+--
+-- A send can be a song, 2026-09-26.
+--
+-- Until now a send was always a record: the visitor's form picks a cover, and
+-- the keeper's sheet picked one too. The one send sheet (Miyel's brief of
+-- 2026-09-26) sends a song as readily as an album — from the tracklist in the
+-- middle of a listen, where "hear this now" is time-sensitive and there is no
+-- entry yet to send, and from the picker's Tracks section anywhere else.
+--
+-- So a send carries one more word, the same way an entry does (migration 025):
+-- `song` names the track, and the record it is off stays in `album` and
+-- `artist`. Empty is an album send, which is every send before this, so
+-- nothing already in an inbox changes. The inbox draws a song send with the
+-- folded corner a track note wears and names the song over its record;
+-- Start a listen still starts the record, with the sender's credit on it.
+--
+-- A copy that has not run this yet drops the word on the floor and files the
+-- send as its album — the route destructures the keys it knows and ignores
+-- the rest — which is the same graceful drop `sender_entry` has always relied
+-- on. Nothing is lost but the one word, and the next update brings it.
+ALTER TABLE submissions ADD COLUMN IF NOT EXISTS song text;
