@@ -32,7 +32,7 @@
 
 'use client';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { CaretRight, MagnifyingGlass, Trash, XCircle } from '@phosphor-icons/react';
+import { CaretRight, ClockCounterClockwise, MagnifyingGlass, Trash, XCircle } from '@phosphor-icons/react';
 import SiteNav from '../main_components/SiteNav';
 import { searchAlbums, searchSongs } from '../../library/music_data_api';
 import { PENDING_EVENT, SAVED_EVENT, TRACK_NOTE_WRITING } from '../../hooks/useListeningSession';
@@ -62,6 +62,16 @@ const SETTLE_MS = 420;
 const ALBUM_COLUMNS = 3;
 const TRACKS_PER_PAGE = 5;
 const DESK_TRACKS = 8;
+// ── What you looked for last, 2026-09-26 ─────────────────────────────────
+// Miyel: "I find myself needing to retype in the same thing over and over."
+// A search you took something from is kept, newest first, in this browser,
+// and offered under the field whenever it is empty and in use. Only the ones
+// that found what you wanted: what was typed on the way there ("fon",
+// "fonta") never counts. Six, because a list you have to scroll through is a
+// second search.
+const RECENT_KEY = 'ln_recent_searches';
+const RECENT_KEPT = 6;
+
 // What has to fit under three rows before a page may hold three: the room
 // kept for the covers' shadows, the "1 of 3", the Tracks heading and one
 // whole track — 12, 24, 40, 6 and 67 pixels in session.css. At 150 a page
@@ -118,6 +128,15 @@ export default function AlbumPicker({ onPick, onResume, onPickSong = null, inlin
   const albumPager = useRef(null);
   const trackPager = useRef(null);
   const field = useRef(null);
+  // The searches kept (RECENT_KEY), and whether the field is in use — the
+  // list shows only while it is, and the field is empty.
+  const [recent, setRecent] = useState(() => {
+    if (typeof window === 'undefined') return [];
+    try {
+      return JSON.parse(localStorage.getItem(RECENT_KEY) || '[]').filter(t => typeof t === 'string').slice(0, RECENT_KEPT);
+    } catch { return []; }
+  });
+  const [fieldOn, setFieldOn] = useState(false);
   const [byHand, setByHand]     = useState(false);
   const [hand, setHand]         = useState({ album: '', artist: '', year: '', art: '' });
 
@@ -354,6 +373,14 @@ export default function AlbumPicker({ onPick, onResume, onPickSong = null, inlin
   // The armed discard goes too. A question asked before a listen and still
   // asked after it is a question about a screen that has been away.
   function chosen() {
+    // The search that found it is worth keeping (RECENT_KEY). A draft is
+    // resumed from an empty field, so there is nothing to keep then.
+    const term = typed.trim();
+    if (term) {
+      const next = [term, ...recent.filter(t => t.toLowerCase() !== term.toLowerCase())].slice(0, RECENT_KEPT);
+      setRecent(next);
+      try { localStorage.setItem(RECENT_KEY, JSON.stringify(next)); } catch { /* kept for this visit only */ }
+    }
     setTyped('');
     setResults([]);
     setSongs([]);
@@ -516,6 +543,10 @@ export default function AlbumPicker({ onPick, onResume, onPickSong = null, inlin
             <input
               ref={field}
               className="ses-input"
+              onFocus={() => setFieldOn(true)}
+              /* A beat late, so a tap on a recent search lands before the list
+                 it is in goes: on a phone the tap takes the focus first. */
+              onBlur={() => setTimeout(() => setFieldOn(false), 200)}
               value={typed}
               onChange={e => type(e.target.value)}
               placeholder="Search an artist, album, or track"
@@ -553,6 +584,34 @@ export default function AlbumPicker({ onPick, onResume, onPickSong = null, inlin
               </button>
             )}
           </label>
+
+          {/* Recent searches, under an empty field in use (RECENT_KEY). A tap
+              runs one again; Clear forgets them all. The mouse press is kept
+              from taking the focus, so on a desk the list stays put under the
+              pointer. */}
+          {fieldOn && !typed.trim() && recent.length > 0 && (
+            <div className="ses-recent" onMouseDown={e => e.preventDefault()}>
+              <div className="ses-recent-head">
+                <span className="ses-label">Recent</span>
+                <button
+                  type="button"
+                  className="ses-label ses-recent-clear"
+                  onClick={() => {
+                    setRecent([]);
+                    try { localStorage.removeItem(RECENT_KEY); } catch { /* nothing kept */ }
+                  }}
+                >
+                  Clear
+                </button>
+              </div>
+              {recent.map(term => (
+                <button key={term} type="button" className="ses-recent-row" onClick={() => type(term)}>
+                  <ClockCounterClockwise size={16} weight="regular" aria-hidden="true" />
+                  <span>{term}</span>
+                </button>
+              ))}
+            </div>
+          )}
 
           {/* Only when there is something to say. It held a line open under the
               field the whole time, which was the gap between the search and

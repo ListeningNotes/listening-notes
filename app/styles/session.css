@@ -322,6 +322,30 @@
   -webkit-tap-highlight-color: transparent;
 }
 .ses-clear:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: -4px; border-radius: 50%; }
+/* ── Recent searches, 2026-09-26 ──
+   Under the field while it is empty and in use (AlbumPicker): the heading's
+   own face, a Clear at its end, and a row per search — the mark for "again"
+   and the words, the height of a track row without its cover. */
+.ses-recent { margin-top: 12px; }
+.ses-recent-head { display: flex; align-items: baseline; justify-content: space-between; }
+.ses-recent-clear {
+  padding: 8px 0 8px 16px;
+  border: 0; background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.ses-recent-row {
+  display: flex; align-items: center; gap: 12px;
+  width: 100%;
+  padding: 11px 0;
+  border: 0; border-bottom: 1px solid var(--border);
+  background: none; color: var(--ink);
+  font: inherit; font-size: 15px; text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.ses-recent-row svg { flex-shrink: 0; color: var(--ink-faint); }
+.ses-recent-row span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 
 /* Three covers to a row, the mockup's count, and said outright rather than
