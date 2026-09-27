@@ -159,9 +159,11 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
   // this project has already made twice, about the desk's copy of Start a
   // listen and about the row of pills that used to sit under the pinned
   // record. So the line is the name alone now, for everybody, which is the
-  // shape the owner always saw. See CallingCard.js, which carries the press
-  // that used to live here and the reason a journal can only ever copy its
-  // own address rather than write into somebody else's book.
+  // shape the owner always saw. The pair went from the beacon too on
+  // 2026-09-27, with the face beside them: a page served by another copy
+  // cannot write to a reader's book or post a send, so no control implying
+  // it ships. A visitor reads; an address travels by copy and paste from the
+  // code below (DECISIONS, The network).
   // The square is a CodeSlot — the same one an entry's cover turns in. It
   // owns the turn, the copy and its pill, the corner mark and the wait; the
   // card owns which face is up. A card with no photograph starts on its

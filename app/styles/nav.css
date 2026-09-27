@@ -1102,6 +1102,27 @@
      is rows, and forty pixels of a row is plainly a row, where the wall's own
      search bar holds the first 96px of its floor and forty pixels of cover
      under it was a sliver of a sliver. */
+  /* ── A visitor's floor has the peek; the keeper's still does not, 2026-09-27
+     Two things changed since the 20th. The wall's bar stands at the foot of
+     the phone screen now, so the wall's first covers begin 8px under its top
+     and a peek is covers from the first pixel — on the 20th the sliver was
+     the bar's room and the band, which is why nothing showed. And the row
+     that stood under a visitor's record is gone (CallingCard.js, deleted),
+     which left the room this takes: the floor stops short by the same
+     --hn-peek the book does, and the first row of the wall shows under the
+     chevron the way the feed shows under the faces. min-height rather than
+     height, so a phone too short for the record and its past grows the
+     floor instead of running the chevron into the covers.
+
+     The keeper's floor is full — the ring — and stays exactly as it is:
+     Miyel's pick, 2026-09-27, over a real tease that would have put the mark
+     about 30px higher. .hn--visitor is set only once the wristband check has
+     answered (HomeNav.js), so the keeper's own floor never draws short for
+     the beat before it does. */
+  .hn--visitor .hn-pane--home .hn-floor--beacon {
+    height: auto;
+    min-height: calc(var(--hn-h) - var(--hn-peek));
+  }
   /* The snap stops a bar's-worth short, so the wall lands under the mark
      rather than behind it — and at rest the peek is all wall and no gap. */
   /* Same, and read by the same press. See the note on .hn-floor--feed. */
@@ -2842,16 +2863,17 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
     box-sizing: border-box;
     background: var(--bg);
   }
-  /* The dissolve above it. Sized to the band so the two read as one object
-     with a soft top edge rather than a bar with a gradient stuck on. */
-  .hn-foot::before {
-    content: '';
-    position: absolute;
-    left: 0; right: 0; bottom: 100%;
-    height: 26px;
-    background: linear-gradient(to top, var(--bg), transparent);
-    pointer-events: none;
-  }
+  /* ── No dissolve above it, 2026-09-27 ─────────────────────────────────
+     A 26px gradient from the page colour to clear stood on the band's top
+     edge from the day it was built, so a wall of covers or a record
+     mid-scroll read as continuing under it. It came off the book on
+     2026-09-20 (rows with hairlines between them, and 26px of the last row
+     going grey for no reason), off the beacon on 2026-09-27 (it was a third
+     of the covers under a visitor's chevron), and off the card and the inbox
+     the same afternoon — Miyel: "no fade on footer bar, just a split cut off
+     like feed and ID", then "take the fade off the card and inbox too." The
+     band is a hard edge everywhere on the cross now: what runs under it is
+     cut, not dissolved. */
   /* Down it goes, with no delay: the bar is on its way up on the same frame
      and nothing should be in the way of it.
 
@@ -2867,13 +2889,6 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .hn[data-waving] .hn-foot,
   .hn--typing .hn-foot { transform: translateY(100%); transition-delay: 0s; }
 
-  /* Except over the book and its feed (Miyel, 2026-09-20). A dissolve is for
-     a floor whose content runs off the bottom edge and should read as
-     continuing — a wall of covers, a record mid-scroll. This pane ends in
-     rows with hairlines between them, and a soft top edge over a hard line
-     is 26px of the last row going grey for no reason anybody can name.
-     Pane 2 is the book; see the constants in HomeNav.js. */
-  .hn[data-pane="2"] .hn-foot::before { display: none; }
   .hn-foot-stop {
     flex: 1 1 0;
     min-width: 0;
@@ -3838,29 +3853,26 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
    beacon"). The row gap above it is the screen's 22; this is the rest, and it
    is on the control rather than in the gap because the gap is also what holds
    the name off the cover, which wants to stay where it is. */
-/* The child combinator matters: the calling card's own two words wear
-   `.ln-onward` as well, and they are inside it rather than in this grid. The
-   way in is the grid's own child, and this is only ever about the way in. */
+/* The child combinator is from when a visitor's row hung two `.ln-onward`
+   words inside it (gone 2026-09-27); it is harmless and keeps this about the
+   way in, which is the grid's own child. */
 .hn-pane--home .hn-screen > .ln-onward {
   grid-column: 1 / -1;
   grid-row: 3;
-  /* ── The same hairline, and in the same place ──────────────────────────
+  /* ── The hairline ──────────────────────────────────────────────────────
      Miyel, 2026-09-19: "we should do the hairline above start a listen as
-     well." The two versions of this slot are one shape at two contents —
-     the keeper gets a way in, a visitor gets whose journal this is — and a
-     rule over one of them and not the other makes them two different
-     floors to anybody who has seen both.
+     well." It matched the rule over a visitor's row in this same slot, and
+     the spacing was copied from that row so the line landed on the same
+     pixel whoever was looking. The row is gone (2026-09-27; a visitor's
+     slot is empty now) and the keeper's rule stays where it was: the 38
+     this used to take was the way in hanging further from the record, and
+     the line does that job — the words sit below a rule instead of below
+     air.
 
-     Which is why the spacing is copied from `.calling` rather than kept:
-     same row, same margin above the line, so the line lands on the same
-     pixel whoever is looking. The 38 this used to take was the way in
-     hanging further from the record, and the line does that job now — the
-     words sit lower than they did, below a rule instead of below air.
-
-     Full width for the same reason the calling card is: the line runs the
-     record's left edge to the right edge of the past column, and a rule
-     only as wide as two words would be an underline for them. The words
-     stay centred, because .ln-onward already centres its own contents. */
+     Full width: the line runs the record's left edge to the right edge of
+     the past column, and a rule only as wide as two words would be an
+     underline for them. The words stay centred, because .ln-onward already
+     centres its own contents. */
   display: flex;
   justify-content: center;
   width: 100%;
@@ -3944,62 +3956,6 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
    half-bright. */
 .ln-onward:hover .hn-go-say,
 .ln-onward:active .hn-go-say { color: var(--ink); }
-/* The visitor's answer stands in the keeper's slot — same row, same column
-   span, and never on screen at the same time as it. Its own margin because it
-   is two lines rather than one and the same 38 under a taller object puts it
-   into the down caret on a short phone. */
-.hn-pane--home .calling {
-  grid-column: 1 / -1;
-  grid-row: 3;
-  /* The row runs the width of the composition above it: the face lines up
-     with the record's left edge and Send with the right edge of the past
-     column, which is what makes it read as the foot of the same object rather
-     than a thing floating under it.
-
-     Capped against the screen as well as the row. The row spans two auto
-     columns sized by the record and the past beside it, and a name longer
-     than both would widen them rather than folding — so the cap is the
-     viewport less this screen's two 24px gutters. */
-  width: 100%;
-  max-width: min(100%, calc(100vw - 48px));
-  /* Room over the rule for the top half of the circle that straddles it, the
-     same as the keeper's slot takes. */
-  margin: clamp(46px, calc(var(--hn-h) * 0.075), 62px) auto 0;
-  /* ── A hairline above it ───────────────────────────────────────────────
-     From Miyel's own mock-up of this floor, f6, drawn 2026-09-17. The row
-     was arrived at independently two days later — the same two glyphs in
-     the same order — and this line was the one thing it was missing.
-
-     It is the only rule on this floor and it earns that by separating two
-     subjects rather than decorating one: above it is the record, below it
-     is the person whose record it is. Which is also why it is not a box.
-     It divides where an outline would enclose, and nothing on this floor
-     is enclosed.
-
-     A border rather than a child, because the row already spans exactly the
-     width the line wants: the record's left edge to the right edge of the
-     past column. */
-  /* ── Only as long as the words, 2026-09-22 ─────────────────────────────
-     Miyel: "remove extra little hairline after send." Full width, the rule
-     ran on past both words, and a word ends a line better than a stub of
-     line does. So it is drawn as a child and stops under Add and under Send:
-     40px into each, which the words' own ground covers (both are wider than
-     that), so what shows is the two equal stretches between them and the
-     face and nothing outside. The row keeps its width for the grid. */
-  border-top: 0;
-  /* And the bottom half under it. The circle is out of the flow, so this is
-     the whole of what the row occupies below the rule — half of 72. */
-  padding-top: 36px;
-}
-.hn-pane--home .calling::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 50%;
-  width: calc(2 * (66px + 40px));
-  transform: translate(-50%, -50%);
-  border-top: 1px solid var(--border);
-}
 /* The empty beacon has neither a cover nor a name — it has one quiet line, and
    it spans. */
 .hn-pane--home .beacon-quiet { grid-column: 1 / -1; grid-row: 1; }
@@ -4072,11 +4028,11 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
    down to this row is transparent: the colour behind the note is `--bg`
    itself, in either theme, and never a panel that would show as a patch.
 
-   Both slots wear it, because both wear the rule — the keeper's way in and a
-   visitor's calling card are one shape at two contents. */
-/* The ♪ that sat in the break in the rule is gone from both slots now: the
-   keeper's is a ring with two words in it and a visitor's is the keeper's
-   face, and a mark over a mark is a mark explaining one. */
+   The keeper's way in wears it. A visitor's row wore it too, until the row
+   went on 2026-09-27; nothing stands in a visitor's slot now. */
+/* The ♪ that sat in the break in the rule is gone: the keeper's slot is a
+   ring with two words in it, and a mark over a mark is a mark explaining
+   one. */
 
 
 /* ── The picker gets the whole screen back ─────────────────────────────────

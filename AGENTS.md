@@ -292,8 +292,6 @@ do not say what they hold.
 
 - `Bookplate.js` — context holding the journal's own details (name, keeper,
   portrait), read once on the server and handed down.
-- `CallingCard.js` — the keeper's face and name at the foot of the beacon for
-  a visitor, with Send and Add.
 - `Pitch.js` — the pane a visitor sees in place of the desk: what this is and
   where to get one.
 - `KeeperTools.js` — the owner's ··· menu on an entry or the card.

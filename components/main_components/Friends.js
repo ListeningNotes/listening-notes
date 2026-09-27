@@ -312,9 +312,11 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null }
   }, []);
 
   // ── An address that arrived in the link ─────────────────────────────────
-  // Somebody reading another journal pressed Add there. That journal cannot
-  // write to this copy, so it sends the reader home with the address in hand
-  // and this files it. See CallingCard.js for the other end.
+  // Somebody reading another journal pressed Add there — a door copies on
+  // 1.36.0 and earlier still have at the foot of their beacon (gone from
+  // this copy 2026-09-27). That journal cannot write to this copy, so it
+  // sends the reader home with the address in hand and this files it. Kept
+  // because those links still arrive.
   //
   // Offered, not filed: a link that writes the moment it opens is a link
   // anybody could send you, and the one promise this book makes is that a

@@ -295,6 +295,12 @@ wall's own search bar. A feed is rows and forty pixels of a row reads as a
 row; forty pixels of cover under a bar does not. Miyel, on the seam
 being gone: "i don't even mind that it scrolls seamless from top to bottom,
 that was something i wanted to address anyway."
+**A visitor's beacon has the peek and the keeper's does not, 2026-09-27.**
+The room the visitor row left goes to the wall's top: signed out, the first
+covers show under the chevron the way the feed shows under the faces. It is
+real now because the wall's bar stands at the foot of the phone screen; on
+the 20th the sliver was bar and band. The keeper's floor stays full and
+unmoved — Miyel's pick over a tease that would have put the mark 30px higher.
 
 What follows is the 2026-09-07 reasoning, which is why there was ever an
 exception: proximity on the long pane argued with the thumb and came off
@@ -318,22 +324,15 @@ rest step down and the oldest goes. All 0.7s on the site's curve, except the
 flight, which is crossing into somewhere else. A fourth movement on that floor
 gets a name from Miyel and that clock, or it reads as a different room.
 
-**A visitor's two controls stand at the foot of the beacon, 2026-09-19.**
-Send and Add were beside the name on the identity card from the day it was
-built. They are on the landing floor now, in the slot the owner's way in
-stands in — a stranger lands on the beacon and reaches the card by choosing to
-— and the card carries no copy of them. One pair of controls, one place;
-`CallingCard.js`.
-
-**Add hands the reader home rather than copying, when it can, 2026-09-19.**
-A journal cannot write to a reader's address book — different origin — but it
-is often told where that book is, because every link out of a copy carries its
-keeper's address. Knowing, Add links home with this address in it and that copy
-files it, after confirming; not knowing, it copies as before. The journal never
-asks for the address and never guesses: asking would be learning who reads it.
+**A visitor's floor holds nothing under the record, 2026-09-27.** Add, Send
+and the keeper's face are off the beacon for anybody who is not its keeper;
+the row went whole and nothing fills the slot. A page served by another copy
+cannot write to a reader's book or post a send, so no control implying it
+ships. One way to add someone: copy their address, paste it in your own book.
+A visitor reads; the keeper is on the card and nowhere else (archive: the row).
 
 **Nothing on the beacon floor is a box, 2026-09-19.** Every control there is a
-glyph and a mono capital, a visitor's included. Four shapes were tried in one
+glyph and a mono capital. Four shapes were tried in one
 day — a filled pill, the entry editor's round flag, an entry's squared tag, a
 hairline between two words — and each was a box in a room that has none. The
 tag shapes are an entry's and stay an entry's.

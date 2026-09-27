@@ -653,3 +653,35 @@ because a popup is not a sheet that pulls down. The sheet from a friend's
 doors was also the flow that had broken, being a screen of its own with a
 pre-filled state of its own; under the popup it is only the right square
 arriving full.
+
+## The beacon — a visitor's row, 2026-09-19 to 2026-09-27
+
+The current rule is in DECISIONS.md, Structure: *A visitor's floor holds
+nothing under the record*.
+
+For eight days the slot under the record held, for a visitor, the keeper's
+face in a circle on the rule with Add and Send either side (`CallingCard.js`).
+The two entries that stood for it:
+
+**A visitor's two controls stand at the foot of the beacon, 2026-09-19.**
+Send and Add were beside the name on the identity card from the day it was
+built. They are on the landing floor now, in the slot the owner's way in
+stands in — a stranger lands on the beacon and reaches the card by choosing to
+— and the card carries no copy of them. One pair of controls, one place;
+`CallingCard.js`.
+
+**Add hands the reader home rather than copying, when it can, 2026-09-19.**
+A journal cannot write to a reader's address book — different origin — but it
+is often told where that book is, because every link out of a copy carries its
+keeper's address. Knowing, Add links home with this address in it and that copy
+files it, after confirming; not knowing, it copies as before. The journal never
+asks for the address and never guesses: asking would be learning who reads it.
+
+Reversed 2026-09-27 on Miyel's brief of the 26th. Neither word could do what
+it said: a page served by their copy cannot write to your book and cannot
+post a send, so Add copied an address and Send was a label for an errand
+that happens on your own copy — "which is exactly why pressing Add doesn't
+feel like adding." The face went with them on her call the next day: the
+only evidence of the person is the card. The `?add=` door home stays on the
+receiving side (Friends.js) because copies on 1.36.0 and earlier still send
+readers through it, and `knownHere` in return_address.js is now unread.

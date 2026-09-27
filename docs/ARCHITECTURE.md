@@ -195,8 +195,7 @@ The furniture — visual pieces
     main_components/           Everything on the public side
       HomeNav.js               The cross itself — on a phone a rail of panes with the band at the foot (Card, Beacon, Friends, Inbox for the keeper; Card, Beacon, About for a visitor); on a desk an open book — the spine on the left, the journal on the right, the fold, and a control in the spine's header to turn between its two pages
       About.js                 One face of the turning pane: the card, then the writing under it, in one scroll
-      IdentityCard.js          The ID: the portrait full width and square — the same object an entry's album art is — then the name, three counts in the flags' colours, and the pinned record. Send and Add left it for CallingCard on 2026-09-19. This is the About page
-      CallingCard.js           Whose journal this is, at the foot of the beacon, for a visitor: face, name, Send and Add — the card's own row at the size the beacon floor can afford
+      IdentityCard.js          The ID: the portrait full width and square — the same object an entry's album art is — then the name, three counts in the flags' colours, and the pinned record. Send and Add left it on 2026-09-19, and left the beacon too on 2026-09-27; a visitor sees the keeper here and nowhere else. This is the About page
       IdentificationCardEditor.js  Editing the card in place
       ListeningBeacon.js       The beacon — what is playing, or last played
       Journal.js               The wall of covers, with its search, filters and sort
