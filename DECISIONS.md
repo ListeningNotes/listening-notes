@@ -603,7 +603,7 @@ source of one.
 **The canonical instance must not become the reference, 2026-09-15.** Miyel's
 copy is the one with everything connected, so it shows states nobody else's
 does — and a feature checked only against it is a feature checked against the
-best case. The default is what June sees. This is exactly how the Last.fm
+best case. The default is what a beta tester sees. This is exactly how the Last.fm
 setup screen survived two failed installs, and how Last.fm itself survived a
 week past the point where nobody could connect one.
 
@@ -1076,8 +1076,8 @@ grows a step, ending at the plain code — something scannable always ships.
 **Pressed on the server, judged by jsQR, one file with its ink flipped for
 the dark page.** The judge is the strictest reader on purpose: what passes
 it scans on any phone, and the answer is the same whatever phone the owner
-holds — Safari has no reader of its own, which is how June's copy got the
-plain code. The dark page's file is the light one with pure black and white
+holds — Safari has no reader of its own, which is how a beta tester's copy got
+the plain code. The dark page's file is the light one with pure black and white
 swapped at request time; the photo is banded so it never holds either.
 
 **A code drawn by an older build is re-pressed on the owner's next visit;
@@ -1200,7 +1200,7 @@ Adding stays silent; the wave is an extra press and Not now is not a lesser
 path. No Wave back (the brief had one; Miyel cut it): adding somebody from
 their wave brings up the same offer, which is the reply. A copy too old to
 take a wave says so and the add stands — it never waits on the wave.
-**The inbox says "June waved" and never "added you"** (Miyel, 2026-09-23):
+**The inbox says "[name] waved" and never "added you"** (Miyel, 2026-09-23):
 the wave is the quiet codeword for "I added you, add me back", and spelling
 it out was offered and turned down.
 
@@ -1304,7 +1304,7 @@ where one cannot be. This reverses *the sender opens; it does not display*
 of 2026-09-14, one day old; the argument it replaced is in the archive.
 
 **Send and credit in the machinery; "put on" where a reader sees it,
-2026-09-22.** The entry prints *Put on by Ethan*, the correction panel asks
+2026-09-22.** The entry prints *Put on by [name]*, the correction panel asks
 the same, and a person's page says what they have put you onto. The inbox,
 the send sheet, the quiet toggle, the ··· tool's *Credit* and every column
 keep their words: a send is an event, a put-on is the credit it leaves. Why:
@@ -1366,8 +1366,8 @@ journals. Do not put the IP keying back.
 **Replies come home by asking, and a journal will say which comments came
 from a given journal, 2026-09-22.** `/api/public/replies?to=` answers with the
 approved replies to comments left from that address, and the keeper's own
-later comments on the same entry — Miyel's call, on seeing Ethan answer with a
-comment of his own. The commenter's journal was the keeper's to see until
+later comments on the same entry — Miyel's call, on seeing a beta tester
+answer with a comment of their own. The commenter's journal was the keeper's to see until
 then; the name was already public. A keeper is known by the address the
 wristband stamps on their comment, or by name before that.
 
@@ -1405,7 +1405,7 @@ journal to the next. Per browser, not per person; the cost is one paste.
 from how somebody got there, 2026-09-14.** Every link out of a copy to
 another journal carries the keeper's name and address (`?from=` and `?as=`,
 owner surfaces only); the journal landed on keeps them as the return
-address. A keeper who arrived that way sees *Sending as Blue · his journal*
+address. A keeper who arrived that way sees *Sending as [name] · their journal*
 with a way to change it; anyone else is asked for a name and nothing else —
 no journal field, because somebody without a copy has nothing to put there.
 
@@ -1521,7 +1521,7 @@ does not: a tap outside would throw away what has been typed. Both keep Escape.
 
 **One send sheet, three doors, 2026-09-26.** Thing on the left, person on the
 right, an arrow between them, the order fixed: it reads as the sentence it is
-(Shrines → Lacey) and person-first would read as Lacey sending it. Opened from
+(Shrines → a friend) and person-first would read as the friend sending it. Opened from
 an entry's tools, a track row mid-listen, or a person in the book, and nothing
 about it varies by door except which square starts full. No door on the home
 pane (Miyel). It replaced the two-step sheet of 2026-09-19/21; the archive has it.
