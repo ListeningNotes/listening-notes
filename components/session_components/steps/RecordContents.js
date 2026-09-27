@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 'use client';
 import { useEffect, useState } from 'react';
-import { Heart } from '@phosphor-icons/react';
+import { EnvelopeSimple, Heart } from '@phosphor-icons/react';
 import StarRating from '../../main_components/StarRating';
 
 // What the next forty minutes are.
@@ -57,10 +57,15 @@ function runtimeOf(tracks) {
 // what would otherwise replay it.
 const arrived = new Set();
 
+// `onSend` is the one control on a row, 2026-09-26: an envelope at its end
+// that opens the send sheet with that song in it (Miyel's one-send-sheet
+// brief). A track rather than the album, because mid-listen there is no entry
+// yet and "hear this now" dies if it waits for the writing; the record keeps
+// being sent from the finished entry. Without it the rows carry no control.
 export default function RecordContents({
   tracks, tracksLoading, facts = {},
   trackRatings = {}, trackFavorites = {},
-  onPick, onNext, onLookAgain, onHandTracks,
+  onPick, onNext, onLookAgain, onHandTracks, onSend = null,
 }) {
   const list = tracks || [];
   const key = list.length ? `${list.length}:${list[0]?.title}` : '';
@@ -266,6 +271,23 @@ export default function RecordContents({
                 ) : width ? (
                   <span className="ses-contents-bar" style={{ width }} aria-hidden="true" />
                 ) : null}
+                {/* Send this song, at the end of the row. An envelope and not
+                    a paper plane, as the entry's own Send is (KeeperTools,
+                    2026-09-17): a letter to one person. Faint, so a list you
+                    can read without deciding anything stays one; the touch
+                    target comes from padding with a matching negative
+                    margin, so the eye sees only the mark. */}
+                {onSend && (
+                  <button
+                    type="button"
+                    className="ses-contents-send"
+                    onClick={() => onSend(t)}
+                    aria-label={`Send ${t.title} to somebody`}
+                    title="Send this song"
+                  >
+                    <EnvelopeSimple size={16} weight="regular" aria-hidden="true" />
+                  </button>
+                )}
               </div>
             </li>
           );

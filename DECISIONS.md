@@ -1513,18 +1513,44 @@ is whether the thing has a *place* on the page.
 because that is the platform's habit and nothing is lost. A form in the page
 does not: a tap outside would throw away what has been typed. Both keep Escape.
 
-**A sheet that asks two things is two screens, 2026-09-19.** The send sheet
-picks a record and writes a message; both at once is a form you read before
-you can start. The list at nearly full height, then the message at a third of
-it — the change of size is what says they are steps. **And no × on a sheet
-that pulls down:** it is a mark for a gesture the site already trusts you to
-know, and it sits where the thing worth pressing should be.
+**One send sheet, three doors, 2026-09-26.** Thing on the left, person on the
+right, an arrow between them, the order fixed: it reads as the sentence it is
+(Shrines → Lacey) and person-first would read as Lacey sending it. Opened from
+an entry's tools, a track row mid-listen, or a person in the book, and nothing
+about it varies by door except which square starts full. No door on the home
+pane (Miyel). It replaced the two-step sheet of 2026-09-19/21; the archive has it.
 
-**Either half is the step, 2026-09-21.** Whichever of the two is still a
-question takes the screen: a wall of covers coming from the book, a wall of
-faces coming from a record's tools. The half you arrived knowing is never a
-step — a wizard that makes you press through an answer you have already given
-— and the screen you write on is the same screen by either door.
+**The send is the one popup in the app, 2026-09-26.** Centred, not rising
+from the foot, and it keeps an ×: it is the only screen about two things
+meeting rather than one thing you are doing, and neither of the two has a
+place on the page the other could unfold in. The rule above holds for
+everything else.
+
+**The blank square is the instruction, 2026-09-26.** No title, no mode name:
+whichever square is empty is the whole prompt, and a blank borrows the corner
+radius of what it waits for — 8 for a sleeve, 18 for a face. The arrow is the
+readiness signal, faint until both are full, instead of a disabled button that
+would have to explain itself. A tap on a full square empties it.
+
+**Albums and songs are sendable from everywhere, 2026-09-26.** The shelf
+borrows the session's picker — search, recent, albums, tracks — from every
+door, the friends pane included; restricting songs in one place would be the
+inconsistency the one sheet deletes. A song send carries `submissions.song`
+(migration 026) and an older copy files it as the album. Mid-listen only a
+track is sendable: there is no entry yet, and "hear this now" dies waiting.
+
+**The sent state is a letter seen from the front, with no journal address,
+2026-09-26.** The record as a perforated stamp, ON ITS WAY TO, the name, the
+record; no Done, no ×, it holds a beat and leaves on its own. The shape will
+invite an address forever and it does not get one. It is the only envelope in
+the flow: during the choosing it would be decoration.
+
+**The send button and the credit toggle are existing pieces, reused,
+2026-09-26.** Full width, black, an envelope, Nunito bold in sentence case,
+*Send to <name>*; the switch as built, with new words. Not mono, not
+uppercase, not a paper plane. **And a send still needs a message:** *Add a
+message?* is the label's phrasing, not an offer — every copy's inbox refuses a
+send without one, and a record arriving with nothing said about it is a link.
 
 ---
 

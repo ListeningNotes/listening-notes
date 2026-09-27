@@ -626,3 +626,30 @@ touched make it a record of when you last poked something rather than of when
 you listened; and recency already has three homes — the beacon's last logged,
 the recents under it, and friends' feeds. With the order fixed, the fan took a
 precise meaning with it: more than one entry, a record you have come back to.
+
+## Things open in the page — the send sheet as two screens, 2026-09-19 to 2026-09-26
+
+Current rule: DECISIONS, Things open in the page, not over it ("One send
+sheet, three doors" and the entries after it).
+
+The keeper's send was a sheet rising from the foot with no ×, in two steps.
+Two entries carried it. **A sheet that asks two things is two screens,
+2026-09-19:** the send sheet picks a record and writes a message; both at
+once is a form you read before you can start. The list at nearly full height,
+then the message at a third of it — the change of size is what says they are
+steps. And no × on a sheet that pulls down: it is a mark for a gesture the
+site already trusts you to know, and it sits where the thing worth pressing
+should be. **Either half is the step, 2026-09-21:** whichever of the two is
+still a question takes the screen — a wall of covers coming from the book, a
+wall of faces coming from a record's tools. The half you arrived knowing is
+never a step, and the screen you write on is the same screen by either door.
+
+Miyel's brief of 2026-09-26 replaced both with one centred popup: two squares
+and an arrow, the blank square the instruction, the same markup from every
+door. What the two-screen sheet got right survives — the known half is never a
+step, and choosing and writing never share a screen — but as a shelf under
+the two squares rather than as screens of different sizes. The × came back
+because a popup is not a sheet that pulls down. The sheet from a friend's
+doors was also the flow that had broken, being a screen of its own with a
+pre-filled state of its own; under the popup it is only the right square
+arriving full.

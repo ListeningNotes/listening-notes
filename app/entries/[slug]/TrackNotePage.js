@@ -440,6 +440,9 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
             album_art: entry.album_art || '',
             collection_id: entry.collection_id || '',
             slug: entry.slug,
+            // The song, so the sheet draws it dog-eared and the send says
+            // which track (migrations/026_track_sends.sql).
+            song: entry.song || '',
           }}
         />
       )}

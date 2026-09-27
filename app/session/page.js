@@ -47,6 +47,7 @@ import TrackNotes from '../../components/session_components/steps/TrackNotes';
 import AlbumNotes from '../../components/session_components/steps/AlbumNotes';
 import SessionPreview from '../../components/session_components/steps/SessionPreview';
 import Trouble from '../../components/session_components/Trouble';
+import SendSheet from '../../components/main_components/SendSheet';
 import TrackNotePage from '../entries/[slug]/TrackNotePage';
 import { useBeforeLeaving } from '../../components/main_components/LayerEntry';
 
@@ -100,6 +101,17 @@ export default function SessionPage() {
   const swipe = useRef(null);
 
   const s = useListeningSession({ step });
+
+  // ── Sending a song from the tracklist, 2026-09-26 ───────────────────────
+  // The envelope on a track row (RecordContents) opens the one send sheet
+  // with that song in the left square: the record on the desk, and the
+  // track's title as the song. A track and not the album, because there is no
+  // entry yet and "hear this now" dies if it waits for the writing; the album
+  // keeps being sent from the finished entry. The session stays open behind
+  // it — the sheet is a popup over this page and the draft goes on saving
+  // itself underneath, so nothing is saved, paused or lost by sending.
+  const [sendingTrack, setSendingTrack] = useState(null);
+  function sendTrack(track) { setSendingTrack(track); }
 
   // ── The note comes up to meet the keyboard, 2026-09-22 ──────────────────
   // Miyel: "it still feels weird when I open the keyboard — it glitches just
@@ -657,6 +669,7 @@ export default function SessionPage() {
                   onNext={() => goToStep(2)}
                   onLookAgain={s.lookAgain}
                   onHandTracks={s.takeHandTracks}
+                  onSend={sendTrack}
                 />
               )}
               {step === 1 && (
@@ -720,6 +733,23 @@ export default function SessionPage() {
         says={s.trouble?.says}
         because={s.trouble?.because}
         onClose={() => s.setTrouble(null)}
+      />
+
+      {/* The send sheet, with the song from the row that was pressed. A
+          popup over the whole page (it portals onto the body), so it is
+          centred on the screen and not on the layer. */}
+      <SendSheet
+        open={Boolean(sendingTrack)}
+        onClose={() => setSendingTrack(null)}
+        record={sendingTrack ? {
+          album: s.albumInput,
+          artist: s.artistName,
+          year: s.year || '',
+          album_art: s.albumArt || '',
+          collection_id: s.collectionIdRef?.current || '',
+          song: sendingTrack.title || '',
+        } : null}
+        foot="Your session stays open behind this"
       />
     </div>
   );

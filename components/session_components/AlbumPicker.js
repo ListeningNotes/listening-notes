@@ -110,7 +110,12 @@ function sinceLabel(iso) {
 // in the Songs section, which starts a track note rather than a listen (the
 // track-notes brief). Without it there is no Songs section, and the picker is
 // exactly what it was.
-export default function AlbumPicker({ onPick, onResume, onPickSong = null, inline = false }) {
+//
+// `noDrafts` is the picker inside the send sheet, 2026-09-26: the same search,
+// recent, albums and tracks, and none of the unfinished listens — a draft is
+// a listen you walked away from, and it has nothing to do with handing a
+// record to somebody. The list is neither asked for nor drawn.
+export default function AlbumPicker({ onPick, onResume, onPickSong = null, inline = false, noDrafts = false }) {
   const [typed, setTyped]       = useState('');
   const [results, setResults]   = useState([]);
   // The songs the same search found. Albums above songs, always, so the
@@ -193,6 +198,7 @@ export default function AlbumPicker({ onPick, onResume, onPickSong = null, inlin
   // 2026-09-16 for the same reason, that the listen and the thing underneath
   // it are one route and nothing else would tell it.
   useEffect(() => {
+    if (noDrafts) return undefined;
     let alive = true;
     const ask = () => {
       fetch('/api/drafts')
@@ -217,7 +223,7 @@ export default function AlbumPicker({ onPick, onResume, onPickSong = null, inlin
       window.removeEventListener(PENDING_EVENT, ask);
       window.removeEventListener(SAVED_EVENT, ask);
     };
-  }, []);
+  }, [noDrafts]);
 
   // ── Anywhere else is the no ──────────────────────────────────────────────
   // Miyel, 2026-09-18: "clicking away anywhere on the screen should cancel
@@ -776,7 +782,7 @@ export default function AlbumPicker({ onPick, onResume, onPickSong = null, inlin
             </>
           )}
 
-          {drafts.length > 0 && !typed.trim() && (
+          {!noDrafts && drafts.length > 0 && !typed.trim() && (
             /* ── Drafts, as the same squares a search gives ────────────────
                They were rows — a small cover, a name, and the step they were
                left on — under a heading, beside a grid of album art. Two

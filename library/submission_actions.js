@@ -9,11 +9,12 @@ import database from './database_connection.js';
 export async function save_submission({
   album, artist, year, note, submitter_name,
   album_art, collection_id, sender_url, quiet = false, sender_entry = null,
+  song = null,
 }) {
   const result = await database`
     INSERT INTO submissions (
       album, artist, year, note, submitter_name,
-      album_art, collection_id, sender_url, quiet, sender_entry, status
+      album_art, collection_id, sender_url, quiet, sender_entry, song, status
     )
     VALUES (
       ${album.trim()},
@@ -29,6 +30,9 @@ export async function save_submission({
       -- of one at all (migrations/016_sender_entry.sql). A slug, never an id:
       -- it is theirs, and it only means anything beside sender_url.
       ${sender_entry?.trim() || null},
+      -- The song, when the send is one rather than a record (migrations/026).
+      -- Empty is an album send, as every send was before.
+      ${song?.trim() || null},
       'pending'
     )
     RETURNING id, album, artist, year, submitter_name, created_at
@@ -45,7 +49,7 @@ export async function pull_submissions() {
   return await database`
     SELECT s.id, s.album, s.artist, s.year, s.note, s.submitter_name,
            s.album_art, s.collection_id, s.sender_url, s.status, s.created_at,
-           s.quiet, s.sender_entry,
+           s.quiet, s.sender_entry, s.song,
            s.entry_id, e.slug AS entry_slug, e.album AS entry_album,
            e.posted_at AS entry_posted_at
     FROM submissions s

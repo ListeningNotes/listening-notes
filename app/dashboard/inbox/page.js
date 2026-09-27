@@ -744,18 +744,26 @@ export default function Inbox({ layered = false, inPane = false }) {
                               {/* New is a property of the row, the way unread
                                   is in mail. A dot, not a tab. */}
                               <span className={'ib-newdot' + (unopened(sent) ? '' : ' ib-newdot--off')} aria-hidden="true" />
-                              <span className="ib-rart">
+                              {/* A song send (migrations/026) wears the folded
+                                  corner a track note wears on the wall, and
+                                  is named by the song, with the record it is
+                                  off on the line under. Start a listen still
+                                  starts the record. */}
+                              <span className={'ib-rart' + (sent.song && sent.album_art ? ' ln-fold' : '')}>
                                 {sent.album_art
                                   ? <img src={sent.album_art} alt="" loading="lazy" />
                                   : <span className="ib-nocover" aria-hidden="true">&#9834;</span>}
+                                {sent.song && sent.album_art && (
+                                  <span className="ln-fold-flap" aria-hidden="true"><img src={sent.album_art} alt="" /></span>
+                                )}
                               </span>
                               <span className="ib-rsaid">
-                                <span className="ib-rttl">{sent.album}</span>
+                                <span className="ib-rttl">{sent.song || sent.album}</span>
                                 {/* Open, the state is the actions below, so
                                     the line goes back to being about the
                                     record. */}
                                 <span className="ib-rsub">
-                                  {sent.artist}
+                                  {sent.song ? `${sent.album} · ${sent.artist}` : sent.artist}
                                   {open
                                     ? (sent.year ? ` · ${sent.year}` : '')
                                     : ` · ${became(sent)}`}

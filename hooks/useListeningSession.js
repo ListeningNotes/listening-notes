@@ -707,6 +707,9 @@ export function useListeningSession({ step }) {
     // Timer. The ref itself, so a caller reads it at the moment it asks
     // rather than being re-rendered every second to be told.
     elapsedRef,
+    // Apple's id for the record on the desk, for a send that starts from a
+    // track row (the send sheet) — the same ref the tracklist is fetched by.
+    collectionIdRef,
     // Functions
     beginListen,
     lookAgain,

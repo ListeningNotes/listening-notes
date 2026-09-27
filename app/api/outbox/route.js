@@ -55,7 +55,7 @@ export async function POST(request) {
     }
   }
 
-  const { person_id, album, artist, year, note, album_art, collection_id, quiet, sender_entry } = body;
+  const { person_id, album, artist, year, note, album_art, collection_id, quiet, sender_entry, song } = body;
 
   // The same three the visitor form insists on, checked here for the same
   // reason it checks them: a route states its own rules. A send with no note
@@ -77,6 +77,9 @@ export async function POST(request) {
     const result = await send_record({
       to: person.address,
       album, artist, year, note, album_art, collection_id, quiet, sender_entry,
+      // A song rather than a record, when the sheet was opened on one. The
+      // recipient's route decides what to keep of it.
+      song: typeof song === 'string' ? song.trim() : '',
     });
 
     // A refusal at the far end is not this copy failing, so it answers 200

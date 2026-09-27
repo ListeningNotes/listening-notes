@@ -959,6 +959,9 @@ textarea.st-field { resize: vertical; min-height: 96px; }
   display: inline-flex; align-items: center; justify-content: center; color: var(--ink-faint);
 }
 .ib-rart img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* A song send wears the fold (.ln-fold, base.css); at 46px the flap's blur
+   is the small cover's, and the fold's cut corner takes the radius with it. */
+.ib-rart.ln-fold { --fold-blur: 3px; border-radius: 0; }
 /* ── What came back, 2026-09-22 ── the envelope a sent record wears
    everywhere else, in the cover's corner: this record went out from here and
    came back. Inside the corner, because the cover clips what overhangs it. */
@@ -1870,15 +1873,13 @@ a.pn-item-album:hover { text-decoration: underline; text-underline-offset: 3px; 
 .sb-quiet:hover { color: var(--ink); }
 
 
-/* ── The send sheet ────────────────────────────────────────────────────────
-   Handing a record to somebody in the book, from a row in it or from a
-   record's own tools. components/main_components/SendSheet.js says why it is
-   allowed to be a sheet when almost nothing else here is.
-
-   It rises from the foot the way the owner's pages do, because that is what a
-   thing you summoned and will dismiss does on this site. It is never full
-   height: the record or the person the send is about stays visible above it,
-   which is what stops it reading as a page you navigated to. */
+/* ── The rising sheet, and the send popup's dim ────────────────────────────
+   .sn-scrim, .sn-pull and .sn-sheet were the send sheet's until 2026-09-26,
+   when the send became a centred popup (further down, .sn-room onward). The
+   three stay as they are because Give and Wave borrow them: a sheet rising
+   from the foot the way the owner's pages do, never full height, with a
+   strip across its top to pull it back down. The scrim is shared by all
+   three — one dim, whatever is standing in it. */
 .sn-scrim {
   position: fixed; inset: 0; z-index: 260;
   background: rgba(26, 26, 26, 0.38);
@@ -2040,97 +2041,201 @@ a.pn-item-album:hover { text-decoration: underline; text-underline-offset: 3px; 
 }
 .wv-not:hover { color: var(--ink-soft); }
 .gv-act:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; border-radius: 6px; }
-/* The close, in a corner. It was centred at the top for a day, which read as
-   part of the sheet's own content and sat over the record you came to look at
-   — every other close on this site is in a corner (Miyel, 2026-09-17). Right,
-   because that is the corner this site's tools live in. */
+/* ── The send popup, 2026-09-26 ────────────────────────────────────────────
+   One send sheet (components/main_components/SendSheet.js): a thing, an
+   arrow, a person, centred on the screen — the one popup in the app, and
+   why it is allowed to be one is at the top of that file. It replaced the
+   two-step sheet that rose from the foot.
+
+   The room is the part of the screen you can see: the sheet insets it to
+   visualViewport every time, so the popup stays centred in what is left when
+   a keyboard is up rather than sitting under it. The room takes no presses
+   of its own; what stands in it does. */
+.sn-room {
+  position: fixed; left: 0; right: 0;
+  top: var(--sn-top, 0px);
+  height: var(--sn-room, 100dvh);
+  z-index: 261;
+  display: grid; place-items: center;
+  padding: 16px;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+/* The page's own colour rather than plain white, as Give's sheet is (Miyel,
+   2026-09-22: "can the white match the white of the site"). */
+.sn-popup {
+  position: relative;
+  pointer-events: auto;
+  width: min(100%, 400px);
+  max-height: 100%;
+  box-sizing: border-box;
+  display: flex; flex-direction: column;
+  padding: 22px 20px 20px;
+  background: var(--bg);
+  border-radius: 26px;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.28), 0 0 0 1px var(--border);
+  overflow: hidden;
+  animation: snPop 0.32s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+@keyframes snPop {
+  from { opacity: 0; transform: translateY(10px) scale(0.96); }
+  to   { opacity: 1; transform: none; }
+}
+/* While a square is blank the shelf is a chooser and the popup takes a set
+   height, so the covers or the faces are a screen and not a strip under two
+   squares: most of the room, capped where a phone's worth of popup would
+   stop reading as one. Both full, it is as tall as the message and the
+   button. */
+.sn-popup--picking { height: min(100%, 76dvh, 640px); }
+@media (prefers-reduced-motion: reduce) { .sn-popup { animation: none; } }
+
+/* The close, in the corner every close on this site is in (Miyel,
+   2026-09-17) — right, because that is the corner the tools live in. A popup
+   keeps its ×: a pull is a sheet's gesture, and this is not a sheet. */
 .sn-shut {
-  align-self: flex-end; flex-shrink: 0;
-  width: 36px; height: 36px; margin: -2px -6px 2px 0; padding: 0;
+  position: absolute; top: 10px; right: 10px; z-index: 1;
+  width: 36px; height: 36px; padding: 0;
   display: flex; align-items: center; justify-content: center;
   border: none; border-radius: 10px; background: transparent;
   color: var(--ink-faint); cursor: pointer;
 }
 .sn-shut:hover { color: var(--ink); background: var(--bg-warm); }
-/* ── Step one: the record, and nothing else ───────────────────────────────
-   The sheet is as tall as it is allowed to be while a record is being
-   chosen, so the covers are the screen and not a strip inside a form. It
-   goes back to its own height once one is picked — the two steps are two
-   sizes, which is most of what makes them feel like two steps.
 
-   Top padding rather than the usual 8, so the pull strip has an edge of its
-   own to sit on above the field. */
-.sn-sheet--picking { height: min(88dvh, calc(var(--sn-room, 100dvh) - env(safe-area-inset-top, 0px) - 18px)); }
-.sn-sheet--picking .sn-pick { display: flex; flex-direction: column; flex: 1; min-height: 0; padding-top: 12px; }
-.sn-sheet--picking .af { display: flex; flex-direction: column; flex: 1; min-height: 0; }
-/* The wall takes whatever is left, rather than a share of the screen: this
-   step *is* the list, so there is nothing below it to protect. */
-.sn-sheet--picking .af-results { max-height: none; flex: 1; min-height: 0; }
+/* ── The two squares and the arrow ────────────────────────────────────────
+   Thing on the left, person on the right, the arrow between them pointing
+   right; the order never flips. Each square is one control that does both
+   jobs — blank, it says what it is waiting for and lights the shelf that
+   fills it; full, it shows what is in it and a tap empties it. */
+.sn-pair {
+  flex-shrink: 0;
+  display: grid; grid-template-columns: 1fr auto 1fr;
+  align-items: start; gap: 10px;
+  padding: 6px 6px 0;
+}
+.sn-slot {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  min-width: 0; padding: 0; border: 0; background: none;
+  color: var(--ink); font: inherit; text-align: center; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.sn-slot:focus-visible { outline: none; }
+.sn-slot:focus-visible .sn-slot-box { box-shadow: 0 0 0 2px var(--ink-faint); }
+/* Blank: dashed, in the faint ink, with a + in it. It borrows the corner
+   radius of what it is waiting for — 8, sharp like a sleeve; 18, soft like
+   the rounded-square face — so it says what goes in it before the label is
+   read. --fold-blur is for a song's flap (.ln-fold-flap, base.css). */
+.sn-slot-box {
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+  width: 112px; height: 112px; max-width: 100%;
+  margin-bottom: 8px;
+  box-sizing: border-box;
+  border-radius: 8px;
+  border: 1.5px dashed var(--ink-faint);
+  background: var(--panel);
+  color: var(--ink-faint);
+  overflow: hidden;
+  transition: border-color 0.2s, color 0.2s, background-color 0.2s;
+  --fold-blur: 4px;
+}
+.sn-slot--who .sn-slot-box { border-radius: 18px; }
+/* The blank the shelf is answering, when both are blank: solid and in ink,
+   so the two squares of an empty sheet say which one the covers below fill. */
+.sn-slot--lit .sn-slot-box {
+  border-style: solid; border-color: var(--ink);
+  background: var(--panel-solid); color: var(--ink);
+}
+/* Full: the picture is the square. */
+.sn-slot--full .sn-slot-box {
+  border: 0; background: var(--panel);
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.18);
+}
+.sn-slot--full.sn-slot--who .sn-slot-box { box-shadow: inset 0 0 0 1px var(--border); }
+.sn-slot-box img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+/* A song: the corner cut and the flap folded over it take the radius away,
+   the way a page on the wall has square corners. */
+.sn-slot-box.ln-fold { border-radius: 0; box-shadow: none; }
+.sn-slot-none { position: absolute; inset: 0; background: var(--panel); }
+.sn-slot-name {
+  max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-family: var(--font-display); font-weight: var(--font-display-weight);
+  font-size: 15px; line-height: 1.25;
+}
+.sn-slot-sub {
+  max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: 13px; color: var(--ink-soft);
+}
+.sn-slot-ask {
+  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.2em;
+  text-transform: uppercase; line-height: 1.7; color: var(--ink-soft);
+}
+/* The arrow is the readiness signal: faint while either square is empty, ink
+   when both are full. Instead of a disabled send button, which would have to
+   explain itself. Its top lines up with the middle of the squares. */
+.sn-arrow { margin-top: 45px; color: var(--ink-faint); transition: color 0.25s; }
+.sn-arrow--ready { color: var(--ink); }
+.sn-rule { flex-shrink: 0; height: 1px; margin: 18px 0 14px; background: var(--border); }
 
-/* ── The same step, asking who ────────────────────────────────────────────
-   Coming in from a record's tools the question is the person, and it gets the
-   screen the covers get. The faces are MiniAddressBook's, which everywhere
-   else is one row that scrolls sideways — right in a form, wrong here, where
-   a sideways row in a screenful of nothing hides most of a book off the right
-   edge. So the strip becomes a wall for this one step, and grows: 44px faces
-   in a grid with a whole screen to spend read as a list that has not loaded.
-   Sized to land somewhere near the address book's own tiles, which is where
-   anybody looking at a wall of their friends has just come from. */
-.sn-sheet--picking .sn-who { gap: 14px; }
-.sn-sheet--picking .sn-who .ln-sender-book {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
-  gap: 18px 10px;
-  align-content: start;
-  contain: none;
-  overflow-x: hidden;
-  overflow-y: auto;
-  flex: 1;
-  min-height: 0;
-  padding: 3px 0 6px;
+/* ── The shelf ─────────────────────────────────────────────────────────────
+   The bottom half: the picker, or the book, or the message. It scrolls
+   inside the popup so the popup itself never moves; the gutter is given
+   back so the picker's swiped pages can run to the popup's edges
+   (--ses-bleed, session.css). */
+.sn-shelf {
+  flex: 1; min-height: 0;
+  overflow-y: auto; overscroll-behavior: contain;
+  margin: 0 -20px; padding: 0 20px 8px;
+  --ses-bleed: 20px;
 }
-/* The auto margins that centre the strip are a row's answer to a row's
-   problem; in a grid they push the first and last tiles out of their own
-   columns. */
-.sn-sheet--picking .sn-who .ln-sender-face { width: auto; }
-.sn-sheet--picking .sn-who .ln-sender-face:first-child,
-.sn-sheet--picking .sn-who .ln-sender-face:last-child { margin-left: 0; margin-right: 0; }
-.sn-sheet--picking .sn-who .ln-sender-portrait {
-  width: 100%;
-  height: auto;
-  aspect-ratio: 1;
-  border-radius: 12px;
+.sn-shelf--what .ses-picker--inline { --ses-bleed: 20px; }
+/* Three across in a popup, as on the pane, and a little tighter. */
+.sn-shelf .ses-picker--inline .ses-grid { grid-template-columns: repeat(3, 1fr); gap: 14px 10px; }
+.sn-shelf .ses-pages { margin-top: 14px; }
+/* The mono label over a shelf's contents — YOUR BOOK, ADD A MESSAGE? */
+.sn-ask {
+  display: block;
+  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--ink-soft);
 }
-
-.sn-form { display: flex; flex-direction: column; gap: 18px; }
-.sn-group { display: flex; flex-direction: column; gap: 9px; }
-
-/* The record, when the send started on one. Centred, with the art over its
-   name (Miyel, 2026-09-17): it is the object being handed across and the
-   subject of everything below it, and a cover pushed into the left corner with
-   its name beside it reads as a row in a list. The art is larger for the same
-   reason — it is the one picture on the sheet. */
-.sn-record { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
-.sn-record-art {
-  width: 132px; height: 132px; flex-shrink: 0; border-radius: 8px; object-fit: cover;
-  box-shadow: inset 0 0 0 1px var(--border), var(--shadow-lift);
+.sn-shelf--who .sn-ask { margin-bottom: 14px; }
+/* The book as a grid: MiniAddressBook's faces, which everywhere else are one
+   row that scrolls sideways — right in a form, wrong here, where a sideways
+   row in a screenful of nothing hides most of a book off the right edge.
+   Four across with names (the brief), the name in the body face rather than
+   the strip's mono capitals, because at this size it is a name and not a
+   label. */
+.sn-shelf--who .ln-sender-book {
+  /* minmax(0, 1fr), not 1fr: a long name would otherwise widen its column
+     and the faces in it, and four equal squares is the whole point. */
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px 10px;
+  contain: none; overflow: visible; padding: 0 0 4px;
 }
-.sn-record-art--none { background: var(--panel); box-shadow: inset 0 0 0 1px var(--border); }
-.sn-record-who { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.sn-record-album { font-weight: var(--font-display-weight); font-size: 18px; line-height: 1.2; }
-.sn-record-artist { font-size: 13px; color: var(--ink-soft); }
-/* Narrowing the book, once there are more faces than the strip shows at once. */
-.sn-find {
-  width: 100%; box-sizing: border-box;
-  padding: 10px 12px; border-radius: 10px;
-  border: 1px solid var(--border); background: var(--panel);
-  font-family: inherit; font-size: 16px; color: var(--ink);
+.sn-shelf--who .ln-sender-face { width: 100%; min-width: 0; gap: 7px; color: var(--ink); }
+.sn-shelf--who .ln-sender-face:first-child,
+.sn-shelf--who .ln-sender-face:last-child { margin-left: 0; margin-right: 0; }
+.sn-shelf--who .ln-sender-portrait { width: 100%; height: auto; aspect-ratio: 1; border-radius: 16px; }
+.sn-shelf--who .ln-sender-name {
+  font-family: inherit; font-size: 12px; letter-spacing: 0; text-transform: none;
+  color: var(--ink-soft);
 }
-.sn-find::placeholder { color: var(--ink-faint); }
+/* The count at the foot of a long book, and the session's line. */
+.sn-more, .sn-foot-say {
+  flex-shrink: 0; margin: 16px 0 0; text-align: center;
+  font-size: 13px; color: var(--ink-soft);
+}
 .sn-empty { margin: 0; font-size: 13px; line-height: 1.5; color: var(--ink-soft); }
+
+/* ── Both full: the message, the switch, the button ────────────────────────
+   The label in the mono label style, the field a hairline, the switch and
+   the button the existing pieces. */
+.sn-form { flex-shrink: 0; display: flex; flex-direction: column; gap: 14px; }
+.sn-group { display: flex; flex-direction: column; gap: 4px; }
+/* One line between the message and the switch, not two: the divider is the
+   rule, so the field goes without the hairline it wears elsewhere. */
+.sn-form .sn-rule { margin: 2px 0 0; }
+.sn-form .sn-note { border-bottom: 0; }
 /* 16px, like every other field on a touch screen: Safari zooms in on anything
    smaller and does not reliably zoom back out. */
-/* A hairline, like the finder's field above it — see the note there. */
 .sn-note {
   width: 100%; box-sizing: border-box; resize: none;
   padding: 9px 2px; border-radius: 0;
@@ -2140,21 +2245,14 @@ a.pn-item-album:hover { text-decoration: underline; text-underline-offset: 3px; 
 }
 .sn-note:focus { border-bottom-color: var(--ink-faint); }
 .sn-note::placeholder { color: var(--ink-faint); }
-/* `.sn-for` was here for an hour: the chosen person stated as a face and a
-   name, after the picker and before nothing. Both went — the sheet does not
-   name the recipient at all when the press that opened it already did, and
-   the button at the foot says Send to June. See SendSheet.js. */
-
 .sn-quiet {
   display: flex; align-items: center; justify-content: space-between; gap: 14px;
-  min-height: 44px; font-size: 14px; color: var(--ink-soft); cursor: pointer;
+  min-height: 44px; font-size: 14px; line-height: 1.35; color: var(--ink-soft); cursor: pointer;
 }
 /* The switch itself is shared — see .ln-switch in base.css. */
 .sn-error { margin: 0; font-size: 13px; line-height: 1.5; color: var(--fav); }
-.sn-foot { display: flex; flex-direction: column; gap: 11px; }
-/* Who it is from, said rather than asked. */
-/* `.sn-from` was here: the sheet naming its own keeper to its own keeper.
-   Gone 2026-09-19 with the line it dressed. See SendSheet.js. */
+/* The button, exactly as built: full width, heavily rounded, black, the
+   envelope, Nunito bold in sentence case, Send to <name>. Do not change. */
 .sn-send {
   display: flex; align-items: center; justify-content: center; gap: 10px;
   min-height: 50px; border-radius: 999px;
@@ -2163,11 +2261,75 @@ a.pn-item-album:hover { text-decoration: underline; text-underline-offset: 3px; 
   cursor: pointer;
 }
 .sn-send:disabled { opacity: 0.55; cursor: default; }
-/* Landed. Not a tick that vanishes before it is read. */
-.sn-done { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 22px 8px 8px; text-align: center; }
-.sn-done-line { margin: 0; font-weight: var(--font-display-weight); font-size: 19px; }
-.sn-done-said { margin: 0; max-width: 34ch; font-size: 14px; line-height: 1.55; color: var(--ink-soft); }
-.sn-done-acts { display: flex; gap: 10px; margin-top: 6px; }
+
+/* ── The letter ────────────────────────────────────────────────────────────
+   What the popup becomes when Send is pressed (SentLetter in SendSheet.js):
+   a landscape envelope, 330 by 238 — paper proportions, not app proportions,
+   so the change of shape is itself the confirmation. No dismiss control. It
+   holds for a beat and slides down off the bottom of the screen on its own;
+   the dim goes with it. Nothing written on it but the address block, and
+   never a journal address. */
+.sn-letter {
+  position: relative; pointer-events: auto;
+  width: min(100%, 330px); aspect-ratio: 330 / 238;
+  box-sizing: border-box;
+  background: var(--bg);
+  border-radius: 10px;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.28), 0 0 0 1px var(--border);
+  animation: snLetter 0.4s cubic-bezier(0.22, 0.61, 0.36, 1);
+  /* The going: LETTER_GO_MS in SendSheet.js is this 0.52s. */
+  transition: transform 0.52s cubic-bezier(0.5, 0, 0.85, 0.5);
+}
+@keyframes snLetter {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: none; }
+}
+.sn-letter--going { transform: translateY(calc(100vh + 80px)); }
+.sn-scrim--going { opacity: 0; transition: opacity 0.5s; }
+@media (prefers-reduced-motion: reduce) {
+  .sn-letter { animation: none; transition: none; }
+  .sn-letter--going { transform: none; opacity: 0; }
+}
+/* The stamp, top right: a paper square a touch brighter than the envelope so
+   it reads as stuck on, its edge cut by the mask in the markup — nine
+   semicircular notches a side, real scallops and not a dashed border — and
+   the art printed inside the paper margin with square corners. Its width is
+   104 of the letter's 330, so at one times the notches are the radius the
+   mask draws them at. */
+.sn-stamp {
+  position: absolute; top: 8.5%; right: 8%;
+  width: 31.5%; aspect-ratio: 1;
+  color: var(--panel-solid);
+}
+.sn-stamp-paper {
+  position: absolute; inset: 0; width: 100%; height: 100%; display: block;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.14));
+}
+.sn-stamp-art {
+  position: absolute; inset: 11.5%; width: 77%; height: 77%;
+  object-fit: cover; display: block; border-radius: 0;
+}
+.sn-stamp-art--none { background: var(--panel); box-shadow: inset 0 0 0 1px var(--border); }
+/* The address block, across the middle left, stacked the way an address is:
+   ON ITS WAY TO, the name large and bold, the record at body size. It stops
+   short of the stamp; a long name ends in dots rather than under it. */
+.sn-address {
+  position: absolute; left: 12%; right: 44%; bottom: 14%;
+  display: flex; flex-direction: column; gap: 2px; min-width: 0;
+}
+.sn-address-way {
+  font-family: var(--font-label); font-size: 9.5px; letter-spacing: 0.22em;
+  text-transform: uppercase; color: var(--ink-soft);
+}
+.sn-address-name {
+  font-family: var(--font-display); font-weight: var(--font-display-weight);
+  font-size: 34px; line-height: 1.1; color: var(--ink);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.sn-address-what {
+  font-size: 14px; line-height: 1.35; color: var(--ink);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
 
 /* The send glyph on a row of the address book. Quiet beside the name, which is
    the row's own offer — the page about them — and louder than Remove, which is
