@@ -150,9 +150,17 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
     }, 700);
     return () => clearTimeout(id);
   }, [writing, draftBody]);
+  // On the way out: the last change, if it had not gone yet, and then the
+  // picker underneath is told, once the draft is on the server, to ask for its
+  // list again. It stays mounted under this sheet and had no other way to
+  // know — Miyel, 2026-09-26: the draft was saved and "didn't appear in draft
+  // list." The same word a listen says when it is put down.
   useEffect(() => () => {
-    if (finished.current || !unsent.current) return;
-    fetch('/api/drafts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: unsent.current, keepalive: true }).catch(() => {});
+    if (finished.current) return;
+    const last = unsent.current
+      ? fetch('/api/drafts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: unsent.current, keepalive: true }).catch(() => {})
+      : inflight.current;
+    if (last) Promise.resolve(last).then(() => saidSoAboutTheDesk());
   }, []);
 
   const [saving, setSaving] = useState(false);
