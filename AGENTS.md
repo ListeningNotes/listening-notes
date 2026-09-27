@@ -12,8 +12,10 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - **[docs/DECISIONS-ARCHIVE.md](docs/DECISIONS-ARCHIVE.md)** — the history
   behind settled decisions and the arguments behind reversed ones. Not read at
   session start; go there when DECISIONS.md points you there.
-- **[NOTES.md](NOTES.md)** — what is pending, what is done, and the gotchas
-  that cost real time.
+- **NOTES.local.md** — this copy's own notebook: what is pending, what is
+  done, and the gotchas that cost real time. Not in the repo (`*.local.md` is
+  gitignored), so a fresh copy starts without one; a copy that keeps one keeps
+  it at the root under that name.
 - **[docs/NOTES-ARCHIVE.md](docs/NOTES-ARCHIVE.md)** — what was done before
   September 2026. Not read at session start.
 - **[README.md](README.md)** — what this is and how to run a copy. The front
@@ -43,7 +45,7 @@ a new numbered `.sql` file and nothing else; the ledger is the
 
 **Run the build before reporting anything as done**, and lint. Stop the dev
 server first: `npm run build` while `next dev` is up leaves stylesheets and
-route headers stale, silently (NOTES, Gotchas).
+route headers stale, silently (NOTES.local.md, Gotchas).
 
 # Never
 
@@ -296,7 +298,7 @@ do not say what they hold.
 
 Update the files, without being asked:
 
-- Finished items move to **Complete** in NOTES.md, with the date.
+- Finished items move to **Complete** in NOTES.local.md, with the date.
 - New items go to **Pending**.
 - Any gotcha that cost real time goes under **Gotchas**.
 - A decision goes in **DECISIONS.md** only if it passes one test: would a
