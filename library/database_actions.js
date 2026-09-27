@@ -637,7 +637,13 @@ export async function delete_entry(slug) {
   // what the record was and when it was on. Written before the delete, so a
   // delete that fails halfway has not already claimed a listen was taken down.
   // A track note is not a listen (2026-09-24), so it leaves no record of one.
-  if (!row.song) await keep_sat_with(row);
+  //
+  // Its date goes in as `at`, the name keep_sat_with reads. The row went in as
+  // it came back — `posted_at` and no `at` — until 2026-09-26, so every listen
+  // deleted before then was filed under the moment Delete was pressed, and an
+  // old record jumped to the front of the beacon's row as though just heard.
+  // Those rows cannot be put right: the entry that knew the real date is gone.
+  if (!row.song) await keep_sat_with({ ...row, at: row.posted_at });
 
   const comments = await database`DELETE FROM comments WHERE entry_slug = ${slug} RETURNING id`;
   // The chain ends here rather than dangling: an album received from this one
