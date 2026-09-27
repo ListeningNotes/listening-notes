@@ -506,7 +506,7 @@ export default function AlbumPicker({ onPick, onResume, onPickSong = null, inlin
               className="ses-input"
               value={typed}
               onChange={e => type(e.target.value)}
-              placeholder="Search an artist or an album"
+              placeholder="Search an artist, album, or track"
               autoComplete="off"
               /* Not inline, and this is the whole of Miyel's "it goes off the
                  screen and everything goes way too high" on a real phone,
