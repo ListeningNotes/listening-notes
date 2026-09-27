@@ -150,6 +150,43 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
     }, 700);
     return () => clearTimeout(id);
   }, [writing, draftBody]);
+  // ── The beacon, while a note is being written, 2026-09-26 ───────────────
+  // Miyel: a track should "show up on and stay on the beacon the same way
+  // that album track listens do." So a note being written puts the needle
+  // down the way a listen does (hooks/useListeningSession.js, the write
+  // effect there): the record, and the song as the track, two seconds after
+  // the sheet opens — the same two that stand between a mis-tap and a
+  // broadcast — and again as the words change, which is what keeps it from
+  // expiring under somebody who is still writing. The beacon says NOW
+  // LOGGING with the song over the cover; when the sheet goes, the needle
+  // ends and stands as the last listen, song and all, until the saved entry
+  // takes over — which carries its song too (library/needle.js).
+  //
+  // `lit` is the same guard the listen keeps: React's development mode
+  // mounts, tears down and remounts, and without it the rehearsal put the
+  // beacon out before the write had landed.
+  const lit = useRef(false);
+  useEffect(() => {
+    if (!writing) return undefined;
+    const t = setTimeout(() => {
+      fetch('/api/needle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          album: entry.album,
+          artist: entry.artist || '',
+          album_art: entry.album_art || '',
+          track: entry.song || '',
+        }),
+      }).then(() => { lit.current = true; }).catch(() => { /* the beacon is not worth an alert */ });
+    }, 2000);
+    return () => clearTimeout(t);
+  }, [writing, entry.album, entry.artist, entry.album_art, entry.song, draftBody]);
+  // Leaving ends it — saved or pulled down, the sheet unmounts either way.
+  useEffect(() => () => {
+    if (lit.current) fetch('/api/needle', { method: 'DELETE' }).catch(() => {});
+  }, []);
+
   // On the way out: the last change, if it had not gone yet, and then the
   // picker underneath is told, once the draft is on the server, to ask for its
   // list again. It stays mounted under this sheet and had no other way to

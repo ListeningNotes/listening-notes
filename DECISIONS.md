@@ -941,6 +941,12 @@ Formative, Masterpiece, or heart (dropped 2026-09-26). Its ··· is Edit, Credi
 Send, Delete; nothing that counts albums counts it. One object doing both is
 one confusing object instead of two clear ones.
 
+**A track note is a listen to the beacon, 2026-09-26, Miyel's call.** Writing
+one puts the needle down — NOW LOGGING, the song over the cover — and once
+it is saved or put down it stands as the last thing logged, song and all,
+exactly as an album listen does. The beacon's title is the song wherever the
+entry has one; an album listen's says the record.
+
 **No tool turns an album entry into a track note, 2026-09-25.** Briefed and
 dropped the same day: with Albums and Songs in the picker nobody logs an
 album to write about one song, so a converter would sit in a menu nobody

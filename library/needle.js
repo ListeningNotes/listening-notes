@@ -168,7 +168,10 @@ export async function keep_sat_with({ album, artist, album_art, at }) {
 export async function pull_recent_listens() {
   try {
     const rows = await database`
-      SELECT album, artist, album_art, slug, NULL  AS track, posted_at  AS at FROM entries
+      -- A track note carries its song, 2026-09-26 (Miyel: a track should
+      -- show up on the beacon, and stay, the way an album listen does). An
+      -- album listen's entry has none, and says the record.
+      SELECT album, artist, album_art, slug, song  AS track, posted_at  AS at FROM entries
       UNION ALL
       -- A track note half-written is not an evening with a record (the
       -- same reason deleting one leaves no row in sat_with), 2026-09-26.
@@ -199,6 +202,7 @@ export async function pull_recent_listens() {
     `;
     const at = new Map();
     const listens = [];
+    const when = [];
     for (const row of rows) {
       const key = sameRecord(row.album);
       if (!key) continue;
@@ -216,10 +220,17 @@ export async function pull_recent_listens() {
         // and the entry has no song in it — which took the song off the
         // beacon at the exact moment the listen finished. The rows are two
         // halves of one listen; between them they know both things.
-        if (!kept.track && row.track) kept.track = String(row.track).trim();
+        //
+        // Only two halves of one listen, though: within the hour. A track
+        // note carries its song since 2026-09-26, and one written last month
+        // must not lend that song to tonight's listen of the same record.
+        const stamp = row.at ? new Date(row.at).getTime() : 0;
+        const twin = Math.abs(when[at.get(key)] - stamp) < 60 * 60 * 1000;
+        if (!kept.track && row.track && twin) kept.track = String(row.track).trim();
         continue;
       }
       at.set(key, listens.length);
+      when.push(row.at ? new Date(row.at).getTime() : 0);
       listens.push({
         album: row.album,
         artist: row.artist || '',
