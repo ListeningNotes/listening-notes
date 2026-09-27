@@ -111,6 +111,14 @@ reasoning; these are inline so nobody has to go looking.
 - **Nothing a person typed is lost to a failure or a dismissal.** A failed
   send keeps the note and says what happened; a dismissed sheet puts the words
   back when it reopens.
+- **No real names, emails, handles or journal addresses anywhere** — not in
+  code, comments, docs, example data or fixtures. Use placeholders: `[name]`,
+  `a beta tester`, `somebody@example.com`. They ship to every copy and every
+  gifted journal, and a tester's real name in a comment is the natural thing
+  to write while debugging, so the rule is what stops it growing back. The
+  same goes for a person's pronouns: *they*. The one exception is
+  the author's name on the copyright line, which is deliberate (DECISIONS,
+  Licence and ownership).
 - **Every source file opens with the two-line copyright and SPDX notice, every
   commit is `git commit -s`, and no tool is named in a commit.**
 
