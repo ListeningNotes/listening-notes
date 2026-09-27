@@ -7,9 +7,8 @@
 // Sometimes the song is the event — a single, something a friend sent, one
 // track played all week — and a beta tester wrote a long piece about one song
 // and had nowhere to put it (Miyel's track-notes brief). So a song gets an
-// entry of its own: its own date, address, stars, heart and note, and the
-// record it belongs to (`album` and `artist`; the song is `song`, migration
-// 025). It is not a shorter album entry and never a part of one, and it never
+// entry of its own: its own date, address, stars and note, and the record it
+// belongs to (`album` and `artist`; the song is `song`, migration 025). It is not a shorter album entry and never a part of one, and it never
 // grows what belongs to a sitting with a whole record — a tracklist, a
 // horizon, an album rating, a Masterpiece. If a track note could do
 // everything an album entry does, there would be one confusing object instead
@@ -17,8 +16,11 @@
 //
 // ── One card ──────────────────────────────────────────────────────────────
 // About a third the height of an album entry: the cover with its folded
-// corner, and beside it the song, `album · artist`, the stars and the heart,
-// and the date, the pair on the middle of the page. Under it, for the keeper
+// corner, and beside it the song, `album · artist`, the stars and the date,
+// the pair on the middle of the page. No heart, from 2026-09-26 (Miyel): a
+// song you wrote a note about is already the one you cared about. The
+// `favorite` column is still saved, false, and read by nothing here — the
+// way back is a button, not a migration. Under it, for the keeper
 // only, Listen to the full album, which starts an ordinary listen of the
 // album — plain words, underlined like the link it is, with a play mark;
 // never a pill (Miyel does not like them). Then the note, read left to right
@@ -49,7 +51,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createPortal } from 'react-dom';
-import { Heart, Play, VinylRecord } from '@phosphor-icons/react';
+import { Play, VinylRecord } from '@phosphor-icons/react';
 import { parseRating, editStamp } from '../../../library/entry_formatter';
 import { kept_receipts } from '../../../library/receipts';
 import { tidyAddress } from '../../../library/return_address';
@@ -107,16 +109,16 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
     if (!writing) return;
     try {
       const all = JSON.parse(localStorage.getItem(TRACK_NOTE_WRITING) || '{}');
-      if (written.note.trim() || written.rating > 0 || written.favorite) all[songKey] = written;
+      if (written.note.trim() || written.rating > 0) all[songKey] = written;
       else delete all[songKey];
       localStorage.setItem(TRACK_NOTE_WRITING, JSON.stringify(all));
     } catch { /* a private window keeps it for as long as the sheet is up */ }
   }, [writing, songKey, written]);
   const [saving, setSaving] = useState(false);
   const [trouble, setTrouble] = useState(null);
-  // Anything at all: stars, the heart or a word. A note with none of them is
-  // an entry that says nothing, and the one thing Save waits for.
-  const saysSomething = Boolean(written.note.trim() || written.rating > 0 || written.favorite);
+  // Anything at all: stars or a word. A note with neither is an entry that
+  // says nothing, and the one thing Save waits for.
+  const saysSomething = Boolean(written.note.trim() || written.rating > 0);
 
   // ── The comments ────────────────────────────────────────────────────────
   // The same read the entry page makes: approved comments, and any still
@@ -166,9 +168,6 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
   }, [headerSlot]);
 
   const rating = writing ? written.rating : parseRating(correcting ? edit.draft.rating : entry.rating);
-  const favorite = writing ? written.favorite
-    : correcting ? !!edit.draft.favorite
-    : entry.favorite === true || entry.favorite === 'true';
   const note = writing ? written.note : correcting ? edit.draft.notes : (entry.notes || '');
   const noteComments = comments['-1'] || [];
   const postedOn = entry.posted_at
@@ -243,27 +242,13 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
               <p className="tn-record">{[entry.album, entry.artist].filter(Boolean).join(' · ')}</p>
               <div className="tn-marks">
                 {writing || correcting ? (
-                  <>
-                    <StarPicker
-                      value={rating}
-                      onChange={v => (writing ? setWritten(w => ({ ...w, rating: v })) : edit.set('rating', String(v)))}
-                      size={22}
-                    />
-                    <button
-                      type="button"
-                      className={'ln-track-heart' + (favorite ? ' ln-track-heart--on' : '')}
-                      onClick={() => (writing ? setWritten(w => ({ ...w, favorite: !w.favorite })) : edit.set('favorite', !edit.draft.favorite))}
-                      aria-pressed={favorite}
-                      aria-label="Favourite song"
-                    >
-                      <Heart size={17} weight={favorite ? 'fill' : 'regular'} />
-                    </button>
-                  </>
+                  <StarPicker
+                    value={rating}
+                    onChange={v => (writing ? setWritten(w => ({ ...w, rating: v })) : edit.set('rating', String(v)))}
+                    size={22}
+                  />
                 ) : (
-                  <>
-                    {rating > 0 && <StarRating rating={rating} size={17} />}
-                    {favorite && <span className="tn-heart" title="Favourite song"><Heart size={16} weight="fill" /></span>}
-                  </>
+                  rating > 0 && <StarRating rating={rating} size={17} />
                 )}
               </div>
               {!writing && postedOn && <p className="tn-posted">Posted {postedOn}</p>}
@@ -361,7 +346,9 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
                   album_art: entry.album_art || '',
                   entry_type: 'Personal Library',
                   rating: written.rating ? `${written.rating} stars` : '',
-                  favorite: written.favorite,
+                  // Always false: there is no heart to set, and a note
+                  // half-written before it went must not bring one in.
+                  favorite: false,
                   notes: written.note.trim(),
                 }),
               });

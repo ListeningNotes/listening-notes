@@ -935,12 +935,11 @@ a single track.
 entries, never chosen. Entries are never overwritten; a relisten is a new one.
 
 **A track note is its own entry, about one song, 2026-09-24.** Never a shorter
-album entry, never part of one, and it can never become one: `song` beside the
-record's `album` (migration 025), and no tracklist, horizon, album rating,
-Formative or Masterpiece — the writer drops them rather than trusting a
-caller. Its ··· is Edit, Credit, Send, Delete. Nothing that numbers, counts or
-compares albums counts it. The brief's reason: one object doing both is one
-confusing object instead of two clear ones.
+album entry and never part of one: `song` beside the record's `album`
+(migration 025). Stars and words only — no tracklist, horizon, album rating,
+Formative, Masterpiece, or heart (dropped 2026-09-26). Its ··· is Edit, Credit,
+Send, Delete; nothing that counts albums counts it. One object doing both is
+one confusing object instead of two clear ones.
 
 **No tool turns an album entry into a track note, 2026-09-25.** Briefed and
 dropped the same day: with Albums and Songs in the picker nobody logs an

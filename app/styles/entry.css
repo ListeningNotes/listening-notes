@@ -2165,8 +2165,8 @@ html[data-printing] .sitenav-row { display: none; }
 
 /* ── A track note (TrackNotePage.js), 2026-09-24 ───────────────────────────
    One card, about a third the height of an album entry: the cover with its
-   fold and, beside it, the song, `album · artist`, the stars and the heart
-   and the posted date, the pair in the middle of the page; the keeper's
+   fold and, beside it, the song, `album · artist`, the stars and the posted
+   date, the pair in the middle of the page; the keeper's
    Listen to the full album under it; the note under that, read left to
    right as an album's notes are, with the comment glyph at its end. The
    type is the entry's own: the song is a title, the note is the album note's
@@ -2219,7 +2219,6 @@ html[data-printing] .sitenav-row { display: none; }
 }
 .tn-record { margin: 7px 0 0; font-size: 13px; line-height: 1.4; color: var(--ink-soft); }
 .tn-marks { display: flex; align-items: center; gap: 9px; margin-top: 12px; min-height: 22px; }
-.tn-heart { display: inline-flex; color: var(--fav); line-height: 1; }
 /* Who put you onto it, under the head, where an album entry's line sits
    under its chips. */
 .tn-card .ln-sent { margin-top: 16px; }
