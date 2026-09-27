@@ -1,10 +1,10 @@
 # NOTES archive
 
-What was finished before September 2026, moved out of [NOTES.md](../NOTES.md)
+What was finished before September 2026, moved out of the working notebook (NOTES.local.md, private since 2026-09-26)
 so the file read at the start of a session holds only what is pending, the
 gotchas that still bite, and the last few weeks of what got done. Nothing here
 is deleted, and nothing here is current: it is the record of how the site got
-to where NOTES.md picks up. The twin of [DECISIONS-ARCHIVE.md](DECISIONS-ARCHIVE.md),
+to where the notebook picks up. The twin of [DECISIONS-ARCHIVE.md](DECISIONS-ARCHIVE.md),
 and not read at session start for the same reason.
 
 Newest first. Each block was the end-of-session note written at the time.

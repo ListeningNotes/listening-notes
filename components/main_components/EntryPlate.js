@@ -38,8 +38,7 @@
 // What carries a reader to the entry is the poster's link sticker, and the
 // press copies the address for it the moment the picture is made. In
 // person, the art on the entry page already turns into its photo code. A
-// physically printed flyer would earn a toggle, not a redesign; the sizes
-// that would need are in NOTES.
+// physically printed flyer would earn a toggle, not a redesign.
 //
 // ── The card is the switchboard, 2026-09-13 ──────────────────────────────
 // Every line that can be left off is tapped on the preview to leave it off,

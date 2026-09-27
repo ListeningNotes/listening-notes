@@ -442,8 +442,8 @@
      better." It does: this is the one band on the site that has a whole
      screen of writing scrolling under it, and a header the same colour as the
      page cannot say where it ends without leaning on a hairline. The hand-over
-     between two beacons was the real complaint and it is a structural one —
-     see the brief in NOTES. */
+     between two beacons was the real complaint and it is a structural one
+     (DECISIONS, Structure: the header belongs to the page). */
   background: var(--panel-strong);
   backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
   border-bottom: 1px solid var(--border);

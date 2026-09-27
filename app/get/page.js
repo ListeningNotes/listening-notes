@@ -24,7 +24,7 @@
 //
 // Screenshot slots read from public/install/ and draw only when the file
 // exists, so the page reads correctly before the pictures are taken and they
-// can be added without touching this file. The filenames are in NOTES. This
+// can be added without touching this file. The filenames are in library/install_guide.js. This
 // is the one part of the page that has to happen on the server.
 //
 // The drawer rule: a copy that has not written the essay 404s here rather

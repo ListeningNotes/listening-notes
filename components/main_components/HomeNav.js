@@ -145,7 +145,7 @@ const TURN_MS = 400;
 // What ended it was not a better animation. It was Miyel noticing that there
 // is nothing to animate: the sheet covers the screen, so the beacon changing
 // underneath it is not a thing anybody is in a position to watch. "You don't
-// see the transition." See beginListen below, and the note in NOTES.
+// see the transition." See beginListen below.
 const TO_THE_BAR_MS = 620;
 // ── And how long the record waits for the mark to get out of the way ──────
 // The two movements this press starts — the big mark leaving out of the top of
@@ -651,7 +651,7 @@ export default function HomeNav() {
     // frames at all, and the whole of this is set-then-release: without the
     // second way out, the name would sit at 1.6 times its size in the wrong
     // place for as long as the picker was open. Seen exactly that way in the
-    // preview pane on 2026-09-18, which reports hidden always (NOTES).
+    // preview pane on 2026-09-18, which reports hidden always.
     let gone = false;
     const release = () => {
       if (gone) return;
@@ -1588,7 +1588,7 @@ export default function HomeNav() {
   // rects would read that scroll as movement and send the record travelling a
   // few hundred pixels it never went. Measured against the screen, a scroll
   // moves both ends together and cancels out — the same correction the wall's
-  // arrival FLIP needed (NOTES, Gotchas).
+  // arrival FLIP needed.
   const floorWas = useRef(null);
   useLayoutEffect(() => {
     const screen = homeRef.current?.querySelector('.hn-screen');
@@ -2439,8 +2439,8 @@ export default function HomeNav() {
   // last of the dot row's destinations looking for a home. They are off it: the
   // foot of the archive is where somebody has finished looking, and three links
   // to elsewhere is the site asking them to leave. Each still has its own
-  // address and nothing in the interface currently points at any of them — see
-  // NOTES, which is where that is written down rather than solved.
+  // address and nothing in the interface currently points at any of them.
+  // That is written down rather than solved.
 
   // The record the card shows. Found here rather than fetched, because this
   // already holds every entry — the wall needs them — and asking the server for

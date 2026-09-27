@@ -154,7 +154,7 @@ export function keepSender({ name = '', address = '' } = {}) {
 // keeps them here as the return address, and takes them back off the
 // address bar. The send form then knows who is sending, and a keeper who
 // arrived through their own address book is never asked for a URL — which
-// was the one place the address book's promise broke (NOTES, 2026-09-14).
+// was the one place the address book's promise broke (DECISIONS, The network, 2026-09-14).
 //
 // Only surfaces the owner alone can reach may add them: a public link that
 // carried the journal's name would introduce every reader as its keeper.

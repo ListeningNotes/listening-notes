@@ -24,7 +24,7 @@
 //
 // **Nothing links here.** The card's swatch used to and does not any more, so
 // this page is reachable only by typing the address — which for a page whose
-// whole job is teaching the vocabulary is most of the job undone. See NOTES.
+// whole job is teaching the vocabulary is most of the job undone.
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';

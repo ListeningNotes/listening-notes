@@ -11,7 +11,7 @@
 // them: GitHub refuses to let any app write under .github/workflows without
 // a permission Vercel does not hold, so rather than have the whole clone
 // rejected, it leaves that one folder behind. Six copies ran for days on old
-// versions before anyone noticed (NOTES, 2026-09-21). The fix is one file,
+// versions before anyone noticed (2026-09-21). The fix is one file,
 // added once, and this is the screen that asks for it.
 //
 // ── Why there is no toggle ────────────────────────────────────────────────

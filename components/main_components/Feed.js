@@ -456,7 +456,7 @@ export default function Feed({ entries = [], density = DEFAULT_DENSITY }) {
     if (entry.entry_type !== 'Submission') return false;
     // A record came back when somebody logged it. A note on one song off it,
     // credited, is not that, and the inbox's row says "logged" and names the
-    // album (2026-09-24; NOTES has it pending).
+    // album (2026-09-24; not built yet).
     if (entry.song) return false;
     const url = tidyJournal(entry.received_from_url);
     if (url) return url === me;

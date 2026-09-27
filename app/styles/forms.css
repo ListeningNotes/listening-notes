@@ -229,7 +229,7 @@ textarea.sb-field {
 }
 /* A second line belongs to the sentence above it, so where one leads the
    stack it closes most of the gap the sentence opened. Not :has() — this
-   build drops those rules without saying so (NOTES, Gotchas). */
+   build drops those rules without saying so. */
 .su-fields > .su-why:first-child { margin-top: -14px; }
 /* The second thought, where a screen needs one. Quieter and narrower than
    the sentence above it, so the two never read as equals. */
@@ -252,7 +252,7 @@ textarea.sb-field {
    border, centred under the sentence. It stays a real, visible, writable
    input all the same — a password manager files a password under a
    username and skips a field it considers hidden or read-only, and that
-   cost an afternoon to learn (NOTES, Gotchas). It is writable in markup
+   cost an afternoon to learn (DECISIONS, Setting a copy up). It is writable in markup
    and inert in practice: the change handler does nothing, so nothing a
    person types into it survives a keystroke. Changing it for real is a
    Settings job. */

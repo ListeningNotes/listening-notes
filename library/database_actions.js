@@ -361,7 +361,7 @@ const OWNER_ROW = 'SELECT id FROM users ORDER BY id LIMIT 1';
 // **What it would take.** A reference that means something in both places —
 // their journal plus their entry's slug, not a bare id — and a send that
 // starts on the sender's own entry rather than on the recipient's form.
-// That is a feature, not a wiring job (NOTES, 2026-09-15).
+// That is a feature, not a wiring job (2026-09-15).
 //
 // **Nothing is lost meanwhile.** The chain a reader sees
 // (components/main_components/Slug_Page/Chain.js) already walks across

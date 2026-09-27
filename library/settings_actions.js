@@ -108,9 +108,9 @@ const blankToNull = v => (typeof v === 'string' && v.trim() === '' ? null : v);
 // separate name on the cover, which asked every owner to invent a title for
 // their own diary before they could write in it — two names for one thing, and
 // the second one always ended up being the first one again. The column is
-// still in the table and nothing reads it; whether it gets dropped is an open
-// question in NOTES.md, and the answer is only free while the schema is still
-// a draft — that is, until somebody else installs a copy.
+// still in the table and nothing reads it, and it stays there: the schema is
+// additive-only (DECISIONS, The model), so a column nothing reads is never
+// dropped.
 //
 // The fallback is deliberately generic and deliberately not this journal's
 // name: a copy whose owner has not introduced themselves yet is "a listening

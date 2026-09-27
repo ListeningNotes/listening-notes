@@ -105,7 +105,7 @@ function pendingFiles(done) {
 // Neon's `-pooler` endpoint is PgBouncer in transaction mode — a statement
 // can land on a different backend from the last one, so the lock is taken on
 // one and "released" on another, and a session-level SET leaks into the pool
-// (NOTES has the afternoon that cost). The Vercel integration sets
+// (DECISIONS: migrations go through the direct endpoint, never the pooler). The Vercel integration sets
 // DATABASE_URL to the pooled address and DATABASE_URL_UNPOOLED to the direct
 // one; a hand-pasted string is usually direct already. Prefer the unpooled
 // variable, and failing that strip the `-pooler` marker off the host.

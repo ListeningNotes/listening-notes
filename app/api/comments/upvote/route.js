@@ -8,8 +8,7 @@ export async function POST(request) {
     const { id } = await request.json();
     if (!id) return Response.json({ error: 'id required' }, { status: 400 });
 
-    // Nothing stood between a script and an unbounded count here — NOTES has
-    // carried "upvote abuse prevention" as a to-do since the feature shipped.
+    // Nothing stood between a script and an unbounded count here.
     //
     // The caller key is the comment as well as the address, so with one try in
     // the window the rule reads as "you have already voted for this one"

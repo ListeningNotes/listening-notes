@@ -7,7 +7,7 @@
 // /api/export has handed over the whole journal since 2026-08-27, and nothing
 // on the site led to it: a keeper had to type the address into a browser they
 // were signed in on, and a journal on a home screen has no address bar. So
-// every copy's one backup was a thing nobody could find (NOTES, 2026-09-23).
+// every copy's one backup was a thing nobody could find (2026-09-23).
 //
 // ── Two presses, the printer's shape ──────────────────────────────────────
 // Make a copy, then hand it over — Miyel's picture of it: "you click it and

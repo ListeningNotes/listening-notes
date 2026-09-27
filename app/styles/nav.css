@@ -1733,8 +1733,8 @@
    is what is left when there is no record to carry at all, which is a copy on
    its first afternoon.
 
-   A sibling selector and not :has(), which this build silently drops (see
-   NOTES). It works because the beacon is written before the mark in the bar,
+   A sibling selector and not :has(), which this build silently drops. It
+   works because the beacon is written before the mark in the bar,
    so "the mark that follows a beacon" is exactly the case to hide. */
 .hn--choosing .hn-bar-beacon ~ .hn-bar-mark { display: none; }
 /* ── The card stands down entirely ────────────────────────────────────────

@@ -9,8 +9,8 @@ implemented.
 
 **The test for an entry, 2026-09-06: would a future session reopen this, or
 repeat a mistake, without it?** If not, it does not go here. How a thing was
-built belongs in its commit; a lesson that cost time belongs in NOTES under
-Gotchas; a small choice nobody will revisit belongs nowhere. An entry is the
+built belongs in its commit; a lesson that cost time belongs in the notebook
+(NOTES.local.md) under Gotchas; a small choice nobody will revisit belongs nowhere. An entry is the
 rule and one reason, six lines at most.
 
 **What is here is what could come up again.** Settled history nobody would
@@ -87,7 +87,7 @@ licence grants no use of the Listening Notes name or mark.
 sign-off and nothing else: a `Co-Authored-By` trailer naming a model was
 putting one on GitHub's contributors list, and nothing — not the licence, the
 DCO or GitHub — asked for it. The 428 commits already carrying the trailer
-were rewritten the same day, while nobody else had a clone; see NOTES.
+were rewritten the same day, while nobody else had a clone.
 
 ---
 
@@ -256,8 +256,7 @@ book for the desk is wrong whatever else is: the book is the journal, and the
 journal is *down* from the beacon, not sideways.
 
 **A flip and then a slide were built for a two-pane cross and are both gone,
-2026-09-15.** The reasoning is in NOTES; what is worth keeping here is that
-0.4s on `cubic-bezier(0.22, 0.61, 0.36, 1)` — the entry layer's arrival — is
+2026-09-15.** What is worth keeping here is that 0.4s on `cubic-bezier(0.22, 0.61, 0.36, 1)` — the entry layer's arrival — is
 the curve everything on this site moves on, and it is what drives the rail now.
 
 **The down caret is drawn by measuring the pane, never by being told.** A pane
@@ -553,7 +552,7 @@ and the session each carried their own copy of a record, a name and a mark, so
 every move between them was a hand-over between two objects — and an evening of
 cross-fades, apertures, erases and settles proved that no animation hides one.
 One header, three states (resting, choosing, listening), and the body is what
-changes underneath it. The brief and the list of what was tried is in NOTES.
+changes underneath it.
 
 **One beacon, two sizes, 2026-09-18.** The beacon is drawn large on the pane
 and small in the nav bar and the session's header — and the small one is a
@@ -1877,7 +1876,7 @@ isolates data, not usage.
 **The target is a page view that costs the same at any journal size.** Reads
 still scale with the archive: every visitor downloads a summary of every
 record to look at one screen. Flat means the database paginating, not the
-browser. Not built; see NOTES. **The journal should get better as it fills
+browser. Not built. **The journal should get better as it fills
 up** — a cost that grows with the archive is backwards.
 
 ---
@@ -2009,8 +2008,7 @@ no file".
   months; needs per-copy client ID and Premium). After the deploy button.
 - Video exports. The ffmpeg-and-timeouts reason is gone, 2026-09-12: a
   browser records its own canvas into an H.264 MP4 with no server, in
-  about a second for four seconds of 1080×1920 (proved in Chromium, see
-  NOTES). Still parked until a phone has posted one and a moving card
+  about a second for four seconds of 1080×1920 (proved in Chromium). Still parked until a phone has posted one and a moving card
   earns it — motion that means something, not a screensaver.
 - Manual now-playing override — say what is on without opening a listen. It
   covered vinyl and iOS Apple Music while Last.fm was the other beacon; with

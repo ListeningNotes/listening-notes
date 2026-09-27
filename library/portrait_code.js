@@ -29,7 +29,7 @@
 // smallest dot, on both pages, at three sizes, with the photograph's tones
 // nearly untouched. The picture that carried the code on its own — no dots,
 // finders made of face — read on a phone's own scanner and on almost nothing
-// else, and half the covers on nothing at all (NOTES, Gotchas).
+// else, and half the covers on nothing at all (DECISIONS, Sharing).
 //
 // ── Proved by decoding, always ────────────────────────────────────────────
 // The picture that ships is decoded here, over both page colours, at the

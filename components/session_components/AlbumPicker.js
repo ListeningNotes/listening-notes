@@ -44,7 +44,7 @@ const FILE_MS = 420;
 
 // Whether the picker offers a way to type a record in by hand. Off since
 // 2026-09-18 and the only thing holding the door: turn it on and the form is
-// back, unchanged. See the note beside the button, and MANUAL ENTRY in NOTES.
+// back, unchanged. See the note beside the button.
 const BY_HAND_OFFERED = false;
 
 // Long enough that typing an artist's name is one search rather than eight,
@@ -655,8 +655,7 @@ export default function AlbumPicker({ onPick, onResume, onPickSong = null, inlin
                 hand-typed tracklist it hands on to — and it is a word away
                 from being offered again. It is held rather than deleted
                 because what is wrong with it is the shape, not the code, and
-                nobody has said yet what the right shape is (MANUAL ENTRY in
-                NOTES).
+                nobody has said yet what the right shape is.
 
                 What this costs, plainly: there is no way to log a record Apple
                 Music does not have. That is the trade she made, knowingly, for

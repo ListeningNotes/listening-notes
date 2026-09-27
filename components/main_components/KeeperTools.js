@@ -19,7 +19,7 @@
 // Not as a panel over the page. An entry arrives on a sheet that claims
 // sideways for the next record and down for closing itself, and a floating
 // menu on top of that is a third surface competing for the same gestures —
-// the nesting problem in NOTES, where a fixed panel inside a layer measures
+// the nesting problem, where a fixed panel inside a layer measures
 // itself against the sheet rather than the window. Pressed, the mark stays
 // exactly where it is and the tools come out from under it. Pressed again,
 // they go back in.
