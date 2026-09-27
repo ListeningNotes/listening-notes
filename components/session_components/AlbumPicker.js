@@ -32,10 +32,11 @@
 
 'use client';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { MagnifyingGlass, Trash } from '@phosphor-icons/react';
+import { CaretRight, ClockCounterClockwise, MagnifyingGlass, Trash, XCircle } from '@phosphor-icons/react';
 import SiteNav from '../main_components/SiteNav';
-import { searchAlbums } from '../../library/music_data_api';
-import { PENDING_EVENT, SAVED_EVENT } from '../../hooks/useListeningSession';
+import { searchAlbums, searchSongs } from '../../library/music_data_api';
+import { PENDING_EVENT, SAVED_EVENT, TRACK_NOTE_WRITING } from '../../hooks/useListeningSession';
+import { lookup_key } from '../../library/entry_formatter';
 
 // How long the grid takes to shuffle over, and how long the newcomer waits
 // before growing into the slot the others are clearing.
@@ -49,6 +50,35 @@ const BY_HAND_OFFERED = false;
 // Long enough that typing an artist's name is one search rather than eight,
 // short enough that it never feels like waiting.
 const SETTLE_MS = 420;
+
+// ── Pages, on a phone, 2026-09-26 ────────────────────────────────────────
+// A search is several screens of covers, and scrolling down through them
+// buried the tracks underneath. On a phone the albums come in pages you swipe
+// sideways — two rows to a page, three where the screen is tall enough that
+// the Tracks heading and a first track still show under them — and the
+// tracks come five at a time the same way, each list with its "1 of 3" under
+// it in the heading's own face (Miyel). A desk has the room and no swipe, so
+// it keeps the long grid and the first eight tracks.
+const ALBUM_COLUMNS = 3;
+const TRACKS_PER_PAGE = 5;
+const DESK_TRACKS = 8;
+// ── What you looked for last, 2026-09-26 ─────────────────────────────────
+// Miyel: "I find myself needing to retype in the same thing over and over."
+// A search you took something from is kept, newest first, in this browser,
+// and offered under the field whenever it is empty and in use. Only the ones
+// that found what you wanted: what was typed on the way there ("fon",
+// "fonta") never counts. Six, because a list you have to scroll through is a
+// second search.
+const RECENT_KEY = 'ln_recent_searches';
+const RECENT_KEPT = 6;
+// How long the list takes to open and fold (.ses-recent, session.css).
+const RECENT_FOLD_MS = 340;
+
+// What has to fit under three rows before a page may hold three: the room
+// kept for the covers' shadows, the "1 of 3", the Tracks heading and one
+// whole track — 12, 24, 40, 6 and 67 pixels in session.css. At 150 a page
+// holds three rows on a 390 by 844 phone and larger, and two on an SE.
+const TRACKS_PEEK = 150;
 
 // How long a draft has been sitting there. Rounded hard on purpose — the point
 // is 'this morning' or 'last week', not a timestamp.
@@ -75,11 +105,43 @@ function sinceLabel(iso) {
 // places for one bug to live, and the brief said so outright.
 //
 // NAME: `inline` is a placeholder for Miyel (AGENTS.md).
-export default function AlbumPicker({ onPick, onResume, inline = false }) {
+//
+// `onPickSong` is the second way out of a search, 2026-09-24: a song pressed
+// in the Songs section, which starts a track note rather than a listen (the
+// track-notes brief). Without it there is no Songs section, and the picker is
+// exactly what it was.
+export default function AlbumPicker({ onPick, onResume, onPickSong = null, inline = false }) {
   const [typed, setTyped]       = useState('');
   const [results, setResults]   = useState([]);
+  // The songs the same search found. Albums above songs, always, so the
+  // default reading stays "an album journal that also lets you mark a song".
+  const [songs, setSongs]       = useState([]);
   const [looking, setLooking]   = useState(false);
   const [asked, setAsked]       = useState(false);   // a search has come back
+  // Paged on a phone (the note over TRACKS_PER_PAGE): whether this screen
+  // pages at all, how many rows of albums a page holds, and which page of each
+  // list is showing. The rows are decided the first time covers land, from
+  // where they land.
+  const [paged, setPaged] = useState(() => typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches);
+  const [rows, setRows] = useState(2);
+  const rowsDecided = useRef(false);
+  const [albumPage, setAlbumPage] = useState(0);
+  const [trackPage, setTrackPage] = useState(0);
+  const albumPager = useRef(null);
+  const trackPager = useRef(null);
+  const field = useRef(null);
+  // The searches kept (RECENT_KEY), and whether the field is in use — the
+  // list shows only while it is, and the field is empty.
+  const [recent, setRecent] = useState(() => {
+    if (typeof window === 'undefined') return [];
+    try {
+      return JSON.parse(localStorage.getItem(RECENT_KEY) || '[]').filter(t => typeof t === 'string').slice(0, RECENT_KEPT);
+    } catch { return []; }
+  });
+  const [fieldOn, setFieldOn] = useState(false);
+  // Clear folds the list away first and forgets it after, so it goes the way
+  // it came rather than vanishing (RECENT_FOLD_MS).
+  const [emptying, setEmptying] = useState(false);
   const [byHand, setByHand]     = useState(false);
   const [hand, setHand]         = useState({ album: '', artist: '', year: '', art: '' });
 
@@ -239,7 +301,7 @@ export default function AlbumPicker({ onPick, onResume, inline = false }) {
   // the timer.
   function type(value) {
     setTyped(value);
-    if (!value.trim()) { setResults([]); setLooking(false); setAsked(false); }
+    if (!value.trim()) { setResults([]); setSongs([]); setLooking(false); setAsked(false); }
     else setLooking(true);
   }
 
@@ -248,14 +310,54 @@ export default function AlbumPicker({ onPick, onResume, inline = false }) {
     if (!query) return undefined;
     const id = setTimeout(async () => {
       askedFor.current = query;
-      const found = await searchAlbums(query);
+      // Both at once, and both land together: a Songs section arriving a beat
+      // after the covers would shove nothing — it is underneath them — but a
+      // "Nothing found" said before the songs had answered would be a lie.
+      const [found, heard] = await Promise.all([
+        searchAlbums(query),
+        onPickSong ? searchSongs(query) : Promise.resolve([]),
+      ]);
       if (askedFor.current !== query) return;
+      // A new search starts on its first page.
+      albumPager.current?.scrollTo({ left: 0 });
+      trackPager.current?.scrollTo({ left: 0 });
+      setAlbumPage(0);
+      setTrackPage(0);
       setResults(found);
+      setSongs(heard);
       setLooking(false);
       setAsked(true);
     }, SETTLE_MS);
     return () => clearTimeout(id);
+  // onPickSong is a prop that says whether to ask at all; it does not change
+  // while a search is being typed.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [typed]);
+
+  // A phone turned into a desk, or back: the pages come and go with it. Either
+  // that or a turned screen means the rows are decided again, next search.
+  useEffect(() => {
+    const phone = window.matchMedia('(max-width: 768px)');
+    const quit = new AbortController();
+    phone.addEventListener('change', () => { rowsDecided.current = false; setPaged(phone.matches); }, { signal: quit.signal });
+    window.addEventListener('resize', () => { rowsDecided.current = false; }, { signal: quit.signal });
+    return () => quit.abort();
+  }, []);
+
+  // Three rows only where three still leave the tracks in sight: measured off
+  // the first cover to land and the room under the top of the grid, before
+  // the page is painted, so a page never shows two rows and then grows.
+  useLayoutEffect(() => {
+    if (!paged || rowsDecided.current || !results.length) return;
+    const pager = albumPager.current;
+    const tile = pager?.querySelector('.ses-tile');
+    if (!tile) return;
+    rowsDecided.current = true;
+    const gap = parseFloat(getComputedStyle(tile.parentElement).rowGap) || 0;
+    const row = tile.getBoundingClientRect().height + gap;
+    const top = pager.getBoundingClientRect().top + (parseFloat(getComputedStyle(pager).paddingTop) || 0);
+    setRows(window.innerHeight - top >= row * 3 - gap + TRACKS_PEEK ? 3 : 2);
+  }, [paged, results]);
 
   // The tile's cover is where the landing starts from, so its box goes along
   // with the record.
@@ -276,8 +378,17 @@ export default function AlbumPicker({ onPick, onResume, inline = false }) {
   // The armed discard goes too. A question asked before a listen and still
   // asked after it is a question about a screen that has been away.
   function chosen() {
+    // The search that found it is worth keeping (RECENT_KEY). A draft is
+    // resumed from an empty field, so there is nothing to keep then.
+    const term = typed.trim();
+    if (term) {
+      const next = [term, ...recent.filter(t => t.toLowerCase() !== term.toLowerCase())].slice(0, RECENT_KEPT);
+      setRecent(next);
+      try { localStorage.setItem(RECENT_KEY, JSON.stringify(next)); } catch { /* kept for this visit only */ }
+    }
     setTyped('');
     setResults([]);
+    setSongs([]);
     setLooking(false);
     setAsked(false);
     setConfirmDiscard(null);
@@ -318,12 +429,41 @@ export default function AlbumPicker({ onPick, onResume, inline = false }) {
   // Two taps, because there's no undo on the other side of this one.
   async function discardDraft(id) {
     if (confirmDiscard !== id) { setConfirmDiscard(id); return; }
+    // A track note's draft has a second copy, in this browser, which would
+    // bring the words straight back the next time the song was pressed. It
+    // goes too — the same key names both (lookup_key).
+    const gone = drafts.find(d => d.id === id);
+    if (gone?.song) {
+      try {
+        const all = JSON.parse(localStorage.getItem(TRACK_NOTE_WRITING) || '{}');
+        delete all[lookup_key(gone.album, gone.artist || '', gone.song)];
+        localStorage.setItem(TRACK_NOTE_WRITING, JSON.stringify(all));
+      } catch { /* no browser copy to clear */ }
+    }
     setDrafts(prev => prev.filter(d => d.id !== id));
     setConfirmDiscard(null);
     try { await fetch(`/api/drafts/${id}`, { method: 'DELETE' }); } catch { /* already gone */ }
   }
 
-  const nothing = asked && !looking && results.length === 0 && typed.trim();
+  const nothing = asked && !looking && results.length === 0 && songs.length === 0 && typed.trim();
+  // Albums are named only when there are songs under them to be told apart
+  // from — a search that found only albums is the picker it always was. The
+  // songs are always named: rows in a picker of covers need saying. The
+  // heading said Records until 2026-09-26; everywhere the session writes the
+  // word it says album (Miyel).
+  const twoKinds = results.length > 0 && songs.length > 0;
+  // The pages, cut from the lists as they stand. Not paged, each list is one
+  // page: the long grid and the first eight tracks, as a desk has them.
+  const perPage = rows * ALBUM_COLUMNS;
+  const albumPages = [];
+  if (paged) for (let i = 0; i < results.length; i += perPage) albumPages.push(results.slice(i, i + perPage));
+  else if (results.length) albumPages.push(results);
+  const trackPages = [];
+  if (paged) for (let i = 0; i < songs.length; i += TRACKS_PER_PAGE) trackPages.push(songs.slice(i, i + TRACKS_PER_PAGE));
+  else if (songs.length) trackPages.push(songs.slice(0, DESK_TRACKS));
+  // While a search is out, the old answer stays up and says nothing; the
+  // word is only for a screen that has nothing on it yet.
+  const lookingOnEmpty = looking && results.length === 0 && songs.length === 0;
 
   return (
     <div className={'ses-picker' + (inline ? ' ses-picker--inline' : '')}>
@@ -406,10 +546,15 @@ export default function AlbumPicker({ onPick, onResume, inline = false }) {
           <label className="ses-search">
             <MagnifyingGlass size={18} weight="regular" aria-hidden="true" />
             <input
+              ref={field}
               className="ses-input"
+              onFocus={() => setFieldOn(true)}
+              /* A beat late, so a tap on a recent search lands before the list
+                 it is in goes: on a phone the tap takes the focus first. */
+              onBlur={() => setTimeout(() => setFieldOn(false), 200)}
               value={typed}
               onChange={e => type(e.target.value)}
-              placeholder="Search an artist or an album"
+              placeholder="Search an artist, album, or track"
               autoComplete="off"
               /* Not inline, and this is the whole of Miyel's "it goes off the
                  screen and everything goes way too high" on a real phone,
@@ -430,10 +575,70 @@ export default function AlbumPicker({ onPick, onResume, inline = false }) {
                  she just watched assemble is still there underneath it. */
               autoFocus={!inline}
             />
+            {/* A way back to an empty field without holding delete, 2026-09-26
+                (Miyel). It keeps the keyboard up: clearing is the start of
+                another search, not the end of this one. */}
+            {typed && (
+              <button
+                type="button"
+                className="ses-clear"
+                onClick={() => { type(''); field.current?.focus(); }}
+                aria-label="Clear the search"
+              >
+                <XCircle size={18} weight="fill" aria-hidden="true" />
+              </button>
+            )}
           </label>
 
+          {/* Recent searches, under an empty field in use (RECENT_KEY). A tap
+              runs one again; Clear forgets them all. The mouse press is kept
+              from taking the focus, so on a desk the list stays put under the
+              pointer. */}
+          {/* It opens and folds rather than appearing, 2026-09-26: always
+              drawn while there is anything kept, grown from nothing as the
+              field is used and folded back when it is not, pushing what is
+              under it down and letting it back up (Miyel: "right now it
+              kind of disappears"). Folded, it cannot be pressed (inert). */}
+          {recent.length > 0 && (
+            <div
+              className={'ses-recent' + (fieldOn && !typed.trim() && !emptying ? ' ses-recent--open' : '')}
+              inert={!(fieldOn && !typed.trim() && !emptying)}
+              onMouseDown={e => e.preventDefault()}
+            >
+              <div className="ses-recent-in">
+                <div className="ses-recent-head">
+                  <span className="ses-label">Recent</span>
+                  <button
+                    type="button"
+                    className="ses-label ses-recent-clear"
+                    onClick={() => {
+                      setEmptying(true);
+                      setTimeout(() => {
+                        setRecent([]);
+                        setEmptying(false);
+                        try { localStorage.removeItem(RECENT_KEY); } catch { /* nothing kept */ }
+                      }, RECENT_FOLD_MS);
+                    }}
+                  >
+                    Clear
+                  </button>
+                </div>
+                {recent.map(term => (
+                  <button key={term} type="button" className="ses-recent-row" onClick={() => type(term)}>
+                    <ClockCounterClockwise size={16} weight="regular" aria-hidden="true" />
+                    <span>{term}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Only when there is something to say. It held a line open under the
+              field the whole time, which was the gap between the search and
+              the albums Miyel called too much (2026-09-26). */}
+          {(lookingOnEmpty || nothing || BY_HAND_OFFERED) && (
           <div className="ses-under">
-            {looking && <span className="ses-label">Looking…</span>}
+            {lookingOnEmpty && <span className="ses-label">Looking…</span>}
             {nothing && <span className="ses-label">Nothing found for that.</span>}
             {/* The door to it is shut. Miyel, 2026-09-18: "let's remove the
                 manual entry button from the session, juuuust until I build it
@@ -456,24 +661,119 @@ export default function AlbumPicker({ onPick, onResume, inline = false }) {
               </button>
             )}
           </div>
+          )}
 
+          {results.length > 0 && twoKinds && <p className="ses-label ses-kind">Albums</p>}
           {results.length > 0 && (
-            <div className="ses-grid">
-              {results.map(album => (
-                <button
-                  type="button"
-                  key={album.collectionId}
-                  className="ses-tile"
-                  onClick={e => take(album, e)}
-                >
-                  <span className="ses-tile-art">
-                    <img src={album.art} alt="" loading="lazy" />
-                  </span>
-                  <span className="ses-tile-name">{album.name}</span>
-                  <span className="ses-tile-year">{album.artist}{album.year ? ` · ${album.year}` : ''}</span>
-                </button>
-              ))}
-            </div>
+            <>
+              <div
+                ref={albumPager}
+                className={'ses-pages' + (paged ? ' ses-pages--paged' : '') + (twoKinds ? ' ses-pages--named' : '')}
+                onScroll={paged ? e => {
+                  const at = Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth);
+                  if (at !== albumPage) setAlbumPage(at);
+                } : undefined}
+              >
+                {albumPages.map((page, i) => (
+                  <div key={i} className="ses-grid ses-page">
+                    {page.map(album => (
+                      <button
+                        type="button"
+                        key={album.collectionId}
+                        className="ses-tile"
+                        onClick={e => take(album, e)}
+                      >
+                        <span className="ses-tile-art">
+                          <img src={album.art} alt="" loading="lazy" />
+                        </span>
+                        <span className="ses-tile-name">{album.name}</span>
+                        {/* The name gives way before the year does
+                            (ses-split, session.css). */}
+                        <span className="ses-tile-year ses-split">
+                          <span className="ses-split-by">{album.artist}</span>
+                          {album.year && <span className="ses-split-end">{'\u00a0·\u00a0'}{album.year}</span>}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                ))}
+              </div>
+              {albumPages.length > 1 && (
+                <p className="ses-label ses-page-at" aria-live="polite">{albumPage + 1} of {albumPages.length}</p>
+              )}
+            </>
+          )}
+
+          {/* ── Tracks, under the albums, 2026-09-24 ──────────────────────
+              A song pressed here is a track note: an entry about that one
+              song, never a listen and never part of one (the track-notes
+              brief). Rows rather than covers, because a row can say which
+              album the song is on, and a cover alone would read as the
+              album — two songs off Shrines are two copies of one picture.
+              Nothing new on the beacon and no second way to start: search is
+              where anybody already looks for a song.
+
+              Headed Tracks, not Songs, from 2026-09-26, and each cover wears
+              the folded corner a track note wears on the wall, so the row
+              already looks like what pressing it makes (Miyel). */}
+          {onPickSong && songs.length > 0 && (
+            <>
+              <p className="ses-label ses-kind ses-kind--tracks">Tracks</p>
+              <div
+                ref={trackPager}
+                className={'ses-pages ses-pages--tracks' + (paged ? ' ses-pages--paged' : '')}
+                onScroll={paged ? e => {
+                  const at = Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth);
+                  if (at !== trackPage) setTrackPage(at);
+                } : undefined}
+              >
+                {trackPages.map((page, i) => (
+                  <div key={i} className="ses-songs ses-page">
+                    {page.map(song => (
+                      <button
+                        type="button"
+                        key={`${song.collectionId}-${song.title}`}
+                        className="ses-song"
+                        onClick={e => {
+                          const img = e.currentTarget.querySelector('img');
+                          const from = img ? img.getBoundingClientRect() : null;
+                          // A draft of this song, if there is one, comes along:
+                          // found again in the search, it opens where it was left.
+                          const kept = drafts.find(d => d.song && d.lookup_key === lookup_key(song.name, song.artist, song.title));
+                          chosen();
+                          onPickSong({
+                            song: song.title,
+                            album: song.name,
+                            artist: song.artist,
+                            year: song.year || '',
+                            artUrl: song.artLarge || song.art || '',
+                            collectionId: song.collectionId || null,
+                            genre: song.genre || '',
+                            written: kept ? { rating: kept.rating, note: kept.notes || '' } : null,
+                          }, from);
+                        }}
+                      >
+                        <span className="ses-song-art ln-fold">
+                          <img src={song.art} alt="" loading="lazy" />
+                          <span className="ln-fold-flap" aria-hidden="true"><img src={song.art} alt="" loading="lazy" /></span>
+                        </span>
+                        <span className="ses-song-said">
+                          <span className="ses-song-title">{song.title}</span>
+                          <span className="ses-song-record ses-split">
+                            <span className="ses-split-by">{song.name}</span>
+                            {song.year && <span className="ses-split-end">{'\u00a0·\u00a0'}{song.year}</span>}
+                          </span>
+                        </span>
+                        <CaretRight className="ses-song-go" size={16} weight="regular" aria-hidden="true" />
+                      </button>
+                    ))}
+                  </div>
+                ))}
+              </div>
+              {trackPages.length > 1 && (
+                <p className="ses-label ses-page-at" aria-live="polite">{trackPage + 1} of {trackPages.length}</p>
+              )}
+            </>
           )}
 
           {drafts.length > 0 && !typed.trim() && (
@@ -501,7 +801,13 @@ export default function AlbumPicker({ onPick, onResume, inline = false }) {
                Only the discard is extra, and it sits on the art, so the tile's
                footprint is a search result's to the pixel. */
             <div className="ses-grid" ref={gridRef}>
-              {drafts.map(draft => {
+              {/* A track note's draft, 2026-09-26, is one of these too: in
+                  the same list, newest first, the same as everything else
+                  (Miyel — a view that sorts them apart is for later). It wears
+                  the folded corner a track note wears on the wall, is named
+                  by its song, and opens the track note rather than a listen.
+                  A picker that offers no songs shows none. */}
+              {drafts.filter(draft => onPickSong || !draft.song).map(draft => {
                 const armed = confirmDiscard === draft.id;
                 return (
                   <div key={draft.id} data-draft={draft.id} className={'ses-tile ses-tile--draft' + (armed ? ' ses-tile--armed' : '')}>
@@ -526,14 +832,30 @@ export default function AlbumPicker({ onPick, onResume, inline = false }) {
                         if (confirmDiscard !== null) { setConfirmDiscard(null); return; }
                         const img = e.currentTarget.querySelector('img');
                         chosen();
+                        if (draft.song) {
+                          onPickSong({
+                            song: draft.song,
+                            album: draft.album,
+                            artist: draft.artist || '',
+                            year: draft.year || '',
+                            artUrl: draft.album_art || '',
+                            collectionId: draft.collection_id || null,
+                            genre: draft.genre || '',
+                            written: { rating: draft.rating, note: draft.notes || '' },
+                          }, img ? img.getBoundingClientRect() : null);
+                          return;
+                        }
                         onResume(draft, img ? img.getBoundingClientRect() : null);
                       }}
                       aria-label={armed
-                        ? `Delete the draft of ${draft.album}`
-                        : `${draft.album}. Press and hold to delete.`}
+                        ? `Delete the draft of ${draft.song || draft.album}`
+                        : `${draft.song || draft.album}. Press and hold to delete.`}
                     >
-                      <span className="ses-tile-art">
+                      <span className={'ses-tile-art' + (draft.song ? ' ln-fold' : '')}>
                         {draft.album_art ? <img src={draft.album_art} alt="" loading="lazy" /> : null}
+                        {draft.song && draft.album_art && (
+                          <span className="ln-fold-flap" aria-hidden="true"><img src={draft.album_art} alt="" /></span>
+                        )}
                         {armed && (
                           <span className="ses-tile-sure">
                             <Trash size={20} weight="fill" aria-hidden="true" />
@@ -548,9 +870,10 @@ export default function AlbumPicker({ onPick, onResume, inline = false }) {
                           still its name while it is being asked. It said
                           "press again" here and the name went red with it,
                           which made the whole tile the question. */}
-                      <span className="ses-tile-name">{draft.album}</span>
-                      <span className="ses-tile-year">
-                        {draft.artist}{draft.artist ? ' · ' : ''}{sinceLabel(draft.updated_at)}
+                      <span className="ses-tile-name">{draft.song || draft.album}</span>
+                      <span className="ses-tile-year ses-split">
+                        {draft.artist && <span className="ses-split-by">{draft.artist}</span>}
+                        <span className="ses-split-end">{draft.artist ? '\u00a0·\u00a0' : ''}{sinceLabel(draft.updated_at)}</span>
                       </span>
                     </button>
                   </div>

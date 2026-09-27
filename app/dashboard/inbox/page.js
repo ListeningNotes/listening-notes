@@ -544,7 +544,9 @@ export default function Inbox({ layered = false, inPane = false }) {
   // recognise one record through different punctuation, so a send for
   // "Beyoncé — Lemonade" finds the entry however either was typed.
   function candidates(sent) {
-    const all = mine || [];
+    // Listens only: a send became a record's listen or nothing, and a note on
+    // one song off it is not the record they sent (2026-09-24).
+    const all = (mine || []).filter(e => !e.song);
     const typed = look.trim().toLowerCase();
     if (typed) {
       return all

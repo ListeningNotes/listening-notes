@@ -1,0 +1,32 @@
+-- Track notes, 2026-09-24.
+--
+-- A track note is a journal entry about one song rather than a record: a
+-- single, something a friend sent, one track played all week. A beta tester
+-- wrote a long piece about one song and had nowhere to put it (Miyel's
+-- track-notes brief). It is its own kind of entry and never a part of an
+-- album entry, and it can never become one.
+--
+-- So it lives with the others — its own id, date, slug, rating, heart, note,
+-- and the record it belongs to in `album` and `artist` — and one column says
+-- which song. Empty is an album listen, which is every entry written before
+-- this, so nothing already in a journal changes. A track note stores no
+-- tracklist, no horizon and no album rating, and is never a Masterpiece:
+-- those belong to a sitting with a record.
+--
+-- The record's `album_key` is the same as the album's, on purpose. It is what
+-- gathers a record's listens and its track notes onto one tile on the wall;
+-- everything that numbers listens or compares albums asks `song IS NULL`
+-- first (library/database_actions.js).
+ALTER TABLE entries ADD COLUMN IF NOT EXISTS song text;
+
+-- ── And a half-written one is a draft, 2026-09-26 ─────────────────────────
+-- A track note walked away from waits in the picker's drafts beside the
+-- album listens, the same as everything else (Miyel). One column says which
+-- song, as it does on entries; empty is an album listen's draft, which every
+-- draft before this is. Its lookup_key carries the song after a bar, so it
+-- never takes the place of its album's own draft (entry_formatter.js).
+--
+-- Added to this file rather than a new one because this file had not reached
+-- a journal yet: it ran only on the Neon test copy for track notes, which
+-- was given this column by hand.
+ALTER TABLE drafts ADD COLUMN IF NOT EXISTS song text;

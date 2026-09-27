@@ -160,7 +160,7 @@ export default function AlbumNotes({
           className={flag(Favorite, 'fav')}
           onClick={() => setFavorite(!Favorite)}
           aria-pressed={Favorite}
-          title="A record you love"
+          title="An album you love"
         >
           <Heart size={24} weight={Favorite ? 'fill' : 'regular'} aria-hidden="true" />
           <span className="ses-mark-word">Favorite</span>
@@ -170,7 +170,7 @@ export default function AlbumNotes({
           className={flag(Formative, 'formative')}
           onClick={() => setFormative(!Formative)}
           aria-pressed={Formative}
-          title="A record that made you"
+          title="An album that made you"
         >
           {/* Bold, not fill. Phosphor's filled Fingerprint is a solid pad with
               the ridges knocked *out* of it, so turning it on painted the
@@ -186,7 +186,7 @@ export default function AlbumNotes({
 
       <hr className="ses-rule" style={{ margin: '30px 0 24px' }} />
 
-      <div className="ses-label" style={{ marginBottom: 12 }}>Album notes</div>
+      <div className="ses-label" style={{ marginBottom: 12 }}>Album note</div>
       {/* Grown by layout, not by script — the same fix as the track note, and
           this one needed it more: its sizing ran on every render of the
           screen, not only on a keystroke. See .ses-grow in session.css. */}

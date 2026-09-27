@@ -37,6 +37,7 @@ import { createPortal } from 'react-dom';
 import { Fingerprint, Heart, SketchLogo } from '@phosphor-icons/react';
 import { handedOver, stillReadingOn } from '../../library/handoff';
 import SiteNav from './SiteNav';
+import FolderFooter from './FolderFooter';
 import KeeperTools from './KeeperTools';
 import { useLayerHeaderSlot } from './LayerEntry';
 import StarRating from './StarRating';
@@ -77,9 +78,18 @@ export default function LayerWaiting({ slug, authed = false }) {
     // the swipe that may leave from it.
     if (onward) document.documentElement.style.setProperty('--ln-turn', '1');
   }, [headerSlot, onward]);
+  // A page of a folder, turned to from the page beside it, carries the
+  // folder with it, so the tabs stay at the foot of the screen while it
+  // loads, already on the page they are turning to, rather than blinking out
+  // for the length of the fetch (2026-09-25). Drawn still: the page itself
+  // makes them pressable.
+  const tabs = known?.folder?.length > 1 ? <FolderFooter folder={known.folder} slug={slug} /> : null;
   const header = headerSlot
     ? createPortal(
-        <SiteNav tools={authed ? <KeeperTools onEdit={() => {}} slug={slug} /> : null} />,
+        <>
+          <SiteNav tools={authed ? <KeeperTools onEdit={() => {}} slug={slug} /> : null} />
+          {tabs}
+        </>,
         headerSlot,
       )
     : null;
@@ -123,7 +133,10 @@ export default function LayerWaiting({ slug, authed = false }) {
     return (<>
       {headerSlot
         ? createPortal(
-            <SiteNav mark={crown} lede={false} tools={authed ? <KeeperTools onEdit={() => {}} slug={slug} /> : null} />,
+            <>
+              <SiteNav mark={crown} lede={false} tools={authed ? <KeeperTools onEdit={() => {}} slug={slug} /> : null} />
+              {tabs}
+            </>,
             headerSlot,
           )
         : null}
@@ -134,6 +147,12 @@ export default function LayerWaiting({ slug, authed = false }) {
       <div className="ln-screens" aria-hidden="true" />
     </>);
   }
+
+  // A track note is a small card, not a record's first screen, 2026-09-24:
+  // drawing the album large while it loads would be a page that shrinks into
+  // a different page when it lands. The header holds still and the card
+  // arrives into an empty sheet.
+  if (known?.song) return header;
 
   if (!known) {
     return (<>
@@ -151,7 +170,6 @@ export default function LayerWaiting({ slug, authed = false }) {
   // The same three lines FullPostPage derives, off the same fields.
   const isMasterpiece = known.masterpiece || known.rating === 'Masterpiece';
   const displayRating = isMasterpiece ? 5 : parseFloat(known.rating) || 0;
-  const listenLabel = known.listen_total > 1 ? `Listen ${known.listen_total}` : null;
   const postedOn = known.posted_at
     ? new Date(known.posted_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
     : null;
@@ -176,7 +194,6 @@ export default function LayerWaiting({ slug, authed = false }) {
           <StarRating rating={displayRating} size={24} glow={isMasterpiece} />
         )}
         <div className="ln-screen-one-chips">
-          {listenLabel && <Chip>{listenLabel}</Chip>}
           {/* The chip only where the line below cannot be drawn, which is the
               rule the entry itself follows — both ask creditOn, so the two
               can never disagree and the row cannot change shape when the

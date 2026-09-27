@@ -610,3 +610,19 @@ rows, Now logging and Quiet (`st-choice`, `st-pick` in forms.css);
 public beacon asked on every answer; `beacon_on` in the Bookplate, set by the
 layout, which stopped a quiet copy's browser from polling at all. All of it is
 in git before the commit that removed it on branch `settings-quiet`.
+
+## The journal — a record moving to the top, 2026-09-24, one afternoon
+
+Current rule: DECISIONS, The journal ("The journal wall is ordered by a
+record's first entry, and never reorders").
+
+When the wall went to one tile per record, a record needed one date to sit
+by, and the first answer was its newest entry: a song marked on a record
+logged months ago took it to the top, on the reasoning that the wall is
+newest first and marking a song is the newest thing that happened to that
+record. It was built and never merged. Miyel's brief the same evening turned
+it round: the wall is a shelf, not a feed; tiles that jump when a record is
+touched make it a record of when you last poked something rather than of when
+you listened; and recency already has three homes — the beacon's last logged,
+the recents under it, and friends' feeds. With the order fixed, the fan took a
+precise meaning with it: more than one entry, a record you have come back to.

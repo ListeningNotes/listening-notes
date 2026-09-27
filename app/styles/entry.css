@@ -52,6 +52,9 @@
   padding: 172px 24px 0;
   gap: 16px;
 }
+/* In a folder the screen ends where its tabs begin, so the caret down to the
+   notes sits above the band rather than under it. */
+.ln-entry--folder .ln-screen-one { padding-bottom: var(--ff-h); }
 .ln-screen-one-art {
   /* Sized off viewport HEIGHT as well as width. A width-only size
      overflowed once Safari's chrome was showing — the chips and the
@@ -357,7 +360,8 @@
      they can win; see the note there. */
   .lay--over-journal { left: var(--spine-w, var(--spine-rest)); right: 0; }
   .lay--over-journal .sitenav-row,
-  .lay--over-journal .sitenav-row::before { left: var(--spine-w, var(--spine-rest)); right: 0; }
+  .lay--over-journal .sitenav-row::before,
+  .lay--over-journal .ff { left: var(--spine-w, var(--spine-rest)); right: 0; }
   .lay--over-journal .lay-step--prev { left: calc(var(--spine-w, var(--spine-rest)) + 10px); }
   .lay--over-journal .lay-step--next { right: 10px; }
   /* The owner's own rooms — the inbox, the address book, a person, a report,
@@ -1036,11 +1040,55 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
   color: var(--fav);
 }
 
+/* ── A track, read ──────────────────────────────────────────────────────────
+   2026-09-24, the track-notes brief. Rated and not written is one tight row —
+   number, title, marks, stars — and five of them fit where one used to sit,
+   because nothing under it is waiting for a note that may never come.
+   Written keeps the row and sets its note under the title, with the comment
+   glyph at the end of it (.ln-say-beside). The rule under a track is the
+   track's own, so it closes the note when there is one and the row when there
+   is not. The title is bold and a size up from where it was, as in the
+   brief's mock-up: in a column of rows the song is what you read down. */
+.ln-track { border-bottom: 1px solid var(--border); }
+.ln-track-row { display: flex; align-items: center; gap: 12px; padding: 13px 0; }
+.ln-track-row--open { padding-bottom: 6px; }
+.ln-track-num {
+  width: 16px;
+  flex-shrink: 0;
+  font-family: var(--font-label);
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+.ln-track-name {
+  min-width: 0;
+  font-size: 15px;
+  font-weight: var(--font-display-weight);
+  color: var(--ink);
+}
+.ln-track-marks { display: flex; align-items: center; gap: 10px; margin-left: auto; flex-shrink: 0; }
+/* Under the title rather than under the number — the note is the song's —
+   which is the number's 16px and the row's 12px gap. */
+.ln-track-note {
+  margin: 0 0 6px 28px;
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--ink-soft);
+  white-space: pre-wrap;
+}
+.ln-track-edited { margin-left: 28px; }
+/* The count at the far end of a section's heading (MetadataLabel's `aside`):
+   a step fainter than the heading's own name, which is what the line is. */
+.ln-meta-label-aside { opacity: 0.7; white-space: nowrap; }
+/* A correction keeps the room it had: every track has a field under it. */
+.ln-track--editing { padding-bottom: 18px; }
+.ln-track--editing .ln-track-row { padding: 12px 0; }
+
 /* A track's own row while it is being corrected: the title becomes a field in
    the title's place, and the heart is always drawn so it can be pressed. Read
    rather than edited, an empty heart on every track would be a column of
-   controls nobody asked for — so it only appears filled. */
-.ln-track-field { flex: 1; min-width: 0; font-size: 13px; }
+   controls nobody asked for — so it only appears filled. The field is set in
+   the title's own type, the way .ln-write is set in the note's. */
+.ln-track-field { flex: 1; min-width: 0; font-size: 15px; font-weight: var(--font-display-weight); }
 /* The heart is only drawn while a correction is open, so this is the editing
    size and there is no reading version to keep small. It carries a thumb-sized
    target on padding with a matching negative margin (2026-09-17): the hit area
@@ -1101,8 +1149,10 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
    this ever saying so. The album note keeps its rule: nothing else is
    underlining that one. */
 .ln-write--track {
-  font-size: 13px; line-height: 1.8; color: var(--ink-soft);
+  font-size: 14px; line-height: 1.75; color: var(--ink-soft);
   border-bottom: 0; margin-bottom: 0;
+  /* Where the note it becomes is read: under the title. */
+  margin-left: 28px; width: calc(100% - 28px);
 }
 
 /* An edit stamp, printed under the piece of writing it belongs to — a track's
@@ -1192,6 +1242,34 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
    three gaps for a control 23px tall. */
 .ln-say-way { display: flex; justify-content: flex-end; }
 .ln-say-way--open { margin-bottom: 10px; }
+/* The glyph, at the end of a track's note, 2026-09-24: a word when the way in
+   stands alone (the album note), a glyph when it is one of a column of them.
+   The note on the left and the glyph on the right, the glyph level with the
+   first line rather than floating halfway down a long paragraph. */
+.ln-say-beside { display: flex; align-items: flex-start; gap: 8px; padding-bottom: 8px; }
+.ln-say-beside--open { margin-bottom: 10px; }
+.ln-say-beside-text { flex: 1; min-width: 0; }
+/* The mark and not a mark in a container (DECISIONS): a thumb's target from
+   padding, paid back in negative margin so the glyph takes only its own 17px
+   and sits flush with the stars above it. Less given back on the left, so
+   the press never reaches across a link at the end of a line. */
+.ln-say-glyph {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  padding: 13px;
+  margin: -9px -13px -13px -5px;
+  border: 0;
+  background: none;
+  color: var(--ink-faint);
+  cursor: pointer;
+  transition: color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.ln-say-glyph:hover { color: var(--ink); }
+.ln-say-glyph:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: -6px; }
+.ln-say-glyph-count { font-family: var(--font-label); font-size: 10px; letter-spacing: 0.04em; }
 .ln-says { display: flex; flex-direction: column; gap: 22px; margin-bottom: 12px; }
 /* A hairline over each comment and none over the first: the gap is enough
    between the note and the first thing said about it, and a line there would
@@ -2083,4 +2161,101 @@ html[data-printing] .sitenav-row { display: none; }
 .td-act:active { transform: scale(0.9); }
 .td-act--yes { color: var(--ink); }
 .td-act--yes:hover { color: var(--ink); opacity: 0.75; }
+
+
+/* ── A track note (TrackNotePage.js), 2026-09-24 ───────────────────────────
+   One card, about a third the height of an album entry: the cover with its
+   fold and, beside it, the song, `album · artist`, the stars and the posted
+   date, the pair in the middle of the page; the keeper's
+   Listen to the full album under it; the note under that, read left to
+   right as an album's notes are, with the comment glyph at its end. The
+   type is the entry's own: the song is a title, the note is the album note's
+   size, because on this card it is the only writing there is. */
+.tn { min-height: 100dvh; background: var(--bg); color: var(--ink); font-family: var(--font-sans); }
+.tn-card {
+  max-width: 560px;
+  margin: 0 auto;
+  box-sizing: border-box;
+  padding: calc(96px + var(--safe-top)) 26px calc(120px + env(safe-area-inset-bottom, 0px));
+}
+/* On the listen's sheet nothing is drawn over a song, so the card clears the
+   phone's own status bar itself — the whole of it, as the session's header
+   does, not the site's trimmed --safe-top. It sat 24px from the top of the
+   glass until 2026-09-26, with the clock over the cover (Miyel's screenshot). */
+.lay--scrolls .tn--writing .tn-card { padding-top: calc(env(safe-area-inset-top, 0px) + 24px); }
+
+/* ── Centred, 2026-09-25 ──
+   The cover on the left and the words on the right, as the brief drew them,
+   but the pair stands in the middle of the page rather than against its left
+   edge, with the listen centred under it (Miyel). The note is not: it reads
+   left to right, as an album's notes do under its centred first screen — the
+   card is centred, the writing is not. The words keep to the cover's side of
+   their own column. Showing its code, the cover grows and the words go under
+   it, still on the middle: a code the size of a thumbnail is too fine to
+   point a phone at. */
+.tn-head { display: flex; align-items: center; justify-content: center; gap: 16px; }
+.tn-head--code { flex-wrap: wrap; }
+.tn-cover {
+  display: block;
+  flex-shrink: 0;
+  width: 96px; height: 96px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--bg-warm);
+  box-shadow: var(--shadow-soft);
+  transition: width 0.26s ease, height 0.26s ease;
+}
+.tn-cover img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.tn-cover--code { width: 220px; height: 220px; }
+.tn-said { flex: 0 1 auto; min-width: 0; }
+.tn-song {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: var(--font-display-weight);
+  font-size: 23px;
+  line-height: 1.15;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.tn-record { margin: 7px 0 0; font-size: 13px; line-height: 1.4; color: var(--ink-soft); }
+.tn-marks { display: flex; align-items: center; gap: 9px; margin-top: 12px; min-height: 22px; }
+/* Who put you onto it, under the head, where an album entry's line sits
+   under its chips. */
+.tn-card .ln-sent { margin-top: 16px; }
+.tn-body { margin-top: 24px; }
+.tn-note {
+  margin: 0 0 6px;
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--ink);
+  white-space: pre-wrap;
+}
+/* The glyph at the end of the note, on the right: the note is the whole
+   width, so its way in waits under it rather than beside its first line. */
+.tn-body .ln-say-beside { padding-bottom: 0; }
+.tn-write { font-size: 15px; line-height: 1.75; }
+/* Plain words and a play mark, in ink, underlined so it reads as the link it
+   is: the one thing on the card that goes somewhere. Under the head, so a
+   long note cannot bury it (2026-09-25) — and not a pill, which Miyel does
+   not like. */
+.tn-whole {
+  display: flex; align-items: center; gap: 9px;
+  width: fit-content; min-height: 44px; margin: 10px auto 0; padding: 0; border: 0; background: none;
+  font-family: var(--font-label); font-size: 10.5px; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 5px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.tn-whole + .tn-body { margin-top: 12px; }
+.tn-whole svg { display: block; flex-shrink: 0; }
+.tn-whole:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; }
+/* The date, last in the head, once — as an album entry says its own. */
+.tn-posted {
+  margin: 10px 0 0;
+  font-family: var(--font-label); font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--ink-faint);
+}
 

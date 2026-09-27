@@ -354,8 +354,8 @@ and it was a column of facts, not an object.
 
 **You browse on the wall and nowhere else, 2026-09-15.** The ID pane is a
 snapshot of a person, not a second journal, so an entry opened from it — the
-pinned record, a cover in a count's window — is handed no neighbours and
-closes back to the card. It had the wall's order behind it and let you swipe
+pinned record, a cover in a count's window — is handed no neighbours beyond
+its own folder (2026-09-25) and closes back to the card. It had the wall's order behind it and let you swipe
 through the journal, which was the pane passing an order it has nothing to do
 with. One layer at a time, too: a cover closes its window before the entry
 opens.
@@ -842,13 +842,15 @@ out: that is a mode, and modes make gesture navigation unlearnable. **On a
 desk the layer is the right page, 2026-09-13, rewritten 2026-09-15,** with
 the spine still beside it; the whole screen is the phone's shape.
 
-**An entry expands from its cover, and sideways means the next record,
-2026-09-02.** The sheet grows out of the tapped tile, the way a photo viewer
-opens a picture; left and right are the previous and next record on the wall
-as it stands (search, filters, sort — `library/handoff.js`), stopping at the
-ends, by `router.replace` so back still means the wall. Closing is a pull
-down from the top of the first screen, Escape, or back. No edge pull:
-sideways cannot mean both next and leave.
+**An entry expands from its cover, and sideways means the next page,
+2026-09-02, amended 2026-09-25.** The sheet grows out of the tapped tile, the
+way a photo viewer opens a picture. From the wall, left and right move
+through the wall as one long run of pages — a folder's entries oldest first,
+then the next record's — as it stands (search, filters, sort —
+`library/handoff.js`), stopping at the ends, by `router.replace` so back
+still means the wall (Miyel chose the run over stopping at a folder's end).
+Closing is a pull down from the top of the first screen, Escape, or back. No
+edge pull: sideways cannot mean both next and leave.
 
 **The layer takes a sideways drag only where a record is beside this one,
 2026-09-03.** On a form, or an entry opened cold, sideways is the browser's.
@@ -931,6 +933,47 @@ a single track.
 
 **An album has many listens, numbered.** The number is computed from existing
 entries, never chosen. Entries are never overwritten; a relisten is a new one.
+
+**A track note is its own entry, about one song, 2026-09-24.** Never a shorter
+album entry and never part of one: `song` beside the record's `album`
+(migration 025). Stars and words only — no tracklist, horizon, album rating,
+Formative, Masterpiece, or heart (dropped 2026-09-26). Its ··· is Edit, Credit,
+Send, Delete; nothing that counts albums counts it. One object doing both is
+one confusing object instead of two clear ones.
+
+**No tool turns an album entry into a track note, 2026-09-25.** Briefed and
+dropped the same day: with Albums and Songs in the picker nobody logs an
+album to write about one song, so a converter would sit in a menu nobody
+opens. The one entry already written that way is fixed by asking its
+keeper. The rule under the brief stands: nothing in a journal changes
+unless its keeper changes it — no update or migration edits an entry.
+
+**Three shapes, by count, drawn like Finder's files, 2026-09-24/25.** A
+card is one album listen; a page, its corner folded over, is one track note
+and no listen; a folder is more than one entry, whatever the mix. Nothing
+else is encoded in the shape — a page in a folder was tried and retired. Flat,
+no shadow or curl, and the folder's tab and the page's flap take the album's
+own colour (Miyel chose it off a sheet of three).
+
+**A folder opens to an entry and flips, 2026-09-25.** No index and no landing
+screen — the record's own page was built and taken out the same day. The only
+chrome is a band of tabs at the foot (Listen, Listen 2, or the song; the one
+you are on in ink), and the header keeps the mark — dots in its place were
+tried for a day. From the wall it opens on the earliest entry; from anywhere
+else on the one pressed, with only its folder either side. Dates show once.
+
+**The journal wall is ordered by a record's first entry, and never reorders,
+2026-09-24.** A second listen or a song marked on a record leaves its tile
+where it is: the wall is a shelf, not a feed, and its worth is finding your
+first listen where you left it. Recency lives on the beacon, the recents and
+the feed. A sort by latest would be a toggle beside the density control, not
+a new default — parked until it is missed. The reversal is in the archive.
+
+**Comments attach to writing, not to ratings, 2026-09-24.** A rated, unwritten
+track is one row with no way in — there is nothing to reply to. A word where
+the way in stands alone (the album note), the round bubble where it is one of
+several. A heading says what is there in numerals — "2 notes", "5 of 5 rated"
+— and never what is missing.
 
 **Definitions ship as editable defaults, and custom listen types are ruled
 out.** Universal second-person text installs and the owner can edit any of

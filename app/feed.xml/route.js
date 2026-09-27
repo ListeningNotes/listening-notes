@@ -64,8 +64,10 @@ export async function GET(request) {
       + (e.rating ? ` — ${e.rating}` : '')
       + (heard ? ` (${heard})` : '');
 
+    // A track note is titled by its song, with its record in the summary
+    // (2026-09-24): a feed reader has no fold to draw.
     return `    <item>
-      <title>${xml(e.album)} — ${xml(e.artist)}</title>
+      <title>${e.song ? `${xml(e.song)} — ${xml(e.artist)} (from ${xml(e.album)})` : `${xml(e.album)} — ${xml(e.artist)}`}</title>
       <link>${xml(link)}</link>
       <guid isPermaLink="true">${xml(link)}</guid>
       <description>${xml(summary)}</description>${date ? `

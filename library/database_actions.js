@@ -92,11 +92,17 @@ export function withoutChain(row) {
 // a second column). It holds a UTC clock reading, and the driver would hand
 // it back as local time — so it is read here as the UTC it is, under its own
 // name, which wins over the bare column from the * before it.
+//
+// A track note is not a listen, 2026-09-24. It shares the record's album_key
+// — that is what puts it behind the record's tile — so the window is split on
+// whether a row has a song: album listens are numbered among album listens,
+// and a track note has no number at all. Counted with it, one song marked in
+// March would have made the record's only listen "Listen 2 of 2".
 const WITH_LISTEN_NUMBERS = `
   SELECT *,
          (edited_at AT TIME ZONE 'UTC') AS edited_at,
-         ROW_NUMBER() OVER (PARTITION BY album_key ORDER BY posted_at, id)::int AS listen_number,
-         COUNT(*)     OVER (PARTITION BY album_key)::int                        AS listen_total
+         CASE WHEN song IS NULL THEN ROW_NUMBER() OVER (PARTITION BY album_key, song IS NULL ORDER BY posted_at, id) END::int AS listen_number,
+         CASE WHEN song IS NULL THEN COUNT(*)     OVER (PARTITION BY album_key, song IS NULL) END::int                        AS listen_total
   FROM entries
 `;
 
@@ -148,11 +154,15 @@ const HEARTS_FIELD = `(
        WITH ORDINALITY AS hearted(t, ord)
 ) AS hearts`;
 
+// `song` is what makes a row a track note (migration 025): empty on an album
+// listen, the song's title on a note about one song. The wall needs it to
+// know which tiles are folded, and every list that counts albums needs it to
+// leave the notes out.
 const WALL_FIELDS = [
   'id', 'slug', 'album', 'artist', 'year', 'genre', 'album_key',
   'rating', 'rating_value', 'entry_type', 'favorite', 'masterpiece',
   'formative', 'horizon', 'album_art', 'posted_at',
-  'listen_number', 'listen_total', 'credit_by_hand',
+  'listen_number', 'listen_total', 'credit_by_hand', 'song',
 ];
 
 // One slug, chosen by the database. /shuffle used to read every entry and pick
@@ -223,11 +233,17 @@ export async function pull_wall_entries() {
 // drawn as blocks — the shape of a listen rather than anything written — and
 // it makes a comparison between two people worth looking at. `tracks` and
 // `track_notes` stay out; those are writing.
+//
+// `song` goes out, 2026-09-24: the title of the one song a track note is
+// about, which is a fact about the entry and not writing. It is what lets a
+// friend's copy draw the fold and leave the note out of its comparisons. An
+// older copy ignores a field it does not know and draws the note as the
+// record — the price of the feed being readable by every version at once.
 const PUBLIC_FIELDS = [
   'slug', 'album', 'artist', 'year', 'genre',
   'album_key', 'rating', 'rating_value', 'entry_type',
   'favorite', 'masterpiece', 'formative', 'horizon', 'album_art', 'posted_at',
-  'listen_number', 'listen_total', 'credit_by_hand',
+  'listen_number', 'listen_total', 'credit_by_hand', 'song',
 ];
 
 export async function pull_public_entries() {
@@ -269,6 +285,29 @@ export async function pull_public_entries() {
     // leaves, and whether a credit was withheld is not a reader's business.
     return out;
   });
+}
+
+// ── One record: every listen and every track note, 2026-09-24 ────────────
+// The folder an entry is a page of: its record's entries, newest first, each
+// with the fields its first screen draws — for the tabs at the foot of the
+// screen and for the entry either side of it when you swipe (useFolder,
+// FolderFooter). The
+// wall's fields and no more: each page reads its own writing when it opens —
+// the lean-list rule above. It listed the record's own page until that page
+// went, 2026-09-25: a folder opens to an entry, not to a list.
+//
+// By album_key, the same key the wall gathers a tile on, so the folder and
+// the tile it opened from can never disagree about what is behind it.
+export async function pull_album(album_key) {
+  if (!album_key) return [];
+  const rows = await database.query(
+    `SELECT ${[...WALL_FIELDS, ...CREDIT_FIELDS, CREDIT_GUARD].map(f => `"${f}"`).join(', ')}
+     FROM (${WITH_LISTEN_NUMBERS}) ranked
+     WHERE album_key = $1
+     ORDER BY posted_at DESC`,
+    [album_key]
+  );
+  return rows.map(row => withoutChain(withSizedArt(row, LIST_ART_PX)));
 }
 
 export async function pull_entry_by_slug(slug, { includeChain = false } = {}) {
@@ -392,12 +431,24 @@ async function next_free_slug(album) {
 export async function save_new_entry(body) {
   const {
     album, artist, year, genre = '', entry_type,
-    rating, favorite, formative = false, notes,
-    track_notes, horizon, album_art, tracks = null,
+    rating, favorite, notes, album_art,
     received_from = null, received_date = null,
     received_from_url = null, credit_private = false,
     user_id = null
   } = body;
+
+  // ── A track note, 2026-09-24 ─────────────────────────────────────────────
+  // An entry about one song: `song` holds its title, and `album` and `artist`
+  // hold the record it belongs to. It keeps none of what belongs to a sitting
+  // with a whole record — no tracklist, no horizon, never Masterpiece, never
+  // Formative — and they are dropped here rather than trusted to the caller,
+  // the same way the mark itself is (below). Its address is the song's, so a
+  // link to it says what it is about.
+  const song = String(body.song || '').trim() || null;
+  const tracks = song ? null : (body.tracks ?? null);
+  const track_notes = song ? null : body.track_notes;
+  const horizon = song ? null : body.horizon;
+  const formative = song ? false : (body.formative ?? false);
 
   // Masterpiece is not taken from the caller, 2026-09-17. Every track rated,
   // every rating five, and it is true; anything else and it is not. Whatever a
@@ -405,13 +456,13 @@ export async function save_new_entry(body) {
   // this one is the rule itself (library/entry_formatter.js, flawless).
   const masterpiece = flawless(tracks);
 
-  const slug = await next_free_slug(album);
+  const slug = await next_free_slug(song || album);
 
   const result = await database`
     INSERT INTO entries (
       album, artist, year, genre, entry_type,
       rating, favorite, masterpiece, formative, notes, track_notes,
-      horizon, album_art, slug, tracks,
+      horizon, album_art, slug, tracks, song,
       received_from, received_date, received_from_url, credit_private, user_id
     ) VALUES (
       ${album}, ${artist}, ${year}, ${genre}, ${entry_type},
@@ -419,6 +470,7 @@ export async function save_new_entry(body) {
       ${track_notes},
       ${horizon}, ${album_art}, ${slug},
       ${tracks ? JSON.stringify(tracks) : null},
+      ${song},
       ${blankToNull(received_from)},
       ${blankToNull(received_date)}, ${blankToNull(tidyJournal(received_from_url))},
       ${credit_private === true},
@@ -426,6 +478,15 @@ export async function save_new_entry(body) {
     )
     RETURNING *
   `;
+  // A track note saved takes its draft with it, 2026-09-26, by the key the
+  // draft was filed under — whichever device wrote the draft. Quietly: the
+  // note is saved, and a draft left over is a tile to throw away, where a
+  // failure reported here would be a note written twice.
+  if (song) {
+    try {
+      await database`DELETE FROM drafts WHERE lookup_key = ${lookup_key(album, artist, song)}`;
+    } catch { /* a stale tile, not a lost note */ }
+  }
   return result[0];
 }
 
@@ -454,9 +515,19 @@ export async function update_entry(slug, fields) {
   // could — a per-track answer needs the old and the new tracklists side by
   // side in the same loop.
   const [current] = await database`
-    SELECT id, notes, tracks, album_key
+    SELECT id, notes, tracks, album_key, song
       FROM entries WHERE slug = ${slug} LIMIT 1
   `;
+
+  // A track note never grows what belongs to a sitting with a record
+  // (save_new_entry): a correction to one carries no tracklist, and a caller
+  // that sends one, or a Formative, is not believed.
+  if (current?.song) {
+    delete fields.tracks;
+    delete fields.track_notes;
+    delete fields.horizon;
+    delete fields.formative;
+  }
 
   // ── Edit stamps ─────────────────────────────────────────────────────────
   // A stamp goes next to the thing that changed, not at the top of the entry.
@@ -565,7 +636,7 @@ export async function update_entry(slug, fields) {
 // revival carrying a silent bug.
 export async function delete_entry(slug) {
   const [row] = await database`
-    SELECT id, album, artist, album_art, posted_at FROM entries WHERE slug = ${slug} LIMIT 1
+    SELECT id, album, artist, album_art, posted_at, song FROM entries WHERE slug = ${slug} LIMIT 1
   `;
   if (!row) return { deleted: false };
 
@@ -574,7 +645,14 @@ export async function delete_entry(slug) {
   // keep_sat_with in needle.js, and migration 020. Four columns and no fifth:
   // what the record was and when it was on. Written before the delete, so a
   // delete that fails halfway has not already claimed a listen was taken down.
-  await keep_sat_with(row);
+  // A track note is not a listen (2026-09-24), so it leaves no record of one.
+  //
+  // Its date goes in as `at`, the name keep_sat_with reads. The row went in as
+  // it came back — `posted_at` and no `at` — until 2026-09-26, so every listen
+  // deleted before then was filed under the moment Delete was pressed, and an
+  // old record jumped to the front of the beacon's row as though just heard.
+  // Those rows cannot be put right: the entry that knew the real date is gone.
+  if (!row.song) await keep_sat_with({ ...row, at: row.posted_at });
 
   const comments = await database`DELETE FROM comments WHERE entry_slug = ${slug} RETURNING id`;
   // The chain ends here rather than dangling: an album received from this one
@@ -656,14 +734,25 @@ export async function save_draft(body) {
 
   if (!album) throw new Error('A draft needs an album');
 
+  // A track note's draft, 2026-09-26: the song, and its own key (lookup_key).
+  // One that says nothing any more — no stars and no words — is taken away
+  // rather than kept, as the browser's copy is: the picker should not hold a
+  // draft of nothing.
+  const song = String(body.song || '').trim() || null;
+  const key = lookup_key(album, artist, song || '');
+  if (song && !(Number(rating) > 0) && !String(notes || '').trim()) {
+    await database`DELETE FROM drafts WHERE lookup_key = ${key}`;
+    return null;
+  }
+
   const result = await database`
     INSERT INTO drafts (
-      lookup_key, album, artist, year, genre, entry_type,
+      lookup_key, song, album, artist, year, genre, entry_type,
       album_art, collection_id, step, elapsed, rating, masterpiece, formative,
       favorite, notes, tracks, received_from, received_date, received_from_url,
       credit_private, submission_id
     ) VALUES (
-      ${lookup_key(album, artist)}, ${album}, ${artist}, ${year}, ${genre},
+      ${key}, ${song}, ${album}, ${artist}, ${year}, ${genre},
       ${entry_type}, ${album_art}, ${String(collection_id || '')},
       ${step}, ${elapsed}, ${rating}, ${masterpiece}, ${formative}, ${favorite}, ${notes},
       ${tracks ? JSON.stringify(tracks) : null},
@@ -673,6 +762,7 @@ export async function save_draft(body) {
       ${Number.isInteger(submission_id) && submission_id > 0 ? submission_id : null}
     )
     ON CONFLICT (lookup_key) DO UPDATE SET
+      song = EXCLUDED.song,
       album = EXCLUDED.album, artist = EXCLUDED.artist, year = EXCLUDED.year,
       genre = EXCLUDED.genre, entry_type = EXCLUDED.entry_type,
       album_art = EXCLUDED.album_art,

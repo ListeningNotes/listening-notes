@@ -46,10 +46,10 @@
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { Envelope, Fingerprint, Heart, Rows, Shuffle, SketchLogo, SquaresFour, User } from '@phosphor-icons/react';
+import { ArrowsDownUp, Envelope, Fingerprint, Heart, Rows, Shuffle, SketchLogo, SquaresFour, User } from '@phosphor-icons/react';
 import { useBookplate } from './Bookplate';
 import StarRating from './StarRating';
-import { parseHorizon } from '../../library/entry_formatter';
+import { parseHorizon, lookup_key } from '../../library/entry_formatter';
 import { carrySender, journalUrl, tidyJournal } from '../../library/return_address';
 
 // How much of a river a shelf may hold. Recent from everyone in the book
@@ -417,7 +417,17 @@ export default function Feed({ entries = [], density = DEFAULT_DENSITY }) {
 
   const me = tidyJournal(site_address);
   const myName = String(keeper_name || '').trim().toLowerCase();
-  const mineByKey = useMemo(() => new Map(entries.map(e => [e.album_key, e])), [entries]);
+  // Your listen of each record, to compare against: the most recent one
+  // (DECISIONS: never average across listens). It was a Map built straight
+  // off the list, which is newest first, so every later row overwrote the
+  // one before and what was kept was your *oldest* listen — found while
+  // mapping the feed for track notes, 2026-09-24. And album listens only: a
+  // track note rates one song, not the record.
+  const mineByKey = useMemo(() => {
+    const mine = new Map();
+    for (const e of entries) if (e.album_key && !e.song && !mine.has(e.album_key)) mine.set(e.album_key, e);
+    return mine;
+  }, [entries]);
 
   const rows = useMemo(() => {
     if (!people) return [];
@@ -444,6 +454,10 @@ export default function Feed({ entries = [], density = DEFAULT_DENSITY }) {
   // match rather than write a second one, which is why it waited here.
   const submissions = useMemo(() => rows.filter(({ entry }) => {
     if (entry.entry_type !== 'Submission') return false;
+    // A record came back when somebody logged it. A note on one song off it,
+    // credited, is not that, and the inbox's row says "logged" and names the
+    // album (2026-09-24; NOTES has it pending).
+    if (entry.song) return false;
     const url = tidyJournal(entry.received_from_url);
     if (url) return url === me;
     const name = String(entry.received_from || '').trim().toLowerCase();
@@ -452,6 +466,34 @@ export default function Feed({ entries = [], density = DEFAULT_DENSITY }) {
 
   const recent = useMemo(() => rows.slice(0, RECENT_MOST), [rows]);
   const shown = recent;
+
+  // ── Your rating of a song a friend noted, 2026-09-24 ──────────────────
+  // A friend's track note is compared with what you gave the same song, when
+  // you gave it anything (the track-notes brief: "You rated this 4.5"). Your
+  // own track note on it says so at once; otherwise it is your listen of the
+  // record, whose track ratings are not in the wall's list — the writing
+  // stays out of lists — so that listen is read once, for these rows only,
+  // and the song found in it by its title.
+  const [songsHeard, setSongsHeard] = useState({});
+  const songsAsked = useRef(new Set());
+  useEffect(() => {
+    for (const { entry } of shown) {
+      if (!entry.song) continue;
+      const mine = mineByKey.get(entry.album_key);
+      if (!mine || songsAsked.current.has(mine.slug)) continue;
+      songsAsked.current.add(mine.slug);
+      fetch(`/api/entries/${encodeURIComponent(mine.slug)}`)
+        .then(res => (res.ok ? res.json() : null))
+        .then(data => {
+          const heard = {};
+          for (const t of Array.isArray(data?.entry?.tracks) ? data.entry.tracks : []) {
+            if (t.rating > 0) heard[`${mine.album_key}|${lookup_key(t.title, '')}`] = t.rating;
+          }
+          setSongsHeard(was => ({ ...was, ...heard }));
+        })
+        .catch(() => {});
+    }
+  }, [shown, mineByKey]);
   const stillAsking = Boolean(people?.some(p => !journals[p.address]));
 
   // ── Telling this copy what came back, 2026-09-22 ────────────────────────
@@ -513,7 +555,15 @@ export default function Feed({ entries = [], density = DEFAULT_DENSITY }) {
       <div className={'fd-list' + (asRows ? ' fd-list--rows' : '')}>
         {shown.map(({ person, entry }) => {
           const key = `${person.address}/${entry.slug}`;
-          const mine = mineByKey.get(entry.album_key);
+          // A friend's track note is not compared with your listen of the
+          // whole record — one song against a record's score. It is compared
+          // with your rating of the same song, below.
+          const mine = entry.song ? null : mineByKey.get(entry.album_key);
+          const song = entry.song ? lookup_key(entry.song, '') : '';
+          const myNote = song ? entries.find(e => e.song && e.album_key === entry.album_key && lookup_key(e.song, '') === song) : null;
+          const yours = !song ? null
+            : myNote ? Number(myNote.rating_value) || null
+            : songsHeard[`${entry.album_key}|${song}`] || null;
           // Carrying who this copy belongs to — see carrySender.
           const there = carrySender(`${journalUrl(person.address)}/entries/${entry.slug}`, { name: keeper_name, address: site_address }, { known: true });
           const rated = entry.rating_value !== null && entry.rating_value !== undefined && entry.rating_value !== '';
@@ -524,28 +574,39 @@ export default function Feed({ entries = [], density = DEFAULT_DENSITY }) {
           // exactly what scrolling past six rows a screen does not leave time
           // for. The same fact the compare mark states in words; this states
           // it at a glance and on the object itself.
-          const shared = Boolean(mine);
+          // A song off a record you have is a record you both have.
+          const shared = song
+            ? Boolean(mineByKey.get(entry.album_key) || entries.some(e => e.album_key === entry.album_key))
+            : Boolean(mine);
 
           if (asRows) {
             return (
               <div key={key} className="fd-rowwrap">
                 <article className="fd-row">
                   <a
-                    className={'fd-row-art' + (shared ? ' fd-art--shared' : '')}
+                    className={'fd-row-art' + (shared ? ' fd-art--shared' : '') + (entry.song ? ' ln-fold' : '')}
                     href={there}
                     target="_blank"
                     rel="noopener noreferrer"
-                    aria-label={`${entry.album} on ${person.name || 'their'} journal`}
+                    aria-label={`${entry.song || entry.album} on ${person.name || 'their'} journal`}
                   >
                     {entry.album_art && <img src={entry.album_art} alt="" loading="lazy" />}
+                    {entry.song && (
+                      <span className="ln-fold-flap" aria-hidden="true">
+                        {entry.album_art && <img src={entry.album_art} alt="" loading="lazy" />}
+                      </span>
+                    )}
                   </a>
                   <div className="fd-row-words">
-                    <a className="fd-row-album" href={there} target="_blank" rel="noopener noreferrer">{entry.album}</a>
+                    {/* A track note keeps its fold at 56px, and is its song
+                        with the record after it — still told apart at a
+                        glance in a column of records. */}
+                    <a className="fd-row-album" href={there} target="_blank" rel="noopener noreferrer">{entry.song || entry.album}</a>
                     {/* Artist, who, when — one line, in the caption face, cut
                         with an ellipsis rather than wrapped. A row that grows
                         a second line for a long artist is not a row. */}
                     <div className="fd-row-meta">
-                      {entry.artist}
+                      {entry.song ? `${entry.album} \u00b7 ${entry.artist}` : entry.artist}
                       {' \u00b7 '}{person.name || 'Someone'}
                       {' \u00b7 '}{briefly(entry.posted_at)}
                     </div>
@@ -580,11 +641,27 @@ export default function Feed({ entries = [], density = DEFAULT_DENSITY }) {
           return (
             <div key={key}>
               <article className="fd-item">
-                <a className={'fd-art' + (shared ? ' fd-art--shared' : '')} href={there} target="_blank" rel="noopener noreferrer" aria-label={`${entry.album} on ${person.name || 'their'} journal`}>
+                <a className={'fd-art' + (shared ? ' fd-art--shared' : '') + (entry.song ? ' ln-fold' : '')} href={there} target="_blank" rel="noopener noreferrer" aria-label={`${entry.song || entry.album} on ${person.name || 'their'} journal`}>
                   {entry.album_art && <img src={entry.album_art} alt="" loading="lazy" />}
+                  {/* A song is a page, its corner folded over in the album's
+                      colour, the way it is on your own wall. */}
+                  {entry.song && (
+                    <span className="ln-fold-flap" aria-hidden="true">
+                      {entry.album_art && <img src={entry.album_art} alt="" loading="lazy" />}
+                    </span>
+                  )}
                 </a>
-                <a className="fd-album" href={there} target="_blank" rel="noopener noreferrer">{entry.album}</a>
-                <div className="fd-artist">{entry.artist}{entry.year ? ` · ${entry.year}` : ''}</div>
+                {/* ── A friend's track note, 2026-09-24 ─────────────────
+                    Like any other entry, and read as a song: the cover with
+                    its fold, the song as the large line and `album · artist`
+                    under it (the track-notes brief). No word saying it is a
+                    track (2026-09-25): the page's own shape says that. */}
+                <a className="fd-album" href={there} target="_blank" rel="noopener noreferrer">{entry.song || entry.album}</a>
+                <div className="fd-artist">
+                  {entry.song
+                    ? `${entry.album} · ${entry.artist}`
+                    : <>{entry.artist}{entry.year ? ` · ${entry.year}` : ''}</>}
+                </div>
                 {/* ── Compare stands with the marks, 2026-09-20 ────────
                     In both densities, which is what her brief says and what
                     her reference draws: the compare is one of the marks on
@@ -619,6 +696,14 @@ export default function Feed({ entries = [], density = DEFAULT_DENSITY }) {
                   </Link>
                   <span className="fd-when">&middot; {timeAgo(entry.posted_at)}</span>
                 </div>
+                {/* The compare, for a song: what you gave it yourself. Said,
+                    not opened — one number beside one number needs no panel. */}
+                {yours > 0 && (
+                  <div className="fd-yours">
+                    <ArrowsDownUp size={16} weight="regular" aria-hidden="true" />
+                    <span>You rated this {yours}</span>
+                  </div>
+                )}
                 {(open === key || shutting === key) && mine && (
                   <Compared mine={mine} theirs={entry} name={person.name || 'them'} closing={shutting === key} />
                 )}

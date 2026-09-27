@@ -119,7 +119,7 @@ export default function RecordContents({
             </button>
           )}
           <button type="button" className="ses-quiet" onClick={onLookAgain}>Look again</button>
-          <button type="button" className="ses-quiet" onClick={onNext}>Go to album notes →</button>
+          <button type="button" className="ses-quiet" onClick={onNext}>Go to the album note →</button>
         </div>
       </div>
     );

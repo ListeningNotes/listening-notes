@@ -39,7 +39,7 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { useListeningSession, SESSION_STEPS, PENDING_KEY, saidSoAboutTheDesk, saidSoAboutTheEntry } from '../../hooks/useListeningSession';
+import { useListeningSession, SESSION_STEPS, PENDING_KEY, TRACK_NOTE_KEY, saidSoAboutTheDesk, saidSoAboutTheEntry } from '../../hooks/useListeningSession';
 import AlbumPicker from '../../components/session_components/AlbumPicker';
 import SessionHeader from '../../components/session_components/SessionHeader';
 import RecordContents from '../../components/session_components/steps/RecordContents';
@@ -47,6 +47,7 @@ import TrackNotes from '../../components/session_components/steps/TrackNotes';
 import AlbumNotes from '../../components/session_components/steps/AlbumNotes';
 import SessionPreview from '../../components/session_components/steps/SessionPreview';
 import Trouble from '../../components/session_components/Trouble';
+import TrackNotePage from '../entries/[slug]/TrackNotePage';
 import { useBeforeLeaving } from '../../components/main_components/LayerEntry';
 
 // How long the picked cover takes to reach the header. The step body slides in
@@ -66,6 +67,20 @@ export default function SessionPage() {
     try {
       const stored = JSON.parse(localStorage.getItem(PENDING_KEY));
       return stored?.album ? stored : null;
+    } catch { return null; }
+  });
+
+  // ── Or a song, 2026-09-24 ───────────────────────────────────────────────
+  // Pressed in the picker's Songs section: a track note rather than a listen
+  // (the track-notes brief). It waits in the tab under TRACK_NOTE_KEY the way
+  // a record waits in the browser, and while it is there this page is the
+  // track note's card, being written — not the four screens of a listen. Read
+  // the same way `pending` is, for the same reason.
+  const [song, setSong] = useState(() => {
+    if (typeof window === 'undefined') return null;
+    try {
+      const stored = JSON.parse(sessionStorage.getItem(TRACK_NOTE_KEY));
+      return stored?.song && stored?.album ? stored : null;
     } catch { return null; }
   });
 
@@ -267,8 +282,10 @@ export default function SessionPage() {
         const ok = !!d.authed;
         setAuthed(ok);
         // What was left on the desk — by the inbox, or by this page before a
-        // reload — opens as soon as the door does.
-        if (ok && pending?.album) show(pending);
+        // reload — opens as soon as the door does. Not under a song: a track
+        // note being written is the thing on the desk, and a listen started
+        // behind it would light the beacon for a record nobody is playing.
+        if (ok && pending?.album && !song) show(pending);
       })
       .catch(() => {})
       .finally(() => setChecking(false));
@@ -356,6 +373,9 @@ export default function SessionPage() {
   // From the picker: a record, and the box its cover was tapped in.
   function pick(record, from) {
     try { localStorage.setItem(PENDING_KEY, JSON.stringify(record)); } catch { /* the listen still opens */ }
+    // A record pressed is a listen, whatever song was on the desk before it.
+    try { sessionStorage.removeItem(TRACK_NOTE_KEY); } catch { /* nothing to clear */ }
+    setSong(null);
     saidSoAboutTheDesk();
     const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     if (from && record.artUrl && !still) setLanding({ art: record.artUrl, from, to: null, go: false });
@@ -383,6 +403,15 @@ export default function SessionPage() {
       submissionId: draft.submission_id ?? null,
       draft,
     }, from);
+  }
+
+  // A song pressed in this page's own picker — the picker HomeNav draws on
+  // the beacon does the same through its own beginTrackNote. The note opens
+  // in place of the picker; there is no cover in flight, because a song has
+  // no header slot to land in.
+  function beginTrackNote(picked) {
+    try { sessionStorage.setItem(TRACK_NOTE_KEY, JSON.stringify(picked)); } catch { /* the note still opens */ }
+    setSong(picked);
   }
 
   // ── Putting the record down ───────────────────────────────────────────────
@@ -414,6 +443,13 @@ export default function SessionPage() {
   // this registers: the layer asks before it moves, and a false answer leaves
   // the listen exactly where it is with Trouble showing why.
   const layered = useBeforeLeaving(async () => {
+    // A track note keeps its own words as they are typed (TrackNotePage), so
+    // putting one down is only putting the song away. There is no listen to
+    // write a draft of.
+    if (song) {
+      try { sessionStorage.removeItem(TRACK_NOTE_KEY); } catch { /* nothing to clear */ }
+      return true;
+    }
     if (!s.saved && !(await s.saveDraft())) return false;
     try { localStorage.removeItem(PENDING_KEY); } catch { /* nothing to clear */ }
     saidSoAboutTheDesk();
@@ -516,7 +552,7 @@ export default function SessionPage() {
   // happens. There is nothing to hide: the record came out of this browser's
   // own storage, every route it will ask for checks the wristband itself, and
   // the redirect below still fires the moment the answer says no.
-  if (checking && !pending?.album) return <div style={{ minHeight: '100dvh', background: 'var(--bg)' }} />;
+  if (checking && !pending?.album && !song) return <div style={{ minHeight: '100dvh', background: 'var(--bg)' }} />;
   if (!checking && !authed) { if (typeof window !== 'undefined') window.location.replace('/login'); return null; }
 
   const open = !!pending?.album;
@@ -540,8 +576,44 @@ export default function SessionPage() {
   return (
     <div className="ses">
 
-      {!open ? (
-        <AlbumPicker onPick={pick} onResume={resume} />
+      {song ? (
+        /* ── A track note, being written ─────────────────────────────────
+           The card itself, before it exists — the rule the preview already
+           keeps for a listen: what is being written is shown as it will
+           print. Saved, it goes the way a saved listen goes: over the cross,
+           the cross drops the sheet onto the journal and the beacon takes it
+           as the last thing logged; opened cold, the picker comes back. */
+        <TrackNotePage
+          writing
+          authed
+          entry={{
+            song: song.song,
+            album: song.album,
+            artist: song.artist || '',
+            year: song.year || '',
+            genre: song.genre || '',
+            album_art: song.artUrl || '',
+            collection_id: song.collectionId || '',
+            // What its draft already holds, when the song came from one —
+            // pressed as a draft, or found again in the search (AlbumPicker).
+            written: song.written || null,
+          }}
+          onSaved={saved => {
+            try { sessionStorage.removeItem(TRACK_NOTE_KEY); } catch { /* nothing to clear */ }
+            if (document.querySelector('.hn')) {
+              saidSoAboutTheEntry({ slug: saved.slug, album: saved.album, artist: saved.artist, art: saved.album_art });
+              return;
+            }
+            setSong(null);
+          }}
+          onLeave={() => {
+            try { sessionStorage.removeItem(TRACK_NOTE_KEY); } catch { /* nothing to clear */ }
+            if (layered) router.back();
+            else setSong(null);
+          }}
+        />
+      ) : !open ? (
+        <AlbumPicker onPick={pick} onResume={resume} onPickSong={beginTrackNote} />
       ) : (
         <>
           <SessionHeader

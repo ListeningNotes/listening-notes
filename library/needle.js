@@ -170,7 +170,9 @@ export async function pull_recent_listens() {
     const rows = await database`
       SELECT album, artist, album_art, slug, NULL  AS track, posted_at  AS at FROM entries
       UNION ALL
-      SELECT album, artist, album_art, NULL, NULL  AS track, updated_at AS at FROM drafts
+      -- A track note half-written is not an evening with a record (the
+      -- same reason deleting one leaves no row in sat_with), 2026-09-26.
+      SELECT album, artist, album_art, NULL, NULL  AS track, updated_at AS at FROM drafts WHERE song IS NULL
       UNION ALL
       -- ── An ended needle does not expire, 2026-09-20 ────────────────────
       -- It carried the twenty-minute window the live read has, and that

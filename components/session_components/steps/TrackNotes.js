@@ -278,7 +278,7 @@ export default function TrackNotes({
       <div>
         <span className="ses-label">Tracks</span>
         <p className="ses-prose" style={{ color: 'var(--ink-soft)', marginTop: 18 }}>
-          No tracklist found for this record. Go on to the album notes.
+          No tracklist found for this album. Go on to the album note.
         </p>
         <div style={{ marginTop: 28 }}>
           <button type="button" className="ses-btn ses-btn--primary" onClick={onNext}>Continue →</button>
@@ -408,7 +408,7 @@ export default function TrackNotes({
         <button type="button" className="ses-caret" onClick={() => goTo(i - 1)} aria-label={i === 0 ? 'Back to the album' : 'Previous track'}>
           <CaretLeft size={22} weight="bold" aria-hidden="true" />
         </button>
-        <button type="button" className="ses-caret" onClick={() => goTo(i + 1)} aria-label={last ? 'On to the album notes' : 'Next track'}>
+        <button type="button" className="ses-caret" onClick={() => goTo(i + 1)} aria-label={last ? 'On to the album note' : 'Next track'}>
           <CaretRight size={22} weight="bold" aria-hidden="true" />
         </button>
       </div>

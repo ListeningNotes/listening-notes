@@ -99,7 +99,7 @@ import AlbumPicker from '../session_components/AlbumPicker';
 // The same two the desk already reaches for, from the same module, so the
 // pane and the desk agree about what "a listen is open" means and say so the
 // same way. The hook itself is not called here.
-import { PENDING_KEY, SAVED_EVENT, saidSoAboutTheDesk } from '../../hooks/useListeningSession';
+import { PENDING_KEY, SAVED_EVENT, TRACK_NOTE_KEY, saidSoAboutTheDesk } from '../../hooks/useListeningSession';
 import Pitch from './Pitch';
 
 // You, then home. Home is the one you land on, which is why it is not index
@@ -699,6 +699,8 @@ export default function HomeNav() {
 
   const beginListen = useCallback((record, from = null) => {
     try { localStorage.setItem(PENDING_KEY, JSON.stringify(record)); } catch { /* the listen still opens */ }
+    // A record pressed is a listen, whatever song was last on the desk.
+    try { sessionStorage.removeItem(TRACK_NOTE_KEY); } catch { /* nothing to clear */ }
     saidSoAboutTheDesk();
     // The beacon is told now, whichever way this goes. Behind the sheet, but
     // true — and the pane is what you come back to when the listen ends.
@@ -783,6 +785,20 @@ export default function HomeNav() {
     // Nothing has to tell this pane the session has closed; the pane never
     // stopped being where it was.
   }, [openSession, router]);
+
+  // ── Off the picker and into a track note, 2026-09-24 ───────────────────
+  // A song pressed in the Songs section. The same door as a listen — the song
+  // waits in the tab and /session opens on it as a sheet — and none of the
+  // rest of it: nothing is announced and nothing flies to the bar, because a
+  // track note is not a listen and nothing new appears on the beacon while
+  // one is written (the track-notes brief). Once saved it drops onto the
+  // journal the way a listen does, and the beacon takes it as the last thing
+  // logged (the drop, below). `choosing` stays on, as it does for a listen,
+  // so pulling the note down lands back on the picker.
+  const beginTrackNote = useCallback(song => {
+    try { sessionStorage.setItem(TRACK_NOTE_KEY, JSON.stringify(song)); } catch { /* the note still opens */ }
+    router.push('/session');
+  }, [router]);
 
   // The journey: out of the picker and into the bar's slot, which is the
   // session header's slot.
@@ -988,7 +1004,9 @@ export default function HomeNav() {
       const landed = () => clocks.push(setTimeout(() => { if (alive) setFiling(null); }, WATCH_MS));
       const watchFor = waited => {
         if (!alive) return;
-        if (document.querySelector(`[data-tile-slug="${CSS.escape(filing.slug || '')}"]`)
+        // Any tile holding the record: a track note saved onto a record that
+        // has a listen lands on that record's tile, which draws the listen.
+        if (document.querySelector(`[data-tile-slugs~="${CSS.escape(filing.slug || '')}"]`)
           || waited >= ARRIVE_MAX_MS) { landed(); return; }
         clocks.push(setTimeout(() => watchFor(waited + 80), 80));
       };
@@ -2643,7 +2661,7 @@ export default function HomeNav() {
                   covers is about the journal's past and has nothing to say
                   while a record is being chosen; the picker takes its room. */}
               {choosing
-                ? <AlbumPicker inline onPick={beginListen} onResume={resumeDraft} />
+                ? <AlbumPicker inline onPick={beginListen} onResume={resumeDraft} onPickSong={beginTrackNote} />
                 : <>
                     {recentRow}
                     {theWayIn}

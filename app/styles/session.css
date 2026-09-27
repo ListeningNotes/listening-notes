@@ -306,6 +306,70 @@
   font-size: max(16px, 1rem);
 }
 .ses-search .ses-input:focus { border: 0; }
+/* The field gives up the room its clear button needs, 2026-09-26. */
+.ses-search .ses-input { flex: 1; min-width: 0; }
+/* Clear, at the end of the field: the mark iOS puts there, in the field's own
+   quiet ink, a thumb's reach of padding given back in margin so the box does
+   not grow when it appears. */
+.ses-clear {
+  display: inline-flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  padding: 10px;
+  margin: -10px -8px -10px 0;
+  border: 0; background: none;
+  color: var(--ink-faint);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.ses-clear:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: -4px; border-radius: 50%; }
+/* ── Recent searches, 2026-09-26 ──
+   Under the field while it is empty and in use (AlbumPicker): the heading's
+   own face, a Clear at its end, and a row per search — the mark for "again"
+   and the words, the height of a track row without its cover. */
+/* It opens and folds, 2026-09-26: the row the list sits in grows from
+   nothing to its full height and back — a grid row going from 0fr to 1fr is
+   the one height CSS can move between without being told a number — and the
+   list fades a touch behind it, so what is under it slides down to make room
+   and back up after. On the site's curve, and not at all for anyone who has
+   asked for less motion. RECENT_FOLD_MS in AlbumPicker matches the 0.34s. */
+.ses-recent {
+  display: grid;
+  grid-template-rows: 0fr;
+  margin-top: 0;
+  transition: grid-template-rows 0.34s cubic-bezier(0.22, 0.61, 0.36, 1),
+              margin-top 0.34s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.ses-recent--open { grid-template-rows: 1fr; margin-top: 12px; }
+.ses-recent-in {
+  min-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity 0.22s ease, transform 0.34s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.ses-recent--open .ses-recent-in { opacity: 1; transform: none; transition-delay: 0.04s, 0s; }
+@media (prefers-reduced-motion: reduce) {
+  .ses-recent, .ses-recent-in { transition: none; }
+}
+.ses-recent-head { display: flex; align-items: baseline; justify-content: space-between; }
+.ses-recent-clear {
+  padding: 8px 0 8px 16px;
+  border: 0; background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.ses-recent-row {
+  display: flex; align-items: center; gap: 12px;
+  width: 100%;
+  padding: 11px 0;
+  border: 0; border-bottom: 1px solid var(--border);
+  background: none; color: var(--ink);
+  font: inherit; font-size: 15px; text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.ses-recent-row svg { flex-shrink: 0; color: var(--ink-faint); }
+.ses-recent-row span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 
 /* Three covers to a row, the mockup's count, and said outright rather than
@@ -958,6 +1022,9 @@
 .ses-picker {
   max-width: 760px; margin: 0 auto; box-sizing: border-box;
   padding: calc(104px + var(--safe-top)) 20px calc(48px + env(safe-area-inset-bottom, 0px));
+  /* The gutter, said once so a page of covers can run to the screen's edges
+     and still line its covers up with the field (.ses-pages--paged). */
+  --ses-bleed: 20px;
 }
 .lay--scrolls .ses-picker { padding-top: 18px; }
 /* Inline, the picker is not a page and has no fixed header to clear: the
@@ -973,9 +1040,16 @@
      own. */
   align-self: stretch;
   width: 100%;
-  padding: 10px 0 0;
+  /* No top of its own, 2026-09-26: the pane has already cleared the bar, and
+     the 10px here was the last of three gaps stacked between the bar and the
+     field that Miyel called too much. */
+  padding: 0;
+  /* The pane's own gutter (.hn-screen), which is this picker's edge. */
+  --ses-bleed: 24px;
 }
-.ses-under { display: flex; align-items: baseline; gap: 14px; min-height: 1.2em; margin-top: 10px; }
+/* Drawn only when it has something to say (AlbumPicker), so it no longer
+   holds a line open under the field. */
+.ses-under { display: flex; align-items: baseline; gap: 14px; margin-top: 12px; }
 /* The way round the search — Manual entry — sits at the far end of this row
    and is the one quiet button on the site that is smaller than the rest. It is
    an escape hatch, not an offer: somebody who needs it is already looking for
@@ -1027,6 +1101,90 @@
   font-family: var(--font-label); font-size: 9px; color: var(--ink-faint);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
+/* ── The end of the line stays, 2026-09-26 ──
+   A second line is a name, a dot and a date — the year, or how long ago a
+   draft was left. Cut as one string, a long name took the date with it:
+   "Fontaines D.C. · 20…" on every cover, with the grid in date order (Miyel).
+   The name is what gives way now; the dot and what follows it never do, and
+   the line is still one line. */
+.ses-split { display: flex; min-width: 0; }
+.ses-split-by { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ses-split-end { flex-shrink: 0; white-space: nowrap; }
+
+/* ── Tracks, under the albums ───────────────────────────────────────────────
+   2026-09-24, the track-notes brief. A song pressed here starts a track note.
+   It is a row — its cover, its title, and the album it is on — because a row
+   can say which album, and a cover alone would read as the album itself. The
+   cover wears the folded corner a track note wears on the wall (.ln-fold,
+   base.css), from 2026-09-26. Albums keep the grid above and are named only
+   when tracks are there too. */
+.ses-kind { margin: 16px 0 0; }
+.ses-kind--tracks { margin-top: 26px; }
+.ses-songs { display: flex; flex-direction: column; }
+
+/* ── Pages, on a phone, 2026-09-26 ───────────────────────────────────────────
+   Each list is a row of pages you swipe through — two or three rows of covers
+   to a page, five tracks to a page — with its "1 of 3" under it in the
+   heading's face (Miyel; the counts are in AlbumPicker). The row runs to the
+   screen's edges and each page puts the gutter back inside itself, so the
+   covers line up with the field and the page leaving takes its margin with
+   it. One page to a swipe, however hard the flick. The shadows under the
+   covers need room a scroller would otherwise clip, which is the padding;
+   the margin gives it back. A desk has no pages: there these are plain boxes
+   holding one long grid and one short list. */
+.ses-pages { margin-top: 24px; }
+.ses-pages--named { margin-top: 10px; }
+.ses-pages--tracks { margin-top: 6px; }
+.ses-pages > .ses-page { margin-top: 0; }
+.ses-pages--paged {
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  margin-left: calc(var(--ses-bleed, 20px) * -1);
+  margin-right: calc(var(--ses-bleed, 20px) * -1);
+  padding: 10px 0 12px;
+  margin-top: 14px;
+}
+.ses-pages--paged::-webkit-scrollbar { display: none; }
+.ses-pages--paged.ses-pages--named { margin-top: 0; }
+.ses-pages--paged.ses-pages--tracks { padding: 0; margin-top: 6px; }
+.ses-pages--paged > .ses-page {
+  flex: 0 0 100%;
+  box-sizing: border-box;
+  padding: 0 var(--ses-bleed, 20px);
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+.ses-pages--paged > .ses-grid { grid-template-columns: repeat(3, 1fr); align-content: start; }
+.ses-page-at { margin: 10px 0 0; text-align: center; }
+.ses-song {
+  display: flex; align-items: center; gap: 14px;
+  padding: 10px 0;
+  border: 0; border-bottom: 1px solid var(--border);
+  background: none; color: inherit; font: inherit; text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.ses-song-art {
+  width: 46px; height: 46px; flex-shrink: 0;
+  /* A flap fifteen pixels wide keeps its album's colour at 3px (base.css). */
+  --fold-blur: 3px;
+  border-radius: 8px; overflow: hidden; background: var(--bg-warm);
+}
+.ses-song-art img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.ses-song-said { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; }
+.ses-song-title {
+  font-weight: var(--font-display-weight); font-size: 15px; line-height: 1.25; color: var(--ink);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ses-song-record {
+  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.06em; color: var(--ink-faint);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ses-song-go { flex-shrink: 0; color: var(--ink-faint); }
 .ses-hand { display: flex; flex-direction: column; gap: 16px; max-width: 440px; }
 /* What typing a record in by hand costs you, said on the form rather than on
    the screen after it. Prose and not a label: it is a sentence to read once,

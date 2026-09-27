@@ -17,7 +17,8 @@ import { kept_receipts } from '../../../library/receipts';
 import { buildReferenceIndex, createReferenceLinker } from '../../../library/cross_references';
 import SiteNav from '../../../components/main_components/SiteNav';
 import { createPortal } from 'react-dom';
-import { useLayerHeaderSlot } from '../../../components/main_components/LayerEntry';
+import { useLayerHeaderSlot, useFolder } from '../../../components/main_components/LayerEntry';
+import FolderFooter from '../../../components/main_components/FolderFooter';
 import KeeperTools from '../../../components/main_components/KeeperTools';
 import EditingBar from '../../../components/main_components/EditingBar';
 import { entryPlate } from '../../../components/main_components/EntryPlate';
@@ -120,8 +121,13 @@ const COVER_LABELS = { toCode: 'Show the code for this entry', toPicture: 'Show 
 // listen in progress exactly as the page will print it. Nothing is fetched
 // for it (there is no slug to fetch by), nothing can be commented on, and the
 // footer's ways out are left off: the session is the way out.
-export default function FullPostPage({ entry, references = [], authed = false, layered = false, preview = false }) {
+// `folder` is the record's entries, oldest first, when it has more than one
+// (2026-09-25): the entry is then a page of a folder, with its tabs at the
+// foot of the screen and the rest a swipe away (useFolder, FolderFooter).
+export default function FullPostPage({ entry, references = [], authed = false, layered = false, preview = false, folder = null }) {
   const router = useRouter();
+  const turnTo = useFolder(preview ? null : folder, entry.slug);
+  const inFolder = !preview && folder?.length > 1;
   // ── Correcting what is written ────────────────────────────────────────────
   // The fields are drawn where the writing is, not in a form somewhere else:
   // the album note becomes a textarea in the album note's place, and a track's
@@ -623,6 +629,15 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   // unwritten one.
   const said = t => t.stars > 0 || (t.note || '').trim() || t.favorite;
   const saidTracks = parsedTracks.filter(said).length;
+  // What the heading says is there, 2026-09-24 (the track-notes brief): the
+  // notes when anything was written, and how much was rated when nothing was
+  // — "2 notes", "5 of 5 rated". Never a count of what is missing. Numbers
+  // stay numbers, not words (Miyel, the same day: cleaner).
+  const notedTracks = parsedTracks.filter(t => (t.note || '').trim()).length;
+  const ratedTracks = parsedTracks.filter(t => t.stars > 0).length;
+  const tracksHold = notedTracks > 0 ? (notedTracks === 1 ? '1 note' : `${notedTracks} notes`)
+    : ratedTracks > 0 ? `${ratedTracks} of ${parsedTracks.length} rated`
+    : null;
 
   // The index only changes when the archive does; the linker is rebuilt every
   // render on purpose. It carries the "first mention on this page" tally, so
@@ -818,6 +833,11 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   //
   // Nothing shows on an album played once: "First listen · 1 of 1" is noise on
   // an entry that has no sequence to be part of.
+  //
+  // And nothing shows on the page itself any more, 2026-09-25: a record played
+  // more than once is a folder, and its tabs already say Listen 1, Listen 2
+  // at the foot of the screen (FolderFooter). Miyel: "it's implied by the
+  // footer now." The chip is kept for the print, which has no footer.
   const listenLabel = entry.listen_total > 1
     ? (entry.listen_number === 1
         ? `First listen · 1 of ${entry.listen_total}`
@@ -1420,9 +1440,18 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     </button>
   );
 
+  const chrome = (
+    <>
+      <SiteNav tools={keeperTools} mark={headerMark} lede={ledeDrawn} />
+      {inFolder && (
+        <FolderFooter folder={folder} slug={entry.slug} onPick={turnTo} away={edit.editing || printing || Boolean(sendering) || sending} />
+      )}
+    </>
+  );
+
   return (
     <div
-      className={'ln-entry' + (scrolled ? ' ln-entry--scrolled' : '') + (crowning ? ' ln-entry--crowning' : '')}
+      className={'ln-entry' + (scrolled ? ' ln-entry--scrolled' : '') + (crowning ? ' ln-entry--crowning' : '') + (inFolder ? ' ln-entry--folder' : '')}
       style={{ background: 'var(--bg)', minHeight: '100vh', color: 'var(--ink)', fontFamily: fonts.sans }}
     >
 
@@ -1431,10 +1460,13 @@ export default function FullPostPage({ entry, references = [], authed = false, l
           layer's own header slot, outside the content that turns with a
           swipe, so the mark and the tools hold still while the record
           beneath them changes. The slot wears this page's classes so the
-          band behind the row keeps working — see the effect below. */}
-      {headerSlot
-        ? createPortal(<SiteNav tools={keeperTools} mark={headerMark} lede={ledeDrawn} />, headerSlot)
-        : <SiteNav tools={keeperTools} mark={headerMark} lede={ledeDrawn} />}
+          band behind the row keeps working — see the effect below.
+
+          A folder's tabs go with it, for the same reason: they are chrome,
+          and hold still at the foot of the screen while the pages flip.
+          They make way for anything else that wants the foot — a
+          correction's bar, the printer, the credit, the send sheet. */}
+      {headerSlot ? createPortal(chrome, headerSlot) : chrome}
 
       {/* A correction is open, and the page is long. The controls that started
           it are at the top of the entry, which is a screen and a half away by
@@ -1585,7 +1617,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
             </>
           ) : (
             <>
-              {!edit.editing && listenLabel && <Chip>{listenLabel}</Chip>}
+              {printing && listenLabel && <Chip>{listenLabel}</Chip>}
               {!edit.editing && !printing && sentChip}
               {!edit.editing && (entry.favorite === true || entry.favorite === 'true') && <Chip tone="fav">Favorite</Chip>}
               {!edit.editing && isMasterpiece && <Chip tone="mp">Masterpiece</Chip>}
@@ -1704,7 +1736,6 @@ export default function FullPostPage({ entry, references = [], authed = false, l
                 {edit.editing
                   ? flagFields
                   : displayRating > 0 && <StarRating rating={displayRating} size={15} glow={isMasterpiece} style={{ verticalAlign: 'middle' }} />}
-                {!edit.editing && listenLabel && <Chip>{listenLabel}</Chip>}
                 {!edit.editing && sentChip}
                 {!edit.editing && (entry.favorite === true || entry.favorite === 'true') && <Chip tone="fav">Favorite</Chip>}
               </div>
@@ -1771,7 +1802,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
             shows where it goes. */}
         {(albumNotes || albumComments.length > 0 || edit.editing) && (
           <section style={{ marginBottom: '48px' }}>
-            <MetadataLabel sticky>Album Notes</MetadataLabel>
+            <MetadataLabel sticky>Album note</MetadataLabel>
             {/* 6px, the same gap a track note leaves under itself before its
                 own bubble. */}
             {edit.editing ? (
@@ -1781,7 +1812,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
                 onChange={e => edit.set('notes', e.target.value)}
                 ref={growOnMount}
                 onInput={grow}
-                aria-label="Album notes"
+                aria-label="Album note"
               />
             ) : (
               <div style={{ lineHeight: 1.95, fontSize: '15px', whiteSpace: 'pre-wrap', color: 'var(--ink)', marginBottom: '6px' }}>{linkedAlbumNotes}</div>
@@ -1798,12 +1829,15 @@ export default function FullPostPage({ entry, references = [], authed = false, l
           </section>
         )}
 
-        {/* Horizon lives under the Track Notes heading rather than on its own:
+        {/* Horizon lives under the Tracks heading rather than on its own:
             it is a map of the tracks, and clicking a bar jumps to one, so it
-            belongs to the same stretch of page they do. */}
+            belongs to the same stretch of page they do. The heading said
+            Track Notes until 2026-09-24: a track note is its own kind of
+            entry now, and this is the record's tracks. While a correction is
+            open the count stands down — it would change under every key. */}
         {(saidTracks > 0 || horizonBars.length > 0 || (edit.editing && parsedTracks.length > 0)) && (
           <section style={{ marginBottom: '48px' }}>
-            <MetadataLabel sticky>Track Notes</MetadataLabel>
+            <MetadataLabel sticky aside={edit.editing ? null : tracksHold}>Tracks</MetadataLabel>
 
             {/* The hint sits with the bars rather than in the heading: the
                 heading is sticky, and "click a bar to jump" makes no sense

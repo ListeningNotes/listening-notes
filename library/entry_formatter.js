@@ -174,8 +174,16 @@ export function entryTypeLabel(type) {
 // strips diacritics as well. These two folds disagree on every accented name
 // — Beyoncé folds to "beyonc" here and "beyonce" there — so a draft looked up
 // with the wrong one is a draft that is never found and then written over.
-export function lookup_key(album, artist) {
-  return `${album} ${artist}`.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, ' ').trim();
+//
+// A song, 2026-09-26: a track note's draft is filed under its record's key and
+// then the song, after a bar the fold itself can never produce — so it is
+// never taken for the album's own draft, and two songs off one record are two
+// drafts. The same key names the browser's copy of what is being written
+// (TrackNotePage), so the picker can throw both away together.
+export function lookup_key(album, artist, song = '') {
+  const fold = text => String(text).toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, ' ').trim();
+  const key = fold(`${album} ${artist}`);
+  return song ? `${key}|${fold(song)}` : key;
 }
 
 // ── Assembling an entry out of what was written ───────────────────────────

@@ -92,7 +92,7 @@ The library — logic, no visuals
     slug_generator.js          Turns "Pet Sounds" into "pet-sounds" for the URL
     entry_formatter.js         Parses entry data so it can be displayed correctly
     sitewide_visuals.js        All colors and fonts — change here, changes everywhere
-    music_data_api.js          Fetches album art and tracklists from iTunes
+    music_data_api.js          Fetches album art and tracklists from iTunes, and the searches: records (searchAlbums) and songs (searchSongs)
     card_links.js              The marks a card can wear — which shape stands for the rig, which logo a link gets
     portrait_code.js           The press: the portrait made into the journal's QR code on the server — a dot of ink in every photo module, proved by the strictest reader on both page colours
     cover_code.js              The same press for an entry's cover: the code for that entry's address, redrawn from the art on each ask, with only the proved dot kept on the row
@@ -154,7 +154,8 @@ The furniture — visual pieces
       ListeningBeacon.js       The beacon — what is playing, or last played
       Journal.js               The wall of covers, with its search, filters and sort
       JournalFilters.js        The filter sheet — a popover on a desk, a pull-down sheet on a phone — and the year range
-      AlbumTile.js             One cover on that wall
+      AlbumTile.js             One record on that wall — a card for one listen, a page with its corner folded for one track note, a folder for more than one entry (Journal.js gathers entries into records)
+      FolderFooter.js          A folder's tabs at the foot of the screen — Listen 1, Listen 2 or the song, the one you are on in ink — the one piece of chrome a folder adds; useFolder in LayerEntry.js does the flipping
       CodeSlot.js              A square that holds a picture and turns into that picture's code — the card's portrait and an entry's cover: the two faces, the copy and its pill, the corner mark, the wait
       AddressCode.js           A plain code for an address, drawn in the browser — what CodeSlot shows when no pressed picture can be had
       CodeScanner.js           The camera pointed at a code — the address book's way in for a card's or a cover's code
@@ -194,7 +195,7 @@ The furniture — visual pieces
         Chain.js               What the Submission chip opens — who sent the record, whether they logged it, the chain behind them, read off their journals on the press
     session_components/        Everything in the private dashboard
       PasswordGate.js          The password screen
-      AlbumPicker.js           Type, see a grid of covers, tap one — the screen before a listen
+      AlbumPicker.js           Type, see a grid of covers with songs under them, tap one — the screen before a listen, or before a track note
       SessionHeader.js         The title line, the glowing question mark and the theme switch, and the four steps
       StarRating.js            The interactive stars you click to rate
       steps/
@@ -226,6 +227,7 @@ The rooms — full pages assembled from furniture
     entries/[slug]/
       page.js                  Loads the entry, hands it to FullPostPage
       FullPostPage.js          The full public entry page with comments — and, in preview mode, the session's preview
+      TrackNotePage.js         A track note — an entry about one song: its card, read, corrected, and written for the first time on the listen's sheet
       opengraph-image.js       The picture an entry's link unfurls into — cover, title, score, marks — drawn on the server per request
     archive/page.js            Every entry — search, sort, filters
     key/page.js                What the stars and the three marks mean
@@ -307,7 +309,7 @@ than what anyone remembers building.
 
 | Table | What it holds |
 |---|---|
-| `entries` | The journal. One row per listen — an album listened to twice is two entries, never an overwrite. `posted_at` is when, with its zone; `created_at` is the older naive stamp, kept and unread. `cover_code` is the dot that carried the cover into its code, stamped on the first tap — never the picture. |
+| `entries` | The journal. One row per listen — an album listened to twice is two entries, never an overwrite. `posted_at` is when, with its zone; `created_at` is the older naive stamp, kept and unread. `cover_code` is the dot that carried the cover into its code, stamped on the first tap — never the picture. `song` makes a row a track note, about that one song off the record in `album`; it is empty on every album listen, and nothing that numbers, counts or compares albums counts a row that has one. |
 | `settings` | Everything that makes a copy someone's own: the keeper, the portrait, the links, the rig, the starting theme. Exactly one row, forced by a check on `id`. |
 | `secrets` | What must never reach a visitor: the session secret, the password hash, the claim code, the two API keys. One row; read only by `library/secrets.js`. |
 | `users` | The owner. One row, written at setup. |

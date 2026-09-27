@@ -27,12 +27,17 @@ import database from '@/library/database_connection';
 
 export async function GET() {
   try {
+    // The album counts count albums, 2026-09-24: a track note is about one
+    // song and is none of these. A journal of nothing but songs has nothing in
+    // its albums count, and that is simply true rather than a penalty (the
+    // track-notes brief). It is still kept since its first note, and its
+    // genres are still what it listens to, so those two count everything.
     const [row] = await database`
       SELECT
-        COUNT(*)::int                                  AS records,
-        COUNT(*) FILTER (WHERE masterpiece)::int       AS masterpieces,
-        COUNT(*) FILTER (WHERE formative)::int         AS formative,
-        MIN(posted_at)                                 AS first_listen
+        COUNT(*) FILTER (WHERE song IS NULL)::int                     AS records,
+        COUNT(*) FILTER (WHERE masterpiece AND song IS NULL)::int     AS masterpieces,
+        COUNT(*) FILTER (WHERE formative AND song IS NULL)::int       AS formative,
+        MIN(posted_at)                                                AS first_listen
       FROM entries
     `;
 

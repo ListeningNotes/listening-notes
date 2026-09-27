@@ -328,12 +328,15 @@ export default function About({ stamps, authed = false, pinned = null, entries =
   // The search. Album and artist only: this is somebody looking for a record
   // they already have in mind, not browsing, and matching notes as well would
   // put an album in the results for a sentence written about a different one.
+  // Records only, 2026-09-24: the pin is the one record the card points at,
+  // and a track note is a song — it has its own address, not a place here.
   const pinResults = useMemo(() => {
     const q = pinQuery.trim().toLowerCase();
+    const records = entries.filter(e => !e.song);
     const rows = q
-      ? entries.filter(e =>
+      ? records.filter(e =>
           `${e.album || ''} ${e.artist || ''}`.toLowerCase().includes(q))
-      : entries;
+      : records;
     return rows.slice(0, PIN_RESULTS);
   }, [entries, pinQuery]);
 
