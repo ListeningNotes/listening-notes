@@ -2057,7 +2057,12 @@ a.pn-item-album:hover { text-decoration: underline; text-underline-offset: 3px; 
   height: var(--sn-room, 100dvh);
   z-index: 261;
   display: grid; place-items: center;
-  padding: 16px;
+  /* Never under the clock: with a keyboard up the room is the top half of
+     the screen and a popup centred in it reaches the status bar (Miyel's
+     phone, 2026-09-26 — the popup's edge at 16px under the clock). The
+     inset is the notch, the clock and the wifi, and 16px where there are
+     none. */
+  padding: max(16px, env(safe-area-inset-top, 0px)) 16px 16px;
   box-sizing: border-box;
   /* A drag on the dim, or on a popup with nothing left to scroll, must not
      scroll the page behind — Miyel, 2026-09-26, on the message screen with
