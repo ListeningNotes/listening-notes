@@ -1053,6 +1053,15 @@
   font-family: var(--font-label); font-size: 9px; color: var(--ink-faint);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
+/* ── The end of the line stays, 2026-09-26 ──
+   A second line is a name, a dot and a date — the year, or how long ago a
+   draft was left. Cut as one string, a long name took the date with it:
+   "Fontaines D.C. · 20…" on every cover, with the grid in date order (Miyel).
+   The name is what gives way now; the dot and what follows it never do, and
+   the line is still one line. */
+.ses-split { display: flex; min-width: 0; }
+.ses-split-by { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ses-split-end { flex-shrink: 0; white-space: nowrap; }
 
 /* ── Tracks, under the albums ───────────────────────────────────────────────
    2026-09-24, the track-notes brief. A song pressed here starts a track note.

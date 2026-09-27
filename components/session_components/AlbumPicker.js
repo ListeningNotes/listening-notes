@@ -596,7 +596,12 @@ export default function AlbumPicker({ onPick, onResume, onPickSong = null, inlin
                           <img src={album.art} alt="" loading="lazy" />
                         </span>
                         <span className="ses-tile-name">{album.name}</span>
-                        <span className="ses-tile-year">{album.artist}{album.year ? ` · ${album.year}` : ''}</span>
+                        {/* The name gives way before the year does
+                            (ses-split, session.css). */}
+                        <span className="ses-tile-year ses-split">
+                          <span className="ses-split-by">{album.artist}</span>
+                          {album.year && <span className="ses-split-end">{'\u00a0·\u00a0'}{album.year}</span>}
+                        </span>
                       </button>
                     ))}
                   </div>
@@ -659,7 +664,10 @@ export default function AlbumPicker({ onPick, onResume, onPickSong = null, inlin
                         </span>
                         <span className="ses-song-said">
                           <span className="ses-song-title">{song.title}</span>
-                          <span className="ses-song-record">{song.name}{song.year ? ` · ${song.year}` : ''}</span>
+                          <span className="ses-song-record ses-split">
+                            <span className="ses-split-by">{song.name}</span>
+                            {song.year && <span className="ses-split-end">{'\u00a0·\u00a0'}{song.year}</span>}
+                          </span>
                         </span>
                         <CaretRight className="ses-song-go" size={16} weight="regular" aria-hidden="true" />
                       </button>
@@ -746,8 +754,9 @@ export default function AlbumPicker({ onPick, onResume, onPickSong = null, inlin
                           "press again" here and the name went red with it,
                           which made the whole tile the question. */}
                       <span className="ses-tile-name">{draft.album}</span>
-                      <span className="ses-tile-year">
-                        {draft.artist}{draft.artist ? ' · ' : ''}{sinceLabel(draft.updated_at)}
+                      <span className="ses-tile-year ses-split">
+                        {draft.artist && <span className="ses-split-by">{draft.artist}</span>}
+                        <span className="ses-split-end">{draft.artist ? '\u00a0·\u00a0' : ''}{sinceLabel(draft.updated_at)}</span>
                       </span>
                     </button>
                   </div>
