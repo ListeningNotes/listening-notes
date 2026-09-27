@@ -71,6 +71,8 @@ const DESK_TRACKS = 8;
 // second search.
 const RECENT_KEY = 'ln_recent_searches';
 const RECENT_KEPT = 6;
+// How long the list takes to open and fold (.ses-recent, session.css).
+const RECENT_FOLD_MS = 340;
 
 // What has to fit under three rows before a page may hold three: the room
 // kept for the covers' shadows, the "1 of 3", the Tracks heading and one
@@ -137,6 +139,9 @@ export default function AlbumPicker({ onPick, onResume, onPickSong = null, inlin
     } catch { return []; }
   });
   const [fieldOn, setFieldOn] = useState(false);
+  // Clear folds the list away first and forgets it after, so it goes the way
+  // it came rather than vanishing (RECENT_FOLD_MS).
+  const [emptying, setEmptying] = useState(false);
   const [byHand, setByHand]     = useState(false);
   const [hand, setHand]         = useState({ album: '', artist: '', year: '', art: '' });
 
@@ -589,27 +594,42 @@ export default function AlbumPicker({ onPick, onResume, onPickSong = null, inlin
               runs one again; Clear forgets them all. The mouse press is kept
               from taking the focus, so on a desk the list stays put under the
               pointer. */}
-          {fieldOn && !typed.trim() && recent.length > 0 && (
-            <div className="ses-recent" onMouseDown={e => e.preventDefault()}>
-              <div className="ses-recent-head">
-                <span className="ses-label">Recent</span>
-                <button
-                  type="button"
-                  className="ses-label ses-recent-clear"
-                  onClick={() => {
-                    setRecent([]);
-                    try { localStorage.removeItem(RECENT_KEY); } catch { /* nothing kept */ }
-                  }}
-                >
-                  Clear
-                </button>
+          {/* It opens and folds rather than appearing, 2026-09-26: always
+              drawn while there is anything kept, grown from nothing as the
+              field is used and folded back when it is not, pushing what is
+              under it down and letting it back up (Miyel: "right now it
+              kind of disappears"). Folded, it cannot be pressed (inert). */}
+          {recent.length > 0 && (
+            <div
+              className={'ses-recent' + (fieldOn && !typed.trim() && !emptying ? ' ses-recent--open' : '')}
+              inert={!(fieldOn && !typed.trim() && !emptying)}
+              onMouseDown={e => e.preventDefault()}
+            >
+              <div className="ses-recent-in">
+                <div className="ses-recent-head">
+                  <span className="ses-label">Recent</span>
+                  <button
+                    type="button"
+                    className="ses-label ses-recent-clear"
+                    onClick={() => {
+                      setEmptying(true);
+                      setTimeout(() => {
+                        setRecent([]);
+                        setEmptying(false);
+                        try { localStorage.removeItem(RECENT_KEY); } catch { /* nothing kept */ }
+                      }, RECENT_FOLD_MS);
+                    }}
+                  >
+                    Clear
+                  </button>
+                </div>
+                {recent.map(term => (
+                  <button key={term} type="button" className="ses-recent-row" onClick={() => type(term)}>
+                    <ClockCounterClockwise size={16} weight="regular" aria-hidden="true" />
+                    <span>{term}</span>
+                  </button>
+                ))}
               </div>
-              {recent.map(term => (
-                <button key={term} type="button" className="ses-recent-row" onClick={() => type(term)}>
-                  <ClockCounterClockwise size={16} weight="regular" aria-hidden="true" />
-                  <span>{term}</span>
-                </button>
-              ))}
             </div>
           )}
 

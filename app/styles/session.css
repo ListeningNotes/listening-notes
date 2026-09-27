@@ -326,7 +326,31 @@
    Under the field while it is empty and in use (AlbumPicker): the heading's
    own face, a Clear at its end, and a row per search — the mark for "again"
    and the words, the height of a track row without its cover. */
-.ses-recent { margin-top: 12px; }
+/* It opens and folds, 2026-09-26: the row the list sits in grows from
+   nothing to its full height and back — a grid row going from 0fr to 1fr is
+   the one height CSS can move between without being told a number — and the
+   list fades a touch behind it, so what is under it slides down to make room
+   and back up after. On the site's curve, and not at all for anyone who has
+   asked for less motion. RECENT_FOLD_MS in AlbumPicker matches the 0.34s. */
+.ses-recent {
+  display: grid;
+  grid-template-rows: 0fr;
+  margin-top: 0;
+  transition: grid-template-rows 0.34s cubic-bezier(0.22, 0.61, 0.36, 1),
+              margin-top 0.34s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.ses-recent--open { grid-template-rows: 1fr; margin-top: 12px; }
+.ses-recent-in {
+  min-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity 0.22s ease, transform 0.34s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.ses-recent--open .ses-recent-in { opacity: 1; transform: none; transition-delay: 0.04s, 0s; }
+@media (prefers-reduced-motion: reduce) {
+  .ses-recent, .ses-recent-in { transition: none; }
+}
 .ses-recent-head { display: flex; align-items: baseline; justify-content: space-between; }
 .ses-recent-clear {
   padding: 8px 0 8px 16px;
