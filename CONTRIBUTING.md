@@ -38,7 +38,8 @@ thing on this page and by far the most expensive one to retrofit.
 
 This project is [AGPL-3.0-or-later](LICENSE). Contributions come in under the
 same terms. Every source file opens with a copyright line and an
-`SPDX-License-Identifier` line — keep both, and keep them at the top.
+`SPDX-License-Identifier` line — keep both, and keep them at the top. The
+`.sql` and `.css` files carry the same two lines in their own comment syntax.
 
 On a file you create, **put your own name on the copyright line**, not the
 existing one:
@@ -59,13 +60,25 @@ being read by anyone.
 ## Changes to the database
 
 Migrations are **additive only**. Add columns and tables; never rename a
-column, change its type, or repurpose what one means.
+column, change its type, drop one, or repurpose what one means. The rule has
+been in force since 2026-09-06, and other people have run copies since
+2026-09-09.
 
-(The rule starts the day somebody else is running a copy, not the day this repo
-went public. Until then the schema is a draft owned by one person and cleanup
-costs nothing. NOTES.md records which side of that line the project is on.)
+A schema change is a new numbered file in `migrations/`, written with
+`IF NOT EXISTS` like the ones before it, and nothing else: the runner treats
+the filename as the identity, so a file edited or renamed after it has run
+runs again on every copy. There are no down migrations. Migrations apply
+themselves on server start and at the start of `npm run build`; there is no
+command to run.
 
 The reason is not tidiness. People run their own copies of this software, and
 those databases hold somebody's writing on a machine nobody here can reach. A
 migration that fails is not a failed build — it is a journal that stops
 opening, belonging to a person who cannot be helped.
+
+## Before you send it
+
+`npm run build` and `npm run lint` clean, with the dev server stopped first (a
+build while it is up leaves stylesheets stale). The hard rules that protect
+other people's journals are inline in [AGENTS.md](AGENTS.md), under *Never*;
+the reasoning behind them is in [DECISIONS.md](DECISIONS.md).

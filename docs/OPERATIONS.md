@@ -101,27 +101,32 @@ password comes back instead.
 ## Secret Keys
 
 **Most of them live in the journal now, not in the environment.** The password
-is chosen during setup and changed in Settings (the gear beside the card's
-pencil). The key that signs the login cookie mints itself on first start.
+is chosen during setup and changed in Settings, which is reached from the
+card's ··· (and, on a desk, from the desk's Settings row). The key that signs
+the login cookie mints itself on first start.
 
 **Two key columns stay behind unread**, because the schema is additive-only
 and a column is never dropped: `secrets.lastfm_key`, from when Last.fm came
 out of the software on 2026-09-16, and `secrets.anthropic_key`, from when the
 research and the question mark came out on 2026-09-18 (the prompts are in
 docs/RETIRED-PROMPTS.md). Nothing asks for either any more — the rows in
-Settings are gone — and `library/secrets.js` still resolves them, which is
-what a retirement is: the plumbing stays, nothing is connected to it. All of it sits in the
-`secrets` table, which nothing but `library/secrets.js` reads. The nightly
-backup carries it, so a restore from a backup brings the password back with
-the writing; the export leaves it out, so a restore from an export keeps
-whatever password the database already has.
+Settings are gone — and `library/secrets.js` still resolves the Anthropic one
+for nobody, which is what a retirement is: the plumbing stays, nothing is
+connected to it. `ANTHROPIC_API_KEY` in the environment is likewise read and
+unused; `.env.example` says so. All of it sits in the `secrets` table, which
+nothing but `library/secrets.js` reads. The nightly backup carries it, so a
+restore from a backup brings the password back with the writing; the export
+leaves it out, so a restore from an export keeps whatever password the
+database already has.
 
 **[`.env.example`](../.env.example) is still the list** of what the
-environment *can* hold, with what each variable is for. Only `DATABASE_URL`
-is required. A copy that set the others before Settings existed keeps
-working: the database is read first, then the environment, so a value typed
-into Settings takes over from the variable and the variable can then be
-removed.
+environment *can* hold, with what each variable is for — including the two
+the deploy sets on its own (`DATABASE_URL_UNPOOLED`, `GIFT_FROM`) and the
+one a fork sets for its own problem reports (`NEXT_PUBLIC_REPORTS_URL`). Only
+`DATABASE_URL` is required. A copy that set the others before Settings
+existed keeps working: the database is read first, then the environment, so a
+value typed into Settings takes over from the variable and the variable can
+then be removed.
 
 One worth knowing without opening the file:
 

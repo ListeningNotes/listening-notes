@@ -14,13 +14,15 @@ database is yours, and it is named after you rather than after this software.
 
 ## Run your own copy
 
-**What you need.** Three free accounts, none of which need a card:
+**What you need.** Two free accounts, neither of which needs a card. Make
+them first, each in its own tab, then come back for the button — a sign-up
+ends on that site's own home page and never brings you back here on its own.
 
 | | |
 |---|---|
 | [GitHub](https://github.com) | Holds your copy of the code |
-| [Vercel](https://vercel.com) | Runs the site |
-| [Neon](https://neon.tech) | The Postgres database your writing lives in |
+| [Vercel](https://vercel.com) | Runs the site — sign up with *Continue with GitHub* |
+| [Neon](https://neon.tech) | The Postgres database your writing lives in — attached by Vercel during the deploy; you are not asked to sign up for it |
 
 **Deploy.**
 
@@ -28,8 +30,8 @@ database is yours, and it is named after you rather than after this software.
 
 The button asks Vercel to clone the code into your GitHub, make a project, and
 attach a Neon database to it. Under "Add Products" press **Add** on the Neon
-row, switch the Auth toggle off, keep the Free plan, and press Create; then
-Deploy. It asks you for nothing else: the database connection string arrives
+row, pick the region nearest you, switch the Auth toggle off, keep the Free
+plan, and press Create; then Deploy. It asks you for nothing else: the database connection string arrives
 from Neon, the signing key generates itself, and your password is chosen on
 the site.
 
@@ -48,10 +50,12 @@ code into your account, which is the point.
    later? Press Redeploy in Vercel and try again, or type the code from the
    end of the build log.)
 3. It asks for your name, then offers a photo, three prompts and your rig,
-   each of which you can skip, then a password. Everything you skip has a
-   home later, on the card behind its pencil.
-4. The last screen shows how to put the journal on your home screen, where it
-   opens like an app. Skippable; it is in Settings too.
+   each of which you can skip, then asks to switch on updates (see
+   *Updating*, below), then a password. Everything you skip has a home
+   later, on the card behind its pencil.
+4. If somebody gave you the journal, it offers to add them to your address
+   book and wave. Then the last screen shows how to put the journal on your
+   home screen, where it opens like an app. Skippable; it is in Settings too.
 
 The same steps, with what to expect at each, are written out on the canonical
 copy at [listeningnotes.blog/get](https://listeningnotes.blog/get).
@@ -61,8 +65,8 @@ If it did not work, [say so here](https://github.com/ListeningNotes/listening-no
 If the site says it has no database yet, press Redeploy once in Vercel; the
 database usually arrives a moment after the first build. If it still says so,
 the page tells you where to look. The tables build themselves; you never open
-a SQL editor. `.env.example` lists every variable, and all of them except
-`DATABASE_URL` are optional.
+a SQL editor. `.env.example` describes what the environment can hold; only
+`DATABASE_URL` is required.
 
 **Naming your copy.** Every copy is named after whoever keeps it, so yours is
 not called Listening Notes and should not be. The name comes from `keeper_name`
@@ -74,8 +78,8 @@ in the back of a book.
 
 ---
 
-**Updating.** Your copy keeps itself current. Once an hour it checks this
-repository and, if there is a newer version, brings it in, pushes it, and
+**Updating.** Once switched on (below), your copy keeps itself current. Once
+an hour it checks this repository and, if there is a newer version, brings it in, pushes it, and
 Vercel rebuilds; your journal is simply current the next time you open it,
 database included. It runs on your GitHub account and reports to nobody.
 The one thing it will not do on its own is cross a major version (1.x to
@@ -87,13 +91,21 @@ the hour. If you have changed the code yourself and a change clashes, it
 stops without touching anything and, when you press the button, tells you
 which files.
 
-A copy made before mid-September 2026 does not have this yet. Add it once:
-on your repository press **Add file → Create new file**, name it
+It has to be switched on once, because the deploy button cannot copy the
+one file that does it: GitHub will not let Vercel write anything under
+`.github/workflows/` without a permission it does not hold, so every copy
+made by the button arrives without that folder. Setup asks near the end, and
+**Settings → Keeping up to date** asks again if you skipped it: press it,
+GitHub opens with the file already written out, press **Commit changes**
+twice, and the journal watches for the rebuild and says when it worked. A
+copy from before that screen existed can add the file by hand instead: on
+your repository press **Add file → Create new file**, name it
 `.github/workflows/update.yml`, paste in the contents of
 [that file](https://github.com/ListeningNotes/listening-notes/blob/main/.github/workflows/update.yml),
-and press **Commit changes**. A copy that has the older button already
-opens that file instead, presses the pencil, and replaces its contents with
-the same. Either way it is the last time the file needs touching.
+and press **Commit changes**. Either way it is the last time the file needs
+touching. One thing GitHub does on its own: in a repository with no commits
+for two months it pauses the hourly check and emails you; pressing **Run
+workflow** once turns it back on.
 
 ## Licence
 
