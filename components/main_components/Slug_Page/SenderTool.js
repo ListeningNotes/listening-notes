@@ -116,8 +116,8 @@ export default function SenderTool({ entry, barSlot = null, onDone }) {
   const surelyCredited = entry.entry_type === 'Submission';
 
   // Tapping a face links that journal; tapping the lit one unlinks it and
-  // leaves the name. Typing never unlinks — their journal calls him
-  // [handle] and the entry can still say from Zach.
+  // leaves the name. Typing never unlinks — their journal calls them
+  // [handle] and the entry can still say from [name].
   const pick = p => {
     if (p.address === linked) { setUrl(''); return; }
     setName(p.name || p.address);
@@ -217,7 +217,7 @@ export default function SenderTool({ entry, barSlot = null, onDone }) {
               )}
             </span>
             {/* <strong> rather than the strip's .ln-sender-name, which is an
-                8.5px uppercase label: reusing it turned Zach into ZACH. */}
+                8.5px uppercase label: reusing it set the name in capitals. */}
             <strong>{name}</strong>
           </p>
           {/* Read the way round somebody thinks about it. The column is

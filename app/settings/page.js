@@ -169,8 +169,8 @@ export default function SettingsPage({ layered = false }) {
             key, and a paragraph describing the two things it turned on inside
             a listen. Both came out of the software that day (see
             docs/RETIRED-PROMPTS.md), and a settings row asking for a key that
-            nothing reads is worse than no row: it would have had June, Zach
-            and Blue pasting in a key and paying for nothing.
+            nothing reads is worse than no row: it would have had three beta
+            testers pasting in a key and paying for nothing.
 
             The vault still knows the column and library/secrets.js still
             resolves it, because the schema is additive-only and because that

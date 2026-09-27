@@ -460,8 +460,8 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       // on a wide window — and one of them is hidden. The tool must open in
       // only the one you can see: two copies each put their own Save in the
       // shared bar, the hidden copy's landed on top, and it saved nobody over
-      // the name you had just picked. Miyel, 2026-09-22, crediting HAN to
-      // Ethan: "when I click and click save it just doesn't stick."
+      // the name you had just picked. Miyel, 2026-09-22, crediting a record to
+      // a tester: "when I click and click save it just doesn't stick."
       onSender={() => setSendering(window.matchMedia('(max-width: 768px)').matches ? 'phone' : 'desk')}
       /* And Send opens the same sheet a row in the address book opens, with
          this record already in it — the two ways in differ only in which
@@ -851,7 +851,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   // behind them (SentBy.js, 2026-09-15), so the chip's only remaining job is
   // the entries that line cannot draw: a credit the sender asked to keep
   // quiet, and the Submissions logged before the inbox began filling the
-  // name in. Where a name is about to be printed, *Sent by Zach* already
+  // name in. Where a name is about to be printed, *Sent by [name]* already
   // says the record was one, and the chip would be a third pill on the
   // busiest row saying worse what the line below says. Both read the credit
   // through creditOn, so the chip and the line can never both show, or both

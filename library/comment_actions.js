@@ -73,8 +73,8 @@ export async function upvote_comment(id) {
 // hears of those comments, which live here. So it asks, the way the feed
 // asks for entries (GET /api/public/replies).
 //
-// Two ways of answering count (Miyel, the same day, looking at Ethan's
-// answer to her, which he wrote as a comment of its own and not under hers):
+// Two ways of answering count (Miyel, the same day, looking at a tester's
+// answer to her, written as a comment of its own and not under hers):
 //   a reply        a comment whose parent is theirs
 //   the keeper     this journal's own keeper commenting on the same entry
 //                  after theirs, threaded or not

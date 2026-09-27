@@ -21,8 +21,8 @@
 //     [ thing ]  →  [ person ]
 //
 // The order never flips — thing left, person right, the arrow pointing right —
-// so it reads as the sentence it is: Shrines → Lacey. Person-first would read
-// as Lacey sending it. Whichever square is empty is the instruction; there is
+// so it reads as the sentence it is: Shrines → a friend. Person-first would read
+// as the friend sending it. Whichever square is empty is the instruction; there is
 // no title and no mode name, which is why the sheet needs no explaining from
 // any door. A blank square borrows the corner radius of what it is waiting
 // for (8, sharp like a sleeve; 18, soft like the rounded-square face), so it

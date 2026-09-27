@@ -34,8 +34,8 @@ function withSizedArt(row, px) {
 // building on different terms.
 //
 // The credit — who sent it, and where their journal is — is public on a
-// Submission entry, 2026-09-14: the entry says "from Zach" and the name
-// takes a reader to his journal, the same two fields the public feed has
+// Submission entry, 2026-09-14: the entry says "from [name]" and the name
+// takes a reader to their journal, the same two fields the public feed has
 // carried since 2026-09-13 (DECISIONS, The network: public credit is the
 // default; the quiet toggle is still owed). On anything else the two fields
 // are stripped, so a name typed onto a Library entry never ships in the HTML
@@ -348,7 +348,7 @@ const OWNER_ROW = 'SELECT id FROM users ORDER BY id LIMIT 1';
 //
 // **Why it cannot simply be wired to the send flow.** It was meant to point
 // at the *sender's* entry, and an `entries.id` is local to one database:
-// June's 39 is not this journal's 39. A sender's id arriving here would be
+// a friend's 39 is not this journal's 39. A sender's id arriving here would be
 // rejected by the album check nearly always and, where a local entry
 // happened to share both the number and the album, stored pointing at this
 // journal's own listen — a lineage record claiming you got the record from

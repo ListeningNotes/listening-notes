@@ -8,7 +8,7 @@
 -- `entries.source_entry_id` was meant to point at the sender's entry for the
 -- same album and was parked on 2026-09-15 with nothing able to set it. The
 -- reason is worth restating, because this column is the answer to it: an
--- `entries.id` is local to one database. June's 39 is not this journal's 39,
+-- `entries.id` is local to one database. a friend's 39 is not this journal's 39,
 -- so a sender's id arriving here is wrong at best and, where a local entry
 -- happens to share both the number and the album, a lineage record claiming
 -- you got the record from yourself.

@@ -1992,8 +1992,8 @@ a.pn-item-album:hover { text-decoration: underline; text-underline-offset: 3px; 
 .gv-act:hover { color: var(--ink-soft); }
 
 /* ── The wave sheet, 2026-09-23 ─────────────────────────────────────────────
-   Just after somebody is added: their face, ADDED, "June is in your book",
-   the two lines that say what a wave does and does not do, then Wave to June
+   Just after somebody is added: their face, ADDED, "[name] is in your book",
+   the two lines that say what a wave does and does not do, then Wave to [name]
    and a quiet Not now. The send sheet's sheet on the page's colour, as Give's
    is. WaveSheet.js says what it is for. */
 .wv-sheet { align-items: center; text-align: center; padding-top: 30px; background: var(--bg); }

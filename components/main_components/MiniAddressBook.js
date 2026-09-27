@@ -11,7 +11,7 @@
 //
 // ── Why faces and not names ───────────────────────────────────────────────
 // It was a row of name pills for an afternoon on 2026-09-14 and came off the
-// same day (Miyel): a pill saying Kai is not how anybody recognises [name],
+// same day (Miyel): a pill with a name on it is not how anybody recognises a friend,
 // and a book of forty friends drawn as pills is a wall of words on a screen
 // that has other things to say. A face is what a person is known by. The
 // portrait is the one each journal serves at its own address, in an <img>,

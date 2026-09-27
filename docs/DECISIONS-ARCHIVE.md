@@ -95,7 +95,7 @@ back. It comes from the right because that is where things arrive from, not
 because right means entry.
 
 **Reversed for the entry, 2026-09-02: it expands from the cover, and
-sideways means the next record.** Junior found there was no way to read
+sideways means the next record.** A beta tester found there was no way to read
 entry to entry — every next one meant going back to the wall. Adding a
 next-entry swipe to a sheet that already slid sideways to open and close
 would have put three sideways gestures on one screen: the cross's panes,
@@ -216,7 +216,7 @@ rather than none.
 **Until then the database is a draft.** Dropping a dead column, renaming a bad
 one, deleting a table nothing uses — all fine, and worth doing while it is
 still free. The rule protects databases on machines nobody here can reach;
-until Junior installs one there are none. Publishing the repo does not end the
+until a friend installs one there are none. Publishing the repo does not end the
 draft — somebody installing from it does.
 
 ## Structure — settled and shortened, 2026-09-06
@@ -430,7 +430,7 @@ anywhere else. Owner-only links out — the inbox's — carry `?from=<own
 address>`; the journal landed on keeps it as the return address and clears
 the bar. A public link never carries it: it would make every reader the keeper.
 
-**Surprise stays parked; Compare has its first way in, 2026-09-10.** June's
+**Surprise stays parked; Compare has its first way in, 2026-09-10.** A beta tester's
 copy exists, so Compare was designed against it: the card offers it to a
 visitor whose browser holds their own address. The per-album compare and
 Surprise's shake are still unbuilt; both routes work if typed.

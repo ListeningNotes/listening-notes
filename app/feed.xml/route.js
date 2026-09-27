@@ -14,7 +14,7 @@
 // The credit reached this route from the day it existed — pull_public_entries
 // has carried it since 2026-09-13 — and was dropped on the floor here until
 // 2026-09-15, so a reader saw "(Submission)" where another copy saw a name.
-// It says *from Kai* rather than the shelf it came off, because that is the
+// It says *from [name]* rather than the shelf it came off, because that is the
 // same fact and more of it. A name and never an address: a journal is shown
 // by its keeper's name (DECISIONS, Sharing), and a reader who wants the
 // person can follow the entry.

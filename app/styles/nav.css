@@ -3246,7 +3246,7 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
      opaque ground of its own (.hn-bar-ground, 2026-09-20), which is the
      bar's full height on every pane — so the inbox's folder tabs started
      under it, cut off at the top, with an empty band standing over them.
-     Ethan saw it first: "a false header at the top of his screen and cannot
+     A tester saw it first: "a false header at the top of his screen and cannot
      see tops of tabs." The book already clears the bar on its own floor. */
   .hn-pane--inbox,
   .hn-pane--friends {

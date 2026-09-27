@@ -35,8 +35,8 @@ import { REPORTS_URL } from '../../../library/version';
 // And they are not views you stand on, 2026-09-15. New was never a place —
 // it is a property of a row, the way unread is in mail, and nobody keeps a
 // read tab and an unread tab. Splitting them meant a send in progress had no
-// actions at all, which is how an album Jr sent had nowhere to record that
-// he has a journal now. One list, newest first, a dot for what is new, and
+// actions at all, which is how an album a tester sent had nowhere to record
+// that they have a journal now. One list, newest first, a dot for what is new, and
 // the state as a word in the row's own subtitle.
 const UNOPENED = 'pending';
 const ARCHIVED = 'dismissed';
@@ -599,7 +599,7 @@ export default function Inbox({ layered = false, inPane = false }) {
                     <div className="ib-list">
                       {shown.map(sent => {
                         // ── A record that came back ──────────────────────
-                        // "Blue logged MAGDALENE", then "Came back" and how
+                        // "[name] logged MAGDALENE", then "Came back" and how
                         // they rated it; the envelope on the cover when it
                         // was a real send and not a credit added by hand
                         // (DECISIONS: the envelope is for a real send only).
