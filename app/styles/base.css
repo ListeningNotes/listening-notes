@@ -386,16 +386,22 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   z-index: 1;
   clip-path: polygon(0 0, 0 100%, 100% 100%);
 }
+/* The blur is the cover's size, not a fixed number, 2026-09-26: 9px on a
+   wall tile, and less wherever the flap is small. Nine pixels over a flap
+   fifteen wide blurs the picture out to nearly nothing, and what showed
+   through was the grey ground under it — Miyel: "why are the track icons
+   just grey folded tab and not matching color like on the wall." A small
+   cover says --fold-blur for itself (session.css, nav.css, journal.css). */
 .ln-fold-flap img,
 .ft-tab img {
   display: block;
   width: 100%; height: 100%;
   object-fit: cover;
   transform: scale(2.2);
-  filter: blur(9px) saturate(1.25) brightness(0.78);
+  filter: blur(var(--fold-blur, 9px)) saturate(1.25) brightness(0.78);
 }
 [data-theme='dark'] .ln-fold-flap img,
-[data-theme='dark'] .ft-tab img { filter: blur(9px) saturate(1.25); }
+[data-theme='dark'] .ft-tab img { filter: blur(var(--fold-blur, 9px)) saturate(1.25); }
 .ln-fold-flap::after,
 .ft-tab::after {
   content: '';

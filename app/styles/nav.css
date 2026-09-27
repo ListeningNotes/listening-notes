@@ -2321,6 +2321,9 @@
 }
 .fd-row-art {
   flex: 0 0 auto; width: 56px; height: 56px;
+  /* A friend's track note, in the compact feed: a small flap, a small blur
+     (base.css). */
+  --fold-blur: 3px;
   border-radius: 8px; overflow: hidden;
   background: var(--panel); display: block;
 }
