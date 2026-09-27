@@ -393,11 +393,17 @@ export default function SendSheet({ open, onClose, person = null, record = null,
   // transformed ancestor is fixed to that ancestor, and the cross has several.
   return createPortal(
     <>
-      {/* touch-action: none in the stylesheet, so a drag on the dim cannot pan
-          the page behind it. A tap on it closes the popup; not the letter,
-          which has no dismiss and is already leaving. */}
-      <div className={'sn-scrim' + (going ? ' sn-scrim--going' : '')} onClick={sent ? undefined : shut} aria-hidden="true" />
-      <div className="sn-room" ref={roomRef}>
+      {/* The dim is only a dim: the room stands over it and takes the tap.
+          A tap on the room's own margin closes the popup — not the letter,
+          which has no dismiss and is already leaving — and a drag anywhere
+          that has nothing to scroll goes no further (touch-action: none on
+          the room, forms.css). */}
+      <div className={'sn-scrim' + (going ? ' sn-scrim--going' : '')} aria-hidden="true" />
+      <div
+        className="sn-room"
+        ref={roomRef}
+        onClick={event => { if (event.target === event.currentTarget && !sent) shut(); }}
+      >
         {sent ? (
           <SentLetter to={sent.to} thing={sent.thing} going={going} />
         ) : (
