@@ -2178,8 +2178,11 @@ html[data-printing] .sitenav-row { display: none; }
   box-sizing: border-box;
   padding: calc(96px + var(--safe-top)) 26px calc(120px + env(safe-area-inset-bottom, 0px));
 }
-/* On the listen's sheet the sheet has its own top. */
-.lay--scrolls .tn--writing .tn-card { padding-top: 24px; }
+/* On the listen's sheet nothing is drawn over a song, so the card clears the
+   phone's own status bar itself — the whole of it, as the session's header
+   does, not the site's trimmed --safe-top. It sat 24px from the top of the
+   glass until 2026-09-26, with the clock over the cover (Miyel's screenshot). */
+.lay--scrolls .tn--writing .tn-card { padding-top: calc(env(safe-area-inset-top, 0px) + 24px); }
 
 /* ── Centred, 2026-09-25 ──
    The cover on the left and the words on the right, as the brief drew them,
