@@ -1,12 +1,12 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// One send: settling it, saying it was already logged, and naming who it
-// came from. Owner-only, all three.
+// One send: settling it, saying it was already logged (which points it at
+// the post and writes nothing on the post), and naming who it came from.
+// Owner-only, all three.
 import {
   update_submission_status, log_submission, name_submission_sender,
   pull_submissions,
 } from '@/library/submission_actions';
-import { update_entry } from '@/library/database_actions';
 import database from '@/library/database_connection';
 import { requireWristband } from '@/library/wristband';
 import { tidyJournal } from '@/library/return_address';
@@ -42,40 +42,21 @@ export async function PATCH(request, { params }) {
     }
 
     // ── Already logged ────────────────────────────────────────────────────
-    // Two writes in one press, and the second is the point: the send is
-    // marked logged and pointed at the record, and that record is credited
-    // to the sender. Without the credit this would only tidy the inbox,
-    // and the connection would still exist nowhere.
-    //
-    // The entry is credited only where it is not already: received_from is
-    // a correction the keeper may have made by hand, and a button pressed
-    // on a different screen should not quietly overwrite what they wrote.
+    // "I already have this record; read that." The send is marked logged and
+    // pointed at the post, and that is all. The post was here before the
+    // send came, so it is nobody's put-on: it gets no sender from this press
+    // and does not become a Submission (Miyel, 2026-09-27; DECISIONS, The
+    // network). Until then this press also credited the post to the sender,
+    // which is the opposite claim; the argument for it is in the archive. A
+    // record listened to *because* of a send is logged from the row, and
+    // that listen carries the credit and the envelope.
     if (Object.prototype.hasOwnProperty.call(body, 'entry_id')) {
-      const [sent] = await database`
-        SELECT submitter_name, sender_url, quiet FROM submissions WHERE id = ${id} LIMIT 1`;
-      if (!sent) return Response.json({ error: 'No such send.' }, { status: 404 });
-
       const [record] = await database`
-        SELECT slug, received_from FROM entries WHERE id = ${body.entry_id} LIMIT 1`;
+        SELECT id FROM entries WHERE id = ${body.entry_id} LIMIT 1`;
       if (!record) return Response.json({ error: 'No such entry.' }, { status: 404 });
 
       const submission = await log_submission(id, body.entry_id);
-
-      // Submission is the shelf a sent record belongs on, and the credit is
-      // the two fields the entry publishes (library/database_actions.js,
-      // withoutChain) — so both are set here or the entry would carry a
-      // sender nothing draws.
-      if (!String(record.received_from || '').trim()) {
-        await update_entry(record.slug, {
-          entry_type: 'Submission',
-          received_from: sent.submitter_name || null,
-          received_from_url: sent.sender_url || null,
-          // Whatever the sender asked for on the form travels with the
-          // credit; a send logged by hand must not publish a name its
-          // sender asked to keep off.
-          credit_private: sent.quiet === true,
-        });
-      }
+      if (!submission) return Response.json({ error: 'No such send.' }, { status: 404 });
       const submissions = await pull_submissions();
       return Response.json({ submission, submissions });
     }

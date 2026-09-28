@@ -32,64 +32,84 @@ export function sizedAlbumArt(url, size = 600) {
 // A bare song-search (the old approach) only returns a partial, relevance-
 // ranked grab-bag across editions, which dropped and reordered tracks.
 // Optional collectionId skips step 1 when the caller already has the exact id.
+//
+// ── The id is a hint, not a fact, 2026-09-27 ─────────────────────────────
+// Apple re-lists records under new ids. A send carries the id the sender's
+// copy found on the day, and a draft carries the id from the day the listen
+// began — and either can be dead by the time it is asked for. A dead id used
+// to answer "No tracklist found" while the name search would have found the
+// record at once (Wlfgrl, sent 2026-09-14, opened from the inbox on the 27th).
+// So a given id is tried first, and when it answers nothing the name search
+// runs as though no id had been given. What comes back names the id that
+// actually worked, so the caller can keep that one instead.
 export async function fetchTracklist(albumName, artistName, collectionId = null) {
   try {
-    let id = collectionId;
-
-    if (!id) {
-      // Accents folded before anything else is stripped, so "bjork" reads Björk
-// and "beyonce" reads Beyoncé. Without the fold the ö was thrown away with
-// the punctuation and Björk's name came out as two words neither search
-// could match, so typing her name without the umlaut found nothing at all.
-const norm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/&/g, 'and').replace(/[^a-z0-9]+/g, ' ').trim();
-      const query = encodeURIComponent(`${artistName} ${albumName}`);
-      const searchRes = await fetch(`https://itunes.apple.com/search?term=${query}&entity=album&limit=25`);
-      const searchData = await searchRes.json();
-      const results = (searchData.results || []).filter(r => r.wrapperType === 'collection' && r.collectionId);
-      if (!results.length) return null;
-
-      const nAlbum = norm(albumName), nArtist = norm(artistName);
-      let best = null, bestScore = -Infinity;
-      for (const r of results) {
-        const ra = norm(r.collectionName || ''), rar = norm(r.artistName || '');
-        let score = 0;
-        if (ra === nAlbum) score += 40;
-        else if (ra.includes(nAlbum) || nAlbum.includes(ra)) score += 20;
-        if (rar === nArtist) score += 30;
-        else if (rar.includes(nArtist) || nArtist.includes(rar)) score += 15;
-        // Prefer a plain edition over deluxe/expanded when scores otherwise tie.
-        if (/\b(deluxe|expanded|special|anniversary)\b/.test(ra)) score -= 3;
-        if (score > bestScore) { bestScore = score; best = r; }
-      }
-      if (!best) return null;
-      id = best.collectionId;
+    const given = collectionId ? String(collectionId) : '';
+    if (given) {
+      const found = await songsOf(given);
+      if (found) return found;
     }
-
-    const lookupRes = await fetch(`https://itunes.apple.com/lookup?id=${id}&entity=song&limit=300`);
-    const lookupData = await lookupRes.json();
-    const rows = lookupData.results || [];
-    const songs = rows.filter(r => r.wrapperType === 'track' && r.kind === 'song');
-    if (!songs.length) return null;
-
-    // The same response carries the album row. It is what the contents screen
-    // prints its facts from, so it is read here rather than fetched again —
-    // one lookup, both halves (Miyel's contents brief, 2026-09-18).
-    const album = rows.find(r => r.wrapperType === 'collection') || null;
-
-    return {
-      tracks: songs
-        .sort((a, b) => (a.discNumber || 1) - (b.discNumber || 1) || (a.trackNumber || 0) - (b.trackNumber || 0))
-        .map((s, i) => ({
-          number: i + 1,
-          title: s.trackName,
-          duration: s.trackTimeMillis ? Math.round(s.trackTimeMillis / 1000) : null,
-          // Only where a record actually has more than one, so a draft saved
-          // before this existed reads the same as one saved after.
-          disc: s.discNumber && s.discNumber > 1 ? s.discNumber : undefined,
-        })),
-      facts: factsFrom(album),
-    };
+    const id = await findCollectionId(albumName, artistName);
+    if (!id || String(id) === given) return null;
+    return await songsOf(id);
   } catch { return null; }
+}
+
+// Step 1: the record's id, from a search on the name, scored so the plain
+// edition wins over the deluxe when both match. `norm` is the module's, below.
+async function findCollectionId(albumName, artistName) {
+  const query = encodeURIComponent(`${artistName} ${albumName}`);
+  const searchRes = await fetch(`https://itunes.apple.com/search?term=${query}&entity=album&limit=25`);
+  const searchData = await searchRes.json();
+  const results = (searchData.results || []).filter(r => r.wrapperType === 'collection' && r.collectionId);
+  if (!results.length) return null;
+
+  const nAlbum = norm(albumName), nArtist = norm(artistName);
+  let best = null, bestScore = -Infinity;
+  for (const r of results) {
+    const ra = norm(r.collectionName || ''), rar = norm(r.artistName || '');
+    let score = 0;
+    if (ra === nAlbum) score += 40;
+    else if (ra.includes(nAlbum) || nAlbum.includes(ra)) score += 20;
+    if (rar === nArtist) score += 30;
+    else if (rar.includes(nArtist) || nArtist.includes(rar)) score += 15;
+    // Prefer a plain edition over deluxe/expanded when scores otherwise tie.
+    if (/\b(deluxe|expanded|special|anniversary)\b/.test(ra)) score -= 3;
+    if (score > bestScore) { bestScore = score; best = r; }
+  }
+  return best ? best.collectionId : null;
+}
+
+// Step 2: every song under one id, in order, with the record's facts off the
+// same answer. Null when Apple has no songs under it — a retired id, or one
+// that was never a record's.
+async function songsOf(id) {
+  const lookupRes = await fetch(`https://itunes.apple.com/lookup?id=${id}&entity=song&limit=300`);
+  const lookupData = await lookupRes.json();
+  const rows = lookupData.results || [];
+  const songs = rows.filter(r => r.wrapperType === 'track' && r.kind === 'song');
+  if (!songs.length) return null;
+
+  // The same response carries the album row. It is what the contents screen
+  // prints its facts from, so it is read here rather than fetched again —
+  // one lookup, both halves (Miyel's contents brief, 2026-09-18).
+  const album = rows.find(r => r.wrapperType === 'collection') || null;
+
+  return {
+    tracks: songs
+      .sort((a, b) => (a.discNumber || 1) - (b.discNumber || 1) || (a.trackNumber || 0) - (b.trackNumber || 0))
+      .map((s, i) => ({
+        number: i + 1,
+        title: s.trackName,
+        duration: s.trackTimeMillis ? Math.round(s.trackTimeMillis / 1000) : null,
+        // Only where a record actually has more than one, so a draft saved
+        // before this existed reads the same as one saved after.
+        disc: s.discNumber && s.discNumber > 1 ? s.discNumber : undefined,
+      })),
+    facts: factsFrom(album),
+    // The id these songs came from — the one worth keeping.
+    collectionId: String(id),
+  };
 }
 
 // The label, out of the copyright line. It reads like `P 2011 True Panther

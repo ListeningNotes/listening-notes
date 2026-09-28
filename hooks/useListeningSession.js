@@ -452,6 +452,11 @@ export function useListeningSession({ step }) {
       setTracksLoading(true);
       fetchTracklist(album, artist, collectionIdRef.current || null).then(found => {
         if (run !== listenRunRef.current) return;
+        // The id the songs actually came from, which is not always the one
+        // the send or the draft carried (library/music_data_api.js, the id
+        // is a hint): the draft, the entry and any send off this desk keep
+        // the one that works.
+        if (found?.collectionId) collectionIdRef.current = found.collectionId;
         setTracks(found?.tracks || []);
         setFacts(found?.facts || {});
         setTracksLoading(false);
@@ -478,6 +483,7 @@ export function useListeningSession({ step }) {
     setTracksLoading(true);
     fetchTracklist(albumInput, artistName, collectionIdRef.current || null).then(found => {
       if (run !== listenRunRef.current) return;
+      if (found?.collectionId) collectionIdRef.current = found.collectionId;
       setTracks(found?.tracks || []);
       if (found?.facts) setFacts(found.facts);
       setTracksLoading(false);

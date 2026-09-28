@@ -86,11 +86,10 @@ export async function update_submission_status(id, status) {
 // looking for matches and nothing guesses. A person recognised the record and
 // pressed once.
 //
-// The credit on the entry is the caller's half — the route sets received_from
-// on the entry in the same press (app/api/submissions/[id]), so the send and
-// the record agree about who it came from. Done there rather than here
-// because update_entry already owns everything about writing an entry, and a
-// second writer for one column is how two of them drift.
+// Nothing is written on the entry. The press says the record was here before
+// the send came — "read that" — not that the sender put it here, so the post
+// gets no sender and does not become a Submission (Miyel, 2026-09-27;
+// DECISIONS, The network). It did until then; the argument is in the archive.
 //
 // Nothing is checked about the record beyond its existing: an entry for a
 // different pressing, a different year, or the wrong album entirely is the

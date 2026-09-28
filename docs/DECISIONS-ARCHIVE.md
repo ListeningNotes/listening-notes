@@ -653,3 +653,25 @@ because a popup is not a sheet that pulls down. The sheet from a friend's
 doors was also the flow that had broken, being a screen of its own with a
 pre-filled state of its own; under the popup it is only the right square
 arriving full.
+
+## The network — the already-logged press credited the entry, 2026-09-15 to 2026-09-27
+
+The current rule is in DECISIONS.md, The network: *"I've already logged
+this" means it was here before the send*.
+
+When the inbox got its third outcome (2026-09-15), the press did two writes:
+it marked the send logged and pointed at the record, and it made that record
+a Submission credited to the sender. The argument, from the route's own
+comment: "Without the credit this would only tidy the inbox, and the
+connection would still exist nowhere." The credit was written only where the
+entry had none, so a name the keeper had set by hand was never overwritten.
+
+Reversed 2026-09-27, on the first real use. Miyel pressed it to attach a
+listen she had done from the picker after the inbox's own listen failed on a
+dead catalogue id, and it did what she wanted that day — but her reading of
+the words is the opposite of the write: *I've already logged this* says the
+record was in the journal before the send came, and points the sender at
+that post; it does not say the sender put her onto it. A record listened to
+because of a send is logged from the row, as a second listen if there is an
+older one, and that listen carries the envelope. The credit write came out
+the same day; the send still settles and still points at the post.

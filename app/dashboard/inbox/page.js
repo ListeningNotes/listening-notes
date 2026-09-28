@@ -286,8 +286,9 @@ export default function Inbox({ layered = false, inPane = false }) {
     }
   }
 
-  // The press itself. Two writes on the server — the send is marked logged
-  // and pointed at the record, and the record is credited to the sender —
+  // The press itself. One write on the server — the send is marked logged
+  // and pointed at the record, and nothing is written on the record, because
+  // the press says it was here before the send (DECISIONS, The network) —
   // and the answer carries the whole shelf back, because the entry it names
   // has to arrive with it or the row would link to a slug it does not have.
   async function alreadyLogged(sent, entry) {

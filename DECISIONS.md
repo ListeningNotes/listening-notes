@@ -1337,6 +1337,15 @@ abandoned listen claim to be logged. **Nothing ever matches a send to an
 entry automatically** — a person recognises the record and presses once,
 because a wrong guess writes a credit onto somebody's entry.
 
+**"I've already logged this" means it was here before the send, 2026-09-27.**
+The press says *I already have this record; read that* — it settles the send
+and points the row at the old post. It does not say *you put me onto it*, so
+the post it names is not made a Submission and gets no sender (Miyel's
+reading; the route's credit write of 2026-09-15 is reversed and came out
+the same day — archive). A
+record listened to *because* of a send is logged from the row, as a second
+listen if need be, and that is what carries the envelope.
+
 **The inbox is one list and a row opens where it sits, 2026-09-15.** New was
 never a place — it is a property of a row, the way unread is in mail — so
 there are no views to stand on: one list newest first, a dot for what is new,
