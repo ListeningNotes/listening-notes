@@ -45,7 +45,7 @@
 
 const HOME = 'https://www.listeningnotes.blog/get';
 
-import { ArrowRight, BookOpen, Broadcast, Disc, HardDrives, PaperPlaneTilt, Shuffle } from '@phosphor-icons/react';
+import { ArrowRight, BookOpen, Broadcast, Disc, Key, PaperPlaneTilt, Shuffle } from '@phosphor-icons/react';
 import WritingAccess from './WritingAccess';
 // The version this copy is running, beside the source line. A version used
 // to be ruled out here as a line that goes stale; releases keep it true now
@@ -89,16 +89,17 @@ export default function Pitch({ onSignedIn }) {
             flat: these say what the software does and open nothing, and a
             tile that lifts under a finger is a door. Every glyph is the one
             the site already uses for that thing — the beacon's, the send's,
-            Compare's shuffle — so none has to be learned twice. Hosting is
-            HardDrives rather than the mock's key, because the key under GET
-            ONE is the way in, and two keys on one pane would mean two things. */}
+            Compare's shuffle — so none has to be learned twice. Hosting wears
+            the mock's key (Miyel, 2026-09-27: "i think thats better"); it was
+            a stack of drives for a week because the key under GET ONE is the
+            way in, and two keys on one pane read as one thing. Her call. */}
         <ul className="pt-tiles">
           <li className="ln-tile pt-tile"><Broadcast size={25} aria-hidden="true" />Show what you have on</li>
           <li className="ln-tile pt-tile"><Disc size={25} aria-hidden="true" />Rate every track, not just the album</li>
           <li className="ln-tile pt-tile"><PaperPlaneTilt size={25} aria-hidden="true" />Send music to friends</li>
           <li className="ln-tile pt-tile"><Shuffle size={25} aria-hidden="true" />Compare ratings side by side</li>
           <li className="ln-tile pt-tile"><BookOpen size={25} aria-hidden="true" />Look back on every listen</li>
-          <li className="ln-tile pt-tile"><HardDrives size={25} aria-hidden="true" />Host it yourself, for free</li>
+          <li className="ln-tile pt-tile"><Key size={25} aria-hidden="true" />Host it yourself, for free</li>
         </ul>
 
         {/* The foot, pushed to the bottom of a tall screen and following the
