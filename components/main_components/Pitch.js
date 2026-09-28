@@ -91,8 +91,10 @@ export default function Pitch({ onSignedIn }) {
             the site already uses for that thing — the beacon's, the send's,
             Compare's shuffle — so none has to be learned twice. Hosting wears
             the mock's key (Miyel, 2026-09-27: "i think thats better"); it was
-            a stack of drives for a week because the key under GET ONE is the
-            way in, and two keys on one pane read as one thing. Her call. */}
+            a stack of drives for a week because the way in under GET ONE was
+            a key too, and two keys on one pane read as one thing. The way in
+            is a lock since 2026-09-28 (WritingAccess.js), so the key stands
+            alone. */}
         <ul className="pt-tiles">
           <li className="ln-tile pt-tile"><Broadcast size={25} aria-hidden="true" />Show what you have on</li>
           <li className="ln-tile pt-tile"><Disc size={25} aria-hidden="true" />Rate every track, not just the album</li>

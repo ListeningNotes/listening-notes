@@ -754,8 +754,8 @@ cascade and follows the order the rules had in the one file they came from.
 
 **The pitch is for strangers: three lines and six tiles, 2026-09-22.** The
 About pane is visitor-only; a keeper never sees a pitch. The small mark, a
-blurb, six one-line tiles, GET ONE as a word and an arrow, then the key and
-Source · version. A tile is a glyph and one bold line, flat because it opens
+blurb, six one-line tiles, GET ONE as a word and an arrow, then the lock (a
+key until 2026-09-28) and Source · version. A tile is a glyph and one bold line, flat because it opens
 nothing, and ownership is last so the page ends on the promise. It replaced
 three sentences and a pill (2026-09-03).
 
