@@ -77,7 +77,6 @@ import { useSpineWidth } from '../../hooks/useSpineWidth';
 import { useTheme } from './Lightswitch';
 import { useBookplate } from './Bookplate';
 import ListeningBeacon from './ListeningBeacon';
-import CallingCard from './CallingCard';
 import Journal from './Journal';
 import Footer from './Footer';
 import About from './About';
@@ -415,6 +414,12 @@ export default function HomeNav() {
   // permission check — the writing side guards itself — just what decides
   // which of the two right-hand panes is drawn.
   const [authed, setAuthed] = useState(false);
+  // Whether the wristband check has answered at all. `authed` starts false
+  // for everybody, so on its own it cannot tell a visitor from a keeper whose
+  // answer has not arrived — and the one thing drawn for a visitor and not a
+  // keeper (the wall's peek under the beacon, nav.css) must not flash on the
+  // keeper's own floor for that beat.
+  const [checked, setChecked] = useState(false);
   // How many submissions and comments are sitting unread. Null until asked, so
   // the line can hold its place without flashing a zero on the way.
   const [waiting, setWaiting] = useState(null);
@@ -469,6 +474,7 @@ export default function HomeNav() {
       .then(r => r.json())
       .then(d => {
         setAuthed(!!d.authed);
+        setChecked(true);
         if (d.authed) askWaiting();
       })
       .catch(() => {});
@@ -2415,19 +2421,19 @@ export default function HomeNav() {
     </button>
   ));
 
-  // ── And the other answer to the same question ────────────────────────────
-  // The slot the way in stands in is the floor's one question — what now — and
-  // until today it had an answer for the keeper and nothing at all for anybody
-  // else, which left a quarter of a visitor's screen empty (measured
-  // 2026-09-18, 189px of 812). A visitor's answer is whose journal this is and
-  // the two things they can do about it, which is the card's own row at the
-  // size this floor can afford. See CallingCard.js.
-  //
-  // The face goes to the card, through the same `goTo` the Card door at the
-  // foot of the screen uses, and to the same place: the rail's first pane.
-  // Nobody ever sees both this and the way in — one is `authed`, the other is
-  // not — so the slot holds exactly one thing whoever is looking at it.
-  const theCallingCard = !authed && <CallingCard onOpenCard={() => goTo(0)} />;
+  // ── And nothing, for anybody else, 2026-09-27 ───────────────────────────
+  // A visitor's slot held the keeper's face with Add and Send either side of
+  // it from 2026-09-19 (CallingCard.js, gone). Neither word could do what it
+  // said — a page served by this copy cannot write to a reader's address book
+  // or post a send for them — and the face was the keeper turning up on a
+  // floor that is the record's. So below the record a visitor's slot is empty,
+  // and it stays empty: nothing fills it (Miyel's brief, 2026-09-26, and her
+  // call on the face, 2026-09-27). The keeper is on the card, one pane left,
+  // and nowhere else; an address travels by copy and paste from the card's
+  // code (DECISIONS, The network). What the room went to, the same day: a
+  // visitor's floor stops short by the peek and the wall's first covers show
+  // under the chevron, the way the feed shows under the faces (nav.css,
+  // .hn--visitor). The keeper's floor is full and keeps no peek.
 
   // "+ Start a listen" and "Messages" used to sit under the beacon, from when
   // the cover was the only screen an owner had and the writing had to be
@@ -2508,6 +2514,9 @@ export default function HomeNav() {
            and which panes those are is not something a selector can work out
            from the markup. */
         + (authed ? ' hn--keeper' : '')
+        /* And its counterpart, once the check has said so: a visitor's beacon
+           floor stops short so the wall shows under it, 2026-09-27. */
+        + (checked && !authed ? ' hn--visitor' : '')
         + (turning ? ' hn--turning' : '')
         + (spine.dragging ? ' hn--dragging' : '')
         + (choosing ? ' hn--choosing' : '')
@@ -2665,7 +2674,6 @@ export default function HomeNav() {
                 : <>
                     {recentRow}
                     {theWayIn}
-                    {theCallingCard}
                   </>}
             </div>
             {/* ── The way down, in the flow ────────────────────────────
