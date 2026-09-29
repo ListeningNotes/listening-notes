@@ -78,9 +78,13 @@ reasoning; these are inline so nobody has to go looking.
   outbound: a journal shows what its keeper is logging and never who is
   reading, who added whom, or how many. Gifts are not counted either.
 - **Never write to another keeper's database.** The only things one copy may
-  put into another are a send and a wave, each on a keeper's press, through
-  that copy's own public route. Everything else about another journal is read
-  from its public feed and routes.
+  put into another are a send, a wave and a message, each on a keeper's
+  press, through that copy's own public route. Everything else about another
+  journal is read from its public feed and routes.
+- **Nobody's words are drawn on a journal but its keeper's.** No comments, no
+  threads, nothing a visitor wrote shown on an entry or anywhere else. What
+  somebody has to say goes to the keeper as a message and lives in the inbox;
+  it is public only if the keeper quotes it in their own writing.
 - **No phone-home.** Nothing in a copy reports to the canonical copy or
   anywhere else: no analytics, no pushed banners or messages, no deploy
   redirect that would log installs, nothing that runs without a press. A copy
@@ -167,9 +171,6 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   while a copy is unclaimed: the setup link with the claim code in it.
 - `code_shape.js` — two numbers about a QR code's shape (quiet zone, least
   version), shared by the server press and the browser so they cannot drift.
-- `comment_actions.js` — comments: a thread nested by track, saving, upvoting,
-  moderation, and answering another copy's "which replies came from my
-  journal".
 - `cover_code.js` — an entry's cover pressed into the QR code for that entry's
   address, redrawn on every ask; the row keeps only the proved dot size.
 - `cross_references.js` — display-time linking: a mention of an album or
@@ -185,7 +186,7 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   a sentence for the owner.
 - `definitions.js` — the shipped text for the three marks (Masterpiece,
   Favorite, Formative) and the merge of the owner's edits over it.
-- `doorman.js` — rate limiting, in memory: the doors (login, comment, send,
+- `doorman.js` — rate limiting, in memory: the doors (login, message, send,
   wave and so on), how many tries each allows, who is knocking, and the 429
   answer.
 - `entry_formatter.js` — the shapes an entry is written in: the horizon bar
@@ -199,6 +200,9 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   by going back, alone).
 - `install_guide.js` — what `/get` needs: the deploy button's URL and the ten
   install steps with their screenshots and the rings drawn over them.
+- `message_actions.js` — the `messages` table: somebody's words to the
+  keeper, kept, listed for the inbox, opened, marked replied to, and
+  dismissed — which deletes, and takes the comment a message was with it.
 - `migrator.js` — brings the database up to date from `migrations/` on start
   and at build, under a session-level advisory lock, on the direct (unpooled)
   endpoint.
@@ -208,20 +212,18 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - `needle.js` — the beacon's reading half: the one `needle` row saying what
   is being logged now, lifting it, `sat_with` for listens whose post was
   deleted, and the recent listens drawn under the beacon.
-- `outbox.js` — a send or a wave leaving this copy for another, server to
-  server: posts to their `/api/submissions` or `/api/waves` and reports what
-  came back in plain words.
+- `outbox.js` — a send, a wave or a reply leaving this copy for another,
+  server to server: posts to their `/api/submissions`, `/api/waves` or
+  `/api/messages` and reports what came back in plain words.
 - `people_actions.js` — the address book (`people`): list, file, pin (six at
   most), remove, and asking a journal its keeper's name.
 - `portrait_code.js` — the press: the portrait made into the journal's QR
   code with a dot of ink per module, proved by decoding with jsQR on both page
   colours; `CODE_BUILD` is bumped whenever the drawing changes.
-- `receipts.js` — the browser half of comment receipts: the signed stubs kept
-  in localStorage so a writer sees their own comment while it waits.
 - `report_actions.js` — the `reports` table: problems keepers wrote in from
   their desks, received by the canonical copy.
 - `return_address.js` — a sender's name and journal kept in their own browser
-  for the send and comment forms; `tidyAddress`, `tidyJournal` and
+  for the send and message forms; `tidyAddress`, `tidyJournal` and
   `journalUrl`, the one spelling an address is kept in; and the `?from=` /
   `?as=` handling when a keeper arrives from their own copy.
 - `secrets.js` — the vault: the `secrets` table's only reader. The session
@@ -247,8 +249,8 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   table as Postgres writes it; shared by backup, export and restore so no list
   is kept. `.mjs` because the backup is plain Node.
 - `wristband.js` — the login cookie: signed tokens issued and checked with the
-  session secret, renewal, the route guard `requireWristband`,
-  `wristbandOnHand` for pages, and the signing of comment receipts.
+  session secret, renewal, the route guard `requireWristband`, and
+  `wristbandOnHand` for pages.
 
 ## `hooks/` — reusable browser logic
 

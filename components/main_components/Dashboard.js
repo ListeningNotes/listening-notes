@@ -55,7 +55,7 @@ import { VERSION, RELEASE_URL } from '../../library/version';
 // journal; a second one that only its owner could see was a CMS grown beside a
 // site that did not need one.
 const DOORS = [
-  { href: '/dashboard/inbox',   label: 'Inbox',   note: 'Submissions and comments waiting on you', Icon: Envelope, count: w => w?.total },
+  { href: '/dashboard/inbox',   label: 'Inbox',   note: 'Records sent to you, waiting on you', Icon: Envelope, count: w => w?.total },
   // What the people in the address book logged. It ran on down this pane's own
   // scroll until 2026-09-15, under the rows; the desk is a hero and its rows
   // and stops there now, so the feed is a door like the others (Miyel's

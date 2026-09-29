@@ -416,8 +416,8 @@ export default function HomeNav() {
   // keeper (the wall's peek under the beacon, nav.css) must not flash on the
   // keeper's own floor for that beat.
   const [checked, setChecked] = useState(false);
-  // How many submissions and comments are sitting unread. Null until asked, so
-  // the line can hold its place without flashing a zero on the way.
+  // How many sends are waiting on the keeper. Null until asked, so the line
+  // can hold its place without flashing a zero on the way.
   const [waiting, setWaiting] = useState(null);
   // The counts printed on the card. Null until they land, so it holds the
   // shape of its number rows rather than flashing zeros into them.
@@ -1065,7 +1065,7 @@ export default function HomeNav() {
   // The card and the beacon are always drawn: you land on one and the other is
   // one swipe away, and both are this journal's own pages. The inbox and the
   // book are not. Each of them is a page that fetches when it mounts — the
-  // inbox asks for submissions, comments, reports and the address book, and
+  // inbox asks for sends, messages, waves, reports and the address book, and
   // the feed asks every journal in that book, one cross-origin request each.
   // Mounting them with the cross would mean paying for all of that on every
   // visit to the front door, including the visits that never leave the beacon

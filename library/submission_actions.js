@@ -58,7 +58,7 @@ export async function pull_submissions() {
   `;
 }
 
-// Same as count_pending_comments: the cover wants a number, not the rows.
+// The desk wants a number, not the rows.
 export async function count_pending_submissions() {
   const [row] = await database`
     SELECT COUNT(*)::int AS n FROM submissions WHERE status = 'pending'

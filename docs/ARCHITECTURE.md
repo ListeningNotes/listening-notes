@@ -27,7 +27,7 @@ Think of it like a house.
   it has two floors and a down caret. On a desk it is an open book — the
   spine on the left turns between the card and the desk (or, signed out, the
   colophon) and is a quarter of the window; the journal takes the rest
-- Individual entry pages where people can read your notes and leave comments
+- Individual entry pages where people can read your notes and write to you about them
 - `/archive` — every entry, searchable and filterable
 - `/key` — what the stars and the three marks mean
 - `/submit` — send the keeper an album
@@ -52,8 +52,9 @@ publicly):
   a time, the score and note, the preview. Identical on a phone and a desk. From the desk
   it opens as a layer, the way an entry does, and a swipe puts you back — on a
   desk that layer is the right page, so the spine stays beside it
-- `/dashboard/inbox` — sent albums, comments awaiting moderation, and problems
-  keepers wrote in
+- `/dashboard/inbox` — everything that has arrived, in one list: records sent
+  to you, messages, waves, records that came back, and problems keepers
+  wrote in
 - `/dashboard/report` — report a problem: one box, sent to the copy the
   software comes from
 - `/dashboard/feed` — what the journals in the address book have logged.
@@ -93,7 +94,6 @@ The library — logic, no visuals
     card_links.js              The marks a card can wear — which shape stands for the rig, which logo a link gets
     claim_notice.js            The box printed in the build log while a copy is unclaimed
     code_shape.js              Two numbers about a code's shape — the quiet zone and the least version — read by the press and by the browser that sizes its picture
-    comment_actions.js         Everything to do with comments: the thread nested by track, saving, upvoting, moderation, and which replies came from a given journal
     cover_code.js              The same press for an entry's cover: the code for that entry's address, redrawn from the art on each ask, with only the proved dot kept on the row
     cross_references.js        Display-time linking: a mention of an album or artist in the archive becomes a link; [[brackets]] force one; COMMON_WORD_NAMES is the hand-edited blocklist
     database_actions.js        Everything to do with saving and loading entries — the wall's lean list, the public feed's allow-list, one entry, a record's folder, save/update/delete, drafts, briefings
@@ -104,13 +104,13 @@ The library — logic, no visuals
     gold_burst.js              The gold sparkle fired when a Masterpiece is marked
     handoff.js                 What the wall leaves for the entry layer: the tapped record's first screen, the wall's order for swiping to neighbours, and how a layer arrived
     install_guide.js           What /get needs: the deploy button's URL and the ten steps with their screenshots
+    message_actions.js         Messages: somebody's words to the keeper — kept, listed for the inbox, opened, marked replied to, and dismissed, which deletes
     migrator.js                Brings the database up to date — from instrumentation.js on start, and from scripts/prepare_database.mjs at build
     music_data_api.js          Fetches album art and tracklists from iTunes, and the searches: records (searchAlbums) and songs (searchSongs)
     needle.js                  The beacon's reading half: the one row saying what is being logged now, lifting it, sat_with for deleted listens, and the recent listens under the beacon
-    outbox.js                  Handing a record, or a song, to somebody in the book from this copy — this server to theirs, never the browser — and a wave
+    outbox.js                  Handing a record, or a song, to somebody in the book from this copy — this server to theirs, never the browser — and a wave, and a reply to a message
     people_actions.js          The address book: the people table, pinning, and asking a journal its keeper's name
     portrait_code.js           The press: the portrait made into the journal's QR code on the server — a dot of ink in every photo module, proved by the strictest reader on both page colours
-    receipts.js                The browser half of comment receipts: the signed stubs kept in localStorage
     report_actions.js          Problems keepers wrote in from their desks — the reports table
     return_address.js          The back of the envelope — a sender's name and journal kept in their own browser — and the one spelling an address is kept in
     secrets.js                 The vault: the session secret, the password hash, the claim code, the setup window, and two retired key columns. Database first, environment second
@@ -122,7 +122,7 @@ The library — logic, no visuals
     version.js                 Which version this copy is running (from package.json), where its release notes are, and where a report goes — read by the pitch pane, the desk and the report sheet
     wave_actions.js            The waves that arrived here: one row per waving journal, replaced not stacked, deleted when left
     whole_journal.mjs          Which tables the journal has, asked of the database, and one table's rows as Postgres writes them — shared by the nightly backup and the export, so neither keeps a list
-    wristband.js               Session auth — issues and checks the JWT cookie, renews it, guards routes and pages, and signs comment receipts
+    wristband.js               Session auth — issues and checks the JWT cookie, renews it, guards routes and pages
 
 The update button
   .github/workflows/update.yml   Ships in every copy: Actions → Update this copy → Run workflow, and once an hour on its own
@@ -148,17 +148,13 @@ The front doors — receive requests, hand them off, send back responses
     drafts/route.js            Unfinished listens — owner-only both ways, the read included
     drafts/[id]/route.js       DELETE one draft
     format/route.js            Assemble your notes into a post (local, no model)
-    comments/route.js          Load or submit comments
-    comments/[id]/route.js     Moderation — PATCH approves, DELETE dismisses; owner-only
-    comments/pending/route.js  Every comment awaiting moderation, for the inbox; owner-only
-    comments/receipts/route.js POST: the thread plus any held comments the caller's receipts prove they wrote
-    comments/upvote/route.js   Upvote a comment
+    messages/route.js          Messages — POST is public: from a person on an entry here, or from another copy's server replying; GET, PATCH and DELETE are the keeper's
     submissions/route.js       POST: a send arrives — from the visitor form or from another copy's server; GET for the owner
     submissions/[id]/route.js  One send: settling it, saying it was already logged, naming who it came from; owner-only
     settings/route.js          The settings row — public to read, owner-only to write
     people/route.js            The address book — owner-only: the list, and filing an address
-    outbox/route.js            Where a send leaves from — owner-only: the person resolved out of the address book, the record (or the song) handed to library/outbox.js, which posts to their copy's /api/submissions; a wave goes the same road
-    came-back/route.js         What came back — owner-only: the inbox's list, what the feed noticed, and a row opened
+    outbox/route.js            Where a send leaves from — owner-only: the person resolved out of the address book, the record (or the song) handed to library/outbox.js, which posts to their copy's /api/submissions; a wave goes the same road, and so does a reply, whose recipient is read off the message it answers
+    came-back/route.js         What came back — owner-only: the inbox's list, what the feed noticed, a row opened, and a row dismissed
     waves/route.js             Waves — POST is public, from another copy's server: a journal and a name, nothing else, checked and counted; GET, PATCH and DELETE are the keeper's
     people/[id]/route.js       One person: reading them, crossing them out
     reports/route.js           A problem written in — POST from any copy (rate-limited, cross-origin), GET for the owner
@@ -168,7 +164,7 @@ The front doors — receive requests, hand them off, send back responses
     auth/login/route.js        The password, the deploy-time variable, or — unclaimed — the claim code
     auth/check/route.js        Am I still wearing a valid wristband; renews an ageing one on the way
     auth/logout/route.js       Cuts the wristband off
-    waiting/route.js           How much has arrived and not been looked at — the inbox's number
+    waiting/route.js           How many sends are waiting on the keeper — the desk's number; messages are never counted
     needle/route.js            Where a listen says what it is on — owner-only, write only; the read is public/beacon
     portrait/route.js          The keeper's picture: uploaded into a column, served back from it, removed
     portrait/code/route.js     POST: press the journal's code out of the stored portrait — owner-only, no body
@@ -176,7 +172,6 @@ The front doors — receive requests, hand them off, send back responses
     update/route.js            Is there a newer Listening Notes — the latest public release against package.json, at most once an hour, owner-only
     public/beacon/route.js     What the keeper is listening to — anyone may ask; cached at the edge
     public/entries/route.js    The public feed another copy reads — PUBLIC_FIELDS only, with keeper_name beside them
-    public/replies/route.js    Replies to comments left here from a given journal (?to=), for that journal's inbox
     public/stamps/route.js     The card's counted facts — records, first entry, top genres, the two flag counts
 
 The hooks — reusable logic shared across pages
@@ -235,10 +230,8 @@ The furniture — visual pieces
       Lightswitch.js           Manages light and dark mode — the one switch that calls it is the beacon's, top right
       Slug_Page/
         MiniCard.js            The record, kept at the head of the notes
-        CommentThread.js       A single comment and its replies
-        CommentBubble.js       One comment, drawn
-        NewCommentForm.js      The form to leave a comment
-        TrackThread.js         A track row that expands to show notes and comments
+        MessageForm.js         The form a message is written in, and MessageWayIn: "Message" and the keeper's name under an entry's album note
+        TrackThread.js         A track row, with its note under it when it has one
         HorizonBar.js          The bar chart on the full entry page
         MetadataLabel.js       The small uppercase section labels
         Chip.js                The small pill tags (Favorite, Masterpiece, etc)
@@ -271,7 +264,7 @@ The rooms — full pages assembled from furniture
       base.css                 Palette, both themes, the two typefaces, resets, the pill
       nav.css                  The cross: panes, crown, carets, beacon, pitch, desk, and the nav row on other pages
       journal.css              The wall of covers and its bar
-      entry.css                The layer, the stand-in, the entry page, comments, corrections, the printer's bar and grounds
+      entry.css                The layer, the stand-in, the entry page, the way to write to its keeper, corrections, the printer's bar and grounds
       idcard.css               The identity card, its editor, the About pane writing
       session.css              The listen: picker, header, four screens, the reference
       get.css                  /get — the steps and the button, and the story
@@ -280,7 +273,7 @@ The rooms — full pages assembled from furniture
     feed.xml/route.js          The journal as an RSS feed
     entries/[slug]/
       page.js                  Loads the entry, hands it to FullPostPage
-      FullPostPage.js          The full public entry page with comments — and, in preview mode, the session's preview
+      FullPostPage.js          The full public entry page — and, in preview mode, the session's preview
       TrackNotePage.js         A track note — an entry about one song: its card, read, corrected, and written for the first time on the listen's sheet
       opengraph-image.js       The picture an entry's link unfurls into — cover, title, score, marks — drawn on the server per request
     archive/page.js            Every entry — search, sort, filters
@@ -311,7 +304,7 @@ The rooms — full pages assembled from furniture
     @layer/(.)printer/page.js  The printer, as a sheet over the entry or the card
     dashboard/
       page.js                  Redirect to / — the desk is a face of the cross's turning pane
-      inbox/page.js            Comments and submissions in one place — plain, on the tokens, and a sheet over the desk
+      inbox/page.js            Everything that arrives, in one list: each row carries the mark of its kind and opens where it sits to its doors — plain, on the tokens, and a sheet over the desk
       feed/page.js             What the journals in the address book have logged
       people/page.js           The address book — the list, the field, the scanner
       people/[id]/page.js      Your page about one person — the whole-journal compare, and what they sent you
@@ -374,10 +367,11 @@ than what anyone remembers building.
 | `settings` | Everything that makes a copy someone's own: the keeper, the portrait, the links, the rig, the starting theme. Exactly one row, forced by a check on `id`. |
 | `secrets` | What must never reach a visitor: the session secret, the password hash, the claim code, the setup window, and two API key columns nothing reads any more (Last.fm, retired 2026-09-16; Anthropic, retired 2026-09-18). One row; read only by `library/secrets.js`. |
 | `users` | The owner. One row, written at setup. |
-| `comments` | Replies on entries and on individual tracks, with a moderation queue. |
+| `comments` | What was said under entries until 2026-09-29, when comments became messages. Nothing reads it; the rows stay, less any whose message was dismissed or whose entry was deleted. |
+| `messages` | Somebody's words to the keeper, drawn in the inbox and nowhere else. Who it is from, what was said, the entry it is about as a journal and a slug with the record as it was, the line it answers when it is a reply, `seen_at` for the dot, `replied_at`, and `comment_id` with `was_comment` for one that used to be a comment. Dismissing deletes the row. |
 | `submissions` | Albums other people have sent you. `status` is pending, reviewed (a listen was started from the row), logged, or dismissed; `entry_id` is the record a send points at, set by hand on the row (*I've already logged this*) and never by matching; that press writes nothing on the record. `song` makes a send a track rather than a record, with the record it is off still in `album` and `artist`; empty is an album send, which every send before migration 026 is. |
 | `waves` | Somebody added this journal and said so: one row per waving address, the name their journal gave when asked, when it arrived, and `seen_at`. No message column, now or later; Leave it deletes the row. |
-| `came_back` | Records this journal put somebody onto, logged on their journal: one row per entry, keyed by their journal and slug, with what their feed said about it and `seen_at` for the inbox's dot. Written by the keeper's own browser, from the feed's match. |
+| `came_back` | Records this journal put somebody onto, logged on their journal: one row per entry, keyed by their journal and slug, with what their feed said about it, `seen_at` for the inbox's dot and `dismissed_at` for one put away — kept, so the feed does not bring it back. Written by the keeper's own browser, from the feed's match. |
 | `people` | The address book: one row per journal address, the name that journal gave when it was filed, and `pinned_at` for the pinned row. The face is never stored. |
 | `reports` | Problems keepers wrote in from their desks. Every copy has the table; only the one in `REPORTS_URL` is written to. |
 | `needle` | What is on the desk right now, for the beacon. One row; it lifts itself when nothing has touched it for twenty minutes. |

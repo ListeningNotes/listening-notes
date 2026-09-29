@@ -62,10 +62,21 @@
 //      taken on the server, whose clock is UTC, and needs nothing; one
 //      downloaded from a dev server on a laptop has the laptop's problem, and
 //      nothing here can tell.
+//   7. A file from before messages holds comments that nothing draws any
+//      more. Comments became messages on 2026-09-29: migration 027 brought
+//      every comment on a standing entry into the inbox, once, on the day a
+//      copy took the update. A file taken before that day holds `comments`
+//      and no `messages`, and put back it would leave its comments in a table
+//      nothing reads — restored, and never seen again. So after such a file
+//      is restored the same statement is run again, read out of the migration
+//      itself so there is one copy of it, and the comments arrive in the
+//      inbox where they are not there already. It cannot fail a restore: if
+//      it does not work the journal is restored all the same, and says so.
 
 import { Client } from '@neondatabase/serverless';
 import { readFileSync, existsSync, statSync } from 'node:fs';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { every_table } from '../library/whole_journal.mjs';
 
 const [source, ...flags] = process.argv.slice(2);
@@ -133,6 +144,32 @@ function load() {
 }
 
 const backup = load();
+
+// Point 7 at the top. The two statements that bring comments into the inbox,
+// cut out of the migrations that first ran them: the one that brings them,
+// and the one that says which comment a reply was answering. Read rather
+// than written out again here, because a second copy is a copy that drifts,
+// and a migration that has shipped is never edited. Null when either cannot
+// be found, and then nothing is brought and the plan says nothing of it.
+function comments_into_messages() {
+  try {
+    const folder = fileURLToPath(new URL('../migrations/', import.meta.url));
+    const made = readFileSync(join(folder, '027_messages.sql'), 'utf8');
+    const chained = readFileSync(join(folder, '028_chains_and_dismissals.sql'), 'utf8');
+    const from = made.indexOf('INSERT INTO messages (');
+    const close = 'ON CONFLICT (comment_id) DO NOTHING;';
+    const to = made.indexOf(close, from);
+    const start = chained.indexOf('UPDATE messages m');
+    const end = chained.indexOf(';', start);
+    if (from < 0 || to < 0 || start < 0 || end < 0) return null;
+    return {
+      bring: made.slice(from, to + close.length),
+      answering: chained.slice(start, end + 1),
+    };
+  } catch {
+    return null;
+  }
+}
 
 function connectionString() {
   if (process.env.DATABASE_URL) return process.env.DATABASE_URL;
@@ -210,6 +247,11 @@ if (!restoring.length) refusals.push('The file holds none of the tables this dat
 // nothing ever wrote to, conversations and echo_memory, empty and long since
 // dropped; nothing is lost leaving those behind. A table with rows in it is a
 // table this database is too old for.
+// A file from before messages, going into a database that has them.
+const bringing = restoring.includes('comments') && tables.includes('messages') && !backup.holds.includes('messages')
+  ? comments_into_messages()
+  : null;
+
 const strangers = backup.holds.filter(t => !tables.includes(t));
 const emptyStrangers = strangers.filter(t => !backup.read(t).length);
 for (const t of strangers) {
@@ -279,6 +321,10 @@ if (untouched.length) {
 }
 if (tables.includes('schema_migrations')) {
   console.log('\n  read and never written: schema_migrations, the list of what built this database');
+}
+if (bringing) {
+  console.log('\n  this file is from before messages: once it is restored, its comments arrive');
+  console.log('  in the inbox as messages, where they are not there already');
 }
 if (emptyStrangers.length) {
   console.log(`\n  in the file, empty, and gone from this database: ${emptyStrangers.join(', ')}`);
@@ -376,10 +422,10 @@ try {
   // Move every counter past the highest id it just took, or the next row
   // written collides with one that is already there — and never backwards. A
   // counter that has already handed out more than the file holds stays where
-  // it is, because those ids went somewhere: a held comment's receipt sits in
-  // its writer's browser for ninety days, and an id handed out twice would let
-  // that receipt open somebody else's comment. On a new database the counters
-  // start just past the file's highest id.
+  // it is, because those ids went somewhere — a message keeps the id of the
+  // comment it was (messages.comment_id), and an id handed out twice would
+  // point it at somebody else's. On a new database the counters start just
+  // past the file's highest id.
   const moved = [];
   for (const { table_name, column_name, counter } of counters) {
     if (!restoring.includes(table_name)) continue;
@@ -392,6 +438,22 @@ try {
     if (rows.length) moved.push(table_name);
   }
   console.log(`\n  id counters moved past the restored rows: ${moved.join(', ') || 'none needed to move'}`);
+
+  // Point 7 at the top: the comments of a file from before messages, into
+  // the inbox. Behind a savepoint, so that if it cannot be done the restore
+  // itself still stands — the comments are back in their table either way.
+  if (bringing) {
+    await client.query('SAVEPOINT bringing');
+    try {
+      const brought = await client.query(bringing.bring);
+      await client.query(bringing.answering);
+      await client.query('RELEASE SAVEPOINT bringing');
+      console.log(`\n  ${brought.rowCount ?? 0} comments arrived in the inbox as messages`);
+    } catch (error) {
+      await client.query('ROLLBACK TO SAVEPOINT bringing');
+      console.log(`\n  ! The comments are restored, and could not be brought into the inbox: ${error?.message || error}`);
+    }
+  }
 
   // One last look before it counts: every table holds what the file held.
   for (const [table, rows] of plan) {

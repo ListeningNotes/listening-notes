@@ -5,8 +5,8 @@
 // twice.
 //
 // Both, not just the URL, because a return address is a name and an address —
-// and because being asked your own name on every comment is the kind of small
-// friction that stops somebody leaving the second one.
+// and because being asked your own name on every message is the kind of small
+// friction that stops somebody writing the second one.
 //
 // ── Why this cannot be read from the session ──────────────────────────────
 // Somebody arriving here to send an album may well be keeping a journal of
@@ -31,13 +31,12 @@
 // card carry no such thing, and those are how people arrive. Everything
 // social lives on the visitor's own copy now: their address book, their
 // comparing (DECISIONS, The network). This file is the send form's and the
-// comment form's, and nothing reads it to decide what a visitor is.
+// message form's, and nothing reads it to decide what a visitor is.
 //
-// Deliberately free of imports and of anything server-only — same reason as
-// receipts.js, which this is modelled on — so the address helpers below are
-// safe to read from the browser and from a route alike.
+// Deliberately free of imports and of anything server-only, so the address
+// helpers below are safe to read from the browser and from a route alike.
 
-// One key, shared by the send form and the comment form. Not one per feature:
+// One key, shared by the send form and the message form. Not one per feature:
 // fill it in anywhere and it is filled in everywhere after.
 const KEY = 'ln-return-address';
 
@@ -57,7 +56,7 @@ const KEY = 'ln-return-address';
 // network: no email anywhere on the site), so an @ disqualifies rather than
 // being stripped — a guess at the host after it would file somebody under
 // gmail.com. This is the only place the test lives, so the send form, the
-// address book, the comment form and every route reject it alike.
+// address book, the message form and every route reject it alike.
 const LOOKS_LIKE_A_HOST = /^[^\s.\/@]+(\.[^\s.\/@]+)+$/;
 
 // Everything is stored the way it will be shown: no scheme, no trailing

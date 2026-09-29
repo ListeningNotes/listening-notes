@@ -6,7 +6,7 @@
 //
 // Written on Listening Notes, on the keeper's own desk, and sent to the one
 // copy the software comes from (REPORTS_URL), where it lands in the inbox
-// beside the sends and the comments. Nothing leaves unless Send is pressed
+// beside the sends and the messages. Nothing leaves unless Send is pressed
 // — a letter, not a phone-home — and what leaves is what was written plus
 // what a keeper would otherwise be asked for: the version, the browser, and
 // their name and journal so there is a way to find them.

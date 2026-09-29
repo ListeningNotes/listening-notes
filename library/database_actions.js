@@ -618,7 +618,12 @@ export async function update_entry(slug, fields) {
 //
 //   comments.entry_slug is a plain text column, so an entry's comments survive
 //   it — sitting in the table forever, unreachable, and turning up years later
-//   in a backup attached to a record nobody can find.
+//   in a backup attached to a record nobody can find. Nothing draws the table
+//   since 2026-09-29, when comments became messages (migrations/027), and it
+//   is still cleared here: what was said about a record that has gone has no
+//   business outliving it out of sight. A message about the entry is left
+//   alone. It is the keeper's to dismiss, and it goes on saying what it was
+//   about after the entry has gone.
 //
 //   entries.source_entry_id has an index and no key, so an album that somebody
 //   else's entry was received *from* leaves that entry pointing at a row that

@@ -11,13 +11,13 @@ Two ways, because they answer different questions.
 
 **A button — Settings → Back up your journal.** Press **Make a copy** and your
 whole journal is gathered into one JSON file: every table the database has —
-the entries and their notes, the settings, the comments, the address book, the
+the entries and their notes, the settings, the messages, the address book, the
 sends, the waves and what came back — and the page says how many entries and
 people it holds. Then **Share** on a phone hands it to the share sheet (Mail,
 Save to Files, AirDrop), and **Download** on a computer puts it in Downloads.
 No setup, nothing to configure, works on any copy of this software. The same
 file is at `/api/export` for anyone who would rather use the address. It is
-owner-only — it hands over unpublished drafts, comments still in moderation,
+owner-only — it hands over unpublished drafts, the messages in the inbox,
 the address book, and the return addresses people left with submissions.
 
 **It never carries the `secrets` table** — the password and the key that signs

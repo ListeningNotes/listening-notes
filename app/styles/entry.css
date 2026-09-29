@@ -2,8 +2,9 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 /* app/styles/entry.css
    One record: the sheet it arrives on over the wall, the stand-in while it
-   loads, the two-screen shape on a phone, the full page and its comments, and
-   the owner's corrections — the fields, the cover, the provenance, the pin. */
+   loads, the two-screen shape on a phone, the full page, the way to write to
+   its keeper, and the owner's corrections — the fields, the cover, the
+   provenance, the pin. */
 
 /* ── The card, and the screen under it ─────────────────────────────────────
    The two-screen shape an entry is read in on a phone: a screen of album that
@@ -1004,13 +1005,12 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
    whole screen and no bar, and padding it would move the page at the moment a
    sheet opens over it — which is the thing this panel was just fixed for. */
 .ln-crediting .ln-screen-two-scroll { padding-bottom: 96px; }
-/* And a comment being written, 2026-09-21. Not a bar at the foot this time but
-   the same problem it solves: the form opens where the note is, and a note on
-   the last track is already at the bottom of the scroller — so the field, and
-   the Post under it, land against the edge with the keyboard over them. The
-   floor is what lets the scroller carry them up. NewCommentForm writes the
-   class, and writes it for a reply inside a branch as readily as for a comment
-   on the album notes, because both of those are that one component. */
+/* And a message being written. Not a bar at the foot this time but the same
+   problem it solves: the form opens where the way in stood, and on an entry
+   with no album note that is the foot of the tracks, already at the bottom
+   of the scroller — so the field, and the word under it, land against the
+   edge with the keyboard over them. The floor is what lets the scroller
+   carry them up. MessageWayIn writes the class (MessageForm.js). */
 .ln-saying .ln-screen-two-scroll { padding-bottom: 96px; }
 /* One correction to the three of them, measured 2026-09-21: `.ln-screen-two-scroll`
    is not the element that scrolls any more, whatever the note above says. It
@@ -1044,8 +1044,8 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
    2026-09-24, the track-notes brief. Rated and not written is one tight row —
    number, title, marks, stars — and five of them fit where one used to sit,
    because nothing under it is waiting for a note that may never come.
-   Written keeps the row and sets its note under the title, with the comment
-   glyph at the end of it (.ln-say-beside). The rule under a track is the
+   Written keeps the row and sets its note under the title (.ln-say-beside),
+   and nothing else stands under a track. The rule under a track is the
    track's own, so it closes the note when there is one and the row when there
    is not. The title is bold and a size up from where it was, as in the
    brief's mock-up: in a column of rows the song is what you read down. */
@@ -1210,141 +1210,39 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
    dragging the sheet. See Journal.js. */
 .ln-locked { overflow: hidden !important; }
 
-/* ── What other people said ─────────────────────────────────────────────────
-   Rebuilt 2026-09-21. Miyel: "the comments — they are so outdated, the box is
-   old, it's a thing that has not been touched since we have basically designed
-   every new aspect of this site."
-
-   It was the last part of the entry still carrying its own styling inline: a
-   hand-drawn speech bubble, 6px fields on a frosted panel, a filled accent
-   button with its text colour written out in hex, and a reply form that opened
-   as a modal over a dimmed screen. Every one of those is a thing the rest of
-   the site has since decided against, in writing:
+/* ── Writing to the keeper ──────────────────────────────────────────────────
+   What is left of the comments, which went on 2026-09-29: nobody's words are
+   drawn on an entry but its keeper's, and what somebody has to say goes to
+   the keeper as a message (the messages brief). The thread, the bubble, the
+   upvote and the branch are gone with their rules; the way in and the form
+   stay, in the vocabulary they were rebuilt in on 2026-09-21:
 
      a control is the mark, not a mark in a container  (DECISIONS)
      things open in the page, not over it              (DECISIONS)
      a word that commits is a word on a rule           (.ln-word)
      a field is a hairline, not a box                  (.sn-note, .af)
 
-   So this is that vocabulary, and nothing else. No panel, no blur, no radius,
-   no colour that is not a token. A comment is somebody's writing under yours,
-   and the page already knows how to set writing.
+   No panel, no blur, no radius, no colour that is not a token. */
 
-   The one thing kept whole is the rail down the side of a branch and the
-   tap-to-fold on it: that is a borrowed idiom people already know, and it was
-   not what looked old. */
-
-/* The way in, at the end of a note. Right-aligned, because it belongs to the
-   note above it rather than to the page, and quiet, because the writing is the
-   thing worth looking at. A word and a count, where there used to be a drawn
-   bubble and a number: the site has no other hand-drawn glyph left in it.
-   Margins only when something is open below, so an empty track does not pay
-   three gaps for a control 23px tall. */
+/* The way in, under the album note. Right-aligned, because it belongs to the
+   note above it rather than to the page, and quiet, because the writing is
+   the thing worth looking at. "Message" and the keeper's name, in the caption
+   face: words and no mark (Miyel, 2026-09-29). At the foot of the tracks
+   instead, on an entry with no album note to stand under. Once a message has
+   gone the word says so for a moment, and that is a statement rather than
+   something to press. */
 .ln-say-way { display: flex; justify-content: flex-end; }
-/* ── The way in to an entry, 2026-09-29 ── "Message" and the keeper's name,
-   in the caption face, under the album note: words and no mark (Miyel). At
-   the foot of the tracks instead, on an entry with no album note to stand
-   under. Once a message has gone the word says so for a moment, and that is
-   a statement rather than something to press. */
 .ln-message-foot { margin-top: 14px; }
 .ln-message-gone { cursor: default; color: var(--ink-soft); }
 .ln-message-gone:hover { color: var(--ink-soft); }
-.ln-say-way--open { margin-bottom: 10px; }
-/* The glyph, at the end of a track's note, 2026-09-24: a word when the way in
-   stands alone (the album note), a glyph when it is one of a column of them.
-   The note on the left and the glyph on the right, the glyph level with the
-   first line rather than floating halfway down a long paragraph. */
+/* A track's note, under its title. */
 .ln-say-beside { display: flex; align-items: flex-start; gap: 8px; padding-bottom: 8px; }
-.ln-say-beside--open { margin-bottom: 10px; }
 .ln-say-beside-text { flex: 1; min-width: 0; }
-/* The mark and not a mark in a container (DECISIONS): a thumb's target from
-   padding, paid back in negative margin so the glyph takes only its own 17px
-   and sits flush with the stars above it. Less given back on the left, so
-   the press never reaches across a link at the end of a line. */
-.ln-say-glyph {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  flex-shrink: 0;
-  padding: 13px;
-  margin: -9px -13px -13px -5px;
-  border: 0;
-  background: none;
-  color: var(--ink-faint);
-  cursor: pointer;
-  transition: color 0.15s;
-  -webkit-tap-highlight-color: transparent;
-}
-.ln-say-glyph:hover { color: var(--ink); }
-.ln-say-glyph:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: -6px; }
-.ln-say-glyph-count { font-family: var(--font-label); font-size: 10px; letter-spacing: 0.04em; }
-.ln-says { display: flex; flex-direction: column; gap: 22px; margin-bottom: 12px; }
-/* A hairline over each comment and none over the first: the gap is enough
-   between the note and the first thing said about it, and a line there would
-   read as the note's own footer. */
-.ln-says > * + * { border-top: 1px solid var(--border); padding-top: 20px; }
-
-/* Who said it, and when. One row, pressable along its whole width to fold the
-   branch — the header has always been the second way to do what the rail does,
-   and on a phone it is the bigger target of the two. */
-.ln-say-who {
-  display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
-  width: 100%; padding: 0; border: 0; background: none; cursor: pointer;
-  text-align: left;
-}
-.ln-say-name {
-  font-family: var(--font-label); font-size: 11px; letter-spacing: 0.04em;
-  color: var(--ink);
-}
-.ln-say-when, .ln-say-more {
-  font-family: var(--font-label); font-size: 9px; letter-spacing: 0.06em;
-  color: var(--ink-faint);
-}
-/* The same measure and leading the notes above are set in, because it is the
-   same kind of thing: somebody writing about a record. Softer than the owner's
-   own, which is the only thing that separates them. */
-.ln-say-body {
-  margin: 6px 0 0;
-  font-size: 14px; line-height: 1.75; color: var(--ink-soft);
-  overflow-wrap: anywhere; white-space: pre-wrap;
-}
-/* The row under a comment. .ln-word, the same word Save and Cancel are on the
-   editing bar — these were already quiet uppercase words and were the one part
-   of this that did not need rethinking, only rehousing. */
-.ln-say-acts { display: flex; gap: 2px; margin: 4px 0 0 -8px; flex-wrap: wrap; }
-.ln-say-up--on { color: var(--ink); cursor: default; }
-
-/* Held: posted, and waiting to be read. It reaches only the browser that wrote
-   it (a signed receipt, see receipts.js), so it is always *your* comment that
-   is dimmed, never somebody else's. The line under it is what explains the
-   dimming; without it the fade is just a rendering fault. */
-.ln-say--held { opacity: 0.55; }
-.ln-say-held-line {
-  margin: 8px 0 0;
-  font-family: var(--font-label); font-size: 9px; letter-spacing: 0.1em;
-  text-transform: uppercase; color: var(--ink-faint);
-}
-
-/* The branch. The rail spans exactly what this comment owns and folds it on a
-   tap, which is the thing people reach for. 2px and --border, unchanged. */
-.ln-say-branch { display: flex; margin-top: 14px; }
-.ln-say-rail {
-  width: 2px; border-radius: 1px; background: var(--border);
-  flex-shrink: 0; padding: 0; border: 0; cursor: pointer;
-}
-.ln-say-rail:hover { background: var(--ink-faint); }
-.ln-say-kids {
-  flex: 1; min-width: 0; padding-left: 14px;
-  display: flex; flex-direction: column; gap: 18px;
-}
 
 /* ── Writing one ──────────────────────────────────────────────────────────
-   In the page, where it will go. The new-comment form already did this and
-   said why in its own note; the *reply* form was still a fixed overlay with a
-   scrim, which is the same instinct the same file had already argued against
-   two screens up. A reply is an answer to the comment directly above it, and a
-   box in the middle of a darkened screen has been taken away from the thing it
-   is about. Pushing the page down is what leaving room looks like.
+   In the page, where the way in stood. A box in the middle of a darkened
+   screen has been taken away from the thing it is about, and pushing the
+   page down is what leaving room looks like.
    A hairline over it, and nothing else: it is not a panel. */
 .ln-say-form {
   margin: 12px 0 16px;
@@ -1353,17 +1251,14 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
   animation: cb-unfold 0.24s ease both;
 }
 /* ── Who it will be signed by ───────────────────────────────────
-   Where two fields were, when the journal landed on already knows both. Miyel,
-   2026-09-21: "we don't need name if you're commenting from a journal — it can
-   just put your keeper name and pfp bubble." The portrait is .ln-sender-portrait,
-   the same object the address book and the feed and the send sheet draw, served
-   from the visitor's own journal at their own address. Smaller here, because it
-   is a signature and not a choice: there is one face and nothing to pick.
-
-   This block used to be a heading — ADD A COMMENT, and under it the name of the
-   track. "Take away 'add a comment' and also song title, we know what song
-   we're on, that's extra bulk." Both were the form telling you what you had
-   just pressed and which song you were already looking at. */
+   A face and a name, when the journal landed on already knows both. Miyel,
+   2026-09-21, of the form this one took over from: "we don't need name if
+   you're commenting from a journal — it can just put your keeper name and pfp
+   bubble." The portrait is .ln-sender-portrait, the same object the address
+   book and the feed and the send sheet draw, served from the visitor's own
+   journal at their own address. Smaller here, because it is a signature and
+   not a choice: there is one face and nothing to pick. No heading over the
+   form: where a thing opens is what it is about. */
 .ln-say-me { display: flex; align-items: center; gap: 10px; }
 .ln-say-me .ln-sender-portrait { width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0; }
 .ln-say-me-name {
@@ -1402,9 +1297,8 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
   color: var(--fav);
 }
 
-/* A comment form opening where the comment will go. It grows out of the note
-   it is answering rather than arriving over the top of it — see the note in
-   CommentBubble for why the modal it replaced was the wrong instinct. */
+/* The form opening where the way in stood. It grows out of the note it is
+   about rather than arriving over the top of it. */
 @keyframes cb-unfold {
   from { opacity: 0; transform: translateY(-4px); }
   to   { opacity: 1; transform: none; }
@@ -2176,7 +2070,8 @@ html[data-printing] .sitenav-row { display: none; }
    fold and, beside it, the song, `album · artist`, the stars and the posted
    date, the pair in the middle of the page; the keeper's
    Listen to the full album under it; the note under that, read left to
-   right as an album's notes are, with the comment glyph at its end. The
+   right as an album's notes are, with the way to write to the keeper under
+   it. The
    type is the entry's own: the song is a title, the note is the album note's
    size, because on this card it is the only writing there is. */
 .tn { min-height: 100dvh; background: var(--bg); color: var(--ink); font-family: var(--font-sans); }
@@ -2238,9 +2133,6 @@ html[data-printing] .sitenav-row { display: none; }
   color: var(--ink);
   white-space: pre-wrap;
 }
-/* The glyph at the end of the note, on the right: the note is the whole
-   width, so its way in waits under it rather than beside its first line. */
-.tn-body .ln-say-beside { padding-bottom: 0; }
 .tn-write { font-size: 15px; line-height: 1.75; }
 /* Plain words and a play mark, in ink, underlined so it reads as the link it
    is: the one thing on the card that goes somewhere. Under the head, so a

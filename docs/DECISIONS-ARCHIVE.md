@@ -738,3 +738,52 @@ front of every keeper's journal, the exact thing the gate closes. The source
 link and the version moved to the foot of the card, where a visitor is and
 where AGPL §13 is owed; the lock went with them, since a keeper still needs
 the way in on their own phone. The band is two doors for a visitor.
+
+## The network — comments, 2026-08 to 2026-09-29
+
+The current rule is in DECISIONS.md, The network: *Nobody's words appear on a
+journal but its keeper's*.
+
+An entry carried a thread. Anybody could write under the album note or under
+a track's note, nested one reply inside another; a comment was held until the
+keeper approved it in the inbox's Comments tab, and the writer saw their own
+held comment by way of a signed receipt kept in their browser. A comment
+could be upvoted. The three entries that stood for it:
+
+**Comments attach to writing, not to ratings, 2026-09-24.** A rated, unwritten
+track is one row with no way in — there is nothing to reply to. A word where
+the way in stands alone (the album note), the round bubble where it is one of
+several. A heading says what is there in numerals — "2 notes", "5 of 5 rated"
+— and never what is missing.
+
+**Replies come home by asking, and a journal will say which comments came
+from a given journal, 2026-09-22.** `/api/public/replies?to=` answers with the
+approved replies to comments left from that address, and the keeper's own
+later comments on the same entry — Miyel's call, on seeing a beta tester
+answer with a comment of their own. The commenter's journal was the keeper's to see until
+then; the name was already public. A keeper is known by the address the
+wristband stamps on their comment, or by name before that.
+
+**An upvote is one per person per comment, not a rate.** In memory, so it
+forgets: a durable record of who voted for what is the kind of thing this
+site does not keep about its readers.
+
+Retired 2026-09-29 by Miyel's brief *comments become messages*. A thread
+turned an entry into a blog post, and approving was the only thing in the
+whole system that asked the keeper to make a decision every time something
+arrived. The responses worth having already existed in better form: another
+entry, shown against yours in compare, and a send with a note. What was left
+for comments was the reply thread, the weakest of the three and the only one
+that needed moderating. The published comments arrived in each keeper's
+inbox as messages, once, so that the only person who decides what survives
+is the person whose journal it is. The routes, the receipts, the upvote and
+the replies route went; the `comments` table stays, as every table does.
+
+Two things were picked and reversed inside the same two days and are worth
+knowing: a message with no entry, written from a person in the Friends pane
+(picked on the 28th, cut on the 29th: "messaging happens only on posts"), and
+a way in under every written track note (picked on the 28th; on the 29th the
+one way in became words under the album note). A round bubble was picked as
+the mark of a message and replaced by the envelope in the inbox and by words
+on an entry.
+

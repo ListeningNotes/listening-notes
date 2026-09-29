@@ -987,12 +987,6 @@ first listen where you left it. Recency lives on the beacon, the recents and
 the feed. A sort by latest would be a toggle beside the density control, not
 a new default — parked until it is missed. The reversal is in the archive.
 
-**Comments attach to writing, not to ratings, 2026-09-24.** A rated, unwritten
-track is one row with no way in — there is nothing to reply to. A word where
-the way in stands alone (the album note), the round bubble where it is one of
-several. A heading says what is there in numerals — "2 notes", "5 of 5 rated"
-— and never what is missing.
-
 **Definitions ship as editable defaults, and custom listen types are ruled
 out.** Universal second-person text installs and the owner can edit any of
 it: stable keys, editable labels and bodies, one JSONB column. Fixing the
@@ -1201,8 +1195,9 @@ entry can be read across origins. Compare arrives because something
 happened; it is not a place you navigate to.
 
 **A wave is the second thing one journal may put in another's inbox,
-2026-09-23.** Sends and waves are the only two, and a wave carries a name and
-an address, never words — the route refuses any body with more. The
+2026-09-23.** A send was the first and a message is the third (below), and a
+wave carries a name and an address, never words — the route refuses any body
+with more. The
 recipient asks the journal its name and keeps that, not the one handed; a
 second wave replaces the first; Leave it deletes. **Nothing is reported
 back:** a waver never learns what the other copy did.
@@ -1374,6 +1369,36 @@ row's primary is Put back, which is why archiving needs no undo of its own.
 rows joined only by album and artist, and starting fresh would upsert over
 the saved notes.
 
+**Nobody's words appear on a journal but its keeper's, 2026-09-28.** A
+response to an entry is a message, and it lives in the inbox and nowhere
+else: no threads under entries, nothing to approve, no count of them. A
+thread turned an entry into a blog post and was the one thing that asked a
+keeper for a decision every time something arrived. The argument for
+comments, and how they worked, are in the archive.
+
+**The response the system is built for is another entry, shown against
+yours in compare.** Somebody reads a note, listens, and logs their own: a
+public conversation where both people sat with the record. The quick one is
+a send with a note. A message is what is left, and it is private.
+
+**A message is one arrival, not a thread, 2026-09-28.** A reply is a new
+message going the other way, with a row of its own on the other journal.
+Nothing stacks into a conversation, there is no messages pane, and nothing
+says a message was read. Two people past a couple of messages move to
+texting, which is correct. **It is the third thing one copy may put in
+another**, after a send and a wave, and the only one that carries words alone.
+
+**A message becomes public only by being quoted in the keeper's own
+writing.** No archive and no search: what matters enough to keep, the keeper
+quotes, and the rest is dismissed, which deletes it. It keeps *nothing in a
+journal changes unless its keeper changes it*.
+
+**The comments that were published arrived in the inbox, once, 2026-09-29.**
+Migration 027 brought them across marked *Was a comment*, so nothing left a
+page without its keeper seeing it first; the `comments` table stays, read by
+nothing. Dismissing one takes its comment with it. A backup from before then
+brings its comments into the inbox when it is restored (scripts/restore.mjs).
+
 **An open row in the inbox is doors, 2026-09-28.** What was said, then a
 glyph over one word in a row, on the Friends pane's own classes. Miyel found
 the line naming the sender, the filled button and the column of sentences
@@ -1429,14 +1454,6 @@ filing an address already asks — and a second, loose limit on the address
 exists only so one machine cannot make a copy fetch a thousand made-up
 journals. Do not put the IP keying back.
 
-**Replies come home by asking, and a journal will say which comments came
-from a given journal, 2026-09-22.** `/api/public/replies?to=` answers with the
-approved replies to comments left from that address, and the keeper's own
-later comments on the same entry — Miyel's call, on seeing a beta tester
-answer with a comment of their own. The commenter's journal was the keeper's to see until
-then; the name was already public. A keeper is known by the address the
-wristband stamps on their comment, or by name before that.
-
 **A cross-copy reference is a journal and a slug, never an id, 2026-09-16.**
 `submissions.sender_entry` holds the entry a send came from, beside the
 `sender_url` that holds the journal; together they are a URL, which is the one
@@ -1458,7 +1475,7 @@ journal if you keep one.
 
 **One stored value, not one per feature.** The sender's URL lives in
 localStorage under a single key owned by `return_address.js`, shared by the
-send form and the comment form — fill it in once on any journal and it is
+send form and the message form — fill it in once on any journal and it is
 prefilled on every journal after. Nothing reads it to decide what a visitor
 is (2026-09-12, above); the send form reads it to know who is sending.
 
@@ -1665,10 +1682,6 @@ On one process the count is exact; on serverless it is a speed bump that
 still stops one machine hammering one endpoint. `library/doorman.js` says
 all of this at the top. Hiding an entrance is worth nothing; counting attempts
 is worth everything.
-
-**An upvote is one per person per comment, not a rate.** In memory, so it
-forgets: a durable record of who voted for what is the kind of thing this
-site does not keep about its readers.
 
 ---
 

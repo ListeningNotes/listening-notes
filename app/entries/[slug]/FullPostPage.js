@@ -119,7 +119,7 @@ const COVER_LABELS = { toCode: 'Show the code for this entry', toPicture: 'Show 
 // its scroll position, and on its own page there is no history to go back to.
 // `preview` draws an entry that does not exist yet — the session shows the
 // listen in progress exactly as the page will print it. Nothing is fetched
-// for it (there is no slug to fetch by), nothing can be commented on, and the
+// for it (there is no slug to fetch by), there is nobody to write to, and the
 // footer's ways out are left off: the session is the way out.
 // `folder` is the record's entries, oldest first, when it has more than one
 // (2026-09-25): the entry is then a page of a folder, with its tabs at the
@@ -1752,12 +1752,10 @@ export default function FullPostPage({ entry, references = [], authed = false, l
 
       <div id="ln-content" className="ln-content" style={{ maxWidth: '860px', margin: '0 auto' }}>
 
-        {/* The album's own thread hangs here, on the notes about the album,
-            exactly as a track's hangs on the note about the track. Rendered
-            when there are comments even if the notes are empty: an approved
-            comment going invisible because the writing above it changed is the
-            failure this whole section exists to fix.
-            And always while a correction is open, from 2026-09-18 — "we need a
+        {/* The album note, and under it the one way in to the entry for
+            somebody who wants to write to its keeper (MessageForm.js).
+            Drawn where there is a note — and always while a correction is
+            open, from 2026-09-18 — "we need a
             place to add album notes if someone decides in edit when saved
             without any as well." A listen can be saved with nothing written
             since this morning, so the one section that only existed once there

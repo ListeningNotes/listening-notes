@@ -17,9 +17,9 @@
 //
 // Owner-only, and not because the writing is secret — most of it is on the
 // public pages already. It is that this hands over the whole table in one
-// request, including the drafts nobody has published, the comments still in
-// moderation, the address book, and the return addresses people left with
-// their submissions.
+// request, including the drafts nobody has published, the messages in the
+// inbox, the address book, and the return addresses people left with their
+// submissions.
 
 import { requireWristband } from '@/library/wristband';
 import database from '@/library/database_connection';

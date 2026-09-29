@@ -11,8 +11,8 @@
 // manages, and that is the difference between a strong password taking
 // centuries and taking an afternoon. A few tries a minute is the whole fix.
 //
-// Comments and submissions are the other doors. Neither needs a password —
-// anyone can leave a note or send a record, which is the point — and both
+// Messages and sends are the other doors. Neither needs a password — anyone
+// can write to a keeper or send a record, which is the point — and both
 // would otherwise let one script fill the inbox overnight.
 //
 // ── Why the counting is in memory ─────────────────────────────────────────
@@ -79,22 +79,16 @@ export function whoIsKnocking(request) {
 // person who has forgotten their password will ever need, and it takes a
 // brute-force attempt from millions of tries an hour to three hundred.
 //
-// Comments and submissions are slower still in real use — somebody writing a
+// Messages and sends are slower still in real use — somebody writing a
 // paragraph takes minutes — so the numbers are about stopping a script rather
 // than about pacing a person.
-// Upvote is the odd one and is not really a rate limit. Keyed on the comment
-// as well as the caller — see the route — one try in a long window is "you
-// have already voted for this one", which is the actual rule an upvote wants.
-// Rate limiting alone would still allow hundreds a day into a single count.
 // Cover is the entry's code, pressed out of its art on request: a quarter
 // of a second of work each, public, and asked for once or twice by a person
 // tapping a cover. Generous for a person and enough to stop a script pressing
 // the whole archive.
 export const DOORS = {
   login:      { tries: 5,  windowMs: 60_000 },
-  comment:    { tries: 5,  windowMs: 10 * 60_000 },
   submission: { tries: 5,  windowMs: 10 * 60_000 },
-  upvote:     { tries: 1,  windowMs: 12 * 60 * 60_000 },
   cover:      { tries: 20, windowMs: 60_000 },
   // A problem written in from another copy's desk. A person writes one and
   // maybe a second; a script writing hundreds is the thing to stop.
@@ -139,8 +133,7 @@ export const DOORS = {
   // callers and the key says which: a person on a page is counted by the
   // machine they are writing from, a keeper's server by the journal it
   // names (app/api/messages/route.js). Somebody writing a paragraph takes
-  // minutes, so five in ten is about stopping a script, as it was for the
-  // comments this replaces.
+  // minutes, so five in ten is about stopping a script.
   message:    { tries: 5,  windowMs: 10 * 60_000 },
 };
 
@@ -151,8 +144,8 @@ export const DOORS = {
 //
 // Counts the attempt when it allows it. A door that only counted failures
 // would let somebody hammer away as long as they kept getting it right, which
-// is not a thing that happens on a login but is exactly what a comment flood
-// looks like.
+// is not a thing that happens on a login but is exactly what a flood of
+// messages looks like.
 export function mayKnock(door, caller) {
   const rule = DOORS[door];
   if (!rule) return { allowed: true, retryAfter: 0 };
