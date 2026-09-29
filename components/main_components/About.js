@@ -124,35 +124,51 @@ export default function About({ stamps, authed = false, pinned = null, entries =
   // class on `.hn` rather than by threading editing state up through a pane
   // and back down. The DOM write is this file's own: it puts the class on and
   // takes it off, including if the pane goes away mid-correction.
-  const [barUp, setBarUp] = useState(false);
+  //
+  // ── Worked out while drawing, not set from an effect, 2026-09-29 ─────────
+  // Whether the bar is up is not a fact of its own: it is up while a
+  // correction is open and for the length of its way out afterwards. So the
+  // only thing kept is the way out, `barGoing`, and it is turned on in the
+  // same pass that notices the correction has just closed — by comparing
+  // against what editing was the last time this drew, which is the shape
+  // React gives for a value that follows another. It used to be two pieces
+  // of state set from two effects, a frame after the fact, and the lint rule
+  // that refuses a setState in an effect's body is what flagged it
+  // (NOTES, Gotchas). What is on screen is the same: the bar rises the moment
+  // a correction opens, sinks when it closes, and is gone once it has sunk.
+  const [wasEditing, setWasEditing] = useState(edit.editing);
   const [barGoing, setBarGoing] = useState(false);
+  if (wasEditing !== edit.editing) {
+    setWasEditing(edit.editing);
+    setBarGoing(!edit.editing);
+  }
+  const barUp = edit.editing || barGoing;
+
   useEffect(() => {
     const cross = document.querySelector('.hn');
-    if (edit.editing) {
-      setBarGoing(false);
-      setBarUp(true);
-      // An attribute, not a class — see the same change in SendSheet.js. The
-      // cross's class attribute belongs to React and is rewritten whole on
-      // every render of HomeNav, so this was being wiped whenever anything
-      // else on the cross moved, and the editing bar came up over the band it
-      // was supposed to be replacing. Since 2026-09-20 and not noticed,
-      // because it only shows when the two happen to coincide.
-      cross?.toggleAttribute('data-editing', true);
-      return () => cross?.removeAttribute('data-editing');
+    if (!edit.editing) {
+      cross?.removeAttribute('data-editing');
+      return undefined;
     }
-    cross?.removeAttribute('data-editing');
-    setBarGoing(going => going);
-    return undefined;
+    // An attribute, not a class — see the same change in SendSheet.js. The
+    // cross's class attribute belongs to React and is rewritten whole on
+    // every render of HomeNav, so this was being wiped whenever anything
+    // else on the cross moved, and the editing bar came up over the band it
+    // was supposed to be replacing. Since 2026-09-20 and not noticed,
+    // because it only shows when the two happen to coincide.
+    cross?.toggleAttribute('data-editing', true);
+    return () => cross?.removeAttribute('data-editing');
   }, [edit.editing]);
 
   // And the way out, which is a state of its own because a row that is
   // unmounted on the frame it stops being wanted does not leave, it vanishes.
+  // The clock is the only thing here: it ends the way out once the bar has
+  // had time to sink, and a correction reopened in the meantime stops it.
   useEffect(() => {
-    if (edit.editing || !barUp) return undefined;
-    setBarGoing(true);
-    const done = setTimeout(() => { setBarUp(false); setBarGoing(false); }, EDIT_BAR_MS);
+    if (!barGoing) return undefined;
+    const done = setTimeout(() => setBarGoing(false), EDIT_BAR_MS);
     return () => clearTimeout(done);
-  }, [edit.editing, barUp]);
+  }, [barGoing]);
 
   // Whether a newer Listening Notes exists, for the line at the foot. Asked
   // once, of this copy's own server, which asks GitHub's public releases at

@@ -267,26 +267,34 @@ function Trail({ trail, keeper, mine, loggedOn }) {
 // null entry to not walk at all — the session's preview, where the record
 // does not exist yet and there is nobody to ask.
 export function useTrail(entry) {
-  const [trail, setTrail] = useState(null);
   const slug = entry?.slug;
   const albumKey = entry?.album_key;
   const type = entry?.entry_type;
   const from = entry?.received_from;
   const fromUrl = entry?.received_from_url;
-  // Deps are the five fields the walk actually reads rather than `entry`
-  // itself, which is a fresh object on most of this page's renders. On the
+  // Which walk this is: the five fields the walk reads, as one word, rather
+  // than `entry` itself, which is a fresh object on most of this page's
+  // renders. Null is an entry with nobody behind it, and no walk. On the
   // layer a swipe brings the next record through the same component, and the
   // slug changing is what starts its walk.
+  const walk = type === 'Submission' && (from || fromUrl)
+    ? JSON.stringify([slug, albumKey, from, fromUrl])
+    : null;
+  // A trail is kept with the walk it answers, 2026-09-29. It used to be
+  // cleared from the effect's body when the record changed, which the lint
+  // rule refuses (NOTES, Gotchas), and there is nothing to clear this way: a
+  // trail that answers another record's walk is simply not this one's, so
+  // the last record's never shows beside the next while its own is out.
+  const [found, setFound] = useState({ walk: null, trail: null });
   useEffect(() => {
-    if (type !== 'Submission' || (!from && !fromUrl)) { setTrail(null); return undefined; }
+    if (walk === null) return undefined;
     let gone = false;
-    setTrail(null);
     walkBack({ album_key: albumKey, received_from: from, received_from_url: fromUrl }, tidyJournal(window.location.host))
-      .then(found => { if (!gone) setTrail(found); })
-      .catch(() => { if (!gone) setTrail(null); });
+      .then(trail => { if (!gone) setFound({ walk, trail }); })
+      .catch(() => { if (!gone) setFound({ walk, trail: null }); });
     return () => { gone = true; };
-  }, [slug, albumKey, type, from, fromUrl]);
-  return trail;
+  }, [walk, albumKey, from, fromUrl]);
+  return walk !== null && found.walk === walk ? found.trail : null;
 }
 
 export default function SentBy({ entry, trail = null, keeper = '', mine = false, open = false, onOpen }) {

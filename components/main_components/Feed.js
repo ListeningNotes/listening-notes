@@ -44,7 +44,7 @@
 // are simply large, because the feed holds little and can afford to be
 // (Miyel, 2026-09-13). The Compare panel opens under the item.
 'use client';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { ArrowsDownUp, Envelope, Fingerprint, Heart, Rows, Shuffle, SketchLogo, SquaresFour, User } from '@phosphor-icons/react';
 import { useBookplate } from './Bookplate';
@@ -135,18 +135,34 @@ export function DensityToggle({ density, onFlip }) {
 // the feed the answer: HomeNav on the cross, FeedPage at the feed's own
 // address.
 //
-// Read after mount rather than during the first render: the server has no
-// localStorage, and a value taken from it here would be the two of them
-// disagreeing about what the page says.
+// Read from the browser as a thing outside React, 2026-09-29, which is what
+// a value kept in localStorage is. The server has no localStorage, so it is
+// told the default, and the page takes up the stored answer once it is in a
+// browser — the same first frame as before, when this was a piece of state
+// filled in from an effect after mount (the shape the lint rule refuses;
+// NOTES, Gotchas). Anything drawing the density hears of a flip, wherever it
+// was pressed.
+//
+// `picked` is the answer for a browser that cannot store one — a private
+// window — so the control still does what it says for as long as the page
+// is open.
 //
 // NAME: `useFeedDensity` is a placeholder for Miyel.
+const densityWatchers = new Set();
+let picked = null;
+const watchDensity = listener => {
+  densityWatchers.add(listener);
+  return () => densityWatchers.delete(listener);
+};
+const densityNow = () => picked ?? readStoredDensity();
+const densityOnServer = () => DEFAULT_DENSITY;
+
 export function useFeedDensity() {
-  const [density, setDensity] = useState(DEFAULT_DENSITY);
-  useEffect(() => { setDensity(readStoredDensity()); }, []);
+  const density = useSyncExternalStore(watchDensity, densityNow, densityOnServer);
   const flip = () => {
-    const next = density === 'rows' ? 'full' : 'rows';
-    setDensity(next);
-    storeDensity(next);
+    picked = density === 'rows' ? 'full' : 'rows';
+    storeDensity(picked);
+    for (const tell of densityWatchers) tell();
   };
   return { density, flip };
 }

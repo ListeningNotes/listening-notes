@@ -1886,7 +1886,6 @@ export default function HomeNav() {
     // screen each and have nothing to be carried to.
     const offs = [paneRefs[HOME]?.current, paneRefs[BOOK]?.current].map(wire);
     return () => offs.forEach(off => off());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paneRefs, authed]);
 
   // ── The one row that sits over all three panes ────────────────────────────
