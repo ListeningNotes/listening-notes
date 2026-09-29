@@ -957,6 +957,16 @@ textarea.st-field { resize: vertical; min-height: 96px; }
   background: var(--ink);
 }
 .ib-newdot--off { background: transparent; }
+/* ── What kind of thing a row is, 2026-09-28 ── a send, a wave, a message
+   or a record that came back, as a mark in a column of its own before the
+   cover (Miyel's pick). A fixed width, so the covers line up down the list
+   whatever the mark. Softer than the title and stronger than the caption:
+   it is read before either, and it is not what the row is about. */
+.ib-kind {
+  width: 18px; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--ink-soft);
+}
 .ib-rart {
   width: 46px; aspect-ratio: 1 / 1; border-radius: 7px; overflow: hidden; flex-shrink: 0;
   background: var(--panel);
@@ -995,7 +1005,6 @@ a.ib-rhead { text-decoration: none; }
   font-size: 15px; color: var(--ink);
 }
 .ib-radd:hover { color: var(--ink-soft); }
-a.ib-act { text-decoration: none; }
 .ib-rsaid { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 .ib-rttl {
   font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
@@ -1016,31 +1025,44 @@ a.ib-act { text-decoration: none; }
 .ib-rface img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 
 /* ── An open row ────────────────────────────────────────────────────────────
-   Who it came from, what they said, the one thing that happens next, and the
-   quiet ones under it. */
+   What they said, and then the doors (below). */
 .ib-open { padding: 2px 2px 18px 18px; animation: ib-unfold 0.18s ease-out; }
-.ib-from { display: flex; align-items: center; gap: 8px; padding-bottom: 10px; }
-.ib-from-face {
-  position: relative; width: 20px; aspect-ratio: 1 / 1; border-radius: 999px;
-  overflow: hidden; flex-shrink: 0;
-  background: var(--panel); border: 1px solid var(--border);
-  display: inline-flex; align-items: center; justify-content: center; color: var(--ink-faint);
-}
-.ib-from-face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.ib-from-nm { font-size: 12.5px; color: var(--ink-soft); min-width: 0; }
-.ib-from-nm a, .ib-from-nm span { color: var(--ink); }
-.ib-from-nm a { text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--border); }
-.ib-from-nm a:hover { text-decoration-color: var(--ink-faint); }
-.ib-from-dt {
-  margin-left: auto; flex-shrink: 0;
-  font-family: var(--font-label); font-size: 9px; letter-spacing: 0.06em; color: var(--ink-faint);
-}
 /* The message, at reading size, and only here — it is what you read in order
    to decide, so it is out while you are deciding and folded away after. */
 .ib-msg {
   font-size: 14px; line-height: 1.65; color: var(--ink);
   margin: 0 0 14px; white-space: pre-wrap; overflow-wrap: anywhere;
 }
+
+/* ── An open row's doors, 2026-09-28 ── what was said, and then the doors
+   in the Friends pane's own pattern and its own classes (.fr-doors-row,
+   .fr-door): a glyph over one word, spread evenly. Miyel, on the line of who
+   it was from, the black button and the column of sentences this replaced:
+   "too bulky ... I'm not a fan of this vertical list, too wordy."
+
+   A hairline stands over the doors only where there are words above them,
+   which is a message; a wave's doors follow its row directly. The row's own
+   bottom border closes them, so nothing is ruled twice. */
+.ib-open--doors { padding: 2px 0 16px; }
+.ib-open--doors .ib-msg { margin: 0 2px 16px; }
+.ib-doors { padding: 6px 0 0; }
+/* Each door has an equal share of the row, so a word changing under one —
+   Dismiss becoming Dismiss? — moves nothing beside it. */
+.ib-doors .fr-door { flex: 1 1 0; min-width: 0; }
+.ib-msg + .ib-doors, .ib-said-by + .ib-doors { padding-top: 16px; border-top: 1px solid var(--border); }
+/* Who a send is from and when: the caption face, one line, over their note.
+   It took the place of a row with a face, a linked name and a date. */
+.ib-said-by {
+  margin: 0 2px 8px;
+  font-family: var(--font-label); font-size: 9.5px; letter-spacing: 0.04em;
+  color: var(--ink-faint);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ib-said-by + .ib-doors { margin-top: 8px; }
+/* Dismiss, asked once. The only red on the row, and the doubled class beats
+   :hover, because iOS leaves :hover on whatever was last tapped and the
+   armed door must not go quiet at the moment it arms (.fr-cut--sure). */
+.fr-door.ib-door--sure, .fr-door.ib-door--sure:hover { color: var(--fav, #f0484f); opacity: 1; }
 
 /* The one thing that happens next, chosen by the state the send is in. */
 .ib-primary {
@@ -1054,9 +1076,6 @@ a.ib-act { text-decoration: none; }
 }
 .ib-primary:hover { opacity: 0.85; }
 
-/* The rest, as rows rather than buttons: available, and plainly not the
-   thing you came to do. */
-.ib-acts { display: flex; flex-direction: column; align-items: flex-start; margin-top: 10px; }
 /* ── The listen already open ── the panel a row opens when Start a listen
    would replace a record with writing in it. Sits where the row's other two
    panels sit, says what is open, and offers the harmless press first. */
@@ -1074,11 +1093,6 @@ a.ib-act { text-decoration: none; }
   transition: color 0.15s;
 }
 .ib-act:hover { color: var(--ink-soft); }
-.ib-act-ic { display: inline-flex; width: 15px; justify-content: center; color: var(--ink-faint); flex-shrink: 0; }
-/* Archive keeps the colour, last in the list. */
-.ib-act--warn { color: var(--fav, #f0484f); }
-.ib-act--warn:hover { color: var(--fav, #f0484f); opacity: 0.8; }
-.ib-act--warn .ib-act-ic { color: var(--fav, #f0484f); }
 
 .ib-showarch {
   display: block; width: 100%; margin-top: 14px; padding: 12px 0;
@@ -1092,6 +1106,9 @@ a.ib-act { text-decoration: none; }
 @media (max-width: 640px) {
   .ib-open { padding-left: 0; }
   .ib-rart { width: 42px; }
+  /* The kind column took 30px from the title on a phone; the row gives a
+     third of it back by standing a little closer together. */
+  .ib-rhead { gap: 10px; }
 }
 
 /* A comment waiting: who, where, what they said, and the two buttons. */

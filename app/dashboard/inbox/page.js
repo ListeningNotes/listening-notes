@@ -4,7 +4,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Archive, ArrowUpRight, Check, Envelope, PencilSimple, Plus, User } from '@phosphor-icons/react';
+import { Archive, ArrowCounterClockwise, ArrowUUpLeft, Article, BookOpen, Broadcast, ChatCircle, Check, Envelope, HandWaving, LinkSimple, PencilSimple, Plus, User, VinylRecord, X } from '@phosphor-icons/react';
 import Link from 'next/link';
 import SiteNav from '../../../components/main_components/SiteNav';
 import MiniAddressBook from '../../../components/main_components/MiniAddressBook';
@@ -70,6 +70,64 @@ function became(sent) {
   // about the commonest one.
   return 'new';
 }
+// ── What kind of thing a row is, 2026-09-28 ────────────────────────────────
+// Miyel: "each thing in the inbox should hold an icon" — sends, waves,
+// messages, what came back. Four kinds of arrival share one list, and a
+// cover or a face says what a row is about, not what it is. So every row
+// carries its kind in a column of its own, before the cover, where the eye
+// can run down it (her pick over a badge on the cover's corner and a glyph
+// in the small line).
+//
+// Each is the mark this site already uses for that thing, so none is learned
+// twice: the envelope a sent record wears on the wall, the hand on the Wave
+// button, the round bubble that stands at the end of a track's note. The
+// arrow turning back is the one new mark, for what went out and returned.
+const KIND = {
+  send: Envelope,
+  wave: HandWaving,
+  back: ArrowUUpLeft,
+  message: ChatCircle,
+};
+
+function Kind({ of }) {
+  const Mark = KIND[of];
+  return (
+    <span className="ib-kind" aria-hidden="true">
+      <Mark size={17} weight="regular" />
+    </span>
+  );
+}
+
+// ── An open row's doors, 2026-09-28 ────────────────────────────────────────
+// Miyel, on seeing a message open as a line of who it was from, a black
+// button and a column of sentences: "too bulky ... not the clean design that
+// I really like. I would like it to match more on the friends page when you
+// click on a friend and there's visit compare send and pin ... I'm not a fan
+// of this vertical list, too wordy."
+//
+// So an open row is what was said and then its doors, in the Friends pane's
+// own pattern and its own classes (.fr-doors-row, .fr-door): a glyph over
+// one word, spread evenly across the row. Open, Visit, Add, Dismiss — her
+// words. A door that has nothing behind it is not drawn: no Add for somebody
+// already in the book, no Open when the entry has gone. Nothing is said
+// twice, so the line naming who it is from went; the row's own title says
+// it, and the day joins the small line under it.
+//
+// A day, said short for that line: "Sep 28", with the year once it is not
+// this one.
+function shortDay(value) {
+  const day = new Date(value);
+  if (Number.isNaN(day.getTime())) return '';
+  const sameYear = day.getFullYear() === new Date().getFullYear();
+  return day.toLocaleDateString(undefined, sameYear
+    ? { month: 'short', day: 'numeric' }
+    : { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+// The first line of a message, for the small line under a row that is about
+// no entry: the words are all it has to say what it is.
+const opening = said => String(said || '').trim().split(/\n/)[0];
+
 // A folder tab that connects to the open panel when active. Module scope so
 // it keeps a stable identity across renders.
 function FolderTab({ id, tab, onSelect, children }) {
@@ -123,6 +181,16 @@ export default function Inbox({ layered = false, inPane = false }) {
   const [waves, setWaves] = useState([]);
   const [openWave, setOpenWave] = useState(null);
   const [wavingTo, setWavingTo] = useState(null);
+  // ── Messages, 2026-09-28 ───────────────────────────────────────────────
+  // Somebody's words, addressed to this journal's keeper: written from an
+  // entry here, or from another keeper's copy (the messages brief). A
+  // message sits among the sends by when it arrived and opens where it sits
+  // like any row. It is never drawn on a page, and there is no thread: one
+  // row is one arrival. Dismissing deletes it, in two presses — `sureOf` is
+  // the row whose Dismiss has been pressed once and is asking.
+  const [messages, setMessages] = useState([]);
+  const [openMessage, setOpenMessage] = useState(null);
+  const [sureOf, setSureOf] = useState(null);
   // Which row is open. One at a time — an open row is a decision being made,
   // and two of them is a list of controls again.
   const [openRow, setOpenRow] = useState(null);
@@ -198,6 +266,7 @@ export default function Inbox({ layered = false, inPane = false }) {
     fetch('/api/submissions').then(r => r.json()).then(d => { setSubmissions(d.submissions || []); setSubLoading(false); }).catch(() => setSubLoading(false));
     fetch('/api/came-back').then(r => (r.ok ? r.json() : { cameBack: [] })).then(d => setCameBack(d.cameBack || [])).catch(() => {});
     fetch('/api/waves').then(r => (r.ok ? r.json() : { waves: [] })).then(d => setWaves(d.waves || [])).catch(() => {});
+    fetch('/api/messages').then(r => (r.ok ? r.json() : { messages: [] })).then(d => setMessages(d.messages || [])).catch(() => {});
     fetch('/api/comments/pending').then(r => r.json()).then(d => { setComments(d.comments || []); setComLoading(false); }).catch(() => setComLoading(false));
     fetch('/api/people').then(r => r.json()).then(d => setPeople(d.people || [])).catch(() => {}).finally(() => setBookIn(true));
   }, [authed]);
@@ -217,6 +286,16 @@ export default function Inbox({ layered = false, inPane = false }) {
     });
     return () => { gone = true; };
   }, [authed, myJournal, people, bookIn]);
+
+  // A Dismiss that has been pressed once is put back by a press anywhere
+  // else — the shape Remove has in the address book and Delete has on an
+  // entry. Listening only while one is asking.
+  useEffect(() => {
+    if (sureOf === null) return undefined;
+    const away = event => { if (!event.target.closest?.('[data-sure]')) setSureOf(null); };
+    document.addEventListener('pointerdown', away);
+    return () => document.removeEventListener('pointerdown', away);
+  }, [sureOf]);
 
   useEffect(() => {
     if (!authed || !takesReports) return;
@@ -241,6 +320,29 @@ export default function Inbox({ layered = false, inPane = false }) {
     // Somebody new to the book — from a send's row or from their wave — so
     // the wave is offered, which is also how a wave is answered (2026-09-23).
     if (r.ok && d.person && d.fresh) setWavingTo(d.person);
+  }
+
+  // Opens a message where it sits, which is also what puts its dot out.
+  // Nothing is sent back: whoever wrote it never learns it was read.
+  function openWords(message) {
+    setOpenMessage(o => (o === message.id ? null : message.id));
+    setSureOf(null);
+    if (message.seen_at) return;
+    fetch('/api/messages', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: message.id }) }).catch(() => {});
+    setMessages(prev => prev.map(m => (m.id === message.id ? { ...m, seen_at: new Date().toISOString() } : m)));
+  }
+
+  // Dismissing is how a message ends, and it deletes it: there is no archive
+  // (the messages brief). Two presses, so a thumb cannot lose somebody's
+  // words by brushing past — the first asks, the second does it. The row
+  // leaves the list only once the server has said it is gone.
+  async function dismiss(message) {
+    if (sureOf !== message.id) { setSureOf(message.id); return; }
+    const r = await fetch('/api/messages', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: message.id }) }).catch(() => null);
+    setSureOf(null);
+    if (!r?.ok) return;
+    setMessages(prev => prev.filter(m => m.id !== message.id));
+    setOpenMessage(null);
   }
 
   async function updateStatus(id, status) {
@@ -525,6 +627,7 @@ export default function Inbox({ layered = false, inPane = false }) {
     ...live.map(s => ({ ...s, at: s.created_at })),
     ...cameBack.map(row => ({ ...row, backed: true, at: row.posted_at || row.noticed_at })),
     ...waves.map(w => ({ ...w, waved: true, at: w.arrived_at })),
+    ...messages.map(m => ({ ...m, wrote: true, at: m.arrived_at })),
   ].sort((a, b) => new Date(b.at) - new Date(a.at));
   const shown = showArchived ? [...liveWithReturns, ...archivedRows] : liveWithReturns;
   const counts = { new: submissions.filter(unopened).length };
@@ -584,7 +687,7 @@ export default function Inbox({ layered = false, inPane = false }) {
                   <div className="ib-list" style={{ gap: 10 }}>
                     {[...Array(4)].map((_, i) => <div key={i} className="own-skeleton" style={{ height: 46 }} />)}
                   </div>
-                ) : submissions.length === 0 && cameBack.length === 0 && waves.length === 0 ? (
+                ) : submissions.length === 0 && cameBack.length === 0 && waves.length === 0 && messages.length === 0 ? (
                   <div className="own-empty">Nothing has been sent to you yet.</div>
                 ) : (
                   <>
@@ -633,6 +736,7 @@ export default function Inbox({ layered = false, inPane = false }) {
                                   }}
                                 >
                                   <span className={'ib-newdot' + (w.seen_at ? ' ib-newdot--off' : '')} aria-hidden="true" />
+                                  <Kind of="wave" />
                                   <span className="ib-rart ib-rart--face" aria-hidden="true">
                                     <User size={18} weight="regular" />
                                     <img src={`${journalUrl(w.address)}/api/portrait`} alt="" loading="lazy" onError={e => { e.currentTarget.style.display = 'none'; }} />
@@ -642,38 +746,172 @@ export default function Inbox({ layered = false, inPane = false }) {
                                     <span className="ib-rsub">{inBook ? 'Already in your book' : 'Not in your book'}</span>
                                   </span>
                                 </button>
-                                {!inBook && (
+                                {/* On the row while it is shut; once it is
+                                    open, Add is one of its doors, and the
+                                    same word twice is one too many. */}
+                                {!inBook && !isOpen && (
                                   <button className="ib-radd" onClick={() => file(w.address)}>Add</button>
                                 )}
                               </div>
                               {isOpen && (
-                                <div className="ib-open">
-                                  <div className="ib-acts">
+                                <div className="ib-open ib-open--doors">
+                                  <div className="ib-doors fr-doors-row">
                                     <a
-                                      className="ib-act"
+                                      className="fr-door"
                                       href={carrySender(journalUrl(w.address), me, { known: inBook })}
                                       target="_blank"
                                       rel="noopener noreferrer"
                                     >
-                                      <span className="ib-act-ic" aria-hidden="true"><ArrowUpRight size={13} weight="bold" /></span>
-                                      Their journal
+                                      <BookOpen size={22} weight="regular" aria-hidden="true" />
+                                      Visit
                                     </a>
                                     {!inBook && (
-                                      <button className="ib-act" onClick={() => file(w.address)}>
-                                        <span className="ib-act-ic" aria-hidden="true"><Plus size={13} weight="bold" /></span>
-                                        Add to your book
+                                      <button type="button" className="fr-door" onClick={() => file(w.address)}>
+                                        <Plus size={22} weight="regular" aria-hidden="true" />
+                                        Add
                                       </button>
                                     )}
                                     <button
-                                      className="ib-act"
+                                      type="button"
+                                      className="fr-door"
                                       onClick={() => {
                                         fetch('/api/waves', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: w.id }) }).catch(() => {});
                                         setWaves(prev => prev.filter(x => x.id !== w.id));
                                         setOpenWave(null);
                                       }}
                                     >
-                                      <span className="ib-act-ic" aria-hidden="true" />
+                                      <X size={22} weight="regular" aria-hidden="true" />
                                       Leave it
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        }
+                        // ── A message ───────────────────────────────────
+                        // "[name] wrote", and what about: the entry it was
+                        // written from, the song when it was written from a
+                        // track's note, or the opening of the words when it
+                        // is about nothing. One that used to be a comment on
+                        // an entry says so. The cover when it is about a
+                        // record, the writer's face when it is not.
+                        //
+                        // Open, it is the words in full, the entry as the
+                        // one thing that happens next, and the quiet rows
+                        // under it. The keeper's own replies came across
+                        // with the comments they answered, and read "You
+                        // wrote".
+                        if (sent.wrote) {
+                          const m = sent;
+                          const host = tidyJournal(m.from_journal);
+                          const own = Boolean(host) && bare(host) === bare(myJournal);
+                          const who = own ? 'You' : (m.from_name || 'Someone');
+                          const isOpen = openMessage === m.id;
+                          const sure = sureOf === m.id;
+                          const theirs = tidyJournal(m.about_journal);
+                          const about = m.about_song || m.about_album || '';
+                          const where = !m.about_slug ? null
+                            : theirs ? `${journalUrl(theirs)}/entries/${m.about_slug}`
+                            : m.entry_here ? `/entries/${m.about_slug}`
+                            : null;
+                          const under = m.was_comment
+                            ? `Was a comment${about ? ` · ${about}` : ''}`
+                            : about ? `About ${about}` : opening(m.said);
+                          const face = host && (
+                            <img src={`${journalUrl(host)}/api/portrait`} alt="" loading="lazy" onError={e => { e.currentTarget.style.display = 'none'; }} />
+                          );
+                          return (
+                            <div key={`message-${m.id}`} className={'ib-r ib-r--message' + (isOpen ? ' ib-r--open' : '')}>
+                              <button className="ib-rhead" aria-expanded={isOpen} onClick={() => openWords(m)}>
+                                <span className={'ib-newdot' + (m.seen_at ? ' ib-newdot--off' : '')} aria-hidden="true" />
+                                <Kind of="message" />
+                                {m.about_slug ? (
+                                  <span className={'ib-rart' + (m.about_song && m.about_art ? ' ln-fold' : '')}>
+                                    {m.about_art
+                                      ? <img src={m.about_art} alt="" loading="lazy" />
+                                      : <span className="ib-nocover" aria-hidden="true">&#9834;</span>}
+                                    {m.about_song && m.about_art && (
+                                      <span className="ln-fold-flap" aria-hidden="true"><img src={m.about_art} alt="" /></span>
+                                    )}
+                                  </span>
+                                ) : (
+                                  <span className="ib-rart ib-rart--face" aria-hidden="true">
+                                    <User size={18} weight="regular" />
+                                    {face}
+                                  </span>
+                                )}
+                                <span className="ib-rsaid">
+                                  <span className="ib-rttl">{who} wrote</span>
+                                  <span className="ib-rsub">
+                                    {under}
+                                    {isOpen && shortDay(m.written_at || m.arrived_at) ? ` · ${shortDay(m.written_at || m.arrived_at)}` : ''}
+                                  </span>
+                                </span>
+                                {m.about_slug && (
+                                  <span className="ib-rface" aria-hidden="true">
+                                    <User size={13} weight="regular" />
+                                    {face}
+                                  </span>
+                                )}
+                              </button>
+
+                              {isOpen && (
+                                <div className="ib-open ib-open--doors">
+                                  <p className="ib-msg">{m.said}</p>
+
+                                  <div className="ib-doors fr-doors-row">
+                                    {/* Their entry opens on their journal, in
+                                        a new window like every link to
+                                        another journal; this journal's own
+                                        opens here. The record is the mark a
+                                        listen wears in a folder's tabs. */}
+                                    {where && (theirs ? (
+                                      <a
+                                        className="fr-door"
+                                        href={carrySender(where, me, { known: filed.has(theirs) })}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                      >
+                                        <VinylRecord size={22} weight="regular" aria-hidden="true" />
+                                        Open
+                                      </a>
+                                    ) : (
+                                      <Link className="fr-door" href={where}>
+                                        <VinylRecord size={22} weight="regular" aria-hidden="true" />
+                                        Open
+                                      </Link>
+                                    ))}
+                                    {host && !own && (
+                                      <a
+                                        className="fr-door"
+                                        href={carrySender(journalUrl(host), me, { known: filed.has(host) })}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                      >
+                                        <BookOpen size={22} weight="regular" aria-hidden="true" />
+                                        Visit
+                                      </a>
+                                    )}
+                                    {host && !own && !filed.has(host) && (
+                                      <button type="button" className="fr-door" onClick={() => file(m.from_journal)}>
+                                        <Plus size={22} weight="regular" aria-hidden="true" />
+                                        Add
+                                      </button>
+                                    )}
+                                    {/* Last, and red only once it has been
+                                        asked: the first press asks, the
+                                        second deletes, a press anywhere else
+                                        puts it back. */}
+                                    <button
+                                      type="button"
+                                      data-sure
+                                      className={'fr-door' + (sure ? ' ib-door--sure' : '')}
+                                      onClick={() => dismiss(m)}
+                                      title={sure ? 'Press again to delete this message for good' : 'Delete this message'}
+                                    >
+                                      <X size={22} weight="regular" aria-hidden="true" />
+                                      {sure ? 'Dismiss?' : 'Dismiss'}
                                     </button>
                                   </div>
                                 </div>
@@ -699,6 +937,7 @@ export default function Inbox({ layered = false, inPane = false }) {
                                 }}
                               >
                                 <span className={'ib-newdot' + (row.seen_at ? ' ib-newdot--off' : '')} aria-hidden="true" />
+                                <Kind of="back" />
                                 <span className="ib-rart ib-rart--back">
                                   {row.album_art
                                     ? <img src={row.album_art} alt="" loading="lazy" />
@@ -745,6 +984,7 @@ export default function Inbox({ layered = false, inPane = false }) {
                               {/* New is a property of the row, the way unread
                                   is in mail. A dot, not a tab. */}
                               <span className={'ib-newdot' + (unopened(sent) ? '' : ' ib-newdot--off')} aria-hidden="true" />
+                              <Kind of="send" />
                               {/* A song send (migrations/026) wears the folded
                                   corner a track note wears on the wall, and
                                   is named by the song, with the record it is
@@ -777,20 +1017,12 @@ export default function Inbox({ layered = false, inPane = false }) {
                             </button>
 
                             {open && (
-                              <div className="ib-open">
-                                <div className="ib-from">
-                                  <span className="ib-from-face" aria-hidden="true">
-                                    <User size={12} weight="regular" />
-                                    {host && <img src={`${journalUrl(host)}/api/portrait`} alt="" loading="lazy" onError={e => { e.currentTarget.style.display = 'none'; }} />}
-                                  </span>
-                                  <span className="ib-from-nm">
-                                    From{' '}
-                                    {host
-                                      ? <a href={carrySender(journalUrl(host), me, { known: filed.has(host) })} target="_blank" rel="noopener noreferrer">{who}</a>
-                                      : <span>{who}</span>}
-                                  </span>
-                                  <span className="ib-from-dt">{new Date(sent.created_at).toLocaleDateString()}</span>
-                                </div>
+                              <div className="ib-open ib-open--doors">
+                                {/* Who sent it and when, in the caption face.
+                                    A send's title is the record, so this is
+                                    the one place the sender is named; their
+                                    journal is a door below. */}
+                                <p className="ib-said-by">From {who} &middot; {shortDay(sent.created_at)}</p>
 
                                 {/* The message is here and only here. It is
                                     what you read in order to decide, so it
@@ -798,93 +1030,111 @@ export default function Inbox({ layered = false, inPane = false }) {
                                     away when you are not. */}
                                 {sent.note && <p className="ib-msg">{sent.note}</p>}
 
-                                {/* One primary, chosen by the state the send
-                                    is in. An archived row's is the way back,
-                                    which is why archiving needs no undo
-                                    control of its own. */}
-                                {archived ? (
-                                  <button className="ib-primary" onClick={() => updateStatus(sent.id, UNOPENED)}>
-                                    Put back
-                                  </button>
-                                ) : sent.status === 'logged' && sent.entry_slug ? (
-                                  <Link className="ib-primary" href={`/entries/${sent.entry_slug}`}>
-                                    Open the entry &#8594;
-                                  </Link>
-                                ) : sent.status === 'reviewed' ? (
-                                  <button className="ib-primary" onClick={() => resumeListen(sent, draft)}>
-                                    Resume the listen &#8594;
-                                  </button>
-                                ) : (
-                                  <button className="ib-primary" onClick={() => startListen(sent)}>
-                                    Start a listen &#8594;
-                                  </button>
-                                )}
+                                {/* ── The doors, 2026-09-28 ─────────────────
+                                    Miyel's words for them: Listen, Logged,
+                                    Read, and the rare two only when there is
+                                    something behind them. The first is
+                                    chosen by the state the send is in — an
+                                    archived row's is the way back, which is
+                                    why archiving needs no undo of its own.
+                                    The sender's are here whatever state the
+                                    send is in. Six is the most a phone's row
+                                    holds, so Visit steps aside where Read
+                                    is: both lead to their journal. */}
+                                <div className="ib-doors fr-doors-row">
+                                  {archived ? (
+                                    <button type="button" className="fr-door" onClick={() => updateStatus(sent.id, UNOPENED)}>
+                                      <ArrowCounterClockwise size={22} weight="regular" aria-hidden="true" />
+                                      Put back
+                                    </button>
+                                  ) : sent.status === 'logged' && sent.entry_slug ? (
+                                    <Link className="fr-door" href={`/entries/${sent.entry_slug}`}>
+                                      <VinylRecord size={22} weight="regular" aria-hidden="true" />
+                                      Open
+                                    </Link>
+                                  ) : sent.status === 'reviewed' ? (
+                                    <button type="button" className="fr-door" onClick={() => resumeListen(sent, draft)}>
+                                      <Broadcast size={22} weight="regular" aria-hidden="true" />
+                                      Resume
+                                    </button>
+                                  ) : (
+                                    <button type="button" className="fr-door" onClick={() => startListen(sent)}>
+                                      <Broadcast size={22} weight="regular" aria-hidden="true" />
+                                      Listen
+                                    </button>
+                                  )}
 
-                                {/* The quiet ones, as rows rather than
-                                    buttons. The sender's is here whatever
-                                    state the send is in — an album
-                                    half-listened-to whose sender has since
-                                    made a journal had nowhere to say so,
-                                    which is what this whole change is for. */}
-                                <div className="ib-acts">
                                   {/* Where they sent it from, when they sent
                                       it from a record's own page on their own
                                       copy (migrations/016_sender_entry.sql).
                                       Their journal plus their slug is a URL,
                                       which is the only kind of reference that
                                       means the same thing in two databases —
-                                      and it is the one thing on this row that
+                                      and it is the one door on this row that
                                       is about what THEY thought of it, so it
-                                      leads out rather than doing anything
-                                      here. Absent for every send off the
+                                      leads out. Absent for every send off the
                                       visitor form, which is most of them. */}
                                   {host && sent.sender_entry && (
                                     <a
-                                      className="ib-act"
+                                      className="fr-door"
                                       href={`${journalUrl(host)}/entries/${sent.sender_entry}`}
                                       target="_blank"
                                       rel="noopener noreferrer"
                                     >
-                                      <span className="ib-act-ic" aria-hidden="true"><ArrowUpRight size={13} weight="bold" /></span>
-                                      Read {who}&rsquo;s listen
+                                      <Article size={22} weight="regular" aria-hidden="true" />
+                                      Read
                                     </a>
                                   )}
 
+                                  {/* The record was here before they sent it
+                                      (DECISIONS, The network). Pressed again,
+                                      the picker it opened shuts. */}
                                   {unopened(sent) && (
-                                    <button className="ib-act" onClick={() => openNaming(sent)}>
-                                      <span className="ib-act-ic" aria-hidden="true"><Check size={13} weight="bold" /></span>
-                                      {naming === sent.id ? 'Never mind' : 'I’ve already logged this'}
+                                    <button type="button" className="fr-door" aria-expanded={naming === sent.id} onClick={() => openNaming(sent)}>
+                                      <Check size={22} weight="regular" aria-hidden="true" />
+                                      Logged
                                     </button>
+                                  )}
+
+                                  {host && !sent.sender_entry && (
+                                    <a
+                                      className="fr-door"
+                                      href={carrySender(journalUrl(host), me, { known: filed.has(host) })}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                    >
+                                      <BookOpen size={22} weight="regular" aria-hidden="true" />
+                                      Visit
+                                    </a>
                                   )}
 
                                   {host
                                     ? !filed.has(host) && (
-                                      <button className="ib-act" onClick={() => file(sent.sender_url)}>
-                                        <span className="ib-act-ic" aria-hidden="true"><Plus size={13} weight="bold" /></span>
-                                        Add {who} to your address book
+                                      <button type="button" className="fr-door" onClick={() => file(sent.sender_url)}>
+                                        <Plus size={22} weight="regular" aria-hidden="true" />
+                                        Add
                                       </button>
                                     )
                                     : people.length > 0 && (
-                                      <button className="ib-act" onClick={() => { setWhose(w => (w === sent.id ? null : sent.id)); setNaming(null); }}>
-                                        <span className="ib-act-ic" aria-hidden="true"><ArrowUpRight size={13} weight="bold" /></span>
-                                        {whose === sent.id ? 'Never mind' : `Link ${who}’s journal`}
+                                      <button type="button" className="fr-door" aria-expanded={whose === sent.id} onClick={() => { setWhose(w => (w === sent.id ? null : sent.id)); setNaming(null); }}>
+                                        <LinkSimple size={22} weight="regular" aria-hidden="true" />
+                                        Link
                                       </button>
                                     )}
 
-                                  {/* Only where it is not the primary already:
-                                      resuming a listen *is* opening its draft,
-                                      and two rows doing one thing is what this
-                                      redesign takes off every other row. */}
+                                  {/* Only where it is not the first door
+                                      already: resuming a listen *is* opening
+                                      its draft. */}
                                   {draft && sent.status !== 'reviewed' && (
-                                    <button className="ib-act" onClick={() => resumeListen(sent, draft)}>
-                                      <span className="ib-act-ic" aria-hidden="true"><PencilSimple size={13} weight="bold" /></span>
-                                      Open the draft
+                                    <button type="button" className="fr-door" onClick={() => resumeListen(sent, draft)}>
+                                      <PencilSimple size={22} weight="regular" aria-hidden="true" />
+                                      Draft
                                     </button>
                                   )}
 
                                   {!archived && (
-                                    <button className="ib-act ib-act--warn" onClick={() => updateStatus(sent.id, ARCHIVED)}>
-                                      <span className="ib-act-ic" aria-hidden="true"><Archive size={13} weight="bold" /></span>
+                                    <button type="button" className="fr-door" onClick={() => updateStatus(sent.id, ARCHIVED)}>
+                                      <Archive size={22} weight="regular" aria-hidden="true" />
                                       Archive
                                     </button>
                                   )}

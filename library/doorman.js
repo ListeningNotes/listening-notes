@@ -133,6 +133,15 @@ export const DOORS = {
   // every copy leaves from. So it is counted like `send`, against the journal
   // it says it is from — five in ten minutes is more hello than anybody means.
   wave:       { tries: 5,  windowMs: 10 * 60_000 },
+  // ── A message, 2026-09-28 ───────────────────────────────────────────────
+  // The third thing one journal may put in another's inbox, and the one
+  // thing anybody may write to a keeper from an entry. One door for both
+  // callers and the key says which: a person on a page is counted by the
+  // machine they are writing from, a keeper's server by the journal it
+  // names (app/api/messages/route.js). Somebody writing a paragraph takes
+  // minutes, so five in ten is about stopping a script, as it was for the
+  // comments this replaces.
+  message:    { tries: 5,  windowMs: 10 * 60_000 },
 };
 
 // Ask whether this caller may try this door.
