@@ -1374,6 +1374,18 @@ row's primary is Put back, which is why archiving needs no undo of its own.
 rows joined only by album and artist, and starting fresh would upsert over
 the saved notes.
 
+**An open row in the inbox is doors, 2026-09-28.** What was said, then a
+glyph over one word in a row, on the Friends pane's own classes. Miyel found
+the line naming the sender, the filled button and the column of sentences
+"too bulky ... too wordy". A door with nothing behind it is not drawn, and
+Visit steps aside where Read is: six is the most a phone's row holds. The
+state still chooses the first door; *the rest as quiet rows* above is retired.
+
+**Every row in the inbox carries its kind, 2026-09-28.** A mark in a column
+of its own before the cover: envelope, waving hand, round bubble, arrow
+turning back. A cover says what a row is about, not what it is. Miyel's pick
+over a badge on the cover's corner and a glyph in the small line.
+
 **A send can start on the sender's own copy, and the visitor form stays,
 2026-09-16.** A keeper sends out of their own address book, through
 `/api/outbox` on their copy, which posts server-to-server to the recipient's
