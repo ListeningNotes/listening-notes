@@ -5,7 +5,7 @@ import { Heart } from '@phosphor-icons/react';
 import { fonts } from '../../../library/sitewide_visuals';
 import { parseHorizon } from '../../../library/entry_formatter';
 
-export default function HorizonBar({ horizon, tracks, commentsByTrack, onBarClick }) {
+export default function HorizonBar({ horizon, tracks, onBarClick }) {
   const bars = parseHorizon(horizon);
   if (!bars.length) return null;
 
@@ -16,7 +16,6 @@ export default function HorizonBar({ horizon, tracks, commentsByTrack, onBarClic
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: '3px', height: '52px' }}>
         {bars.map((h, i) => {
           const track = tracks[i];
-          const count = (commentsByTrack[String(i)] || []).length;
           const label = track ? (i + 1) + '. ' + track.name : 'Track ' + (i + 1);
           const fav = !!track?.favorite;
           return (
@@ -26,26 +25,18 @@ export default function HorizonBar({ horizon, tracks, commentsByTrack, onBarClic
               title={label}
               style={{ flex: 1, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', cursor: 'pointer', position: 'relative' }}
             >
-              {/* One row holding both marks, so a favourite that also has
-                  comments reads as two things side by side. The heart used to
-                  be pinned to the top of its own bar, which put it under the
-                  comment dot on a tall bar and inside the bar's click area.
-                  pointerEvents:none keeps the whole column clickable through
-                  them — the marks are labels, not targets. */}
-              {(count > 0 || fav) && (
+              {/* The heart over its own bar. pointerEvents:none keeps the
+                  whole column clickable through it — the mark is a label,
+                  not a target. */}
+              {fav && (
                 <div style={{
                   position: 'absolute', bottom: '100%', marginBottom: '4px', left: '50%',
                   transform: 'translateX(-50%)', display: 'flex', alignItems: 'center',
                   gap: '3px', lineHeight: 1, pointerEvents: 'none',
                 }}>
-                  {fav && (
-                    <span style={{ display: 'inline-flex', color: 'var(--fav, #f0484f)', lineHeight: 1 }}>
-                      <Heart size={10} weight="fill" />
-                    </span>
-                  )}
-                  {count > 0 && (
-                    <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: 'var(--accent)' }} />
-                  )}
+                  <span style={{ display: 'inline-flex', color: 'var(--fav, #f0484f)', lineHeight: 1 }}>
+                    <Heart size={10} weight="fill" />
+                  </span>
                 </div>
               )}
               <div

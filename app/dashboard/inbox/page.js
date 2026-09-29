@@ -165,16 +165,6 @@ const runsLong = words => words.length > 150 || (words.match(/\n/g) || []).lengt
 // no entry: the words are all it has to say what it is.
 const opening = said => String(said || '').trim().split(/\n/)[0];
 
-// A folder tab that connects to the open panel when active. Module scope so
-// it keeps a stable identity across renders.
-function FolderTab({ id, tab, onSelect, children }) {
-  return (
-    <button onClick={() => onSelect(id)} className={'ib-tab' + (tab === id ? ' ib-tab--on' : '')}>
-      {children}
-    </button>
-  );
-}
-
 // NoteModal is gone. It existed because the submissions view was a table with
 // no room in it for a paragraph, so the one part of a send that mattered — why
 // somebody sent it — was hidden behind a button marked "Note". The view is a
@@ -197,7 +187,6 @@ export default function Inbox({ layered = false, inPane = false }) {
 
   const [authed, setAuthed] = useState(false);
   const [checking, setChecking] = useState(true);
-  const [tab, setTab] = useState('submissions');
 
   const [submissions, setSubmissions] = useState([]);
   const [subLoading, setSubLoading] = useState(true);
@@ -265,9 +254,6 @@ export default function Inbox({ layered = false, inPane = false }) {
   // inbox never open anything.
   const [drafts, setDrafts] = useState(null);
 
-  const [comments, setComments] = useState([]);
-  const [comLoading, setComLoading] = useState(true);
-
   // Problems keepers wrote in from their desks (library/report_actions.js).
   // Only the copy the software comes from ever receives any, so only that
   // copy has the tab — on every other one it was a folder that could never
@@ -282,21 +268,8 @@ export default function Inbox({ layered = false, inPane = false }) {
   // offers to file it only once. A send is one of the ways an address gets
   // in (app/dashboard/people/page.js); this is that way.
   const [people, setPeople] = useState([]);
-  // Whether the book has answered yet. An empty list is also what it is
-  // before it has, and Replies must not say "none" on the strength of that.
-  const [bookIn, setBookIn] = useState(false);
   const filed = new Set(people.map(p => p.address));
 
-  // ── Replies to what you said on other journals, 2026-09-22 ─────────────
-  // Miyel: "replies should show up in inbox" — meaning answers to the
-  // comments she leaves on friends' journals. Those comments live on their
-  // copies and this one never hears of them, so it goes and asks each
-  // journal in the book (GET /api/public/replies), in this browser, the way
-  // the feed reads their entries. Nothing is kept; a copy from before 1.28.0
-  // answers 404 and simply adds nothing. No count on the tab: a reply is not
-  // waiting on you the way a comment to approve is, and this site does not
-  // do unread (DECISIONS, The model).
-  const [replies, setReplies] = useState(null);
   const myJournal = tidyJournal(myAddress);
 
   // ── Saying a send was already logged ─────────────────────────────────────
@@ -329,25 +302,8 @@ export default function Inbox({ layered = false, inPane = false }) {
     fetch('/api/came-back').then(r => (r.ok ? r.json() : { cameBack: [] })).then(d => setCameBack(d.cameBack || [])).catch(() => {});
     fetch('/api/waves').then(r => (r.ok ? r.json() : { waves: [] })).then(d => setWaves(d.waves || [])).catch(() => {});
     fetch('/api/messages').then(r => (r.ok ? r.json() : { messages: [] })).then(d => setMessages(d.messages || [])).catch(() => {});
-    fetch('/api/comments/pending').then(r => r.json()).then(d => { setComments(d.comments || []); setComLoading(false); }).catch(() => setComLoading(false));
-    fetch('/api/people').then(r => r.json()).then(d => setPeople(d.people || [])).catch(() => {}).finally(() => setBookIn(true));
+    fetch('/api/people').then(r => r.json()).then(d => setPeople(d.people || [])).catch(() => {});
   }, [authed]);
-
-  useEffect(() => {
-    if (!authed || !myJournal || !bookIn) return;
-    let gone = false;
-    const found = [];
-    Promise.allSettled(people.map(p =>
-      fetch(`${journalUrl(p.address)}/api/public/replies?to=${encodeURIComponent(myJournal)}`, { signal: AbortSignal.timeout(8000) })
-        .then(r => (r.ok ? r.json() : { replies: [] }))
-        .then(d => { for (const r of d.replies || []) found.push({ ...r, journal: p.address, whose: p.name || '' }); })
-    )).then(() => {
-      if (gone) return;
-      found.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-      setReplies(found);
-    });
-    return () => { gone = true; };
-  }, [authed, myJournal, people, bookIn]);
 
   // Their shelves, asked for as the rows arrive.
   useEffect(() => {
@@ -505,6 +461,9 @@ export default function Inbox({ layered = false, inPane = false }) {
     if (!r?.ok || !d?.ok) {
       return { ok: false, error: d?.error || 'Something went wrong. Nothing was sent, and your words are still here.' };
     }
+    // The row says it was answered from here on (migrations/029).
+    const when = d.replied_at || new Date().toISOString();
+    setMessages(prev => prev.map(m => (m.id === message.id ? { ...m, replied_at: when } : m)));
     return { ok: true };
   }
 
@@ -801,15 +760,6 @@ export default function Inbox({ layered = false, inPane = false }) {
     router.push('/session');
   }
 
-  async function approveComment(id) {
-    await fetch(`/api/comments/${id}`, { method: 'PATCH' });
-    setComments(prev => prev.filter(c => c.id !== id));
-  }
-  async function dismissComment(id) {
-    await fetch(`/api/comments/${id}`, { method: 'DELETE' });
-    setComments(prev => prev.filter(c => c.id !== id));
-  }
-
   const unopened = s => s.status === UNOPENED;
   // One list, newest first — which is how the rows arrive. Archived come out
   // of it and sit behind a line at the foot; opened, they go on the end
@@ -828,10 +778,6 @@ export default function Inbox({ layered = false, inPane = false }) {
     ...messages.map(m => ({ ...m, wrote: true, at: m.arrived_at })),
   ].sort((a, b) => new Date(b.at) - new Date(a.at));
   const shown = showArchived ? [...liveWithReturns, ...archivedRows] : liveWithReturns;
-  const counts = { new: submissions.filter(unopened).length };
-  // The folder tab still counts what is waiting, which is the number worth
-  // interrupting anybody with.
-  const subCounts = { pending: counts.new };
 
   // The draft behind a send, if there is one. Matched on the fold that keys
   // the drafts table — see resumeListen for why it has to be that one.
@@ -867,19 +813,20 @@ export default function Inbox({ layered = false, inPane = false }) {
     <div className={'own-screen' + (layered ? ' own-screen--layered' : '') + (inPane ? ' own-screen--pane' : '')}>
       {!inPane && <SiteNav />}
 
+      {/* ── One list, and no tabs, 2026-09-29 ─────────────────────────────
+          There were three folders: Submissions, Comments waiting to be
+          approved, and Replies to what the keeper had said on other
+          journals. Comments became messages and nothing waits to be
+          approved; a reply is a message too, and arrives like one (the
+          messages brief). So everything that arrives is a row in the one
+          list, told apart by the mark it carries, and the row of tabs went
+          with the two folders that had nothing left in them. The count over
+          the list went too: it counted sends, in a list that is no longer
+          only sends, and a row that is new says so with its dot. */}
       <div className="own-body ib-body">
-        <div className="ib-tabs">
-          <FolderTab id="submissions" tab={tab} onSelect={setTab}>Submissions{subCounts.pending > 0 ? ` (${subCounts.pending})` : ''}</FolderTab>
-          <FolderTab id="comments" tab={tab} onSelect={setTab}>Comments{comments.length > 0 ? ` (${comments.length})` : ''}</FolderTab>
-          <FolderTab id="replies" tab={tab} onSelect={setTab}>Replies</FolderTab>
-        </div>
-
-        {/* The open folder */}
         <div className="own-panel ib-panel">
           <div className="ib-scroll">
 
-            {/* ── SUBMISSIONS ── */}
-            {tab === 'submissions' && (
               <>
                 {subLoading ? (
                   <div className="ib-list" style={{ gap: 10 }}>
@@ -889,23 +836,11 @@ export default function Inbox({ layered = false, inPane = false }) {
                   <div className="own-empty">Nothing has been sent to you yet.</div>
                 ) : (
                   <>
-                    {/* The count is of sends: what came back is not waiting
-                        on anybody, so it adds nothing to either number. */}
-                    {submissions.length > 0 && (
-                      <div className="ib-count">
-                        {counts.new > 0 && <>{counts.new} new &middot; </>}
-                        {submissions.length} in all
-                      </div>
-                    )}
-
                     <div className="ib-list">
                       {shown.map(sent => {
                         // ── A record that came back ──────────────────────
                         // "[name] logged MAGDALENE", then "Came back" and how
-                        // they rated it; the envelope on the cover when it
-                        // was a real send and not a credit added by hand
-                        // (DECISIONS: the envelope is for a real send only).
-                        // Opening it is what puts the dot out.
+                        // they rated it. Opening it is what puts the dot out.
                         // ── A wave ──────────────────────────────────────
                         // "Omar waved", and whether they are in the book.
                         // Add sits on the row itself when they are not —
@@ -1054,7 +989,15 @@ export default function Inbox({ layered = false, inPane = false }) {
                                 )}
                                 <span className="ib-rsaid">
                                   <span className="ib-rttl">{who} wrote</span>
+                                  {/* Whether it has been answered, what it
+                                      is about, and the day once it is open.
+                                      Replied leads the line: the line is cut
+                                      short on a phone, and what is cut
+                                      should be the song's name sooner than
+                                      the one word that says where things
+                                      stand. */}
                                   <span className="ib-rsub">
+                                    {m.replied_at ? 'Replied · ' : ''}
                                     {under}
                                     {isOpen && shortDay(m.written_at || m.arrived_at) ? ` · ${shortDay(m.written_at || m.arrived_at)}` : ''}
                                   </span>
@@ -1185,15 +1128,15 @@ export default function Inbox({ layered = false, inPane = false }) {
                               <button className="ib-rhead" aria-expanded={isOpen} onClick={() => openReturned(row)}>
                                 <span className={'ib-newdot' + (row.seen_at ? ' ib-newdot--off' : '')} aria-hidden="true" />
                                 <Kind of="back" />
-                                <span className="ib-rart ib-rart--back">
+                                {/* No envelope in the cover's corner, from
+                                    2026-09-29 (Miyel: it "must go"). In this
+                                    list the envelope is anything written,
+                                    and the arrow before the cover already
+                                    says what the row is. */}
+                                <span className="ib-rart">
                                   {row.album_art
                                     ? <img src={row.album_art} alt="" loading="lazy" />
                                     : <span className="ib-nocover" aria-hidden="true">&#9834;</span>}
-                                  {!row.by_hand && (
-                                    <span className="ib-rart-sent" aria-hidden="true">
-                                      <Envelope size={10} weight="regular" />
-                                    </span>
-                                  )}
                                 </span>
                                 <span className="ib-rsaid">
                                   <span className="ib-rttl">{who} logged {row.album}</span>
@@ -1212,17 +1155,22 @@ export default function Inbox({ layered = false, inPane = false }) {
                               {/* It opened their entry on a press until
                                   2026-09-29. It opens where it sits now,
                                   like every other row, and their entry is
-                                  one of its doors: Open is yours, Read is
-                                  theirs (Miyel). */}
+                                  the first of its doors. Read, Compare,
+                                  Dismiss, in her order — and nothing that
+                                  leads to the keeper's own entry, which is
+                                  on their own wall and not what arrived. */}
                               {isOpen && (
                                 <div className="ib-open ib-open--doors">
                                   <div className="ib-doors fr-doors-row">
-                                    {yours && (
-                                      <Link className="fr-door" href={`/entries/${yours.slug}`}>
-                                        <VinylRecord size={22} weight="regular" aria-hidden="true" />
-                                        Open
-                                      </Link>
-                                    )}
+                                    <a
+                                      className="fr-door"
+                                      href={carrySender(`${journalUrl(row.journal)}/entries/${row.slug}`, me, { known: filed.has(row.journal) })}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                    >
+                                      <Article size={22} weight="regular" aria-hidden="true" />
+                                      Read
+                                    </a>
                                     {yours && theirs && (
                                       <button
                                         type="button"
@@ -1234,15 +1182,6 @@ export default function Inbox({ layered = false, inPane = false }) {
                                         Compare
                                       </button>
                                     )}
-                                    <a
-                                      className="fr-door"
-                                      href={carrySender(`${journalUrl(row.journal)}/entries/${row.slug}`, me, { known: filed.has(row.journal) })}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                    >
-                                      <Article size={22} weight="regular" aria-hidden="true" />
-                                      Read
-                                    </a>
                                     <button
                                       type="button"
                                       data-sure
@@ -1537,7 +1476,6 @@ export default function Inbox({ layered = false, inPane = false }) {
                   </>
                 )}
               </>
-            )}
 
             {/* ── REPORTS, 2026-09-22 ──────────────────────────────────
                 A tab of their own until Replies arrived and four tabs would
@@ -1545,7 +1483,7 @@ export default function Inbox({ layered = false, inPane = false }) {
                 tab. maybe my reports tab can go somewhere else" — so they
                 are a line at the foot of the sends, the archived rows'
                 shape, and only on the copy they are sent to. */}
-            {tab === 'submissions' && takesReports && !repLoading && (() => {
+            {takesReports && !repLoading && (() => {
               const kept = reports.filter(r => r.status !== 'dismissed');
               const fresh = kept.filter(r => r.status === 'pending').length;
               if (kept.length === 0) return null;
@@ -1583,82 +1521,12 @@ export default function Inbox({ layered = false, inPane = false }) {
               );
             })()}
 
-            {/* ── REPLIES ── */}
-            {tab === 'replies' && (
-              <>
-                {replies === null ? (
-                  <div className="ib-list" style={{ gap: 14 }}>
-                    {[...Array(2)].map((_, i) => <div key={i} className="own-skeleton" style={{ height: 70 }} />)}
-                  </div>
-                ) : replies.length === 0 ? (
-                  <div className="own-empty">No replies to your comments yet.</div>
-                ) : (
-                  <div>
-                    {replies.map(r => (
-                      <div key={`${r.journal}-${r.id}`} className="ib-comment">
-                        <div className="ib-comment-head">
-                          <span className="ib-comment-who">{r.author_name}</span>
-                          <a href={carrySender(`${journalUrl(r.journal)}/entries/${r.entry_slug}`, me, { known: true })} target="_blank" rel="noopener noreferrer" className="own-link ib-comment-where">
-                            on {r.album || r.entry_slug}{r.track_index >= 0 ? ` · track ${r.track_index + 1}` : ''}{r.whose ? ` · ${r.whose}` : ''} ↗
-                          </a>
-                          <span className="ib-comment-when">{new Date(r.created_at).toLocaleDateString()}</span>
-                        </div>
-                        {r.answering && <p className="ib-answering">You said: {r.answering}</p>}
-                        <p className="ib-comment-text">{r.content}</p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </>
-            )}
-
-            {/* ── COMMENTS ── */}
-            {tab === 'comments' && (
-              <>
-                {comLoading ? (
-                  <div className="ib-list" style={{ gap: 14 }}>
-                    {[...Array(3)].map((_, i) => <div key={i} className="own-skeleton" style={{ height: 70 }} />)}
-                  </div>
-                ) : comments.length === 0 ? (
-                  <div className="own-empty">No comments awaiting moderation.</div>
-                ) : (
-                  <div>
-                    {comments.map(c => (
-                      <div key={c.id} className="ib-comment">
-                        <div className="ib-comment-head">
-                          <span className="ib-comment-who">{c.author_name}</span>
-                          <a href={`/entries/${c.entry_slug}`} target="_blank" rel="noopener noreferrer" className="own-link ib-comment-where">
-                            on {c.entry_slug}{c.track_index >= 0 ? ` · track ${c.track_index + 1}` : ''} ↗
-                          </a>
-                          <span className="ib-comment-when">{new Date(c.created_at).toLocaleDateString()}</span>
-                        </div>
-                        <p className="ib-comment-text">{c.content}</p>
-                        <div className="ib-comment-row">
-                          <button onClick={() => approveComment(c.id)} className="own-act own-act--solid">Approve</button>
-                          <button onClick={() => dismissComment(c.id)} className="own-act own-act--danger">Dismiss</button>
-                          {c.author_url && tidyJournal(c.author_url) && (
-                            filed.has(tidyJournal(c.author_url))
-                              ? <span className="own-label ib-filed">In your address book</span>
-                              : <button onClick={() => file(c.author_url)} className="own-act">Add to address book</button>
-                          )}
-                          {c.author_url && (
-                            <a href={carrySender(journalUrl(c.author_url), me, { known: filed.has(tidyJournal(c.author_url)) })} target="_blank" rel="noopener noreferrer" className="own-link">
-                              their journal &#8599;
-                            </a>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </>
-            )}
           </div>
         </div>
       </div>
 
-      {/* Somebody just added from here — a send's sender, a commenter, or
-          somebody who waved — and the offer to wave at them. */}
+      {/* Somebody just added from here — a send's sender, somebody who
+          wrote, or somebody who waved — and the offer to wave at them. */}
       <WaveSheet person={wavingTo} onClose={() => setWavingTo(null)} />
     </div>
   );

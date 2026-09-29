@@ -24,7 +24,8 @@
 // only, Listen to the full album, which starts an ordinary listen of the
 // album — plain words, underlined like the link it is, with a play mark;
 // never a pill (Miyel does not like them). Then the note, read left to right
-// as an album's notes are, with the comment glyph at its end. Send is not on the card —
+// as an album's notes are, with the way to write to the keeper under it
+// (MessageForm.js). Send is not on the card —
 // it is behind the ···, with Edit, Credit and Delete. There is no Share: the
 // printer knows how to print a record and not a song.
 //
@@ -53,7 +54,6 @@ import { useRouter } from 'next/navigation';
 import { createPortal } from 'react-dom';
 import { Play, VinylRecord } from '@phosphor-icons/react';
 import { parseRating, editStamp, lookup_key } from '../../../library/entry_formatter';
-import { kept_receipts } from '../../../library/receipts';
 import { tidyAddress } from '../../../library/return_address';
 import SiteNav from '../../../components/main_components/SiteNav';
 import { useLayerHeaderSlot, useFolder } from '../../../components/main_components/LayerEntry';
@@ -61,7 +61,7 @@ import FolderFooter from '../../../components/main_components/FolderFooter';
 import KeeperTools from '../../../components/main_components/KeeperTools';
 import EditingBar from '../../../components/main_components/EditingBar';
 import CodeSlot from '../../../components/main_components/CodeSlot';
-import CommentBubble from '../../../components/main_components/Slug_Page/CommentBubble';
+import { MessageWayIn } from '../../../components/main_components/Slug_Page/MessageForm';
 import SentBy, { creditOn, useTrail } from '../../../components/main_components/Slug_Page/SentBy';
 import SenderTool from '../../../components/main_components/Slug_Page/SenderTool';
 import SendSheet from '../../../components/main_components/SendSheet';
@@ -206,26 +206,6 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
   // says nothing, and the one thing Save waits for.
   const saysSomething = Boolean(written.note.trim() || written.rating > 0);
 
-  // ── The comments ────────────────────────────────────────────────────────
-  // The same read the entry page makes: approved comments, and any still
-  // held that this browser can prove it wrote. A track note's are all on the
-  // note itself, which is the -1 bucket an album note's are in.
-  const [comments, setComments] = useState({});
-  const [askedFor, setAskedFor] = useState(0);
-  useEffect(() => {
-    if (writing || !entry.slug) return undefined;
-    let cancelled = false;
-    fetch('/api/comments/receipts', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ slug: entry.slug, receipts: kept_receipts() }),
-    })
-      .then(res => res.json())
-      .then(data => { if (!cancelled) setComments(data.comments || {}); })
-      .catch(() => {});
-    return () => { cancelled = true; };
-  }, [writing, entry.slug, askedFor]);
-
   // ── Who put you onto it, and sending the record ─────────────────────────
   // The album entry's own two tools, unchanged: Credit unfolds where its
   // answer prints, under the head of the card, and Send rises with the
@@ -255,7 +235,6 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
 
   const rating = writing ? written.rating : parseRating(correcting ? edit.draft.rating : entry.rating);
   const note = writing ? written.note : correcting ? edit.draft.notes : (entry.notes || '');
-  const noteComments = comments['-1'] || [];
   const postedOn = entry.posted_at
     ? new Date(entry.posted_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
     : '';
@@ -401,9 +380,10 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
               <>
                 {note.trim() && <p className="tn-note">{note}</p>}
                 {editedOn && <p className="ln-edited">Edited {editedOn}</p>}
-                {/* The glyph at the end of the note, not the word: the brief
-                    draws a track note's way in the way a track's is drawn. */}
-                <CommentBubble glyph slug={entry.slug} trackIndex={-1} comments={noteComments} onRefresh={() => setAskedFor(n => n + 1)} />
+                {/* The one way in, in words, under the note: what is written
+                    goes to the keeper and is never drawn here (the messages
+                    brief). Left out for the keeper on their own journal. */}
+                {!authed && <MessageWayIn slug={entry.slug} keeper={(keeper_name || '').trim()} />}
               </>
             )}
           </div>

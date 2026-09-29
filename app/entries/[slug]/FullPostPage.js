@@ -3,7 +3,8 @@
 // app/entries/[slug]/PostClient.js
 // The interactive UI for a single entry page.
 // This is a CLIENT component — it runs in the browser and handles all interactivity:
-// comments, upvotes, the horizon bar, track threads, and the live listening beacon.
+// corrections, the horizon bar, the track rows, the way to write to the keeper,
+// and the live listening beacon.
 // It receives the entry data from page.js which fetched it server-side.
 
 'use client';
@@ -13,7 +14,6 @@ import { Envelope, Fingerprint, Heart, SketchLogo, VinylRecord } from '@phosphor
 import { fonts } from '../../../library/sitewide_visuals';
 import { sizedAlbumArt, fetchAlbumArtUrl } from '../../../library/music_data_api';
 import { parseHorizon, entryTracks, splitNotes, parseRating, flawless } from '../../../library/entry_formatter';
-import { kept_receipts } from '../../../library/receipts';
 import { buildReferenceIndex, createReferenceLinker } from '../../../library/cross_references';
 import SiteNav from '../../../components/main_components/SiteNav';
 import { createPortal } from 'react-dom';
@@ -26,7 +26,7 @@ import { usePress } from '../../../hooks/usePress';
 import { FRAMES, FRAME_ORDER } from '../../../components/main_components/SharePrinter';
 import HorizonBar from '../../../components/main_components/Slug_Page/HorizonBar';
 import TrackThread from '../../../components/main_components/Slug_Page/TrackThread';
-import CommentBubble from '../../../components/main_components/Slug_Page/CommentBubble';
+import { MessageWayIn } from '../../../components/main_components/Slug_Page/MessageForm';
 import MetadataLabel from '../../../components/main_components/Slug_Page/MetadataLabel';
 import Chip from '../../../components/main_components/Slug_Page/Chip';
 import SentBy, { creditOn, useTrail } from '../../../components/main_components/Slug_Page/SentBy';
@@ -583,9 +583,6 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     </span>
   );
 
-  const [commentsByTrack, setCommentsByTrack] = useState({});
-  const [commentsLoaded, setCommentsLoaded] = useState(false);
-
   // Screen one is a full viewport of album art and metadata; scrolling off it
   // is what swaps the phone header over to screen two's look — the dot nav
   // goes away and the album's own blurred art takes over the band behind the
@@ -624,8 +621,8 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   // filled — her "ghost tracks".
   //
   // Counted rather than filtered, on purpose: the index into parsedTracks is
-  // the track's identity everywhere on this page — its comments, its note,
-  // its link — so a filtered copy would renumber every song after the first
+  // the track's identity everywhere on this page — its note, its link, its
+  // bar — so a filtered copy would renumber every song after the first
   // unwritten one.
   const said = t => t.stars > 0 || (t.note || '').trim() || t.favorite;
   const saidTracks = parsedTracks.filter(said).length;
@@ -642,7 +639,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   // The index only changes when the archive does; the linker is rebuilt every
   // render on purpose. It carries the "first mention on this page" tally, so
   // reusing one across renders would spend every link on the first pass and
-  // leave the prose bare on the second, once the comments arrive.
+  // leave the prose bare on the second.
   //
   // Linking happens here rather than inside TrackThread for the same reason:
   // the album notes and every track note are one page sharing one tally, and
@@ -652,11 +649,6 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   const linkedAlbumNotes = link(albumNotes, 'album');
   const linkedTrackNotes = parsedTracks.map((t, i) => link(t.note, 'track' + i));
 
-  // Comments about the album rather than any one track. save_comment has
-  // always filed a track-less comment under -1, and nest_comments has always
-  // handed the bucket back — until now nothing on the page ever asked for it,
-  // so there was no way to leave one and nothing would have shown it.
-  const albumComments = commentsByTrack['-1'] || [];
   // ── When there is nothing under the fold ────────────────────────────────
   // A listen can be a cover, a score and nothing else since 2026-09-18, and
   // Miyel logged one and found what it does: "it scrolls down to a header
@@ -676,51 +668,23 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   // write one on.
   const nothingBelow = !edit.editing
     && !albumNotes
-    && albumComments.length === 0
     && saidTracks === 0
     && horizonBars.length === 0;
   // The wobble. Held for as long as it plays and no longer.
   const [wobble, setWobble] = useState(false);
 
 
-  // Load the thread for this entry. Posts rather than gets, and sends along
-  // whatever receipts this browser is holding: the reply carries the approved
-  // comments as always, plus any still waiting to be read that this browser can
-  // prove it wrote. Someone else's held comment is never in here.
-  async function fetchComments() {
-    const res = await fetch('/api/comments/receipts', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ slug: entry.slug, receipts: kept_receipts() }),
-    });
-    const data = await res.json();
-    return data.comments || {};
-  }
-
-  async function loadComments() {
-    try {
-      setCommentsByTrack(await fetchComments());
-      setCommentsLoaded(true);
-    } catch {}
-  }
-
-  // Load comments once when the page mounts. The work is wrapped so nothing is
-  // set during the effect's synchronous pass, and a cancel flag stops a slow
-  // response writing state after the page has moved on.
-  useEffect(() => {
-    if (preview) return undefined;
-    let cancelled = false;
-    (async () => {
-      try {
-        const comments = await fetchComments();
-        if (cancelled) return;
-        setCommentsByTrack(comments);
-        setCommentsLoaded(true);
-      } catch {}
-    })();
-    return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entry.slug]);
+  // ── Writing to the keeper, 2026-09-29 ───────────────────────────────────
+  // Nobody's words are drawn on an entry but its keeper's: the threads that
+  // stood under the notes are gone, and what somebody has to say about an
+  // entry goes to the keeper as a message (the messages brief; the comments
+  // that were here arrived in the inbox, migration 027). The one way in is
+  // under the album note — or at the foot of the tracks, on an entry with
+  // no album note — and it is left out for the keeper on their own journal,
+  // for the session's preview, and while a correction is open.
+  const wayIn = !preview && !authed && !edit.editing
+    ? <MessageWayIn slug={entry.slug} keeper={keeperName} />
+    : null;
 
   // Smooth scroll to a track section when clicking a horizon bar
   function handleBarClick(i) {
@@ -1800,7 +1764,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
             was writing had become the one you could never start. Same shape as
             the ghost tracks below it: reading shows what was said, correcting
             shows where it goes. */}
-        {(albumNotes || albumComments.length > 0 || edit.editing) && (
+        {(albumNotes || edit.editing) && (
           <section style={{ marginBottom: '48px' }}>
             <MetadataLabel sticky>Album note</MetadataLabel>
             {/* 6px, the same gap a track note leaves under itself before its
@@ -1818,14 +1782,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
               <div style={{ lineHeight: 1.95, fontSize: '15px', whiteSpace: 'pre-wrap', color: 'var(--ink)', marginBottom: '6px' }}>{linkedAlbumNotes}</div>
             )}
             {editedOn && !edit.editing && <p className="ln-edited">Edited {editedOn}</p>}
-            {!preview && (
-              <CommentBubble
-                slug={entry.slug}
-                trackIndex={-1}
-                comments={albumComments}
-                onRefresh={loadComments}
-              />
-            )}
+            {wayIn}
           </section>
         )}
 
@@ -1850,7 +1807,6 @@ export default function FullPostPage({ entry, references = [], authed = false, l
                 <HorizonBar
                   horizon={entry.horizon}
                   tracks={parsedTracks}
-                  commentsByTrack={commentsByTrack}
                   onBarClick={handleBarClick}
                 />
               </div>
@@ -1867,19 +1823,18 @@ export default function FullPostPage({ entry, references = [], authed = false, l
                   track={t}
                   note={edit.editing ? null : linkedTrackNotes[i]}
                   trackIndex={i}
-                  slug={entry.slug}
-                  commentsByTrack={commentsByTrack}
-                  onRefresh={loadComments}
                   editing={edit.editing}
                   draft={edit.draft.tracks[i]}
                   onField={(key, value) => edit.setTrack(i, key, value)}
                   onOpenDial={setDialTrack}
                   dialOpen={dialTrack === i}
-                  preview={preview}
                 />
                 );
               })}
             </div>
+            {/* The way in, here, only where there is no album note for it
+                to stand under. */}
+            {!albumNotes && wayIn && <div className="ln-message-foot">{wayIn}</div>}
           </section>
         )}
 

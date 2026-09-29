@@ -877,46 +877,12 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 
 /* ── from app/dashboard/inbox/page.js ────────────────────────────────── */
 .ib-body { max-width: 940px; padding: 18px 24px 40px; }
-/* Folder tabs that connect to the open panel. Sends are one folder, comments
-   another, reports a third — the two views over sends live inside the first
-   rather than beside them (Miyel, 2026-09-15: the folders were not the thing
-   that needed changing). */
-.ib-tabs { display: flex; align-items: flex-end; gap: 5px; padding-left: 14px; position: relative; z-index: 2; flex-shrink: 0; }
-.ib-tab {
-  font-family: var(--font-label); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
-  padding: 9px 22px 11px; border: 1px solid transparent; border-bottom: none; cursor: pointer;
-  border-radius: 16px 16px 0 0; background: none; color: var(--ink-faint);
-  position: relative; z-index: 1; transition: background 0.15s, color 0.15s, padding 0.12s;
-}
-.ib-tab:hover { color: var(--ink-soft); }
-.ib-tab--on { padding: 11px 24px 13px; margin-bottom: -1px; background: var(--panel); border-color: var(--border); color: var(--ink); z-index: 2; }
-/* Three tabs: on a phone they fit by giving up side padding, not by folding
-   their words. Submissions, Comments, Replies since 2026-09-22 — Reports
-   left the row for a line at the foot of the sends — and measured then:
-   exactly the 327px a 375px phone has at 12/14, so 10/12 for some air, and
-   the spine's smaller type on the narrowest phones, where 327 is 272. */
-@media (max-width: 640px) {
-  .ib-tabs { gap: 2px; padding-left: 6px; }
-  .ib-tab { padding-left: 10px; padding-right: 10px; white-space: nowrap; }
-  .ib-tab--on { padding-left: 12px; padding-right: 12px; }
-}
-@media (max-width: 359px) {
-  .ib-tab { font-size: 10px; letter-spacing: 0.06em; padding-left: 7px; padding-right: 7px; }
-  .ib-tab--on { padding-left: 9px; padding-right: 9px; }
-}
-/* And on the spine, where the sheet is 300 to 520px in a window far wider
-   than either — so the rule above, which is a viewport query, never fires and
-   three tabs at their full padding run off the edge. Tighter than the phone's,
-   because the phone at its narrowest is still 320 of gutter-to-gutter and this
-   is 300 inside a panel with its own. */
-.lay--over-spine .ib-tabs { gap: 2px; padding-left: 6px; }
-.lay--over-spine .ib-tab {
-  font-size: 10px; letter-spacing: 0.08em;
-  padding-left: 9px; padding-right: 9px; white-space: nowrap;
-}
-.lay--over-spine .ib-tab--on { padding-left: 11px; padding-right: 11px; }
+/* One list and no folder tabs, from 2026-09-29: comments became messages
+   and replies arrive as messages, so everything is a row in the one list
+   (the messages brief). The panel is a plain sheet with the same corner all
+   round, where it had a tab standing on its top edge. */
 .lay--over-spine .ib-scroll { padding: 18px 16px 24px; }
-.ib-panel { border-radius: 20px 20px 24px 24px; }
+.ib-panel { border-radius: 24px; }
 .ib-scroll { position: relative; z-index: 1; flex: 1; padding: 22px 26px 28px; }
 @media (max-width: 640px) { .ib-scroll { padding: 18px 18px 24px; } }
 /* ── One list of sends ──────────────────────────────────────────────────────
@@ -926,10 +892,6 @@ textarea.st-field { resize: vertical; min-height: 96px; }
    when the two were split. Newest first, archived behind a line at the foot.
    Pressing a row opens it where it sits (DECISIONS: a control opens where it
    belongs); it never takes you into a listen on its own. */
-.ib-count {
-  font-family: var(--font-label); font-size: 9.5px; letter-spacing: 0.14em;
-  text-transform: uppercase; color: var(--ink-faint); margin-bottom: 14px;
-}
 .ib-list { display: flex; flex-direction: column; }
 .ib-r { border-bottom: 1px solid var(--border); }
 .ib-r:last-child { border-bottom: none; }
@@ -976,18 +938,6 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 /* A song send wears the fold (.ln-fold, base.css); at 46px the flap's blur
    is the small cover's, and the fold's cut corner takes the radius with it. */
 .ib-rart.ln-fold { --fold-blur: 3px; border-radius: 0; }
-/* ── What came back, 2026-09-22 ── the envelope a sent record wears
-   everywhere else, in the cover's corner: this record went out from here and
-   came back. Inside the corner, because the cover clips what overhangs it. */
-.ib-rart--back { position: relative; }
-.ib-rart-sent {
-  position: absolute; right: 3px; bottom: 3px;
-  width: 16px; height: 16px; border-radius: 999px;
-  display: inline-flex; align-items: center; justify-content: center;
-  background: var(--bg); color: var(--ink-soft);
-  box-shadow: 0 0 0 1px var(--border);
-}
-a.ib-rhead { text-decoration: none; }
 /* ── A wave, 2026-09-23 ── a person rather than a record, so the face is
    round where a cover is square; and Add on the row itself when they are not
    in the book, beside the row's button rather than inside it. */

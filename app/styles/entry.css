@@ -1241,6 +1241,14 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
    Margins only when something is open below, so an empty track does not pay
    three gaps for a control 23px tall. */
 .ln-say-way { display: flex; justify-content: flex-end; }
+/* ── The way in to an entry, 2026-09-29 ── "Message" and the keeper's name,
+   in the caption face, under the album note: words and no mark (Miyel). At
+   the foot of the tracks instead, on an entry with no album note to stand
+   under. Once a message has gone the word says so for a moment, and that is
+   a statement rather than something to press. */
+.ln-message-foot { margin-top: 14px; }
+.ln-message-gone { cursor: default; color: var(--ink-soft); }
+.ln-message-gone:hover { color: var(--ink-soft); }
 .ln-say-way--open { margin-bottom: 10px; }
 /* The glyph, at the end of a track's note, 2026-09-24: a word when the way in
    stands alone (the album note), a glyph when it is one of a column of them.

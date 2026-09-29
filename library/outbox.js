@@ -180,8 +180,9 @@ export async function send_wave({ to }) {
 
 // ── A message, 2026-09-29 ───────────────────────────────────────────────────
 // The third thing this copy may put in another's inbox: words, written by
-// its keeper to another keeper — a reply to a message that arrived here, or
-// a message from the address book about nothing at all (the messages brief).
+// its keeper to another keeper, in reply to a message that arrived here (the
+// messages brief). A message starts on an entry, on the other journal's own
+// page; this is the way back, and the only message a copy ever sends.
 // The same road as a send and a wave: this server to theirs, on a press.
 //
 // It carries who is writing, read off this copy's own settings; what it is

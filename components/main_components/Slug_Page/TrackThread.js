@@ -4,7 +4,6 @@
 import { Heart } from '@phosphor-icons/react';
 import StarRating from '../StarRating';
 import TrackDial from './TrackDial';
-import CommentBubble from './CommentBubble';
 import { editStamp } from '../../../library/entry_formatter';
 
 // `note` is the track's own note with any cross-references already turned
@@ -16,36 +15,28 @@ import { editStamp } from '../../../library/entry_formatter';
 // where the display one was expected is exactly how the number, the title and
 // the stars once vanished the moment edit mode opened.
 export default function TrackThread({
-  track, note, trackIndex, slug, commentsByTrack, onRefresh,
+  track, note, trackIndex,
   editing = false, draft, onField, onOpenDial, dialOpen = false,
-  // The session's preview of an entry that is not saved yet: nothing to
-  // comment on, so no bubble under the note.
-  preview = false,
 }) {
   // Under this track's note, if this track's note has been rewritten. Stored
   // on the track itself rather than on the entry — see the stamps in
   // update_entry — so a typo fixed in track two marks track two and says
   // nothing about the other eleven.
   const edited = editStamp(track.edited);
-  const trackComments = commentsByTrack[String(trackIndex)] || [];
 
   // ── Rated is a row; written is a row with its note under it ─────────────
   // 2026-09-24, the track-notes brief. Every track used to reserve room for a
   // note and a way to comment on it, so an entry that was rated and not
   // written read as a form somebody abandoned — and rating without writing is
   // a real way to keep a journal. So a track with nothing written is one
-  // tight row, number, title, marks, stars, and nothing under it: no note to
-  // read, and no comment, because there is nothing to reply to. A written one
-  // keeps the row and has its note underneath, with the glyph at the end of
-  // it (CommentBubble).
+  // tight row, number, title, marks, stars, and nothing under it. A written
+  // one keeps the row and has its note underneath.
   //
-  // Two things still open the space under a bare row: a thread somebody
-  // already started there, when every track had a way in (an approved comment
-  // going invisible is the one failure the comments exist to prevent), and an
-  // edit stamp left by a note that was taken out.
+  // Nothing else stands under a track, from 2026-09-29: comments went, and
+  // the one way in to an entry is under its album note (MessageForm.js). An
+  // edit stamp left by a note that was taken out still opens the space.
   const written = !!(track.note || '').trim();
-  const thread = trackComments.length > 0;
-  const under = !editing && (written || thread || !!edited);
+  const under = !editing && (written || !!edited);
   const noteRead = (
     <>
       {written && <p className="ln-track-note">{note ?? track.note}</p>}
@@ -156,24 +147,11 @@ export default function TrackThread({
         />
       )}
 
-      {/* While a correction is open there is no way in to a new comment — it
-          is a correction, not a reply — but a thread already there stays in
-          view, so nothing seems to vanish the moment editing starts. */}
-      {editing && thread && !preview && (
-        <CommentBubble glyph slug={slug} trackIndex={trackIndex} comments={trackComments} onRefresh={onRefresh} />
+      {under && (
+        <div className="ln-say-beside">
+          <div className="ln-say-beside-text">{noteRead}</div>
+        </div>
       )}
-
-      {/* The way in, at the end of the note you've just read. Lives in
-          CommentBubble, which the album notes share — see the note at the top
-          of that file for why. The session's preview has nothing to comment
-          on yet, so it draws the note in the same place and no glyph. */}
-      {under && (preview ? (
-        <div className="ln-say-beside"><div className="ln-say-beside-text">{noteRead}</div></div>
-      ) : (
-        <CommentBubble glyph slug={slug} trackIndex={trackIndex} comments={trackComments} onRefresh={onRefresh}>
-          {noteRead}
-        </CommentBubble>
-      ))}
     </div>
   );
 }

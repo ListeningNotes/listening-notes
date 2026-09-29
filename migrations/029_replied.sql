@@ -1,0 +1,20 @@
+-- Copyright (C) 2026 Miyel Brown
+-- SPDX-License-Identifier: AGPL-3.0-or-later
+-- migrations/029_replied.sql
+--
+-- The day a message was replied to, 2026-09-29.
+--
+-- A reply leaves through the outbox and nothing is kept of it: what this
+-- copy has sent is only ever known by what comes back (library/outbox.js).
+-- So a message looked the same before its keeper had answered it and after,
+-- and whether they had was something to remember. Miyel: "we can add
+-- replied."
+--
+-- This is the one fact kept, on the message that was answered and not on
+-- the answer: that it was replied to, and when. It is a note to the keeper
+-- on their own copy. Nothing is sent to anybody because of it, and the
+-- other journal is told nothing it was not already sent.
+--
+-- Null for every message that has not been answered, which is every message
+-- before this.
+ALTER TABLE messages ADD COLUMN IF NOT EXISTS replied_at timestamptz;

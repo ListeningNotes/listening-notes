@@ -82,7 +82,7 @@ export async function pull_messages() {
     SELECT m.id, m.from_name, m.from_journal, m.said,
            m.about_journal, m.about_slug, m.about_album, m.about_artist,
            m.about_art, m.about_song, m.answering, m.answering_name,
-           m.was_comment, m.written_at, m.arrived_at, m.seen_at,
+           m.was_comment, m.written_at, m.arrived_at, m.seen_at, m.replied_at,
            (e.id IS NOT NULL) AS entry_here
     FROM messages m
     LEFT JOIN entries e ON m.about_journal IS NULL AND e.slug = m.about_slug
@@ -160,6 +160,15 @@ export async function save_message({ from_name, from_journal, said, about, answe
     RETURNING id, arrived_at
   `;
   return row;
+}
+
+// Replied to, once the reply has landed on their journal (migrations/029).
+// The latest reply's day, since a message can be answered more than once.
+export async function mark_replied(id) {
+  const [row] = await database`
+    UPDATE messages SET replied_at = now() WHERE id = ${id} RETURNING id, replied_at
+  `;
+  return row || null;
 }
 
 // Opened, so no longer new. Only the first opening is kept.

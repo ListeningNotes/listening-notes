@@ -9,8 +9,8 @@
 //   a person     on a page this copy serves, writing from an entry. They
 //                give a name, and their journal if they keep one. Counted
 //                against the machine they are writing from.
-//   a journal    another keeper's server, because its keeper wrote back or
-//                wrote from their own address book (library/outbox.js).
+//   a journal    another keeper's server, because its keeper replied to a
+//                message from this one (library/outbox.js).
 //                Counted against the journal it names, and before anything
 //                is kept this copy asks that journal its keeper's name, the
 //                way filing an address does, and keeps the name it got back.

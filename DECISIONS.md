@@ -1393,6 +1393,24 @@ reply is replying to, which travel with it because no copy keeps what it
 sent. Three lines and the rest on a press. One line of context, not a
 thread: nothing stacks under it, and a message is still one arrival.
 
+**What each row in the inbox offers, 2026-09-29, in Miyel's words.** A
+message: Reply, Compare when the writer has logged the record too, Add for
+somebody not in the book, Dismiss. A record that came back: Read, Compare,
+Dismiss — a door to the keeper's own entry was built and cut the same day.
+A message that has been answered says *Replied*, first in its small line;
+that is a note to the keeper, and nothing is sent because of it.
+
+**The way in to an entry is words, once: *Message* and the keeper's name,
+under the album note, 2026-09-29.** Not the comment's bubble, and not an
+envelope, which on an entry means a record somebody sent. Not under each
+track: a message is about the entry. At the foot of the tracks where there
+is no album note. Left out of the page for the keeper on their own journal.
+
+**A message starts on an entry, and nowhere else, 2026-09-29.** There is no
+door in Friends and no writing to somebody out of the address book (picked
+on the 28th, reversed on the 29th: "messaging happens only on posts"). The
+only message a copy sends is a reply to one that arrived.
+
 **A send can start on the sender's own copy, and the visitor form stays,
 2026-09-16.** A keeper sends out of their own address book, through
 `/api/outbox` on their copy, which posts server-to-server to the recipient's
