@@ -99,7 +99,6 @@ import AlbumPicker from '../session_components/AlbumPicker';
 // pane and the desk agree about what "a listen is open" means and say so the
 // same way. The hook itself is not called here.
 import { PENDING_KEY, SAVED_EVENT, TRACK_NOTE_KEY, saidSoAboutTheDesk } from '../../hooks/useListeningSession';
-import Pitch from './Pitch';
 
 // You, then home. Home is the one you land on, which is why it is not index
 // 0 — the rail is scrolled to it on mount before the first paint. A visitor
@@ -108,7 +107,8 @@ import Pitch from './Pitch';
 // meet and the person is one swipe away.
 const HOME = 1;
 // Where the keeper's two extra rooms sit on the rail. Only ever true when the
-// lock has said yes — a visitor's rail is three panes and neither of these is
+// lock has said yes — a visitor's rail is two panes, the card and the beacon
+// (three until 2026-09-28, when the About pane went), and neither of these is
 // on it. See paneRefs, which is the list these index into.
 const BOOK = 2;
 const INBOX = 3;
@@ -358,23 +358,19 @@ function passing(was, now, base) {
 // list (Footer.js); the panes carry their labels in the markup.
 
 // The two sides, for the switch. Card either way — signed in it is yours,
-// signed out it is the keeper's, and it is the same face. Desk or About for
-// the other side.
+// signed out it is the keeper's, and it is the same face. The desk for the
+// other side, and only the keeper has one: the About pane that stood there
+// for a visitor went on 2026-09-28 (DECISIONS, A visited journal is a card,
+// a beacon and entries), so a visitor has one face and no switch.
 // `opens` is what the control says, and it says a verb now: the pages slide
 // past each other rather than turning over, so the thing you are doing is
 // opening the other one (Miyel, 2026-09-15). The control is set in small caps,
 // which is what lets OPEN ABOUT read as a page's name rather than a sentence
 // with a word missing.
 function paneFaces(authed) {
-  return [
-    { key: 'card', word: 'Card', opens: 'Open card', label: 'About this journal' },
-    {
-      key: 'desk',
-      word: authed ? 'Desk' : 'About',
-      opens: authed ? 'Open desk' : 'Open about',
-      label: authed ? 'Your desk' : 'About this software',
-    },
-  ];
+  const card = { key: 'card', word: 'Card', opens: 'Open card', label: 'About this journal' };
+  if (!authed) return [card];
+  return [card, { key: 'desk', word: 'Desk', opens: 'Open desk', label: 'Your desk' }];
 }
 
 // Smooth, unless the reader has asked for less. A page that slides sideways
@@ -481,7 +477,7 @@ export default function HomeNav() {
   }, [askWaiting]);
   // The lock on the pitch pane opened. The pane it is on becomes the desk,
   // with nothing reloaded: the wristband was just issued and the cross never
-  // unmounted.
+  // unmounted. The lock is at the foot of the card since 2026-09-28.
   const letIn = useCallback(() => {
     setAuthed(true);
     askWaiting();
@@ -563,7 +559,7 @@ export default function HomeNav() {
   // lock answers. Every effect that lists it re-runs then and re-attaches to
   // the panes that now exist, which is exactly right and is why they list it.
   const paneRefs = useMemo(
-    () => (authed ? [cardRef, homeRef, friendsRef, inboxRef] : [cardRef, homeRef, deskRef]),
+    () => (authed ? [cardRef, homeRef, friendsRef, inboxRef] : [cardRef, homeRef]),
     [authed]
   );
   // Kept in step on every render, and read by the getter above. It has to be
@@ -2491,7 +2487,8 @@ export default function HomeNav() {
   // the bar centres on.
   const faces = paneFaces(authed);
   const goingTo = faces.find(side => side.key !== face);
-  const turnLine = (
+  // Nothing to turn to for a visitor (paneFaces), so no control.
+  const turnLine = goingTo ? (
     <div className="hn-turn-row">
       <button type="button" className="hn-turn-say" onClick={turnPane}>
         {/* Two arrows side by side, not a rotation. The glyph turned in a
@@ -2503,12 +2500,14 @@ export default function HomeNav() {
         {goingTo.opens}
       </button>
     </div>
-  );
+  ) : null;
 
   return (
     <div
       className={
-        'hn hn--face-' + face
+        /* A visitor's leaf has one face, whatever this browser remembered
+           from a keeper who signed out on it. */
+        'hn hn--face-' + (authed ? face : 'card')
         /* Whether the keeper is looking. The stylesheet needs to know because
            the rail is a different shape either way — four panes or three —
            and which panes those are is not something a selector can work out
@@ -2558,38 +2557,29 @@ export default function HomeNav() {
         <div className="hn-pane hn-pane--turn">
           <div className="hn-leaf">
           <section className="hn-pane hn-face hn-face--card" ref={cardRef} aria-label="About this journal">
-            <About stamps={stamps} authed={authed} pinned={pinned} entries={entries} />
+            <About stamps={stamps} authed={authed} pinned={pinned} entries={entries} onSignedIn={letIn} />
           </section>
 
-          {/* The desk, or the colophon signed out — a page about the software
-              rather than a set of doors, which is why it is its own word and
-              its own mark in the band at the foot. */}
+          {/* The desk — the keeper's, and empty for anybody else. It was the
+              About pane signed out, a page about the software, from
+              2026-08-28 to 2026-09-28: a visited journal is a card, a beacon
+              and entries now, and what that pane owed a visitor (the source
+              line, the version, the lock) stands at the foot of the card. The
+              section stays in the markup for the leaf's geometry on a desk;
+              the stylesheet keeps it off the phone's rail. */}
           <section
-            className={'hn-pane hn-face hn-face--desk' + (authed ? '' : ' hn-face--colophon')}
+            className="hn-pane hn-face hn-face--desk"
             ref={deskRef}
-            aria-label={authed ? 'Your desk' : 'About this software'}
+            aria-label="Your desk"
           >
-            {authed ? (
-              <>
-                {/* The desk, and nothing under it. The feed used to run on
-                    straight down this same scroll; it is a row and a page of
-                    its own now, which is what lets this pane be a hero and its
-                    rows and stop there (Miyel's brief, 2026-09-15). The small
-                    mark goes down from here — the cross owns the one mark this
-                    site has, and the beacon keeps the large one. */}
-                <Dashboard waiting={waiting} mark={mark('db-mark-svg')} />
-              </>
-            ) : (
-              <>
-                {/* The colophon keeps the crown. Every other page carries the
-                    mark small; this one is the page *about* the mark, and a
-                    colophon without it is a paragraph. Small here too since
-                    2026-09-22 — the large one is the beacon's — so the crown
-                    is kept for its link home and its place under the bar,
-                    and the stylesheet sizes the mark (.hn-face--colophon). */}
-                {crown}
-                <Pitch onSignedIn={letIn} />
-              </>
+            {authed && (
+              /* The desk, and nothing under it. The feed used to run on
+                 straight down this same scroll; it is a row and a page of
+                 its own now, which is what lets this pane be a hero and its
+                 rows and stop there (Miyel's brief, 2026-09-15). The small
+                 mark goes down from here — the cross owns the one mark this
+                 site has, and the beacon keeps the large one. */
+              <Dashboard waiting={waiting} mark={mark('db-mark-svg')} />
             )}
           </section>
           </div>

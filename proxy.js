@@ -29,10 +29,16 @@
 import { NextResponse } from 'next/server';
 
 export const PATH_HEADER = 'x-ln-path';
+// And the query, the same way, 2026-09-28. One reader: app/get/layout.js,
+// which leaves the nav row out of /get when the link carries no gift, so the
+// page can draw the mark in the middle with its two lines. Still no decision
+// made here — the string is copied, the layout reads it.
+export const SEARCH_HEADER = 'x-ln-search';
 
 export function proxy(request) {
   const headers = new Headers(request.headers);
   headers.set(PATH_HEADER, request.nextUrl.pathname);
+  headers.set(SEARCH_HEADER, request.nextUrl.search);
   return NextResponse.next({ request: { headers } });
 }
 

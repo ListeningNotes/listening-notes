@@ -707,3 +707,34 @@ feel like adding." The face went with them on her call the next day: the
 only evidence of the person is the card. The `?add=` door home stays on the
 receiving side (Friends.js) because copies on 1.36.0 and earlier still send
 readers through it, and `knownHere` in return_address.js is now unread.
+
+## The pitch pane, 2026-08-28 to 2026-09-28
+
+The current rule is in DECISIONS.md, Structure: *A visited journal is a card,
+a beacon and entries*.
+
+Signed out, a right swipe reached a page about the software: the small mark,
+a blurb, six tiles, GET ONE to `/get`, then the lock and Source · version. The
+two entries that stood for it:
+
+**The pitch is for strangers: three lines and six tiles, 2026-09-22.** The
+About pane is visitor-only; a keeper never sees a pitch. The small mark, a
+blurb, six one-line tiles, GET ONE as a word and an arrow, then the lock (a
+key until 2026-09-28) and Source · version. A tile is a glyph and one bold line, flat because it opens
+nothing, and ownership is last so the page ends on the promise. It replaced
+three sentences and a pill (2026-09-03).
+
+**The pitch pane ships on every copy, and only visitors see it.** Logged out,
+right swipe: the pitch and a link to listeningnotes.blog/get. A keeper's
+phone has no pitch pane, so a keeper hands over the way in with Give — a
+sheet, never a tab: the band stays four for keepers and three for visitors.
+
+Reversed 2026-09-28 by Miyel's brief *handed out, not downloaded*. The pane
+existed to explain the software to a stranger who wandered in, and under the
+brief nobody wanders in: a journal is handed to you by a person, `/get` draws
+no steps without a gift, and the explaining happens in the room or on the
+Instagram. Keeping the pane would have put a public door to the source on the
+front of every keeper's journal, the exact thing the gate closes. The source
+link and the version moved to the foot of the card, where a visitor is and
+where AGPL §13 is owed; the lock went with them, since a keeper still needs
+the way in on their own phone. The band is two doors for a visitor.

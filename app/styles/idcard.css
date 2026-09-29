@@ -280,11 +280,16 @@
 /* And the line gives up the 22px it wore under the Settings door, which went
    up into the ··· this morning and left it spacing itself from nothing. */
 .ab-keep .db-colophon { margin-top: 0; }
+/* A visitor's foot carries the lock over the line, 2026-09-28: the lock's own
+   column, then the air the line wants under it. */
+.ab-keep--visitor { display: flex; flex-direction: column; align-items: center; gap: 18px; }
 /* Only where the desk is gone. Above 769px the book still has its spine and
    the desk is still its second page, with Settings on it — so this would be
-   the same door twice, one turn apart. The card's foot exists *because* the
-   desk does not, and that is only true on a phone. */
-@media (min-width: 769px) { .ab-keep { display: none; } }
+   the same door twice, one turn apart. The keeper's foot exists *because*
+   the desk does not, and that is only true on a phone. A visitor has no desk
+   at any width since 2026-09-28 (the About pane went), so their foot — the
+   lock and the software's line — stays at every width. */
+@media (min-width: 769px) { .ab-keep:not(.ab-keep--visitor) { display: none; } }
 
 /* ── Below the fold ─────────────────────────────────────────────────────────
    A quiet line saying whose voice the answers are in, then the answers, then

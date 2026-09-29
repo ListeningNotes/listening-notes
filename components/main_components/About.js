@@ -51,9 +51,10 @@ import {
 } from '../../library/card_links';
 import { useIdentificationCardEditor } from './IdentificationCardEditor';
 import EditingBar from './EditingBar';
+import WritingAccess from './WritingAccess';
 import { useBookplate } from './Bookplate';
 import { BIO_PROMPTS, readBioAnswers } from '../../library/bioprompt';
-import { VERSION, RELEASE_URL } from '../../library/version';
+import { VERSION, RELEASE_URL, SOURCE_URL } from '../../library/version';
 
 // How long the row at the foot takes to change places with the band. The
 // band's own transition in nav.css is the same number, and the delay that
@@ -93,7 +94,7 @@ const PIN_RESULTS = 40;
 // over a list that is already in memory. A journal large enough for that to be
 // the wrong shape is a journal whose archive has the same problem, and they
 // should be solved together.
-export default function About({ stamps, authed = false, pinned = null, entries = [] }) {
+export default function About({ stamps, authed = false, pinned = null, entries = [], onSignedIn = null }) {
   const settings = useBookplate();
   const { bioanswers, keeper_name, rig: rigRows, social_links } = settings;
 
@@ -1043,8 +1044,8 @@ export default function About({ stamps, authed = false, pinned = null, entries =
           {/* The one line about the software rather than the journal: which
               version this is, and — only when it is true — that there is a
               newer one. No Source: §13 is owed to visitors and this is the
-              half of the page a visitor never sees; the pitch pane carries it
-              for them. */}
+              half of the page a visitor never sees; their own foot, below,
+              carries it. */}
           <p className="db-colophon">
             <a className="pt-source" href={RELEASE_URL} target="_blank" rel="noopener noreferrer" title="What this version contains">
               {VERSION}
@@ -1061,6 +1062,29 @@ export default function About({ stamps, authed = false, pinned = null, entries =
             <Link className="db-update" href="/dashboard/report" title="Something did not work">
               Report a problem
             </Link>
+          </p>
+        </section>
+      )}
+      {/* ── And a visitor's foot: the lock, then the software's line, 2026-09-28
+          What stood at the foot of the About pane until that pane went (Miyel's
+          brief, handed out, §4: a visited journal is a card, a beacon and
+          entries). Source is a licence obligation — AGPL §13 offers the
+          corresponding source to anyone using the software over a network — and
+          it is owed to visitors, so it stands where a visitor is and not on the
+          keeper's half above. The version beside it says at a glance which copy
+          a friend is running. The lock is the keeper's way in on their own
+          phone; a visitor sees a lock and nothing happens (WritingAccess.js). */}
+      {!authed && (
+        <section className="ab-keep ab-keep--visitor" aria-label="This software">
+          <WritingAccess onSignedIn={onSignedIn} />
+          <p className="db-colophon">
+            <a className="pt-source" href={SOURCE_URL} target="_blank" rel="noopener noreferrer">
+              Source
+            </a>
+            <span className="pt-colophon-dot" aria-hidden="true">&middot;</span>
+            <a className="pt-source" href={RELEASE_URL} target="_blank" rel="noopener noreferrer" title="What this version contains">
+              {VERSION}
+            </a>
           </p>
         </section>
       )}

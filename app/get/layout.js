@@ -18,13 +18,27 @@
 // 404 on a copy that has not written the essay, because these are Miyel's
 // pages on Miyel's copy.
 
+import { headers } from 'next/headers';
 import SiteNav from '../../components/main_components/SiteNav';
+import { PATH_HEADER, SEARCH_HEADER } from '../../proxy';
+import { tidyJournal } from '../../library/return_address';
 
-export default function GetLayout({ children }) {
+// ── No row on the page with no gift, 2026-09-28 ────────────────────────────
+// /get without `?gift=` is two lines in the middle of the screen with the
+// mark over them (app/get/page.js, the gate), and Miyel asked for the mark
+// to go with them — so the row that carries it everywhere else stands down
+// there, and the page draws its own. A layout is not given the URL, so the
+// middleware hands it the path and the query as headers (proxy.js), and the
+// test here is the page's own: a gift that tidies to nothing is no gift.
+export default async function GetLayout({ children }) {
+  const h = await headers();
+  const path = h.get(PATH_HEADER) || '';
+  const gift = new URLSearchParams(h.get(SEARCH_HEADER) || '').get('gift') || '';
+  const handed = path === '/get' && !tidyJournal(gift);
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100vh', color: 'var(--ink)' }}>
 
-      <SiteNav />
+      {!handed && <SiteNav />}
       {children}
     </div>
   );

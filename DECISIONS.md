@@ -752,17 +752,15 @@ found only by whoever already knows which. The one exception is ComingSoon,
 which must draw when nothing else does. Import order in `layout.js` is the
 cascade and follows the order the rules had in the one file they came from.
 
-**The pitch is for strangers: three lines and six tiles, 2026-09-22.** The
-About pane is visitor-only; a keeper never sees a pitch. The small mark, a
-blurb, six one-line tiles, GET ONE as a word and an arrow, then the lock (a
-key until 2026-09-28) and Source · version. A tile is a glyph and one bold line, flat because it opens
-nothing, and ownership is last so the page ends on the promise. It replaced
-three sentences and a pill (2026-09-03).
-
-**The pitch pane ships on every copy, and only visitors see it.** Logged out,
-right swipe: the pitch and a link to listeningnotes.blog/get. A keeper's
-phone has no pitch pane, so a keeper hands over the way in with Give — a
-sheet, never a tab: the band stays four for keepers and three for visitors.
+**A visited journal is a card, a beacon and entries, 2026-09-28.** The
+About pane is gone. Nobody wanders in any more — they arrive because a person
+showed them, and the explaining happens in the room or on the Instagram — so
+a pitch for the software on the front of every keeper's journal was a public
+door to the source, the thing the gate on `/get` closes. What that pane owed
+a visitor stands at the foot of the card: the source link (a licence
+obligation, AGPL §13), the version beside it, and the lock. The band is two
+doors for a visitor and four for a keeper; the spine never turns for a
+visitor. The pane's own two entries are in the archive.
 
 **Give is the Friends header's left-hand control, Add its right, and it is
 nowhere else, 2026-09-22.** One bare mark each side, as every header has —
@@ -778,8 +776,17 @@ address (`noteArrival`), so a friend who scanned a `?from=` gift would be
 signed as the giver on their next send — and a giver's own gifts pass on
 their own copy, which is how it would have shipped.
 
-**Source link on every copy** — one faint line at the foot of the pitch pane,
-under "Get one" (it left the About pane 2026-08-28). §13 is owed to visitors,
+**A journal is handed to you by a person, 2026-09-28.** `/get` draws its
+steps only when the link carries `?gift=`; without one it is two lines and
+the Instagram, with no form, no waiting list and no coming soon. A self-serve
+page hands out software; an evening with a record hands out software and a
+reason to open it, and a stranger installing today would be stranded on a
+copy with no updater. The gate is one condition in app/get/page.js, not a
+rewrite: it comes off in one line when the install is ready for strangers.
+
+**Source link on every copy** — one faint line at the foot of the card for a
+visitor, with the version beside it (at the foot of the pitch pane from
+2026-08-28 to 2026-09-28). §13 is owed to visitors,
 so a signed-in owner sees no Source line and is not owed one; it satisfies
 AGPL §13 whether or not anyone has modified anything. **It is an
 environment variable, never a setting:** a fork owes *its* source, and anybody
@@ -1067,8 +1074,8 @@ is the code, not smaller type — so the address book's rows, the compare's
 headings and the inbox's links say the name, and the public feed carries
 `keeper_name` so another copy has one to say. A host is printed only when
 nothing else is known, never by choice. **Two different QRs:** a journal's
-About QR shares that person; the pitch pane's is a fixed code to `/get`, the
-same on every copy.
+About QR shares that person; the pitch pane's fixed code to `/get` went with
+the pane on 2026-09-28, and Give's code is the one way to `/get` now.
 
 **The photo QR: the photograph fills the dark modules, a dot of ink sits in
 each, the finders and the alignment target are solid, 2026-09-11.** The
@@ -1217,6 +1224,14 @@ offers "Add them to your address book and wave", ticked. Where it did not surviv
 setup offers the camera: the Give code carries `?gift=`. Vercel's
 `redirect-url` is ruled out — it would hand the canonical server every
 gifted install's address and repository, the log a phone-home keeps.
+
+**Setup's gift screen is a hello, and it never blocks, 2026-09-28.** The
+screen before the home-screen step says *[Giver] gifted you this journal*,
+then *Say hello?* over the one ticked choice, add them and wave; the wave
+carries a name and an address and nothing about the gift. A hello that
+cannot be sent finishes setup anyway and is said once on the next screen —
+until then a failed add held the screen. The giver's wave back is what
+teaches the new inbox. Both hellos are chosen; skipping is never mentioned.
 
 **A returned send is an arrival, and this copy keeps it, 2026-09-22.** When
 somebody in the book logs a record this journal put them onto, the feed's

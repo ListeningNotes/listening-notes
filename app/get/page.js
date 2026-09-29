@@ -1,12 +1,24 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // app/get/page.js
-// Get your copy: ten steps, then the button.
+// Get your copy: ten steps, then the button — for somebody a keeper gave
+// the link to.
 //
-// This is the address every copy's About pane sends people to. Anybody here
-// has already decided — they have seen a journal working, on a friend's phone
-// or in a post — so there is no pitch on this page; About carries it. What is
-// left is instructions and a button.
+// ── Handed out, not downloaded, 2026-09-28 ─────────────────────────────────
+// The steps draw only when the link carries a gift (`?gift=<the giver's
+// journal>`, which is what Give's code and a giver's link say). Without one
+// the page is two lines and the Instagram, and nothing else: no form, no
+// waiting list, no coming soon, because a coming-soon invites people to ask
+// and nothing invites nothing. A journal arrives from a person: the giver is
+// the one who is there when the install goes sideways, and the one who gives
+// the new keeper a reason to open it the next day. The repo stays public and
+// AGPL — anyone determined can fork it — so this is a gate on the front door
+// and not a rewrite; it comes off by deleting the one condition below when
+// the install is ready for strangers (Miyel's brief, handed out, §1).
+//
+// Anybody past the gate has already decided — they were handed this by
+// somebody with a journal — so there is no pitch on this page. What is left
+// is instructions and a button.
 //
 // ── The button is at the foot, 2026-09-22 ──────────────────────────────────
 // After step ten, not at the top. People read what is above a button before
@@ -56,6 +68,7 @@
 // Miyel's phone the same evening. A sign-in partway drops the whole link, and
 // pressing the button again brings the gift back with it.
 
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { headers } from 'next/headers';
 import { existsSync } from 'node:fs';
@@ -68,11 +81,17 @@ import { ask_journal_name } from '../../library/people_actions';
 import { tidyJournal, journalUrl } from '../../library/return_address';
 import { mayKnock, whoIsKnocking } from '../../library/doorman';
 import { DEPLOY_URL, STEPS } from '../../library/install_guide';
+import { INSTAGRAM_URL } from '../../library/version';
 import InstallSteps from '../../components/main_components/InstallSteps';
 
 export async function generateMetadata({ searchParams }) {
   const settings = await pull_settings();
   if (!settings.why_essay?.trim()) return {};
+  const { gift } = await searchParams;
+  const giver = tidyJournal(typeof gift === 'string' ? gift : '');
+  // Without a gift the page is the two lines, not the steps, and its title
+  // says nothing about getting one (the gate, above).
+  if (!giver) return { title: titleName(settings) };
   const title = `Get your copy · ${titleName(settings)}`;
 
   // A gift link's preview, 2026-09-23: "A gift from" the giver, over the
@@ -81,8 +100,6 @@ export async function generateMetadata({ searchParams }) {
   // plain preview, as every other address on the site has. Set whole,
   // because a page's openGraph replaces the layout's rather than adding to
   // it; and by the journal's own address, since there is no metadataBase.
-  const { gift } = await searchParams;
-  const giver = tidyJournal(typeof gift === 'string' ? gift : '');
   let giverName = null;
   if (giver && giver === tidyJournal(settings.site_address)) {
     giverName = String(settings.keeper_name || '').trim() || null;
@@ -113,13 +130,62 @@ export default async function GetPage({ searchParams }) {
   const settings = await pull_settings();
   if (!settings.why_essay?.trim()) notFound();
 
+  // Whose gift this is, when the link came from Give. See the notes above.
+  const { gift } = await searchParams;
+  const giver = tidyJournal(typeof gift === 'string' ? gift : '');
+
+  // ── The gate ─────────────────────────────────────────────────────────────
+  // No gift in the link, no steps. The mark, then two lines, in the middle
+  // of the screen (Miyel, 2026-09-28: "centered on the page", "bring the
+  // logo with it") — the nav row that carries the mark everywhere else is
+  // left out of this page by app/get/layout.js, and the mark drawn here is
+  // the row's own, a link home like the row's. The second line ends on the
+  // Instagram as a handle in the sentence ("or visit us on instagram
+  // @listeningnotes.blog"), or on "one." when a fork names no account.
+  // Delete this block and the page is the steps for everybody again.
+  if (!giver) {
+    const handle = INSTAGRAM_URL ? '@' + INSTAGRAM_URL.replace(/\/+$/, '').split('/').pop() : '';
+    return (
+      <main className="get-wrap get-wrap--steps get-handed">
+        <Link href="/" className="get-handed-home" aria-label={titleName(settings)}>
+        <svg viewBox="76 96 241 140" className="get-handed-mark" xmlns="http://www.w3.org/2000/svg">
+        <path
+        transform="translate(73.734177, 220.794814)"
+        d="M 44.65625 0 C 37.46875 0 31.160156 -1.601562 25.734375 -4.8125 C 20.304688 -8.019531 16.097656 -12.28125 13.109375 -17.59375 C 10.128906 -22.90625 8.640625 -28.773438 8.640625 -35.203125 L 8.640625 -116.21875 L 36.53125 -116.21875 L 36.53125 -33.203125 C 36.53125 -30.546875 37.46875 -28.222656 39.34375 -26.234375 C 41.226562 -24.242188 43.550781 -23.25 46.3125 -23.25 L 77.03125 -23.25 L 77.03125 0 Z M 44.65625 0 "
+        />
+        <path
+        transform="translate(153.915942, 220.794814)"
+        d="M 91.96875 2 C 85 2 78.742188 0.476562 73.203125 -2.5625 C 67.671875 -5.613281 63.300781 -9.847656 60.09375 -15.265625 C 56.882812 -20.691406 55.28125 -26.835938 55.28125 -33.703125 L 55.28125 -84.5 C 55.28125 -86.269531 54.835938 -87.875 53.953125 -89.3125 C 53.066406 -90.75 51.90625 -91.910156 50.46875 -92.796875 C 49.03125 -93.679688 47.425781 -94.125 45.65625 -94.125 C 43.882812 -94.125 42.28125 -93.679688 40.84375 -92.796875 C 39.40625 -91.910156 38.269531 -90.75 37.4375 -89.3125 C 36.601562 -87.875 36.1875 -86.269531 36.1875 -84.5 L 36.1875 0 L 8.96875 0 L 8.96875 -82.515625 C 8.96875 -89.484375 10.539062 -95.625 13.6875 -100.9375 C 16.84375 -106.25 21.21875 -110.453125 26.8125 -113.546875 C 32.40625 -116.648438 38.6875 -118.203125 45.65625 -118.203125 C 52.738281 -118.203125 59.046875 -116.648438 64.578125 -113.546875 C 70.109375 -110.453125 74.476562 -106.25 77.6875 -100.9375 C 80.90625 -95.625 82.515625 -89.484375 82.515625 -82.515625 L 82.515625 -31.703125 C 82.515625 -29.929688 82.957031 -28.300781 83.84375 -26.8125 C 84.726562 -25.320312 85.859375 -24.160156 87.234375 -23.328125 C 88.617188 -22.492188 90.144531 -22.078125 91.8125 -22.078125 C 93.582031 -22.078125 95.210938 -22.492188 96.703125 -23.328125 C 98.203125 -24.160156 99.394531 -25.320312 100.28125 -26.8125 C 101.164062 -28.300781 101.609375 -29.929688 101.609375 -31.703125 L 101.609375 -116.21875 L 128.65625 -116.21875 L 128.65625 -33.703125 C 128.65625 -26.835938 127.050781 -20.691406 123.84375 -15.265625 C 120.632812 -9.847656 116.265625 -5.613281 110.734375 -2.5625 C 105.203125 0.476562 98.945312 2 91.96875 2 Z M 91.96875 2 "
+        />
+        <circle
+        cx="297.0547"
+        cy="216.71875"
+        r="14.1328"
+        className="get-handed-dot"
+        />
+        </svg>
+        </Link>
+        <p className="get-handed-said">Listening Notes is handed out by people who have one.</p>
+        <p className="get-handed-ask">
+          Know someone with a journal? Ask them to gift you one
+          {handle ? (
+            <>
+              , or visit us on Instagram{' '}
+              <a className="get-handed-ig" href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer">
+                {handle}
+              </a>
+              .
+            </>
+          ) : '.'}
+        </p>
+      </main>
+    );
+  }
+
   // Which pictures exist, in step order.
   const shots = STEPS.map(step =>
     existsSync(join(process.cwd(), 'public', 'install', `${step.shot}.png`)));
 
-  // Whose gift this is, when the link came from Give. See the note above.
-  const { gift } = await searchParams;
-  const giver = tidyJournal(typeof gift === 'string' ? gift : '');
   let giverName = null;
   if (giver && giver === tidyJournal(settings.site_address)) {
     giverName = String(settings.keeper_name || '').trim() || null;

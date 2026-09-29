@@ -58,6 +58,46 @@
    in the nav row. No heading and no pitch — anybody here has decided. */
 .get-top { text-align: center; }
 
+/* ── Handed out, 2026-09-28 ── the page with no gift in its link: two lines
+   under the mark, centred, and nothing else. The first in the display face
+   at the lede's measure, the second in the lede's own voice and ending on
+   the Instagram, a handle in the sentence with its glyph, in ink so it reads
+   as the one thing on the page you can press. No box round any of it. */
+/* Centred on the page as well as across it (Miyel, 2026-09-28): the page is
+   the screen's height and the block — the mark, then the two lines — sits
+   in the middle of it. The nav row is not drawn on this page (the layout),
+   so nothing has to be cleared and the air is the same above and below. */
+.get-handed {
+  text-align: center;
+  min-height: 100dvh; box-sizing: border-box;
+  display: flex; flex-direction: column; justify-content: center; align-items: center;
+  padding-top: 24px; padding-bottom: 24px;
+}
+/* The mark over the lines: the row's own drawing at the size the setup
+   screens give it, a link home like the row's, with the same air under it
+   the line has above it. */
+.get-handed-home { display: block; line-height: 0; margin: 0 0 26px; }
+.get-handed-mark { display: block; width: 78px; height: auto; margin: 0 auto; }
+.get-handed-mark path, .get-handed-dot { fill: var(--ink); }
+.get-handed-said {
+  margin: 0 auto; max-width: 340px;
+  font-family: var(--font-display); font-weight: var(--font-display-weight);
+  font-size: 22px; line-height: 1.3; letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+.get-handed-ask {
+  margin: 14px auto 0; max-width: 340px;
+  font-size: 16px; line-height: 1.6; color: var(--ink-soft);
+  text-wrap: balance;
+}
+.get-handed-ig {
+  display: inline-flex; align-items: center; gap: 4px;
+  color: var(--ink); text-decoration: none; white-space: nowrap;
+  border-bottom: 1px solid var(--border);
+}
+.get-handed-ig:hover { border-bottom-color: var(--ink); }
+.get-handed-ig:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; border-radius: 4px; }
+
 /* ── A gift, 2026-09-22 ── the giver's card, when the link came from Give:
    a tile as wide as what is on it, centred over the caption — a face, "A
    gift from" and the name, and the gift at the far end. A door since

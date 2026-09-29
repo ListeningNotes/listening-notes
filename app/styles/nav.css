@@ -1965,88 +1965,13 @@
   .hn-controls--busy { transform: none; }
 }
 
-/* ── Right, logged out: Pitch ───────────────────────────────────────────── */
-/* The About pane, 2026-09-22: the small mark, three lines, six tiles and GET
-   ONE. A column that fills the face, so the foot can sit at the bottom of a
-   tall screen and follow the tiles on a short one. */
-.hn-face--colophon { display: flex; flex-direction: column; }
-/* The crown, at the size every other page's mark is (28px, .hn-bar-svg).
-   Under the bar rather than in it: the bar's ground is opaque, 80px plus the
-   notch, and the face starts 36px down — so 52 stands the mark eight pixels
-   under the bar, on the line the card's portrait starts on next door. */
-.hn-face--colophon .hn-crown { flex: none; min-height: 0; padding: 52px 16px 0; }
-.hn-face--colophon .hn-crown-svg { height: 28px; }
-.pt-pane {
-  flex: 1 0 auto;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  padding: 20px var(--page-gutter) 8px;
-}
-.pt-body {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-  max-width: 380px;
-  margin: 0 auto;
-}
-.pt-blurb {
-  margin: 0;
-  max-width: 300px;
-  text-align: center;
-  font-size: 1rem;
-  line-height: 1.65;
-  color: var(--ink-soft);
-}
-.pt-tiles {
-  list-style: none;
-  width: 100%;
-  margin: 28px 0 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-/* .ln-tile's panel, hairline and radius, laid flat: no shadow and no lift,
-   because these open nothing. One bold line under the glyph, in the display
-   face rather than the door's mono caps. */
-.ln-tile.pt-tile {
-  flex-direction: column;
-  gap: 14px;
-  min-height: 120px;
-  padding: 18px 14px;
-  box-shadow: none;
-  font-family: var(--font-display);
-  font-weight: var(--font-display-weight);
-  font-size: 0.875rem;
-  line-height: 1.4;
-  letter-spacing: 0;
-  text-transform: none;
-  text-align: center;
-  /* Two even lines rather than a full one and a word left over — "Show
-     what you have" over a lone "on". */
-  text-wrap: balance;
-  transition: none;
-}
-.ln-tile.pt-tile:hover { border-color: var(--border); transform: none; }
-.pt-tile svg { flex: none; }
-/* GET ONE: a word and an arrow in the caption face, 48px tall for a thumb. */
-.pt-get {
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-  min-height: 48px;
-  padding: 0 4px;
-  font-family: var(--font-label);
-  font-size: 0.75rem;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--ink);
-  text-decoration: none;
-}
-.pt-get:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; }
+/* ── The software's line ────────────────────────────────────────────────── */
+/* Source · version, the smallest type on the site, at the foot of the card
+   for a visitor and of the desk for the keeper (About.js). It stood at the
+   foot of the About pane — the small mark, a blurb, six tiles and GET ONE —
+   from 2026-08-28 until that pane went on 2026-09-28: a visited journal is a
+   card, a beacon and entries (DECISIONS). The .pt- prefix is that pane's
+   old name, kept so nothing else had to be renamed. */
 /* The smallest type on the site. AGPL §13, satisfied once, quietly. */
 .pt-source {
   margin: 0;
@@ -3235,8 +3160,12 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
 
      `display: none` and not `order: 99`: a pane out of the band's reckoning
      but still in the flexbox is a screenful of desk you can swipe into and
-     not swipe out of by pressing anything. */
-  .hn--keeper .hn-face--desk { display: none; }
+     not swipe out of by pressing anything.
+
+     For everybody, not the keeper alone, since 2026-09-28: signed out this
+     face held the About pane, and now holds nothing (HomeNav.js), so a
+     visitor's rail is the card and the beacon. */
+  .hn-face--desk { display: none; }
   /* Friends before the inbox (Miyel, 2026-09-19: "two double levels two not
      sandwiched"). Two of these panes have a second floor and two do not, and
      with the inbox third the flat one sat between the two deep ones. The rail
@@ -3667,9 +3596,10 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   margin-top: auto;
   padding-top: 24px;
 }
-/* ── The lock ── a small key where the Sign in line sat, 2026-09-10. Press
-   it and the password field opens under it, in place: no page, no heading,
-   no address over the box, the pane still behind. A visitor sees a key and
+/* ── The lock ── where the Sign in line sat, 2026-09-10; at the foot of the
+   About pane until 2026-09-28 and at the foot of the card since. Press it
+   and the password field opens under it, in place: no page, no heading, no
+   address over the box, the pane still behind. A visitor sees a lock and
    nothing happens; the keeper has the key. See WritingAccess.js. */
 .pt-lock {
   display: flex;

@@ -1,7 +1,8 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // components/main_components/WritingAccess.js
-// The lock at the foot of the pitch pane: a small lock, shut until pressed
+// The lock at the foot of the card (the About pane's foot until 2026-09-28,
+// when that pane went): a small lock, shut until pressed
 // and open while the password field is up under it, opened in place. It was
 // drawn as a key until 2026-09-28; the reasoning below is unchanged by that.
 //

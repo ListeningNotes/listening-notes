@@ -210,7 +210,6 @@ The furniture — visual pieces
       Dashboard.js             The desk, for the owner — Start a listen as a band, then Inbox, Feed, Address book and Settings as rows; the header holds the mark alone. On a desk only since 2026-09-19, as the spine's second page
       Friends.js               The address book as a grid of faces, pinned first; a face opens its three doors in place under its own row. The Friends stop, and /dashboard/people
       Feed.js                  What the people in the address book logged, read off their public feeds; Submissions and Recent; Compare on a row you also have. Its own page at /dashboard/feed since 2026-09-15
-      Pitch.js                 The other face, for everybody else — the colophon
       Footer.js                The band at the foot of the phone's cross — Card, Beacon, Friends, Inbox (Card, Beacon, About for a visitor), the one you are on in ink; presses move the rail exactly as a swipe does
       EditingBar.js            The band at the foot of anything being corrected — what you are in the middle of, and Save and Cancel as words
       UpdateSwitch.js          Switching on the updater — a screen in setup, a section in Settings: hands the keeper a pre-filled GitHub link for the workflow file, then watches for the rebuild
@@ -219,7 +218,7 @@ The furniture — visual pieces
       KeeperTools.js           The owner's ··· — top right on both, Edit/Print/Delete on an entry and Edit/Print on the ID pane; the door stays put and the tools file out of it
       SharePrinter.js          The press's toolbox, not the press: the paper sizes (FRAMES), the page's two colours, and the canvas tools a plate draws with. The press itself has been hooks/usePress.js since 2026-09-13
       EntryPlate.js            A record cut as a plate — the entry page's first screen on the record's blurred colour: mark, keeper, cover, album, artist and year, stars, chips, date, horizon; no code, the press copies the address
-      WritingAccess.js         The lock at the foot of the pitch pane — a key, and the password field it opens in place
+      WritingAccess.js         The lock at the foot of the card for a visitor — shut, open while the password field it opens in place
       ComingSoon.js            What a held copy shows instead of a site — unclaimed, no database, or database unreachable
       AddToHomeScreen.js       The one step the software cannot do: the last screen of setup, and a Settings section
       JournalCopy.js           Back up your journal, in Settings: Make a copy fetches the export and holds it, then Share (a phone) or Download (a computer)

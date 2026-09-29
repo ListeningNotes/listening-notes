@@ -150,6 +150,11 @@ export default function WelcomeScreen() {
   const [giftFrom, setGiftFrom] = useState('');
   const [giver, setGiver] = useState(null);
   const [giverWave, setGiverWave] = useState(true);
+  // A hello that could not be sent, said on the screen after — never on
+  // this one, because a failed hello does not hold the install up (Miyel's
+  // brief, handed out, 2026-09-28: "the setup finishes anyway and says so
+  // plainly").
+  const [helloTrouble, setHelloTrouble] = useState('');
   const [scanningGift, setScanningGift] = useState(false);
   const [giftTrouble, setGiftTrouble] = useState('');
 
@@ -400,7 +405,7 @@ export default function WelcomeScreen() {
                   rig: 'What you listen on.',
                   updates: 'Keep your journal up to date automatically.',
                   password: 'What you’ll type to get back in.',
-                  gift: giver ? 'Your journal is ready!' : 'Did someone give you this journal?',
+                  gift: giver ? `${giver.name} gifted you this journal.` : 'Did someone give you this journal?',
                   homescreen: 'It’s yours. Put it on your home screen.',
               }[current]}
             </p>
@@ -608,8 +613,12 @@ export default function WelcomeScreen() {
                   <>
                     {/* A GIFT FROM, their face over the plain mark, the name
                         under it (Miyel, 2026-09-23: the picture sandwiched
-                        between the two), and the one choice — ticked,
-                        visible, one tap to undo. */}
+                        between the two), then the question and the one
+                        choice — ticked, visible, one tap to undo. The
+                        heading over all of it says who gifted it, and the
+                        question is "Say hello?" (Miyel, 2026-09-28: the
+                        brief's Say hello, kept with the selection rather
+                        than made a button of its own). */}
                     <div className="su-gift">
                       <span className="su-gift-from"><Gift size={12} aria-hidden="true" /> A gift from</span>
                       <span className="su-gift-face" aria-hidden="true">
@@ -617,6 +626,7 @@ export default function WelcomeScreen() {
                         <img src={`${journalUrl(giver.address)}/api/portrait`} alt="" onError={e => { e.currentTarget.style.display = 'none'; }} />
                       </span>
                       <span className="su-gift-name">{giver.name}</span>
+                      <p className="su-gift-ask">Say hello?</p>
                       <label className="su-gift-check">
                         <input type="checkbox" checked={giverWave} onChange={e => setGiverWave(e.target.checked)} />
                         <span>Add {giver.name} to your address book and wave</span>
@@ -631,21 +641,27 @@ export default function WelcomeScreen() {
                       disabled={busy}
                       onClick={() => advance(async () => {
                         if (!giverWave) return;
-                        const r = await fetch('/api/people', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ address: giver.address }),
-                        });
-                        const d = await r.json().catch(() => ({}));
-                        if (!r.ok || !d.person) throw new Error(d.error || 'They could not be added just now. Untick the box to go on, and add them later from your book.');
-                        // The wave does not hold anything up: they are in the
-                        // book either way, and a journal too old to take one
-                        // is not this journal's problem to report here.
-                        await fetch('/api/outbox', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ wave: true, person_id: d.person.id }),
-                        }).catch(() => {});
+                        // Neither half holds the install up. Until 2026-09-28
+                        // a failed add threw, which kept this screen until the
+                        // box was unticked; now it moves on and the next
+                        // screen says so, plainly, once. A journal too old to
+                        // take a wave is not this journal's problem to report.
+                        try {
+                          const r = await fetch('/api/people', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ address: giver.address }),
+                          });
+                          const d = await r.json().catch(() => ({}));
+                          if (!r.ok || !d.person) throw new Error('not added');
+                          await fetch('/api/outbox', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ wave: true, person_id: d.person.id }),
+                          }).catch(() => {});
+                        } catch {
+                          setHelloTrouble(`${giver.name} couldn’t be reached just now. You can add them later from your book.`);
+                        }
                       })}
                     >Next</button>
                   </>
@@ -680,7 +696,9 @@ export default function WelcomeScreen() {
             {current === 'homescreen' && (
               <div className="su-fields">
                 {/* The question and nothing under it (Miyel, 2026-09-23): the
-                    emblem and three tiles say the rest. */}
+                    emblem and three tiles say the rest. One exception, and
+                    only when it is true: the hello that could not be sent. */}
+                {helloTrouble && <p className="su-why">{helloTrouble}</p>}
                 <AddToHomeScreen centered />
                 <button type="button" className="su-go" disabled={busy} onClick={() => advance()}>Open the journal</button>
               </div>

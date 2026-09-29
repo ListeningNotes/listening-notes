@@ -112,9 +112,10 @@ reasoning; these are inline so nobody has to go looking.
   one; a journal address does every job an email might.
 - **A copy is never called Listening Notes, and the software's name never
   becomes a setting.** Titles read `{keeper_name} · Listening Notes` on every
-  copy; the pitch pane and its Source link ship on every copy and cannot be
-  switched off; the canonical address and `REPORTS_URL` are constants, with an
-  environment variable for a fork.
+  copy; the Source line and the version ship on every copy, at the foot of
+  the card for a visitor, and cannot be switched off; the canonical address,
+  `REPORTS_URL` and `INSTAGRAM_URL` are constants, with an environment
+  variable for a fork.
 - **Nothing per entry that grows with the archive on a free tier.** Never
   base64 a picture into a row (a cover's code keeps only its dot); album art
   is a plain `<img>`, never the framework's metered image component; a query
@@ -292,8 +293,6 @@ do not say what they hold.
 
 - `Bookplate.js` — context holding the journal's own details (name, keeper,
   portrait), read once on the server and handed down.
-- `Pitch.js` — the pane a visitor sees in place of the desk: what this is and
-  where to get one.
 - `KeeperTools.js` — the owner's ··· menu on an entry or the card.
 - `Friends.js` — the address book as a grid of faces.
 - `Footer.js` — the band at the foot of the phone's cross naming the panes.

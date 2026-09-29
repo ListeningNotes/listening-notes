@@ -346,6 +346,10 @@ textarea.su-field { resize: vertical; min-height: 64px; }
 }
 .su-gift-check input { width: 18px; height: 18px; margin: 0; flex: none; accent-color: var(--ink); }
 .su-gift-line { margin: 10px 0 0; font-size: 12.5px; line-height: 1.5; color: var(--ink-faint); max-width: 30ch; }
+/* The question over the choice, 2026-09-28: the card's own voice, a little
+   larger than the choice under it, so the screen reads name, question,
+   answer. */
+.su-gift-ask { margin: 18px 0 0; font-size: 16px; line-height: 1.4; color: var(--ink); }
 .su-photo {
   width: 132px; height: 132px; border-radius: 26px; margin: 0 auto;
   background: var(--panel); border: 1px solid var(--border);

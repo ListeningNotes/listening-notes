@@ -35,29 +35,25 @@
 // and keep the words.
 'use client';
 
-import { AddressBook, Broadcast, Envelope, IdentificationCard, Info } from '@phosphor-icons/react';
+import { AddressBook, Broadcast, Envelope, IdentificationCard } from '@phosphor-icons/react';
 
-// ── Four for the keeper, three for everybody else, 2026-09-19 ────────────
-// The desk was the third stop and is gone. It was a page of doors, which is a
-// place you pass through on the way somewhere — and the two rooms worth
-// standing in, the inbox and the people, were behind it. They are stops of
-// their own now, so nothing on this band is a corridor (Miyel's friends
-// brief, and the band it draws).
+// ── Four for the keeper, two for everybody else ───────────────────────────
+// The desk was the third stop and is gone (2026-09-19). It was a page of
+// doors, which is a place you pass through on the way somewhere — and the two
+// rooms worth standing in, the inbox and the people, were behind it. They are
+// stops of their own now, so nothing on this band is a corridor (Miyel's
+// friends brief, and the band it draws).
 //
-// Signed out there is no inbox and nobody to read, so the third stop is the
-// colophon: a page about the software rather than a set of doors, which is
-// why it takes its own word and its own mark rather than wearing the owner's.
-// Three either way is a coincidence and not a rule; the count follows what
-// there is.
+// Signed out there is no inbox and nobody to read. The third stop was the
+// About pane, a page about the software, until 2026-09-28: a visited journal
+// is a card, a beacon and entries, and the software's line is at the foot of
+// the card (DECISIONS). The count follows what there is.
 function stops(authed) {
   const here = [
     { key: 'card', word: 'Card', Icon: IdentificationCard, label: 'About this journal' },
     { key: 'beacon', word: 'Beacon', Icon: Broadcast, label: 'Now listening' },
   ];
-  if (!authed) {
-    here.push({ key: 'about', word: 'About', Icon: Info, label: 'About this software' });
-    return here;
-  }
+  if (!authed) return here;
   // ── Friends before Inbox, 2026-09-19 ─────────────────────────────────
   // Miyel's reason, and it is about the shape of the rail rather than about
   // what the rooms are for: "two double levels two not sandwiched." Two of
