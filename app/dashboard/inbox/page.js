@@ -805,7 +805,17 @@ export default function Inbox({ layered = false, inPane = false }) {
                         if (sent.wrote) {
                           const m = sent;
                           const host = tidyJournal(m.from_journal);
-                          const own = Boolean(host) && bare(host) === bare(myJournal);
+                          // The keeper's own words, brought across with
+                          // the comments they answered. Known by this
+                          // journal's address — or, for a comment from
+                          // before the address was stamped on, by the
+                          // keeper's name, which is how replies knew them
+                          // too. By name only on a row that was a comment:
+                          // anybody can type a name into a form.
+                          const own = host
+                            ? bare(host) === bare(myJournal)
+                            : Boolean(m.written_at) && Boolean(myName)
+                              && String(m.from_name || '').trim().toLowerCase() === String(myName).trim().toLowerCase();
                           const who = own ? 'You' : (m.from_name || 'Someone');
                           const isOpen = openMessage === m.id;
                           const sure = sureOf === m.id;
