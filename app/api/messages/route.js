@@ -24,6 +24,10 @@
 //             `journal` when the entry is not one of this journal's own,
 //             with the `album`, `artist`, `art` and `song` as the sender's
 //             copy knew them
+//   answering the words it replies to, when it is a reply. Kept only from
+//             another keeper's copy: a form on a page has the keeper's own
+//             note to answer, and that is read off the entry, never taken
+//             from whoever is writing
 //
 // Anything else in the body is ignored, not refused: a field a later
 // version adds has to be one this version can drop on the floor (AGENTS.md:
@@ -115,6 +119,7 @@ export async function POST(request) {
       from_journal: journal,
       said,
       about: body.about,
+      answering: server && typeof body.answering === 'string' ? body.answering : null,
       own,
     });
     return Response.json({ ok: true });

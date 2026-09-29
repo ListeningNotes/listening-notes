@@ -177,3 +177,76 @@ export async function send_wave({ to }) {
   const said = String(body?.error || '').trim();
   return { ok: false, error: said || 'Their copy would not take the wave.' };
 }
+
+// ── A message, 2026-09-29 ───────────────────────────────────────────────────
+// The third thing this copy may put in another's inbox: words, written by
+// its keeper to another keeper — a reply to a message that arrived here, or
+// a message from the address book about nothing at all (the messages brief).
+// The same road as a send and a wave: this server to theirs, on a press.
+//
+// It carries who is writing, read off this copy's own settings; what it is
+// about, when it is about an entry, as a journal and a slug with the record
+// as this copy knew it; and, for a reply, the words being answered, cut to a
+// few lines — their copy keeps no record of what it sent any more than this
+// one does, and a reply with nothing over it is an answer to a question
+// nobody can see. An entry of this journal's own is named at this journal's
+// address, since "here" means something else once it has arrived.
+//
+// What comes back is only whether it landed. Nothing says whether it was
+// read, and nothing ever will.
+//
+// A journal too old to have the route is told apart the way a wave tells it
+// (above): anything that is not JSON saying `ok: true` has not landed.
+// Nothing is kept on this side either way, so the sheet that called this is
+// where the words still are, and it says so.
+const TOO_OLD_FOR_WORDS = "Their journal is on an older version and can't take a message yet. Nothing was sent, and your words are still here.";
+const bare = host => String(host || '').replace(/^www\./, '');
+
+export async function send_message({ to, said, about = null, answering = '' }) {
+  const host = tidyJournal(to);
+  if (!host) return { ok: false, error: NO_ADDRESS };
+
+  const settings = await pull_settings();
+  const name = String(settings?.keeper_name || '').trim();
+  const mine = tidyJournal(settings?.site_address);
+  if (!mine) return { ok: false, error: NO_JOURNAL };
+  if (bare(host) === bare(mine)) return { ok: false, error: OWN };
+
+  const on = about && about.slug
+    ? {
+        journal: tidyJournal(about.journal) || mine,
+        slug: about.slug,
+        album: about.album || '',
+        artist: about.artist || '',
+        art: about.art || '',
+        song: about.song || '',
+      }
+    : null;
+
+  let answer;
+  try {
+    answer = await fetch(`${journalUrl(host)}/api/messages`, {
+      method: 'POST',
+      signal: AbortSignal.timeout(WAIT_MS),
+      headers: { 'content-type': 'application/json', accept: 'application/json' },
+      body: JSON.stringify({
+        journal: mine,
+        name,
+        said,
+        ...(on ? { about: on } : {}),
+        ...(answering ? { answering } : {}),
+      }),
+    });
+  } catch {
+    return { ok: false, error: 'Their copy did not answer. It may be offline — nothing was sent, and your words are still here.' };
+  }
+
+  const json = (answer.headers.get('content-type') || '').includes('application/json');
+  if (answer.status === 404 || !json) return { ok: false, old: true, error: TOO_OLD_FOR_WORDS };
+  let body = null;
+  try { body = await answer.json(); } catch { /* said it was JSON and was not */ }
+  if (answer.ok && body?.ok === true) return { ok: true };
+  const back = String(body?.error || '').trim();
+  return { ok: false, error: back || 'Their copy would not take the message.' };
+}
+

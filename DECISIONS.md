@@ -1377,14 +1377,21 @@ the saved notes.
 **An open row in the inbox is doors, 2026-09-28.** What was said, then a
 glyph over one word in a row, on the Friends pane's own classes. Miyel found
 the line naming the sender, the filled button and the column of sentences
-"too bulky ... too wordy". A door with nothing behind it is not drawn, and
-Visit steps aside where Read is: six is the most a phone's row holds. The
-state still chooses the first door; *the rest as quiet rows* above is retired.
+"too bulky ... too wordy". A door with nothing behind it is not drawn. A send
+leads to what its sender wrote, Read, wherever they have the record posted,
+and to their journal, Visit, only where they have not: never both.
 
-**Every row in the inbox carries its kind, 2026-09-28.** A mark in a column
-of its own before the cover: envelope, waving hand, round bubble, arrow
-turning back. A cover says what a row is about, not what it is. Miyel's pick
-over a badge on the cover's corner and a glyph in the small line.
+**Every row in the inbox carries its kind, 2026-09-28/29.** A mark in a
+column of its own before the cover: an envelope for anything written, a disc
+for a record sent and a note for a song, a waving hand, an arrow turning
+back. A cover says what a row is about, not what it is. Miyel's pick over a
+badge on the cover's corner, and her marks.
+
+**A message shows what it answers, greyed, and then the response,
+2026-09-29.** The keeper's own note, read off the entry, or the words a
+reply is replying to, which travel with it because no copy keeps what it
+sent. Three lines and the rest on a press. One line of context, not a
+thread: nothing stacks under it, and a message is still one arrival.
 
 **A send can start on the sender's own copy, and the visitor form stays,
 2026-09-16.** A keeper sends out of their own address book, through

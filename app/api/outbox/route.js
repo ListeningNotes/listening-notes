@@ -29,7 +29,8 @@
 
 import { requireWristband } from '@/library/wristband';
 import { pull_person } from '@/library/people_actions';
-import { send_record, send_wave } from '@/library/outbox';
+import { send_record, send_wave, send_message } from '@/library/outbox';
+import { SAID_MOST, ANSWERING_MOST, pull_message } from '@/library/message_actions';
 
 export async function POST(request) {
   const blocked = await requireWristband(request);
@@ -50,6 +51,61 @@ export async function POST(request) {
       const result = await send_wave({ to: person.address });
       if (!result.ok) return Response.json({ ok: false, old: result.old === true, error: result.error });
       return Response.json({ ok: true });
+    } catch (error) {
+      return Response.json({ ok: false, error: error.message }, { status: 500 });
+    }
+  }
+
+  // ── A message, 2026-09-29 ───────────────────────────────────────────────
+  // Words, to another keeper. Either a reply — `reply_to` names a message in
+  // this inbox, and who it goes to, what it is about and what it answers are
+  // all read off that row here, so a page says only which message and what
+  // to say — or a message from the address book, `person_id`, about nothing.
+  // The same answer shape as a send and a wave: the form prints what
+  // happened and keeps what was written.
+  if (body.message === true) {
+    const said = String(body.said ?? '').trim();
+    if (!said) return Response.json({ ok: false, error: 'Say something first.' }, { status: 400 });
+    if (said.length > SAID_MOST) {
+      return Response.json(
+        { ok: false, error: `That is longer than a message can be. It holds about ${SAID_MOST} characters, and nothing was sent.` },
+        { status: 400 },
+      );
+    }
+    try {
+      let to = '';
+      let name = '';
+      let about = null;
+      let answering = '';
+      if (body.reply_to) {
+        const id = Number(body.reply_to);
+        const row = Number.isInteger(id) && id > 0 ? await pull_message(id) : null;
+        if (!row) return Response.json({ ok: false, error: 'That message is no longer in your inbox.' }, { status: 404 });
+        if (!row.from_journal) return Response.json({ ok: false, error: 'They left no journal to reply to.' });
+        to = row.from_journal;
+        name = row.from_name || '';
+        about = row.about_slug
+          ? {
+              journal: row.about_journal || '',
+              slug: row.about_slug,
+              album: row.about_album,
+              artist: row.about_artist,
+              art: row.about_art,
+              song: row.about_song,
+            }
+          : null;
+        answering = String(row.said || '').trim().slice(0, ANSWERING_MOST);
+      } else if (body.person_id) {
+        const person = await pull_person(body.person_id);
+        if (!person) return Response.json({ ok: false, error: 'They are not in your address book.' }, { status: 404 });
+        to = person.address;
+        name = person.name || '';
+      } else {
+        return Response.json({ ok: false, error: 'Nobody was chosen.' }, { status: 400 });
+      }
+      const result = await send_message({ to, said, about, answering });
+      if (!result.ok) return Response.json({ ok: false, old: result.old === true, error: result.error });
+      return Response.json({ ok: true, to: name || null });
     } catch (error) {
       return Response.json({ ok: false, error: error.message }, { status: 500 });
     }

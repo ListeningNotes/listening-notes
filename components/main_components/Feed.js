@@ -267,7 +267,12 @@ function Face({ address }) {
 // reads here as no hearts rather than as an error.
 const heartsOf = entry => String(entry?.hearts || '');
 
-function Compared({ mine, theirs, name, closing = false }) {
+//
+// Exported for the inbox, 2026-09-29, where a message or a record that came
+// back offers the same comparison (the messages brief: the response this is
+// built for is another entry, shown against yours). `theirStars` draws their
+// stars over their horizon, for a row that does not already carry them.
+export function Compared({ mine, theirs, name, closing = false, theirStars = false }) {
   const yours = parseHorizon(mine.horizon);
   const hers = parseHorizon(theirs.horizon);
   const yourHearts = heartsOf(mine);
@@ -281,6 +286,11 @@ function Compared({ mine, theirs, name, closing = false }) {
 
   return (
     <div className={'fd-cmp' + (closing ? ' fd-cmp--shutting' : '')}>
+      {theirStars && theirs.rating_value !== null && theirs.rating_value !== undefined && theirs.rating_value !== '' && (
+        <div className="fd-cmp-stars fd-cmp-stars--theirs">
+          <StarRating rating={Number(theirs.rating_value)} size={17} />
+        </div>
+      )}
       {hers.length > 0 && (
         <div className="fd-cmp-bars fd-cmp-bars--theirs" aria-label={`How ${name} heard it, track by track`}>
           {hers.map((v, i) => (

@@ -64,6 +64,7 @@ export async function pull_came_back() {
     SELECT id, journal, slug, name, album, artist, album_art, rating,
            masterpiece, by_hand, posted_at, noticed_at, seen_at
     FROM came_back
+    WHERE dismissed_at IS NULL
     ORDER BY coalesce(posted_at, noticed_at) DESC
     LIMIT 60
   `;
@@ -91,6 +92,19 @@ export async function save_came_back(rows) {
     added += done.length;
   }
   return added;
+}
+
+// Dismissed: put away, and kept. The row cannot be deleted, because the
+// friend's feed it was noticed on goes on saying it, and the next sweep
+// would write it down again as new (migrations/028). Kept, the sweep finds
+// it already here and changes nothing.
+export async function dismiss_came_back(id) {
+  const [row] = await database`
+    UPDATE came_back SET dismissed_at = now(), seen_at = COALESCE(seen_at, now())
+    WHERE id = ${id} AND dismissed_at IS NULL
+    RETURNING id
+  `;
+  return row || null;
 }
 
 // Opened, so no longer new. Only the first opening is kept.

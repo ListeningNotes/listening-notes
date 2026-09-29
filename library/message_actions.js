@@ -20,6 +20,10 @@ import { tidyJournal } from './return_address.js';
 // problem report has, and for the same reason: it is a letter, not a file.
 export const SAID_MOST = 4000;
 
+// The most of what a message answers that travels with it: the greyed line
+// over a reply (migrations/028). Context for reading, not a copy.
+export const ANSWERING_MOST = 600;
+
 // How many the inbox reads. Dismissing deletes, so the list is only ever
 // what a keeper has not yet dealt with, and two hundred of those is a
 // backlog nobody scrolls.
@@ -77,7 +81,7 @@ export async function pull_messages() {
   return await database`
     SELECT m.id, m.from_name, m.from_journal, m.said,
            m.about_journal, m.about_slug, m.about_album, m.about_artist,
-           m.about_art, m.about_song,
+           m.about_art, m.about_song, m.answering, m.answering_name,
            m.was_comment, m.written_at, m.arrived_at, m.seen_at,
            (e.id IS NOT NULL) AS entry_here
     FROM messages m
@@ -85,6 +89,19 @@ export async function pull_messages() {
     ORDER BY m.arrived_at DESC, m.written_at DESC NULLS LAST, m.id DESC
     LIMIT ${MOST_READ}
   `;
+}
+
+// One, for writing back to: who it was from, what it was about and what it
+// said, read off the row on the server so a page is never trusted with
+// where a reply goes (app/api/outbox/route.js).
+export async function pull_message(id) {
+  const [row] = await database`
+    SELECT id, from_name, from_journal, said,
+           about_journal, about_slug, about_album, about_artist, about_art, about_song
+    FROM messages
+    WHERE id = ${id}
+  `;
+  return row || null;
 }
 
 // Keep one. `own` is this journal's address, tidied, or empty when it has
@@ -95,7 +112,12 @@ export async function pull_messages() {
 // and a cover, and what it prints should be what is in the journal. An
 // entry on somebody else's journal cannot be looked up from here, so what
 // their copy said about it is kept, tidied.
-export async function save_message({ from_name, from_journal, said, about, own = '' }) {
+//
+// `answering` is the words this message replies to, when it is a reply from
+// another keeper's copy: theirs to send, because this copy keeps no record
+// of what it sent. The route hands it over only for a journal that has been
+// asked whether it is there.
+export async function save_message({ from_name, from_journal, said, about, answering = null, own = '' }) {
   const words = String(said ?? '').trim();
   if (!words) throw new Error('Say something first.');
 
@@ -120,7 +142,8 @@ export async function save_message({ from_name, from_journal, said, about, own =
   const [row] = await database`
     INSERT INTO messages (
       from_name, from_journal, said,
-      about_journal, about_slug, about_album, about_artist, about_art, about_song
+      about_journal, about_slug, about_album, about_artist, about_art, about_song,
+      answering
     )
     VALUES (
       ${text(from_name, 120)},
@@ -131,7 +154,8 @@ export async function save_message({ from_name, from_journal, said, about, own =
       ${on?.album ?? null},
       ${on?.artist ?? null},
       ${on?.art ?? null},
-      ${on?.song ?? null}
+      ${on?.song ?? null},
+      ${text(answering, ANSWERING_MOST)}
     )
     RETURNING id, arrived_at
   `;

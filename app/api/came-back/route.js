@@ -8,9 +8,11 @@
 // names this one — and nothing is asked of those journals here: the browser
 // has already read their public feeds, and this copy only writes down what it
 // was shown (library/came_back_actions.js). PATCH carries an id and marks it
-// seen, which is the inbox's dot going out.
+// seen, which is the inbox's dot going out. DELETE carries an id and
+// dismisses it: the row is put away and kept, so the feed that noticed it
+// does not bring it back (migrations/028).
 import { requireWristband } from '@/library/wristband';
-import { pull_came_back, save_came_back, see_came_back } from '@/library/came_back_actions';
+import { pull_came_back, save_came_back, see_came_back, dismiss_came_back } from '@/library/came_back_actions';
 
 export async function GET(request) {
   const blocked = await requireWristband(request);
@@ -44,6 +46,22 @@ export async function PATCH(request) {
       return Response.json({ error: 'Which one?' }, { status: 400 });
     }
     await see_came_back(id);
+    return Response.json({ ok: true });
+  } catch (error) {
+    return Response.json({ error: error.message }, { status: 500 });
+  }
+}
+
+export async function DELETE(request) {
+  const blocked = await requireWristband(request);
+  if (blocked) return blocked;
+  try {
+    const body = await request.json().catch(() => ({}));
+    const id = Number(body?.id);
+    if (!Number.isInteger(id) || id < 1) {
+      return Response.json({ error: 'Which one?' }, { status: 400 });
+    }
+    await dismiss_came_back(id);
     return Response.json({ ok: true });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
