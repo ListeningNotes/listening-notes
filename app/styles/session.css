@@ -6,6 +6,9 @@
    the session follows the theme like every other page. */
 
 .ses {
+  /* The phone's status bar, as a number the page can read when it lifts a
+     note into view (app/session/page.js, raise). */
+  --ses-inset: env(safe-area-inset-top, 0px);
   min-height: 100dvh;
   background: var(--bg);
   color: var(--ink);
@@ -712,32 +715,53 @@
   color: var(--ink); text-wrap: balance; overflow-wrap: break-word; max-width: 30ch;
 }
 .ses-record-by { font-size: 15px; line-height: 1.4; color: var(--ink-soft); margin: 4px 0 0; }
-.ses-record-marks { display: flex; align-items: center; justify-content: center; gap: 18px; margin-top: 18px; }
-.ses-flag {
-  display: inline-flex; align-items: center; justify-content: center;
-  padding: 8px; margin: -8px -2px;
-  border: 0; background: none; color: var(--ink-faint); cursor: pointer;
-  -webkit-tap-highlight-color: transparent; transition: color 0.18s;
-}
-.ses-flag:hover { color: var(--ink-soft); }
-.ses-flag--fav.ses-flag--on { color: var(--fav); }
-.ses-flag--formative.ses-flag--on { color: var(--formative); }
-.ses-flag--mp { color: var(--mp, var(--accent)); cursor: default; }
+/* The stars on the centre line, and under them the marks as the old album
+   screen had them — a glyph over a word each, the one shape this software
+   uses to mean *here is something you can do* (Miyel, 2026-09-29: "let's
+   label favorite and formative"). Set, the mark fills and takes its own
+   colour and the word goes to ink; unset, both are faint. */
+.ses-record-marks { display: flex; align-items: center; justify-content: center; margin-top: 18px; }
+/* ── The three marks ───────────────────────────────────────────────────────
+   A glyph over a word, which is the one shape this software uses to mean
+   "here is something you can do" — an entry's ···, the address book's doors,
+   the band at the foot of the cross. They were pills at 12px until
+   2026-09-18, and a small glyph inside a bordered lozenge reads as a *tag*,
+   something describing the record, rather than as something to press. Miyel
+   was skipping them.
+
+   No container: a control is the mark, not a mark in a container (DECISIONS,
+   2026-09-17). What grew is the mark itself, from 12px to 24, and the row
+   still fits three on a 320px phone — 3 × 72 is 216 of 288. Measured.
+
+   Set, the mark fills and takes its own colour and the word goes to ink;
+   unset, both are faint. So the difference between a record you marked and
+   one you did not is a colour arriving, not a border changing weight. */
+/* Close under the stars, because they are one statement and not two. The row
+   read thin at 22px of air above it — two marks adrift in the middle of a
+   screen (Miyel, 2026-09-18: "it does look a little bit light"). The answer
+   was not a third mark to fill it out: what is above them is the score, and
+   what they are is the rest of the same sentence about the same record, so
+   they sit with it. Everything below still gets the rule and the full gap. */
 
 /* ── The album note ─────────────────────────────────────────────────────────
    A box of hairlines with rounded corners, so it is plainly a field; the
    question sits inside it as the placeholder. The field's own underline
    comes off inside the box. */
-.ses-album-box {
-  width: 100%; box-sizing: border-box; margin-top: 24px;
+.ses-note-box {
+  width: 100%; box-sizing: border-box;
   padding: 10px 16px 12px; text-align: left;
   border: 1px solid var(--border); border-radius: 14px;
   background: var(--panel);
   transition: border-color 0.15s;
 }
-.ses-album-box:focus-within { border-color: var(--ink-faint); }
-.ses-album-box .ses-textarea { border-bottom: 0; min-height: 0; padding: 4px 0; }
-.ses-album-box .ses-grow::after { padding: 4px 0; }
+.ses-note-box:focus-within { border-color: var(--ink-faint); }
+.ses-note-box .ses-textarea { border-bottom: 0; min-height: 0; padding: 4px 0; }
+.ses-note-box .ses-grow::after { padding: 4px 0; }
+.ses-album-box { margin-top: 24px; }
+/* A track's note: the same box, under the whole row, with the envelope in
+   its corner. The row wraps to make the room. */
+.ses-row-box { margin: 12px 0 4px; position: relative; padding-right: 44px; }
+.ses-row-send { position: absolute; right: 10px; bottom: 8px; }
 
 /* The offer under a track: the caption face at caption weight, and nothing
    about it that reads as a field. The padding is its touch target; the
@@ -766,7 +790,7 @@
 .ses-rows-disc { display: block; padding: 22px 20px 6px; }
 /* A row is about 58px shut: number, name, stars, heart. */
 .ses-row {
-  display: flex; align-items: center; gap: 12px;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
   padding: 12px 20px;
   border-bottom: 1px solid var(--border);
   transition: background 0.25s;
@@ -775,7 +799,7 @@
   flex: 0 0 22px; display: flex; align-items: center;
   font-family: var(--font-label); font-size: 11px; color: var(--ink-faint);
 }
-.ses-row-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
+.ses-row-main { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
 /* A shut row is one press, the row's whole width, that puts the song on air.
    A button in nothing but name: the row's own shape, no box. */
 .ses-row-press {
@@ -803,14 +827,6 @@
    across the row. The dot is the header's dot — listed beside it, so the two
    cannot come apart. */
 .ses-row--on { background: color-mix(in srgb, var(--live) 9%, transparent); }
-
-/* ── The note, under its row ──────────────────────────────────────────────
-   The field opens under the track being logged, two lines high, and the
-   envelope that sends the song stands at its foot. Only that row ever has
-   one. */
-.ses-row-field { width: 100%; margin-top: 4px; }
-.ses-row-field .ses-textarea { min-height: 0; font-size: 15px; }
-.ses-row-send { display: block; margin: 6px 0 0 auto; }
 
 /* ── The foot: Discard · Save draft · Preview ─────────────────────────────
    The entry's correction bar (.ln-editing-bar, entry.css) with three words.

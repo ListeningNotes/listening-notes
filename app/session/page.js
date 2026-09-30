@@ -206,7 +206,13 @@ export default function SessionPage() {
       const root = field.closest('.ses');
       const scroller = field.closest('.lay') || document.scrollingElement;
       const head = root.querySelector('.ses-head');
-      const under = head ? head.getBoundingClientRect().bottom : 0;
+      const under = Math.max(
+        head ? head.getBoundingClientRect().bottom : 0,
+        // No header now: the lift stops under the phone's status bar, which
+        // is where a row lifted to the very top went (Miyel's screenshot,
+        // 2026-09-29 — the track's name under the clock).
+        parseFloat(getComputedStyle(root).getPropertyValue('--ses-inset')) || 0,
+      );
       const above = field.closest('.ses-row') || field.closest('.ses-grow').previousElementSibling || field;
       const space = room || Math.round(window.innerHeight * 0.55);
       const at = tapY ?? field.getBoundingClientRect().top + 20;

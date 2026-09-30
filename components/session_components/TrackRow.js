@@ -107,31 +107,6 @@ export default function TrackRow({
             {note}
           </button>
         )}
-        {noting && (
-          <div className="ses-row-field">
-            {/* Grown by layout, never measured — see .ses-grow. */}
-            <div className="ses-grow" data-said={note + ' '}>
-              <textarea
-                ref={field}
-                className="ses-textarea"
-                value={note}
-                onChange={e => onNoteChange(e.target.value)}
-                // Left empty, the field shuts again; written in, the words
-                // stand where it was.
-                onBlur={() => { if (!note.trim()) onNoteShut(); }}
-                aria-label={`Notes on ${title}`}
-                rows={2}
-              />
-            </div>
-            {/* Send this song, at the foot of its note: you are already
-                looking at one song and thinking about it. */}
-            {onSend && (
-              <button type="button" className="ses-heart ses-row-send" onMouseDown={e => e.preventDefault()} onClick={onSend} aria-label={`Send ${title} to somebody`} title="Send this song">
-                <EnvelopeSimple size={18} weight="regular" aria-hidden="true" />
-              </button>
-            )}
-          </div>
-        )}
       </div>
 
       <div className="ses-row-marks">
@@ -151,6 +126,35 @@ export default function TrackRow({
           <Heart size={20} weight={favorite ? 'fill' : 'regular'} />
         </button>
       </div>
+
+      {/* The note, in the same box the album note is written in, under the
+          whole row (Miyel, 2026-09-29: "have the track notes match the
+          album notes — that box opens"). Grown by layout, never measured —
+          see .ses-grow. The envelope that sends the song stands in the
+          box's corner. */}
+      {noting && (
+        <div className="ses-note-box ses-row-box">
+          <div className="ses-grow" data-said={note + ' '}>
+            <textarea
+              ref={field}
+              className="ses-textarea"
+              value={note}
+              onChange={e => onNoteChange(e.target.value)}
+              // Left empty, the box shuts again; written in, the words stand
+              // where it was.
+              onBlur={() => { if (!note.trim()) onNoteShut(); }}
+              placeholder="Any notes on this track?"
+              aria-label={`Notes on ${title}`}
+              rows={3}
+            />
+          </div>
+          {onSend && (
+            <button type="button" className="ses-heart ses-row-send" onMouseDown={e => e.preventDefault()} onClick={onSend} aria-label={`Send ${title} to somebody`} title="Send this song">
+              <EnvelopeSimple size={18} weight="regular" aria-hidden="true" />
+            </button>
+          )}
+        </div>
+      )}
     </li>
   );
 }
