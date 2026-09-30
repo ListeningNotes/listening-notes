@@ -111,7 +111,14 @@ export default function StarRating({ value, onChange, size = 18, roomy = false, 
   };
   const move = e => {
     if (dragging) { set(e.clientX); return; }
-    const p = press.current;
+    let p = press.current;
+    // A press that was let go somewhere else never told this row: the row
+    // only hears a pointerup that lands on it. Left standing, the next mouse
+    // that merely crossed the row read as that press still travelling, and
+    // set the rating by passing over it — Miyel, 2026-09-30: "other tracks
+    // went down in rating when I didn't even click near them." A mouse with
+    // no button down is not pressing, whatever was remembered.
+    if (p && e.pointerType === 'mouse' && e.buttons === 0) { press.current = null; p = null; }
     if (p) {
       const dx = e.clientX - p.x;
       const dy = e.clientY - p.y;
@@ -152,7 +159,7 @@ export default function StarRating({ value, onChange, size = 18, roomy = false, 
       onPointerMove={move}
       onPointerUp={up}
       onPointerCancel={cancel}
-      onPointerLeave={() => setHover(null)}
+      onPointerLeave={() => { setHover(null); if (!dragging) press.current = null; }}
       onKeyDown={e => {
         // The keyboard gets the same half steps the finger does.
         if (e.key === 'ArrowRight') { e.preventDefault(); onChange(Math.min(5, (value || 0) + 0.5)); }

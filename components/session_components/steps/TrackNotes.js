@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 'use client';
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import HorizonChart from '../../main_components/HorizonChart';
 import TrackRow from '../TrackRow';
 
@@ -42,6 +42,46 @@ export default function TrackNotes({
   onHandTracks,
 }) {
   const list = tracks || [];
+
+  // ── One set of handlers for every row ───────────────────────────────────
+  // Each takes the row's place in the list, and none changes between
+  // renders, so a row whose own track did not change is not redrawn
+  // (TrackRow is memoised). Typing in one note used to redraw every row of
+  // the record on every key.
+  const press = useCallback(k => putOnAir?.(k), [putOnAir]);
+  const rate = useCallback((k, v) => { putOnAir?.(k); setTrackRatings(prev => ({ ...prev, [k]: v })); }, [putOnAir, setTrackRatings]);
+  const heart = useCallback(k => { putOnAir?.(k); setTrackFavorites(prev => ({ ...prev, [k]: !prev[k] })); }, [putOnAir, setTrackFavorites]);
+  const openNote = useCallback(k => { putOnAir?.(k); onOpenNote(k); }, [putOnAir, onOpenNote]);
+  const writeNote = useCallback((k, text) => setTrackNotes(prev => ({ ...prev, [k]: text })), [setTrackNotes]);
+
+  // ── A box shuts when the cursor leaves it — after the press is over ─────
+  // A box shutting takes its height with it, every row below moves up, and
+  // the row that was being pressed is no longer under the pointer: the press
+  // lands on nothing. So a cursor that left because something was pressed
+  // waits for that press to finish, and only then shuts what it left.
+  const pressing = useRef(false);
+  useEffect(() => {
+    const down = () => { pressing.current = true; };
+    const up = () => { pressing.current = false; };
+    window.addEventListener('pointerdown', down, true);
+    window.addEventListener('pointerup', up, true);
+    window.addEventListener('pointercancel', up, true);
+    return () => {
+      window.removeEventListener('pointerdown', down, true);
+      window.removeEventListener('pointerup', up, true);
+      window.removeEventListener('pointercancel', up, true);
+    };
+  }, []);
+  const shutNote = useCallback(() => {
+    if (!pressing.current) { onShutNote(); return; }
+    const after = () => {
+      window.removeEventListener('click', after, true);
+      window.removeEventListener('pointercancel', after, true);
+      setTimeout(onShutNote, 0);
+    };
+    window.addEventListener('click', after, true);
+    window.addEventListener('pointercancel', after, true);
+  }, [onShutNote]);
 
   // Typed in by hand, when there is no tracklist to be found. One title a
   // line, which is how anybody would write one out.
@@ -108,20 +148,20 @@ export default function TrackNotes({
         {list.map((t, k) => (
           <TrackRowWithDisc key={k} disc={discBreak[k] ? t.disc : null}>
             <TrackRow
-              number={t.number || k + 1}
-              title={t.title}
+              index={k}
+              track={t}
               rating={trackRatings[k] || 0}
               favorite={!!trackFavorites?.[k]}
               note={trackNotes[k] || ''}
               onAir={onAir === k}
               noting={noting === k}
-              onPress={() => putOnAir?.(k)}
-              onRate={v => { putOnAir?.(k); setTrackRatings(prev => ({ ...prev, [k]: v })); }}
-              onFavorite={() => { putOnAir?.(k); setTrackFavorites(prev => ({ ...prev, [k]: !prev[k] })); }}
-              onNote={() => onOpenNote(k)}
-              onNoteChange={text => setTrackNotes(prev => ({ ...prev, [k]: text }))}
-              onNoteShut={onShutNote}
-              onSend={onSend ? () => onSend(t) : null}
+              onPress={press}
+              onRate={rate}
+              onFavorite={heart}
+              onNote={openNote}
+              onNoteChange={writeNote}
+              onNoteShut={shutNote}
+              onSend={onSend}
             />
           </TrackRowWithDisc>
         ))}

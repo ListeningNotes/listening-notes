@@ -35,19 +35,32 @@
 // stars now tell a scroll from a tap from a drag themselves (StarRating.js),
 // which is the middle Miyel asked for — "sometimes I want to edit stars
 // without having to click the track."
+//
+// ── What a real listen found, 2026-09-30 ──────────────────────────────────
+// Miyel, from a desk, an hour into a record: the box stayed open on a track
+// after she had moved on; a finished note could only be shut by emptying it;
+// and with a list full of notes "it gets hard to open the notes to edit, or
+// click to a new track gets very slow". So: the box shuts when the cursor
+// leaves it and when the name is pressed again, and when another track
+// lights; a written note is a press on any row, lit or not; and the row is
+// memoised, so typing in one note redraws one row and not the record.
 'use client';
-import { useLayoutEffect, useRef } from 'react';
+import { memo, useLayoutEffect, useRef } from 'react';
 import { Heart } from '@phosphor-icons/react';
 import StarRating from './StarRating';
 import { colors } from '../../library/sitewide_visuals';
 
-export default function TrackRow({
-  number, title,
+// Every handler takes the row's place in the list, so the list can hand the
+// same functions to every row and a row that did not change is not redrawn.
+function TrackRow({
+  index, track,
   rating = 0, favorite = false, note = '',
   onAir = false,
   noting = false,
   onPress, onRate, onFavorite, onNote, onNoteChange, onNoteShut, onSend = null,
 }) {
+  const number = track.number || index + 1;
+  const title = track.title;
   const written = !!note.trim();
   const offered = onAir && !written && !noting;
 
@@ -70,26 +83,27 @@ export default function TrackRow({
           : number}
       </span>
 
-      {/* The name is the press that puts the song on air. A button in
-          nothing but name. */}
+      {/* The name is the press that puts the song on air — and, with its
+          note box open, the press that shuts the box. A button in nothing
+          but name. */}
       <button
         type="button"
         className="ses-row-name"
-        onClick={onPress}
+        onClick={() => (noting ? onNoteShut() : onPress(index))}
         aria-label={`${title}${onAir ? ', being logged' : ' — press to log this track'}`}
       >
         {title}
       </button>
 
       <div className="ses-row-marks">
-        <StarRating value={rating} onChange={onRate} size={16} roomy />
+        <StarRating value={rating} onChange={v => onRate(index, v)} size={16} roomy />
         {/* Favourite is deliberately separate from the rating — a song can
             be the one you keep returning to without being the best on the
             record. */}
         <button
           type="button"
           className="ses-heart"
-          onClick={onFavorite}
+          onClick={() => onFavorite(index)}
           title={favorite ? 'Remove from favourites' : 'Mark as a favourite song'}
           aria-label={favorite ? 'Remove from favourites' : 'Mark as a favourite song'}
           aria-pressed={favorite}
@@ -97,72 +111,62 @@ export default function TrackRow({
         >
           <Heart size={20} weight={favorite ? 'fill' : 'regular'} />
         </button>
-        {/* Send this song. Beside the heart on the track being logged, not
-            in its note box — Miyel, 2026-09-29: "some won't click that box
-            open." An envelope and not a paper plane, as the entry's own
-            Send is: a letter to one person. */}
       </div>
 
-      {/* Under the name, the row's whole width: the offer, the note, or
-          the box. In a wrapper of its own so the row's line above it — dot
-          or number, name, stars, heart — is never crowded by it. */}
-      {/* ── The line under a lit track: two words ─────────────────────────
-          *Add notes*, and *Send track*. Both in the caption face, centred under the row, both quiet — the
-          way this site says "here is something you can do" everywhere else,
-          in a word rather than a glyph. The envelope was tried beside the
-          heart (it moved the stars), at the end of this line, and under the
-          live dot, and none of them read right (Miyel, 2026-09-29: "I really
-          don't know"). A word cannot be mistaken for anything: it says Send track.
-          Once the note is written, the words stand under it. */}
-      {onAir && !noting && (
+      {/* ── The line under the name ──────────────────────────────────────
+          A written note, on any row: pressing it lights the track and opens
+          the box it was written in. On the lit track, two words under it —
+          *Add notes* (or *Edit notes*) and *Send track* — both in the
+          caption face, centred. The envelope was tried beside the heart (it
+          moved the stars), at the end of this line, and under the live dot,
+          and none read right; a word cannot be mistaken for anything. */}
+      {!noting && (written || onAir) && (
         <div className="ses-row-under">
           {written && (
-            <button type="button" className="ses-row-note" onClick={onNote} aria-label={`Notes on ${title}: ${note}. Press to edit`}>
+            <button type="button" className="ses-row-note" onClick={() => onNote(index)} aria-label={`Notes on ${title}: ${note}. Press to edit`}>
               {note}
             </button>
           )}
-          <div className="ses-row-doors">
-            <button type="button" className="ses-row-offer" onClick={onNote}>
-              {written ? 'Edit notes' : 'Add notes'}
-            </button>
-            {onSend && (
-              <button type="button" className="ses-row-offer" onClick={onSend} aria-label={`Send ${title} to somebody`}>
-                Send track
+          {onAir && (
+            <div className="ses-row-doors">
+              <button type="button" className="ses-row-offer" onClick={() => onNote(index)}>
+                {offered ? 'Add notes' : 'Edit notes'}
               </button>
-            )}
-          </div>
-        </div>
-      )}
-      {!onAir && written && (
-        <div className="ses-row-under">
-          <span className="ses-row-note">{note}</span>
+              {onSend && (
+                <button type="button" className="ses-row-offer" onClick={() => onSend(track)} aria-label={`Send ${title} to somebody`}>
+                  Send track
+                </button>
+              )}
+            </div>
+          )}
         </div>
       )}
 
       {/* The note, in the same box the album note is written in, under the
           whole row (Miyel, 2026-09-29: "have the track notes match the
           album notes — that box opens"). Grown by layout, never measured —
-          see .ses-grow. */}
+          see .ses-grow. It shuts when the cursor leaves it: empty, the row
+          goes back to offering; written, the words stand where it was. */}
       {noting && (
         <div className="ses-row-under ses-row-under--box">
-        <div className="ses-note-box ses-row-box">
-          <div className="ses-grow" data-said={note + ' '}>
-            <textarea
-              ref={field}
-              className="ses-textarea"
-              value={note}
-              onChange={e => onNoteChange(e.target.value)}
-              // Left empty, the box shuts again; written in, the words stand
-              // where it was.
-              onBlur={() => { if (!note.trim()) onNoteShut(); }}
-              placeholder="Notes on this track"
-              aria-label={`Notes on ${title}`}
-              rows={3}
-            />
+          <div className="ses-note-box ses-row-box">
+            <div className="ses-grow" data-said={note + ' '}>
+              <textarea
+                ref={field}
+                className="ses-textarea"
+                value={note}
+                onChange={e => onNoteChange(index, e.target.value)}
+                onBlur={onNoteShut}
+                placeholder="Notes on this track"
+                aria-label={`Notes on ${title}`}
+                rows={3}
+              />
+            </div>
           </div>
-        </div>
         </div>
       )}
     </li>
   );
 }
+
+export default memo(TrackRow);
