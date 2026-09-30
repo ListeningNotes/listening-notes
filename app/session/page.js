@@ -201,7 +201,7 @@ export default function SessionPage() {
       const scroller = field.closest('.lay') || document.scrollingElement;
       const head = root.querySelector('.ses-head');
       const under = head ? head.getBoundingClientRect().bottom : 0;
-      const above = field.closest('.ses-grow').previousElementSibling || field;
+      const above = field.closest('.ses-row') || field.closest('.ses-grow').previousElementSibling || field;
       const space = room || Math.round(window.innerHeight * 0.55);
       const at = tapY ?? field.getBoundingClientRect().top + 20;
       let by = above.getBoundingClientRect().top - (under + 10);
