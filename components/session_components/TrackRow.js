@@ -64,10 +64,19 @@ export default function TrackRow({
 
   return (
     <li className={'ses-row' + (onAir ? ' ses-row--on' : '')}>
-      <span className="ses-row-n">
+      {/* The number, or on the lit row the live dot with the envelope that
+          sends the song under it — in the gutter, on its own, where it reads
+          as its own thing and not as part of *Add notes* (Miyel,
+          2026-09-29). Nothing on the row's first line moves when it lights. */}
+      <span className={'ses-row-n' + (onAir ? ' ses-row-n--lit' : '')}>
         {onAir
           ? <span className="ses-row-dot" role="img" aria-label="Being logged" />
           : number}
+        {onAir && onSend && (
+          <button type="button" className="ses-heart ses-row-send" onClick={onSend} aria-label={`Send ${title} to somebody`} title="Send this song">
+            <EnvelopeSimple size={18} weight="regular" aria-hidden="true" />
+          </button>
+        )}
       </span>
 
       {/* The name is the press that puts the song on air. A button in
@@ -106,11 +115,6 @@ export default function TrackRow({
       {/* Under the name, the row's whole width: the offer, the note, or
           the box. In a wrapper of its own so the row's line above it — dot
           or number, name, stars, heart — is never crowded by it. */}
-      {/* The envelope that sends the song stands at the right of that line,
-          not beside the heart: there it pushed the stars left the moment a
-          row was pressed, "and the stars moving doesn't feel right" (Miyel,
-          2026-09-29). Here nothing on the row's first line moves when it
-          lights. Off the line while the box is open, which has the width. */}
       {onAir && !noting && (
         <div className="ses-row-under">
           {offered && (
@@ -121,11 +125,6 @@ export default function TrackRow({
           {written && (
             <button type="button" className="ses-row-note" onClick={onNote} aria-label={`Notes on ${title}: ${note}. Press to edit`}>
               {note}
-            </button>
-          )}
-          {onSend && (
-            <button type="button" className="ses-heart ses-row-send" onClick={onSend} aria-label={`Send ${title} to somebody`} title="Send this song">
-              <EnvelopeSimple size={18} weight="regular" aria-hidden="true" />
             </button>
           )}
         </div>
@@ -152,7 +151,7 @@ export default function TrackRow({
               // Left empty, the box shuts again; written in, the words stand
               // where it was.
               onBlur={() => { if (!note.trim()) onNoteShut(); }}
-              placeholder="What this one did…"
+              placeholder="Notes on this track"
               aria-label={`Notes on ${title}`}
               rows={3}
             />
