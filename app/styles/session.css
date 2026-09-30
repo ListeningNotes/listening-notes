@@ -860,11 +860,10 @@
 .ses-row-n, .ses-row-marks { margin-top: 1px; }
 /* Under the name, the row's whole width, indented to the name's edge: the
    offer, the note, the box. Its own line, always. */
-.ses-row-under { flex: 1 1 100%; min-width: 0; margin: -6px 0 0 34px; display: flex; align-items: flex-start; gap: 12px; }
-.ses-row-under > .ses-row-note, .ses-row-under > .ses-row-offer { flex: 1 1 auto; min-width: 0; }
-/* The lit row's gutter: the dot, and the envelope under it. */
-.ses-row-n--lit { flex-direction: column; align-items: center; gap: 12px; align-self: flex-start; margin-top: 8px; }
-.ses-row-send { padding: 6px; margin: 0 -6px; }
+.ses-row-under { flex: 1 1 100%; min-width: 0; margin: -6px 0 0 34px; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.ses-row-under > .ses-row-note { width: 100%; }
+/* The two words under a lit track, a thumb's width apart. */
+.ses-row-doors { display: flex; align-items: center; gap: 28px; }
 .ses-row-under--box { margin-top: 6px; }
 /* The name is the press that puts the song on air. A button in nothing but
    name: the title's own face, no box. */

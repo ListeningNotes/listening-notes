@@ -37,7 +37,7 @@
 // without having to click the track."
 'use client';
 import { useLayoutEffect, useRef } from 'react';
-import { EnvelopeSimple, Heart } from '@phosphor-icons/react';
+import { Heart } from '@phosphor-icons/react';
 import StarRating from './StarRating';
 import { colors } from '../../library/sitewide_visuals';
 
@@ -64,19 +64,10 @@ export default function TrackRow({
 
   return (
     <li className={'ses-row' + (onAir ? ' ses-row--on' : '')}>
-      {/* The number, or on the lit row the live dot with the envelope that
-          sends the song under it — in the gutter, on its own, where it reads
-          as its own thing and not as part of *Add notes* (Miyel,
-          2026-09-29). Nothing on the row's first line moves when it lights. */}
-      <span className={'ses-row-n' + (onAir ? ' ses-row-n--lit' : '')}>
+      <span className="ses-row-n">
         {onAir
           ? <span className="ses-row-dot" role="img" aria-label="Being logged" />
           : number}
-        {onAir && onSend && (
-          <button type="button" className="ses-heart ses-row-send" onClick={onSend} aria-label={`Send ${title} to somebody`} title="Send this song">
-            <EnvelopeSimple size={18} weight="regular" aria-hidden="true" />
-          </button>
-        )}
       </span>
 
       {/* The name is the press that puts the song on air. A button in
@@ -115,18 +106,31 @@ export default function TrackRow({
       {/* Under the name, the row's whole width: the offer, the note, or
           the box. In a wrapper of its own so the row's line above it — dot
           or number, name, stars, heart — is never crowded by it. */}
+      {/* ── The line under a lit track: two words ─────────────────────────
+          *Add notes*, and *Send*. Both in the caption face, both quiet — the
+          way this site says "here is something you can do" everywhere else,
+          in a word rather than a glyph. The envelope was tried beside the
+          heart (it moved the stars), at the end of this line, and under the
+          live dot, and none of them read right (Miyel, 2026-09-29: "I really
+          don't know"). A word cannot be mistaken for anything: it says Send.
+          Once the note is written, the words stand under it. */}
       {onAir && !noting && (
         <div className="ses-row-under">
-          {offered && (
-            <button type="button" className="ses-row-offer" onClick={onNote}>
-              Add notes
-            </button>
-          )}
           {written && (
             <button type="button" className="ses-row-note" onClick={onNote} aria-label={`Notes on ${title}: ${note}. Press to edit`}>
               {note}
             </button>
           )}
+          <div className="ses-row-doors">
+            <button type="button" className="ses-row-offer" onClick={onNote}>
+              {written ? 'Edit notes' : 'Add notes'}
+            </button>
+            {onSend && (
+              <button type="button" className="ses-row-offer" onClick={onSend} aria-label={`Send ${title} to somebody`}>
+                Send
+              </button>
+            )}
+          </div>
         </div>
       )}
       {!onAir && written && (
