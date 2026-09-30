@@ -819,14 +819,13 @@
 .ses-album-box { margin-top: 24px; }
 /* A track's note: the same box, under the whole row. The row wraps to make
    the room. */
-.ses-row-box.ses-row-under { margin: 8px 0 4px 34px; width: auto; flex-basis: calc(100% - 34px); }
+.ses-row-box { margin: 0 0 4px; }
 
 /* The offer under a track: the caption face at caption weight, and nothing
    about it that reads as a field. The padding is its touch target; the
    margin gives the room back. */
 .ses-row-offer {
-  display: inline-block; padding: 10px 8px; margin: -10px -8px;
-  align-self: flex-start; flex: 0 0 auto; min-width: 0;
+  display: inline-block; padding: 10px 8px; margin: -6px -8px -10px;
   border: 0; background: none; cursor: pointer;
   font-family: var(--font-label); font-size: 12px; letter-spacing: 0.06em;
   color: var(--ink-faint); text-align: left;
@@ -855,24 +854,21 @@
   flex: 0 0 22px; display: flex; align-items: center;
   font-family: var(--font-label); font-size: 11px; color: var(--ink-faint);
 }
-/* The name takes the line; the stars and the heart hold to that line
-   whatever comes under it. */
-.ses-row-name { flex: 1 1 0; min-width: 0; }
+/* The name takes the line, wrapping at its spaces; the stars and the heart
+   hold to that line whatever comes under it. */
+.ses-row-name { flex: 1 1 0%; min-width: 0; }
 .ses-row-n, .ses-row-marks { margin-top: 1px; }
 /* Under the name, the row's whole width, indented to the name's edge: the
-   offer, the note, the box. */
-.ses-row-under { flex: 1 1 100%; margin-top: -4px; }
-/* Each thing that goes under has a margin of its own above; these win by
-   being two classes, and set the indent for each. */
-.ses-row-note.ses-row-under { width: auto; margin: -2px 0 0 34px; }
-.ses-row-offer.ses-row-under { flex: 0 0 auto; margin: -12px 0 0 26px; }
+   offer, the note, the box. Its own line, always. */
+.ses-row-under { flex: 1 1 100%; min-width: 0; margin: -6px 0 0 34px; }
+.ses-row-under--box { margin-top: 6px; }
 /* The name is the press that puts the song on air. A button in nothing but
    name: the title's own face, no box. */
 .ses-row-name {
   display: block; padding: 4px 0; margin: -4px 0;
   border: 0; background: none; cursor: pointer; text-align: left;
   font-family: var(--font-display); font-weight: var(--font-display-weight);
-  font-size: 16px; line-height: 1.3; color: var(--ink); overflow-wrap: anywhere;
+  font-size: 16px; line-height: 1.3; color: var(--ink); overflow-wrap: break-word;
   -webkit-tap-highlight-color: transparent;
 }
 /* The note, on the row, at the size a note is written in. Pressing it opens

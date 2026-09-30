@@ -108,15 +108,22 @@ export default function TrackRow({
         )}
       </div>
 
+      {/* Under the name, the row's whole width: the offer, the note, or
+          the box. In a wrapper of its own so the row's line above it — dot
+          or number, name, stars, heart — is never crowded by it. */}
       {offered && (
-        <button type="button" className="ses-row-offer ses-row-under" onClick={onNote}>
-          Add notes
-        </button>
+        <div className="ses-row-under">
+          <button type="button" className="ses-row-offer" onClick={onNote}>
+            Add notes
+          </button>
+        </div>
       )}
       {written && !noting && (
-        <button type="button" className="ses-row-note ses-row-under" onClick={onNote} aria-label={`Notes on ${title}: ${note}. Press to edit`}>
-          {note}
-        </button>
+        <div className="ses-row-under">
+          <button type="button" className="ses-row-note" onClick={onNote} aria-label={`Notes on ${title}: ${note}. Press to edit`}>
+            {note}
+          </button>
+        </div>
       )}
 
       {/* The note, in the same box the album note is written in, under the
@@ -124,7 +131,8 @@ export default function TrackRow({
           album notes — that box opens"). Grown by layout, never measured —
           see .ses-grow. */}
       {noting && (
-        <div className="ses-note-box ses-row-box ses-row-under">
+        <div className="ses-row-under ses-row-under--box">
+        <div className="ses-note-box ses-row-box">
           <div className="ses-grow" data-said={note + ' '}>
             <textarea
               ref={field}
@@ -139,6 +147,7 @@ export default function TrackRow({
               rows={3}
             />
           </div>
+        </div>
         </div>
       )}
     </li>

@@ -270,6 +270,16 @@ export default async function RootLayout({ children, layer }) {
   return (
     <html lang="en" suppressHydrationWarning data-theme={theme} className={`${nunito.variable} ${dmMono.variable}`}>
       <body>
+        {/* ── The brow, 2026-09-29 ──────────────────────────────────────
+            A band as tall as the phone's status bar and no taller, over
+            everything, in the page's own colour: what scrolls up goes under
+            it instead of behind the clock. Miyel: "the whole site needs a
+            header — I don't like when everything passes behind the clock
+            and the stuff at the top of my iPhone." Every page still keeps
+            its own inset for where its content starts; this is only what
+            the content passes under. Nothing on a desk, where the inset is
+            zero and the band has no height. */}
+        <div className="ln-brow" aria-hidden="true" />
         <script
           suppressHydrationWarning
           dangerouslySetInnerHTML={{
