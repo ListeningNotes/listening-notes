@@ -2029,8 +2029,10 @@ in the album note's own box under the row; the eye beside the album's stars
 reveals the tracks' average with "avg." after it.
 
 **A brow the height of the status bar stands over every page, 2026-09-29.**
-Solid, the page's colour, a hairline at its foot, no blur; what scrolls goes
-under it rather than behind the clock. Nothing where the inset is zero.
+Solid, the page's colour, no blur and no hairline; what scrolls goes under
+it rather than behind the clock. It is sixteen short of the inset, because
+that is where the site's fixed rows start (`--safe-top`); at the inset's
+full height it cut their tops off. Nothing where the inset is zero.
 
 **Discard · Save draft · Preview at the foot; on a desk, in a row at the
 top.** Discard asks twice. Save draft is the pull down as a word: the draft

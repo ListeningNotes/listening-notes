@@ -49,7 +49,7 @@
 // where the nav row sits — is CSS scoped to the layer.
 
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { CaretLeft } from '@phosphor-icons/react';
 import { useListeningSession, SESSION_STEPS, PENDING_KEY, TRACK_NOTE_KEY, saidSoAboutTheDesk, saidSoAboutTheEntry } from '../../hooks/useListeningSession';
@@ -140,6 +140,15 @@ export default function SessionPage() {
   // Which track's field is open, or null. One at a time; it shuts when it is
   // left empty (TrackRow.js) or when another track's opens.
   const [noting, setNoting] = useState(null);
+  const shutNote = useCallback(() => setNoting(null), []);
+  // Lighting a track shuts the box on any other: the field follows the song
+  // being logged and is never left open behind it (found in a real listen,
+  // 2026-09-30 — a box still open on track eight with track nine lit).
+  const putOnAir = s.putOnAir;
+  const light = useCallback(k => {
+    putOnAir(k);
+    setNoting(open => (open === k ? open : null));
+  }, [putOnAir]);
 
   // The tracks' average, behind a press under the album's stars. Kept here
   // because the ratings it is made of live in the list below.
@@ -156,7 +165,6 @@ export default function SessionPage() {
   // it — the sheet is a popup over this page and the draft goes on saving
   // itself underneath, so nothing is saved, paused or lost by sending.
   const [sendingTrack, setSendingTrack] = useState(null);
-  function sendTrack(track) { setSendingTrack(track); }
 
   // ── The note comes up to meet the keyboard, 2026-09-22 ──────────────────
   // Miyel: "it still feels weird when I open the keyboard — it glitches just
@@ -768,12 +776,12 @@ export default function SessionPage() {
                 trackNotes={s.trackNotes}
                 trackRatings={s.trackRatings} setTrackRatings={s.setTrackRatings}
                 trackFavorites={s.trackFavorites} setTrackFavorites={s.setTrackFavorites}
-                onAir={s.onAir} putOnAir={s.putOnAir}
+                onAir={s.onAir} putOnAir={light}
                 noting={noting}
                 onOpenNote={setNoting}
                 setTrackNotes={s.setTrackNotes}
-                onShutNote={() => setNoting(null)}
-                onSend={sendTrack}
+                onShutNote={shutNote}
+                onSend={setSendingTrack}
                 onLookAgain={s.lookAgain}
                 onHandTracks={s.takeHandTracks}
               />

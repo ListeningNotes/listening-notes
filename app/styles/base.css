@@ -692,14 +692,17 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
    the last thing on top. No height at all where there is no inset. */
 .ln-brow {
   position: fixed; top: 0; left: 0; right: 0;
-  height: env(safe-area-inset-top, 0px);
+  /* Sixteen short of the inset, which is where this site has always started
+     its fixed rows: --safe-top, above, lands them at inset minus 16 — the
+     buffer Apple builds into the number — so a band the inset's full height
+     cut the top off every one of them (Miyel's screenshot of an entry,
+     2026-09-30: the cover in the pinned strip with its head under the band).
+     The band ends exactly where those rows begin. */
+  height: max(0px, calc(env(safe-area-inset-top, 0px) - 16px));
   z-index: 1000;
   pointer-events: none;
-  /* Solid, and a hairline at its foot so it reads as a band and not as a
-     smear. No blur: Miyel, "I don't like any blur. I just want it to be a
-     solid line." */
-  /* The hairline is painted inside the band's own height rather than as a
-     border, so where the inset is zero — a desk — nothing at all is drawn. */
-  background: linear-gradient(to top, var(--border) 1px, var(--bg) 1px);
+  /* Solid, the page's colour, and no edge of its own — no blur and no
+     hairline (Miyel). It is the page continuing up under the clock. */
+  background: var(--bg);
 }
 
