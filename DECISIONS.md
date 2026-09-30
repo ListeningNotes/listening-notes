@@ -1998,7 +1998,7 @@ the mini beacon header went with it. The reversed entries and the day of
 trials are in the archive; do not bring the screens back a third time.
 
 **An empty note field is closed.** *Add notes* under the track being
-logged, and under the album note's label, until it is pressed; the writing
+logged until it is pressed; the album note is a box that is always open; the writing
 once there is any; nothing under any other track. The session offers rather
 than asks.
 
@@ -2015,6 +2015,22 @@ pressed, a star, the heart, its note opened — "any sort of click on a track
 counts as lighting it as live". Its number gives way to the live dot and the
 row takes the faintest green, and *Any notes?* stands under that track alone.
 Nothing about the beacon changes.
+
+**The stars tell a scroll from a tap from a drag, 2026-09-29.** Nothing is
+set on the way down: up-and-down is the page's, sideways is the rating,
+still is a tap. Every row's stars are live because of it. The lock — a row
+dead until pressed — was tried for an hour and was "super awkward" the other
+way.
+
+**Under a lit track, two words: Add notes and Send track, centred.** A word,
+not the envelope: it was tried beside the heart (it moved the stars), at the
+end of the line, and under the live dot, and none read right. The note opens
+in the album note's own box under the row; the eye beside the album's stars
+reveals the tracks' average with "avg." after it.
+
+**A brow the height of the status bar stands over every page, 2026-09-29.**
+Solid, the page's colour, a hairline at its foot, no blur; what scrolls goes
+under it rather than behind the clock. Nothing where the inset is zero.
 
 **Discard · Save draft · Preview at the foot; on a desk, in a row at the
 top.** Discard asks twice. Save draft is the pull down as a word: the draft
