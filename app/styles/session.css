@@ -332,7 +332,12 @@
   padding: 6px 0;
   border-bottom: 1px solid transparent;
 }
-@media (pointer: coarse) { .ses-grow::after { font-size: 16px; } }
+/* The copy follows the field's type exactly, or the box is a line short of
+   its writing. The field is 16px on a touch screen (above) and also in any
+   window under 769px, where base.css sets every field to 16px to stop iOS
+   zooming — so a narrow window with a mouse, which is a preview pane, got a
+   16px field over a 15px copy and lost its last line. */
+@media (pointer: coarse), (max-width: 768px) { .ses-grow::after { font-size: 16px; } }
 .ses-field { display: flex; flex-direction: column; gap: 7px; }
 .ses-field--year { max-width: 150px; }
 

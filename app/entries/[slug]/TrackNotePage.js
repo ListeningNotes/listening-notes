@@ -17,10 +17,14 @@
 // ── One card ──────────────────────────────────────────────────────────────
 // About a third the height of an album entry: the cover with its folded
 // corner, and beside it the song, `album · artist`, the stars and the date,
-// the pair on the middle of the page. No heart, from 2026-09-26 (Miyel): a
-// song you wrote a note about is already the one you cared about. The
-// `favorite` column is still saved, false, and read by nothing here — the
-// way back is a button, not a migration. Under it, for the keeper
+// the pair on the middle of the page. The heart came off on 2026-09-26 (a
+// song you wrote a note about is already the one you cared about) and came
+// back on 2026-09-30 with Formative beside it, on Miyel's word after writing
+// about a song that shaped her: "we have to add formative and favorite to
+// single track posts, it just feels right… I do want to make this one
+// formative. I think it matters." Both are the album entry's own columns and
+// its own chips. Masterpiece stays the album's: it is a tracklist of fives.
+// Under it, for the keeper
 // only, Listen to the full album, which starts an ordinary listen of the
 // album — plain words, underlined like the link it is, with a play mark;
 // never a pill (Miyel does not like them). Then the note, read left to right
@@ -40,19 +44,28 @@
 // ── Three ways it is drawn ────────────────────────────────────────────────
 // Read, at its own address or as a layer over the journal — page.js and the
 // @layer route hand a row with a song here instead of to FullPostPage.
-// Corrected, from the ···: the same card, with the stars, the heart and the
+// Corrected, from the ···: the same card, with the stars, the marks and the
 // note turned into their own controls in place, the rule every editor on this
 // site keeps. And written for the first time, from the picker's Songs
 // section, on the listen's sheet (app/session/page.js): the same card again,
 // before it exists, with Save on the editing bar. What is written there is
 // kept in the browser, per song, as it is typed — a sheet pulled down never
 // eats a note (TRACK_NOTE_WRITING).
+//
+// ── Written as a listen is written, 2026-09-30 ────────────────────────────
+// While it is being written or corrected the card takes the album listen's
+// shape (steps/AlbumNotes.js): the cover, the song and its record on the
+// centre line, the stars under them, Favorite and Formative as a glyph over
+// a word, and the note in the same box of hairlines — grown by layout, never
+// by script, which is what stops the page jumping under the keyboard as the
+// note gets longer. Miyel: "the single track doesn't follow the look of the
+// album listen. Let's bring it up to speed."
 
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createPortal } from 'react-dom';
-import { Play, VinylRecord } from '@phosphor-icons/react';
+import { Fingerprint, Heart, Play, VinylRecord } from '@phosphor-icons/react';
 import { parseRating, editStamp, lookup_key } from '../../../library/entry_formatter';
 import { tidyAddress } from '../../../library/return_address';
 import SiteNav from '../../../components/main_components/SiteNav';
@@ -67,13 +80,14 @@ import SenderTool from '../../../components/main_components/Slug_Page/SenderTool
 import SendSheet from '../../../components/main_components/SendSheet';
 import StarRating from '../../../components/main_components/StarRating';
 import StarPicker from '../../../components/session_components/StarRating';
+import Chip from '../../../components/main_components/Slug_Page/Chip';
 import { useBookplate } from '../../../components/main_components/Bookplate';
 import { useTheme } from '../../../components/main_components/Lightswitch';
 import { useEntryEditor } from '../../../hooks/useEntryEditor';
 import { PENDING_KEY, TRACK_NOTE_KEY, TRACK_NOTE_WRITING, saidSoAboutTheDesk } from '../../../hooks/useListeningSession';
 
 const COVER_LABELS = { toCode: 'Show the code for this entry', toPicture: 'Show the cover' };
-const NOTHING_WRITTEN = { rating: 0, favorite: false, note: '' };
+const NOTHING_WRITTEN = { rating: 0, favorite: false, formative: false, note: '' };
 
 // `entry` is the row, or — while `writing` — the song as the picker handed
 // it over, shaped like one: song, album, artist, year, genre, album_art.
@@ -109,7 +123,13 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
       if (kept) return { ...NOTHING_WRITTEN, ...kept };
     } catch { /* no browser copy; the draft, if there is one */ }
     return entry.written
-      ? { ...NOTHING_WRITTEN, rating: Number(entry.written.rating) || 0, note: entry.written.note || '' }
+      ? {
+          ...NOTHING_WRITTEN,
+          rating: Number(entry.written.rating) || 0,
+          note: entry.written.note || '',
+          favorite: entry.written.favorite === true,
+          formative: entry.written.formative === true,
+        }
       : NOTHING_WRITTEN;
   });
   // Every change goes into the browser as it happens, and a note taken back
@@ -135,6 +155,7 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
     song: entry.song, album: entry.album, artist: entry.artist || '',
     year: entry.year || '', genre: entry.genre || '', album_art: entry.album_art || '',
     collection_id: entry.collection_id || '', rating: written.rating, notes: written.note,
+    favorite: written.favorite === true, formative: written.formative === true,
   });
   const openedWith = useRef(draftBody);
   const unsent = useRef(null);
@@ -234,6 +255,14 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
   }, [headerSlot]);
 
   const rating = writing ? written.rating : parseRating(correcting ? edit.draft.rating : entry.rating);
+  // The two marks, from wherever they are being kept: the browser's copy
+  // while a note is first written, the editor's draft while one is being
+  // corrected, the row otherwise.
+  const truthy = v => v === true || v === 'true';
+  const isFavorite = writing ? written.favorite === true : correcting ? edit.draft.favorite === true : truthy(entry.favorite);
+  const isFormative = writing ? written.formative === true : correcting ? edit.draft.formative === true : truthy(entry.formative);
+  const setMark = (key, on) => (writing ? setWritten(w => ({ ...w, [key]: on })) : edit.set(key, on));
+  const composing = writing || correcting;
   const note = writing ? written.note : correcting ? edit.draft.notes : (entry.notes || '');
   const postedOn = entry.posted_at
     ? new Date(entry.posted_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
@@ -267,7 +296,7 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
   );
 
   return (
-    <div className={'ln-entry tn' + (writing ? ' tn--writing' : '')}>
+    <div className={'ln-entry tn' + (writing ? ' tn--writing' : '') + (composing ? ' tn--composing' : '')}>
       {headerSlot ? createPortal(chrome, headerSlot) : chrome}
 
       {/* The scroller the layer asks about before a pull closes it, the same
@@ -306,19 +335,56 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
               <h1 className="tn-song">{entry.song}</h1>
               <p className="tn-record">{[entry.album, entry.artist].filter(Boolean).join(' · ')}</p>
               <div className="tn-marks">
-                {writing || correcting ? (
+                {composing ? (
                   <StarPicker
                     value={rating}
                     onChange={v => (writing ? setWritten(w => ({ ...w, rating: v })) : edit.set('rating', String(v)))}
-                    size={22}
+                    size={26}
+                    roomy
                   />
                 ) : (
                   rating > 0 && <StarRating rating={rating} size={17} />
                 )}
               </div>
+              {/* Read: the two marks as the chips an album entry wears. */}
+              {!composing && (isFavorite || isFormative) && (
+                <div className="tn-chips">
+                  {isFavorite && <Chip tone="fav">Favorite</Chip>}
+                  {isFormative && <Chip tone="formative">Formative</Chip>}
+                </div>
+              )}
               {!writing && postedOn && <p className="tn-posted">Posted {postedOn}</p>}
             </div>
           </div>
+
+          {/* Written or corrected: the marks as a listen sets them, a glyph
+              over a word each, under the stars (.ses-marks, session.css). */}
+          {composing && (
+            <div className="ses-marks tn-set-marks">
+              <button
+                type="button"
+                className={'ses-mark ses-mark--fav' + (isFavorite ? ' ses-mark--on' : '')}
+                onClick={() => setMark('favorite', !isFavorite)}
+                aria-pressed={isFavorite}
+                title="A song you love"
+              >
+                <Heart size={24} weight={isFavorite ? 'fill' : 'regular'} aria-hidden="true" />
+                <span className="ses-mark-word">Favorite</span>
+              </button>
+              <button
+                type="button"
+                className={'ses-mark ses-mark--formative' + (isFormative ? ' ses-mark--on' : '')}
+                onClick={() => setMark('formative', !isFormative)}
+                aria-pressed={isFormative}
+                title="A song that made you"
+              >
+                {/* Bold, not fill: the filled fingerprint is a solid pad with
+                    the ridges knocked out of it. */}
+                <Fingerprint size={24} weight={isFormative ? 'bold' : 'regular'} aria-hidden="true" />
+                <span className="ses-mark-word">Formative</span>
+              </button>
+            </div>
+          )}
 
           {/* Who put you onto it — the line, or the tool while it is open, in
               the one place its answer prints. */}
@@ -366,16 +432,27 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
           )}
 
           <div className="tn-body">
-            {writing || correcting ? (
-              <textarea
-                className="ln-write tn-write"
-                value={note}
-                onChange={e => (writing ? setWritten(w => ({ ...w, note: e.target.value })) : edit.set('notes', e.target.value))}
-                onInput={e => { e.currentTarget.style.height = 'auto'; e.currentTarget.style.height = `${e.currentTarget.scrollHeight}px`; }}
-                ref={el => { if (el) { el.style.height = 'auto'; el.style.height = `${el.scrollHeight}px`; } }}
-                placeholder="Notes for this track…"
-                aria-label={`Note on ${entry.song}`}
-              />
+            {composing ? (
+              /* The listen's own box, grown by layout (.ses-grow): a copy of
+                 the writing sits in the same cell and the field takes the
+                 cell's height. It was sized by script on every key — height
+                 to auto, then to what the text needed — and for the moment it
+                 was auto the page under it got shorter and the phone scrolled
+                 to find the cursor, then again when it grew back. Miyel,
+                 2026-09-30: "the keyboard doesn't really follow… it scrolls
+                 down really far and there's just weird gaps." */
+              <div className="ses-note-box tn-box">
+                <div className="ses-grow" data-said={(note || '') + ' '}>
+                  <textarea
+                    className="ses-textarea"
+                    value={note}
+                    onChange={e => (writing ? setWritten(w => ({ ...w, note: e.target.value })) : edit.set('notes', e.target.value))}
+                    placeholder="Notes on this track"
+                    aria-label={`Note on ${entry.song}`}
+                    rows={5}
+                  />
+                </div>
+              </div>
             ) : (
               <>
                 {note.trim() && <p className="tn-note">{note}</p>}
@@ -417,9 +494,8 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
                   album_art: entry.album_art || '',
                   entry_type: 'Personal Library',
                   rating: written.rating ? `${written.rating} stars` : '',
-                  // Always false: there is no heart to set, and a note
-                  // half-written before it went must not bring one in.
-                  favorite: false,
+                  favorite: written.favorite === true,
+                  formative: written.formative === true,
                   notes: written.note.trim(),
                 }),
               });

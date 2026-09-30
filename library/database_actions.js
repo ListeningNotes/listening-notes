@@ -440,15 +440,21 @@ export async function save_new_entry(body) {
   // ── A track note, 2026-09-24 ─────────────────────────────────────────────
   // An entry about one song: `song` holds its title, and `album` and `artist`
   // hold the record it belongs to. It keeps none of what belongs to a sitting
-  // with a whole record — no tracklist, no horizon, never Masterpiece, never
-  // Formative — and they are dropped here rather than trusted to the caller,
-  // the same way the mark itself is (below). Its address is the song's, so a
-  // link to it says what it is about.
+  // with a whole record — no tracklist, no horizon, never Masterpiece — and
+  // they are dropped here rather than trusted to the caller, the same way the
+  // mark itself is (below). Its address is the song's, so a link to it says
+  // what it is about.
+  //
+  // Formative is the song's to carry since 2026-09-30, and so is Favorite
+  // (Miyel, on writing a note about a song that shaped her: "we have to add
+  // formative and favorite to single track posts — I think it matters").
+  // Both were refused here until then. What counts albums still counts only
+  // albums: the card's Formative is `formative AND song IS NULL`.
   const song = String(body.song || '').trim() || null;
   const tracks = song ? null : (body.tracks ?? null);
   const track_notes = song ? null : body.track_notes;
   const horizon = song ? null : body.horizon;
-  const formative = song ? false : (body.formative ?? false);
+  const formative = body.formative === true || body.formative === 'true';
 
   // Masterpiece is not taken from the caller, 2026-09-17. Every track rated,
   // every rating five, and it is true; anything else and it is not. Whatever a
@@ -521,12 +527,11 @@ export async function update_entry(slug, fields) {
 
   // A track note never grows what belongs to a sitting with a record
   // (save_new_entry): a correction to one carries no tracklist, and a caller
-  // that sends one, or a Formative, is not believed.
+  // that sends one is not believed. Formative is its own to set, 2026-09-30.
   if (current?.song) {
     delete fields.tracks;
     delete fields.track_notes;
     delete fields.horizon;
-    delete fields.formative;
   }
 
   // ── Edit stamps ─────────────────────────────────────────────────────────
