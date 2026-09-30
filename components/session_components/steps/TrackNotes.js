@@ -20,8 +20,9 @@ import TrackRow from '../TrackRow';
 // One track per screen, with the carets and the swipe between tracks, and
 // the strip that stood over it as the way to move along the record. That
 // layout was right for a list with an open text field in every row, which
-// this is not: a row here is stars and a heart, and its note is a sheet
-// (TrackRow.js, NoteSheet.js). The reversal is in DECISIONS, The session.
+// this is not: a row here is stars and a heart, and only the track being
+// logged ever opens a field (TrackRow.js). The reversal is in DECISIONS, The
+// session.
 export default function TrackNotes({
   tracks,
   tracksLoading,
@@ -32,7 +33,11 @@ export default function TrackNotes({
   setTrackFavorites,
   onAir = null,
   putOnAir,
+  noting = null,
   onOpenNote,
+  setTrackNotes,
+  onShutNote,
+  onSend = null,
   onLookAgain,
   onHandTracks,
 }) {
@@ -112,10 +117,14 @@ export default function TrackNotes({
               favorite={!!trackFavorites?.[k]}
               note={trackNotes[k] || ''}
               onAir={onAir === k}
+              noting={noting === k}
               onPress={() => putOnAir?.(k)}
               onRate={v => { putOnAir?.(k); setTrackRatings(prev => ({ ...prev, [k]: v })); }}
               onFavorite={() => { putOnAir?.(k); setTrackFavorites(prev => ({ ...prev, [k]: !prev[k] })); }}
               onNote={() => { putOnAir?.(k); onOpenNote(k); }}
+              onNoteChange={text => setTrackNotes(prev => ({ ...prev, [k]: text }))}
+              onNoteShut={onShutNote}
+              onSend={onSend ? () => onSend(t) : null}
             />
           </TrackRowWithDisc>
         ))}

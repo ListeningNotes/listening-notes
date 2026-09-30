@@ -2002,10 +2002,12 @@ logged, and under the album note's label, until it is pressed; the writing
 once there is any; nothing under any other track. The session offers rather
 than asks.
 
-**A track note opens as a sheet over the list, never inline.** A field
-opening in the middle of a long column is what sank the list in 2026-09-18.
-The sheet carries the song's stars, heart, envelope and field; Cancel keeps
-what was typed for the next opening.
+**A track's note opens under its row, with the keyboard, and only under the
+track being logged.** The brief drew a sheet and one was built for an hour;
+Miyel: "the notes field should open in the tracklist, not as a popup." What
+sank the list in 2026-09-18 was a field under every row; one field, on the
+lit row, lifted clear of the keyboard, is a different thing. Left empty it
+shuts; written in, the words stand where it was. The envelope is at its foot.
 
 **The track being logged is the one last touched, 2026-09-29.** Its name
 pressed, a star, the heart, its note opened — "any sort of click on a track

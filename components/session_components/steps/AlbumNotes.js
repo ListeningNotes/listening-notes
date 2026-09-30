@@ -78,58 +78,62 @@ export default function AlbumNotes({
           <p className="ses-record-by">
             {artist}{year ? ` · ${year}` : ''}
           </p>
-          <div className="ses-record-marks">
-            {/* The album's own score. No label over it — five stars under a
-                record you are logging are not ambiguous (Miyel, 2026-09-18). */}
-            <StarRating value={rating} onChange={setRating} size={20} roomy ghost={avgShown && avg ? Number(avg) : 0} />
-            <button
-              type="button"
-              className={flag(Favorite, 'fav')}
-              onClick={() => setFavorite(!Favorite)}
-              aria-pressed={Favorite}
-              aria-label="Favorite"
-              title="An album you love"
-            >
-              <Heart size={22} weight={Favorite ? 'fill' : 'regular'} aria-hidden="true" />
-            </button>
-            <button
-              type="button"
-              className={flag(Formative, 'formative')}
-              onClick={() => setFormative(!Formative)}
-              aria-pressed={Formative}
-              aria-label="Formative"
-              title="An album that made you"
-            >
-              {/* Bold, not fill: Phosphor's filled fingerprint is a solid
-                  pad with the ridges knocked out of it (Miyel, 2026-09-18). */}
-              <Fingerprint size={22} weight={Formative ? 'bold' : 'regular'} aria-hidden="true" />
-            </button>
-            {/* Masterpiece is not pressed, 2026-09-17. It is read off the
-                tracklist — every track rated, every rating five — so it turns
-                up when it is true and is simply absent when it is not. */}
-            {Masterpiece && (
-              <span className={flag(true, 'mp') + ' ses-flag--said'} title="Every track is five stars" aria-label="Masterpiece" role="img">
-                <SketchLogo size={22} weight="fill" aria-hidden="true" />
-              </span>
-            )}
-          </div>
-          {/* Only when there is an average to reveal, which is the same
-              thing as some track having been rated. */}
-          {avg && (
-            <div className="ses-record-reveal">
-              <button
-                type="button"
-                className="ses-quiet"
-                style={{ borderBottom: 'none' }}
-                onClick={() => setAvgShown(v => !v)}
-                aria-pressed={avgShown}
-              >
-                {avgShown ? 'hide average' : 'reveal average'}
-              </button>
-            </div>
-          )}
         </div>
       </div>
+
+      {/* The stars and the marks on their own line under the record, then
+          the reveal under them — Miyel, 2026-09-29, on the first phone
+          screenshot: "album left, info right, then the stars and heart and
+          formative under." No label over the stars: five stars under a
+          record you are logging are not ambiguous (2026-09-18). */}
+      <div className="ses-record-marks">
+        <StarRating value={rating} onChange={setRating} size={22} roomy ghost={avgShown && avg ? Number(avg) : 0} />
+        <button
+          type="button"
+          className={flag(Favorite, 'fav')}
+          onClick={() => setFavorite(!Favorite)}
+          aria-pressed={Favorite}
+          aria-label="Favorite"
+          title="An album you love"
+        >
+          <Heart size={22} weight={Favorite ? 'fill' : 'regular'} aria-hidden="true" />
+        </button>
+        <button
+          type="button"
+          className={flag(Formative, 'formative')}
+          onClick={() => setFormative(!Formative)}
+          aria-pressed={Formative}
+          aria-label="Formative"
+          title="An album that made you"
+        >
+          {/* Bold, not fill: Phosphor's filled fingerprint is a solid pad
+              with the ridges knocked out of it (Miyel, 2026-09-18). */}
+          <Fingerprint size={22} weight={Formative ? 'bold' : 'regular'} aria-hidden="true" />
+        </button>
+        {/* Masterpiece is not pressed, 2026-09-17. It is read off the
+            tracklist — every track rated, every rating five — so it turns
+            up when it is true and is simply absent when it is not. */}
+        {Masterpiece && (
+          <span className={flag(true, 'mp') + ' ses-flag--said'} title="Every track is five stars" aria-label="Masterpiece" role="img">
+            <SketchLogo size={22} weight="fill" aria-hidden="true" />
+          </span>
+        )}
+      </div>
+      {/* Only when there is an average to reveal, which is the same thing
+          as some track having been rated. */}
+      {avg && (
+        <div className="ses-record-reveal">
+          <button
+            type="button"
+            className="ses-quiet"
+            style={{ borderBottom: 'none' }}
+            onClick={() => setAvgShown(v => !v)}
+            aria-pressed={avgShown}
+          >
+            {avgShown ? 'hide average' : 'reveal average'}
+          </button>
+        </div>
+      )}
 
       <div className="ses-album-note">
         <span className="ses-label">Album note</span>

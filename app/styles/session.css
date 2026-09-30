@@ -696,22 +696,23 @@
 }
 
 /* ── The record ─────────────────────────────────────────────────────────── */
-.ses-record-head { display: flex; align-items: flex-start; gap: 18px; }
+.ses-record-head { display: flex; align-items: center; gap: 18px; }
 .ses-record-cover {
   flex: 0 0 auto; width: 96px; height: 96px; border-radius: 8px; overflow: hidden;
   background: var(--panel-strong); display: flex; align-items: center; justify-content: center;
 }
 .ses-record-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .ses-record-cover-none { font-size: 22px; color: var(--ink-faint); }
-.ses-record-text { min-width: 0; flex: 1 1 auto; padding-top: 2px; }
+.ses-record-text { min-width: 0; flex: 1 1 auto; }
 .ses-record-title {
   font-family: var(--font-display); font-weight: var(--font-display-weight);
   font-size: clamp(1.35rem, 5vw, 1.7rem); line-height: 1.15; margin: 0;
   color: var(--ink); overflow-wrap: break-word;
 }
 .ses-record-by { font-size: 15px; line-height: 1.4; color: var(--ink-soft); margin: 3px 0 0; }
-/* The stars and the marks on one line, as the entry shows them. */
-.ses-record-marks { display: flex; align-items: center; gap: 14px; margin-top: 12px; }
+/* The stars and the marks on one line under the record, as the entry shows
+   them; the reveal on the line under that, at the stars' left edge. */
+.ses-record-marks { display: flex; align-items: center; gap: 16px; margin-top: 22px; }
 .ses-flag {
   display: inline-flex; align-items: center; justify-content: center;
   padding: 8px; margin: -8px -2px;
@@ -724,11 +725,11 @@
 .ses-flag--mp { color: var(--mp, var(--accent)); cursor: default; }
 /* The reveal, under the stars it draws into. The tick hangs 7px under the
    star row, so the room is for that and a little more. */
-.ses-record-reveal { margin-top: 14px; }
+.ses-record-reveal { margin-top: 16px; }
 
 /* ── The album note ────────────────────────────────────────────────────── */
-.ses-album-note { margin-top: 26px; }
-.ses-album-note .ses-label { display: block; margin-bottom: 6px; }
+.ses-album-note { margin-top: 30px; }
+.ses-album-note .ses-label { display: block; margin-bottom: 8px; }
 /* The offer: the caption face at caption weight, and nothing about it that
    reads as a field. It is a question you can walk past. The padding is its
    touch target; the margin gives the room back. */
@@ -743,11 +744,11 @@
 .ses-row-offer:focus-visible,
 .ses-row-note:focus-visible,
 .ses-row-name:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 2px; border-radius: 6px; }
-.ses-album-offer { font-size: 13px; margin-top: 0; }
+.ses-album-offer { font-size: 13px; }
 .ses-album-note .ses-textarea { min-height: 0; }
 
 /* ── The tracks ─────────────────────────────────────────────────────────── */
-.ses-tracks { margin-top: 30px; }
+.ses-tracks { margin-top: 36px; }
 .ses-tracks > .ses-label { display: block; }
 /* The horizon, in the entry's slot: under the label, over the rows, with
    the rows' first hairline as its floor. */
@@ -790,46 +791,13 @@
    cannot come apart. */
 .ses-row--on { background: color-mix(in srgb, var(--live) 9%, transparent); }
 
-/* ── The note sheet ────────────────────────────────────────────────────────
-   A track's note, over the list (NoteSheet.js). The scrim dims the list; the
-   sheet stands on the visible bottom — --ns-under is what a keyboard takes,
-   written by the sheet from visualViewport. */
-.ns-scrim {
-  position: fixed; inset: 0; z-index: 300;
-  background: color-mix(in srgb, var(--ink) 28%, transparent);
-  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
-  animation: nsFade 0.2s ease-out both;
-}
-@keyframes nsFade { from { opacity: 0; } to { opacity: 1; } }
-.ns-sheet {
-  position: fixed; left: 0; right: 0; bottom: var(--ns-under, 0px); z-index: 310;
-  max-height: calc(100dvh - var(--ns-under, 0px) - 40px);
-  overflow-y: auto; -webkit-overflow-scrolling: touch;
-  box-sizing: border-box;
-  padding: 10px 20px calc(18px + env(safe-area-inset-bottom, 0px));
-  background: var(--panel-solid);
-  color: var(--ink);
-  border-radius: 22px 22px 0 0;
-  box-shadow: 0 -12px 40px rgba(0,0,0,0.14);
-  animation: nsRise 0.32s cubic-bezier(0.22, 0.61, 0.36, 1) both;
-}
-@keyframes nsRise { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { .ns-sheet, .ns-scrim { animation: none; } }
-.ns-handle { display: block; width: 44px; height: 4px; border-radius: 2px; margin: 0 auto 18px; background: var(--border); }
-.ns-head { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; }
-.ns-title {
-  flex: 1 1 auto; min-width: 0; margin: 0;
-  font-family: var(--font-display); font-weight: var(--font-display-weight);
-  font-size: 19px; line-height: 1.2; color: var(--ink); overflow-wrap: break-word;
-}
-.ns-marks { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; }
-.ns-sheet .ses-label { display: block; margin-bottom: 6px; }
-.ns-grow .ses-textarea { min-height: 0; }
-.ns-foot { display: flex; justify-content: flex-end; gap: 22px; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); }
-@media (min-width: 769px) {
-  .ns-sheet { left: 50%; right: auto; width: min(560px, calc(100% - 40px)); transform: translateX(-50%); border-radius: 22px 22px 0 0; }
-  @keyframes nsRise { from { transform: translate(-50%, 24px); opacity: 0; } to { transform: translateX(-50%); opacity: 1; } }
-}
+/* ── The note, under its row ──────────────────────────────────────────────
+   The field opens under the track being logged, two lines high, and the
+   envelope that sends the song stands at its foot. Only that row ever has
+   one. */
+.ses-row-field { width: 100%; margin-top: 4px; }
+.ses-row-field .ses-textarea { min-height: 0; font-size: 15px; }
+.ses-row-send { display: block; margin: 6px 0 0 auto; }
 
 /* ── The foot: Discard · Save draft · Preview ─────────────────────────────
    The entry's correction bar (.ln-editing-bar, entry.css) with three words.
@@ -848,7 +816,7 @@
   column-gap: clamp(40px, 7%, 96px); align-items: start;
 }
 .ses--wide .ses-record { position: sticky; top: 88px; }
-.ses--wide .ses-record-head { flex-direction: column; gap: 22px; }
+.ses--wide .ses-record-head { flex-direction: column; align-items: flex-start; gap: 22px; }
 .ses--wide .ses-record-cover { width: 100%; height: auto; aspect-ratio: 1; border-radius: 10px; }
 .ses--wide .ses-record-title { font-size: 1.9rem; }
 .ses--wide .ses-album-note { margin-top: 30px; }

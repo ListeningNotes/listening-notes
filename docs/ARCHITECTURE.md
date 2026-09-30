@@ -243,8 +243,7 @@ The furniture — visual pieces
       PasswordGate.js          The password screen
       AlbumPicker.js           Type, see a grid of covers with songs under them, tap one — the screen before a listen, or before a track note
       StarRating.js            The interactive stars you click to rate
-      TrackRow.js              One track in the session's list — number or the live dot, name (press it to log this track), *Any notes?* or the note, stars and heart set in place
-      NoteSheet.js             A track's note on a sheet over the list: the song, its stars, heart, envelope, the field, Cancel and Done
+      TrackRow.js              One track in the session's list — number or the live dot, the name, stars and heart set in place; on the track being logged, *Any notes?* or the note, and the field under the row when it is open, with the envelope at its foot
       Trouble.js               Something in a listen went wrong, said in the site's own voice — two sentences, and whether the writing is safe
       steps/
         AlbumNotes.js          The top of the session — cover, title, artist and year, the album's stars and marks, the album note behind *Any notes?*
