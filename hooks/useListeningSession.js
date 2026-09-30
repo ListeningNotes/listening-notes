@@ -163,12 +163,11 @@ export function useListeningSession({ step }) {
     && tracks.every((_, i) => Number(trackRatings[i]) === 5);
 
   // ── The track being logged ───────────────────────────────────────────────
-  // By its place in the list, and null until one is. Pressing a track's name
-  // in the list puts it on (TrackRow.js) — Miyel, 2026-09-29: "whichever song
-  // you're clicked on is the one that's on air, not rating it. Sometimes I
-  // haven't rated it before; I'm listening and then I rate it at the end."
-  // So the stars and the heart leave it where it is. It was `openTrack`, the
-  // track on screen, while a listen was one track per screen.
+  // By its place in the list, and null until one is. Anything done to a
+  // track in the list puts it on — its name pressed, a star, the heart, its
+  // note opened (TrackRow.js; Miyel, 2026-09-29: "any sort of click on a
+  // track counts as lighting it as live"). It was `openTrack`, the track on
+  // screen, while a listen was one track per screen.
   const [onAir, setOnAir]                 = useState(null);
 
   // The draft — the browser's copy and the row in `drafts` — is kept by

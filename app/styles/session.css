@@ -716,6 +716,9 @@
 .ses-flag--fav.ses-flag--on { color: var(--fav); }
 .ses-flag--formative.ses-flag--on { color: var(--formative); }
 .ses-flag--mp { color: var(--mp, var(--accent)); cursor: default; }
+/* The reveal, under the stars it draws into. The tick hangs 7px under the
+   star row, so the room is for that and a little more. */
+.ses-record-reveal { margin-top: 14px; }
 
 /* ── The album note ────────────────────────────────────────────────────── */
 .ses-album-note { margin-top: 26px; }

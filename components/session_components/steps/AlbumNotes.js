@@ -23,6 +23,7 @@ import StarRating from '../StarRating';
 // which can wait. An empty field is a question; the session offers.
 export default function AlbumNotes({
   album, artist, year, albumArt,
+  trackRatings,
   overallNotes,
   setOverallNotes,
   rating,
@@ -33,6 +34,17 @@ export default function AlbumNotes({
   Formative,
   setFormative,
 }) {
+  // ── The average, under the stars it draws into ──────────────────────
+  // Still behind a press. Miyel rates blind on purpose — "sometimes I like
+  // to not see what my average is and just rate it and see if it matches up
+  // with what I thought" — so nothing is shown until it is asked for, and
+  // then it is drawn into the stars as a ghost, unrounded (2026-09-18). It
+  // was left off the one-screen session for an hour, 2026-09-29, and asked
+  // back the same day.
+  const rated = Object.values(trackRatings || {}).filter(v => v > 0);
+  const avg = rated.length ? (rated.reduce((a, b) => a + b, 0) / rated.length).toFixed(2) : null;
+  const [avgShown, setAvgShown] = useState(false);
+
   const [opened, setOpened] = useState(false);
   const asked = useRef(false);
   const field = useRef(null);
@@ -69,7 +81,7 @@ export default function AlbumNotes({
           <div className="ses-record-marks">
             {/* The album's own score. No label over it — five stars under a
                 record you are logging are not ambiguous (Miyel, 2026-09-18). */}
-            <StarRating value={rating} onChange={setRating} size={20} roomy />
+            <StarRating value={rating} onChange={setRating} size={20} roomy ghost={avgShown && avg ? Number(avg) : 0} />
             <button
               type="button"
               className={flag(Favorite, 'fav')}
@@ -101,6 +113,21 @@ export default function AlbumNotes({
               </span>
             )}
           </div>
+          {/* Only when there is an average to reveal, which is the same
+              thing as some track having been rated. */}
+          {avg && (
+            <div className="ses-record-reveal">
+              <button
+                type="button"
+                className="ses-quiet"
+                style={{ borderBottom: 'none' }}
+                onClick={() => setAvgShown(v => !v)}
+                aria-pressed={avgShown}
+              >
+                {avgShown ? 'hide average' : 'reveal average'}
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

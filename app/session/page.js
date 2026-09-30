@@ -762,6 +762,7 @@ export default function SessionPage() {
             <div className={'ses-page' + (landing ? ' ses-step ses-step--fade' : '')}>
               <AlbumNotes
                 album={s.albumInput} artist={s.artistName} year={s.year} albumArt={s.albumArt}
+                trackRatings={s.trackRatings}
                 overallNotes={s.overallNotes} setOverallNotes={s.setOverallNotes}
                 rating={s.rating} setRating={s.setRating}
                 Masterpiece={s.Masterpiece}

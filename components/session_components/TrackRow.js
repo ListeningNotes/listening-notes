@@ -20,9 +20,12 @@
 // middle of the column.
 //
 // ── The track being logged ────────────────────────────────────────────────
-// Pressing the name puts the song on air: its number gives way to the live
-// dot and the row takes the faintest green. Only the name — Miyel:
-// "whichever song you're clicked on is the one that's on air, not rating it."
+// Anything done to a track puts it on air — its name pressed, a star, the
+// heart, its note opened (Miyel, 2026-09-29: "any sort of click on a track
+// counts as lighting it as live"). Its number gives way to the live dot and
+// the row takes the faintest green. The offer to write is on that row alone:
+// *Any notes?* follows the song being logged rather than standing under
+// every rated track, so the list never reads as a column of questions.
 'use client';
 import { Heart } from '@phosphor-icons/react';
 import StarRating from './StarRating';
@@ -35,7 +38,7 @@ export default function TrackRow({
   onPress, onRate, onFavorite, onNote,
 }) {
   const written = !!note.trim();
-  const offered = rating > 0 && !written;
+  const offered = onAir && !written;
 
   return (
     <li className={'ses-row' + (onAir ? ' ses-row--on' : '')}>

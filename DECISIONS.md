@@ -1997,19 +1997,21 @@ and its note is a sheet. The strip, the carets, the swipe between tracks and
 the mini beacon header went with it. The reversed entries and the day of
 trials are in the archive; do not bring the screens back a third time.
 
-**An empty note field is closed.** *Any notes?* under a rated track, and
-under the album note's label, until it is pressed; the writing once there is
-any; nothing at all under an unrated track. The session offers rather than
-asks.
+**An empty note field is closed.** *Any notes?* under the track being
+logged, and under the album note's label, until it is pressed; the writing
+once there is any; nothing under any other track. The session offers rather
+than asks.
 
 **A track note opens as a sheet over the list, never inline.** A field
 opening in the middle of a long column is what sank the list in 2026-09-18.
 The sheet carries the song's stars, heart, envelope and field; Cancel keeps
 what was typed for the next opening.
 
-**The track being logged is the one whose name was pressed.** Not the last
-rated — "sometimes I rate it at the end". Its number gives way to the live
-dot and the row takes the faintest green. Nothing about the beacon changes.
+**The track being logged is the one last touched, 2026-09-29.** Its name
+pressed, a star, the heart, its note opened — "any sort of click on a track
+counts as lighting it as live". Its number gives way to the live dot and the
+row takes the faintest green, and *Any notes?* stands under that track alone.
+Nothing about the beacon changes.
 
 **Discard · Save draft · Preview at the foot; on a desk, in a row at the
 top.** Discard asks twice. Save draft is the pull down as a word: the draft

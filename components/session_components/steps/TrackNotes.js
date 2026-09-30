@@ -112,10 +112,10 @@ export default function TrackNotes({
               favorite={!!trackFavorites?.[k]}
               note={trackNotes[k] || ''}
               onAir={onAir === k}
-              onPress={() => putOnAir?.(onAir === k ? null : k)}
-              onRate={v => setTrackRatings(prev => ({ ...prev, [k]: v }))}
-              onFavorite={() => setTrackFavorites(prev => ({ ...prev, [k]: !prev[k] }))}
-              onNote={() => onOpenNote(k)}
+              onPress={() => putOnAir?.(k)}
+              onRate={v => { putOnAir?.(k); setTrackRatings(prev => ({ ...prev, [k]: v })); }}
+              onFavorite={() => { putOnAir?.(k); setTrackFavorites(prev => ({ ...prev, [k]: !prev[k] })); }}
+              onNote={() => { putOnAir?.(k); onOpenNote(k); }}
             />
           </TrackRowWithDisc>
         ))}
