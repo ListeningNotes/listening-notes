@@ -5,10 +5,20 @@
 //
 // One address for the whole thing. With nothing on the desk it is the picker:
 // a search field and a grid of covers. Tap one and the same page becomes the
-// listen — the cover settles into the header, and the four screens turn
-// underneath it: the album, the tracks one at a time, the note and score, the
-// preview. The record being listened to is kept in the browser, so a reload,
-// a locked phone or a closed tab reopens where you were.
+// listen — the cover settles at the top of one screen laid out as the entry
+// is: the record, its stars and marks and note, then the tracks under the
+// horizon they build. The preview is the second screen and the only other
+// one. The record being listened to is kept in the browser, so a reload, a
+// locked phone or a closed tab reopens where you were.
+//
+// ── One screen, 2026-09-29 ────────────────────────────────────────────────
+// Miyel's brief *the session becomes one screen*. It was four — Overview,
+// Tracks one at a time, Album, Preview — and the first three are this one
+// page (steps/AlbumNotes.js, steps/TrackNotes.js). The header that carried
+// the small beacon and the steps went with them: the live dot in the list
+// says the same thing where you are already looking, and the two words that
+// used to be steps are at the foot with a third — Discard, Save draft,
+// Preview. The needle is still set and the beacon still broadcasts.
 //
 // ── Why it is not two pages any more ──────────────────────────────────────
 // It was: /dashboard/echo found the album and /dashboard/echo/session took
@@ -25,9 +35,11 @@
 // screen is already on and usable while the cover is still moving.
 //
 // ── Not a reduced version on a phone ──────────────────────────────────────
-// Every screen holds one thing and runs full-bleed, on both devices. The
-// difference between a phone and a desk is the width of the column, and
-// nothing else — no step, field or mark exists on one and not the other.
+// No step, field or mark exists on one and not the other. A phone is one
+// column, the record over the tracks; a desk stands the record at the left
+// and the tracks at the right, with the foot's three words in a row at the
+// top. Decided by the listen's own width, because on a desk it opens beside
+// the spine and the window's width is not the listen's.
 //
 // ── How it is usually reached ─────────────────────────────────────────────
 // From the desk, as a layer: app/@layer/(.)session intercepts this address
@@ -39,21 +51,25 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { CaretLeft } from '@phosphor-icons/react';
 import { useListeningSession, SESSION_STEPS, PENDING_KEY, TRACK_NOTE_KEY, saidSoAboutTheDesk, saidSoAboutTheEntry } from '../../hooks/useListeningSession';
 import AlbumPicker from '../../components/session_components/AlbumPicker';
-import SessionHeader from '../../components/session_components/SessionHeader';
-import RecordContents from '../../components/session_components/steps/RecordContents';
 import TrackNotes from '../../components/session_components/steps/TrackNotes';
 import AlbumNotes from '../../components/session_components/steps/AlbumNotes';
 import SessionPreview from '../../components/session_components/steps/SessionPreview';
 import Trouble from '../../components/session_components/Trouble';
 import SendSheet from '../../components/main_components/SendSheet';
 import TrackNotePage from '../entries/[slug]/TrackNotePage';
-import { useBeforeLeaving } from '../../components/main_components/LayerEntry';
+import { useBeforeLeaving, useLayerExit } from '../../components/main_components/LayerEntry';
 
 // How long the picked cover takes to reach the header. The step body slides in
 // on the same curve at nearly the same length, so the two read as one move.
 const LANDING_MS = 520;
+
+// How wide the listen has to be before it is laid out as a desk: the record
+// at the left, the tracks at the right. A number about the listen, not the
+// window — it opens beside the spine.
+const WIDE_PX = 720;
 
 export default function SessionPage() {
   const [authed, setAuthed]     = useState(false);
@@ -101,6 +117,35 @@ export default function SessionPage() {
   const swipe = useRef(null);
 
   const s = useListeningSession({ step });
+
+  // ── How wide the listen is, which is not how wide the screen is ─────────
+  // On a desk the listen opens over the journal, beside the spine, and the
+  // spine is dragged to whatever width its keeper likes (useSpineWidth). So
+  // "is there room for the desk's layout" is a question about this sheet,
+  // and a media query answers it about the window. Measured here instead.
+  const root = useRef(null);
+  const [wide, setWide] = useState(false);
+  const listening = !!pending?.album && !song;
+  useEffect(() => {
+    const el = root.current;
+    if (!el || !listening) return undefined;
+    const say = () => setWide(el.clientWidth >= WIDE_PX);
+    say();
+    const watch = typeof ResizeObserver === 'function' ? new ResizeObserver(say) : null;
+    watch?.observe(el);
+    return () => watch?.disconnect();
+  }, [listening, checking, authed]);
+
+  // ── A track's note, under its row ────────────────────────────────────────
+  // Which track's field is open, or null. One at a time; it shuts when it is
+  // left empty (TrackRow.js) or when another track's opens.
+  const [noting, setNoting] = useState(null);
+
+  // The tracks' average, behind a press under the album's stars. Kept here
+  // because the ratings it is made of live in the list below.
+  const [avgShown, setAvgShown] = useState(false);
+  const ratedSoFar = Object.values(s.trackRatings || {}).filter(v => v > 0);
+  const avg = ratedSoFar.length ? (ratedSoFar.reduce((a, b) => a + b, 0) / ratedSoFar.length).toFixed(2) : null;
 
   // ── Sending a song from the tracklist, 2026-09-26 ───────────────────────
   // The envelope on a track row (RecordContents) opens the one send sheet
@@ -161,8 +206,14 @@ export default function SessionPage() {
       const root = field.closest('.ses');
       const scroller = field.closest('.lay') || document.scrollingElement;
       const head = root.querySelector('.ses-head');
-      const under = head ? head.getBoundingClientRect().bottom : 0;
-      const above = field.closest('.ses-grow').previousElementSibling || field;
+      const under = Math.max(
+        head ? head.getBoundingClientRect().bottom : 0,
+        // No header now: the lift stops under the phone's status bar, which
+        // is where a row lifted to the very top went (Miyel's screenshot,
+        // 2026-09-29 — the track's name under the clock).
+        parseFloat(getComputedStyle(root).getPropertyValue('--ses-inset')) || 0,
+      );
+      const above = field.closest('.ses-row') || field.closest('.ses-grow').previousElementSibling || field;
       const space = room || Math.round(window.innerHeight * 0.55);
       const at = tapY ?? field.getBoundingClientRect().top + 20;
       let by = above.getBoundingClientRect().top - (under + 10);
@@ -325,7 +376,7 @@ export default function SessionPage() {
       // than handed down a ref, the way the cross measures the beacon it
       // flies a record into: the destination belongs to the header, not to
       // whichever screen happens to be underneath it.
-      const slot = document.querySelector('.ses-cover');
+      const slot = document.querySelector('.ses .ses-record-cover');
       if (!slot) { setLanding(null); return; }
       const to = slot.getBoundingClientRect();
       setLanding(l => l && { ...l, to });
@@ -454,7 +505,12 @@ export default function SessionPage() {
   // button, and a write that fails has to stop the sheet going. That is what
   // this registers: the layer asks before it moves, and a false answer leaves
   // the listen exactly where it is with Trouble showing why.
+  // Set while a listen is being thrown away, so the sheet's own way out does
+  // not write the draft it is in the middle of deleting.
+  const discarding = useRef(false);
+  const exit = useLayerExit();
   const layered = useBeforeLeaving(async () => {
+    if (discarding.current) return true;
     // A track note keeps its own words as they are typed (TrackNotePage), so
     // putting one down is only putting the song away. There is no listen to
     // write a draft of.
@@ -485,11 +541,59 @@ export default function SessionPage() {
     // pressing again after fixing whatever it was does the whole thing
     // properly. Leaving anyway would have thrown away the one copy of the
     // afternoon that is not on this device.
-    if (!s.saved && !(await s.saveDraft())) return;
+    if (!s.saved && !(await s.saveDraft())) return false;
     try { localStorage.removeItem(PENDING_KEY); } catch { /* nothing to clear */ }
     saidSoAboutTheDesk();
     setLanding(null);
     show(null);
+    return true;
+  }
+
+  // ── The three words at the foot, 2026-09-29 ──────────────────────────────
+  // Save draft keeps the listen and leaves. The draft was already saving
+  // itself as you went and again on the way out, so this is a visible way
+  // out rather than a new ability: over the journal it closes the sheet the
+  // way the pull does, and the sheet's own hook writes the draft first;
+  // opened cold it puts the record down and shows the picker.
+  function saveDraftAndLeave() {
+    if (exit) { exit(); return; }
+    leave();
+  }
+
+  // Discard throws the listen away, draft included, and asks first: the
+  // first press arms the word, the second does it, the same two presses a
+  // draft's discard takes on the picker. Nothing here is written; both
+  // copies of the draft go and the needle lifts.
+  const [armed, setArmed] = useState(false);
+  useEffect(() => {
+    if (!armed) return undefined;
+    const t = setTimeout(() => setArmed(false), 4000);
+    return () => clearTimeout(t);
+  }, [armed]);
+  async function discard() {
+    if (!armed) { setArmed(true); return; }
+    setArmed(false);
+    discarding.current = true;
+    await s.discardDraft();
+    try { localStorage.removeItem(PENDING_KEY); } catch { /* nothing to clear */ }
+    saidSoAboutTheDesk();
+    if (exit) { exit(); return; }
+    setLanding(null);
+    show(null);
+    discarding.current = false;
+  }
+
+  // ── The way back, for a mouse, on a listen opened on its own ────────────
+  // Over the journal the sheet has a caret and the pull; opened cold — a
+  // reload mid-listen, the installed app — there was no way out a mouse
+  // could make. This is Save draft's own move, then the journal, since there
+  // is nothing behind a cold page to go back to. Drawn for a mouse and never
+  // on a phone (.ses-back, entry.css).
+  async function backToTheJournal() {
+    if (song) {
+      try { sessionStorage.removeItem(TRACK_NOTE_KEY); } catch { /* nothing to clear */ }
+    } else if (pending?.album && !(await leave())) return;
+    router.push('/');
   }
 
   // Every step change goes through here so the slide knows which way to travel.
@@ -544,7 +648,6 @@ export default function SessionPage() {
     // the top of the screen, and `leave` writes the draft exactly as the
     // sheet's own way out does.
     if (!layered && from.top && dy > 80 && dy > Math.abs(dx) * 1.5) { leave(); return; }
-    if (step === 1) return;   // the tracks screen has its own
     if (Math.abs(dx) < 56 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
     if (dx < 0) forward(); else goToStep(step - 1);
   }
@@ -586,7 +689,12 @@ export default function SessionPage() {
   }
 
   return (
-    <div className="ses">
+    <div className={'ses' + (wide ? ' ses--wide' : '')} ref={root}>
+      {!layered && (
+        <button type="button" className="ses-back" onClick={backToTheJournal} aria-label="Back to the journal" title="Back to the journal">
+          <CaretLeft size={18} weight="bold" aria-hidden="true" />
+        </button>
+      )}
 
       {song ? (
         /* ── A track note, being written ─────────────────────────────────
@@ -628,78 +736,54 @@ export default function SessionPage() {
         <AlbumPicker onPick={pick} onResume={resume} onPickSong={beginTrackNote} />
       ) : (
         <>
-          <SessionHeader
-            album={s.albumInput}
-            artist={s.artistName}
-            year={s.year}
-            /* The beacon's two things, so the strip at the top of a listen is
-               the beacon rather than a caption about it. The same song the
-               needle is sending, read the same way. */
-            art={s.albumArt}
-            track={s.tracks?.[s.openTrack]?.title || ''}
-            step={step}
-            onStep={goToStep}
-            /* ── Back to drafts, not out of the session ──────────────────
-               Miyel, 2026-09-18, and it is the reframe the whole thing was
-               missing: "the session is a new state… drafts is really the
-               landing starting page, and being in a session needs to take me
-               back to drafts. I'm tired of going in and then closing and
-               having to restart a listen. When you're in session you might be
-               listening to multiple albums."
-               Out to the cross, where the picker is. The picker belongs on
-               the pane again (see the Start a listen button in HomeNav) and
-               that pane never stopped choosing while this was open, so
-               closing this lands on the drafts it was started from. `leave`
-               is the answer when a session was opened cold at this address
-               and there is no pane under it — endListen asks which. */
-            hasWriting={s.hasWriting}
-          />
+          {/* ── The foot: Discard · Save draft · Preview ─────────────────
+              The band the entry's correction bar is (.ln-editing-bar), with
+              three words: the one that ends the listen faint, the one that
+              keeps it in ink, the one that goes forward underlined. On a desk
+              the same three sit in a row at the top (.ses-bar). Only on the
+              session: the preview has its own foot, with its own words. */}
+          {step === 0 && (
+            <div className="ln-editing-bar ses-bar">
+              <button type="button" className={'ln-word ses-bar-discard' + (armed ? ' ses-bar-discard--armed' : '')} onClick={discard}>
+                {armed ? 'Discard?' : 'Discard'}
+              </button>
+              <button type="button" className="ln-word" onClick={saveDraftAndLeave}>Save draft</button>
+              <button type="button" className="ln-word ln-word--on" onClick={() => goToStep(1)}>Preview</button>
+            </div>
+          )}
 
-          <main className="ses-body" onTouchStart={swipeStart} onTouchEnd={swipeEnd}>
-            {/* Keyed on step so each screen mounts fresh and slides in. */}
-            <div key={step} className={'ses-step' + (landing ? ' ses-step--fade' : stepDir < 0 ? ' ses-step--back' : '')}>
-              {/* Overview — the record's contents: the facts and the
-                  tracklist. A step of its own, so a swipe reaches it like
-                  every other screen in the listen (Miyel, 2026-09-18). */}
-              {step === 0 && (
-                <RecordContents
-                  tracks={s.tracks} tracksLoading={s.tracksLoading} facts={s.facts}
-                  trackRatings={s.trackRatings} trackFavorites={s.trackFavorites}
-                  onPick={k => { s.setOpenTrack(k); goToStep(1); }}
-                  onNext={() => goToStep(2)}
-                  onLookAgain={s.lookAgain}
-                  onHandTracks={s.takeHandTracks}
-                  onSend={sendTrack}
-                />
-              )}
-              {step === 1 && (
-                <TrackNotes
-                  tracks={s.tracks} tracksLoading={s.tracksLoading}
-                  trackNotes={s.trackNotes} setTrackNotes={s.setTrackNotes}
-                  trackRatings={s.trackRatings} setTrackRatings={s.setTrackRatings}
-                  trackFavorites={s.trackFavorites} setTrackFavorites={s.setTrackFavorites}
-                  openTrack={s.openTrack} setOpenTrack={s.setOpenTrack}
-                  onPrev={() => goToStep(0)}
-                  onNext={() => goToStep(2)}
-                />
-              )}
-              {step === 2 && (
-                <AlbumNotes
-                  tracks={s.tracks} trackRatings={s.trackRatings} trackFavorites={s.trackFavorites}
-                  overallNotes={s.overallNotes} setOverallNotes={s.setOverallNotes}
-                  rating={s.rating} setRating={s.setRating}
-                  Masterpiece={s.Masterpiece}
-                  Favorite={s.Favorite} setFavorite={s.setFavorite}
-                  Formative={s.Formative} setFormative={s.setFormative}
-                />
-              )}
+          <main className={'ses-body ses-body--page' + (wide ? ' ses-body--desk' : '')} onTouchStart={swipeStart} onTouchEnd={swipeEnd}>
+            <div className={'ses-page' + (landing ? ' ses-step ses-step--fade' : '')}>
+              <AlbumNotes
+                album={s.albumInput} artist={s.artistName} year={s.year} albumArt={s.albumArt}
+                avg={avg} avgShown={avgShown} onReveal={() => setAvgShown(v => !v)}
+                overallNotes={s.overallNotes} setOverallNotes={s.setOverallNotes}
+                rating={s.rating} setRating={s.setRating}
+                Masterpiece={s.Masterpiece}
+                Favorite={s.Favorite} setFavorite={s.setFavorite}
+                Formative={s.Formative} setFormative={s.setFormative}
+              />
+              <TrackNotes
+                tracks={s.tracks} tracksLoading={s.tracksLoading}
+                trackNotes={s.trackNotes}
+                trackRatings={s.trackRatings} setTrackRatings={s.setTrackRatings}
+                trackFavorites={s.trackFavorites} setTrackFavorites={s.setTrackFavorites}
+                onAir={s.onAir} putOnAir={s.putOnAir}
+                noting={noting}
+                onOpenNote={setNoting}
+                setTrackNotes={s.setTrackNotes}
+                onShutNote={() => setNoting(null)}
+                onSend={sendTrack}
+                onLookAgain={s.lookAgain}
+                onHandTracks={s.takeHandTracks}
+              />
             </div>
           </main>
 
           {/* The preview stands over the whole session on its own sheet — the
-              entry page needs the viewport. The notes screen stays mounted
+              entry page needs the viewport. The session stays mounted
               underneath, so the way back is instant. */}
-          {step === 3 && (
+          {step === 1 && (
             <SessionPreview
               album={s.albumInput} artist={s.artistName} year={s.year} albumArt={s.albumArt} genre={s.genre}
               overallNotes={s.overallNotes} hasWriting={s.hasWriting}
@@ -708,15 +792,11 @@ export default function SessionPage() {
               tracks={s.tracks} trackRatings={s.trackRatings} trackFavorites={s.trackFavorites} trackNotes={s.trackNotes}
               saving={s.saving} saved={s.saved} savedEntry={s.savedEntry}
               doSave={s.doSave}
-              onBack={() => goToStep(2)}
+              onBack={() => goToStep(0)}
               onAnother={leave}
             />
           )}
 
-          {/* The ? that opened a reference, and the sheet it opened, came out
-              on 2026-09-18. See docs/RETIRED-PROMPTS.md: it was one of the two
-              things here that spent money per press, and Miyel's call is that
-              a phone beside the record does the same job. */}
         </>
       )}
 

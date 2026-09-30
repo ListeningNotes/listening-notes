@@ -27,11 +27,22 @@ import { useRef, useState } from 'react';
 // ── Pointer events, and why ───────────────────────────────────────────────
 // One set of handlers covers a finger, a trackpad and a mouse, and
 // setPointerCapture keeps the drag alive once the finger leaves the row —
-// which it will, because a thumb overshoots. `touch-action: none` because a
-// horizontal drag on a phone is otherwise the page deciding to scroll.
+// which it will, because a thumb overshoots.
 //
-// A tap still works, and always did: pointerdown sets the value where you
-// pressed, so a press with no movement is a press.
+// ── A finger going up and down is a scroll, 2026-09-29 ────────────────────
+// It was `touch-action: none`, and the row set its value the moment a finger
+// landed. With every track a row in one list (Miyel's brief, *the session
+// becomes one screen*) that made the list unscrollable by its right-hand
+// third: a thumb coming down to scroll landed on a star row, the row took it,
+// and the stars ran right while the page stood still — "the stars moving
+// right, right, right, while you scroll." Locking every row until pressed
+// answered it for an hour and was "super awkward" the other way.
+//
+// So the row now waits to see what a finger means. `touch-action: pan-y`
+// hands anything up-and-down to the browser as a scroll; a movement that is
+// plainly sideways becomes the drag, captured and followed as before; and a
+// press that goes nowhere is a tap, set where it lifted. Nothing is set on
+// the way down any more, which is the whole change.
 
 // What the row is worth at this point along it.
 function valueAt(clientX, row) {
@@ -86,23 +97,44 @@ export default function StarRating({ value, onChange, size = 18, roomy = false, 
     if (next !== value) onChange(next);
   };
 
+  // Where the finger landed, until it has said whether it is a tap, a drag
+  // along the row, or a scroll — which the browser takes, and tells us of
+  // with a pointercancel.
+  const press = useRef(null);
+  const SIDEWAYS = 6;
+  const STILL = 8;
+
   const down = e => {
-    e.preventDefault();
-    // Capture is an improvement, not a requirement: it keeps the drag alive
-    // when the finger leaves the row. It can throw — a pointer that is
-    // already gone by the time this runs has no id to capture — and an
-    // exception here would take the press with it, so a rating that missed
-    // its capture would not register at all.
-    try { e.currentTarget.setPointerCapture?.(e.pointerId); } catch { /* the drag still works */ }
-    setDragging(true);
+    if (e.button > 0) return;
+    press.current = { x: e.clientX, y: e.clientY, id: e.pointerId, target: e.currentTarget };
     setHover(null);
-    set(e.clientX);
   };
   const move = e => {
     if (dragging) { set(e.clientX); return; }
+    const p = press.current;
+    if (p) {
+      const dx = e.clientX - p.x;
+      const dy = e.clientY - p.y;
+      if (Math.abs(dx) > SIDEWAYS && Math.abs(dx) > Math.abs(dy)) {
+        // Capture is an improvement, not a requirement: it keeps the drag
+        // alive when the finger leaves the row. It can throw — a pointer
+        // already gone has no id to capture — and an exception here would
+        // take the drag with it.
+        try { p.target.setPointerCapture?.(p.id); } catch { /* the drag still works */ }
+        setDragging(true);
+        set(e.clientX);
+      }
+      return;
+    }
     if (e.pointerType === 'mouse') setHover(valueAt(e.clientX, row.current));
   };
-  const up = () => setDragging(false);
+  const up = e => {
+    const p = press.current;
+    press.current = null;
+    if (dragging) { setDragging(false); return; }
+    if (p && Math.abs(e.clientX - p.x) < STILL && Math.abs(e.clientY - p.y) < STILL) set(e.clientX);
+  };
+  const cancel = () => { press.current = null; setDragging(false); };
 
   return (
     <div
@@ -119,7 +151,7 @@ export default function StarRating({ value, onChange, size = 18, roomy = false, 
       onPointerDown={down}
       onPointerMove={move}
       onPointerUp={up}
-      onPointerCancel={up}
+      onPointerCancel={cancel}
       onPointerLeave={() => setHover(null)}
       onKeyDown={e => {
         // The keyboard gets the same half steps the finger does.
@@ -130,7 +162,7 @@ export default function StarRating({ value, onChange, size = 18, roomy = false, 
         position: 'relative',
         display: 'flex',
         gap: roomy ? 7 : 1,
-        touchAction: 'none',
+        touchAction: 'pan-y',
         cursor: 'pointer',
         padding: roomy ? `${reach}px ${Math.round(reach / 3)}px` : 0,
         margin: roomy ? `-${reach}px -${Math.round(reach / 3)}px` : 0,

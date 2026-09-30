@@ -787,3 +787,49 @@ one way in became words under the album note). A round bubble was picked as
 the mark of a message and replaced by the envelope in the inbox and by words
 on an entry.
 
+---
+
+## The session — one track per screen, 2026-09-01 to 2026-09-29
+
+The current rules are in DECISIONS.md, The session: *A listen is two steps*
+and the entries under it.
+
+A listen was four screens — Overview · Tracks · Album · Preview — and the
+Tracks step showed one song at a time under a strip of every track's bar,
+with carets and a swipe between songs and the small beacon in a header over
+it all. The entries that stood for it:
+
+**The strip is the horizon being built.** The tracks screen shows every track
+as a column — its bar rising as it is rated, a dot empty until something is
+written, lit for the track on screen. A row of dots said where you were; it
+could not say which song was three back.
+**The album screen is the art**, large and centred, with the horizon once the
+tracks have stars. On the notes screen the score and marks come first and the
+writing last, where a growing field wants nothing under it but the button.
+**One track per screen.** Name, stars, a heart, a note, a swipe to the next.
+It matches the pace of the record and turned out better on a desk too, so it
+is the only layout. The step is not skippable; nothing insists on a note for
+every song.
+**The score lives on the note screen.** There is no score step: the score is
+the last line of the note, not a thing on its own.
+**The whole listen is one swipe.** Album → tracks → notes → preview, and back.
+Nothing on the way forward is gated; only the save waits for an album note.
+**The one moment kept is the landing.** The cover you tap flies to where the
+album screen draws it. Nothing waits on it. **No small cover in the header:**
+the album screen is the art, and a thumbnail a screen above was the same
+picture twice.
+
+It had itself replaced a list — every track as a row with a text field in it,
+the keyboard covering whichever one was being written in. One per screen
+fixed the column and kept the box.
+
+Retired 2026-09-29 by Miyel's brief *the session becomes one screen*, the
+second brief of that day. The first, *the session asks less*, led to three
+shapes built and tried the same afternoon — the tracks as rows with a note
+opening in the row, the whole listen as one page with the strip pinned over
+it, and one song over the album's score — and she preferred the screen she
+had. What the trials taught, and the second brief kept: an open note field
+under every song reads as a test; the horizon must stay in sight; the song on
+air is the one pressed, not the one rated; a note in the middle of a list
+needs a sheet, not a field. The one-screen session is that brief, built once.
+

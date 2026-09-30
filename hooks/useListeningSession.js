@@ -14,30 +14,25 @@ import { useSessionDraft } from './useSessionDraft';
 // step is passed in so the hook can assemble the preview when you reach it,
 // and so the draft remembers which screen you were on (see useSessionDraft).
 
-// The four screens of a listen, in order. The header draws them and the
-// picker names the one a draft was left on.
-// Overview · Tracks · Album · Preview.
+// The two screens of a listen: the session, and the preview of the entry it
+// will make. Miyel's brief *the session becomes one screen*, 2026-09-29.
 //
-// "Notes" became "Album" on 2026-09-18: that screen is where the record gets
-// its score, its marks and the writing that is *about the album*, which is
-// what the word Album says.
+// It was four — Overview · Tracks · Album · Preview — with one track per
+// screen in the middle. The Overview was the cover, the facts and the
+// tracklist; Tracks and Album were apart only because a per-track screen
+// needed somewhere to live. All three are one screen now, laid out as the
+// entry is (steps/AlbumNotes.js, steps/TrackNotes.js), and the preview is
+// what it was.
 //
-// Overview is a different screen behind the same word. It was the cover, the
-// title and the artist — the beacon one row up, said larger — and it is the
-// record's contents now: the facts and the tracklist
-// (steps/RecordContents.js). It was folded into Tracks for an hour, as one
-// step with two faces, and Miyel put it back the same day for a reason that
-// is about the gesture rather than the shape: "I do miss scrolling
-// horizontally through tracks and between steps." A face is not a step, so a
-// swipe could not reach it, and a screen you can only arrive at by pressing
-// its name is not on the same footing as the ones either side of it.
-//
-// **The stored value is the index, not the word.** The count went four → three
-// → four across two hours, which is why there are two migrations about it:
-// 017 shifted every draft down, 018 shifts it back. A copy that gets both at
-// once nets out at nothing, which is correct; this one got them an hour apart,
-// which is also correct.
-export const SESSION_STEPS = ['Overview', 'Tracks', 'Album', 'Preview'];
+// **The stored value is still the old index.** A draft keeps the screen it
+// was left on as a number, 0 to 3, and drafts written before this are still
+// there. So what is stored is 0 for the session and 3 for the preview, and
+// anything under 3 reads as the session — which is what a draft left on the
+// Overview, Tracks or Album means now. See `stored` and `fromStored`.
+export const SESSION_STEPS = ['Session', 'Preview'];
+const STORED_PREVIEW = 3;
+const stored = step => (step === SESSION_STEPS.length - 1 ? STORED_PREVIEW : 0);
+const fromStored = n => ((Number(n) || 0) >= STORED_PREVIEW ? SESSION_STEPS.length - 1 : 0);
 
 // Where the record being listened to is kept between the picker and the
 // session, and across a reload. Written by whoever starts a listen — the
@@ -166,7 +161,14 @@ export function useListeningSession({ step }) {
   // show the mark before there is an entry to read it off.
   const Masterpiece = Array.isArray(tracks) && tracks.length > 0
     && tracks.every((_, i) => Number(trackRatings[i]) === 5);
-  const [openTrack, setOpenTrack]         = useState(0);      // the track on screen
+
+  // ── The track being logged ───────────────────────────────────────────────
+  // By its place in the list, and null until one is. Anything done to a
+  // track in the list puts it on — its name pressed, a star, the heart, its
+  // note opened (TrackRow.js; Miyel, 2026-09-29: "any sort of click on a
+  // track counts as lighting it as live"). It was `openTrack`, the track on
+  // screen, while a listen was one track per screen.
+  const [onAir, setOnAir]                 = useState(null);
 
   // The draft — the browser's copy and the row in `drafts` — is kept by
   // useSessionDraft, below the timer, once everything it watches exists.
@@ -215,12 +217,14 @@ export function useListeningSession({ step }) {
   );
 
   const draft = useSessionDraft({
-    step, saved, hasWriting,
+    // In the numbering a draft has always been kept in (SESSION_STEPS).
+    step: stored(step),
+    saved, hasWriting,
     values: {
       albumInput, artistName, year, albumArt, genre, entryType, receivedFrom, receivedDate,
       receivedFromUrl, creditPrivate, submissionId,
       collectionIdRef, tracks, overallNotes, trackNotes, trackRatings, trackFavorites,
-      rating, Masterpiece, Favorite, Formative, elapsedRef,
+      rating, Masterpiece, Favorite, Formative, elapsedRef, onAir,
     },
     setters: {
       setOverallNotes, setRating, setFavorite, setFormative,
@@ -244,24 +248,15 @@ export function useListeningSession({ step }) {
   //
   // **It is keyed on interaction and never on a heartbeat.** The row expires
   // three hours after its last write, so what keeps a beacon alive is somebody
-  // turning to a track or writing a line. A timer that pinged while the page
+  // pressing a track, rating one or writing a line. A timer that pinged while the page
   // merely sat open would keep the beacon claiming a listen all weekend, which
   // is the one loophole this had to close.
-  // ── The song a listen got to, 2026-09-20 ────────────────────────────────
-  // Kept for the length of one record rather than read off the screen each
-  // time. What is on screen answers "what is open", and the beacon is asking
-  // something else: how far into this record its keeper has got. Those are
-  // the same answer everywhere except the album screen, where nothing is
-  // open — so going back to the cover for a moment used to take the song off
-  // the beacon, and finishing from there left the record's name standing
-  // where a song had been (Miyel, 2026-09-20: "if it ends on a song, leave
-  // the song up").
-  //
-  // Blank until a song is actually reached, which is the whole of what the
-  // old guard was for: openTrack is 0 before anybody has pressed anything,
-  // so a record sitting on its own cover would otherwise announce track one.
-  // Cleared by a different record arriving, and by nothing else.
-  const gotTo = useRef({ album: '', track: '' });
+  // ── The song a listen got to ────────────────────────────────────────────
+  // `onAir`, above, and nothing about which screen is up: going on to the
+  // preview leaves the song standing (Miyel, 2026-09-20: "if it ends on a
+  // song, leave the song up"). Blank until a song is pressed, so a record
+  // just opened says its own name. Cleared by a different record arriving,
+  // and by nothing else.
   useEffect(() => {
     if (!albumInput || saved) return undefined;
     // ── Every record in hand is a beacon, 2026-09-18 ──────────────────────
@@ -296,29 +291,16 @@ export function useListeningSession({ step }) {
           album: albumInput,
           artist: artistName,
           album_art: albumArt,
-          // Whatever song is open, and blank while the tracklist is still
-          // being fetched or a resumed draft is sitting on its album screen.
-          // Blank is no longer the same as no beacon — the gate above decides
-          // that — so a listen with no song yet says the record's name instead
-          // of going dark. It keeps naming the last song reached through Notes
-          // and Preview too: the listen is still open, and dropping to "Last
-          // logged" while its keeper writes the album note would be wrong at
-          // the most deliberate moment of the whole thing.
-          // The furthest song this listen has reached — see gotTo above.
-          // Blank is not the same as no beacon: the route names the record
-          // instead.
-          track: (() => {
-            if (gotTo.current.album !== albumInput) gotTo.current = { album: albumInput, track: '' };
-            const open = step > 0 ? (tracks?.[openTrack]?.title || '') : '';
-            if (open) gotTo.current.track = open;
-            return gotTo.current.track;
-          })(),
+          // The song being logged, and blank until one is pressed or while
+          // the tracklist is still being fetched. Blank is not the same as no
+          // beacon: the route names the record instead.
+          track: onAir === null ? '' : (tracks?.[onAir]?.title || ''),
         }),
       }).then(() => { litRef.current = true; })
         .catch(() => { /* the beacon is not worth an alert */ });
     }, 2000);
     return () => clearTimeout(t);
-  }, [albumInput, artistName, albumArt, tracks, openTrack, saved,
+  }, [albumInput, artistName, albumArt, tracks, onAir, saved,
       overallNotes, trackNotes, trackRatings, trackFavorites,
       rating, Masterpiece, Favorite, Formative, step, hasWriting]);
 
@@ -379,7 +361,7 @@ export function useListeningSession({ step }) {
     setTrackNotes({});
     setTrackRatings({});
     setTrackFavorites({});
-    setOpenTrack(0);
+    setOnAir(null);
     elapsedRef.current = 0;
     setOverallNotes('');
     setRating(0);
@@ -436,6 +418,10 @@ export function useListeningSession({ step }) {
       draft.applyLocal(local);
       if (!rows.length && Array.isArray(local.tracks) && local.tracks.length) rows = local.tracks;
       if (typeof local.step === 'number') openAt = local.step;
+      // Which track was being logged, which only the browser's copy knows:
+      // the row in `drafts` has no column for it and is not getting one for
+      // something a press puts back.
+      if (Number.isInteger(local.onAir)) setOnAir(local.onAir);
     }
 
     if (rows.length) {
@@ -469,7 +455,8 @@ export function useListeningSession({ step }) {
       });
     }
 
-    return Math.min(Math.max(0, openAt), SESSION_STEPS.length - 1);
+    // Out of the stored numbering.
+    return fromStored(openAt);
   }
 
   // ── When there is no tracklist ────────────────────────────────────────────
@@ -701,7 +688,7 @@ export function useListeningSession({ step }) {
     trackNotes, setTrackNotes,
     trackRatings, setTrackRatings,
     trackFavorites, setTrackFavorites,
-    openTrack, setOpenTrack,
+    onAir, putOnAir: setOnAir,
     // Draft
     draftState: draft.state,
     // Preview
@@ -721,6 +708,9 @@ export function useListeningSession({ step }) {
     lookAgain,
     takeHandTracks,
     saveDraft: draft.save,
+    // Discard, 2026-09-29: the listen is thrown away, both copies of the
+    // draft with it, and the needle lifts. The caller clears the desk.
+    discardDraft: async () => { liftNeedle(); await draft.finish(); },
     doFormat,
     doSave,
   };

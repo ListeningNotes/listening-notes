@@ -40,7 +40,7 @@
 .get-back:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: -4px; border-radius: 10px; }
 /* On a desk the sheet the story rises on draws its own caret (.lay-back in
    entry.css), so this one stands down there and there is still only one. */
-@media (min-width: 769px) {
+@media (min-width: 769px), (hover: hover) and (pointer: fine) {
   .get-layered .get-back { display: none; }
 }
 .get-kicker {

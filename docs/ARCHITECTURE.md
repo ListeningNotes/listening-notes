@@ -242,14 +242,13 @@ The furniture — visual pieces
     session_components/        Everything in the private dashboard
       PasswordGate.js          The password screen
       AlbumPicker.js           Type, see a grid of covers with songs under them, tap one — the screen before a listen, or before a track note
-      SessionHeader.js         The title line, the glowing question mark and the theme switch, and the four steps
       StarRating.js            The interactive stars you click to rate
+      TrackRow.js              One track in the session's list — number or the live dot, the name, stars and heart set in place; on the track being logged, *Any notes?* or the note, and the field under the row when it is open, with the envelope at its foot
       Trouble.js               Something in a listen went wrong, said in the site's own voice — two sentences, and whether the writing is safe
       steps/
-        RecordContents.js      Overview — the strip, the record's facts and the tracklist; tapping a track starts there
-        TrackNotes.js          Step 1 — one track per screen, under a strip of every track's bar, dot and title
-        AlbumNotes.js          Step 2 — the horizon so far, the score, the three marks, then the album note
-        SessionPreview.js      Step 3 — the real entry page (FullPostPage in preview mode) on its own sheet, with Return to session and Save to journal at its foot
+        AlbumNotes.js          The top of the session — cover, title, artist and year, the album's stars and marks, the album note behind *Any notes?*
+        TrackNotes.js          The tracks — the label, the horizon, every track as a row (TrackRow.js)
+        SessionPreview.js      The second step — the real entry page (FullPostPage in preview mode) on its own sheet, with Return to session and Save to journal at its foot
       backgrounds/             10 animated canvas scenes — parked 2026-09-06, nothing mounts them; wanted back as plates for the share printer
         Rain.js / DVD.js / Gallery.js / Fizzy.js / SplitScreen.js
         Snake.js / Pong.js / Solitaire.js / Reel.js
@@ -328,8 +327,7 @@ The rooms — full pages assembled from furniture
 | Printing a record (the share printer) | components/main_components/EntryPlate.js draws the plate, hooks/usePress.js makes and saves the picture, Slug_Page/PrintBar.js is the bar, styles under .ln-print in app/styles/entry.css, app/printer/page.js opens it |
 | The album picker | components/session_components/AlbumPicker.js |
 | The note-taking session | app/session/page.js, styles in app/styles/session.css |
-| The header above every session screen | components/session_components/SessionHeader.js |
-| The session screens (overview, tracks, album, preview) | components/session_components/steps/ |
+| The session's one screen and its preview | components/session_components/steps/ |
 | Editing an entry | hooks/useEntryEditor.js, drawn into app/entries/[slug]/FullPostPage.js |
 
 ---

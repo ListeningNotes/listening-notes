@@ -684,3 +684,22 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 }
 .ln-word:disabled { opacity: 0.45; cursor: default; }
 .ln-word:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; }
+
+/* ── The brow ───────────────────────────────────────────────────────────────
+   The phone's status bar, as a band of the page's colour that everything
+   scrolls under (app/layout.js). Fixed over every sheet and bar the site
+   draws — the layers stand at 200, the sheets' foot bars at 400 — so it is
+   the last thing on top. No height at all where there is no inset. */
+.ln-brow {
+  position: fixed; top: 0; left: 0; right: 0;
+  height: env(safe-area-inset-top, 0px);
+  z-index: 1000;
+  pointer-events: none;
+  /* Solid, and a hairline at its foot so it reads as a band and not as a
+     smear. No blur: Miyel, "I don't like any blur. I just want it to be a
+     solid line." */
+  /* The hairline is painted inside the band's own height rather than as a
+     border, so where the inset is zero — a desk — nothing at all is drawn. */
+  background: linear-gradient(to top, var(--border) 1px, var(--bg) 1px);
+}
+

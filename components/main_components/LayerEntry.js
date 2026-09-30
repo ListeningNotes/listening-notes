@@ -111,6 +111,15 @@ export function useLayerHeaderSlot() {
 // false — and the sheet does not go. Anything else and it does. Nothing that
 // does not call this is affected: the pull closes as directly as it ever did.
 export const LayerLeaving = createContext(null);
+// ── And asking the sheet to go ────────────────────────────────────────────
+// A listen has two words at its foot that end it — Save draft and Discard
+// (2026-09-29) — and each has to close the sheet the way the pull does,
+// through leave(): the page's own before-leaving hook runs first and the
+// sheet sinks. Null on a page opened cold, where the page finds its own way.
+export const LayerExit = createContext(null);
+export function useLayerExit() {
+  return useContext(LayerExit);
+}
 export function useBeforeLeaving(fn) {
   const holdRef = useContext(LayerLeaving);
   const latestRef = useRef(fn);
@@ -796,6 +805,7 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
           early, or leaves off the edge; a neighbour is a new layer and
           enters from the side it was on. */}
       <LayerLeaving.Provider value={held}>
+      <LayerExit.Provider value={leave}>
       <LayerHeaderSlot.Provider value={headerSlot}>
       <LayerFolder.Provider value={folderLayer}>
       {/* ── A link that means back, 2026-09-22 ──────────────────────────
@@ -820,6 +830,7 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
       </div>
       </LayerFolder.Provider>
       </LayerHeaderSlot.Provider>
+      </LayerExit.Provider>
       </LayerLeaving.Provider>
 
       {/* For a pointer, where there is no swipe: a caret at each edge, and
