@@ -101,28 +101,38 @@ export default function TrackRow({
             in its note box — Miyel, 2026-09-29: "some won't click that box
             open." An envelope and not a paper plane, as the entry's own
             Send is: a letter to one person. */}
-        {onSend && onAir && (
-          <button type="button" className="ses-heart" onClick={onSend} aria-label={`Send ${title} to somebody`} title="Send this song">
-            <EnvelopeSimple size={20} weight="regular" aria-hidden="true" />
-          </button>
-        )}
       </div>
 
       {/* Under the name, the row's whole width: the offer, the note, or
           the box. In a wrapper of its own so the row's line above it — dot
           or number, name, stars, heart — is never crowded by it. */}
-      {offered && (
+      {/* The envelope that sends the song stands at the right of that line,
+          not beside the heart: there it pushed the stars left the moment a
+          row was pressed, "and the stars moving doesn't feel right" (Miyel,
+          2026-09-29). Here nothing on the row's first line moves when it
+          lights. Off the line while the box is open, which has the width. */}
+      {onAir && !noting && (
         <div className="ses-row-under">
-          <button type="button" className="ses-row-offer" onClick={onNote}>
-            Add notes
-          </button>
+          {offered && (
+            <button type="button" className="ses-row-offer" onClick={onNote}>
+              Add notes
+            </button>
+          )}
+          {written && (
+            <button type="button" className="ses-row-note" onClick={onNote} aria-label={`Notes on ${title}: ${note}. Press to edit`}>
+              {note}
+            </button>
+          )}
+          {onSend && (
+            <button type="button" className="ses-heart ses-row-send" onClick={onSend} aria-label={`Send ${title} to somebody`} title="Send this song">
+              <EnvelopeSimple size={18} weight="regular" aria-hidden="true" />
+            </button>
+          )}
         </div>
       )}
-      {written && !noting && (
+      {!onAir && written && (
         <div className="ses-row-under">
-          <button type="button" className="ses-row-note" onClick={onNote} aria-label={`Notes on ${title}: ${note}. Press to edit`}>
-            {note}
-          </button>
+          <span className="ses-row-note">{note}</span>
         </div>
       )}
 

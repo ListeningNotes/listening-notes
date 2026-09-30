@@ -695,7 +695,17 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   height: env(safe-area-inset-top, 0px);
   z-index: 1000;
   pointer-events: none;
-  background: color-mix(in srgb, var(--bg) 88%, transparent);
-  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  /* Solid, and a hairline at its foot so it reads as a band and not as a
+     smear. No blur: Miyel, "I don't like any blur. I just want it to be a
+     solid line." */
+  background: var(--bg);
+  box-sizing: content-box;
+  border-bottom: 1px solid var(--border);
 }
+/* Nothing at all where there is no inset: the hairline would otherwise be
+   a stray line across the top of a desk. */
+@supports (top: env(safe-area-inset-top)) {
+  .ln-brow { display: block; }
+}
+@media (max-width: 0px) { .ln-brow { display: none; } }
 
