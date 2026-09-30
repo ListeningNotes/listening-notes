@@ -939,18 +939,23 @@ the other two be subjective and what makes two journals comparable at all.
 Checked before shipping: the rule agreed with all 40 entries, so nothing
 gained or lost the mark.
 
-**Favorite applies to tracks and albums. Masterpiece and Formative are
-album-only.** Masterpiece is a full five-star tracklist, which cannot apply to
-a single track.
+**Favorite applies to tracks and albums. Masterpiece is album-only.**
+Masterpiece is a full five-star tracklist, which cannot apply to a single
+track. **Formative is an album's or a track note's, 2026-09-30:** a song can
+be the thing that made you. A track inside an album listen still has a heart
+and no Formative.
 
 **An album has many listens, numbered.** The number is computed from existing
 entries, never chosen. Entries are never overwritten; a relisten is a new one.
 
 **A track note is its own entry, about one song, 2026-09-24.** Never a shorter
 album entry and never part of one: `song` beside the record's `album`
-(migration 025). Stars and words only — no tracklist, horizon, album rating,
-Formative, Masterpiece, or heart (dropped 2026-09-26). Its ··· is Edit, Credit,
-Send, Delete; nothing that counts albums counts it. One object doing both is
+(migration 025). Stars, words, Favorite and Formative — no tracklist, horizon,
+album rating or Masterpiece. The heart was dropped on 2026-09-26 and came
+back with Formative on 2026-09-30 (Miyel: "it just feels right… I think it
+matters"). Its ··· is Edit, Credit, Send, Delete; nothing that counts albums
+counts it — the card's Formative is still albums only. Written or corrected,
+it takes the album listen's shape. One object doing both is
 one confusing object instead of two clear ones.
 
 **A track note is a listen to the beacon, 2026-09-26, Miyel's call.** Writing

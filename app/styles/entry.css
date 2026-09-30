@@ -2177,6 +2177,28 @@ html[data-printing] .sitenav-row { display: none; }
   white-space: pre-wrap;
 }
 .tn-write { font-size: 15px; line-height: 1.75; }
+/* Read: Favorite and Formative, as the chips an album entry wears. */
+.tn-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 12px; }
+
+/* ── Written as a listen is written, 2026-09-30 ────────────────────────────
+   While a note is being written or corrected the card takes the album
+   listen's shape: everything on the centre line, the stars under the record,
+   the marks a glyph over a word, the note in the listen's own box
+   (.ses-note-box, .ses-marks — session.css). Read, the card is as it was. */
+.tn--composing .tn-head { flex-direction: column; gap: 18px; }
+.tn--composing .tn-cover { width: 132px; height: 132px; }
+.tn--composing .tn-said { text-align: center; display: flex; flex-direction: column; align-items: center; }
+.tn--composing .tn-marks { justify-content: center; margin-top: 16px; min-height: 0; }
+.tn--composing .tn-posted { margin-top: 12px; }
+.tn-set-marks { margin-top: 12px; }
+.tn-box { margin-top: 4px; }
+/* Room under the note for a keyboard and the strip a phone floats over it,
+   while the cursor is in the card; and the scroller keeps the cursor that
+   far clear of its foot as the note grows. */
+@media (pointer: coarse) {
+  .tn--composing:focus-within .tn-card { padding-bottom: 50vh; }
+  .tn--composing .tn-screens { scroll-padding-bottom: 160px; }
+}
 /* Plain words and a play mark, in ink, underlined so it reads as the link it
    is: the one thing on the card that goes somewhere. Under the head, so a
    long note cannot bury it (2026-09-25) — and not a pill, which Miyel does

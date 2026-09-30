@@ -754,7 +754,7 @@ export default function AlbumPicker({ onPick, onResume, onPickSong = null, inlin
                             artUrl: song.artLarge || song.art || '',
                             collectionId: song.collectionId || null,
                             genre: song.genre || '',
-                            written: kept ? { rating: kept.rating, note: kept.notes || '' } : null,
+                            written: kept ? { rating: kept.rating, note: kept.notes || '', favorite: kept.favorite === true, formative: kept.formative === true } : null,
                           }, from);
                         }}
                       >
@@ -846,7 +846,7 @@ export default function AlbumPicker({ onPick, onResume, onPickSong = null, inlin
                             artUrl: draft.album_art || '',
                             collectionId: draft.collection_id || null,
                             genre: draft.genre || '',
-                            written: { rating: draft.rating, note: draft.notes || '' },
+                            written: { rating: draft.rating, note: draft.notes || '', favorite: draft.favorite === true, formative: draft.formative === true },
                           }, img ? img.getBoundingClientRect() : null);
                           return;
                         }
