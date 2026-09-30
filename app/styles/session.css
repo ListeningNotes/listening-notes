@@ -721,6 +721,10 @@
    label favorite and formative"). Set, the mark fills and takes its own
    colour and the word goes to ink; unset, both are faint. */
 .ses-record-marks { display: flex; align-items: center; justify-content: center; margin-top: 18px; }
+/* The reveal, under the stars it draws into. The tick hangs 7px under the
+   star row, so the room is for that and a little more. */
+.ses-record-reveal { margin-top: 14px; }
+.ses-record-reveal + .ses-marks { margin-top: 6px; }
 /* ── The three marks ───────────────────────────────────────────────────────
    A glyph over a word, which is the one shape this software uses to mean
    "here is something you can do" — an entry's ···, the address book's doors,
@@ -826,9 +830,6 @@
 
 /* ── The tracks ─────────────────────────────────────────────────────────── */
 .ses-tracks { margin-top: 34px; }
-/* The reveal, over the horizon at its right — where the entry keeps its own
-   caption over the bars. */
-.ses-horizon-cap { display: flex; justify-content: flex-end; margin-bottom: -8px; }
 /* The horizon, in the entry's slot: over the rows, with the rows' first
    hairline as its floor. */
 .ses-horizon { margin: 0 0 4px; }
@@ -879,7 +880,10 @@
    Discard is faint until it is pressed once, then asks in red. */
 .ses-bar { gap: 26px; }
 .ses-bar-discard { color: var(--ink-faint); }
-.ses-bar-discard--armed { color: var(--fav); }
+/* Over the word's own hover rule, which a phone keeps lit after a tap and
+   which was turning the question back to ink. */
+.ln-word.ses-bar-discard--armed,
+.ln-word.ses-bar-discard--armed:hover { color: var(--fav); }
 
 /* ── A desk ────────────────────────────────────────────────────────────────
    The record at the left, holding still; the tracks at the right; the three

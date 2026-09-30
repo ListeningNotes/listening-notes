@@ -16,16 +16,20 @@ import StarRating from '../StarRating';
 //
 // No label over the note and none over the tracks: the preview says what
 // each is, and here the box and the list say it themselves. The average of
-// the track ratings is revealed from the horizon, where the ratings are
-// (steps/TrackNotes.js), and drawn into the stars here as a ghost.
+// the track ratings is revealed under the stars and drawn into them as a
+// ghost.
 export default function AlbumNotes({
   album, artist, year, albumArt,
   overallNotes,
   setOverallNotes,
   rating,
   setRating,
-  // The tracks' average, drawn into the stars once it has been asked for.
-  ghost = 0,
+  // The tracks' average: behind a press under the stars, and drawn into
+  // them as a ghost once it has been asked for. Miyel rates blind on
+  // purpose — "sometimes I like to not see what my average is and just rate
+  // it and see if it matches up" — so nothing shows until asked. It stood
+  // over the horizon for an hour and she asked for it back here.
+  avg = null, avgShown = false, onReveal,
   Masterpiece,
   Favorite,
   setFavorite,
@@ -53,8 +57,17 @@ export default function AlbumNotes({
           stars under a record you are logging are not ambiguous (Miyel,
           2026-09-18). */}
       <div className="ses-record-marks">
-        <StarRating value={rating} onChange={setRating} size={26} roomy ghost={ghost} />
+        <StarRating value={rating} onChange={setRating} size={26} roomy ghost={avgShown && avg ? Number(avg) : 0} />
       </div>
+      {/* Only when there is an average to reveal, which is the same thing
+          as some track having been rated. */}
+      {avg && (
+        <div className="ses-record-reveal">
+          <button type="button" className="ses-quiet" style={{ borderBottom: 'none' }} onClick={onReveal} aria-pressed={avgShown}>
+            {avgShown ? 'hide average' : 'reveal average'}
+          </button>
+        </div>
+      )}
       {/* The marks, a glyph over a word each — the album screen's own
           shape, back on Miyel's word ("let's label favorite and
           formative"). */}

@@ -141,8 +141,8 @@ export default function SessionPage() {
   // left empty (TrackRow.js) or when another track's opens.
   const [noting, setNoting] = useState(null);
 
-  // The tracks' average, behind a press over the horizon and drawn into the
-  // album's stars — two components apart, so it is kept here.
+  // The tracks' average, behind a press under the album's stars. Kept here
+  // because the ratings it is made of live in the list below.
   const [avgShown, setAvgShown] = useState(false);
   const ratedSoFar = Object.values(s.trackRatings || {}).filter(v => v > 0);
   const avg = ratedSoFar.length ? (ratedSoFar.reduce((a, b) => a + b, 0) / ratedSoFar.length).toFixed(2) : null;
@@ -756,7 +756,7 @@ export default function SessionPage() {
             <div className={'ses-page' + (landing ? ' ses-step ses-step--fade' : '')}>
               <AlbumNotes
                 album={s.albumInput} artist={s.artistName} year={s.year} albumArt={s.albumArt}
-                ghost={avgShown && avg ? Number(avg) : 0}
+                avg={avg} avgShown={avgShown} onReveal={() => setAvgShown(v => !v)}
                 overallNotes={s.overallNotes} setOverallNotes={s.setOverallNotes}
                 rating={s.rating} setRating={s.setRating}
                 Masterpiece={s.Masterpiece}
@@ -769,7 +769,6 @@ export default function SessionPage() {
                 trackRatings={s.trackRatings} setTrackRatings={s.setTrackRatings}
                 trackFavorites={s.trackFavorites} setTrackFavorites={s.setTrackFavorites}
                 onAir={s.onAir} putOnAir={s.putOnAir}
-                avg={avg} avgShown={avgShown} onReveal={() => setAvgShown(v => !v)}
                 noting={noting}
                 onOpenNote={setNoting}
                 setTrackNotes={s.setTrackNotes}

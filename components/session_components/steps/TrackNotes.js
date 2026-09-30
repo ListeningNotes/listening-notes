@@ -33,9 +33,6 @@ export default function TrackNotes({
   setTrackFavorites,
   onAir = null,
   putOnAir,
-  // The average of the ratings, revealed here because this is where the
-  // ratings are, and drawn into the album's stars above (page.js holds it).
-  avg = null, avgShown = false, onReveal,
   noting = null,
   onOpenNote,
   setTrackNotes,
@@ -101,17 +98,6 @@ export default function TrackNotes({
 
   return (
     <section className="ses-tracks">
-      {/* The reveal, over the horizon and at its right, where the entry
-          keeps its own caption over the bars. Only when there is an average
-          to reveal, which is the same thing as some track having been rated.
-          Miyel rates blind on purpose, so nothing shows until asked. */}
-      {avg && (
-        <div className="ses-horizon-cap">
-          <button type="button" className="ses-quiet" style={{ borderBottom: 'none' }} onClick={onReveal} aria-pressed={avgShown}>
-            {avgShown ? 'hide average' : 'reveal average'}
-          </button>
-        </div>
-      )}
       <div className="ses-horizon">
         <HorizonChart
           tracks={list} trackRatings={trackRatings} favorites={trackFavorites}
