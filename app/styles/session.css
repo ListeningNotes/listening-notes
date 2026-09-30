@@ -805,10 +805,9 @@
 .ses-note-box .ses-textarea { border-bottom: 0; min-height: 0; padding: 4px 0; }
 .ses-note-box .ses-grow::after { padding: 4px 0; }
 .ses-album-box { margin-top: 24px; }
-/* A track's note: the same box, under the whole row, with the envelope in
-   its corner. The row wraps to make the room. */
-.ses-row-box { margin: 12px 0 4px; position: relative; padding-right: 44px; }
-.ses-row-send { position: absolute; right: 10px; bottom: 8px; }
+/* A track's note: the same box, under the whole row. The row wraps to make
+   the room. */
+.ses-row-box { margin: 12px 0 4px; }
 
 /* The offer under a track: the caption face at caption weight, and nothing
    about it that reads as a field. The padding is its touch target; the

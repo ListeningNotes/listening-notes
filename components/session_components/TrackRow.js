@@ -99,7 +99,7 @@ export default function TrackRow({
         <span className="ses-row-name">{title}</span>
         {offered && (
           <button type="button" className="ses-row-offer" onClick={onNote}>
-            Any notes?
+            Add notes
           </button>
         )}
         {written && !noting && (
@@ -125,13 +125,21 @@ export default function TrackRow({
         >
           <Heart size={20} weight={favorite ? 'fill' : 'regular'} />
         </button>
+        {/* Send this song. Beside the heart on the track being logged, not
+            in its note box — Miyel, 2026-09-29: "some won't click that box
+            open." An envelope and not a paper plane, as the entry's own
+            Send is: a letter to one person. */}
+        {onSend && (
+          <button type="button" className="ses-heart" onClick={onSend} aria-label={`Send ${title} to somebody`} title="Send this song">
+            <EnvelopeSimple size={20} weight="regular" aria-hidden="true" />
+          </button>
+        )}
       </div>
 
       {/* The note, in the same box the album note is written in, under the
           whole row (Miyel, 2026-09-29: "have the track notes match the
           album notes — that box opens"). Grown by layout, never measured —
-          see .ses-grow. The envelope that sends the song stands in the
-          box's corner. */}
+          see .ses-grow. */}
       {noting && (
         <div className="ses-note-box ses-row-box">
           <div className="ses-grow" data-said={note + ' '}>
@@ -148,11 +156,6 @@ export default function TrackRow({
               rows={3}
             />
           </div>
-          {onSend && (
-            <button type="button" className="ses-heart ses-row-send" onMouseDown={e => e.preventDefault()} onClick={onSend} aria-label={`Send ${title} to somebody`} title="Send this song">
-              <EnvelopeSimple size={18} weight="regular" aria-hidden="true" />
-            </button>
-          )}
         </div>
       )}
     </li>

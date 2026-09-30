@@ -1997,7 +1997,7 @@ and its note is a sheet. The strip, the carets, the swipe between tracks and
 the mini beacon header went with it. The reversed entries and the day of
 trials are in the archive; do not bring the screens back a third time.
 
-**An empty note field is closed.** *Any notes?* under the track being
+**An empty note field is closed.** *Add notes* under the track being
 logged, and under the album note's label, until it is pressed; the writing
 once there is any; nothing under any other track. The session offers rather
 than asks.
@@ -2007,7 +2007,8 @@ track being logged.** The brief drew a sheet and one was built for an hour;
 Miyel: "the notes field should open in the tracklist, not as a popup." What
 sank the list in 2026-09-18 was a field under every row; one field, on the
 lit row, lifted clear of the keyboard, is a different thing. Left empty it
-shuts; written in, the words stand where it was. The envelope is at its foot.
+shuts; written in, the words stand where it was. The envelope is beside the
+heart on the lit row, so a song can be sent without the box being opened.
 
 **The track being logged is the one last touched, 2026-09-29.** Its name
 pressed, a star, the heart, its note opened — "any sort of click on a track
