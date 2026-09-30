@@ -151,7 +151,7 @@ export default function TrackRow({
               // Left empty, the box shuts again; written in, the words stand
               // where it was.
               onBlur={() => { if (!note.trim()) onNoteShut(); }}
-              placeholder="Any notes on this track?"
+              placeholder="What this one did…"
               aria-label={`Notes on ${title}`}
               rows={3}
             />

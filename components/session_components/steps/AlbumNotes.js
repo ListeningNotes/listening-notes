@@ -10,7 +10,9 @@ import StarRating from '../StarRating';
 // note (Miyel's brief, *the session becomes one screen*, 2026-09-29, and her
 // first look at it on a phone the same night: "center the album and album
 // data, also the stars… make a box out of hairlines with rounded corners
-// that is clearly a field for overall album notes").
+// that is clearly a field for overall album notes"). The words inside it are
+// the first brief's own, picked over a question: a question mark makes the
+// box a question, and the box is meant to be a note already begun.
 //
 // No label over the note and none over the tracks: the preview says what
 // each is, and here the box and the list say it themselves. The average of
@@ -99,7 +101,7 @@ export default function AlbumNotes({
             className="ses-textarea"
             value={overallNotes}
             onChange={e => setOverallNotes(e.target.value)}
-            placeholder="Any overall album notes?"
+            placeholder="What it did, where you were, what you noticed…"
             aria-label="Album note"
             rows={3}
           />
