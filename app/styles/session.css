@@ -687,7 +687,13 @@
    session is the page being filled in. The four screens it replaces, and
    the styles that drew them (the strip, one track at a time, the contents
    screen, the album screen), are in the history at 1.39.0. */
-.ses-body--page { padding-top: 22px; padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
+/* Under the phone's status bar, not behind it: the header that used to
+   carry that inset is gone, so the page carries it now. Seen on Miyel's
+   phone, 2026-09-29 — the cover sat under the clock. */
+.ses-body--page {
+  padding-top: calc(env(safe-area-inset-top, 0px) + 28px);
+  padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+}
 
 /* ── The record ─────────────────────────────────────────────────────────── */
 .ses-record-head { display: flex; align-items: flex-start; gap: 18px; }
@@ -836,7 +842,7 @@
    The record at the left, holding still; the tracks at the right; the three
    words in a row at the top instead of a band at the foot. Said by the page,
    which measures the listen itself (app/session/page.js, WIDE_PX). */
-.ses--wide .ses-body--desk { max-width: 1080px; padding-top: 88px; padding-bottom: 60px; }
+.ses--wide .ses-body--desk { max-width: 1080px; padding-top: calc(env(safe-area-inset-top, 0px) + 88px); padding-bottom: 60px; }
 .ses--wide .ses-page {
   display: grid; grid-template-columns: minmax(220px, 36%) minmax(0, 1fr);
   column-gap: clamp(40px, 7%, 96px); align-items: start;
