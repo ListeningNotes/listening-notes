@@ -221,7 +221,18 @@ export default function SessionPage() {
         // 2026-09-29 — the track's name under the clock).
         parseFloat(getComputedStyle(root).getPropertyValue('--ses-inset')) || 0,
       );
-      const above = field.closest('.ses-row') || field.closest('.ses-grow').previousElementSibling || field;
+      // What is kept in sight over the note: a track's row in a listen, and
+      // on a track note the head of its card — cover, song, stars, marks.
+      // The note's own box was the fallback for a track note, which put the
+      // box against the top of the screen with the song gone above it and
+      // half a screen of nothing between the box and the keyboard (Miyel,
+      // 2026-09-30: "the track data is so lost with so much empty space").
+      // The page still lifts further if where you tapped would be under the
+      // keyboard.
+      const above = field.closest('.ses-row')
+        || field.closest('.tn-card')?.querySelector('.tn-head')
+        || field.closest('.ses-grow').previousElementSibling
+        || field;
       const space = room || Math.round(window.innerHeight * 0.55);
       const at = tapY ?? field.getBoundingClientRect().top + 20;
       let by = above.getBoundingClientRect().top - (under + 10);
