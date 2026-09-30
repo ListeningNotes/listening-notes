@@ -116,8 +116,8 @@ export default function TrackNotes({
               onAir={onAir === k}
               noting={noting === k}
               onPress={() => putOnAir?.(k)}
-              onRate={v => setTrackRatings(prev => ({ ...prev, [k]: v }))}
-              onFavorite={() => setTrackFavorites(prev => ({ ...prev, [k]: !prev[k] }))}
+              onRate={v => { putOnAir?.(k); setTrackRatings(prev => ({ ...prev, [k]: v })); }}
+              onFavorite={() => { putOnAir?.(k); setTrackFavorites(prev => ({ ...prev, [k]: !prev[k] })); }}
               onNote={() => onOpenNote(k)}
               onNoteChange={text => setTrackNotes(prev => ({ ...prev, [k]: text }))}
               onNoteShut={onShutNote}

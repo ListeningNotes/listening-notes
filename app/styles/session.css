@@ -720,23 +720,19 @@
    uses to mean *here is something you can do* (Miyel, 2026-09-29: "let's
    label favorite and formative"). Set, the mark fills and takes its own
    colour and the word goes to ink; unset, both are faint. */
-.ses-record-marks { display: flex; align-items: center; justify-content: center; margin-top: 18px; }
-/* The reveal, under the stars it draws into. The tick hangs 7px under the
-   star row, so the room is for that and a little more. */
-.ses-record-reveal { margin-top: 12px; }
-.ses-record-reveal + .ses-marks { margin-top: 4px; }
-/* The eye: shut, faint; open, in soft ink with the number beside it in the
-   caption face. */
+.ses-record-marks { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 18px; }
+/* The eye, at the right of the stars: shut, faint; open, in soft ink with
+   the number beside it in the caption face. */
 .ses-eye {
   display: inline-flex; align-items: center; gap: 6px;
-  padding: 8px 10px; margin: -8px -10px;
+  padding: 8px 10px; margin: -8px -10px -8px 0;
   border: 0; background: none; cursor: pointer;
   color: var(--ink-faint); -webkit-tap-highlight-color: transparent;
   transition: color 0.15s;
 }
 .ses-eye:hover, .ses-eye--open { color: var(--ink-soft); }
 .ses-eye:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 2px; border-radius: 8px; }
-.ses-eye-n { font-family: var(--font-label); font-size: 11px; letter-spacing: 0.04em; }
+.ses-eye-n { font-family: var(--font-label); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; }
 /* ── The three marks ───────────────────────────────────────────────────────
    A glyph over a word, which is the one shape this software uses to mean
    "here is something you can do" — an entry's ···, the address book's doors,
@@ -839,7 +835,7 @@
 .ses-row-offer:hover { color: var(--ink-soft); }
 .ses-row-offer:focus-visible,
 .ses-row-note:focus-visible,
-.ses-row-press:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: -4px; border-radius: 8px; }
+.ses-row-name:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: -4px; border-radius: 8px; }
 
 /* ── The tracks ─────────────────────────────────────────────────────────── */
 .ses-tracks { margin-top: 34px; }
@@ -870,18 +866,14 @@
    being two classes, and set the indent for each. */
 .ses-row-note.ses-row-under { width: auto; margin: -2px 0 0 34px; }
 .ses-row-offer.ses-row-under { flex: 0 0 auto; margin: -12px 0 0 26px; }
-/* A shut row is one press, the row's whole width, that puts the song on air.
-   A button in nothing but name: the row's own shape, no box. */
-.ses-row-press {
-  display: flex; flex-wrap: wrap; align-items: flex-start; gap: 12px; width: 100%;
-  padding: 0; margin: 0; border: 0; background: none; cursor: pointer;
-  text-align: left; color: inherit; font: inherit;
-  -webkit-tap-highlight-color: transparent;
-}
+/* The name is the press that puts the song on air. A button in nothing but
+   name: the title's own face, no box. */
 .ses-row-name {
-  display: block;
+  display: block; padding: 4px 0; margin: -4px 0;
+  border: 0; background: none; cursor: pointer; text-align: left;
   font-family: var(--font-display); font-weight: var(--font-display-weight);
   font-size: 16px; line-height: 1.3; color: var(--ink); overflow-wrap: anywhere;
+  -webkit-tap-highlight-color: transparent;
 }
 /* The note, on the row, at the size a note is written in. Pressing it opens
    the sheet it was written on. */

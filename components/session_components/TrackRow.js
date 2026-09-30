@@ -23,22 +23,22 @@
 // logged ever has one, and the page lifts it clear of the keyboard the way
 // it lifts the album note (app/session/page.js).
 //
-// ── Locked until pressed, 2026-09-29 ──────────────────────────────────────
-// A row does nothing until it is pressed. Pressed, it is the track being
-// logged — its number gives way to the live dot, the row takes the faintest
-// green — and only then are its stars, its heart and its note there to set.
-// Every other row shows what it was given and takes a thumb as a scroll.
-// Miyel, on the first list where every row's stars were live: "I'm having a
-// hard time actually scrolling through the track list, because if you scroll
-// anywhere by the stars, you start rating the song… every song is locked
-// until you click it." The offer to write is on that row alone: *Any notes?*
-// follows the song being logged rather than standing under every rated
-// track, so the list never reads as a column of questions.
+// ── The track being logged ────────────────────────────────────────────────
+// Anything done to a track puts it on air — its name pressed, a star, the
+// heart (Miyel, 2026-09-29: "any sort of click on a track counts as lighting
+// it as live"). Its number gives way to the live dot and the row takes the
+// faintest green; *Add notes* stands under that row alone, so the list never
+// reads as a column of questions.
+//
+// Every row's stars and heart are live. For an hour a row was locked until
+// pressed, because the stars took every thumb that came down to scroll; the
+// stars now tell a scroll from a tap from a drag themselves (StarRating.js),
+// which is the middle Miyel asked for — "sometimes I want to edit stars
+// without having to click the track."
 'use client';
 import { useLayoutEffect, useRef } from 'react';
 import { EnvelopeSimple, Heart } from '@phosphor-icons/react';
 import StarRating from './StarRating';
-import Stars from '../main_components/StarRating';
 import { colors } from '../../library/sitewide_visuals';
 
 export default function TrackRow({
@@ -62,41 +62,24 @@ export default function TrackRow({
     el.setSelectionRange(el.value.length, el.value.length);
   }, [noting]);
 
-  // Shut: the whole row is one press, and shows what it was given.
-  if (!onAir) {
-    return (
-      <li className="ses-row">
-        <button
-          type="button"
-          className="ses-row-press"
-          onClick={onPress}
-          aria-label={`${number}. ${title}${rating ? `, ${rating} out of 5` : ''}${favorite ? ', a favourite' : ''} — press to log this track`}
-        >
-          <span className="ses-row-n">{number}</span>
-          <span className="ses-row-name">{title}</span>
-          <div className="ses-row-marks" aria-hidden="true">
-            <Stars rating={rating} size={16} />
-            <span className="ses-heart" style={{ color: favorite ? colors.fav : undefined }}>
-              <Heart size={20} weight={favorite ? 'fill' : 'regular'} />
-            </span>
-          </div>
-          {/* The note runs the row's whole width under the name, so the
-              stars and the heart stay on the name's line however long it
-              is (Miyel, 2026-09-29). */}
-          {written && <span className="ses-row-note ses-row-under">{note}</span>}
-        </button>
-      </li>
-    );
-  }
-
-  // Open: the track being logged, with everything about it there to set.
   return (
-    <li className="ses-row ses-row--on">
+    <li className={'ses-row' + (onAir ? ' ses-row--on' : '')}>
       <span className="ses-row-n">
-        <span className="ses-row-dot" role="img" aria-label="Being logged" />
+        {onAir
+          ? <span className="ses-row-dot" role="img" aria-label="Being logged" />
+          : number}
       </span>
 
-      <span className="ses-row-name">{title}</span>
+      {/* The name is the press that puts the song on air. A button in
+          nothing but name. */}
+      <button
+        type="button"
+        className="ses-row-name"
+        onClick={onPress}
+        aria-label={`${title}${onAir ? ', being logged' : ' — press to log this track'}`}
+      >
+        {title}
+      </button>
 
       <div className="ses-row-marks">
         <StarRating value={rating} onChange={onRate} size={16} roomy />
@@ -118,7 +101,7 @@ export default function TrackRow({
             in its note box — Miyel, 2026-09-29: "some won't click that box
             open." An envelope and not a paper plane, as the entry's own
             Send is: a letter to one person. */}
-        {onSend && (
+        {onSend && onAir && (
           <button type="button" className="ses-heart" onClick={onSend} aria-label={`Send ${title} to somebody`} title="Send this song">
             <EnvelopeSimple size={20} weight="regular" aria-hidden="true" />
           </button>

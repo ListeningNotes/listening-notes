@@ -58,15 +58,13 @@ export default function AlbumNotes({
           2026-09-18). */}
       <div className="ses-record-marks">
         <StarRating value={rating} onChange={setRating} size={26} roomy ghost={avgShown && avg ? Number(avg) : 0} />
-      </div>
-      {/* Only when there is an average to reveal, which is the same thing
-          as some track having been rated. */}
-      {avg && (
-        <div className="ses-record-reveal">
-          {/* An eye, shut until pressed; open, with the number beside it
-              (Miyel, 2026-09-29: "smaller — an eye closed, an eye open with
-              the average"). The ghost in the stars above is the same number
-              drawn where it can be compared. */}
+        {/* The eye, at the right of the stars: shut until pressed; open,
+            with the number and "avg." beside it so the number explains
+            itself (Miyel, 2026-09-29). The ghost in the stars is the same
+            number drawn where it can be compared. Only when there is an
+            average to reveal, which is the same thing as some track having
+            been rated. */}
+        {avg && (
           <button
             type="button"
             className={'ses-eye' + (avgShown ? ' ses-eye--open' : '')}
@@ -78,10 +76,10 @@ export default function AlbumNotes({
             {avgShown
               ? <Eye size={16} weight="regular" aria-hidden="true" />
               : <EyeClosed size={16} weight="regular" aria-hidden="true" />}
-            {avgShown && <span className="ses-eye-n">{avg}</span>}
+            {avgShown && <span className="ses-eye-n">{avg} avg.</span>}
           </button>
-        </div>
-      )}
+        )}
+      </div>
       {/* The marks, a glyph over a word each — the album screen's own
           shape, back on Miyel's word ("let's label favorite and
           formative"). */}
