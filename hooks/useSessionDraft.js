@@ -25,7 +25,7 @@ export function useSessionDraft({ step, saved, hasWriting, values, setters }) {
     albumInput, artistName, year, albumArt, genre, entryType, receivedFrom, receivedDate,
     receivedFromUrl = '', creditPrivate = false, submissionId = null,
     collectionIdRef, tracks, overallNotes, trackNotes, trackRatings, trackFavorites,
-    rating, Masterpiece, Favorite, Formative, elapsedRef,
+    rating, Masterpiece, Favorite, Formative, elapsedRef, onAir = null,
   } = values;
   const {
     setOverallNotes, setRating, setFavorite, setFormative,
@@ -60,12 +60,14 @@ export function useSessionDraft({ step, saved, hasWriting, values, setters }) {
         tracks: tracks || [],
         overallNotes, trackNotes, trackRatings, trackFavorites,
         rating, Masterpiece, Favorite, Formative, entryType, step,
+        // Which track is being logged (useListeningSession, onAir).
+        onAir,
         savedAt: Date.now(),
       }));
     } catch { /* storage full or blocked — the draft button still works */ }
     }, 300);
     return () => clearTimeout(t);
-  }, [albumInput, artistName, year, albumArt, tracks, overallNotes, trackNotes, trackRatings, trackFavorites, rating, Masterpiece, Favorite, Formative, entryType, step, hasWriting, saved]);
+  }, [albumInput, artistName, year, albumArt, tracks, overallNotes, trackNotes, trackRatings, trackFavorites, rating, Masterpiece, Favorite, Formative, entryType, step, onAir, hasWriting, saved]);
 
   // The row in `drafts` follows the writing. Debounced, because every keystroke
   // is a change and a write per keystroke is a flood; three seconds after the

@@ -1982,18 +1982,46 @@ lives in the app and not another tab. A question mark on the cover's corner;
 a bottom sheet on a phone, a column on a desk. **Nothing it says ever enters
 the entry** — AI is a tool the owner uses, never a voice on the page.
 
+**A listen is two steps: the session and the preview, 2026-09-29, Miyel's
+brief *the session becomes one screen*.** Everything that was Overview,
+Tracks and Album is one screen, laid out as the entry is: the record with its
+stars and marks, the album note, then the tracks under the horizon they
+build. It is the page being filled in, not a form that produces one. The
+preview is what it was. A draft still stores the old step number: 3 is the
+preview, anything less is the session.
+
+**This reverses one track per screen, 2026-09-18 to 2026-09-29.** That
+layout was right for a list with an open text field in every row, which this
+is not: a row is number, name, stars and heart, set in place with a thumb,
+and its note is a sheet. The strip, the carets, the swipe between tracks and
+the mini beacon header went with it. The reversed entries and the day of
+trials are in the archive; do not bring the screens back a third time.
+
+**An empty note field is closed.** *Any notes?* under a rated track, and
+under the album note's label, until it is pressed; the writing once there is
+any; nothing at all under an unrated track. The session offers rather than
+asks.
+
+**A track note opens as a sheet over the list, never inline.** A field
+opening in the middle of a long column is what sank the list in 2026-09-18.
+The sheet carries the song's stars, heart, envelope and field; Cancel keeps
+what was typed for the next opening.
+
+**The track being logged is the one whose name was pressed.** Not the last
+rated — "sometimes I rate it at the end". Its number gives way to the live
+dot and the row takes the faintest green. Nothing about the beacon changes.
+
+**Discard · Save draft · Preview at the foot; on a desk, in a row at the
+top.** Discard asks twice. Save draft is the pull down as a word: the draft
+was always saving itself, this is the visible way out. Posting is on the
+preview.
+
+**The cover lands on the record's own cover at the top of the session.**
+There is no header for it to land in.
+
 **The session opens as a layer over the desk.** Leaving it puts you back on
 the desk rather than on the beacon, because the cross never unmounted. There
 is no dashboard door on the picker or after a save; the way back is the layer's.
-
-**The strip is the horizon being built.** The tracks screen shows every track
-as a column — its bar rising as it is rated, a dot empty until something is
-written, lit for the track on screen. A row of dots said where you were; it
-could not say which song was three back.
-
-**The album screen is the art**, large and centred, with the horizon once the
-tracks have stars. On the notes screen the score and marks come first and the
-writing last, where a growing field wants nothing under it but the button.
 
 **The mobile version is not a reduced version.** Every screen holds one thing
 and runs full-bleed on both devices; nothing exists on one and not the other.
@@ -2004,14 +2032,6 @@ reads the same tokens as every other page.
 listening, skip it for a quick log; the API is called only when wanted. A copy
 with no key logs a listen with the button simply absent.
 
-**One track per screen.** Name, stars, a heart, a note, a swipe to the next.
-It matches the pace of the record and turned out better on a desk too, so it
-is the only layout. The step is not skippable; nothing insists on a note for
-every song.
-
-**The score lives on the note screen.** There is no score step: the score is
-the last line of the note, not a thing on its own.
-
 **No question before the listen.** Where a record is from is decided by how
 the listen started — the inbox says Submission, anything else is the library.
 
@@ -2020,14 +2040,11 @@ draft if anything has been written. The browser's own copy is written on
 every change and carries the tracklist; where two copies exist, the newer
 wins.
 
-**The one moment kept is the landing.** The cover you tap flies to where the
-album screen draws it. Nothing waits on it. **No small cover in the header:**
-the album screen is the art, and a thumbnail a screen above was the same
-picture twice.
-
 **The draft saves itself.** Three seconds after the last change, and on the
 way out; a Save draft button was a thing to remember on a phone that locks
 mid-sentence. Saving the entry waits for any draft write still in the air.
+The *Save draft* word of 2026-09-29 does not change this: it leaves, and the
+leaving saves.
 
 **A saved listen drops onto the journal, 2026-09-24, Miyel's call.** The
 sheet goes down the way it came up, the journal already under it with the
@@ -2035,9 +2052,6 @@ record filing into the top, and you stay there. The cutaway — down to the
 wall, file in, back up to the drafts — is parked until it can be seamless
 ("I do love the cutaway, but if it's not going to be seamless, I would rather
 not have it for now"). What changes under a sheet changes while it covers.
-
-**The whole listen is one swipe.** Album → tracks → notes → preview, and back.
-Nothing on the way forward is gated; only the save waits for an album note.
 
 **The preview is the entry page.** FullPostPage, handed a row that does not
 exist yet — no fetches, no comment controls — on its own sheet, reachable

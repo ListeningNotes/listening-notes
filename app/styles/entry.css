@@ -325,19 +325,45 @@
    disagree the moment the sheet is not the whole window. A sticky slot of no
    height at the top of the sheet's scroll stays at the sheet's own corner in
    every case. */
-.lay-back-slot { display: none; }
-@media (min-width: 769px) {
+/* ── A desk is a mouse, not a width, 2026-09-29 ─────────────────────────────
+   The caret was drawn above 769px and nowhere else, which is a statement
+   about windows and was meant as one about hands. A window on a computer can
+   be any width — a narrow one beside something else, a preview pane — and
+   under 769px it got the phone's layout and the phone's way out, which is a
+   pull down that a mouse cannot make. Miyel: "we need back buttons on
+   desktop, I get stuck so many places." So it is drawn wherever the pointer
+   is a mouse, as well as wherever the window is wide. A phone is neither.
+
+   And on a page opened on its own, which has no sheet to carry one: a
+   reload, a link, the installed app. The nav row carries it there
+   (.sitenav-back, SiteNav.js) and a listen carries its own (.ses-back,
+   app/session/page.js). Inside a sheet both stand down for the sheet's. */
+.lay-back-slot,
+.sitenav-back,
+.ses-back { display: none; }
+@media (min-width: 769px), (hover: hover) and (pointer: fine) {
   .lay-back-slot { display: block; position: sticky; top: 0; height: 0; z-index: 210; overflow: visible; }
-  .lay-back {
+  .lay-back,
+  .sitenav-back,
+  .ses-back {
     display: inline-flex; align-items: center; justify-content: center;
-    position: absolute; top: 22px; left: 16px;
     width: 36px; height: 36px; border-radius: 10px;
     color: var(--ink-faint); background: transparent; border: 0; cursor: pointer;
     transition: color 0.15s, background 0.15s;
   }
-  .lay-back:hover { color: var(--ink); background: var(--bg-warm); }
-  .lay-back:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 2px; }
+  .lay-back { position: absolute; top: 22px; left: 16px; }
+  .ses-back { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 12px); left: 16px; z-index: 30; }
+  .lay-back:hover,
+  .sitenav-back:hover,
+  .ses-back:hover { color: var(--ink); background: var(--bg-warm); }
+  .lay-back:focus-visible,
+  .sitenav-back:focus-visible,
+  .ses-back:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 2px; }
   .lay .sitenav-side--left { padding-left: 40px; }
+  .lay .sitenav-back,
+  .lay .ses-back { display: none; }
+}
+@media (min-width: 769px) {
 
   /* ── Where a layer opens, on a desk ── the desktop is an open book, and
      the rule under it is that the right page is what you are reading or

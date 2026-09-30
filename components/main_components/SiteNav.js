@@ -44,6 +44,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { CaretLeft } from '@phosphor-icons/react';
 import { usePathname } from 'next/navigation';
 import { useListeningBeacon } from '../../hooks/useListeningBeacon';
 import { useBookplate } from './Bookplate';
@@ -100,9 +101,20 @@ export default function SiteNav({ tools = null, mark = null, lede = true }) {
 
   return (
     <div className={'sitenav-row' + (scrolled ? ' sitenav-row--scrolled' : '')}>
-      {/* The left slot, and there is nothing in it. It is a spacer that holds
-          the mark on the middle of the row. */}
-      <div className="sitenav-side sitenav-side--left" aria-hidden="true" />
+      {/* The left slot. A spacer that holds the mark on the middle of the
+          row — and, on a page opened on its own with a mouse in hand, the way
+          back (2026-09-29). Opened over the journal a page is on a sheet and
+          the sheet has its own caret, so this one stands down there; on a
+          phone it is never drawn. Opened cold — a reload, a link, the
+          installed app, which has no browser bar — there was nothing on the
+          page that led anywhere. It leads to the journal rather than "back",
+          because a page opened cold has nothing behind it to go back to. See
+          .lay-back in entry.css, whose look this is. */}
+      <div className="sitenav-side sitenav-side--left">
+        <Link href="/" className="sitenav-back" aria-label="Back to the journal" title="Back to the journal">
+          <CaretLeft size={18} weight="bold" aria-hidden="true" />
+        </Link>
+      </div>
 
       {(onAnEntry || onGet) && lede && (
       <Link href="/" className="sitenav-logo" aria-label={cover_name}>

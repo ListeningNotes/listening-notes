@@ -175,102 +175,6 @@
 }
 .ses-quiet:hover { color: var(--ink-soft); }
 
-/* ── The three marks ───────────────────────────────────────────────────────
-   A glyph over a word, which is the one shape this software uses to mean
-   "here is something you can do" — an entry's ···, the address book's doors,
-   the band at the foot of the cross. They were pills at 12px until
-   2026-09-18, and a small glyph inside a bordered lozenge reads as a *tag*,
-   something describing the record, rather than as something to press. Miyel
-   was skipping them.
-
-   No container: a control is the mark, not a mark in a container (DECISIONS,
-   2026-09-17). What grew is the mark itself, from 12px to 24, and the row
-   still fits three on a 320px phone — 3 × 72 is 216 of 288. Measured.
-
-   Set, the mark fills and takes its own colour and the word goes to ink;
-   unset, both are faint. So the difference between a record you marked and
-   one you did not is a colour arriving, not a border changing weight. */
-/* Close under the stars, because they are one statement and not two. The row
-   read thin at 22px of air above it — two marks adrift in the middle of a
-   screen (Miyel, 2026-09-18: "it does look a little bit light"). The answer
-   was not a third mark to fill it out: what is above them is the score, and
-   what they are is the rest of the same sentence about the same record, so
-   they sit with it. Everything below still gets the rule and the full gap. */
-/* ── The reveal, between the stars and the marks ───────────────────────────
-   The tick it draws sits 7px under the star row, so this needs its own air or
-   the two collide (Miyel, 2026-09-18: "don't let it overlap the average tick,
-   give it room to breathe"). 18px above it clears the tick and its own line
-   height; 4px below, because the marks bring their own 14. */
-.ses-reveal {
-  display: flex;
-  justify-content: center;
-  /* The tick hangs 7px under the star row, and that is the whole clearance
-     this needs — 12 leaves five clear pixels and nothing has ever touched.
-     It was 18 for an hour on the strength of a worry rather than a
-     collision (Miyel, 2026-09-18: "i think that breathing room was more me
-     worried about overlapping the tick which doesn't happen"). Nothing
-     below: the gap down to the marks is .ses-marks' job alone. */
-  margin: 12px 0 0;
-}
-
-.ses-marks {
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  gap: 8px;
-  /* The one gap between the score and the marks. It read as 48px until
-     2026-09-18 because three margins were stacking — this one, the reveal's,
-     and the horizon block's own bottom margin — then 26 for an hour, which
-     was still a held breath. The three of them are one thought: this is what
-     I gave it, this is what the tracks said, this is what it was to me. They
-     sit as one block. */
-  margin-top: 14px;
-}
-.ses-mark {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 7px;
-  width: 72px;
-  padding: 6px 0;
-  border: 0;
-  background: none;
-  color: var(--ink-faint);
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  transition: color 0.18s;
-}
-.ses-mark-word {
-  font-family: var(--font-label);
-  font-size: 9px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  line-height: 1;
-  transition: color 0.18s;
-}
-.ses-mark:hover { color: var(--ink-soft); }
-/* Masterpiece is not pressed — it is what the tracklist says. */
-.ses-mark--said { cursor: default; }
-.ses-mark--mp.ses-mark--on { color: var(--mp); }
-.ses-mark--fav.ses-mark--on { color: var(--fav); }
-.ses-mark--formative.ses-mark--on { color: var(--formative); }
-/* The word goes to ink when the mark is set, so the pair reads as one thing
-   turning on rather than a coloured glyph over a grey caption. */
-.ses-mark--on .ses-mark-word { color: var(--ink); }
-.ses-mark:focus-visible { outline: none; }
-.ses-mark:focus-visible .ses-mark-word { color: var(--ink); text-decoration: underline; }
-@media (max-width: 360px) { .ses-mark { width: 64px; } }
-
-/* The same frosted recipe every other input on the site uses. */
-.ses-input {
-  display: block; width: 100%; box-sizing: border-box;
-  background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
-  color: var(--ink); padding: 12px 14px;
-  font-family: var(--font-nunito), sans-serif; font-size: 14px; line-height: 1.6;
-  outline: none; transition: border-color 0.15s;
-}
-.ses-input::placeholder { color: var(--ink-faint); }
-
 /* ── The field, inline on the beacon pane ──────────────────────────────────
    A hairline and a magnifier, no border but the underline (Miyel's beacon
    brief, 2026-09-17). A box round a search field is right on a page that is
@@ -687,7 +591,8 @@
   font-family: var(--font-label); font-size: 9.5px; letter-spacing: 0.16em;
   text-transform: uppercase; color: var(--ink-soft);
 }
-.ses-head-dot {
+.ses-head-dot,
+.ses-row-dot {
   width: 8px; height: 8px; border-radius: 50%;
   background: var(--live);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--live) 22%, transparent);
@@ -697,7 +602,7 @@
   0%, 100% { opacity: 1; }
   50%      { opacity: 0.5; }
 }
-@media (prefers-reduced-motion: reduce) { .ses-head-dot { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .ses-head-dot, .ses-row-dot { animation: none; } }
 /* No overflow of its own any more: the clip around it does that, and a title
    that is allowed to be its full width is the thing the marquee measures. */
 .ses-head-album {
@@ -770,266 +675,185 @@
 .ses-stepdot { width: 6px; height: 6px; border-radius: 50%; border: 1px solid currentColor; flex-shrink: 0; }
 .ses-stepbtn--past .ses-stepdot, .ses-stepbtn--current .ses-stepdot { background: currentColor; }
 
-/* ── The album screen ──────────────────────────────────────────────────── */
-
-
 .ses-actions--center { justify-content: center; }
-
-/* ── Tracks, one at a time ─────────────────────────────────────────────── */
-.ses-track { touch-action: pan-y; }
-
-
-/* The strip — the horizon being built, one column per track. The label row
-   is the entry page's: each title anchored at its column's centre and
-   rotated down-left so its end points at the bar it belongs to. */
-/* Room on the left for the first title, which leans out past its own
-   column the way every rotated label does. */
-/* touch-action so the browser does not pan the page out from under a finger
-   travelling along this — the same thing the star row does, and for the same
-   reason. It only stops the *browser*; the session's own swipe handlers still
-   fire, which is what data-slide is for. */
-.ses-strip { display: flex; gap: 3px; margin: 14px 0 22px; padding-left: 26px; touch-action: none; }
-/* When the browser scrolls a focused field into view inside the layer, it
-   lands under the header without this. */
-.lay--scrolls { scroll-padding-top: 120px; }
-.ses-strip-col {
-  flex: 1; min-width: 0; display: grid; grid-template-rows: 56px 16px 82px;
-  background: none; border: none; padding: 0; cursor: pointer; color: var(--ink-faint);
-}
-/* Headroom above a full bar for the heart a favourite carries. */
-.ses-strip-bars { position: relative; display: flex; align-items: flex-end; height: 100%; padding-top: 14px; box-sizing: border-box; }
-/* A favourite wears its heart above the bar — the entry's horizon does the
-   same — in ink here rather than red, so the strip stays one colour while it
-   is being built. It was red for half an hour on 2026-09-18 and Miyel put it
-   back: the strip is a drawing of the record taking shape, and one red mark
-   in a grey drawing is a mark you look at instead of the shape. The red heart
-   is on the entry, where the record is finished. */
-.ses-strip-heart {
-  position: absolute; left: 50%; transform: translateX(-50%);
-  display: inline-flex; line-height: 1; color: var(--ink); pointer-events: none;
-}
-.ses-strip-bar {
-  display: block; width: 100%; border-radius: 3px 3px 0 0; background: var(--border);
-  transition: height 0.3s cubic-bezier(0.34, 1.2, 0.64, 1), background 0.2s;
-}
-.ses-strip-bar--rated { background: var(--ink-soft); }
-.ses-strip-col--now .ses-strip-bar { background: var(--ink); }
-.ses-strip-dot {
-  width: 7px; height: 7px; border-radius: 50%; justify-self: center; align-self: center;
-  border: 1px solid var(--ink-faint); background: transparent;
-  transition: background 0.2s, transform 0.2s, border-color 0.2s;
-}
-.ses-strip-col--done .ses-strip-dot { background: var(--ink-faint); }
-
-/* ── The contents screen ───────────────────────────────────────────────────
-   What the next forty minutes are: the facts, and the tracklist. It replaced
-   the old Overview, which was the cover and the title — the beacon one row
-   up, larger (Miyel's contents brief, 2026-09-18).
-
-   The brief opened it with the strip, every track an empty slot at full
-   height, and that came off the same day: on the screen it read as a horizon
-   chart with no data in it. A horizon is a picture of what you thought of a
-   record; its empty frame, drawn before you have heard a note, is a chart
-   pretending. The strip is back on the track screen with one caller, where
-   the bars mean something. The rules that drew slots went with it.
-
-   Arriving: the facts and the list come up together as the tracklist lands.
-   Once a listen rather than every time you come back to the step — see
-   `arrived` in the component. */
-.ses-contents--arriving .ses-facts,
-.ses-contents--arriving .ses-contents-list {
-  animation: sesFactsIn 0.42s cubic-bezier(0.22, 0.61, 0.36, 1) both;
-}
-.ses-contents--arriving .ses-contents-list { animation-delay: 0.1s; }
-@keyframes sesFactsIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: none; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .ses-contents--arriving .ses-facts,
-  .ses-contents--arriving .ses-contents-list { animation: none; }
-}
-
-/* The strip and the facts hold still while the list moves under them. Sticky
-   rather than a scroller of its own: a box that scrolls inside a sheet that
-   scrolls is two answers to one drag, and this session has that scar already
-   (see the rail lock note in nav.css). */
-.ses-contents-head {
-  position: sticky;
-  top: 0;
-  z-index: 3;
-  background: var(--bg);
-  padding-bottom: 6px;
-}
-
-/* ── The facts ─────────────────────────────────────────────────────────────
-   Label and value on one line with a hairline between, which is the shape a
-   record's back cover uses and the reason it reads at a glance. A row with
-   nothing behind it is not drawn — see the filter in the component. */
-/* ── The facts ─────────────────────────────────────────────────────────────
-   Five label-and-value rows lived here until 2026-09-18, stacked above a
-   tracklist that is also stacked. Two lists on one screen and only one of them
-   is a list, which is Miyel's note exactly.
-
-   It is the identity card's counts band now, drawn with the card's own classes
-   (.idc-counts, .idc-count, .idc-genres) rather than a copy of them, so the
-   two cannot drift. What is below is the difference this screen needs and
-   nothing else. */
-/* One rule, and it closes the whole block rather than sitting inside it.
-   On the card the band is in the middle of a page and is ruled at each end;
-   here the step's own header is already a line across the screen directly
-   above, so a second would read as a box — and the band's lower rule was
-   cutting the genre and label off from the numbers they belong with. Miyel:
-   "put the genre and label tags above that line, then a line and tracklist
-   under." So the rule moves to the foot of .ses-facts, under everything the
-   record has to say about itself and over the list of what is on it. */
-.ses-facts {
-  margin: 0;
-  padding: 0 0 16px;
-  border-bottom: 1px solid var(--border);
-}
-.ses-facts .idc-counts {
-  margin-top: 0; padding-top: 0;
-  border-top: none; border-bottom: none;
-}
-/* Digits at full size, their units small between them — see the note in
-   RecordContents.js. Not italic despite the <i>: that tag is here for the
-   fragment it is, not for a slant. */
-.ses-unit {
-  font-family: var(--font-label);
-  font-style: normal; font-weight: 400;
-  font-size: 11px; letter-spacing: 0.04em;
-  color: var(--ink-faint);
-  margin: 0 5px 0 2px;
-}
-.ses-unit:last-child { margin-right: 0; }
-
-/* ── The tracklist ─────────────────────────────────────────────────────────
-   Number, title, and a hairline as long as that track is against the longest
-   on the record. A floor of 20px so a ninety-second interlude still draws
-   something rather than nothing. */
-.ses-contents-list { list-style: none; margin: 18px 0 0; padding: 0; }
-.ses-contents-disc {
-  display: block;
-  margin: 22px 0 6px;
-}
-.ses-contents-row {
-  display: flex; align-items: center; gap: 14px;
-  width: 100%; padding: 13px 0;
-  color: var(--ink);
-}
-.ses-contents-n {
-  flex: 0 0 auto; min-width: 16px;
-  font-family: var(--font-label); font-size: 11px; color: var(--ink-faint);
-}
-.ses-contents-title {
-  flex: 1 1 auto; min-width: 0;
-  font-family: var(--font-display); font-weight: var(--font-display-weight);
-  font-size: 15px; line-height: 1.3;
-}
-/* The bar is the one thing here that is not a word, so it gets the right-hand
-   third and nothing else does. Right-aligned, because a row of bars read
-   against a common edge is a comparison and one read against ragged text is
-   a decoration. */
-.ses-contents-bar {
-  flex: 0 0 auto;
-  height: 2px;
-  max-width: 33%;
-  border-radius: 1px;
-  background: var(--border);
-}
-/* Or, where there is a rating, what you made of it. Right-aligned on the same
-   edge the bars are, so a list half rated reads as one column rather than two
-   kinds of thing wandering about. */
-.ses-contents-said {
-  flex: 0 0 auto;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-}
-.ses-contents-heart { display: inline-flex; line-height: 1; color: var(--fav); }
-/* Send this song, 2026-09-26: the envelope at the end of a row, opening the
-   send sheet with the track in it (RecordContents). A control that is the
-   mark — faint, in the row's own ink on hover, 44px of thumb from padding
-   given back in margin so the row does not grow for it. */
-.ses-contents-send {
-  flex: 0 0 auto;
-  display: inline-flex; align-items: center; justify-content: center;
-  padding: 14px 4px 14px 10px;
-  margin: -14px -4px -14px -4px;
-  border: 0; background: none;
-  color: var(--ink-faint);
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  transition: color 0.15s;
-}
-.ses-contents-send:hover { color: var(--ink); }
-.ses-contents-send:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: -6px; border-radius: 8px; }
-
-.ses-strip-col--now .ses-strip-dot { background: var(--ink); border-color: var(--ink); transform: scale(1.3); }
-.ses-strip-label { position: relative; display: block; height: 100%; }
-.ses-strip-title {
-  position: absolute; top: 4px; right: 50%;
-  transform-origin: 100% 0; transform: rotate(-52deg);
-  display: block; max-width: 104px; text-align: right;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  font-family: var(--font-label); font-size: 9.5px; line-height: 1.2;
-  color: var(--ink-faint); transition: color 0.15s;
-}
-.ses-strip-col--done .ses-strip-title { color: var(--ink-soft); }
-.ses-strip-col--now .ses-strip-title { color: var(--ink); }
-.ses-strip--dense .ses-strip-col { grid-template-rows: 52px 14px 70px; }
-.ses-strip--dense .ses-strip-title { max-width: 80px; font-size: 8.5px; }
-/* The title and its marks on one line (Miyel, 2026-09-18). The title takes
-   what is left and wraps into it; the marks never shrink, because a score
-   that changes width with the length of a song title is not a score you can
-   aim at. Centred against each other, so a two-line title keeps its stars in
-   the middle of it rather than hanging them off the first line. */
-.ses-track-head {
-  display: flex; align-items: center; gap: 14px;
-  margin: 0 0 22px;
-}
-.ses-track-head .ses-title { flex: 1 1 auto; min-width: 0; }
-/* The track's number, the way an entry's tracklist prints it — DM Mono in
-   faint ink ahead of the name — a size up to sit beside a title. */
-.ses-track-no {
-  font-family: var(--font-label); font-size: 12px; font-weight: 400;
-  letter-spacing: 0.06em; color: var(--ink-faint);
-  margin-right: 10px; vertical-align: 0.1em;
-}
-/* Smaller than a title elsewhere in the listen, because it is now sharing a
-   line rather than owning one. */
-.ses-title--track {
-  font-size: clamp(1.05rem, 4.4vw, 1.35rem); line-height: 1.25;
-  /* A title with no space in it long enough to fill the column — a URL-ish
-     name, a run-on remix credit — would otherwise push the stars off the
-     right edge instead of wrapping. break-word only breaks when there is no
-     other way, so ordinary titles wrap at their spaces as before. */
-  overflow-wrap: break-word;
-}
-.ses-track-marks { display: flex; align-items: center; gap: 10px; flex: none; }
 .ses-heart {
   display: inline-flex; padding: 4px; background: none; border: none; cursor: pointer;
   color: var(--ink-faint); transition: color 0.15s;
 }
-.ses-track-nav { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 26px; }
-/* No circle. It was a 36px bordered disc until 2026-09-18 — "also remove pill
-   from around left and right carats" — and the rule it was breaking is the
-   one the album screen's marks were pulled out of a pill for the day before:
-   a control is the mark, not a mark in a container.
 
-   The glyph grew from 16 to 22 in the same move, because the disc was what
-   made a small arrow findable and there is no disc now. The padding is the
-   touch target the disc used to be, and the matching negative margin keeps
-   the ink flush with the column the title and the notes are in — otherwise
-   the arrows sit ten pixels inside every other edge on the screen. */
-.ses-caret {
-  padding: 8px 10px; margin: 0 -10px;
-  display: flex; align-items: center; justify-content: center;
-  border: none; background: transparent; color: var(--ink-faint); cursor: pointer;
-  transition: color 0.15s;
+/* ── The session, one screen, 2026-09-29 ───────────────────────────────────
+   Miyel's brief *the session becomes one screen*: laid out as the entry is —
+   the record, its note, the tracks under the horizon they build — so the
+   session is the page being filled in. The four screens it replaces, and
+   the styles that drew them (the strip, one track at a time, the contents
+   screen, the album screen), are in the history at 1.39.0. */
+.ses-body--page { padding-top: 22px; padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
+
+/* ── The record ─────────────────────────────────────────────────────────── */
+.ses-record-head { display: flex; align-items: flex-start; gap: 18px; }
+.ses-record-cover {
+  flex: 0 0 auto; width: 96px; height: 96px; border-radius: 8px; overflow: hidden;
+  background: var(--panel-strong); display: flex; align-items: center; justify-content: center;
 }
-.ses-caret:hover { color: var(--ink); }
+.ses-record-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ses-record-cover-none { font-size: 22px; color: var(--ink-faint); }
+.ses-record-text { min-width: 0; flex: 1 1 auto; padding-top: 2px; }
+.ses-record-title {
+  font-family: var(--font-display); font-weight: var(--font-display-weight);
+  font-size: clamp(1.35rem, 5vw, 1.7rem); line-height: 1.15; margin: 0;
+  color: var(--ink); overflow-wrap: break-word;
+}
+.ses-record-by { font-size: 15px; line-height: 1.4; color: var(--ink-soft); margin: 3px 0 0; }
+/* The stars and the marks on one line, as the entry shows them. */
+.ses-record-marks { display: flex; align-items: center; gap: 14px; margin-top: 12px; }
+.ses-flag {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 8px; margin: -8px -2px;
+  border: 0; background: none; color: var(--ink-faint); cursor: pointer;
+  -webkit-tap-highlight-color: transparent; transition: color 0.18s;
+}
+.ses-flag:hover { color: var(--ink-soft); }
+.ses-flag--fav.ses-flag--on { color: var(--fav); }
+.ses-flag--formative.ses-flag--on { color: var(--formative); }
+.ses-flag--mp { color: var(--mp, var(--accent)); cursor: default; }
+
+/* ── The album note ────────────────────────────────────────────────────── */
+.ses-album-note { margin-top: 26px; }
+.ses-album-note .ses-label { display: block; margin-bottom: 6px; }
+/* The offer: the caption face at caption weight, and nothing about it that
+   reads as a field. It is a question you can walk past. The padding is its
+   touch target; the margin gives the room back. */
+.ses-row-offer {
+  display: inline-block; padding: 10px 8px; margin: -10px -8px;
+  border: 0; background: none; cursor: pointer;
+  font-family: var(--font-label); font-size: 12px; letter-spacing: 0.06em;
+  color: var(--ink-faint); text-align: left;
+  -webkit-tap-highlight-color: transparent; transition: color 0.15s;
+}
+.ses-row-offer:hover { color: var(--ink-soft); }
+.ses-row-offer:focus-visible,
+.ses-row-note:focus-visible,
+.ses-row-name:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 2px; border-radius: 6px; }
+.ses-album-offer { font-size: 13px; margin-top: 0; }
+.ses-album-note .ses-textarea { min-height: 0; }
+
+/* ── The tracks ─────────────────────────────────────────────────────────── */
+.ses-tracks { margin-top: 30px; }
+.ses-tracks > .ses-label { display: block; }
+/* The horizon, in the entry's slot: under the label, over the rows, with
+   the rows' first hairline as its floor. */
+.ses-horizon { margin: 0 0 4px; }
+.ses-rows { list-style: none; margin: 0 -20px; padding: 0; border-top: 1px solid var(--border); }
+.ses-rows-disc { display: block; padding: 22px 20px 6px; }
+/* A row is about 58px shut: number, name, stars, heart. */
+.ses-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.25s;
+}
+.ses-row-n {
+  flex: 0 0 22px; display: flex; align-items: center;
+  font-family: var(--font-label); font-size: 11px; color: var(--ink-faint);
+}
+.ses-row-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
+/* The name is the press that puts the song on air. A button in nothing but
+   name: the title's own face, no box. */
+.ses-row-name {
+  padding: 4px 0; margin: -4px 0;
+  border: 0; background: none; cursor: pointer; text-align: left;
+  font-family: var(--font-display); font-weight: var(--font-display-weight);
+  font-size: 16px; line-height: 1.3; color: var(--ink); overflow-wrap: anywhere;
+  -webkit-tap-highlight-color: transparent;
+}
+/* The note, on the row, at the size a note is written in. Pressing it opens
+   the sheet it was written on. */
+.ses-row-note {
+  display: block; padding: 0; margin: 0;
+  border: 0; background: none; cursor: pointer; text-align: left;
+  font-family: var(--font-nunito), sans-serif; font-size: 15px; line-height: 1.55;
+  color: var(--ink-soft); white-space: pre-wrap; overflow-wrap: anywhere;
+  -webkit-tap-highlight-color: transparent;
+}
+.ses-row-marks { flex: 0 0 auto; display: flex; align-items: center; gap: 12px; }
+/* The track being logged: the live dot for its number, the faintest green
+   across the row. The dot is the header's dot — listed beside it, so the two
+   cannot come apart. */
+.ses-row--on { background: color-mix(in srgb, var(--live) 9%, transparent); }
+
+/* ── The note sheet ────────────────────────────────────────────────────────
+   A track's note, over the list (NoteSheet.js). The scrim dims the list; the
+   sheet stands on the visible bottom — --ns-under is what a keyboard takes,
+   written by the sheet from visualViewport. */
+.ns-scrim {
+  position: fixed; inset: 0; z-index: 300;
+  background: color-mix(in srgb, var(--ink) 28%, transparent);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  animation: nsFade 0.2s ease-out both;
+}
+@keyframes nsFade { from { opacity: 0; } to { opacity: 1; } }
+.ns-sheet {
+  position: fixed; left: 0; right: 0; bottom: var(--ns-under, 0px); z-index: 310;
+  max-height: calc(100dvh - var(--ns-under, 0px) - 40px);
+  overflow-y: auto; -webkit-overflow-scrolling: touch;
+  box-sizing: border-box;
+  padding: 10px 20px calc(18px + env(safe-area-inset-bottom, 0px));
+  background: var(--panel-solid);
+  color: var(--ink);
+  border-radius: 22px 22px 0 0;
+  box-shadow: 0 -12px 40px rgba(0,0,0,0.14);
+  animation: nsRise 0.32s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+@keyframes nsRise { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .ns-sheet, .ns-scrim { animation: none; } }
+.ns-handle { display: block; width: 44px; height: 4px; border-radius: 2px; margin: 0 auto 18px; background: var(--border); }
+.ns-head { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; }
+.ns-title {
+  flex: 1 1 auto; min-width: 0; margin: 0;
+  font-family: var(--font-display); font-weight: var(--font-display-weight);
+  font-size: 19px; line-height: 1.2; color: var(--ink); overflow-wrap: break-word;
+}
+.ns-marks { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; }
+.ns-sheet .ses-label { display: block; margin-bottom: 6px; }
+.ns-grow .ses-textarea { min-height: 0; }
+.ns-foot { display: flex; justify-content: flex-end; gap: 22px; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); }
+@media (min-width: 769px) {
+  .ns-sheet { left: 50%; right: auto; width: min(560px, calc(100% - 40px)); transform: translateX(-50%); border-radius: 22px 22px 0 0; }
+  @keyframes nsRise { from { transform: translate(-50%, 24px); opacity: 0; } to { transform: translateX(-50%); opacity: 1; } }
+}
+
+/* ── The foot: Discard · Save draft · Preview ─────────────────────────────
+   The entry's correction bar (.ln-editing-bar, entry.css) with three words.
+   Discard is faint until it is pressed once, then asks in red. */
+.ses-bar { gap: 26px; }
+.ses-bar-discard { color: var(--ink-faint); }
+.ses-bar-discard--armed { color: var(--fav); }
+
+/* ── A desk ────────────────────────────────────────────────────────────────
+   The record at the left, holding still; the tracks at the right; the three
+   words in a row at the top instead of a band at the foot. Said by the page,
+   which measures the listen itself (app/session/page.js, WIDE_PX). */
+.ses--wide .ses-body--desk { max-width: 1080px; padding-top: 88px; padding-bottom: 60px; }
+.ses--wide .ses-page {
+  display: grid; grid-template-columns: minmax(220px, 36%) minmax(0, 1fr);
+  column-gap: clamp(40px, 7%, 96px); align-items: start;
+}
+.ses--wide .ses-record { position: sticky; top: 88px; }
+.ses--wide .ses-record-head { flex-direction: column; gap: 22px; }
+.ses--wide .ses-record-cover { width: 100%; height: auto; aspect-ratio: 1; border-radius: 10px; }
+.ses--wide .ses-record-title { font-size: 1.9rem; }
+.ses--wide .ses-album-note { margin-top: 30px; }
+.ses--wide .ses-tracks { margin-top: 0; }
+.ses--wide .ses-rows { margin: 0; }
+.ses--wide .ses-row { padding: 12px 0; }
+.ses--wide .ses-row--on { margin: 0 -14px; padding-left: 14px; padding-right: 14px; border-radius: 8px; }
+.ses--wide .ses-rows-disc { padding-left: 0; }
+.ses--wide .ses-bar {
+  position: absolute; top: 0; right: 0; left: auto; bottom: auto;
+  z-index: 25; padding: 22px 32px 0; background: none; border: 0;
+  justify-content: flex-end;
+}
+.ses { position: relative; }
 
 /* ── The picker ────────────────────────────────────────────────────────── */
 /* Room for the nav row. On the page it is fixed and floats over the top,
