@@ -862,8 +862,10 @@
    offer, the note, the box. Its own line, always. */
 .ses-row-under { flex: 1 1 100%; min-width: 0; margin: -6px 0 0 34px; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
 .ses-row-under > .ses-row-note { width: 100%; }
-/* The two words under a lit track, a thumb's width apart. */
-.ses-row-doors { display: flex; align-items: center; gap: 28px; }
+/* The two words under a lit track, a thumb's width apart and centred on the
+   row — out from under the name's indent, so they read as the row's own
+   pair of doors. */
+.ses-row-doors { display: flex; align-items: center; justify-content: center; gap: 32px; width: calc(100% + 34px); margin-left: -34px; padding: 4px 0 2px; }
 .ses-row-under--box { margin-top: 6px; }
 /* The name is the press that puts the song on air. A button in nothing but
    name: the title's own face, no box. */

@@ -107,12 +107,12 @@ export default function TrackRow({
           the box. In a wrapper of its own so the row's line above it — dot
           or number, name, stars, heart — is never crowded by it. */}
       {/* ── The line under a lit track: two words ─────────────────────────
-          *Add notes*, and *Send*. Both in the caption face, both quiet — the
+          *Add notes*, and *Send track*. Both in the caption face, centred under the row, both quiet — the
           way this site says "here is something you can do" everywhere else,
           in a word rather than a glyph. The envelope was tried beside the
           heart (it moved the stars), at the end of this line, and under the
           live dot, and none of them read right (Miyel, 2026-09-29: "I really
-          don't know"). A word cannot be mistaken for anything: it says Send.
+          don't know"). A word cannot be mistaken for anything: it says Send track.
           Once the note is written, the words stand under it. */}
       {onAir && !noting && (
         <div className="ses-row-under">
@@ -127,7 +127,7 @@ export default function TrackRow({
             </button>
             {onSend && (
               <button type="button" className="ses-row-offer" onClick={onSend} aria-label={`Send ${title} to somebody`}>
-                Send
+                Send track
               </button>
             )}
           </div>
