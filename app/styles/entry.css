@@ -1046,6 +1046,23 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
    is room the scroller can use either way; it is the *reasoning* that went
    stale, and anybody moving these to "the element that actually scrolls" would
    be moving them onto the element they are already on. */
+/* ── And the keyboard, on a phone, 2026-09-30 ──────────────────────────────
+   96px clears the bar at the foot. It does not clear a keyboard, and since
+   iOS floats its own bar of arrows and a tick over the page above the keys,
+   the last lines of the last track's note sat under that bar with no more
+   page to scroll — Miyel, correcting an entry she had just posted: "when
+   editing I cannot see the bottom text." So while a field in the entry has
+   the cursor, on a touch screen, the content ends with half a screen of
+   room, which is more than any keyboard takes; and the scroller keeps the
+   cursor that far clear of its foot when it brings a line into view. Gone
+   again when the cursor leaves. */
+@media (pointer: coarse) {
+  .ln-editing:focus-within .ln-screen-two-scroll,
+  .ln-crediting:focus-within .ln-screen-two-scroll,
+  .ln-saying:focus-within .ln-screen-two-scroll { padding-bottom: 50vh; }
+  .ln-screens.ln-editing,
+  .ln-screens.ln-saying { scroll-padding-bottom: 160px; }
+}
 .ln-editing-label {
   font-family: var(--font-label);
   font-size: 9px;
