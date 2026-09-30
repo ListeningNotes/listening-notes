@@ -742,6 +742,53 @@
    was not a third mark to fill it out: what is above them is the score, and
    what they are is the rest of the same sentence about the same record, so
    they sit with it. Everything below still gets the rule and the full gap. */
+.ses-marks {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 8px;
+  /* The one gap between the score and the marks. It read as 48px until
+     2026-09-18 because three margins were stacking — this one, the reveal's,
+     and the horizon block's own bottom margin — then 26 for an hour, which
+     was still a held breath. The three of them are one thought: this is what
+     I gave it, this is what the tracks said, this is what it was to me. They
+     sit as one block. */
+  margin-top: 14px;
+}
+.ses-mark {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  width: 72px;
+  padding: 6px 0;
+  border: 0;
+  background: none;
+  color: var(--ink-faint);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.18s;
+}
+.ses-mark-word {
+  font-family: var(--font-label);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  line-height: 1;
+  transition: color 0.18s;
+}
+.ses-mark:hover { color: var(--ink-soft); }
+/* Masterpiece is not pressed — it is what the tracklist says. */
+.ses-mark--said { cursor: default; }
+.ses-mark--mp.ses-mark--on { color: var(--mp); }
+.ses-mark--fav.ses-mark--on { color: var(--fav); }
+.ses-mark--formative.ses-mark--on { color: var(--formative); }
+/* The word goes to ink when the mark is set, so the pair reads as one thing
+   turning on rather than a coloured glyph over a grey caption. */
+.ses-mark--on .ses-mark-word { color: var(--ink); }
+.ses-mark:focus-visible { outline: none; }
+.ses-mark:focus-visible .ses-mark-word { color: var(--ink); text-decoration: underline; }
+@media (max-width: 360px) { .ses-mark { width: 64px; } }
 
 /* ── The album note ─────────────────────────────────────────────────────────
    A box of hairlines with rounded corners, so it is plainly a field; the
