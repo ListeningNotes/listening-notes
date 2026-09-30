@@ -33,6 +33,9 @@ export default function TrackNotes({
   setTrackFavorites,
   onAir = null,
   putOnAir,
+  // The average of the ratings, revealed here because this is where the
+  // ratings are, and drawn into the album's stars above (page.js holds it).
+  avg = null, avgShown = false, onReveal,
   noting = null,
   onOpenNote,
   setTrackNotes,
@@ -50,7 +53,6 @@ export default function TrackNotes({
   if (tracksLoading && !tracks) {
     return (
       <section className="ses-tracks" aria-busy="true">
-        <span className="ses-label">Tracks</span>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 18 }} aria-hidden="true">
           {[...Array(6)].map((_, k) => (
             <div key={k} className="ses-skel" style={{ animationDelay: `${k * 0.06}s` }} />
@@ -67,7 +69,6 @@ export default function TrackNotes({
   if (!list.length) {
     return (
       <section className="ses-tracks">
-        <span className="ses-label">Tracks</span>
         <p className="ses-prose" style={{ color: 'var(--ink-soft)', marginTop: 14 }}>
           No tracklist found for this record.
         </p>
@@ -100,7 +101,17 @@ export default function TrackNotes({
 
   return (
     <section className="ses-tracks">
-      <span className="ses-label">Tracks</span>
+      {/* The reveal, over the horizon and at its right, where the entry
+          keeps its own caption over the bars. Only when there is an average
+          to reveal, which is the same thing as some track having been rated.
+          Miyel rates blind on purpose, so nothing shows until asked. */}
+      {avg && (
+        <div className="ses-horizon-cap">
+          <button type="button" className="ses-quiet" style={{ borderBottom: 'none' }} onClick={onReveal} aria-pressed={avgShown}>
+            {avgShown ? 'hide average' : 'reveal average'}
+          </button>
+        </div>
+      )}
       <div className="ses-horizon">
         <HorizonChart
           tracks={list} trackRatings={trackRatings} favorites={trackFavorites}
@@ -119,9 +130,9 @@ export default function TrackNotes({
               onAir={onAir === k}
               noting={noting === k}
               onPress={() => putOnAir?.(k)}
-              onRate={v => { putOnAir?.(k); setTrackRatings(prev => ({ ...prev, [k]: v })); }}
-              onFavorite={() => { putOnAir?.(k); setTrackFavorites(prev => ({ ...prev, [k]: !prev[k] })); }}
-              onNote={() => { putOnAir?.(k); onOpenNote(k); }}
+              onRate={v => setTrackRatings(prev => ({ ...prev, [k]: v }))}
+              onFavorite={() => setTrackFavorites(prev => ({ ...prev, [k]: !prev[k] }))}
+              onNote={() => onOpenNote(k)}
               onNoteChange={text => setTrackNotes(prev => ({ ...prev, [k]: text }))}
               onNoteShut={onShutNote}
               onSend={onSend ? () => onSend(t) : null}

@@ -23,17 +23,22 @@
 // logged ever has one, and the page lifts it clear of the keyboard the way
 // it lifts the album note (app/session/page.js).
 //
-// ── The track being logged ────────────────────────────────────────────────
-// Anything done to a track puts it on air — its name pressed, a star, the
-// heart, its note opened (Miyel, 2026-09-29: "any sort of click on a track
-// counts as lighting it as live"). Its number gives way to the live dot and
-// the row takes the faintest green. The offer to write is on that row alone:
-// *Any notes?* follows the song being logged rather than standing under
-// every rated track, so the list never reads as a column of questions.
+// ── Locked until pressed, 2026-09-29 ──────────────────────────────────────
+// A row does nothing until it is pressed. Pressed, it is the track being
+// logged — its number gives way to the live dot, the row takes the faintest
+// green — and only then are its stars, its heart and its note there to set.
+// Every other row shows what it was given and takes a thumb as a scroll.
+// Miyel, on the first list where every row's stars were live: "I'm having a
+// hard time actually scrolling through the track list, because if you scroll
+// anywhere by the stars, you start rating the song… every song is locked
+// until you click it." The offer to write is on that row alone: *Any notes?*
+// follows the song being logged rather than standing under every rated
+// track, so the list never reads as a column of questions.
 'use client';
 import { useLayoutEffect, useRef } from 'react';
 import { EnvelopeSimple, Heart } from '@phosphor-icons/react';
 import StarRating from './StarRating';
+import Stars from '../main_components/StarRating';
 import { colors } from '../../library/sitewide_visuals';
 
 export default function TrackRow({
@@ -57,23 +62,41 @@ export default function TrackRow({
     el.setSelectionRange(el.value.length, el.value.length);
   }, [noting]);
 
+  // Shut: the whole row is one press, and shows what it was given.
+  if (!onAir) {
+    return (
+      <li className="ses-row">
+        <button
+          type="button"
+          className="ses-row-press"
+          onClick={onPress}
+          aria-label={`${number}. ${title}${rating ? `, ${rating} out of 5` : ''}${favorite ? ', a favourite' : ''} — press to log this track`}
+        >
+          <span className="ses-row-n">{number}</span>
+          <div className="ses-row-main">
+            <span className="ses-row-name">{title}</span>
+            {written && <span className="ses-row-note">{note}</span>}
+          </div>
+          <div className="ses-row-marks" aria-hidden="true">
+            <Stars rating={rating} size={16} />
+            <span className="ses-heart" style={{ color: favorite ? colors.fav : undefined }}>
+              <Heart size={20} weight={favorite ? 'fill' : 'regular'} />
+            </span>
+          </div>
+        </button>
+      </li>
+    );
+  }
+
+  // Open: the track being logged, with everything about it there to set.
   return (
-    <li className={'ses-row' + (onAir ? ' ses-row--on' : '')}>
+    <li className="ses-row ses-row--on">
       <span className="ses-row-n">
-        {onAir
-          ? <span className="ses-row-dot" role="img" aria-label="Being logged" />
-          : number}
+        <span className="ses-row-dot" role="img" aria-label="Being logged" />
       </span>
 
       <div className="ses-row-main">
-        <button
-          type="button"
-          className="ses-row-name"
-          onClick={onPress}
-          aria-label={`${title}${onAir ? ', being logged' : ' — press to log this track'}`}
-        >
-          {title}
-        </button>
+        <span className="ses-row-name">{title}</span>
         {offered && (
           <button type="button" className="ses-row-offer" onClick={onNote}>
             Any notes?
@@ -115,7 +138,7 @@ export default function TrackRow({
         <StarRating value={rating} onChange={onRate} size={16} roomy />
         {/* Favourite is deliberately separate from the rating — a song can
             be the one you keep returning to without being the best on the
-            record. Filled once it is one, outline while it isn't. */}
+            record. */}
         <button
           type="button"
           className="ses-heart"

@@ -1,93 +1,57 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 'use client';
-import { useLayoutEffect, useRef, useState } from 'react';
 import { Heart, SketchLogo, Fingerprint } from '@phosphor-icons/react';
 import StarRating from '../StarRating';
 
-// The record, and what is said about it as a whole. The top of the session,
-// in the entry page's own order: cover, title, artist and year, the album's
-// stars and its marks on one line; then the album note (Miyel's brief, *the
-// session becomes one screen*, 2026-09-29).
+// The record, and what is said about it as a whole. The top of the session:
+// cover, title, artist and year, the album's stars and its marks, all on the
+// centre line, and under them a box that is plainly the field for the album
+// note (Miyel's brief, *the session becomes one screen*, 2026-09-29, and her
+// first look at it on a phone the same night: "center the album and album
+// data, also the stars… make a box out of hairlines with rounded corners
+// that is clearly a field for overall album notes").
 //
-// It was the Album screen — the third of four — with the horizon over the
-// score and the marks as a glyph over a word each. The horizon is with the
-// tracks now, where the entry draws it (steps/TrackNotes.js), and the marks
-// sit beside the stars as the entry shows them, a glyph each: the heart, the
-// fingerprint, and the diamond only when the tracks have earned it.
-//
-// ── The album note is offered, not asked for ──────────────────────────────
-// Closed as a quiet *Any notes?* until it is pressed, and the writing once
-// there is any. The one field on the screen that opens in place: it is at
-// the top, with nothing under it for a keyboard to cover but the tracks,
-// which can wait. An empty field is a question; the session offers.
+// No label over the note and none over the tracks: the preview says what
+// each is, and here the box and the list say it themselves. The average of
+// the track ratings is revealed from the horizon, where the ratings are
+// (steps/TrackNotes.js), and drawn into the stars here as a ghost.
 export default function AlbumNotes({
   album, artist, year, albumArt,
-  trackRatings,
   overallNotes,
   setOverallNotes,
   rating,
   setRating,
+  // The tracks' average, drawn into the stars once it has been asked for.
+  ghost = 0,
   Masterpiece,
   Favorite,
   setFavorite,
   Formative,
   setFormative,
 }) {
-  // ── The average, under the stars it draws into ──────────────────────
-  // Still behind a press. Miyel rates blind on purpose — "sometimes I like
-  // to not see what my average is and just rate it and see if it matches up
-  // with what I thought" — so nothing is shown until it is asked for, and
-  // then it is drawn into the stars as a ghost, unrounded (2026-09-18). It
-  // was left off the one-screen session for an hour, 2026-09-29, and asked
-  // back the same day.
-  const rated = Object.values(trackRatings || {}).filter(v => v > 0);
-  const avg = rated.length ? (rated.reduce((a, b) => a + b, 0) / rated.length).toFixed(2) : null;
-  const [avgShown, setAvgShown] = useState(false);
-
-  const [opened, setOpened] = useState(false);
-  const asked = useRef(false);
-  const field = useRef(null);
-  const open = opened || !!overallNotes;
-
-  // The cursor goes in as the field arrives, because pressing the offer was
-  // asking to write — in the layout pass, while the press is still on the
-  // stack, which is the only moment a phone raises its keyboard for it.
-  useLayoutEffect(() => {
-    if (!asked.current || !field.current) return;
-    asked.current = false;
-    field.current.focus({ preventScroll: true });
-  }, [open]);
-
   const flag = (on, kind) => `ses-flag ses-flag--${kind}${on ? ' ses-flag--on' : ''}`;
 
   return (
     <section className="ses-record">
-      <div className="ses-record-head">
-        {/* Where the picked cover lands (app/session/page.js, the landing).
-            It was the header's small beacon, and the header is gone. Its
-            own class, not .ses-cover: the nav bar under the sheet draws its
-            small beacon in that one. */}
-        <span className="ses-record-cover" aria-hidden="true">
-          {albumArt
-            ? <img src={albumArt} alt="" />
-            : <span className="ses-record-cover-none">♪</span>}
-        </span>
-        <div className="ses-record-text">
-          <h1 className="ses-record-title">{album}</h1>
-          <p className="ses-record-by">
-            {artist}{year ? ` · ${year}` : ''}
-          </p>
-        </div>
-      </div>
+      {/* Where the picked cover lands (app/session/page.js, the landing). Its
+          own class, not .ses-cover: the nav bar under the sheet draws its
+          small beacon in that one. */}
+      <span className="ses-record-cover" aria-hidden="true">
+        {albumArt
+          ? <img src={albumArt} alt="" />
+          : <span className="ses-record-cover-none">♪</span>}
+      </span>
+      <h1 className="ses-record-title">{album}</h1>
+      <p className="ses-record-by">
+        {artist}{year ? ` · ${year}` : ''}
+      </p>
 
-      {/* The stars and the marks on their own line under the record, then
-          the reveal under them — Miyel, 2026-09-29, on the first phone
-          screenshot: "album left, info right, then the stars and heart and
-          formative under." No label over the stars: five stars under a
-          record you are logging are not ambiguous (2026-09-18). */}
+      {/* The stars and the marks on one line. No label over the stars: five
+          stars under a record you are logging are not ambiguous (Miyel,
+          2026-09-18). */}
       <div className="ses-record-marks">
-        <StarRating value={rating} onChange={setRating} size={22} roomy ghost={avgShown && avg ? Number(avg) : 0} />
+        <StarRating value={rating} onChange={setRating} size={26} roomy ghost={ghost} />
         <button
           type="button"
           className={flag(Favorite, 'fav')}
@@ -119,44 +83,21 @@ export default function AlbumNotes({
           </span>
         )}
       </div>
-      {/* Only when there is an average to reveal, which is the same thing
-          as some track having been rated. */}
-      {avg && (
-        <div className="ses-record-reveal">
-          <button
-            type="button"
-            className="ses-quiet"
-            style={{ borderBottom: 'none' }}
-            onClick={() => setAvgShown(v => !v)}
-            aria-pressed={avgShown}
-          >
-            {avgShown ? 'hide average' : 'reveal average'}
-          </button>
-        </div>
-      )}
 
-      <div className="ses-album-note">
-        <span className="ses-label">Album note</span>
-        {open ? (
-          /* Grown by layout, never measured — see .ses-grow. */
-          <div className="ses-grow" data-said={(overallNotes || '') + ' '}>
-            <textarea
-              ref={field}
-              className="ses-textarea"
-              value={overallNotes}
-              // Opened for good once it has been written in, so taking the
-              // last word back out does not take the field from under the
-              // cursor.
-              onChange={e => { setOpened(true); setOverallNotes(e.target.value); }}
-              aria-label="Album note"
-              rows={3}
-            />
-          </div>
-        ) : (
-          <button type="button" className="ses-row-offer ses-album-offer" onClick={() => { asked.current = true; setOpened(true); }}>
-            Any notes?
-          </button>
-        )}
+      {/* The album note: a box, so it reads as the field it is, with the
+          question inside it until something is written. Grown by layout,
+          never measured — see .ses-grow. */}
+      <div className="ses-album-box">
+        <div className="ses-grow" data-said={(overallNotes || '') + ' '}>
+          <textarea
+            className="ses-textarea"
+            value={overallNotes}
+            onChange={e => setOverallNotes(e.target.value)}
+            placeholder="Any overall album notes?"
+            aria-label="Album note"
+            rows={3}
+          />
+        </div>
       </div>
     </section>
   );
