@@ -73,16 +73,17 @@ export default function TrackRow({
           aria-label={`${number}. ${title}${rating ? `, ${rating} out of 5` : ''}${favorite ? ', a favourite' : ''} — press to log this track`}
         >
           <span className="ses-row-n">{number}</span>
-          <div className="ses-row-main">
-            <span className="ses-row-name">{title}</span>
-            {written && <span className="ses-row-note">{note}</span>}
-          </div>
+          <span className="ses-row-name">{title}</span>
           <div className="ses-row-marks" aria-hidden="true">
             <Stars rating={rating} size={16} />
             <span className="ses-heart" style={{ color: favorite ? colors.fav : undefined }}>
               <Heart size={20} weight={favorite ? 'fill' : 'regular'} />
             </span>
           </div>
+          {/* The note runs the row's whole width under the name, so the
+              stars and the heart stay on the name's line however long it
+              is (Miyel, 2026-09-29). */}
+          {written && <span className="ses-row-note ses-row-under">{note}</span>}
         </button>
       </li>
     );
@@ -95,19 +96,7 @@ export default function TrackRow({
         <span className="ses-row-dot" role="img" aria-label="Being logged" />
       </span>
 
-      <div className="ses-row-main">
-        <span className="ses-row-name">{title}</span>
-        {offered && (
-          <button type="button" className="ses-row-offer" onClick={onNote}>
-            Add notes
-          </button>
-        )}
-        {written && !noting && (
-          <button type="button" className="ses-row-note" onClick={onNote} aria-label={`Notes on ${title}: ${note}. Press to edit`}>
-            {note}
-          </button>
-        )}
-      </div>
+      <span className="ses-row-name">{title}</span>
 
       <div className="ses-row-marks">
         <StarRating value={rating} onChange={onRate} size={16} roomy />
@@ -136,12 +125,23 @@ export default function TrackRow({
         )}
       </div>
 
+      {offered && (
+        <button type="button" className="ses-row-offer ses-row-under" onClick={onNote}>
+          Add notes
+        </button>
+      )}
+      {written && !noting && (
+        <button type="button" className="ses-row-note ses-row-under" onClick={onNote} aria-label={`Notes on ${title}: ${note}. Press to edit`}>
+          {note}
+        </button>
+      )}
+
       {/* The note, in the same box the album note is written in, under the
           whole row (Miyel, 2026-09-29: "have the track notes match the
           album notes — that box opens"). Grown by layout, never measured —
           see .ses-grow. */}
       {noting && (
-        <div className="ses-note-box ses-row-box">
+        <div className="ses-note-box ses-row-box ses-row-under">
           <div className="ses-grow" data-said={note + ' '}>
             <textarea
               ref={field}

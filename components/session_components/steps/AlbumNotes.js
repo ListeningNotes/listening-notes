@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 'use client';
-import { Heart, SketchLogo, Fingerprint } from '@phosphor-icons/react';
+import { Eye, EyeClosed, Heart, SketchLogo, Fingerprint } from '@phosphor-icons/react';
 import StarRating from '../StarRating';
 
 // The record, and what is said about it as a whole. The top of the session:
@@ -63,8 +63,22 @@ export default function AlbumNotes({
           as some track having been rated. */}
       {avg && (
         <div className="ses-record-reveal">
-          <button type="button" className="ses-quiet" style={{ borderBottom: 'none' }} onClick={onReveal} aria-pressed={avgShown}>
-            {avgShown ? 'hide average' : 'reveal average'}
+          {/* An eye, shut until pressed; open, with the number beside it
+              (Miyel, 2026-09-29: "smaller — an eye closed, an eye open with
+              the average"). The ghost in the stars above is the same number
+              drawn where it can be compared. */}
+          <button
+            type="button"
+            className={'ses-eye' + (avgShown ? ' ses-eye--open' : '')}
+            onClick={onReveal}
+            aria-pressed={avgShown}
+            aria-label={avgShown ? `Hide the tracks' average, ${avg}` : "Reveal the tracks' average"}
+            title={avgShown ? 'Hide the average' : 'Reveal the average'}
+          >
+            {avgShown
+              ? <Eye size={16} weight="regular" aria-hidden="true" />
+              : <EyeClosed size={16} weight="regular" aria-hidden="true" />}
+            {avgShown && <span className="ses-eye-n">{avg}</span>}
           </button>
         </div>
       )}

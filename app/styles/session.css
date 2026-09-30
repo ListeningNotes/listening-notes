@@ -723,8 +723,20 @@
 .ses-record-marks { display: flex; align-items: center; justify-content: center; margin-top: 18px; }
 /* The reveal, under the stars it draws into. The tick hangs 7px under the
    star row, so the room is for that and a little more. */
-.ses-record-reveal { margin-top: 14px; }
-.ses-record-reveal + .ses-marks { margin-top: 6px; }
+.ses-record-reveal { margin-top: 12px; }
+.ses-record-reveal + .ses-marks { margin-top: 4px; }
+/* The eye: shut, faint; open, in soft ink with the number beside it in the
+   caption face. */
+.ses-eye {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 10px; margin: -8px -10px;
+  border: 0; background: none; cursor: pointer;
+  color: var(--ink-faint); -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s;
+}
+.ses-eye:hover, .ses-eye--open { color: var(--ink-soft); }
+.ses-eye:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 2px; border-radius: 8px; }
+.ses-eye-n { font-family: var(--font-label); font-size: 11px; letter-spacing: 0.04em; }
 /* ── The three marks ───────────────────────────────────────────────────────
    A glyph over a word, which is the one shape this software uses to mean
    "here is something you can do" — an entry's ···, the address book's doors,
@@ -811,13 +823,14 @@
 .ses-album-box { margin-top: 24px; }
 /* A track's note: the same box, under the whole row. The row wraps to make
    the room. */
-.ses-row-box { margin: 12px 0 4px; }
+.ses-row-box.ses-row-under { margin: 8px 0 4px 34px; width: auto; flex-basis: calc(100% - 34px); }
 
 /* The offer under a track: the caption face at caption weight, and nothing
    about it that reads as a field. The padding is its touch target; the
    margin gives the room back. */
 .ses-row-offer {
   display: inline-block; padding: 10px 8px; margin: -10px -8px;
+  align-self: flex-start; flex: 0 0 auto; min-width: 0;
   border: 0; background: none; cursor: pointer;
   font-family: var(--font-label); font-size: 12px; letter-spacing: 0.06em;
   color: var(--ink-faint); text-align: left;
@@ -837,7 +850,7 @@
 .ses-rows-disc { display: block; padding: 22px 20px 6px; }
 /* A row is about 58px shut: number, name, stars, heart. */
 .ses-row {
-  display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
+  display: flex; flex-wrap: wrap; align-items: flex-start; gap: 12px;
   padding: 12px 20px;
   border-bottom: 1px solid var(--border);
   transition: background 0.25s;
@@ -846,11 +859,21 @@
   flex: 0 0 22px; display: flex; align-items: center;
   font-family: var(--font-label); font-size: 11px; color: var(--ink-faint);
 }
-.ses-row-main { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
+/* The name takes the line; the stars and the heart hold to that line
+   whatever comes under it. */
+.ses-row-name { flex: 1 1 0; min-width: 0; }
+.ses-row-n, .ses-row-marks { margin-top: 1px; }
+/* Under the name, the row's whole width, indented to the name's edge: the
+   offer, the note, the box. */
+.ses-row-under { flex: 1 1 100%; margin-top: -4px; }
+/* Each thing that goes under has a margin of its own above; these win by
+   being two classes, and set the indent for each. */
+.ses-row-note.ses-row-under { width: auto; margin: -2px 0 0 34px; }
+.ses-row-offer.ses-row-under { flex: 0 0 auto; margin: -12px 0 0 26px; }
 /* A shut row is one press, the row's whole width, that puts the song on air.
    A button in nothing but name: the row's own shape, no box. */
 .ses-row-press {
-  display: flex; align-items: center; gap: 12px; width: 100%;
+  display: flex; flex-wrap: wrap; align-items: flex-start; gap: 12px; width: 100%;
   padding: 0; margin: 0; border: 0; background: none; cursor: pointer;
   text-align: left; color: inherit; font: inherit;
   -webkit-tap-highlight-color: transparent;
