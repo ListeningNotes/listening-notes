@@ -221,16 +221,12 @@ export default function UpdateSwitch({ centered = false, onDone = null, explain 
         <button type="button" className="usw-go" onClick={onDone}>Next</button>
       )}
 
+      {/* One line, in Settings only (Miyel, 2026-09-30: the desk is gone, so
+          nothing says when a big version waits; and "nothing about you is
+          sent anywhere" went with it). */}
       {explain && (
         <div className="usw-told">
-          <p>
-            It checks for a new version every hour and takes it by itself. Nothing about you is
-            sent anywhere.
-          </p>
-          <p>
-            A big version, one that changes how something works, waits for you. Your desk says
-            when one is ready.
-          </p>
+          <p>It checks for a new version every hour and updates by itself.</p>
         </div>
       )}
     </div>
