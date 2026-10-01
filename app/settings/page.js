@@ -208,7 +208,7 @@ export default function SettingsPage({ layered = false }) {
             for a copy whose updater was switched off or never arrived. It
             says so itself when it is already on. */}
         <div className="st-section">
-          <h2 className="st-h">Keeping up to date</h2>
+          <h2 className="st-h">Automatic updates</h2>
           <UpdateSwitch explain />
         </div>
 

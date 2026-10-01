@@ -241,6 +241,11 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - `submission_actions.js` — the `submissions` table: saving a send, listing
   sends with the entry each became, counting, the four outcomes, marking one
   logged, naming a sender later.
+- `updater_link.js` — the link that hands a keeper their updater: GitHub's
+  new-file page on their repository with the workflow file already in it, on
+  the branch the copy was built from; read by the update route and by
+  `/updates/go`, the journal's own redirect that a phone's GitHub app cannot
+  swallow.
 - `version.js` — this copy's version from `package.json`, the releases URL,
   and `REPORTS_URL`.
 - `wave_actions.js` — the `waves` table: waves that arrived here, one row per

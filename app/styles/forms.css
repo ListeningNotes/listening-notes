@@ -2395,6 +2395,22 @@ a.pn-item-album:hover { text-decoration: underline; text-underline-offset: 3px; 
   .usw-tick path { animation: none; stroke-dashoffset: 0; }
 }
 
+/* The film of the two taps, between the instruction and the button: a
+   slot about 210 wide in the film's own shape (620 by 390, 2026-09-30),
+   which holds its place while the file loads. The still stands in for the
+   film when motion is turned down. */
+.usw-film {
+  width: 210px; max-width: 100%; aspect-ratio: 620 / 390;
+  border-radius: 16px; overflow: hidden; background: var(--panel);
+}
+.usw-film video, .usw-film img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.usw-film img { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .usw-film video { display: none; }
+  .usw-film img { display: block; }
+}
+.usw--centered .usw-film { align-self: center; }
+
 /* DM Mono, by way of --font-label. Not --font-mono, which every other
    button on the site uses and which is an alias for Nunito — the name says
    monospace and the value has been the body face since the serif came out.

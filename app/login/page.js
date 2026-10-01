@@ -26,13 +26,27 @@
 //
 // On success it goes home rather than to the dashboard. Somebody who arrived
 // here on purpose was already on their way somewhere, and the cross is one
-// swipe from everything.
+// swipe from everything. Unless the link said where: `?then=` names a page
+// on this journal to go on to, for a door that found no wristband and sent
+// somebody here to get one (2026-09-30, /updates/go from the home-screen
+// app's browser view). Only a path on this site is honoured — never another
+// address, so the page cannot be used to walk somebody off the journal.
 
 'use client';
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import PasswordGate from '../../components/session_components/PasswordGate';
+
+// Where to go once in: the `?then=` path if the link carried one, home
+// otherwise. A full load rather than a client-side step, because the page
+// named may be a door that answers with a redirect off the site.
+function goOn(router) {
+  let then = '';
+  try { then = new URLSearchParams(window.location.search).get('then') || ''; } catch { then = ''; }
+  if (then.startsWith('/') && !then.startsWith('//')) window.location.replace(then);
+  else router.replace('/');
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -43,11 +57,11 @@ export default function LoginPage() {
   useEffect(() => {
     fetch('/api/auth/check')
       .then(r => r.json())
-      .then(d => { if (d.authed) router.replace('/'); else setChecking(false); })
+      .then(d => { if (d.authed) goOn(router); else setChecking(false); })
       .catch(() => setChecking(false));
   }, [router]);
 
   if (checking) return <div style={{ minHeight: '100vh', background: '#f5f3ef' }} />;
 
-  return <PasswordGate onAuth={() => router.replace('/')} />;
+  return <PasswordGate onAuth={() => goOn(router)} />;
 }

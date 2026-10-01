@@ -15,9 +15,11 @@
 //
 // The button is the Update workflow on the keeper's own repository. Vercel
 // tells a build which repository it came from, so the link can go straight
-// to that page; anywhere else it goes to the release itself.
+// to that page; anywhere else it goes to the release itself. The link that
+// installs the updater in the first place is library/updater_link.js.
 
 import { requireWristband } from '@/library/wristband';
+import { updaterLink } from '@/library/updater_link';
 import pkg from '../../../package.json';
 
 const LATEST = 'https://api.github.com/repos/ListeningNotes/listening-notes/releases/latest';
@@ -28,32 +30,6 @@ const LATEST = 'https://api.github.com/repos/ListeningNotes/listening-notes/rele
 // that is worth saying out loud (2026-09-21: four copies sat five days
 // behind because their workflow arrived switched off and nothing said so).
 const GRACE = 3 * 60 * 60 * 1000;
-// The canonical updater, read from upstream rather than from this copy's own
-// files, so the link hands somebody the current file even when their copy is
-// an old one. Fetched, not bundled: a file under .github/workflows is not
-// traced into a function, and a copy that could not read it would offer an
-// empty page.
-const UPDATER = 'https://raw.githubusercontent.com/ListeningNotes/listening-notes/main/.github/workflows/update.yml';
-const UPDATER_PATH = '.github/workflows/update.yml';
-
-// GitHub's own new-file page, with the name and the contents already in it.
-// The deploy button cannot carry a workflow file into somebody's repository —
-// GitHub refuses any app writing under .github/workflows without a permission
-// Vercel does not hold — so every copy arrives without its updater and this
-// is how it gets one: two presses on a page that is already filled in.
-async function updaterLink(owner, slug) {
-  if (!owner || !slug) return null;
-  try {
-    const res = await fetch(UPDATER, { next: { revalidate: A_WHILE } });
-    if (!res.ok) return null;
-    const file = await res.text();
-    if (!file.trim()) return null;
-    const q = new URLSearchParams({ filename: UPDATER_PATH, value: file });
-    return `https://github.com/${owner}/${slug}/new/main?${q}`;
-  } catch {
-    return null;
-  }
-}
 // An hour, not a day (2026-09-15): a keeper told by a friend that there is
 // an update opened the desk and saw nothing, because the day-old answer
 // still said otherwise. One request an hour per copy is nothing to GitHub.
@@ -86,10 +62,18 @@ export async function GET(request) {
   const commit = (process.env.VERCEL_GIT_COMMIT_SHA || '').slice(0, 7);
   const byUpdater = (process.env.VERCEL_GIT_COMMIT_AUTHOR_LOGIN || '') === 'github-actions[bot]'
     || /^Update to Listening Notes /.test(process.env.VERCEL_GIT_COMMIT_MESSAGE || '');
-  const install = await updaterLink(owner, slug);
+  // The link is offered on the branch this copy was built from, which is
+  // the keeper's default branch — the only one a schedule runs on.
+  const install = await updaterLink(owner, slug, process.env.VERCEL_GIT_COMMIT_REF || 'main');
+  // Where the button to take an update is: the workflow on their own
+  // repository. Built here and not inside the try (2026-09-30), so a
+  // rate-limited GitHub does not answer without it.
+  const page = owner && slug
+    ? `https://github.com/${owner}/${slug}/actions/workflows/update.yml`
+    : null;
   const quiet = {
     current: pkg.version, latest: null, newer: false, stalled: false, major: false,
-    commit, byUpdater, install,
+    commit, byUpdater, install, page,
   };
   try {
     const res = await fetch(LATEST, {
@@ -100,9 +84,6 @@ export async function GET(request) {
     const release = await res.json();
     const latest = String(release.tag_name || '').replace(/^v/, '');
     if (!latest) return Response.json(quiet);
-    const page = owner && slug
-      ? `https://github.com/${owner}/${slug}/actions/workflows/update.yml`
-      : release.html_url;
     const newer = isNewer(latest, pkg.version);
     // A major waits for a person on purpose — the updater will not cross one
     // on its own — so a copy sitting behind a major is not stalled, it is
@@ -118,7 +99,7 @@ export async function GET(request) {
     const stalled = newer && !major && Number.isFinite(published) && Date.now() - published > GRACE;
     return Response.json({
       current: pkg.version, latest, newer, stalled, major, commit, byUpdater, install,
-      page, notes: release.html_url,
+      page: page || release.html_url, notes: release.html_url,
     });
   } catch {
     // GitHub unreachable, or rate-limited: say nothing rather than guess.

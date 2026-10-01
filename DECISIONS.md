@@ -1574,6 +1574,27 @@ never reaches that path, so the canonical copy stayed green while every new
 one failed. A run that finds nothing to do now exits green saying *Already up
 to date*, and an empty index is never committed.
 
+**The updater link goes through the journal's own domain, 2026-09-30.** A
+link to `github.com` tapped on a phone is swallowed by GitHub's app, which
+cannot make files, so nobody who set up on a phone ever finished the step.
+iOS matches a universal link on the URL that was tapped, so the button opens
+`/updates/go` on the journal and the redirect from there lands in the
+browser. `x-safari-https://` was tried and rejected: it worked from Safari
+and did nothing from inside another app's web view, and an install step
+cannot rest on something that works sometimes.
+
+**A setup screen shows one way through, not a menu of what to do when it
+fails, 2026-09-30.** A screen of alternatives tells the keeper the thing is
+unreliable, which is the opposite of what this software is for. The updater
+screen is four lines and a film; everything that could go wrong is the
+brief's problem, not the keeper's.
+
+**Settings decides the updater's state by the version, 2026-09-30.** Matched
+shows a tick; behind shows the offer. No third state, nothing stored, and the
+keeper is never asked about machinery: if the updater is on and working the
+versions match, and if it is off or broken the copy drifts behind and the
+offer appears by itself.
+
 **The version moves with the merge; the release announces it,
 2026-09-12.** A fix moves the last number, something new the middle, a change
 that asks something of keepers the first — bumped in the same merge, so a

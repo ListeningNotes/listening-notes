@@ -94,7 +94,11 @@ import { tidyJournal, journalUrl } from '../../library/return_address';
 // card with the box ticked; one that does not asks whether somebody gave it
 // and offers the camera — the Give code carries the giver in it, and a card's
 // code is their journal. Skip is always there: most copies are nobody's gift.
-const STEPS = ['name', 'photo', 'prompts', 'rig', 'updates', 'password', 'gift', 'homescreen'];
+// The updater step sits after the password (2026-09-30): it sends somebody
+// to another site, and before the password the journal is not claimed — the
+// name, openings and rig are still unwritten, so leaving costs them. After
+// it, leaving costs nothing.
+const STEPS = ['name', 'photo', 'prompts', 'rig', 'password', 'updates', 'gift', 'homescreen'];
 const PASSWORD_FLOOR = 8;
 
 async function patchSettings(fields) {
@@ -223,7 +227,7 @@ export default function WelcomeScreen() {
   // The journal is claimed on the password screen; the screens after it only
   // go forward. Once claimed, Back is no longer offered — there is nothing
   // behind it that could still be changed here.
-  const claimed = current === 'gift' || current === 'homescreen';
+  const claimed = current === 'updates' || current === 'gift' || current === 'homescreen';
 
   // ── Finding the giver, on the gift screen ─────────────────────────────────
   // Asked here and not when the page loads: on a real install the first
@@ -732,10 +736,10 @@ export default function WelcomeScreen() {
                 )}
               </div>
             )}
-            {/* Skip on the gift screen only. The home screen's was "Later —
-                it's in Settings", which did what Open the journal does
-                (Miyel, 2026-09-23: not necessary). */}
-            {current === 'gift' && (
+            {/* Skip on the updater and gift screens only. The home screen's
+                was "Later — it's in Settings", which did what Open the
+                journal does (Miyel, 2026-09-23: not necessary). */}
+            {(current === 'updates' || current === 'gift') && (
               <div className="su-under" style={{ justifyContent: 'flex-end' }}>
                 <button type="button" className="su-skip" disabled={busy} onClick={() => advance()}>Skip</button>
               </div>
