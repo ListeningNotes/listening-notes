@@ -32,15 +32,33 @@
 // updater says so in its own commit, so a copy that has ever updated itself
 // knows it for certain. Never having updated is not a fault — it may simply
 // be current — which is why the unlit state offers rather than warns.
+//
+// ── Settings decides by the version, 2026-09-30 ───────────────────────────
+// Settings compares this copy's version with the latest release and shows
+// one of two things: matched, a tick and that the journal is up to date;
+// behind, that there is a newer version, and the same offer as setup. No
+// third state and nothing stored — if the updater is on and working the
+// versions match, and if it is off or broken the copy drifts behind and the
+// offer appears by itself. The keeper is never asked a question about
+// machinery. A copy installed today is current, so Settings shows the tick
+// even if setup's step was skipped; that corrects itself at the next release.
+//
+// ── The button points at this journal, not at GitHub ──────────────────────
+// A link to github.com tapped on a phone is swallowed by GitHub's app, which
+// cannot make files, so nobody who set up on a phone ever finished this step
+// (2026-09-30). iOS matches a universal link on the URL that was tapped, so
+// the button opens /updates/go on this journal and that page redirects —
+// github.com is never tapped, and Safari follows like any other page.
 
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 // How often to look while waiting, and how long to keep looking. A Vercel
-// build is a minute or two; past four the wait is worse than the not
-// knowing, and Carry on has been sitting there the whole time.
+// build is a minute or two, sometimes more; past six the wait is worse than
+// the not knowing, and Skip has been sitting there the whole time.
 const LOOK_EVERY = 5000;
+const GIVE_UP_AFTER = 6 * 60 * 1000;
 // The turning ring: eight dots on a circle, fading round it, so the ring
 // reads as moving even before the rotation is noticed.
 const RING = Array.from({ length: 8 }, (unused, i) => {
@@ -51,7 +69,15 @@ const RING = Array.from({ length: 8 }, (unused, i) => {
     o: Number((0.22 + (i / 8) * 0.78).toFixed(2)),
   };
 });
-const GIVE_UP_AFTER = 4 * 60 * 1000;
+// A few silent seconds of the two taps on GitHub's Commit changes button,
+// recorded on a phone, and a still of it for anyone with motion turned
+// down. People follow a film through a strange screen where they would
+// stall on a paragraph.
+const FILM = '/updater-film.mp4';
+const STILL = '/updater-film.jpg';
+// Where the button goes: this journal's own redirect to the GitHub page, so
+// the tap never lands on github.com itself (see the top of the file).
+const DOOR = '/updates/go';
 
 // `explain` is Settings: the page somebody opens to find out how a thing
 // works, so it says how this one does. Setup says none of it — that it is
@@ -71,12 +97,12 @@ export default function UpdateSwitch({ centered = false, onDone = null, explain 
   }, []);
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
 
-  // Opens their own repository's new-file page, already filled in, and starts
-  // watching for the rebuild their commit will cause.
+  // Opens the door to their own repository's new-file page, already filled
+  // in, and starts watching for the rebuild their commit will cause.
   const press = useCallback(() => {
     if (!state?.install) return;
     was.current = state.commit || '';
-    window.open(state.install, '_blank', 'noopener,noreferrer');
+    window.open(DOOR, '_blank', 'noopener,noreferrer');
     setWatching(true);
     const began = Date.now();
     const look = () => {
@@ -102,63 +128,96 @@ export default function UpdateSwitch({ centered = false, onDone = null, explain 
     timers.current.push(setTimeout(look, LOOK_EVERY));
   }, [state]);
 
-  // Proven on: this very deployment was pushed by the updater.
-  const on = Boolean(state?.byUpdater) || landed;
+  // What the screen shows. `done` is the press that just worked, on either
+  // page. In Settings the versions decide the rest; in setup, a deployment
+  // the updater itself pushed is proof it is on, and otherwise the offer.
+  const done = landed;
+  const matched = explain && Boolean(state) && !state.newer;
+  const on = !explain && Boolean(state?.byUpdater);
+  const offering = Boolean(state) && !done && !matched && !on;
 
-  const signal = (
+  const tick = (
     <div className="usw-signal" aria-hidden="true">
-      {on && <svg className="usw-tick" viewBox="0 0 26 26"><path d="M5 13.6l5.2 5.2L21 7.6" /></svg>}
-      {watching && !on && (
-        <span className="usw-ring">
-          {RING.map((at, i) => (
-            <i key={i} style={{ transform: `translate(${at.x}px, ${at.y}px)`, opacity: at.o }} />
-          ))}
-        </span>
-      )}
+      <svg className="usw-tick" viewBox="0 0 26 26"><path d="M5 13.6l5.2 5.2L21 7.6" /></svg>
+    </div>
+  );
+  const ring = (
+    <div className="usw-signal" aria-hidden="true">
+      <span className="usw-ring">
+        {RING.map((at, i) => (
+          <i key={i} style={{ transform: `translate(${at.x}px, ${at.y}px)`, opacity: at.o }} />
+        ))}
+      </span>
     </div>
   );
 
   // The order every other setup screen keeps: what this is, then what it
-  // asks of you, then the thing you press. The instruction sat under the
-  // button for a while and made the button the middle of the screen
-  // rather than the end of it.
+  // asks of you, then the film of it, then the thing you press.
   return (
     <div className={'usw' + (centered ? ' usw--centered' : '')}>
-      {/* Settings has no screen sentence above it, so the component says it
-          there. In setup the screen's own sentence says it and this would
-          be the same words twice. */}
-      {explain && !on && <p className="usw-said">Keep your journal up to date automatically.</p>}
+      {done && (
+        <>
+          {tick}
+          <p className="usw-said" role="status">You’re all set!</p>
+          <p className="usw-how">Your journal will keep itself up to date.</p>
+        </>
+      )}
 
-      {on ? (
+      {!done && matched && (
         <>
-          {signal}
-          <p className="usw-said" role="status">{landed ? 'It worked.' : 'On — your journal updates itself.'}</p>
-          {landed && <p className="usw-how">Your journal will keep itself up to date from now on.</p>}
+          {tick}
+          <p className="usw-said" role="status">Your journal is up to date.</p>
         </>
-      ) : state?.install ? (
+      )}
+
+      {!done && on && (
         <>
-          {/* Said before the press, not after: a new tab nobody expected is
-              a new tab nobody trusts. And only ever alongside the button —
-              an instruction to press something that is not there is worse
-              than saying nothing. */}
-          <p className="usw-how">
-            {watching ? 'Waiting for GitHub…' : (
-              <>
-                {state?.stalled && <>Your journal has stopped updating itself. </>}
-                Opens a GitHub link in a new tab. Press <strong>Commit changes</strong>, twice.
-              </>
-            )}
-          </p>
-          {signal}
-          <button type="button" className="usw-switch" onClick={press} disabled={watching}>
-            Turn on auto updates
-          </button>
+          {tick}
+          <p className="usw-said" role="status">On — your journal updates itself.</p>
         </>
-      ) : null}
+      )}
+
+      {offering && (
+        <>
+          {/* Settings has no screen sentence above it, so the component says
+              it there. In setup the screen's own sentence says it and this
+              would be the same words twice. */}
+          {explain && <p className="usw-said">There’s a newer version of Listening Notes.</p>}
+          {state.install ? (
+            <>
+              {/* Said before the press, not after: a page nobody expected is
+                  a page nobody trusts. And only ever alongside the button —
+                  an instruction to press something that is not there is
+                  worse than saying nothing. */}
+              <p className="usw-how">
+                {watching ? 'Waiting for GitHub…' : (
+                  <>Opens GitHub. Press the green <strong>Commit changes</strong> button, twice.</>
+                )}
+              </p>
+              {/* The film gives way to the ring while the page waits: the
+                  thing to do has been done, and the ring is the answer. */}
+              {watching ? ring : (
+                <div className="usw-film">
+                  <video src={FILM} poster={STILL} autoPlay muted loop playsInline aria-label="The two taps on Commit changes" />
+                  <img src={STILL} alt="" />
+                </div>
+              )}
+              <button type="button" className="usw-switch" onClick={press} disabled={watching}>
+                Turn on auto updates
+              </button>
+            </>
+          ) : (
+            /* A copy that cannot say which repository it is: no link to
+               offer. One line, rather than nothing — nothing under the
+               sentence looked exactly like a copy that is already on. */
+            <p className="usw-how">This copy can’t find your repository. Settings has what to do.</p>
+          )}
+        </>
+      )}
 
       {/* Only once it is on. Before that the way past is the setup page's
-          own Skip, the same one every screen before this has. */}
-      {onDone && on && (
+          own Skip. */}
+      {onDone && (done || on) && (
         <button type="button" className="usw-go" onClick={onDone}>Next</button>
       )}
 

@@ -119,6 +119,7 @@ The library — logic, no visuals
     sitewide_visuals.js        Colours and fonts as JS, for canvas and chart code that cannot read a custom property; the stylesheets are the source
     slug_generator.js          Turns "Pet Sounds" into "pet-sounds" for the URL
     submission_actions.js      Albums other people sent you: saving one, its four outcomes, the record a send became, and naming its sender once they have a copy
+    updater_link.js            The pre-filled GitHub new-file page that installs the updater, on the copy's own branch — read by api/update and by /updates/go
     version.js                 Which version this copy is running (from package.json), where its release notes are, and where a report goes — read by the pitch pane, the desk and the report sheet
     wave_actions.js            The waves that arrived here: one row per waving journal, replaced not stacked, deleted when left
     whole_journal.mjs          Which tables the journal has, asked of the database, and one table's rows as Postgres writes them — shared by the nightly backup and the export, so neither keeps a list
@@ -270,6 +271,7 @@ The rooms — full pages assembled from furniture
       forms.css                Send, setup, settings, the password gate, compare, key
     manifest.js                PWA manifest — force-dynamic, so the name is not baked in
     feed.xml/route.js          The journal as an RSS feed
+    updates/go/route.js        Owner-only redirect to the updater's GitHub page — tapped on the journal, not on github.com, so a phone's GitHub app never swallows it
     entries/[slug]/
       page.js                  Loads the entry, hands it to FullPostPage
       FullPostPage.js          The full public entry page — and, in preview mode, the session's preview
