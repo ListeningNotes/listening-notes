@@ -1565,6 +1565,15 @@ keeper. The logic is fetched from upstream each run, because GitHub will not
 let a workflow rewrite workflow files — which is also why a copy from before
 the schedule pastes the file once more, and then never again.
 
+**A copy with no shared history cannot be asked whether it is current until
+after the graft, 2026-09-30.** The question was asked once, before the graft,
+where it can only answer no — so every copy installed from the current release
+grafted, found nothing to merge, and threw on an empty commit. Hourly, on
+every new copy, invisibly: a copy with history exits at the first ask and
+never reaches that path, so the canonical copy stayed green while every new
+one failed. A run that finds nothing to do now exits green saying *Already up
+to date*, and an empty index is never committed.
+
 **The version moves with the merge; the release announces it,
 2026-09-12.** A fix moves the last number, something new the middle, a change
 that asks something of keepers the first — bumped in the same merge, so a
