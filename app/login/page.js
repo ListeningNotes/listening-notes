@@ -41,10 +41,18 @@ import PasswordGate from '../../components/session_components/PasswordGate';
 // Where to go once in: the `?then=` path if the link carried one, home
 // otherwise. A full load rather than a client-side step, because the page
 // named may be a door that answers with a redirect off the site.
+//
+// Same site or nothing, judged by the browser's own parser rather than by
+// the first character: `//example.com` and `/\example.com` both begin with a
+// slash and both resolve to another host (Miyel, 2026-09-30).
 function goOn(router) {
-  let then = '';
-  try { then = new URLSearchParams(window.location.search).get('then') || ''; } catch { then = ''; }
-  if (then.startsWith('/') && !then.startsWith('//')) window.location.replace(then);
+  let to = null;
+  try {
+    const then = new URLSearchParams(window.location.search).get('then') || '';
+    const url = new URL(then, window.location.origin);
+    if (then && url.origin === window.location.origin) to = url.pathname + url.search + url.hash;
+  } catch { to = null; }
+  if (to) window.location.replace(to);
   else router.replace('/');
 }
 
