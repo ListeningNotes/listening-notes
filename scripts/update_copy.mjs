@@ -247,7 +247,7 @@ const given = taken || root;
 for (const file of clashing) {
   if (tryGit('diff', '--quiet', given, 'HEAD', '--', file).status !== 0) continue;
   if (tryGit('cat-file', '-e', `${UPSTREAM_REF}:${file}`).status === 0) git('checkout', UPSTREAM_REF, '--', file);
-  else { git('rm', '-q', '--cached', '--', file); tryGit('rm', '-q', '--force', '--', file); }
+  else git('rm', '-q', '--force', '--', file);
 }
 clashing = clashing.filter(file => tryGit('diff', '--quiet', given, 'HEAD', '--', file).status !== 0);
 if (clashing.length) {
@@ -275,6 +275,19 @@ if (clashing.length) {
     '`git merge upstream/main`, fix the files it lists, commit, and push. If the changes in',
     'those files were not yours to keep, undo them first and press Run workflow again.',
   );
+}
+
+// And the same rule after a merge that went through: a file the keeper
+// never changed that still differs from upstream's — because upstream's
+// edit was rewritten into the base and the copy's old text won a hunk, or
+// because upstream no longer has the file — takes upstream's version, which
+// is what the merge would have given before the rewrite. A file the keeper
+// added or changed is left exactly as the merge left it.
+for (const file of git('diff', '--cached', '--name-only', UPSTREAM_REF).split('\n').filter(Boolean)) {
+  if (tryGit('diff', '--quiet', given, 'HEAD', '--', file).status !== 0) continue;
+  if (tryGit('cat-file', '-e', `${given}:${file}`).status !== 0) continue;
+  if (tryGit('cat-file', '-e', `${UPSTREAM_REF}:${file}`).status === 0) git('checkout', UPSTREAM_REF, '--', file);
+  else git('rm', '-q', '--force', '--', file);
 }
 
 // GitHub refuses a push from a workflow's own token that creates or changes
