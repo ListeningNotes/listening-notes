@@ -342,18 +342,21 @@ export default function About({ stamps, authed = false, pinned = null, entries =
     ? (entries.find(e => e.id === edit.pin) || null)
     : pinned;
 
-  // The search. Album and artist only: this is somebody looking for a record
-  // they already have in mind, not browsing, and matching notes as well would
-  // put an album in the results for a sentence written about a different one.
-  // Records only, 2026-09-24: the pin is the one record the card points at,
-  // and a track note is a song — it has its own address, not a place here.
+  // The search. Song, album and artist only: this is somebody looking for a
+  // record, or a song, they already have in mind, not browsing, and matching
+  // notes as well would put an album in the results for a sentence written
+  // about a different one.
+  // Records and songs, 2026-10-01. The track notes were left out on
+  // 2026-09-24 — the pin was the one record the card points at, and a song
+  // had its own address, not a place here — and came in with Miyel's brief: a
+  // song can be the thing somebody is pointing at as readily as a record
+  // (DECISIONS, Structure; the argument it replaced is in the archive).
   const pinResults = useMemo(() => {
     const q = pinQuery.trim().toLowerCase();
-    const records = entries.filter(e => !e.song);
     const rows = q
-      ? records.filter(e =>
-          `${e.album || ''} ${e.artist || ''}`.toLowerCase().includes(q))
-      : records;
+      ? entries.filter(e =>
+          `${e.song || ''} ${e.album || ''} ${e.artist || ''}`.toLowerCase().includes(q))
+      : entries;
     return rows.slice(0, PIN_RESULTS);
   }, [entries, pinQuery]);
 
@@ -591,15 +594,15 @@ export default function About({ stamps, authed = false, pinned = null, entries =
       {pinSheetOpen && (
         <>
           <div className="ab-pin-scrim" onClick={() => setPinOpen(false)} />
-          <div className="ab-pin-sheet" ref={sheetRef} role="dialog" aria-label="Choose a pinned album">
+          <div className="ab-pin-sheet" ref={sheetRef} role="dialog" aria-label="Choose a pinned album or song">
             <div className="ab-pin-search">
               <MagnifyingGlass size={14} weight="bold" aria-hidden="true" />
               <input
                 className="ab-pin-field"
                 value={pinQuery}
                 onChange={e => setPinQuery(e.target.value)}
-                placeholder="Search your albums"
-                aria-label="Search your albums"
+                placeholder="Search your albums and songs"
+                aria-label="Search your albums and songs"
               />
             </div>
 
@@ -625,20 +628,28 @@ export default function About({ stamps, authed = false, pinned = null, entries =
                   className={'ab-pin-one' + (row.id === edit.pin ? ' ab-pin-one--on' : '')}
                   onClick={() => choosePin(row.id)}
                   aria-pressed={row.id === edit.pin}
-                  aria-label={`${row.album} — ${row.artist}`}
-                  title={`${row.album} — ${row.artist}`}
+                  aria-label={row.song ? `${row.song} — ${row.album} \u00b7 ${row.artist}` : `${row.album} — ${row.artist}`}
+                  title={row.song ? `${row.song} — ${row.album} \u00b7 ${row.artist}` : `${row.album} — ${row.artist}`}
                 >
-                  <span className="ab-pin-one-art">
+                  {/* A song is a page, its corner folded over in the album's
+                      colour, the way it is on the wall and in the feed
+                      (2026-10-01), and the one line under it is the song. */}
+                  <span className={'ab-pin-one-art' + (row.song ? ' ln-fold' : '')}>
                     {row.album_art
                       ? <img src={row.album_art} alt="" />
                       : <span aria-hidden="true">♪</span>}
+                    {row.song && (
+                      <span className="ln-fold-flap" aria-hidden="true">
+                        {row.album_art && <img src={row.album_art} alt="" />}
+                      </span>
+                    )}
                     {row.id === edit.pin && (
                       <span className="ab-pin-one-tick" aria-hidden="true">
                         <Check size={12} weight="bold" />
                       </span>
                     )}
                   </span>
-                  <span className="ab-pin-one-album">{row.album}</span>
+                  <span className="ab-pin-one-album">{row.song || row.album}</span>
                 </button>
               ))}
               {pinResults.length === 0 && (

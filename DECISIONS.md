@@ -358,24 +358,26 @@ through the journal, which was the pane passing an order it has nothing to do
 with. One layer at a time, too: a cover closes its window before the entry
 opens.
 
-**Masterpieces and Formative open a window; Albums does not, 2026-09-15.** A
-window of covers, no bar and no search — a glance. Albums is the total, and a
-window of all of them would be the wall with its controls taken off, one swipe
-away. Only the two flag counts opening anything also says which of the numbers
-mean something.
+**Masterpieces and Formative open a window; Albums and Songs do not,
+2026-09-15 (Songs 2026-10-01).** A window of covers, no bar and no search — a
+glance. Albums is the total, and a window of all of them would be the wall with
+its controls taken off, one swipe away; the songs are the other total and get
+the same answer. Only the two flag counts opening anything also says which of
+the numbers mean something.
 
 **No Favorites count, 2026-09-15.** Favourite applies to tracks as well as
 albums, so forty favourite tracks across twelve records is not a number you
-can set beside 14 masterpieces. Masterpiece and Formative are album-only,
-which is exactly why they work here — and three fits the row where four is
-cramped.
+can set beside 14 masterpieces. Masterpiece and Formative are counted on
+albums only, which is exactly why they work here.
 
-**Three counts, in the three flags' colours, 2026-09-15.** Albums,
-masterpieces, formative — how somebody listens, which a genre list never says,
-and the first work those tokens have had away from a mark on a record.
-Typeset, not stamped: with a photograph that size above them the photo is the
-flourish. Top genres moved below the fold, one line. A machine-readable line
-was tried and cut — it references a passport rather than being one.
+**Four counts, 2026-10-01: Albums, Songs, Masterpieces, Formative.** The two
+totals in ink, the two flags in their colours — how somebody listens, which a
+genre list never says. Songs is how many track notes the journal holds, left
+off at zero like the flags. Three counts until 2026-10-01, under *no fourth
+metric*; the argument is in the archive. Typeset, not stamped: with a
+photograph that size above them the photo is the flourish. Top genres below
+the fold, one line. A machine-readable line was tried and cut — it references
+a passport rather than being one.
 
 **Down is a cover, not a gesture, 2026-09-15.** Down means cover-then-contents,
 and two things have that shape: the beacon, which is the journal's cover, and
@@ -452,11 +454,15 @@ prompt says what they would claim; the gap is the interesting part.
 and that is deliberately the later decision.** Easier to add than to take
 away once people have filled it in.
 
-**A pinned album goes on the card.** One entry from the owner's own journal,
-shown as art, tapping through to it: the only image besides the portrait and
-the thing that stops the card reading as all type. Below the name and
-metrics, smaller than the portrait — the person is the subject and the record
-is what they are pointing at. No label; art under a name says what it is.
+**A pinned album, or song, goes on the card (song 2026-10-01).** One entry
+from the owner's own journal, shown as art, tapping through to it: the only
+image besides the portrait and the thing that stops the card reading as all
+type. A track note pins as readily as a record — a song can be the thing
+somebody is pointing at, which is why Formative reached it the day before —
+and wears its folded corner, the song over `album · artist`. Below the name
+and metrics, smaller than the portrait — the person is the subject and the
+record is what they are pointing at. No label; art under a name says what it
+is.
 
 **The pin is set from the card, behind the pencil, through a search sheet,
 2026-08-28.** It is a settings field, so it is edited with the other card
@@ -605,8 +611,11 @@ best case. The default is what a beta tester sees. This is exactly how the Last.
 setup screen survived two failed installs, and how Last.fm itself survived a
 week past the point where nobody could connect one.
 
-**No fourth metric on the card.** The card is a glance and four rows is the
-most a glance holds. Ruled out rather than parked.
+**No fourth metric on the card — reversed 2026-10-01, for Songs.** The rule
+was that four rows is the most a glance holds; a fourth count on the counts row
+is not a fourth row, and a journal that writes about songs has two totals, not
+one (Structure, *Four counts*). The glance keeps its rows: no new line on the
+card came with it.
 
 **Nothing about writing on the beacon.** The desk is one swipe right and
 carries Start a listen and Messages; the cover was showing the same two
@@ -954,7 +963,8 @@ album entry and never part of one: `song` beside the record's `album`
 album rating or Masterpiece. The heart was dropped on 2026-09-26 and came
 back with Formative on 2026-09-30 (Miyel: "it just feels right… I think it
 matters"). Its ··· is Edit, Credit, Send, Delete; nothing that counts albums
-counts it — the card's Formative is still albums only. Written or corrected,
+counts it — the card's Formative is still albums only, and the card's Songs
+(2026-10-01) is the count of them. Written or corrected,
 it takes the album listen's shape. One object doing both is
 one confusing object instead of two clear ones.
 

@@ -833,3 +833,31 @@ under every song reads as a test; the horizon must stay in sight; the song on
 air is the one pressed, not the one rated; a note in the middle of a list
 needs a sheet, not a field. The one-screen session is that brief, built once.
 
+---
+
+## The card — three counts, and a pin for records only, 2026-09-15 to 2026-10-01
+
+Reversed 2026-10-01 by Miyel's brief: a Songs count between Albums and the
+flags, and a song pinnable to the card. The current rules are under Structure
+in DECISIONS.md (*Four counts*; *No fourth metric on the card — reversed*; *A
+pinned album, or song*).
+
+**No fourth metric on the card.** The card is a glance and four rows is the
+most a glance holds. Ruled out rather than parked. — What changed was what a
+journal holds: from 2026-09-24 a note about one song is an entry of its own, so
+the journal's total became two numbers. The fourth count went on the one counts
+row rather than on a row of its own, and the glance kept its four rows.
+
+**Three counts, in the three flags' colours, 2026-09-15.** Albums,
+masterpieces, formative — how somebody listens, which a genre list never says,
+and the first work those tokens have had away from a mark on a record. *No
+Favorites count* carried the other half of the argument: "three fits the row
+where four is cramped." Four fit once each count took the width of its own word
+and an equal share of the rest, rather than a quarter each; the words came out
+evenly spaced, which thirds never quite were.
+
+**The pin's search was records only, 2026-09-24.** The pin was the one record
+the card points at, and a track note was a song — it had its own address, not
+a place here. Formative reached the track notes on 2026-09-30 for the reason
+that undid this: a song can be the thing that made you, and so can be the
+thing you hold up.
