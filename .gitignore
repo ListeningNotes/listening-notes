@@ -60,3 +60,6 @@ next-env.d.ts
 
 # the dev server's own https certificate (next dev --experimental-https), one machine's
 /certificates/
+
+# Not software. The marketing lives here and never ships.
+/marketing/
