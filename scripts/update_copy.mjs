@@ -149,6 +149,22 @@ function sayCurrent() {
 
 if (upToDate()) sayCurrent();
 
+// The upstream commit that differs from `commit` in the fewest files, or
+// null when even the nearest shares less than half: a copy that shares
+// almost nothing with any version is not a copy of this software, and
+// grafting it anywhere would turn the update into one giant clash.
+function nearestByFiles(commit) {
+  let nearest = null;
+  let fewest = Infinity;
+  for (const candidate of git('rev-list', UPSTREAM_REF).split('\n').filter(Boolean)) {
+    const differing = git('diff-tree', '-r', '--name-only', candidate, commit).split('\n').filter(Boolean).length;
+    if (differing < fewest) { fewest = differing; nearest = candidate; }
+    if (fewest === 0) break;
+  }
+  const total = git('ls-tree', '-r', '--name-only', commit).split('\n').filter(Boolean).length;
+  return nearest && fewest <= total / 2 ? nearest : null;
+}
+
 // No common ancestor: a snapshot from the deploy button. Find where it came
 // from and graft it there. An identical tree is the ideal; the nearest is
 // what a real copy has, because the keeper added this very workflow file by
@@ -157,23 +173,36 @@ if (upToDate()) sayCurrent();
 // the one it was made from, and whatever differs is the keeper's own work,
 // merged from that base like any other change.
 if (tryGit('merge-base', 'HEAD', UPSTREAM_REF).status !== 0) {
+  // ── A copy that has updated before, meeting a history it has never seen ──
+  // Upstream's history was rewritten once (2026-09-30, DECISIONS), and a
+  // copy that had merged the old history carries the old commits inside its
+  // own. Grafting its root alone would give the merge a base from the first
+  // day, and every file changed since on both sides would clash — which is
+  // what happened in rehearsal. So: the upstream commit this copy's newest
+  // update merged is the point it last stood level with upstream, and the
+  // new commit nearest it by files is that same point in the new history
+  // — identical for a release after the rewrite's reason, one file apart
+  // before it. Grafting the one onto the other gives the merge its true
+  // base. A copy that has never updated has no such merge, and its root is
+  // grafted below as before.
+  const update = git('log', '--merges', '--format=%H %s', 'HEAD').split('\n')
+    .find(line => /^\S+ Update to Listening Notes /.test(line));
+  if (update) {
+    const taken = git('rev-parse', `${update.split(' ')[0]}^2`);
+    const nearest = nearestByFiles(taken);
+    if (nearest) git('replace', '-f', '--graft', taken, nearest);
+    if (upToDate()) sayCurrent();
+  }
+}
+if (tryGit('merge-base', 'HEAD', UPSTREAM_REF).status !== 0) {
   const roots = git('rev-list', '--max-parents=0', 'HEAD').split('\n').filter(Boolean);
   const root = roots[roots.length - 1];
   const tree = git('rev-parse', `${root}^{tree}`);
   const candidates = git('rev-list', UPSTREAM_REF).split('\n').filter(Boolean);
   let origin = candidates.find(commit => git('rev-parse', `${commit}^{tree}`) === tree);
   if (!origin) {
-    let fewest = Infinity;
-    for (const commit of candidates) {
-      const differing = git('diff-tree', '-r', '--name-only', commit, root).split('\n').filter(Boolean).length;
-      if (differing < fewest) { fewest = differing; origin = commit; }
-      if (fewest === 0) break;
-    }
-    // A copy that shares almost nothing with any version is not a copy of
-    // this software, and grafting it anywhere would turn the update into
-    // one giant clash. Half the files is the line.
-    const total = git('ls-tree', '-r', '--name-only', root).split('\n').filter(Boolean).length;
-    if (!origin || fewest > total / 2) {
+    origin = nearestByFiles(root);
+    if (!origin) {
       stop(
         '## Could not update',
         '',
