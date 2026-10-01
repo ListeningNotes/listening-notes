@@ -552,8 +552,8 @@
 }
 
 /* The ? that opened a reference lived here (.ses-ask-door) and is gone with
-   it, 2026-09-18 — see docs/RETIRED-PROMPTS.md. So is the sheet it opened,
-   further down: .ses-ask and everything under it. */
+   it, 2026-09-18. So is the sheet it opened, further down: .ses-ask and
+   everything under it. */
 .ses-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
 /* Its own width again. It was pinned to clamp(120px, 42vw, 220px) for half an
    hour on 2026-09-18 so that this cover and the cross's bar cover would land

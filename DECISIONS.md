@@ -754,7 +754,7 @@ cascade and follows the order the rules had in the one file they came from.
 
 **A visited journal is a card, a beacon and entries, 2026-09-28.** The
 About pane is gone. Nobody wanders in any more — they arrive because a person
-showed them, and the explaining happens in the room or on the Instagram — so
+showed them, and the explaining happens in person — so
 a pitch for the software on the front of every keeper's journal was a public
 door to the source, the thing the gate on `/get` closes. What that pane owed
 a visitor stands at the foot of the card: the source link (a licence
@@ -1757,10 +1757,6 @@ reliably at all — and the key is the same wall with a card attached. A copy
 without either works whole: the beacon falls back to the last record logged,
 and research and the question mark are simply absent.
 
-**The pitch says nothing about AI, 2026-09-13.** The README and `/get` argue
-ownership, and for part of the audience AI and ownership read as opposites;
-a feature that needs a key is found by whoever goes looking in Settings.
-
 **The handle is derived and the serial is minted; neither is asked.** A second
 name is the mistake `journal_name` made. The serial is the copy's identity and
 random: anything derived from a name or a date is frozen wrong the moment
@@ -2132,8 +2128,8 @@ self-hosted app is.
 **Native app / iframe / proxy for viewing other journals.** All rebuild the
 platform behaviour being removed.
 
-**A directory of journals.** People arrive through Instagram, texting, and
-someone sending it on. A directory doesn't solve discovery.
+**A directory of journals.** People arrive because somebody handed it to
+them. A directory doesn't solve discovery.
 
 ---
 

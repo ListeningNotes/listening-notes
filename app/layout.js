@@ -252,8 +252,8 @@ export default async function RootLayout({ children, layer }) {
   // `research_available` was here until 2026-09-18 — a boolean saying whether
   // this copy had an Anthropic key, so the album screen could leave the
   // Research button out rather than show one that fails. Nothing asks any
-  // more: the research and the question mark came out of the software (see
-  // docs/RETIRED-PROMPTS.md), and the key they needed has no other reader.
+  // more: the research and the question mark came out of the software, and
+  // the key they needed has no other reader.
   // `beacon_on` was here until 2026-09-24 — whether this journal broadcast at
   // all, so that a copy switched to Quiet never polled. The switch came out
   // (Miyel): every journal broadcasts, and there is nothing left to ask before

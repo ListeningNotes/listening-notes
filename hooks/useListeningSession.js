@@ -499,7 +499,7 @@ export function useListeningSession({ step }) {
   // things in this software that spent somebody's money per press, the only
   // two that needed a key before they worked, and neither is something she
   // could not do on a phone beside the record. The prompts — which were the
-  // work — are kept in docs/RETIRED-PROMPTS.md with the reason.
+  // work — are in the repository's history, with the reason.
   //
   // The `briefings` table stays where it is: the schema is additive-only, and
   // a brief already researched is somebody's record of what they read.

@@ -188,7 +188,7 @@ export function lookup_key(album, artist, song = '') {
 
 // ── Assembling an entry out of what was written ───────────────────────────
 // This lived in library/ai_integration.js, which is gone with the research
-// (2026-09-18, docs/RETIRED-PROMPTS.md). It was already the odd one out in
+// (2026-09-18). It was already the odd one out in
 // there: nothing here reaches a model. The only generated thing was ever the
 // tag list, and tags went in 2026-08 — the archive searches the notes and the
 // genre is its own field — so it has been a local, instant, free assembly of
