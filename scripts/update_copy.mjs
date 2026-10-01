@@ -165,6 +165,30 @@ function nearestByFiles(commit) {
   return nearest && fewest <= total / 2 ? nearest : null;
 }
 
+// ── A copy that has updated before, meeting a history it has never seen ──
+// Upstream's history was rewritten (2026-09-30 and 2026-10-01, DECISIONS),
+// and a copy that had merged the earlier history carries the old commits
+// inside its own. Grafting its root alone would give the merge a base from
+// the first day, and every file changed since on both sides would clash —
+// which is what happened in rehearsal. So: the upstream commit this copy's
+// newest update merged is the point it last stood level with upstream, and
+// the new commit nearest it by files is that same point in the new history
+// — identical for a release after the rewrite's reason, a file or two apart
+// before it. Grafting the one onto the other gives the merge its true base.
+// Asked whenever that commit is no longer upstream's, not only when no
+// common ancestor exists at all: a second rewrite leaves the early commits
+// as they were, so a copy that merged the first finds an ancient ancestor
+// that is a real commit and the wrong base. A copy that has never updated
+// has no such merge, and its root is grafted below as before.
+const lastUpdate = git('log', '--merges', '--format=%H %s', 'HEAD').split('\n')
+  .find(line => /^\S+ Update to Listening Notes /.test(line));
+const taken = lastUpdate ? git('rev-parse', `${lastUpdate.split(' ')[0]}^2`) : null;
+if (taken && tryGit('merge-base', '--is-ancestor', taken, UPSTREAM_REF).status !== 0) {
+  const nearest = nearestByFiles(taken);
+  if (nearest) git('replace', '-f', '--graft', taken, nearest);
+  if (upToDate()) sayCurrent();
+}
+
 // No common ancestor: a snapshot from the deploy button. Find where it came
 // from and graft it there. An identical tree is the ideal; the nearest is
 // what a real copy has, because the keeper added this very workflow file by
@@ -172,31 +196,9 @@ function nearestByFiles(commit) {
 // commit that differs from the copy's first commit in the fewest files is
 // the one it was made from, and whatever differs is the keeper's own work,
 // merged from that base like any other change.
+const roots = git('rev-list', '--max-parents=0', 'HEAD').split('\n').filter(Boolean);
+const root = roots[roots.length - 1];
 if (tryGit('merge-base', 'HEAD', UPSTREAM_REF).status !== 0) {
-  // ── A copy that has updated before, meeting a history it has never seen ──
-  // Upstream's history was rewritten once (2026-09-30, DECISIONS), and a
-  // copy that had merged the old history carries the old commits inside its
-  // own. Grafting its root alone would give the merge a base from the first
-  // day, and every file changed since on both sides would clash — which is
-  // what happened in rehearsal. So: the upstream commit this copy's newest
-  // update merged is the point it last stood level with upstream, and the
-  // new commit nearest it by files is that same point in the new history
-  // — identical for a release after the rewrite's reason, one file apart
-  // before it. Grafting the one onto the other gives the merge its true
-  // base. A copy that has never updated has no such merge, and its root is
-  // grafted below as before.
-  const update = git('log', '--merges', '--format=%H %s', 'HEAD').split('\n')
-    .find(line => /^\S+ Update to Listening Notes /.test(line));
-  if (update) {
-    const taken = git('rev-parse', `${update.split(' ')[0]}^2`);
-    const nearest = nearestByFiles(taken);
-    if (nearest) git('replace', '-f', '--graft', taken, nearest);
-    if (upToDate()) sayCurrent();
-  }
-}
-if (tryGit('merge-base', 'HEAD', UPSTREAM_REF).status !== 0) {
-  const roots = git('rev-list', '--max-parents=0', 'HEAD').split('\n').filter(Boolean);
-  const root = roots[roots.length - 1];
   const tree = git('rev-parse', `${root}^{tree}`);
   const candidates = git('rev-list', UPSTREAM_REF).split('\n').filter(Boolean);
   let origin = candidates.find(commit => git('rev-parse', `${commit}^{tree}`) === tree);
@@ -232,8 +234,23 @@ if (ON_ITS_OWN && major(after) > major(before)) {
   process.exit(0);
 }
 const merged = tryGit('merge', '--no-commit', '--no-ff', UPSTREAM_REF);
-if (merged.status !== 0) {
-  const clashing = git('diff', '--name-only', '--diff-filter=U').split('\n').filter(Boolean);
+let clashing = merged.status !== 0 ? git('diff', '--name-only', '--diff-filter=U').split('\n').filter(Boolean) : [];
+// A file the keeper has never changed is not theirs to keep. The copy's
+// version of it is whatever upstream gave them last — at the deploy, or at
+// their last update — and when upstream's history has been rewritten under
+// it (2026-10-01: names in comments became placeholders in every commit),
+// git reads that old version as the keeper's own edit and clashes. So a
+// clashing file identical to the version this copy was given takes
+// upstream's; a file the keeper did change is still theirs, and still
+// reported.
+const given = taken || root;
+for (const file of clashing) {
+  if (tryGit('diff', '--quiet', given, 'HEAD', '--', file).status !== 0) continue;
+  if (tryGit('cat-file', '-e', `${UPSTREAM_REF}:${file}`).status === 0) git('checkout', UPSTREAM_REF, '--', file);
+  else git('rm', '-q', '--force', '--', file);
+}
+clashing = clashing.filter(file => tryGit('diff', '--quiet', given, 'HEAD', '--', file).status !== 0);
+if (clashing.length) {
   tryGit('merge', '--abort');
   if (ON_ITS_OWN) {
     say(
@@ -258,6 +275,19 @@ if (merged.status !== 0) {
     '`git merge upstream/main`, fix the files it lists, commit, and push. If the changes in',
     'those files were not yours to keep, undo them first and press Run workflow again.',
   );
+}
+
+// And the same rule after a merge that went through: a file the keeper
+// never changed that still differs from upstream's — because upstream's
+// edit was rewritten into the base and the copy's old text won a hunk, or
+// because upstream no longer has the file — takes upstream's version, which
+// is what the merge would have given before the rewrite. A file the keeper
+// added or changed is left exactly as the merge left it.
+for (const file of git('diff', '--cached', '--name-only', UPSTREAM_REF).split('\n').filter(Boolean)) {
+  if (tryGit('diff', '--quiet', given, 'HEAD', '--', file).status !== 0) continue;
+  if (tryGit('cat-file', '-e', `${given}:${file}`).status !== 0) continue;
+  if (tryGit('cat-file', '-e', `${UPSTREAM_REF}:${file}`).status === 0) git('checkout', UPSTREAM_REF, '--', file);
+  else git('rm', '-q', '--force', '--', file);
 }
 
 // GitHub refuses a push from a workflow's own token that creates or changes
