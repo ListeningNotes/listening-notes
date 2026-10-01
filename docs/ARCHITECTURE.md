@@ -377,7 +377,7 @@ than what anyone remembers building.
 | `needle` | What is on the desk right now, for the beacon. One row; it lifts itself when nothing has touched it for twenty minutes. |
 | `sat_with` | A listen whose post was deleted: the record and when it was on, and nothing written. |
 | `drafts` | A listening session in progress, so closing the tab does not lose it. |
-| `briefings` | Cached album research. Nothing reads or writes it since 2026-09-18 — the research came out of the software and the schema is additive-only, so the table stays with whatever is in it (docs/RETIRED-PROMPTS.md). |
+| `briefings` | Cached album research. Nothing reads or writes it since 2026-09-18 — the research came out of the software and the schema is additive-only, so the table stays with whatever is in it. |
 | `schema_migrations` | The migration runner's ledger: which files in `migrations/` have built this database. Backed up and exported, and never written back by a restore — it describes this database's shape, not the journal. |
 
 Nothing keeps a list of these tables. The backup, the export and the restore

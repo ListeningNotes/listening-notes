@@ -16,8 +16,6 @@ This version has breaking changes — APIs, conventions, and file structure may 
   done, and the gotchas that cost real time. Not in the repo (`*.local.md` is
   gitignored), so a fresh copy starts without one; a copy that keeps one keeps
   it at the root under that name.
-- **[docs/NOTES-ARCHIVE.md](docs/NOTES-ARCHIVE.md)** — what was done before
-  September 2026. Not read at session start.
 - **[README.md](README.md)** — what this is and how to run a copy. The front
   door, for strangers.
 - **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** — where everything lives and

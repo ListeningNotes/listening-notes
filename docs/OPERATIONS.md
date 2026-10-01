@@ -108,8 +108,8 @@ the login cookie mints itself on first start.
 **Two key columns stay behind unread**, because the schema is additive-only
 and a column is never dropped: `secrets.lastfm_key`, from when Last.fm came
 out of the software on 2026-09-16, and `secrets.anthropic_key`, from when the
-research and the question mark came out on 2026-09-18 (the prompts are in
-docs/RETIRED-PROMPTS.md). Nothing asks for either any more — the rows in
+research and the question mark came out on 2026-09-18. Nothing asks for
+either any more — the rows in
 Settings are gone — and `library/secrets.js` still resolves the Anthropic one
 for nobody, which is what a retirement is: the plumbing stays, nothing is
 connected to it. `ANTHROPIC_API_KEY` in the environment is likewise read and
