@@ -14,9 +14,12 @@
 // has to keep true. Two of them are back, 2026-09-15, because the card's
 // stamps print them: how many records somebody called a masterpiece and how
 // many were formative. The third, favourites, is not asked for and is not
-// counted. Counted here rather than from the entries the cross already holds,
-// for the reason below: the card is public and a visitor's copy of the
-// journal is not the place to work out a number about its keeper.
+// counted. A fourth number joined them on 2026-10-01: how many songs, which
+// is how many track notes the journal holds — the other total, beside the
+// records, now that a note about one song is an entry of its own. Counted
+// here rather than from the entries the cross already holds, for the reason
+// below: the card is public and a visitor's copy of the journal is not the
+// place to work out a number about its keeper.
 //
 // Deliberately not derived on the client from /api/entries. That endpoint sends
 // every entry with its notes and its tracklist to draw a strip of album art;
@@ -30,11 +33,14 @@ export async function GET() {
     // The album counts count albums, 2026-09-24: a track note is about one
     // song and is none of these. A journal of nothing but songs has nothing in
     // its albums count, and that is simply true rather than a penalty (the
-    // track-notes brief). It is still kept since its first note, and its
-    // genres are still what it listens to, so those two count everything.
+    // track-notes brief) — and since 2026-10-01 it has everything in its
+    // songs count, which is the track notes and nothing else. It is still
+    // kept since its first note, and its genres are still what it listens
+    // to, so those two count everything.
     const [row] = await database`
       SELECT
         COUNT(*) FILTER (WHERE song IS NULL)::int                     AS records,
+        COUNT(*) FILTER (WHERE song IS NOT NULL)::int                 AS songs,
         COUNT(*) FILTER (WHERE masterpiece AND song IS NULL)::int     AS masterpieces,
         COUNT(*) FILTER (WHERE formative AND song IS NULL)::int       AS formative,
         MIN(posted_at)                                                AS first_listen
@@ -61,6 +67,7 @@ export async function GET() {
     // prints a month and a year from it.
     return Response.json({
       records: row?.records ?? 0,
+      songs: row?.songs ?? 0,
       masterpieces: row?.masterpieces ?? 0,
       formative: row?.formative ?? 0,
       first_listen: row?.first_listen ?? null,
@@ -70,6 +77,6 @@ export async function GET() {
     // A card with no numbers on it is a card. A card that fails to load is a
     // broken page, so the counts come back as zeros and the component leaves
     // those rows off rather than printing "0 records".
-    return Response.json({ records: 0, masterpieces: 0, formative: 0, first_listen: null, genres: [] }, { status: 200 });
+    return Response.json({ records: 0, songs: 0, masterpieces: 0, formative: 0, first_listen: null, genres: [] }, { status: 200 });
   }
 }

@@ -109,19 +109,20 @@
    Add, Send, hung on the rule — went whole on 2026-09-27 with CallingCard.js.
    A visitor's slot under the record is empty now (DECISIONS, The network). */
 
-/* ── Three counts ───────────────────────────────────────────────────────────
-   Records, masterpieces, formative — each in its own flag's colour, which is
-   the first work those three tokens have had away from a mark on a record.
-   Between two hairlines, evenly spread, the number large and the word small
-   under it: typeset, not stamped. A photograph that size above them is
-   already the flourish.
+/* ── Four counts ────────────────────────────────────────────────────────────
+   Records, songs, masterpieces, formative — the two totals in ink and the two
+   flags each in its own colour, which is the first work those tokens have had
+   away from a mark on a record. Between two hairlines, evenly spread, the
+   number large and the word small under it: typeset, not stamped. A
+   photograph that size above them is already the flourish. Three until
+   2026-10-01, when the songs came in (IdentityCard.js).
 
    These two rules are the only ones on the page (Miyel, 2026-09-15). The
    genres row carried one and another was drawn above the writing, and four
    hairlines on a page whose argument is that things separate by tone is three
-   too many. This band is the exception because it is a band — three counts
+   too many. This band is the exception because it is a band — the counts
    reading across, which wants a top and a bottom to read as a row rather than
-   as three stray numbers. Verticals between them were tried in between and
+   as a few stray numbers. Verticals between them were tried in between and
    are not it: the line goes round the set, not between its parts. */
 .idc-counts {
   display: flex; align-items: flex-start; justify-content: space-between;
@@ -135,7 +136,11 @@
    pressable without becoming a button: the number lifts a little and the word
    under it comes up out of faint. */
 .idc-count {
-  flex: 1; min-width: 0;
+  /* Each count is as wide as its own word and takes an equal share of what is
+     left, 2026-10-01 — four of them since the songs came in, and equal
+     quarters put MASTERPIECES into its neighbours on a narrow phone. The
+     words come out evenly spaced, which equal thirds never quite managed. */
+  flex: 1 1 auto; min-width: 0;
   border: 0; background: none; font: inherit;
   text-align: center;
   text-decoration: none; color: inherit;
@@ -164,6 +169,12 @@
   font-family: var(--font-label);
   font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase;
   color: var(--ink-faint);
+}
+/* Four words across the narrowest phones still in use: a shade smaller and
+   tighter, so the row keeps its one line with the eye beside it in a
+   correction. */
+@media (max-width: 359px) {
+  .idc-count-word { font-size: 8px; letter-spacing: 0.12em; }
 }
 /* Built as `idc-count--` + the word (IdentityCard.js), so these two never
    appear literally anywhere and a search for them finds nothing. They are
@@ -213,6 +224,9 @@
 .idc-pinned-art {
   flex: none;
   width: 50px; height: 50px;
+  /* A pinned song wears its fold at 50px, 2026-10-01: a small flap, a small
+     blur (base.css). */
+  --fold-blur: 3px;
   border-radius: 8px; overflow: hidden;
   background: var(--bg-warm);
   display: flex; align-items: center; justify-content: center;
@@ -302,8 +316,7 @@
    What the two flag counts open: covers and nothing else. The sheet is the
    height of what is in it, capped — nine covers is three rows and opens short,
    where a fixed sheet with empty space under nine albums reads as something
-   that failed to load. Three across, which is what a phone holds and why
-   there are three counts and not four.
+   that failed to load. Three across, which is what a phone holds.
 
    A bottom sheet on a phone and a panel in the middle on a desk, which is the
    arrangement the pin's search below already uses and the archive's filters
@@ -494,6 +507,9 @@
   position: relative;
   display: flex; align-items: center; justify-content: center;
   width: 100%; aspect-ratio: 1;
+  /* A song in the grid is a page, as on the wall's small tiles (journal.css),
+     2026-10-01. */
+  --fold-blur: 5px;
   border-radius: 8px; overflow: hidden;
   background: var(--bg-warm); color: var(--ink-faint);
   /* A hairline under the pointer and nothing else. The one you have wore a

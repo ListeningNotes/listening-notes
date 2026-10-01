@@ -173,7 +173,7 @@ The front doors — receive requests, hand them off, send back responses
     update/route.js            Is there a newer Listening Notes — the latest public release against package.json, at most once an hour, owner-only
     public/beacon/route.js     What the keeper is listening to — anyone may ask; cached at the edge
     public/entries/route.js    The public feed another copy reads — PUBLIC_FIELDS only, with keeper_name beside them
-    public/stamps/route.js     The card's counted facts — records, first entry, top genres, the two flag counts
+    public/stamps/route.js     The card's counted facts — records, songs, first entry, top genres, the two flag counts
 
 The hooks — reusable logic shared across pages
   hooks/
@@ -191,7 +191,7 @@ The furniture — visual pieces
     main_components/           Everything on the public side
       HomeNav.js               The cross itself — on a phone a rail of panes with the band at the foot (Card, Beacon, Friends, Inbox for the keeper; Card, Beacon, About for a visitor); on a desk an open book — the spine on the left, the journal on the right, the fold, and a control in the spine's header to turn between its two pages
       About.js                 One face of the turning pane: the card, then the writing under it, in one scroll
-      IdentityCard.js          The ID: the portrait full width and square — the same object an entry's album art is — then the name, three counts in the flags' colours, and the pinned record. Send and Add left it on 2026-09-19, and left the beacon too on 2026-09-27; a visitor sees the keeper here and nowhere else. This is the About page
+      IdentityCard.js          The ID: the portrait full width and square — the same object an entry's album art is — then the name, four counts — albums, songs, and the two flags in their colours — and the pinned record or song. Send and Add left it on 2026-09-19, and left the beacon too on 2026-09-27; a visitor sees the keeper here and nowhere else. This is the About page
       IdentificationCardEditor.js  Editing the card in place
       ListeningBeacon.js       The beacon — what is playing, or last played
       Journal.js               The wall of covers, with its search, filters and sort
@@ -363,7 +363,7 @@ than what anyone remembers building.
 
 | Table | What it holds |
 |---|---|
-| `entries` | The journal. One row per listen — an album listened to twice is two entries, never an overwrite. `posted_at` is when, with its zone; `created_at` is the older naive stamp, kept and unread. `cover_code` is the dot that carried the cover into its code, stamped on the first tap — never the picture. `song` makes a row a track note, about that one song off the record in `album`; it is empty on every album listen, and nothing that numbers, counts or compares albums counts a row that has one. |
+| `entries` | The journal. One row per listen — an album listened to twice is two entries, never an overwrite. `posted_at` is when, with its zone; `created_at` is the older naive stamp, kept and unread. `cover_code` is the dot that carried the cover into its code, stamped on the first tap — never the picture. `song` makes a row a track note, about that one song off the record in `album`; it is empty on every album listen, and nothing that numbers, counts or compares albums counts a row that has one; the card's Songs counts exactly those rows. |
 | `settings` | Everything that makes a copy someone's own: the keeper, the portrait, the links, the rig, the starting theme. Exactly one row, forced by a check on `id`. |
 | `secrets` | What must never reach a visitor: the session secret, the password hash, the claim code, the setup window, and two API key columns nothing reads any more (Last.fm, retired 2026-09-16; Anthropic, retired 2026-09-18). One row; read only by `library/secrets.js`. |
 | `users` | The owner. One row, written at setup. |

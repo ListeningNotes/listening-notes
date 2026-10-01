@@ -106,25 +106,34 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
   const editing = edit.editing;
 
   const records = stamps?.records ?? null;
-  // The three counts, in their flags' own colours. Counted on the server with
-  // the records (see /api/public/stamps). A zero is left off rather than
+  // The two flag counts, in their flags' own colours. Counted on the server
+  // with the records (see /api/public/stamps). A zero is left off rather than
   // printed: a fresh journal saying 0 masterpieces is a boast in reverse, and
   // the row reads as two counts or one without complaint.
   const marks = [
     { word: 'masterpieces', n: stamps?.masterpieces ?? 0 },
     { word: 'formative', n: stamps?.formative ?? 0 },
   ].filter(m => m.n > 0);
-  // Two of the three open a window of covers; albums does not (Miyel's brief,
-  // 2026-09-15). Albums is the total, and a window of every record would be
-  // the wall with its controls taken off — the wall is one swipe away. Only
-  // the two flag counts open anything, which also says which of the numbers
-  // mean something.
+  // Songs, 2026-10-01: how many track notes the journal holds — the other
+  // total, beside the albums, now that a note about one song is an entry of
+  // its own (migration 025). It stands between Albums and the two flags, in
+  // the ink the albums are in, and like the flags it is left off at zero: most
+  // journals have written no song yet, and "0 songs" on every one of them is
+  // the boast in reverse again. This reversed *no fourth metric on the card*
+  // (DECISIONS, Structure; the argument it replaced is in the archive).
+  const songs = stamps?.songs ?? 0;
+  // The two flags open a window of covers; the two totals do not (Miyel's
+  // brief, 2026-09-15). Albums is the total, and a window of every record
+  // would be the wall with its controls taken off — the wall is one swipe
+  // away — and the same goes for the songs. Only the flag counts open
+  // anything, which also says which of the numbers mean something.
   //
   // They used to link to /archive with a filter in the address. That is
   // browsing, and nothing on this pane browses: the window is a glance, and
   // anybody who wants to browse masterpieces has the archive's own filter.
   const counts = [
     ...(records !== null ? [{ word: 'albums', n: records, opens: false }] : []),
+    ...(songs > 0 ? [{ word: 'songs', n: songs, opens: false }] : []),
     ...marks.map(m => ({ ...m, opens: true })),
   ];
   const genres = stamps?.genres ?? [];
@@ -142,6 +151,29 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
   const since = monthAndYear(founded_at) || monthAndYear(stamps?.first_listen);
 
 
+
+  // What the pinned row says, and the picture it holds, 2026-10-01. A song
+  // is read the way the feed and the wall read one: the song as the large
+  // line, `album · artist` under it, and the cover's corner folded over
+  // (.ln-fold, base.css). A record is its album over its artist, as before.
+  // One pair of helpers, because the row is drawn twice — as a door while a
+  // correction is open and as a link otherwise — and the two drawings must
+  // never disagree about what a song looks like.
+  const pinSaid = p => (p.song
+    ? { first: p.song, second: `${p.album} \u00b7 ${p.artist}`, label: `${p.song} — ${p.album} \u00b7 ${p.artist}` }
+    : { first: p.album, second: p.artist, label: `${p.album} — ${p.artist}` });
+  const pinArt = p => (
+    <span className={'idc-pinned-art' + (p.song ? ' ln-fold' : '')}>
+      {p.album_art
+        ? <img src={p.album_art} alt="" />
+        : <span className="idc-pinned-none" aria-hidden="true">♪</span>}
+      {p.song && (
+        <span className="ln-fold-flap" aria-hidden="true">
+          {p.album_art && <img src={p.album_art} alt="" />}
+        </span>
+      )}
+    </span>
+  );
 
   // What the editor is currently showing, which is the draft rather than what
 
@@ -532,12 +564,14 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
 
         </div>
 
-        {/* ── Three counts ─────────────────────────────────────────────────
-            How many records, how many were masterpieces, how many were
-            formative — each in its own flag's colour, which is the first job
-            those three tokens have had outside a mark on a record. Counts say
-            how somebody listens in a way a genre list never does; the genres
-            are still here, one line of them, below the fold.
+        {/* ── Four counts ──────────────────────────────────────────────────
+            How many records, how many songs, how many were masterpieces, how
+            many were formative — the two totals in ink and the two flags
+            each in its own colour, which is the first job those tokens have
+            had outside a mark on a record. Counts say how somebody listens in
+            a way a genre list never does; the genres are still here, one line
+            of them, below the fold. Three counts until 2026-10-01, when the
+            songs joined them (see `counts` above).
 
             Typeset, not stamped. Stamps were tried the hour before and the
             answer is that with a photograph that size above them the photo is
@@ -582,9 +616,12 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
           </p>
         )}
 
-        {/* ── The pinned record ────────────────────────────────────────────
-            One album from the journal, as art, with its name beside it — the
-            only image here besides the photograph (DECISIONS). On the same
+        {/* ── The pinned record, or song ───────────────────────────────────
+            One entry from the journal, as art, with its name beside it — the
+            only image here besides the photograph (DECISIONS). An album since
+            the card was built; a track note as well since 2026-10-01, with the
+            folded corner it wears everywhere else, because a song can be the
+            thing somebody is pointing at as readily as a record. On the same
             left edge as everything above it: it was the one centred row on
             the pane.
 
@@ -602,14 +639,10 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
             >
               {pinned ? (
                 <>
-                  <span className="idc-pinned-art">
-                    {pinned.album_art
-                      ? <img src={pinned.album_art} alt="" />
-                      : <span className="idc-pinned-none" aria-hidden="true">♪</span>}
-                  </span>
+                  {pinArt(pinned)}
                   <span className="idc-pinned-said">
-                    <span className="idc-pinned-album">{pinned.album}</span>
-                    <span className="idc-pinned-artist">{pinned.artist}</span>
+                    <span className="idc-pinned-album">{pinSaid(pinned).first}</span>
+                    <span className="idc-pinned-artist">{pinSaid(pinned).second}</span>
                   </span>
                 </>
               ) : (
@@ -661,19 +694,15 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
             <Link
               href={`/entries/${pinned.slug}`}
               className="idc-pinned"
-              aria-label={`Pinned: ${pinned.album} — ${pinned.artist}`}
+              aria-label={`Pinned: ${pinSaid(pinned).label}`}
               /* One record, and no wall behind it. This pane is a snapshot of
                  a person, not a second journal — see handoff.js. */
               onClick={() => arrivingAlone()}
             >
-              <span className="idc-pinned-art">
-                {pinned.album_art
-                  ? <img src={pinned.album_art} alt="" />
-                  : <span className="idc-pinned-none" aria-hidden="true">♪</span>}
-              </span>
+              {pinArt(pinned)}
               <span className="idc-pinned-said">
-                <span className="idc-pinned-album">{pinned.album}</span>
-                <span className="idc-pinned-artist">{pinned.artist}</span>
+                <span className="idc-pinned-album">{pinSaid(pinned).first}</span>
+                <span className="idc-pinned-artist">{pinSaid(pinned).second}</span>
               </span>
             </Link>
           )
