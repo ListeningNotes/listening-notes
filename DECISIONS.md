@@ -1574,21 +1574,26 @@ never reaches that path, so the canonical copy stayed green while every new
 one failed. A run that finds nothing to do now exits green saying *Already up
 to date*, and an empty index is never committed.
 
-**The history was rewritten once, on 2026-09-30, to remove `NOTES.md` and
-`Notes.md`.** They held a working notebook that was never meant to ship, and
-in its last version a third party's email address and four journal addresses —
-the Never list broken in public. Every hash from April 2026 changed and the
-release tags were re-cut on the new commits. Copies made between 27 August and
+**The history was rewritten, on 2026-09-30 and again on 2026-10-01: first
+to remove `NOTES.md` and `Notes.md`, then to placeholder three strings the
+Never list forbids.** The notebook was never meant to ship, and in its last
+version held a third party's email address and four journal addresses; the
+second pass replaced an email address and two people's names that survived
+in comments and commit messages. Every hash from April 2026 changed, twice,
+and the release tags were re-cut on the new commits each time. Copies made between 27 August and
 26 September keep their own copy of the file; the rewrite cleans this
 repository, not what was already handed out. The notebook has lived outside
 the repository since 2026-09-26 and `*.local.md` keeps it there.
 
 **A copy that has updated before joins a rewritten upstream at the release it
-last took, 2026-09-30.** Its history holds the old upstream's commits, so
+last took, 2026-09-30, and files its keeper never changed take upstream's
+version, 2026-10-01.** Its history holds the old upstream's commits, so
 grafting its root alone put the merge's base in March and every file clashed
 — rehearsed, not guessed. The updater grafts the commit its newest update
-merged onto the new commit nearest it by files, and the merge has its true
-base. The history is not to be rewritten again; this is what it cost.
+merged onto the new commit nearest it by files, asked whenever that commit
+is gone upstream; and a file identical to the one the copy was given is not
+the keeper's to keep, so it takes upstream's rather than clashing or keeping
+rewritten-away text. The history is not to be rewritten again.
 
 **The updater link goes through the journal's own domain, 2026-09-30.** A
 link to `github.com` tapped on a phone is swallowed by GitHub's app, which
