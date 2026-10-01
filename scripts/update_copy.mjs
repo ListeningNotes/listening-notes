@@ -132,10 +132,22 @@ if (latest) {
 }
 const upstream = latest ? latest.replace(/^v/, '') : git('rev-parse', '--short', MAIN_REF);
 
-if (tryGit('merge-base', '--is-ancestor', UPSTREAM_REF, 'HEAD').status === 0) {
+// ── Already up to date, asked twice ───────────────────────────────────────
+// The graft is what gives a button-made copy its shared history, so before it
+// the question has no answer and the first ask can only say no. A copy
+// installed from the current release is up to date the moment the graft lands
+// — and until 2026-09-30 it went on to merge nothing, commit nothing and fail,
+// every hour, forever, on every new copy. The canonical copy never saw it,
+// because a copy with history exits at the first ask and never grafts.
+function upToDate() {
+  return tryGit('merge-base', '--is-ancestor', UPSTREAM_REF, 'HEAD').status === 0;
+}
+function sayCurrent() {
   say('## Already up to date', '', `This copy already has everything in Listening Notes (${upstream}).`);
   process.exit(0);
 }
+
+if (upToDate()) sayCurrent();
 
 // No common ancestor: a snapshot from the deploy button. Find where it came
 // from and graft it there. An identical tree is the ideal; the nearest is
@@ -174,6 +186,8 @@ if (tryGit('merge-base', 'HEAD', UPSTREAM_REF).status !== 0) {
     }
   }
   git('replace', '--graft', root, origin);
+  // Asked again, now that there is something to compare. See above.
+  if (upToDate()) sayCurrent();
 }
 
 const base = git('merge-base', 'HEAD', UPSTREAM_REF);
@@ -226,6 +240,13 @@ const kept = git('diff', '--cached', '--name-only', '--', '.github/workflows').s
 for (const file of kept) {
   if (tryGit('cat-file', '-e', `HEAD:${file}`).status === 0) git('checkout', 'HEAD', '--', file);
   else git('rm', '-q', '--cached', file);
+}
+// The loop above can empty the index on its own, when the only thing this
+// update changes is a workflow file. Committing nothing throws, so stop here
+// and say the true thing instead.
+if (tryGit('diff', '--cached', '--quiet').status === 0) {
+  tryGit('merge', '--abort');
+  sayCurrent();
 }
 git('commit', '-q', '--no-edit', '-m', `Update to Listening Notes ${upstream}`);
 git('push', 'origin', `HEAD:refs/heads/${BRANCH}`);
