@@ -503,10 +503,15 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
   const filtered = useMemo(() => {
     const q = foldForSearch(search);
     const dir = sortDir === 'asc' ? 1 : -1;
-    // The marks are the record's listens' marks: a record is a Favorite, a
-    // Masterpiece or Formative when a listen of it says so. The heart is
-    // anybody's, a song's included — Favorite applies to tracks as well.
-    const marked = (album, test) => album.all.some(test);
+    // The heart is anybody's, a song's included — Favorite applies to tracks
+    // as well, so a record is a Favorite when any entry of it says so. The
+    // two album flags are a listen's: a record is a Masterpiece or Formative
+    // when an album listen of it says so, and a song marked Formative
+    // (2026-09-30) does not bring its record under the filter. The card
+    // counts Formative on album listens only and its window lists the same
+    // rows (/api/public/stamps, About.js); the wall reads it the same way so
+    // the three agree about what counts.
+    const marked = (rows, test) => rows.some(test);
     return albums
       .filter(album => {
         const e = album.face;
@@ -527,12 +532,12 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
           album.notes.some(n => foldForSearch(n.song).includes(q))
         )) return false;
         if (genre && (e.genre || '') !== genre) return false;
-        if (favoritesOnly && !marked(album, x => x.favorite === true || x.favorite === 'true')) return false;
-        if (masterpiecesOnly && !marked(album, x => x.rating === 'Masterpiece' || x.masterpiece === true)) return false;
+        if (favoritesOnly && !marked(album.all, x => x.favorite === true || x.favorite === 'true')) return false;
+        if (masterpiecesOnly && !marked(album.listens, x => x.rating === 'Masterpiece' || x.masterpiece === true)) return false;
         // The flag, which is now the only place this is recorded — the nine
         // rows that said so under the old relationship column were migrated
         // onto it before that column was dropped.
-        if (formativeOnly && !marked(album, x => x.formative === true || x.formative === 'true')) return false;
+        if (formativeOnly && !marked(album.listens, x => x.formative === true || x.formative === 'true')) return false;
         if (yearActive) {
           const y = releaseYear(e);
           // An entry with no year can't be shown to fall inside a range, so

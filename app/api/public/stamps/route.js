@@ -36,7 +36,11 @@ export async function GET() {
     // track-notes brief) — and since 2026-10-01 it has everything in its
     // songs count, which is the track notes and nothing else. It is still
     // kept since its first note, and its genres are still what it listens
-    // to, so those two count everything.
+    // to, so those two count everything. Formative can be a song's too
+    // (2026-09-30) and is still counted on albums here; the window a count
+    // opens lists the same rows (About.js) and the wall's filter reads them
+    // the same way (Journal.js), so the number on the card is the number in
+    // the window it opens.
     const [row] = await database`
       SELECT
         COUNT(*) FILTER (WHERE song IS NULL)::int                     AS records,
