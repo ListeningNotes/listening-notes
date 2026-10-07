@@ -89,6 +89,8 @@ import Dashboard, { heldNow, subscribeHeld } from './Dashboard';
 // component the page is a frame around, which is why Friends.js exists.
 import Inbox from '../../app/dashboard/inbox/page';
 import Friends from './Friends';
+import PullDown from './PullDown';
+import { refreshFriends } from '../../hooks/useFriendsBeacons';
 // The feed sits under the book as that pane's second floor. It is handed the
 // journal's own records — the same list the wall draws — because the one
 // thing it asks of them is whether a row is a record you also have, and
@@ -1794,6 +1796,29 @@ export default function HomeNav() {
     }
   }
 
+  // ── The band's stop you are already on, pressed, 2026-10-06 ─────────────
+  // Once goes back to the top of the floor you are on — down the feed, to
+  // the head of the feed; down the wall, to the head of the wall. Twice
+  // inside half a second goes to floor one, the first screen of the pane:
+  // the beacon, the book. The Franklin's sibling of pulling down to
+  // refresh, and the same family of gesture: a thing you already have under
+  // your thumb, pressed again, means "take me back". (Footer.js promised
+  // this in a comment for three weeks before it was true.)
+  const lastHere = useRef(0);
+  function goBack(index) {
+    const el = paneRefs[index]?.current;
+    if (!el) return;
+    const now = Date.now();
+    const twice = now - lastHere.current < 500;
+    lastHere.current = now;
+    const two = floorTwo(el);
+    if (!twice && two >= 80 && el.scrollTop > two + 8) {
+      el.scrollTo({ top: two, behavior: ease() });
+      return;
+    }
+    goUp(index);
+  }
+
   // To the second floor where there is one — its own top, not one viewport
   // down, because a first floor that had to grow past the screen on a short
   // phone puts the second one lower than that.
@@ -2759,6 +2784,11 @@ export default function HomeNav() {
           <section className="hn-pane hn-pane--friends" ref={friendsRef} aria-label="The journals you read">
             {visited[BOOK] && (
               <>
+                {/* Pulling down at the top of the book asks everyone's beacon
+                    again, past the route's minute (PullDown.js). The first
+                    scroller to carry it; the rest follow once this one is
+                    seen (AGENTS: the shared piece first). */}
+                <PullDown scroller={friendsRef} onPull={refreshFriends} asking="Asking everyone…" />
                 <div className="hn-floor hn-floor--book">
                   <Friends shelf onCount={setBookSize} onBusy={setBookBusy} />
                   {/* The feed's name lives here rather than at the top of
@@ -2863,7 +2893,7 @@ export default function HomeNav() {
         />
       )}
 
-      <Footer pane={pane} goTo={goTo} authed={authed} />
+      <Footer pane={pane} goTo={goTo} onHere={goBack} authed={authed} />
     </div>
   );
 }
