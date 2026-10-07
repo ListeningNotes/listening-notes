@@ -1593,13 +1593,129 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 
 @media (prefers-reduced-motion: reduce) {
   .fr-one, .fr-face, .fr-door, .fr-plus, .fr-give, .fr-doors { transition: none; }
-  .fr-one--live .fr-face::after { animation: none; }
+  .fr-one--live .fr-face::after, .fr-now-pulse { animation: none; }
+  .fr-on { transition: none; }
 }
 
 /* ── The shelf, and the line off the end of it ─────────────────────────────
    On the floor the faces are clipped to a box of settled height: that is what
    "as many as fit" means, and it is measured in Friends.js off this box. Off
    the floor there is no box — the whole book runs down the page. */
+/* ── Who is logging right now, and the quiet line, 2026-10-06 ─────────────
+   The band above the grid: a pulsing dot and a mono caption, then a row of
+   cards that scrolls sideways on the horizontal-row recipe (.ln-sender-book)
+   and bleeds to the gutters. A card is the record's art, the friend with a
+   live dot, the record and the artist. The quiet line stands where the band
+   would, in the absence voice (.beacon-quiet), when nobody is on. */
+.fr-now { margin: 2px 0 4px; }
+.fr-now-head {
+  display: flex; align-items: center; gap: 9px;
+  margin: 0 0 10px; padding: 0 2px;
+  font-family: var(--font-label);
+  font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.fr-now-pulse {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--live);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--live) 22%, transparent);
+  animation: fr-live-breathe 2.5s ease-in-out infinite;
+}
+.fr-now-row {
+  display: flex; gap: 12px;
+  margin: 0 -24px;
+  padding: 2px 24px 14px;
+  overflow-x: auto; overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  contain: inline-size;
+  -webkit-overflow-scrolling: touch;
+}
+.fr-now-row::-webkit-scrollbar { display: none; }
+.fr-on {
+  flex: 0 0 auto; width: 148px;
+  display: flex; flex-direction: column; gap: 4px;
+  text-align: left;
+  border: 1px solid var(--border); border-radius: 16px;
+  background: var(--panel-strong);
+  box-shadow: var(--shadow-soft);
+  padding: 12px;
+  color: inherit; font: inherit; text-decoration: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.18s ease, border-color 0.18s ease;
+}
+.fr-on:hover { border-color: var(--ink-faint); transform: translateY(-2px); }
+.fr-on-art {
+  width: 100%; aspect-ratio: 1; border-radius: 8px; overflow: hidden;
+  background: var(--bg-warm);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--ink-faint);
+  margin-bottom: 7px;
+}
+.fr-on-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.fr-on-who {
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
+  font-size: 13.5px; color: var(--ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.fr-on-dot {
+  width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+  background: var(--live);
+  box-shadow: 0 0 0 2.5px color-mix(in srgb, var(--live) 30%, transparent);
+}
+.fr-on-rec {
+  font-size: 13px; font-weight: 600; color: var(--ink); line-height: 1.3;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.fr-on-by {
+  font-size: 12px; color: var(--ink-soft);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.fr-quiet {
+  display: flex; align-items: baseline; gap: 10px;
+  margin: 8px 0 10px; padding: 0 2px;
+  font-size: 13.5px; line-height: 1.5; color: var(--ink-soft);
+}
+.fr-quiet-word {
+  font-family: var(--font-label);
+  font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--ink-faint);
+  flex-shrink: 0;
+}
+.fr-quiet-said { min-width: 0; }
+.fr-quiet b { color: var(--ink); font-weight: var(--font-display-weight, 700); }
+
+/* Their beacon inside the doors: the record small, a mono caption, the
+   record and the artist, above Visit · Compare · Send · Pin. The doors'
+   open cap grows by its height when it is drawn, and only then, so the
+   unfold still finishes at the end of its clock. */
+.fr-doors-beacon { display: flex; align-items: center; gap: 11px; margin: 0 2px 14px; }
+.fr-doors-art {
+  width: 44px; height: 44px; border-radius: 7px; overflow: hidden; flex-shrink: 0;
+  background: var(--bg-warm);
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--ink-faint);
+}
+.fr-doors-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.fr-doors-said { display: flex; flex-direction: column; min-width: 0; }
+.fr-doors-cap {
+  font-family: var(--font-label);
+  font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 3px;
+}
+.fr-doors-rec {
+  font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
+  font-size: 14px; color: var(--ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.fr-doors-by {
+  font-size: 12.5px; color: var(--ink-soft);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.fr-doors--open.fr-doors--beacon { max-height: 216px; }
+
 .fr-shelf { display: flex; flex-direction: column; }
 /* ── A scroller only while it has something to scroll, 2026-09-20 ─────────
    It was `overflow-y: auto` all the time, on the reasoning that the rows

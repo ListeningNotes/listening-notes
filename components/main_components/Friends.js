@@ -120,6 +120,23 @@ const PINS_MOST = 6;
 //
 // Small and quick. It is a refusal, not an alarm: four pixels each way and
 // gone in a third of a second, which is a head shake rather than a shout.
+// How long ago, in words. For the quiet line ("logged Voodoo, 2 hours ago")
+// and the caption inside the doors ("Last logged · yesterday") — the friend's
+// own beacon's `at`, which only a copy new enough to send it carries.
+// Never a clock face: an absence is read, not measured.
+function since(iso) {
+  const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+  if (!Number.isFinite(mins) || mins < 0) return '';
+  if (mins < 2) return 'just now';
+  if (mins < 10) return 'a few minutes ago';
+  if (mins < 60) return `${mins} minutes ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return hours === 1 ? 'an hour ago' : `${hours} hours ago`;
+  const days = Math.floor(hours / 24);
+  if (days === 1) return 'yesterday';
+  return `${days} days ago`;
+}
+
 function shakeNo(el) {
   if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
   // Press it twice quickly and there is one head shake, not two on top of
@@ -239,6 +256,30 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null }
   const { friends: beacons } = useFriendsBeacons();
   const beaconOf = useMemo(() => new Map(beacons.map(b => [b.address, b])), [beacons]);
   useEffect(() => { if (!shelf) fillFriends(); }, [shelf]);
+
+  // ── The band above the grid, and the quiet line ─────────────────────────
+  // Who is logging right now, in the book's own order, as a row of cards —
+  // only people still in the book, so somebody just removed does not linger
+  // for the length of a round. When nobody is on, the room says who was
+  // here last instead of leaving a hole: the most recent "logged" among the
+  // friends whose copy says when. An empty room that says nothing reads as
+  // abandoned; one that tells you who just left reads as a room (the
+  // brief). No count anywhere: four cards is a feeling, "4 listening" is a
+  // score.
+  const byAddress = useMemo(() => new Map(people.map(p => [p.address, p])), [people]);
+  const onNow = useMemo(
+    () => beacons.filter(b => b.state === 'logging' && byAddress.has(b.address)),
+    [beacons, byAddress]
+  );
+  const lastIn = useMemo(() => {
+    if (onNow.length > 0) return null;
+    let best = null;
+    for (const b of beacons) {
+      if (b.state !== 'logged' || !b.at || !byAddress.has(b.address)) continue;
+      if (!best || b.at > best.at) best = b;
+    }
+    return best;
+  }, [onNow.length, beacons, byAddress]);
   // ── And the one on its way out ──────────────────────────────────────────
   // The doors have to be in the DOM to collapse, and the person they belong
   // to has to still be known while they do it, or the panel empties halfway
@@ -497,7 +538,7 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null }
   useEffect(() => {
     if (open === null) return undefined;
     const away = event => {
-      if (event.target.closest?.('.fr-one, .fr-doors')) return;
+      if (event.target.closest?.('.fr-one, .fr-doors, .fr-now')) return;
       choose(open);
     };
     document.addEventListener('pointerdown', away, true);
@@ -868,6 +909,78 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null }
 
         <p className="bk-said" role="status">{said}</p>
 
+        {/* ── Who is logging right now, 2026-10-06 ─────────────────────────
+            A row of cards that scrolls sideways: the record, the friend
+            with a live dot, the record's name and the artist. Pressing one
+            opens that friend's doors in the grid below, which the shelf
+            then scrolls to show; a friend past what the shelf holds opens
+            the whole book instead. Above the shelf rather than in it, so
+            the shelf's own count of what fits (reckon) stays true — it is
+            given less room and says so. The row contains its own sideways
+            scroll: a swipe that begins on it browses the cards, and the
+            rail's swipe is everywhere else. */}
+        {onNow.length > 0 ? (
+          <div className="fr-now">
+            <p className="fr-now-head">
+              <span className="fr-now-pulse" aria-hidden="true" />
+              Logging right now
+            </p>
+            <div className="fr-now-row">
+              {onNow.map(b => {
+                const person = byAddress.get(b.address);
+                const name = b.name || person?.name || 'Somebody';
+                const title = b.track || b.album;
+                const by = b.track ? `${b.album} · ${b.artist}` : b.artist;
+                const onShelf = !shelf || [...pinned, ...onShow].some(p => p.id === person?.id);
+                const inside = (
+                  <>
+                    <span className="fr-on-art" aria-hidden="true">
+                      {b.art
+                        ? <img src={b.art} alt="" loading="lazy" onError={e => { e.currentTarget.style.display = 'none'; }} />
+                        : <span>&#9834;</span>}
+                    </span>
+                    <span className="fr-on-who">
+                      <span className="fr-on-dot" aria-hidden="true" />
+                      {name}
+                    </span>
+                    <span className="fr-on-rec">{title}</span>
+                    <span className="fr-on-by">{by}</span>
+                  </>
+                );
+                const label = `${name} is logging ${title}${by ? ` · ${by}` : ''}`;
+                return onShelf ? (
+                  <button
+                    key={b.address}
+                    type="button"
+                    className="fr-on"
+                    onClick={() => { if (person) choose(person.id); }}
+                    aria-label={label}
+                    title={label}
+                  >
+                    {inside}
+                  </button>
+                ) : (
+                  <Link key={b.address} href="/dashboard/people" className="fr-on" aria-label={label} title={label}>
+                    {inside}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ) : lastIn && (
+          /* QUIET, and who was here last. Only when a friend's copy says
+             when — until theirs is new enough to, there is no honest
+             "last" to name and the grid simply begins. */
+          <p className="fr-quiet">
+            <span className="fr-quiet-word">Quiet</span>
+            <span className="fr-quiet-said">
+              <b>{lastIn.name || byAddress.get(lastIn.address)?.name || 'Somebody'}</b>
+              {' logged '}{lastIn.album}
+              {since(lastIn.at) ? `, ${since(lastIn.at)}` : ''}
+            </span>
+          </p>
+        )}
+
         {/* ── The shelf ───────────────────────────────────────────────────
             A box of settled height with the faces clipped inside it, which is
             what makes "as many as fit" a fact about the screen rather than a
@@ -973,7 +1086,37 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null }
                     mounted with its open state already on it has no frame to
                     start the movement from, and React would hand us exactly
                     that. An empty collapsed one costs a div. */}
-                <div className={'fr-doors' + (holdsOpen ? ' fr-doors--open' : '')} inert={holdsOpen ? undefined : true}>
+                <div
+                  className={'fr-doors' + (holdsOpen ? ' fr-doors--open' : '')
+                    + (mine && ['logging', 'logged'].includes(beaconOf.get(mine.address)?.state) ? ' fr-doors--beacon' : '')}
+                  inert={holdsOpen ? undefined : true}
+                >
+                  {/* Their beacon, above the doors, 2026-10-06: the record
+                      small, and NOW LOGGING or LAST LOGGED · when, as the
+                      beacon pane says it of the keeper. Nothing for a
+                      journal that has not answered or has nothing to say;
+                      the doors stand as they did. */}
+                  {mine && (() => {
+                    const b = beaconOf.get(mine.address);
+                    if (!b || (b.state !== 'logging' && b.state !== 'logged')) return null;
+                    const when = b.state === 'logged' && b.at ? since(b.at) : '';
+                    return (
+                      <div className="fr-doors-beacon">
+                        <span className="fr-doors-art" aria-hidden="true">
+                          {b.art
+                            ? <img src={b.art} alt="" loading="lazy" onError={e => { e.currentTarget.style.display = 'none'; }} />
+                            : <span>&#9834;</span>}
+                        </span>
+                        <span className="fr-doors-said">
+                          <span className="fr-doors-cap">
+                            {b.state === 'logging' ? 'Now logging' : `Last logged${when ? ` · ${when}` : ''}`}
+                          </span>
+                          <span className="fr-doors-rec">{b.track || b.album}</span>
+                          <span className="fr-doors-by">{b.track ? `${b.album} · ${b.artist}` : b.artist}</span>
+                        </span>
+                      </div>
+                    );
+                  })()}
                   {mine && (
                   <div className="fr-doors-row">
                     <a
