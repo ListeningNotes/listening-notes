@@ -46,6 +46,7 @@ import GiveSheet from './GiveSheet';
 import WaveSheet from './WaveSheet';
 import { carrySender, journalUrl, tidyJournal } from '../../library/return_address';
 import { useBookplate } from './Bookplate';
+import { fillFriends, useFriendsBeacons } from '../../hooks/useFriendsBeacons';
 
 // The order the server keeps: pinned first in the order they were pinned,
 // then by name, or by address for anyone without one. Said twice — here and
@@ -222,6 +223,22 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null }
   const [people, setPeople] = useState([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(null);      // the id of the person showing their doors
+
+  // ── Everyone's beacon, 2026-10-06 ───────────────────────────────────────
+  // What each journal in the book is logging, through one shared poll of
+  // this copy's own fan-out route (hooks/useFriendsBeacons.js — the brief's
+  // "one hop, not ten"). Keyed by address, which is what the book files a
+  // person under. A friend whose beacon says `logging` wears a lit ring and
+  // a dot on their face; nothing is drawn for `unknown`, a journal that has
+  // not answered yet, because a dark dot would be a claim too. Nothing here
+  // is stored: read when the pane is looked at, gone when it is not.
+  //
+  // The timer asks the first thirty in the book. The whole grid — this
+  // page off the shelf, where everyone is drawn — asks for the rest once,
+  // as it opens (Miyel, 2026-10-07).
+  const { friends: beacons } = useFriendsBeacons();
+  const beaconOf = useMemo(() => new Map(beacons.map(b => [b.address, b])), [beacons]);
+  useEffect(() => { if (!shelf) fillFriends(); }, [shelf]);
   // ── And the one on its way out ──────────────────────────────────────────
   // The doors have to be in the DOM to collapse, and the person they belong
   // to has to still be known while they do it, or the panel empties halfway
@@ -898,14 +915,18 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null }
                   {row.people.map(p => {
                     const called = p.name || 'Not answering yet';
                     const isOpen = who?.id === p.id;
+                    // Logging right now, by their own beacon. The ring and
+                    // the dot are the face's (forms.css, .fr-one--live).
+                    const lit = beaconOf.get(p.address)?.state === 'logging';
                     return (
                       <button
                         key={p.id}
                         type="button"
-                        className={'fr-one' + (isOpen ? ' fr-one--open' : '')}
+                        className={'fr-one' + (isOpen ? ' fr-one--open' : '') + (lit ? ' fr-one--live' : '')}
                         data-face={p.id}
                         onClick={() => choose(p.id)}
                         aria-expanded={isOpen}
+                        aria-label={lit ? `${called}, logging right now` : undefined}
                         title={called}
                       >
                         {/* Their journal's own portrait, read straight off it

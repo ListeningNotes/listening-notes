@@ -778,6 +778,28 @@ door on the card was cut (Miyel). **Nothing counts gifts:** no totals, no
 "3 friends joined", nothing reported back to the giver. A gift is a gift,
 not a referral scheme.
 
+**Friends shows everyone's beacon, fetched through one route rather than ten
+from the browser, 2026-10-06.** `/api/friends/beacons` fans out to the people
+table in parallel with a short per-friend timeout and keeps its answer a
+minute, so a keeper's open tabs cost their friends one round of requests
+rather than forty a minute each. Friends' beacons refresh on a 60-second tier
+rather than the keeper's own 15, because pulling down to refresh — site-wide,
+in the same change — gives a person a way to demand *now* and removes the
+reason to poll fast. A fetch that fails is `unknown` and leaves the last known
+state standing; a dot is never darkened by somebody else's slow deployment. No
+presence is stored, there is no "last seen", and the number of people
+listening is never shown. The public beacon gained `at` for the quiet line's
+"2 hours ago"; an older copy never sends it and the line then gives no time.
+
+**And it is never rude to other people's hosting, 2026-10-07.** A journal
+that does not answer is asked half as often each time — one minute, two,
+four, eight, ten at most — and at the usual rate again on its first good
+answer, so a copy that is asleep is not asked every minute forever by every
+keeper who has it in their book. The timer asks the first thirty in the
+book's own order, pinned first; the rest are asked when the whole grid is
+opened and on a pull down, since a book of a hundred would otherwise be a
+hundred fetches a minute, the browser's mistake moved to the server.
+
 **A gift link says `?gift=`, never `?from=`, 2026-09-22.** Give's code points
 at `listeningnotes.blog/get?gift=<the giver's journal>`. Every page already
 reads `?from=` as the reader's *own* journal and files it as their return

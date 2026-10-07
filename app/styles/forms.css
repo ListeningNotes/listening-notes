@@ -1459,6 +1459,26 @@ textarea.st-field { resize: vertical; min-height: 96px; }
    it never touches a neighbour and the grid below never moves: the face
    grows out of its own square rather than taking room from the row. */
 .fr-one--open .fr-face { transform: scale(1.15); }
+/* ── A friend who is logging right now, 2026-10-06 ─────────────────────────
+   The ring is the live green with the light off, on the face's own edge; the
+   dot is --live, set in at the corner (the face clips at its rounded edge,
+   so a dot astride it would be cut) and breathing on the site's one pulse.
+   Thin and green on purpose: the ink ring a chosen face wore came off
+   (above), and this one says live, never chosen. It is what still tells you
+   who is on once the band above the grid has scrolled away. */
+.fr-one--live .fr-face { box-shadow: 0 0 0 1.5px var(--live-deep); }
+.fr-one--live .fr-face::after {
+  content: '';
+  position: absolute; right: 4px; bottom: 4px; z-index: 1;
+  width: 9px; height: 9px; border-radius: 50%;
+  background: var(--live);
+  border: 2px solid var(--bg);
+  animation: fr-live-breathe 2.5s ease-in-out infinite;
+}
+@keyframes fr-live-breathe {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.5; }
+}
 .fr-name {
   font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
   font-size: 13px; line-height: 1.2; color: var(--ink);
@@ -1573,6 +1593,7 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 
 @media (prefers-reduced-motion: reduce) {
   .fr-one, .fr-face, .fr-door, .fr-plus, .fr-give, .fr-doors { transition: none; }
+  .fr-one--live .fr-face::after { animation: none; }
 }
 
 /* ── The shelf, and the line off the end of it ─────────────────────────────

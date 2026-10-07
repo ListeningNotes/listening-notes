@@ -75,6 +75,9 @@
      --live below, which is green and already means something else. */
   --new:          #f0a24a;
   --live:         #7cff9b;
+  /* The same green with the light off: a ring or a line that says live
+     without glowing, beside the dot that does. The friends' faces. */
+  --live-deep:    #2e9c55;
   --card-blur:    blur(48px);
   --shadow-soft:  0 2px 12px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.04);
   --shadow-lift:  0 4px 20px rgba(0,0,0,0.06), 0 16px 48px rgba(0,0,0,0.06);

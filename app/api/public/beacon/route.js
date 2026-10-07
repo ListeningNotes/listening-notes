@@ -65,7 +65,7 @@ const CACHED = {
 
 // A journal with nothing to say: a copy on its first day, before a record has
 // been picked up.
-const NOTHING = { state: 'none', album: '', artist: '', art: '', track: '', before: [] };
+const NOTHING = { state: 'none', album: '', artist: '', art: '', track: '', at: null, before: [] };
 
 // "Before that" — never the record on the beacon, which is already the largest
 // thing on the page and does not need repeating underneath itself at a third
@@ -95,6 +95,11 @@ export async function GET() {
       return Response.json({
         state: 'logging',
         album: needle.album, artist: needle.artist, art: needle.art, track: needle.track,
+        // When, 2026-10-06: the last time the needle moved. Added for the
+        // friends' room on other copies ("logged Voodoo, 2 hours ago"); a
+        // copy older than this never sends it, and a reader treats it as
+        // optional. A new field an older copy can ignore, nothing renamed.
+        at: needle.at,
         before: beforeThat(recent, needle.album),
       }, { headers: CACHED });
     }
@@ -113,6 +118,7 @@ export async function GET() {
     return Response.json({
       state: 'logged',
       album: last.album, artist: last.artist, art: last.art, track: last.track || '',
+      at: last.at,
       before: recent.slice(1, 1 + BEFORE_THAT),
     }, { headers: CACHED });
   } catch {
