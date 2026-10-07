@@ -57,7 +57,7 @@ export const sameRecord = text => String(text ?? '').trim().toLowerCase();
 export async function pull_needle() {
   try {
     const [row] = await database`
-      SELECT album, artist, album_art, track
+      SELECT album, artist, album_art, track, updated_at
       FROM needle
       WHERE id = 1
         AND ended_at IS NULL
@@ -69,6 +69,8 @@ export async function pull_needle() {
       artist: row.artist || '',
       art: sizedAlbumArt(row.album_art || '', TILE_PX),
       track: String(row.track || '').trim(),
+      // When the needle last moved, for the beacon's `at` (2026-10-06).
+      at: row.updated_at ? new Date(row.updated_at).toISOString() : null,
     };
   } catch {
     return null;
@@ -241,6 +243,9 @@ export async function pull_recent_listens() {
         // than falling back to the album title — which loses the one thing
         // that said where in the record you had got to.
         track: String(row.track || '').trim(),
+        // When it was sat with, for the beacon's `at` (2026-10-06): a
+        // friend's room says "logged Voodoo, 2 hours ago" from this.
+        at: row.at ? new Date(row.at).toISOString() : null,
       });
     }
     return listens;
