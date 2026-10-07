@@ -1,0 +1,14 @@
+-- A came-back can be a song, 2026-10-06.
+--
+-- A song send is logged as a track note (DECISIONS, the same day), and a
+-- credited note is what the feed notices coming back, the way a credited
+-- listen is. The row the inbox keeps names what came back, so it needs the
+-- song: `song` is the track's title when the entry that came back is a note
+-- on one song, and empty for a record, which is every row before this. The
+-- record it is off stays in `album` and `artist`, which is what Compare and
+-- the rest of the row read.
+--
+-- Additive, like every migration since 2026-09-06. The browser hands the
+-- song across from a friend's public feed (Feed.js → /api/came-back); a copy
+-- that never updates writes nothing here and reads nothing from it.
+ALTER TABLE came_back ADD COLUMN IF NOT EXISTS song text;

@@ -480,10 +480,10 @@ export default function Feed({ entries = [], density = DEFAULT_DENSITY }) {
   // match rather than write a second one, which is why it waited here.
   const submissions = useMemo(() => rows.filter(({ entry }) => {
     if (entry.entry_type !== 'Submission') return false;
-    // A record came back when somebody logged it. A note on one song off it,
-    // credited, is not that, and the inbox's row says "logged" and names the
-    // album (2026-09-24; not built yet).
-    if (entry.song) return false;
+    // A record came back when somebody logged it — and a song came back when
+    // somebody wrote its note, since a song send is logged as a track note
+    // (DECISIONS, 2026-10-06). The row the inbox keeps names the song over
+    // its record (came_back.song, migration 030).
     const url = tidyJournal(entry.received_from_url);
     if (url) return url === me;
     const name = String(entry.received_from || '').trim().toLowerCase();
@@ -545,6 +545,8 @@ export default function Feed({ entries = [], density = DEFAULT_DENSITY }) {
           album: entry.album,
           artist: entry.artist,
           album_art: entry.album_art,
+          // The song, when what came back is a note on one (migration 030).
+          song: entry.song || '',
           rating: entry.rating_value,
           masterpiece: entry.masterpiece === true || entry.masterpiece === 'true',
           by_hand: entry.credit_by_hand === true,
