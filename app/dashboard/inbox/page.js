@@ -15,6 +15,7 @@ import { carrySender, journalUrl, tidyJournal } from '../../../library/return_ad
 import { useBookplate } from '../../../components/main_components/Bookplate';
 import { albumKey } from '../../../hooks/useListeningBeacon';
 import { lookup_key, splitNotes } from '../../../library/entry_formatter';
+import { TRACK_NOTE_KEY } from '../../../hooks/useListeningSession';
 import { REPORTS_URL } from '../../../library/version';
 
 // ── What became of a send ──────────────────────────────────────────────────
@@ -585,11 +586,13 @@ export default function Inbox({ layered = false, inPane = false }) {
       try {
         const d = await fetch('/api/drafts').then(r => (r.ok ? r.json() : null));
         // Against the column the draft was stored under, not a recomputation
-        // of it, so a row written by an older fold still matches itself.
-        const key = lookup_key(sent.album, sent.artist || '');
-        draft = (d?.drafts || []).find(row => (row.lookup_key || lookup_key(row.album, row.artist || '')) === key) || null;
+        // of it, so a row written by an older fold still matches itself. A
+        // song send's draft is the note's, keyed with the song after a bar.
+        const key = lookup_key(sent.album, sent.artist || '', sent.song || '');
+        draft = (d?.drafts || []).find(row => (row.lookup_key || lookup_key(row.album, row.artist || '', row.song || '')) === key) || null;
       } catch { /* the listen still opens; see below */ }
     }
+    if (sent.song) return beginNote(sent, draft);
     // With no draft found this is the same as Start a listen, which is the
     // honest answer: there is nothing to resume, because nothing was saved.
     localStorage.setItem('ln_pending_session', JSON.stringify({
@@ -719,8 +722,41 @@ export default function Inbox({ layered = false, inPane = false }) {
     try { localStorage.removeItem('ln_session_draft'); } catch { /* storage off */ }
   }
 
+  // ── A song send opens a track note, 2026-10-06 ──────────────────────────
+  // Not the record: the note for that song, carrying the sender the way a
+  // listen does, and settling this row when it is saved (DECISIONS: a song
+  // send is logged as a track note). It waits in the tab the way the
+  // picker's songs do (TRACK_NOTE_KEY), so the session page opens it as the
+  // card being written. Nothing is asked first — a note sits over whatever
+  // listen is on the desk and takes nothing from it. With a draft, the note
+  // opens where it was left; the browser's own copy of the words comes
+  // first, as it does from the picker (TrackNotePage).
+  async function beginNote(sent, draft = null) {
+    try {
+      sessionStorage.setItem(TRACK_NOTE_KEY, JSON.stringify({
+        song: sent.song,
+        album: draft?.album || sent.album,
+        artist: draft?.artist || sent.artist || '',
+        year: draft?.year || sent.year || '',
+        artUrl: draft?.album_art || sent.album_art || '',
+        collectionId: draft?.collection_id || sent.collection_id || null,
+        genre: draft?.genre || '',
+        written: draft ? { rating: draft.rating, note: draft.notes || '', favorite: draft.favorite === true, formative: draft.formative === true } : null,
+        entryType: 'Submission',
+        receivedFrom: sent.submitter_name || '',
+        receivedFromUrl: sent.sender_url || '',
+        receivedDate: sent.created_at ? String(sent.created_at).slice(0, 10) : '',
+        creditPrivate: sent.quiet === true,
+        submissionId: sent.id,
+      }));
+    } catch { /* a private window: the session opens on its picker instead */ }
+    if (sent.status !== 'reviewed') await updateStatus(sent.id, 'reviewed');
+    router.push('/session');
+  }
+
   // Ask first, when there is a different record in hand with writing on it.
   async function startListen(sent) {
+    if (sent.song) return beginNote(sent);
     const held = openListen();
     if (held && held.album !== sent.album) { setHolding({ id: sent.id, held }); return; }
     await beginListen(sent);
@@ -783,8 +819,9 @@ export default function Inbox({ layered = false, inPane = false }) {
   // the drafts table — see resumeListen for why it has to be that one.
   function draftFor(sent) {
     if (!drafts || drafts.length === 0) return null;
-    const key = lookup_key(sent.album, sent.artist || '');
-    return drafts.find(row => (row.lookup_key || lookup_key(row.album, row.artist || '')) === key) || null;
+    // A song send's draft is the note's, keyed with the song after a bar.
+    const key = lookup_key(sent.album, sent.artist || '', sent.song || '');
+    return drafts.find(row => (row.lookup_key || lookup_key(row.album, row.artist || '', row.song || '')) === key) || null;
   }
 
   // What the picker offers on the open row: the likely record first, then
@@ -792,17 +829,25 @@ export default function Inbox({ layered = false, inPane = false }) {
   // recognise one record through different punctuation, so a send for
   // "Beyoncé — Lemonade" finds the entry however either was typed.
   function candidates(sent) {
-    // Listens only: a send became a record's listen or nothing, and a note on
-    // one song off it is not the record they sent (2026-09-24).
-    const all = (mine || []).filter(e => !e.song);
+    // A record send became a record's listen or nothing, and a note on one
+    // song off it is not the record they sent (2026-09-24). A song send
+    // (2026-10-06) is logged as a track note, so for one the note on that
+    // song is exactly what they sent and is offered first; a listen of the
+    // record still counts — you had sat with it — and other songs' notes do
+    // not.
+    const key = albumKey(sent.album, sent.artist);
+    const songKey = sent.song ? lookup_key(sent.song, '') : '';
+    const all = (mine || []).filter(e => !e.song || (songKey && e.album_key === key && lookup_key(e.song, '') === songKey));
     const typed = look.trim().toLowerCase();
     if (typed) {
       return all
-        .filter(e => `${e.album} ${e.artist}`.toLowerCase().includes(typed))
+        .filter(e => `${e.song || ''} ${e.album} ${e.artist}`.toLowerCase().includes(typed))
         .slice(0, 8);
     }
-    const key = albumKey(sent.album, sent.artist);
-    return all.filter(e => e.album_key === key).slice(0, 8);
+    return all
+      .filter(e => e.album_key === key)
+      .sort((a, b) => (b.song ? 1 : 0) - (a.song ? 1 : 0))
+      .slice(0, 8);
   }
 
   if (checking) return <div style={{ minHeight: '100vh', background: 'var(--bg)' }} />;
@@ -1133,13 +1178,19 @@ export default function Inbox({ layered = false, inPane = false }) {
                                     list the envelope is anything written,
                                     and the arrow before the cover already
                                     says what the row is. */}
-                                <span className="ib-rart">
+                                <span className={'ib-rart' + (row.song && row.album_art ? ' ln-fold' : '')}>
                                   {row.album_art
                                     ? <img src={row.album_art} alt="" loading="lazy" />
                                     : <span className="ib-nocover" aria-hidden="true">&#9834;</span>}
+                                  {row.song && row.album_art && (
+                                    <span className="ln-fold-flap" aria-hidden="true"><img src={row.album_art} alt="" /></span>
+                                  )}
                                 </span>
                                 <span className="ib-rsaid">
-                                  <span className="ib-rttl">{who} logged {row.album}</span>
+                                  {/* A note that came back is named by its song
+                                      (migration 030); the record is the row's
+                                      own, under Compare and the rest. */}
+                                  <span className="ib-rttl">{who} logged {row.song || row.album}</span>
                                   <span className="ib-rsub">
                                     Came back
                                     {rated ? ` · ${rated}` : ''}
@@ -1429,15 +1480,21 @@ export default function Inbox({ layered = false, inPane = false }) {
                                       <>
                                         {candidates(sent).map(entry => (
                                           <button key={entry.id} className="ib-which-one" onClick={() => alreadyLogged(sent, entry)}>
-                                            <span className="ib-which-art">
+                                            <span className={'ib-which-art' + (entry.song && entry.album_art ? ' ln-fold' : '')}>
                                               {entry.album_art && <img src={entry.album_art} alt="" loading="lazy" />}
+                                              {entry.song && entry.album_art && (
+                                                <span className="ln-fold-flap" aria-hidden="true"><img src={entry.album_art} alt="" /></span>
+                                              )}
                                             </span>
                                             <span className="ib-which-said">
-                                              <span className="ib-which-album">{entry.album}</span>
+                                              {/* A note is named by its song, with the record under it. */}
+                                              <span className="ib-which-album">{entry.song || entry.album}</span>
                                               <span className="ib-which-artist">
-                                                {entry.listen_total > 1
-                                                  ? `Listen ${entry.listen_number} of ${entry.listen_total}`
-                                                  : entry.artist}
+                                                {entry.song
+                                                  ? `${entry.album} · ${entry.artist}`
+                                                  : entry.listen_total > 1
+                                                    ? `Listen ${entry.listen_number} of ${entry.listen_total}`
+                                                    : entry.artist}
                                                 {entry.posted_at ? ` · ${new Date(entry.posted_at).toLocaleDateString()}` : ''}
                                               </span>
                                             </span>

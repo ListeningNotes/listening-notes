@@ -736,6 +736,16 @@ export default function SessionPage() {
             // What its draft already holds, when the song came from one —
             // pressed as a draft, or found again in the search (AlbumPicker).
             written: song.written || null,
+            // The send it came out of, when the inbox opened it on a song
+            // somebody sent (DECISIONS, 2026-10-06: a song send is logged as
+            // a track note): the credit in the row's own words, and which
+            // send to settle once the note is saved.
+            entry_type: song.entryType || '',
+            received_from: song.receivedFrom || '',
+            received_from_url: song.receivedFromUrl || '',
+            received_date: song.receivedDate || '',
+            credit_private: song.creditPrivate === true,
+            submission_id: song.submissionId || null,
           }}
           onSaved={saved => {
             try { sessionStorage.removeItem(TRACK_NOTE_KEY); } catch { /* nothing to clear */ }
