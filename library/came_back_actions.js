@@ -50,6 +50,8 @@ function tidy(row) {
     name: text(row?.name, 120),
     album,
     artist: text(row?.artist, 300),
+    // The song, when what came back is a note on one (migration 030).
+    song: text(row?.song, 300),
     album_art: art && /^https:\/\//i.test(art) ? art : null,
     rating: Number.isFinite(rating) && rating >= 0 && rating <= 5 ? rating : null,
     masterpiece: row?.masterpiece === true,
@@ -61,7 +63,7 @@ function tidy(row) {
 // Newest first, by when they logged it.
 export async function pull_came_back() {
   return await database`
-    SELECT id, journal, slug, name, album, artist, album_art, rating,
+    SELECT id, journal, slug, name, album, artist, song, album_art, rating,
            masterpiece, by_hand, posted_at, noticed_at, seen_at
     FROM came_back
     WHERE dismissed_at IS NULL
@@ -82,9 +84,9 @@ export async function save_came_back(rows) {
     const history = first && row.posted_at && row.posted_at.getTime() < cutoff;
     const done = await database`
       INSERT INTO came_back
-        (journal, slug, name, album, artist, album_art, rating, masterpiece, by_hand, posted_at, seen_at)
+        (journal, slug, name, album, artist, song, album_art, rating, masterpiece, by_hand, posted_at, seen_at)
       VALUES
-        (${row.journal}, ${row.slug}, ${row.name}, ${row.album}, ${row.artist}, ${row.album_art},
+        (${row.journal}, ${row.slug}, ${row.name}, ${row.album}, ${row.artist}, ${row.song}, ${row.album_art},
          ${row.rating}, ${row.masterpiece}, ${row.by_hand}, ${row.posted_at}, ${history ? new Date() : null})
       ON CONFLICT (journal, slug) DO NOTHING
       RETURNING id

@@ -156,6 +156,13 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
     year: entry.year || '', genre: entry.genre || '', album_art: entry.album_art || '',
     collection_id: entry.collection_id || '', rating: written.rating, notes: written.note,
     favorite: written.favorite === true, formative: written.formative === true,
+    // The send a note came out of rides in its draft the way it rides in a
+    // listen's (save_draft): who sent the song, and which send to settle, so
+    // a note picked up again from the picker still knows.
+    entry_type: entry.entry_type || '',
+    received_from: entry.received_from || '', received_date: entry.received_date || '',
+    received_from_url: entry.received_from_url || '', credit_private: entry.credit_private === true,
+    submission_id: entry.submission_id || null,
   });
   const openedWith = useRef(draftBody);
   const unsent = useRef(null);
@@ -387,20 +394,22 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
           )}
 
           {/* Who put you onto it — the line, or the tool while it is open, in
-              the one place its answer prints. */}
-          {!writing && (crediting && authed
+              the one place its answer prints. A note being written on a
+              song somebody sent prints the line as the saved note will (the
+              preview's rule); the tool waits for the note to exist. */}
+          {crediting && authed && !writing
             ? <SenderTool key={`sender-${entry.slug}`} entry={entry} barSlot={barSlot} onDone={() => setCrediting(false)} />
             : credit && !correcting && (
               <SentBy
-                key={`sent-${entry.slug}`}
+                key={`sent-${entry.slug || 'writing'}`}
                 entry={entry}
                 keeper={(keeper_name || '').trim()}
-                mine={authed}
+                mine={authed && !writing}
                 trail={trail}
                 open={trailOpen}
                 onOpen={setTrailOpen}
               />
-            ))}
+            )}
 
           {/* An ordinary listen of the album, through the key every other
               way into a listen uses — the song on the desk is put away
@@ -492,7 +501,15 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
                   year: entry.year || '',
                   genre: entry.genre || '',
                   album_art: entry.album_art || '',
-                  entry_type: 'Personal Library',
+                  // Submission when the inbox opened this note on a song
+                  // somebody sent (DECISIONS, 2026-10-06: a song send is
+                  // logged as a track note), with the credit written in the
+                  // listen's own words; blank fields write null.
+                  entry_type: entry.entry_type || 'Personal Library',
+                  received_from: entry.received_from || '',
+                  received_date: entry.received_date || '',
+                  received_from_url: entry.received_from_url || '',
+                  credit_private: entry.credit_private === true,
                   rating: written.rating ? `${written.rating} stars` : '',
                   favorite: written.favorite === true,
                   formative: written.formative === true,
@@ -508,6 +525,18 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
                 delete all[songKey];
                 localStorage.setItem(TRACK_NOTE_WRITING, JSON.stringify(all));
               } catch { /* nothing kept */ }
+              // The send that started this note is settled, the way a listen
+              // settles its send (useListeningSession): the row in the inbox
+              // becomes `logged`, pointed at this note. Not awaited and
+              // silent — the note is saved, and a send already deleted from
+              // the inbox is not a reason to say it failed.
+              if (entry.submission_id && data.entry?.id) {
+                fetch(`/api/submissions/${entry.submission_id}`, {
+                  method: 'PATCH',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ entry_id: data.entry.id }),
+                }).catch(() => {});
+              }
               onSaved?.(data.entry);
             } catch (err) {
               setTrouble(err.message);
