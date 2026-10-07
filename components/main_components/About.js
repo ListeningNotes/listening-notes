@@ -247,13 +247,19 @@ export default function About({ stamps, authed = false, pinned = null, entries =
     else setCountDrag(0);
   }
 
-  // What is in the open window. The same two tests the wall filters on
-  // (Journal.js), so the window and the archive's filter can never disagree
-  // about what counts; masterpiece was a rating before it was a column, which
-  // is why the first one asks twice.
+  // What is in the open window: the rows the card counted, so the number in
+  // the header is the number on the card. Both flags are counted on album
+  // listens only (/api/public/stamps, `song IS NULL`): a track note marked
+  // Formative, which it can be since 2026-09-30, is in the Songs total and
+  // nowhere else on the card (DECISIONS, A track note is its own entry).
+  // The window had no such test until 2026-10-06, so a journal with three
+  // formative records and one formative song said 3 on the card and 4 here.
+  // The wall's filter reads a record's listens the same way (Journal.js),
+  // so the three cannot disagree about what counts. Masterpiece was a
+  // rating before it was a column, which is why the first test asks twice.
   const inWindow = useMemo(() => {
     if (!openCount) return [];
-    return entries.filter(e => (openCount === 'masterpieces'
+    return entries.filter(e => !e.song && (openCount === 'masterpieces'
       ? (e.masterpiece === true || e.rating === 'Masterpiece')
       : (e.formative === true || e.formative === 'true')));
   }, [openCount, entries]);

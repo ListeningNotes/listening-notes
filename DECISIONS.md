@@ -963,7 +963,8 @@ album entry and never part of one: `song` beside the record's `album`
 album rating or Masterpiece. The heart was dropped on 2026-09-26 and came
 back with Formative on 2026-09-30 (Miyel: "it just feels right… I think it
 matters"). Its ··· is Edit, Credit, Send, Delete; nothing that counts albums
-counts it — the card's Formative is still albums only, and the card's Songs
+counts it — the card's Formative is still albums only, in the window it
+opens and on the wall's filter too (2026-10-06), and the card's Songs
 (2026-10-01) is the count of them. Written or corrected,
 it takes the album listen's shape. One object doing both is
 one confusing object instead of two clear ones.
