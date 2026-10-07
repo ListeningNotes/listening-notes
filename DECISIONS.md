@@ -1695,6 +1695,13 @@ inconsistency the one sheet deletes. A song send carries `submissions.song`
 (migration 026) and an older copy files it as the album. Mid-listen only a
 track is sendable: there is no entry yet, and "hear this now" dies waiting.
 
+**A song send is logged as a track note, 2026-10-06.** Listen on a song send
+opens the note for that song, not the record; the note carries the sender as a
+listen does and settles the send when saved; Resume finds its draft, *already
+logged* offers the song's note, and a credited note is a came-back. A listen
+with the sent track lit was built the same day and refused (Miyel: "it needs
+to send a track send to the track session page") — a song send is a song send.
+
 **The sent state is a letter seen from the front, with no journal address,
 2026-09-26.** The record as a perforated stamp, ON ITS WAY TO, the name, the
 record; no Done, no ×, it holds a beat and leaves on its own. The shape will

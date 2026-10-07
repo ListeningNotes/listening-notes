@@ -82,6 +82,21 @@ const TRACKS_PEEK = 150;
 
 // How long a draft has been sitting there. Rounded hard on purpose — the point
 // is 'this morning' or 'last week', not a timestamp.
+// The send a song's draft came out of, in the words the session's handoff
+// uses, so a note picked up again still knows who sent the song and which
+// send to settle (DECISIONS, 2026-10-06). Nothing, for a note of one's own.
+function sendOf(draft) {
+  if (!draft || draft.entry_type !== 'Submission') return {};
+  return {
+    entryType: 'Submission',
+    receivedFrom: draft.received_from || '',
+    receivedFromUrl: draft.received_from_url || '',
+    receivedDate: draft.received_date ? String(draft.received_date).slice(0, 10) : '',
+    creditPrivate: draft.credit_private === true,
+    submissionId: draft.submission_id ?? null,
+  };
+}
+
 function sinceLabel(iso) {
   const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
   if (mins < 1)  return 'just now';
@@ -755,6 +770,9 @@ export default function AlbumPicker({ onPick, onResume, onPickSong = null, inlin
                             collectionId: song.collectionId || null,
                             genre: song.genre || '',
                             written: kept ? { rating: kept.rating, note: kept.notes || '', favorite: kept.favorite === true, formative: kept.formative === true } : null,
+                            // And the send the draft came out of, if one did
+                            // (TrackNotePage keeps it in the draft).
+                            ...sendOf(kept),
                           }, from);
                         }}
                       >
@@ -847,6 +865,7 @@ export default function AlbumPicker({ onPick, onResume, onPickSong = null, inlin
                             collectionId: draft.collection_id || null,
                             genre: draft.genre || '',
                             written: { rating: draft.rating, note: draft.notes || '', favorite: draft.favorite === true, formative: draft.formative === true },
+                            ...sendOf(draft),
                           }, img ? img.getBoundingClientRect() : null);
                           return;
                         }
