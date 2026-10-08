@@ -1258,25 +1258,26 @@ anybody and neither can be grown. A row is a name and a beacon, never a
 number beside a person (Miyel, amending the rule rather than excepting it).
 
 **Being findable is a press, proved by the address, 2026-10-07.** Off by
-default; the consequence is said before the press, at the head of Everyone. The registry issues a
+default; the consequence is said before the press, at the head of the Hub. The registry issues a
 code made from its secret and the address, the journal serves it at
 /api/public/listing, and the row is kept only if it comes back. Delisting
 needs the code and the journal to have forgotten it — the code is public
 while listed, so the code alone would let anybody delist anybody.
 
-**People is one tab: Friends · Everyone, 2026-10-07, Miyel's call.** The
-Friends tab became People, with two words at the top: Friends, with the
-book's count, and Everyone, the directory's list. The feed stays Friends'
+**People is one tab: Friends · Hub, 2026-10-07, Miyel's call.** The
+Friends tab became People, with two words at the top, each with its count:
+Friends (the book) and Hub (the directory's list — her word, after
+Everyone, Commons and All Users). The feed stays Friends'
 second floor. Being findable lives at the head of Everyone, not in Settings.
 A press on somebody opens Visit · Add; somebody already in the book wears a
 check and stays in the list, so the list and its count read the same for all.
 
-**A visitor's People holds Everyone and nothing of the keeper's,
+**A visitor's People holds the Hub and nothing of the keeper's,
 2026-10-07.** Miyel: "strangers and visitors can see this page." No Friends,
 no switch, no checks — a journal never shows whom its keeper added.
 
-**Reading the directory is not phone-home, 2026-10-07.** Everyone loads the
-list when it opens, with no press of its own. Miyel: "not what i meant by
+**Reading the directory is not phone-home, 2026-10-07.** The Hub loads the
+list when People opens, with no press of its own. Miyel: "not what i meant by
 reporting home. dont worry about that here." The rule is about a copy
 reporting on itself — analytics, installs, banners — not reading a list.
 
