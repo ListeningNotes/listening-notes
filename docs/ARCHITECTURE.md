@@ -196,7 +196,7 @@ The hooks — reusable logic shared across pages
 The furniture — visual pieces
   components/
     main_components/           Everything on the public side
-      HomeNav.js               The cross itself — on a phone a rail of panes with the band at the foot (Card, Beacon, Friends, Inbox for the keeper; Card, Beacon, About for a visitor); on a desk an open book — the spine on the left, the journal on the right, the fold, and a control in the spine's header to turn between its two pages
+      HomeNav.js               The cross itself — on a phone a rail of panes with the band at the foot (Card, Beacon, People, Inbox for the keeper; Card, Beacon, People for a visitor where there is a directory). People is the book's pane with two words in the bar, Friends · Everyone: the faces and the feed under one, the directory's list under the other; on a desk an open book — the spine on the left, the journal on the right, the fold, and a control in the spine's header to turn between its two pages
       About.js                 One face of the turning pane: the card, then the writing under it, in one scroll
       IdentityCard.js          The ID: the portrait full width and square — the same object an entry's album art is — then the name, four counts — albums, songs, and the two flags in their colours — and the pinned record or song. Send and Add left it on 2026-09-19, and left the beacon too on 2026-09-27; a visitor sees the keeper here and nowhere else. This is the About page
       IdentificationCardEditor.js  Editing the card in place
@@ -211,10 +211,10 @@ The furniture — visual pieces
       GiveSheet.js             Give: a code to listeningnotes.blog/get?gift=<this journal>, for a friend who has no copy — the gift at the left of the address book's header, opposite Add
       WaveSheet.js             Just added somebody: "[name] is in your address book", Wave to [name] or Not now — the one moment a wave is offered
       Dashboard.js             The desk, for the owner — Start a listen as a band, then Inbox, Feed, Address book and Settings as rows; the header holds the mark alone. On a desk only since 2026-09-19, as the spine's second page
-      Friends.js               The address book as a grid of faces, pinned first; a face opens its three doors in place under its own row. The Friends stop, and /dashboard/people
+      Friends.js               The address book as a grid of faces, pinned first; a face opens its three doors in place under its own row. Friends, under People, and /dashboard/people
       Feed.js                  What the people in the address book logged, read off their public feeds; Submissions and Recent; Compare on a row you also have. Its own page at /dashboard/feed since 2026-09-15
-      Footer.js                The band at the foot of the phone's cross — Card, Beacon, Friends, Inbox (Card, Beacon, About for a visitor), the one you are on in ink; presses move the rail exactly as a swipe does, and the stop you are on goes back up (twice: to floor one)
-      PullDown.js              Pull down to refresh: at the top of a scroller, the mark and a line in the gap the page opens, then asking — on the Friends pane first
+      Footer.js                The band at the foot of the phone's cross — Card, Beacon, People, Inbox (Card, Beacon, People for a visitor), the one you are on in ink; presses move the rail exactly as a swipe does, and the stop you are on goes back up (twice: to floor one)
+      PullDown.js              Pull down to refresh: at the top of a scroller, the mark and a line in the gap the page opens, then asking — on the People pane first, Friends and Everyone alike
       EditingBar.js            The band at the foot of anything being corrected — what you are in the middle of, and Save and Cancel as words
       UpdateSwitch.js          Switching on the updater — a screen in setup, a section in Settings: hands the keeper a pre-filled GitHub link for the workflow file, then watches for the rebuild
       InstallSteps.js          /get's ten steps as tiles, plain HTML, with a ring over what to press where a picture exists
@@ -296,8 +296,8 @@ The rooms — full pages assembled from furniture
     session/page.js            The listen — picker, then four screens under one header
     printer/page.js            The share printer — the press on a record for the keeper (?entry=slug); the sentence for everyone else and for the card, whose plate is still to come
     setup/page.js              Claiming a copy, one screen at a time: the code, then name, photo, prompts, rig, updates, password, who gave it (GIFT_FROM, or a scan), and the home screen
-    settings/page.js           The machinery, owner-only — the address, Be findable, the password, the backup, updates, the home screen
-    directory/page.js          The directory on every copy, absent where DIRECTORY_URL is empty; the screen is directory/Directory.js — one request to the registry, a page of faces, beacons and covers
+    settings/page.js           The machinery, owner-only — the address, the password, the backup, updates, the home screen
+    directory/page.js          Everyone at its own address, on every copy, absent where DIRECTORY_URL is empty. directory/Directory.js holds `Everyone` — one request to the registry, a page of faces, beacons and covers; for the keeper, Be findable at its head, a check on people in the book, and Visit · Add on a press — drawn here and under People on the cross
     login/page.js              The door at an address — the same password form, for when a link will not do
     get/layout.js              The frame /get and /get/story share: the nav row, the measure, the type
     @layer/default.js          What the layer slot draws when nothing is open: nothing. The framework requires the file
