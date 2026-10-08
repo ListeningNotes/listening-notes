@@ -702,9 +702,15 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null, 
   // 2026-09-20, "the clicking and opening... needs to open and replace
   // address book text." So the fact travels up the way the count does and
   // the cross takes its word down. See barSays in HomeNav.js.
+  //
+  // Since 2026-10-07 the middle of that row is the People tab's two words,
+  // Friends · Board, and a search field sitting there for good once the book
+  // passed a dozen hid them — a keeper with thirteen friends could not get to
+  // the Board. So on the cross the search stands at the top of this floor
+  // (below), and only the + takes the row, while its field is open.
   useEffect(() => {
-    if (shelf) onBusy?.(adding || searchable);
-  }, [shelf, adding, searchable, onBusy]);
+    if (shelf) onBusy?.(adding);
+  }, [shelf, adding, onBusy]);
 
   // ── The rows ────────────────────────────────────────────────────────────
   // Built here rather than left to the grid, because the doors have to open
@@ -805,7 +811,7 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null, 
             {!loading && people.length > 0 && <span> &middot; {people.length}</span>}
           </p>
         )}
-        <label className={'fr-field fr-field--find' + (adding || !searchable ? ' fr-field--gone' : '')} inert={adding || !searchable ? true : undefined}>
+        <label className={'fr-field fr-field--find' + (adding || !searchable || shelf ? ' fr-field--gone' : '')} inert={adding || !searchable || shelf ? true : undefined}>
           <MagnifyingGlass size={15} weight="regular" aria-hidden="true" />
           <input
             value={finding}
@@ -973,6 +979,23 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null, 
             begins on it then browses the cards, and the rail's swipe is
             everywhere else. With one or two cards there is nothing to
             browse and the swipe is the rail's, as it should be. */}
+        {/* The book's search on the cross, 2026-10-08: at the top of the
+            floor, in the Board's own field, once the book passes a dozen —
+            the bar's middle is the two words now (see onBusy, above). */}
+        {shelf && searchable && (
+          <label className="dir-search fr-floor-find">
+            <MagnifyingGlass size={16} weight="regular" aria-hidden="true" />
+            <input
+              type="search"
+              value={finding}
+              onChange={e => setFinding(e.target.value)}
+              placeholder="Search your address book"
+              aria-label="Find somebody in your book"
+              spellCheck={false}
+              autoComplete="off"
+            />
+          </label>
+        )}
         {onNow.length > 0 ? (
           <div className="fr-now">
             <p className="fr-now-head">
