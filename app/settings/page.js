@@ -135,7 +135,7 @@ function OnTheBoard() {
   return (
     <>
       <p className="st-note">
-        Your name, your face and what you&rsquo;re playing are on the board at {BOARD_AT} &mdash; the same
+        Your name, your face and what you&rsquo;re playing are on the board at {BOARD_AT}{' '}&mdash; the same
         things your journal already shows anyone who visits. Your entries stay where they are. Off takes you
         off every board, your friends&rsquo; included.
       </p>
