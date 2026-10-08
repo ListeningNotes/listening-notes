@@ -76,7 +76,10 @@ function stops(authed) {
   return here;
 }
 
-export default function Footer({ pane, goTo, authed = false }) {
+// `onHere` is the stop you are already on, pressed: back to the top of the
+// floor you are on, and twice inside half a second to floor one (HomeNav,
+// goBack). Pressing any other stop moves the rail (goTo).
+export default function Footer({ pane, goTo, onHere = null, authed = false }) {
   const here = stops(authed);
   return (
     <nav className="hn-foot" aria-label="The panes">
@@ -85,10 +88,10 @@ export default function Footer({ pane, goTo, authed = false }) {
           key={stop.key}
           type="button"
           className={'hn-foot-stop' + (pane === i ? ' hn-foot-stop--here' : '')}
-          onClick={() => goTo(i)}
+          onClick={() => (pane === i && onHere ? onHere(i) : goTo(i))}
           /* aria-current rather than aria-disabled on the pane you are on: it
              is still pressable, and pressing it is how you get back to the top
-             of a pane you have scrolled down. */
+             of a pane you have scrolled down (and, twice, to its first screen). */
           aria-current={pane === i ? 'true' : undefined}
           title={stop.label}
         >

@@ -1373,7 +1373,7 @@ textarea.st-field { resize: vertical; min-height: 96px; }
    92, up from 84 (Miyel: "a smidge bigger, I know there's not much space").
    Three across a 327px shelf leaves a 100px cell, so this is most of what
    there is — and six is the cap, which is two rows of it. */
-.fr-row--pinned .fr-face { max-width: 92px; }
+.fr-row--pinned .fr-face, .fr-row--pinned .fr-ring { max-width: 92px; }
 .fr-row--pinned .fr-grid { gap: 20px 14px; }
 .fr-row--pinned .fr-name { font-size: 14px; }
 /* A door that is already done. Ink rather than a second glyph: the word under
@@ -1408,26 +1408,33 @@ textarea.st-field { resize: vertical; min-height: 96px; }
    itself. */
 .fr--open .fr-one { opacity: 0.4; }
 .fr--open .fr-one--open { opacity: 1; }
-/* ── A record's shape, not a circle ───────────────────────────────────────
-   Miyel, 2026-09-19: the faces should be "the rounded square of the beacon
-   and album entry shape." Which is where the book already was — the rows
-   these faces replace carried the same note from 2026-09-12, and the circles
-   came in with the mock-up rather than from the site.
+/* ── Faces are circles, 2026-10-07 ──────────────────────────────────────────
+   Miyel, with the friends-room brief's mock-up beside the page: "i do think
+   the pfps should be circles." This reverses her own call of 2026-09-19,
+   when the faces became "the rounded square of the beacon and album entry
+   shape" — a record's shape, on the grounds that a journal is a shelf of
+   records. A person is a circle now and a record a rounded square, which
+   also keeps the two from being mistaken for each other in the band of
+   cards above the grid, where both are drawn side by side.
 
-   10%, the proportion the record wears at every size it is drawn (see
-   .beacon-art-wrap in nav.css): written as a percentage rather than a number
-   so a face and a cover are the same shape whatever size either is given.
-   A portrait in the shape of a record is the whole idea of this page — these
-   are journals, and a journal is a shelf of records. */
+   The ring holds the face and is what grows when the face is chosen, so the
+   live dot on its edge grows with it; the face inside it clips to the
+   circle. */
+.fr-ring {
+  position: relative;
+  display: block;
+  width: 100%; max-width: 62px;
+  transition: transform 0.2s;
+}
 .fr-face {
   position: relative;
   display: flex; align-items: center; justify-content: center;
   width: 100%; max-width: 62px; aspect-ratio: 1;
-  border-radius: 10%;
+  border-radius: 50%;
   background: var(--panel);
   color: var(--ink-faint);
   overflow: hidden;
-  transition: box-shadow 0.2s, transform 0.2s;
+  transition: box-shadow 0.2s;
 }
 /* ── And no long press on somebody else's face ────────────────────────────
    The crop is the real fix and it is the other copy's to ship: this book
@@ -1458,7 +1465,26 @@ textarea.st-field { resize: vertical; min-height: 96px; }
    pixels across, four and a half each side, inside a ten-pixel gutter — so
    it never touches a neighbour and the grid below never moves: the face
    grows out of its own square rather than taking room from the row. */
-.fr-one--open .fr-face { transform: scale(1.15); }
+.fr-one--open .fr-ring { transform: scale(1.15); }
+/* ── A friend who is logging right now, 2026-10-06 ─────────────────────────
+   As the brief draws it: the circle takes the live green with the light off
+   for its ring, and a --live dot stands on the edge at the bottom right,
+   cut out of the page by a ring of the page's own colour. Placed by the
+   circle's own geometry — the centre of the dot on the circumference at
+   45°, 14.64% in from the ring's corner — so it sits the same on a small
+   face and a pinned one. Still, not breathing: the band's dot is the one
+   that pulses. It is what still tells you who is on once the band above
+   the grid has scrolled away. */
+.fr-one--live .fr-face { box-shadow: 0 0 0 1.5px var(--live-deep); }
+.fr-one--live .fr-ring::after {
+  content: '';
+  position: absolute; z-index: 1;
+  right: calc(14.64% - 6px); bottom: calc(14.64% - 6px);
+  width: 12px; height: 12px; box-sizing: border-box;
+  border-radius: 50%;
+  background: var(--live);
+  border: 2.5px solid var(--bg);
+}
 .fr-name {
   font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
   font-size: 13px; line-height: 1.2; color: var(--ink);
@@ -1573,7 +1599,143 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 
 @media (prefers-reduced-motion: reduce) {
   .fr-one, .fr-face, .fr-door, .fr-plus, .fr-give, .fr-doors { transition: none; }
+  .fr-now-pulse { animation: none; }
+  .fr-on, .fr-ring { transition: none; }
 }
+
+/* ── Who is logging right now, and the quiet line, 2026-10-06 ─────────────
+   To the brief's mock-up (friends-room.html), measure for measure: a dot
+   that pulses outward and LOGGING RIGHT NOW in the label face, then a row
+   of cards that scrolls sideways and settles on a card, bled to the
+   gutters; a card is the record's art, the friend with a live dot, the
+   record and the artist. When nobody is on, the quiet line stands where the
+   band would. Either one ends on a hairline above the grid. */
+.fr-now {
+  padding: 0 0 22px;
+  border-bottom: 1px solid var(--border);
+}
+.fr-now-head {
+  display: flex; align-items: center; gap: 9px;
+  margin: 0; padding: 4px 2px 12px;
+  font-family: var(--font-label);
+  font-size: 9.5px; letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.fr-now-pulse {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  background: var(--live);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--live) 70%, transparent);
+  animation: fr-beat 2.4s infinite;
+}
+@keyframes fr-beat {
+  0%   { box-shadow: 0 0 0 0 color-mix(in srgb, var(--live) 70%, transparent); }
+  70%  { box-shadow: 0 0 0 9px color-mix(in srgb, var(--live) 0%, transparent); }
+  100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--live) 0%, transparent); }
+}
+.fr-now-row {
+  display: flex; gap: 12px;
+  margin: 0 -24px;
+  padding: 2px 24px 18px;
+  overflow-x: auto; overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: 24px;
+  scrollbar-width: none;
+  contain: inline-size;
+  -webkit-overflow-scrolling: touch;
+}
+.fr-now-row::-webkit-scrollbar { display: none; }
+.fr-on {
+  flex: 0 0 auto; width: 152px;
+  scroll-snap-align: start;
+  display: flex; flex-direction: column;
+  text-align: left;
+  border: 1px solid var(--border); border-radius: 16px;
+  background: var(--panel-solid);
+  box-shadow: var(--shadow-soft);
+  padding: 13px;
+  color: inherit; font: inherit; text-decoration: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.18s ease, border-color 0.18s ease;
+}
+@media (hover: hover) {
+  .fr-on:hover { border-color: var(--ink-faint); transform: translateY(-2px); }
+}
+.fr-on-art {
+  width: 100%; aspect-ratio: 1; border-radius: 8px; overflow: hidden;
+  background: var(--bg-warm);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--ink-faint);
+  margin-bottom: 11px;
+}
+.fr-on-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.fr-on-who {
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
+  font-size: 13.5px; color: var(--ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.fr-on-dot {
+  width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+  background: var(--live);
+  box-shadow: 0 0 0 2.5px color-mix(in srgb, var(--live) 30%, transparent);
+}
+.fr-on-rec {
+  margin-top: 5px;
+  font-size: 13px; font-weight: 600; color: var(--ink); line-height: 1.3;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.fr-on-by {
+  font-size: 12px; color: var(--ink-soft);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.fr-quiet {
+  display: flex; align-items: center; gap: 10px;
+  margin: 0; padding: 14px 2px 22px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13.5px; line-height: 1.5; color: var(--ink-soft);
+}
+.fr-quiet-word {
+  font-family: var(--font-label);
+  font-size: 9.5px; letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--ink-faint);
+  flex-shrink: 0;
+}
+.fr-quiet-said { min-width: 0; }
+.fr-quiet b { color: var(--ink); font-weight: var(--font-display-weight, 700); }
+
+/* Their beacon inside the doors, as the mock-up draws it: the record small
+   in a hairline square, a tracked caption, the record and the artist, above
+   Visit · Compare · Send · Pin. The doors' open cap grows by its height when
+   it is drawn, and only then, so the unfold still finishes at the end of its
+   clock. */
+.fr-doors-beacon { display: flex; align-items: center; gap: 11px; margin: 0 2px 15px; }
+.fr-doors-art {
+  width: 44px; height: 44px; border-radius: 6px; overflow: hidden; flex-shrink: 0;
+  box-sizing: border-box;
+  background: var(--bg-warm);
+  border: 1px solid var(--border);
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--ink-faint);
+}
+.fr-doors-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.fr-doors-said { display: flex; flex-direction: column; min-width: 0; }
+.fr-doors-cap {
+  font-family: var(--font-label);
+  font-size: 9.5px; line-height: 1.4; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.fr-doors-rec {
+  margin-top: 2px;
+  font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
+  font-size: 15px; line-height: 1.35; color: var(--ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.fr-doors-by {
+  font-size: 13px; line-height: 1.4; color: var(--ink-soft);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.fr-doors--open.fr-doors--beacon { max-height: 216px; }
 
 /* ── The shelf, and the line off the end of it ─────────────────────────────
    On the floor the faces are clipped to a box of settled height: that is what
