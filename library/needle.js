@@ -69,7 +69,9 @@ export async function pull_needle() {
       artist: row.artist || '',
       art: sizedAlbumArt(row.album_art || '', TILE_PX),
       track: String(row.track || '').trim(),
-      // When the needle last moved, for the beacon's `at` (2026-10-06).
+      // When the needle last moved. The public beacon does not send it
+      // while a listen is open (a last-seen to the second, 2026-10-07); it
+      // is here for the keeper's own screens, should one want it.
       at: row.updated_at ? new Date(row.updated_at).toISOString() : null,
     };
   } catch {

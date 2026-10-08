@@ -105,6 +105,26 @@ const DOORS_MS = 340;
 // which is the right way round for them to be wrong.
 const PINS_MOST = 6;
 
+// ── How long ago, in words ────────────────────────────────────────────────
+// For the quiet line ("logged Voodoo, 2 hours ago") and the caption inside
+// the doors ("Last logged · yesterday") — the friend's own beacon's `at`,
+// which only a copy new enough to send it carries. Never a clock face: an
+// absence is read, not measured. And nothing past a week: "43 days ago" is
+// the absence counted, which is the guilt meter the brief rules out, so the
+// line then names the record and leaves the time off.
+function since(iso) {
+  const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+  if (!Number.isFinite(mins) || mins < 0) return '';
+  if (mins < 2) return 'just now';
+  if (mins < 10) return 'a few minutes ago';
+  if (mins < 60) return `${mins} minutes ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return hours === 1 ? 'an hour ago' : `${hours} hours ago`;
+  const days = Math.floor(hours / 24);
+  if (days === 1) return 'yesterday';
+  return days < 7 ? `${days} days ago` : '';
+}
+
 // ── Saying no ─────────────────────────────────────────────────────────────
 // A door with no room behind it used to be `disabled`, which meant pressing
 // it did nothing at all — and nothing at all is the one answer that does not
@@ -120,23 +140,6 @@ const PINS_MOST = 6;
 //
 // Small and quick. It is a refusal, not an alarm: four pixels each way and
 // gone in a third of a second, which is a head shake rather than a shout.
-// How long ago, in words. For the quiet line ("logged Voodoo, 2 hours ago")
-// and the caption inside the doors ("Last logged · yesterday") — the friend's
-// own beacon's `at`, which only a copy new enough to send it carries.
-// Never a clock face: an absence is read, not measured.
-function since(iso) {
-  const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
-  if (!Number.isFinite(mins) || mins < 0) return '';
-  if (mins < 2) return 'just now';
-  if (mins < 10) return 'a few minutes ago';
-  if (mins < 60) return `${mins} minutes ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return hours === 1 ? 'an hour ago' : `${hours} hours ago`;
-  const days = Math.floor(hours / 24);
-  if (days === 1) return 'yesterday';
-  return `${days} days ago`;
-}
-
 function shakeNo(el) {
   if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
   // Press it twice quickly and there is one head shake, not two on top of
@@ -231,7 +234,10 @@ function travel(box, was) {
 // `onCount` is how the cross learns whether there is a book at all, which it
 // needs before it can decide whether this pane has a second floor. The count
 // is this component's to know: it is the one that asks for the people.
-export default function Friends({ shelf = false, onCount = null, onBusy = null }) {
+// `onScreen` is whether this pane is the one on screen, from the cross; off
+// the shelf it is left true. See the hook: the room listens for beacons only
+// while somebody could be looking at it.
+export default function Friends({ shelf = false, onCount = null, onBusy = null, onScreen = true }) {
   // Who this copy belongs to, carried on every link out to another journal so
   // the form there knows who is sending. See carrySender.
   const { keeper_name: myName, site_address: myAddress } = useBookplate();
@@ -253,7 +259,7 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null }
   // The timer asks the first thirty in the book. The whole grid — this
   // page off the shelf, where everyone is drawn — asks for the rest once,
   // as it opens (Miyel, 2026-10-07).
-  const { friends: beacons } = useFriendsBeacons();
+  const { friends: beacons } = useFriendsBeacons(!shelf || onScreen);
   const beaconOf = useMemo(() => new Map(beacons.map(b => [b.address, b])), [beacons]);
   useEffect(() => { if (!shelf) fillFriends(); }, [shelf]);
 
@@ -267,19 +273,34 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null }
   // brief). No count anywhere: four cards is a feeling, "4 listening" is a
   // score.
   const byAddress = useMemo(() => new Map(people.map(p => [p.address, p])), [people]);
+  // A journal the book has no name for yet is left out of both: the band
+  // and the line say who, and an address is never printed in a name's place.
+  // Its face still lights; the name usually arrives within seconds, since the
+  // page asks again for anybody filed without one (above).
   const onNow = useMemo(
-    () => beacons.filter(b => b.state === 'logging' && byAddress.has(b.address)),
+    () => beacons.filter(b => b.state === 'logging' && byAddress.get(b.address)?.name),
     [beacons, byAddress]
   );
   const lastIn = useMemo(() => {
     if (onNow.length > 0) return null;
     let best = null;
     for (const b of beacons) {
-      if (b.state !== 'logged' || !b.at || !byAddress.has(b.address)) continue;
-      if (!best || b.at > best.at) best = b;
+      if (b.state !== 'logged' || !b.at || !byAddress.get(b.address)?.name) continue;
+      if (!best || Date.parse(b.at) > Date.parse(best.at)) best = b;
     }
     return best;
   }, [onNow.length, beacons, byAddress]);
+
+  // "2 hours ago" is read off the clock when the room draws, and nothing
+  // else would redraw it: a round that says the same thing publishes nothing.
+  // So while a time is on screen — the quiet line, or a pressed face's
+  // doors — the room is redrawn once a minute, and the words keep up.
+  const [, tick] = useState(0);
+  useEffect(() => {
+    if (!lastIn && open === null) return undefined;
+    const clock = setInterval(() => tick(n => n + 1), 60 * 1000);
+    return () => clearInterval(clock);
+  }, [lastIn, open]);
   // ── And the one on its way out ──────────────────────────────────────────
   // The doors have to be in the DOM to collapse, and the person they belong
   // to has to still be known while they do it, or the panel empties halfway
@@ -916,9 +937,11 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null }
             then scrolls to show; a friend past what the shelf holds opens
             the whole book instead. Above the shelf rather than in it, so
             the shelf's own count of what fits (reckon) stays true — it is
-            given less room and says so. The row contains its own sideways
-            scroll: a swipe that begins on it browses the cards, and the
-            rail's swipe is everywhere else. */}
+            given less room and says so. The row is a sideways scroller only
+            once it overflows, from three cards on a phone: a swipe that
+            begins on it then browses the cards, and the rail's swipe is
+            everywhere else. With one or two cards there is nothing to
+            browse and the swipe is the rail's, as it should be. */}
         {onNow.length > 0 ? (
           <div className="fr-now">
             <p className="fr-now-head">
@@ -928,10 +951,12 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null }
             <div className="fr-now-row">
               {onNow.map(b => {
                 const person = byAddress.get(b.address);
-                const name = b.name || person?.name || 'Somebody';
+                const name = person?.name || b.name;
                 const title = b.track || b.album;
                 const by = b.track ? `${b.album} · ${b.artist}` : b.artist;
-                const onShelf = !shelf || [...pinned, ...onShow].some(p => p.id === person?.id);
+                // Only a face that is actually drawn can open its doors —
+                // a search can hide the pinned row and narrow the rest.
+                const onShelf = rows.some(r => r.people.some(p => p.id === person?.id));
                 const inside = (
                   <>
                     <span className="fr-on-art" aria-hidden="true">
@@ -953,7 +978,7 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null }
                     key={b.address}
                     type="button"
                     className="fr-on"
-                    onClick={() => { if (person) choose(person.id); }}
+                    onClick={() => { if (person && open !== person.id) choose(person.id); }}
                     aria-label={label}
                     title={label}
                   >
@@ -974,9 +999,9 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null }
           <p className="fr-quiet">
             <span className="fr-quiet-word">Quiet</span>
             <span className="fr-quiet-said">
-              <b>{lastIn.name || byAddress.get(lastIn.address)?.name || 'Somebody'}</b>
+              <b>{byAddress.get(lastIn.address)?.name || lastIn.name}</b>
               {' logged '}{lastIn.album}
-              {since(lastIn.at) ? `, ${since(lastIn.at)}` : ''}
+              {since(lastIn.at) ? ` \u00b7 ${since(lastIn.at)}` : ''}
             </span>
           </p>
         )}
@@ -1044,15 +1069,20 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null }
                       >
                         {/* Their journal's own portrait, read straight off it
                             and never stored; a journal without one, or one
-                            that is out, leaves the plain mark showing. */}
-                        <span className="fr-face" aria-hidden="true">
-                          <User size={22} weight="regular" />
-                          <img
-                            src={`${journalUrl(p.address)}/api/portrait`}
-                            alt=""
-                            loading="lazy"
-                            onError={e => { e.currentTarget.style.display = 'none'; }}
-                          />
+                            that is out, leaves the plain mark showing. The
+                            ring around it is what the live dot stands on: the
+                            face clips to its circle, and the dot sits astride
+                            the edge (forms.css, .fr-ring). */}
+                        <span className="fr-ring" aria-hidden="true">
+                          <span className="fr-face">
+                            <User size={22} weight="regular" />
+                            <img
+                              src={`${journalUrl(p.address)}/api/portrait`}
+                              alt=""
+                              loading="lazy"
+                              onError={e => { e.currentTarget.style.display = 'none'; }}
+                            />
+                          </span>
                         </span>
                         <span className={'fr-name' + (p.name ? '' : ' fr-name--none')}>{called}</span>
                       </button>

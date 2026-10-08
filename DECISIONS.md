@@ -778,28 +778,6 @@ door on the card was cut (Miyel). **Nothing counts gifts:** no totals, no
 "3 friends joined", nothing reported back to the giver. A gift is a gift,
 not a referral scheme.
 
-**Friends shows everyone's beacon, fetched through one route rather than ten
-from the browser, 2026-10-06.** `/api/friends/beacons` fans out to the people
-table in parallel with a short per-friend timeout and keeps its answer a
-minute, so a keeper's open tabs cost their friends one round of requests
-rather than forty a minute each. Friends' beacons refresh on a 60-second tier
-rather than the keeper's own 15, because pulling down to refresh — site-wide,
-in the same change — gives a person a way to demand *now* and removes the
-reason to poll fast. A fetch that fails is `unknown` and leaves the last known
-state standing; a dot is never darkened by somebody else's slow deployment. No
-presence is stored, there is no "last seen", and the number of people
-listening is never shown. The public beacon gained `at` for the quiet line's
-"2 hours ago"; an older copy never sends it and the line then gives no time.
-
-**And it is never rude to other people's hosting, 2026-10-07.** A journal
-that does not answer is asked half as often each time — one minute, two,
-four, eight, ten at most — and at the usual rate again on its first good
-answer, so a copy that is asleep is not asked every minute forever by every
-keeper who has it in their book. The timer asks the first thirty in the
-book's own order, pinned first; the rest are asked when the whole grid is
-opened and on a pull down, since a book of a hundred would otherwise be a
-hundred fetches a minute, the browser's mistake moved to the server.
-
 **A gift link says `?gift=`, never `?from=`, 2026-09-22.** Give's code points
 at `listeningnotes.blog/get?gift=<the giver's journal>`. Every page already
 reads `?from=` as the reader's *own* journal and files it as their return
@@ -1231,6 +1209,38 @@ only when it is a record you also have — this album, their rating against
 yours and the two horizons; the track notes stay on the journals until an
 entry can be read across origins. Compare arrives because something
 happened; it is not a place you navigate to.
+
+**Friends shows everyone's beacon, fetched through one route rather than ten
+from the browser, 2026-10-06.** `/api/friends/beacons` fans out to the people
+table in parallel with a short per-friend timeout and keeps its answer a
+minute, so a keeper's open tabs cost their friends one round of requests
+rather than forty a minute each. Friends' beacons refresh on a 60-second tier
+rather than the keeper's own 15, because pulling down to refresh — on the
+Friends pane first, every scroller to follow — gives a person a way to demand
+*now* and removes the reason to poll fast. A fetch that fails is `unknown` and leaves the last known
+state standing; a dot is never darkened by somebody else's slow deployment. No
+presence is stored, there is no "last seen", and the number of people
+listening is never shown. The public beacon gained `at` for the quiet line's
+"2 hours ago"; an older copy never sends it and the line then gives no time.
+
+**And it is never rude to other people's hosting, 2026-10-07.** A journal
+that does not answer is asked half as often each time — one minute, two,
+four, eight, ten at most — and at the usual rate again on its first good
+answer, so a copy that is asleep is not asked every minute forever by every
+keeper who has it in their book. The timer asks the first thirty in the
+book's own order, pinned first; the rest are asked when the whole grid is
+opened and on a pull down, since a book of a hundred would otherwise be a
+hundred fetches a minute, the browser's mistake moved to the server. A pull
+does reach a journal in its quiet spell, once: a press is a person asking.
+The room listens only while its pane is on screen; the last answer stays on
+the faces meanwhile and coming back asks at once.
+
+**Faces in the book are circles, 2026-10-07, Miyel's call.** With the
+friends-room mock-up beside the page: "i do think the pfps should be
+circles." It reverses 2026-09-19, when the faces became the record's rounded
+square on the grounds that a journal is a shelf of records. A person is a
+circle and a record a rounded square, which also tells the two apart in the
+band of cards, where both are drawn. The rest of the site's faces wait on her.
 
 **A wave is the second thing one journal may put in another's inbox,
 2026-09-23.** A send was the first and a message is the third (below), and a
