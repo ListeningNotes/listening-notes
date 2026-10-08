@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // components/main_components/Footer.js
-// The band across the foot of the cross: Card · Beacon · Friends · Inbox, the
+// The band across the foot of the cross: Card · Beacon · People · Inbox, the
 // panes named, with the one you are on in ink.
 //
 // ── Why this exists ───────────────────────────────────────────────────────
@@ -26,16 +26,16 @@
 // ── The glyphs are decoration and have to earn it ─────────────────────────
 // The labels carry the meaning. Every mark here is one this site already uses
 // for exactly this thing — the broadcast for what is playing, the card for the
-// person, the envelope for something that arrived, the address book for the
-// journals you read — so none of them is a coinage and none has to be learned
-// twice. The desk's stack of lines went with the desk. An open book was
+// person, the envelope for something that arrived, two people for the people
+// — so none of them is a coinage and none has to be learned twice. The desk's stack of lines went with the desk. An open book was
 // considered once and is wrong for any of them, because the book is the
 // journal and the journal is *down* from the beacon, not sideways. If one of
 // these ever needs explaining, the brief's own instruction is to drop them all
 // and keep the words.
 'use client';
 
-import { AddressBook, Broadcast, Envelope, IdentificationCard } from '@phosphor-icons/react';
+import { Broadcast, Envelope, IdentificationCard, Users } from '@phosphor-icons/react';
+import { DIRECTORY_URL } from '../../library/version';
 
 // ── Four for the keeper, two for everybody else ───────────────────────────
 // The desk was the third stop and is gone (2026-09-19). It was a page of
@@ -44,16 +44,21 @@ import { AddressBook, Broadcast, Envelope, IdentificationCard } from '@phosphor-
 // stops of their own now, so nothing on this band is a corridor (Miyel's
 // friends brief, and the band it draws).
 //
-// Signed out there is no inbox and nobody to read. The third stop was the
-// About pane, a page about the software, until 2026-09-28: a visited journal
-// is a card, a beacon and entries, and the software's line is at the foot of
-// the card (DECISIONS). The count follows what there is.
+// Signed out there is no inbox and no book. The third stop was the About
+// pane, a page about the software, until 2026-09-28: a visited journal is a
+// card, a beacon and entries, and the software's line is at the foot of the
+// card (DECISIONS). Since 2026-10-07 a visitor has People again — the tab with
+// Everyone in it and nothing of the keeper's — on any copy with a directory.
+// The count follows what there is.
 function stops(authed) {
   const here = [
     { key: 'card', word: 'Card', Icon: IdentificationCard, label: 'About this journal' },
     { key: 'beacon', word: 'Beacon', Icon: Broadcast, label: 'Now listening' },
   ];
-  if (!authed) return here;
+  if (!authed) {
+    if (DIRECTORY_URL) here.push({ key: 'people', word: 'People', Icon: Users, label: 'Everyone who is listed' });
+    return here;
+  }
   // ── Friends before Inbox, 2026-09-19 ─────────────────────────────────
   // Miyel's reason, and it is about the shape of the rail rather than about
   // what the rooms are for: "two double levels two not sandwiched." Two of
@@ -64,10 +69,14 @@ function stops(authed) {
   // flat, deep, deep, flat, and going sideways from one two-floor pane to
   // the other does not pass through a page with no downstairs.
   //
-  // The address book's own mark, as the desk's row wore it. Not a pair of
-  // people: this is a book of addresses you keep, not a group you belong to,
-  // and the difference is the whole model.
-  here.push({ key: 'friends', word: 'Friends', Icon: AddressBook, label: 'The journals you read' });
+  // People, 2026-10-07 (Miyel: "footer will be people"): the tab Friends was,
+  // holding the book and Everyone, the list of journals that chose to be
+  // findable. Its mark was the address book's while it held only the book —
+  // "not a pair of people: a book of addresses you keep, not a group you
+  // belong to." Two people now, as her mock-up drew it, because the tab holds
+  // more than the book; the book is still one word inside it, and still not a
+  // group anybody joins.
+  here.push({ key: 'people', word: 'People', Icon: Users, label: 'Your friends, and everyone listed' });
   // Envelope is the mark the whole site already puts on a record that arrived
   // from somebody — it is what the room of arrivals should wear, and the
   // sending tool deliberately wears a different one so the two never read as

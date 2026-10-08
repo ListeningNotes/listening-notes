@@ -91,6 +91,10 @@ import Inbox from '../../app/dashboard/inbox/page';
 import Friends from './Friends';
 import PullDown from './PullDown';
 import { refreshFriends } from '../../hooks/useFriendsBeacons';
+// Everyone, the second word of the People tab: the journals that chose to be
+// findable, drawn here and again at its own address (2026-10-07).
+import { Everyone } from '../../app/directory/Directory';
+import { DIRECTORY_URL } from '../../library/version';
 // The feed sits under the book as that pane's second floor. It is handed the
 // journal's own records — the same list the wall draws — because the one
 // thing it asks of them is whether a row is a record you also have, and
@@ -112,6 +116,10 @@ const HOME = 1;
 // lock has said yes — a visitor's rail is two panes, the card and the beacon
 // (three until 2026-09-28, when the About pane went), and neither of these is
 // on it. See paneRefs, which is the list these index into.
+//
+// Since 2026-10-07 BOOK is the People tab and a visitor has it too, wherever
+// there is a directory: Everyone, and nothing of the keeper's (Miyel: "i think
+// strangers and visitors can see this page"). The inbox stays the keeper's.
 const BOOK = 2;
 const INBOX = 3;
 
@@ -548,8 +556,9 @@ export default function HomeNav() {
   const faceNow = useRef('card');
   // In rail order, and the order depends on who is looking, 2026-09-19.
   //
-  //   signed in    the ID, the beacon, the book, the inbox
-  //   signed out   the ID, the beacon, the colophon
+  //   signed in    the ID, the beacon, people, the inbox
+  //   signed out   the ID, the beacon, people — Everyone only, and only on a
+  //                copy with a directory (2026-10-07)
   //
   // The desk is not in either. It is still in the markup and still the spine's
   // second page on a desktop, where there is no band to reach the other rooms
@@ -561,7 +570,9 @@ export default function HomeNav() {
   // lock answers. Every effect that lists it re-runs then and re-attaches to
   // the panes that now exist, which is exactly right and is why they list it.
   const paneRefs = useMemo(
-    () => (authed ? [cardRef, homeRef, friendsRef, inboxRef] : [cardRef, homeRef]),
+    () => (authed ? [cardRef, homeRef, friendsRef, inboxRef]
+      : DIRECTORY_URL ? [cardRef, homeRef, friendsRef]
+      : [cardRef, homeRef]),
     [authed]
   );
   // Kept in step on every render, and read by the getter above. It has to be
@@ -1396,6 +1407,17 @@ export default function HomeNav() {
   // screen above it: a header that said FEED while you were looking at the
   // faces would be naming the wrong floor. See the scroll effect below.
   const [atFeed, setAtFeed] = useState(false);
+  // ── Friends · Everyone, 2026-10-07 ───────────────────────────────────────
+  // The two words at the top of the People tab, and which one is showing.
+  // The keeper starts on Friends; a visitor has only Everyone. Everyone is
+  // drawn while it shows and taken down when it does not, so coming back to
+  // it reads the list again; the book stays mounted under it either way, so
+  // Friends comes back exactly as it was left. `everyoneAgain` is the way the
+  // list hands up for the pull to ask it again.
+  const [room, setRoom] = useState('friends');
+  const onEveryone = Boolean(DIRECTORY_URL) && (!authed || room === 'everyone');
+  const everyoneAgain = useRef(null);
+  const askEveryoneAgain = useCallback(() => everyoneAgain.current?.(), []);
   // Whether the book has a field open in the bar's row. The name is drawn
   // absolutely on the middle of that row and a field opening there has to
   // have it — see the relay note on barSays.
@@ -1751,7 +1773,10 @@ export default function HomeNav() {
         // .hn-bar-say in nav.css.
         if (i === BOOK) {
           const way = el.querySelector('.hn-down');
-          if (!way || !bar) setAtFeed(false);
+          // `offsetParent` is null while the floors are hidden under
+          // Everyone, whose rectangle would otherwise read as already past
+          // the bar.
+          if (!way || !bar || !way.offsetParent) setAtFeed(false);
           else setAtFeed(way.getBoundingClientRect().bottom <= bar.getBoundingClientRect().bottom);
         }
         setDown(prev => {
@@ -1839,6 +1864,10 @@ export default function HomeNav() {
   // disagree about where the next floor sits.
   function floorTwo(el) {
     if (!el) return 0;
+    // Everyone is one long list, not two floors: nothing to settle between,
+    // and a list that slid back to its top whenever a thumb rested would be
+    // unreadable.
+    if (el.querySelector(':scope > .hn-everyone')) return 0;
     const floors = el.querySelectorAll(':scope > .hn-floor, :scope > * > .hn-floor');
     const clear = floors.length > 1 ? parseFloat(getComputedStyle(floors[1]).scrollMarginTop) || 0 : 0;
     return Math.max(0, secondFloorTop(el) - clear);
@@ -1847,6 +1876,17 @@ export default function HomeNav() {
     const el = paneRefs[index].current;
     if (!el) return;
     el.scrollTo({ top: floorTwo(el), behavior: ease() });
+  }
+
+  // A word at the top of People, pressed. The one you are on takes you back
+  // to its top, as the band's own stop does; the other turns the tab over to
+  // it, starting at its top.
+  function chooseRoom(next) {
+    if ((next === 'everyone') === onEveryone) { goUp(BOOK); return; }
+    setRoom(next);
+    setAtFeed(false);
+    const el = paneRefs[BOOK]?.current;
+    if (el) el.scrollTop = 0;
   }
 
   // ── Two floors, two stops, 2026-09-20 ─────────────────────────────────
@@ -1963,7 +2003,7 @@ export default function HomeNav() {
   // and a control for a list four swipes away is furniture; it arrives with
   // the floor and leaves with it.
   const { density, flip: flipDensity } = useFeedDensity();
-  const onTheFeed = authed && pane === BOOK && atFeed;
+  const onTheFeed = authed && pane === BOOK && atFeed && !onEveryone;
   // What the bar is called while you are on the friends pane. Nothing on the
   // others: the beacon has a mark of its own and the card's tools are the only
   // thing it puts up here.
@@ -1975,13 +2015,17 @@ export default function HomeNav() {
   // The name of a room a visitor cannot enter should never be drawn for
   // them, whatever the arithmetic says, so it is gated on the wristband as
   // well as on the position.
-  const barSays = !authed || pane !== BOOK ? null
-    : atFeed ? 'Recent listens'
-    // The name steps aside for the field the + opens, which arrives in this
-    // same row: "it needs to open and replace address book text."
-    : bookBusy ? null
-    : bookSize > 0 ? `Address book \u00b7 ${bookSize}`
-    : 'Address book';
+  //
+  // ── People, 2026-10-07 ──────────────────────────────────────────────────
+  // Upstairs the middle of the row holds the tab's two words rather than the
+  // book's name: Friends, with the count the name carried ("friends i like
+  // having a count"), and Everyone. A floor down the feed's name takes the
+  // middle as it always did. A visitor's bar holds the one word they have.
+  const onBook = pane === BOOK && (authed || Boolean(DIRECTORY_URL));
+  const barSays = onBook && authed && !onEveryone && atFeed ? 'Recent listens' : null;
+  // The words step aside for the field the + opens, which arrives in this
+  // same row: "it needs to open and replace address book text."
+  const barWords = onBook && !(authed && !onEveryone && (atFeed || bookBusy));
 
   const header = (
     <div className={'hn-bar' + (down[pane] || choosing ? ' hn-bar--scrolled' : '')}>
@@ -2043,6 +2087,32 @@ export default function HomeNav() {
           Keyed on the word so React builds a new one when it changes, which
           is what makes the swap fade rather than cut. */}
       {barSays && <span key={barSays} className="hn-bar-say">{barSays}</span>}
+      {barWords && (
+        <span className="hn-bar-words">
+          {authed && (
+            <button
+              type="button"
+              className={'hn-bar-word' + (onEveryone ? '' : ' hn-bar-word--on')}
+              onClick={() => chooseRoom('friends')}
+              aria-pressed={!onEveryone}
+            >
+              Friends{bookSize > 0 ? ` \u00b7 ${bookSize}` : ''}
+            </button>
+          )}
+          {DIRECTORY_URL && (authed ? (
+            <button
+              type="button"
+              className={'hn-bar-word' + (onEveryone ? ' hn-bar-word--on' : '')}
+              onClick={() => chooseRoom('everyone')}
+              aria-pressed={onEveryone}
+            >
+              Everyone
+            </button>
+          ) : (
+            <span className="hn-bar-word hn-bar-word--on">Everyone</span>
+          ))}
+        </span>
+      )}
       {/* ── The way out of the picker ────────────────────────────────────
           In the corner the up-caret holds the rest of the time — the two never
           want the row at once, because while the picker is open there is no
@@ -2780,17 +2850,29 @@ export default function HomeNav() {
             a promise the page cannot keep. The cross learns the size of the
             book from the book — see onCount — and until it has, there is one
             floor. */}
-        {authed && (
-          <section className="hn-pane hn-pane--friends" ref={friendsRef} aria-label="The journals you read">
+        {(authed || DIRECTORY_URL) && (
+          <section
+            className="hn-pane hn-pane--friends"
+            ref={friendsRef}
+            aria-label={authed ? 'Your friends, and everyone listed' : 'Everyone who is listed'}
+          >
             {visited[BOOK] && (
               <>
                 {/* Pulling down at the top of the book asks everyone's beacon
                     again, past the route's minute (PullDown.js). The first
                     scroller to carry it; the rest follow once this one is
                     seen (AGENTS: the shared piece first). */}
-                <PullDown scroller={friendsRef} onPull={refreshFriends} asking="Asking everyone…" mark={mark('ln-pull-svg')} />
-                <div className="hn-floor hn-floor--book">
-                  <Friends shelf onCount={setBookSize} onBusy={setBookBusy} onScreen={pane === BOOK} />
+                <PullDown
+                  scroller={friendsRef}
+                  onPull={onEveryone ? askEveryoneAgain : refreshFriends}
+                  asking={onEveryone ? 'Asking everyone\u2026' : 'Asking your friends\u2026'}
+                  mark={mark('ln-pull-svg')}
+                />
+                {/* The book's two floors are the keeper's, and hidden rather
+                    than taken down while Everyone shows (see `room`). */}
+                {authed && (
+                <div className={'hn-floor hn-floor--book' + (onEveryone ? ' hn-floor--away' : '')}>
+                  <Friends shelf onCount={setBookSize} onBusy={setBookBusy} onScreen={pane === BOOK && !onEveryone} away={onEveryone} />
                   {/* The feed's name lives here rather than at the top of
                       the feed (Miyel, 2026-09-19: "can i see feed living
                       above the down caret?"). It is the right place for it:
@@ -2821,6 +2903,7 @@ export default function HomeNav() {
                     </button>
                   )}
                 </div>
+                )}
                 {/* No inner scroller, unlike the journal under the beacon.
                     That floor is never visible until you arrive at it; this
                     one shows a sliver of itself at rest, and a scroller you
@@ -2830,9 +2913,16 @@ export default function HomeNav() {
                     taller than the screen instead, which the snap allows to
                     rest anywhere once it covers the screen: it catches you on
                     the way in and then gets out of the way. */}
-                {bookSize > 0 && (
-                  <div className="hn-floor hn-floor--feed">
+                {authed && bookSize > 0 && (
+                  <div className={'hn-floor hn-floor--feed' + (onEveryone ? ' hn-floor--away' : '')}>
                     <Feed entries={entries} density={density} />
+                  </div>
+                )}
+                {/* Everyone: one floor, the whole list. Not an .hn-floor, so
+                    nothing measures it as a second floor to settle on. */}
+                {onEveryone && (
+                  <div className="hn-everyone">
+                    <Everyone keeper={authed} refreshRef={everyoneAgain} />
                   </div>
                 )}
               </>

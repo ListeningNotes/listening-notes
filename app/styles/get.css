@@ -283,19 +283,79 @@
   font-size: 9.5px; letter-spacing: 0.2em; text-transform: uppercase;
   color: var(--ink-faint);
 }
-/* A journal: face, who and what, and the cover. */
+/* A journal: face, who and what, and the cover. A link for a visitor, a
+   button that opens its doors for the keeper, a plain row for the keeper's
+   own — the same row each time. */
 .dir-row {
   display: grid;
   grid-template-columns: 52px minmax(0, 1fr) auto;
   align-items: center;
   column-gap: 14px;
+  width: 100%; box-sizing: border-box;
+  margin: 0;
   padding: 16px 2px;
+  border: 0;
   border-bottom: 1px solid var(--border);
+  background: none;
+  font: inherit; text-align: left;
   color: inherit; text-decoration: none;
+  cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition: opacity 0.15s;
 }
-@media (hover: hover) { .dir-row:hover { opacity: 0.72; } }
+.dir-row--own { cursor: default; }
+.dir-end { display: inline-flex; align-items: center; gap: 12px; }
+/* The keeper's one mark at the end of a row: a check for somebody already
+   in the book, YOU on their own row. */
+.dir-mark {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 18px;
+  color: var(--ink-soft);
+}
+.dir-mark--you {
+  width: auto;
+  font-family: var(--font-label);
+  font-size: 9.5px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--ink-faint);
+}
+/* A row opened: its doors under it, the book's own (.fr-door), and the
+   hairline moves below them. */
+.dir-item--open > .dir-row { border-bottom-color: transparent; }
+.dir-doors {
+  padding: 2px 0 16px;
+  border-bottom: 1px solid var(--border);
+  animation: hn-say-in 0.2s ease both;
+}
+.dir-said {
+  margin: 10px 0 0; text-align: center;
+  font-size: 13px; line-height: 1.5; color: var(--ink-soft);
+}
+/* ── Being findable, at the head of Everyone ── */
+.dir-join {
+  margin: 0 0 28px;
+  padding: 16px 18px 15px;
+  border-radius: 18px;
+  background: var(--panel-strong);
+}
+.dir-join-said { margin: 0 0 14px; font-size: 14px; line-height: 1.55; color: var(--ink-soft); }
+.dir-join-line {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
+  font-size: 15px; color: var(--ink);
+  cursor: pointer;
+}
+.dir-join-foot {
+  display: flex; flex-wrap: wrap; gap: 6px 12px;
+  margin: 12px 0 0;
+  font-family: var(--font-label);
+  font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.dir-join-trouble { color: #e05555; }
+/* In the People tab the list starts under the bar, with no page title over
+   it. */
+.hn-everyone .dir-list { margin-top: 0; }
+@media (hover: hover) { .dir-row:not(.dir-row--own):hover { opacity: 0.72; } }
 .dir-face { position: relative; width: 52px; height: 52px; }
 .dir-face-in {
   position: relative;
