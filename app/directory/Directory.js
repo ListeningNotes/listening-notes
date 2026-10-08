@@ -639,7 +639,14 @@ export function Everyone({ keeper = false, refreshRef = null, myEntries = null }
     .map(r => ({ ...r, keepers: r.keepers.filter(k => !(mine && k.address === mine) && !book.has(k.address)).slice(0, 3) }))
     .filter(r => r.keepers.length > 0)
     .slice(0, 6) : [];
-  const today = page ? page.today || [] : [];
+  // The wall and found records, without the journal whose Board this is —
+  // its keeper is never a row on their own Board — and without a record
+  // nobody else logged. The count on a tile is the others; the check says
+  // the viewer logged it too.
+  const withoutMe = records => records
+    .map(r => ({ ...r, keepers: r.keepers.filter(k => !(mine && k.address === mine)) }))
+    .filter(r => r.keepers.length > 0);
+  const today = page ? withoutMe(page.today || []) : [];
 
   // Never the keeper on their own Board, and — further out — nobody already in
   // their book: the Friends half is where those are.
@@ -672,14 +679,14 @@ export function Everyone({ keeper = false, refreshRef = null, myEntries = null }
         <section className="dir-section" aria-label="Found on the board">
           {found === null ? (
             <p className="dir-quiet">Looking&hellip;</p>
-          ) : found.journals.filter(notMe).length === 0 && found.records.length === 0 ? (
+          ) : found.journals.filter(notMe).length === 0 && withoutMe(found.records).length === 0 ? (
             <p className="dir-quiet">Nobody and nothing on the board by that name.</p>
           ) : (
             <>
               {found.journals.filter(notMe).map(j => row(j))}
-              {found.records.length > 0 && (
+              {withoutMe(found.records).length > 0 && (
                 <div className="dir-wall dir-wall--found">
-                  {found.records.map(r => <Tile key={r.key_hash} record={r} yours={yours(r)} onOpen={setSheet} />)}
+                  {withoutMe(found.records).map(r => <Tile key={r.key_hash} record={r} yours={yours(r)} onOpen={setSheet} />)}
                 </div>
               )}
             </>
