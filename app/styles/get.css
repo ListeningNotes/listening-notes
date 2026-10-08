@@ -269,20 +269,83 @@
   margin: 12px auto 0; max-width: 30em; text-align: center;
   font-size: 15px; line-height: 1.55; color: var(--ink-soft);
 }
-.dir-list { margin-top: 32px; }
-.dir-head {
-  display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
-  margin: 0; padding: 0 2px 12px;
-  border-bottom: 1px solid var(--border);
-  font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
-  font-size: 14px; color: var(--ink);
+/* ── The Board, 2026-10-08 ─────────────────────────────────────────────
+   Miyel's Board brief: the one note, the search, the band (the Friends
+   room's own, forms.css .fr-now), and the sections by distance, each a
+   label in the label face with a line under it. Nothing here is a pill:
+   Shuffle is a word with a glyph, Add is a door under a row. */
+.dir-note {
+  display: flex; align-items: flex-start; gap: 12px;
+  margin: 0 0 18px; padding: 15px 16px 14px;
+  border-radius: 18px;
+  background: var(--panel-strong);
 }
-.dir-count {
-  margin: 0; text-align: right;
+.dir-note-words { flex: 1; min-width: 0; }
+.dir-note-head {
+  margin: 0 0 4px;
+  font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
+  font-size: 15px; color: var(--ink);
+}
+.dir-note-said { margin: 0 0 10px; font-size: 13.5px; line-height: 1.55; color: var(--ink-soft); }
+.dir-note-off {
+  font-family: var(--font-label);
+  font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--ink-soft); text-decoration: none;
+}
+.dir-note-x {
+  display: inline-flex; padding: 2px; margin: -2px -4px 0 0;
+  border: 0; background: none; color: var(--ink-faint); cursor: pointer;
+}
+@media (hover: hover) {
+  .dir-note-off:hover, .dir-note-x:hover { color: var(--ink); }
+}
+.dir-search {
+  display: flex; align-items: center; gap: 9px;
+  margin: 0 0 22px; padding: 11px 13px;
+  border: 1px solid var(--border); border-radius: 13px;
+  background: var(--panel-strong);
+  color: var(--ink-faint);
+}
+.dir-search input {
+  flex: 1; min-width: 0;
+  border: 0; background: none; outline: none;
+  font: inherit; font-size: 15px; color: var(--ink);
+}
+.dir-search input::placeholder { color: var(--ink-faint); }
+.dir-band-quiet {
+  margin: 0; padding: 4px 2px 22px;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-label);
+  font-size: 9.5px; letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.dir-section { margin-top: 26px; }
+.dir-label {
+  margin: 0 0 6px; padding: 0 2px;
   font-family: var(--font-label); font-weight: 400;
+  font-size: 9.5px; letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.dir-sub { margin: 0 0 8px; padding: 0 2px; font-size: 13px; line-height: 1.55; color: var(--ink-soft); }
+.dir-shuffle {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  margin-top: 14px; padding: 0 2px;
+}
+.dir-shuffle-of {
+  font-family: var(--font-label);
   font-size: 9.5px; letter-spacing: 0.2em; text-transform: uppercase;
   color: var(--ink-faint);
 }
+.dir-shuffle-go {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 2px; border: 0; background: none; cursor: pointer;
+  font-family: var(--font-label);
+  font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.dir-shuffle-go:disabled { opacity: 0.5; cursor: default; }
+@media (hover: hover) { .dir-shuffle-go:hover:not(:disabled) { color: var(--ink); } }
+
 /* A journal: face, who and what, and the cover. A link for a visitor, a
    button that opens its doors for the keeper, a plain row for the keeper's
    own — the same row each time. */
@@ -330,31 +393,7 @@
   margin: 10px 0 0; text-align: center;
   font-size: 13px; line-height: 1.5; color: var(--ink-soft);
 }
-/* ── Being findable, at the head of Everyone ── */
-.dir-join {
-  margin: 0 0 28px;
-  padding: 16px 18px 15px;
-  border-radius: 18px;
-  background: var(--panel-strong);
-}
-.dir-join-said { margin: 0 0 14px; font-size: 14px; line-height: 1.55; color: var(--ink-soft); }
-.dir-join-line {
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
-  font-size: 15px; color: var(--ink);
-  cursor: pointer;
-}
-.dir-join-foot {
-  display: flex; flex-wrap: wrap; gap: 6px 12px;
-  margin: 12px 0 0;
-  font-family: var(--font-label);
-  font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
-  color: var(--ink-faint);
-}
-.dir-join-trouble { color: #e05555; }
-/* In the People tab the list starts under the bar, with no page title over
-   it. */
-.hn-everyone .dir-list { margin-top: 0; }
+
 @media (hover: hover) { .dir-row:not(.dir-row--own):hover { opacity: 0.72; } }
 .dir-face { position: relative; width: 52px; height: 52px; }
 .dir-face-in {
@@ -414,15 +453,6 @@
   color: var(--ink-faint);
 }
 .dir-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.dir-more {
-  display: block; margin: 20px auto 0; padding: 8px 12px;
-  border: 0; background: none; cursor: pointer;
-  font-family: var(--font-label);
-  font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
-  color: var(--ink-soft);
-}
-.dir-more:disabled { opacity: 0.5; cursor: default; }
-@media (hover: hover) { .dir-more:hover:not(:disabled) { color: var(--ink); } }
 .dir-quiet {
   margin: 40px 0 0; text-align: center;
   font-family: var(--font-label);

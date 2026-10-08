@@ -12,8 +12,14 @@
 // covers, all of them already public on the journals themselves; never an
 // entry, never anybody's writing, and never a number beside a person.
 // `?after=` is the cursor the last page handed back.
+//
+// ── The Board, 2026-10-08 ──────────────────────────────────────────────────
+// `?board` is the Board's first screen in one answer: everybody logging
+// right now, and a shuffled dozen of everybody else (pull_board). `?q=` looks
+// a name up. The plain list stays as it was for anything that still asks
+// for it.
 
-import { pull_directory_page } from '@/library/directory_actions';
+import { pull_directory_page, pull_board, find_by_name } from '@/library/directory_actions';
 
 const ACROSS = {
   'Access-Control-Allow-Origin': '*',
@@ -21,9 +27,11 @@ const ACROSS = {
 };
 
 export async function GET(request) {
-  const after = new URL(request.url).searchParams.get('after') || '';
+  const asked = new URL(request.url).searchParams;
   try {
-    const page = await pull_directory_page(after);
+    const page = asked.has('board') ? await pull_board()
+      : asked.has('q') ? await find_by_name(asked.get('q'))
+      : await pull_directory_page(asked.get('after') || '');
     return Response.json(page, {
       // The same for everybody: a shared cache may hold it for half a
       // minute, and a browser asks again every time.
