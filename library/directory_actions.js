@@ -182,13 +182,15 @@ export async function record_missed(address) {
 // ── The scheduled job's one run ───────────────────────────────────────────
 // Every journal whose turn has come, the most overdue first, asked at once.
 export async function gather() {
+  // The casts are needed: a CASE of two bare parameters is read as text, and
+  // text times a number is an error, not a number.
   const due = await database.query(
     `SELECT address, name, last_logging_at FROM directory
      WHERE checked_at IS NULL
         OR checked_at + LEAST(
-             (CASE WHEN last_logging_at > now() - interval '1 hour' THEN $1 ELSE $2 END)
+             (CASE WHEN last_logging_at > now() - interval '1 hour' THEN $1::integer ELSE $2::integer END)
                * power(2, fail_count),
-             $3
+             $3::integer
            ) * interval '1 second' <= now()
      ORDER BY checked_at ASC NULLS FIRST
      LIMIT $4`,
