@@ -174,12 +174,19 @@ The front doors — receive requests, hand them off, send back responses
     public/beacon/route.js     What the keeper is listening to — anyone may ask; cached at the edge
     public/entries/route.js    The public feed another copy reads — PUBLIC_FIELDS only, with keeper_name beside them
     public/stamps/route.js     The card's counted facts — records, songs, first entry, top genres, the two flag counts
+    public/listing/route.js    The code the directory issued this journal, as plain text, or 404 — how the registry proves the address
+    friends/beacons/route.js   Everyone in the address book's beacon, through one door — owner-only; each journal's public beacon in parallel, a round kept a minute, a journal that fails asked less often, thirty on the timer
+    listing/route.js           Be findable — owner-only: whether this journal is listed, and pressing it on or off through library/outbox.js
+    directory/route.js         The registry's list — public, read across origins: thirty journals and a cursor, logging first, with how many are listed and logging; read from the table, never from the journals
+    directory/listings/route.js  A journal asking to be listed (POST: issue the code, read it back, keep the row) or to leave (DELETE: the code, and the journal having forgotten it)
+    directory/gather/route.js  The scheduled job's one run, behind CRON_SECRET: the journals whose turn has come, asked what they are logging
 
 The hooks — reusable logic shared across pages
   hooks/
     useEntryEditor.js          The draft of an entry while its keeper corrects it in place; fetches the credit fields separately, since public reads strip them
     useHoldStill.js            Locks every scrolling ancestor behind an open overlay so nothing under it moves
     useJournalHost.js          The journal's host, as the hidden username a password manager files the password under
+    useFriendsBeacons.js       Asks /api/friends/beacons once a minute while the Friends room is on screen — one poll shared by every caller — and keeps a journal's last word through a failure
     useListeningBeacon.js      Asks this journal's own beacon every 15 seconds — one poll shared by every component that draws it — logging or last logged
     useListeningSession.js     All session state — the record, tracks, notes, score, preview, saving; SESSION_STEPS
     usePress.js                The share printer as a hook: make the picture at a size, save or share it, copy the address
@@ -206,7 +213,8 @@ The furniture — visual pieces
       Dashboard.js             The desk, for the owner — Start a listen as a band, then Inbox, Feed, Address book and Settings as rows; the header holds the mark alone. On a desk only since 2026-09-19, as the spine's second page
       Friends.js               The address book as a grid of faces, pinned first; a face opens its three doors in place under its own row. The Friends stop, and /dashboard/people
       Feed.js                  What the people in the address book logged, read off their public feeds; Submissions and Recent; Compare on a row you also have. Its own page at /dashboard/feed since 2026-09-15
-      Footer.js                The band at the foot of the phone's cross — Card, Beacon, Friends, Inbox (Card, Beacon, About for a visitor), the one you are on in ink; presses move the rail exactly as a swipe does
+      Footer.js                The band at the foot of the phone's cross — Card, Beacon, Friends, Inbox (Card, Beacon, About for a visitor), the one you are on in ink; presses move the rail exactly as a swipe does, and the stop you are on goes back up (twice: to floor one)
+      PullDown.js              Pull down to refresh: at the top of a scroller, the mark and a line in the gap the page opens, then asking — on the Friends pane first
       EditingBar.js            The band at the foot of anything being corrected — what you are in the middle of, and Save and Cancel as words
       UpdateSwitch.js          Switching on the updater — a screen in setup, a section in Settings: hands the keeper a pre-filled GitHub link for the workflow file, then watches for the rebuild
       InstallSteps.js          /get's ten steps as tiles, plain HTML, with a ring over what to press where a picture exists
@@ -288,7 +296,8 @@ The rooms — full pages assembled from furniture
     session/page.js            The listen — picker, then four screens under one header
     printer/page.js            The share printer — the press on a record for the keeper (?entry=slug); the sentence for everyone else and for the card, whose plate is still to come
     setup/page.js              Claiming a copy, one screen at a time: the code, then name, photo, prompts, rig, updates, password, who gave it (GIFT_FROM, or a scan), and the home screen
-    settings/page.js           The machinery, owner-only
+    settings/page.js           The machinery, owner-only — the address, Be findable, the password, the backup, updates, the home screen
+    directory/page.js          The directory on every copy, absent where DIRECTORY_URL is empty; the screen is directory/Directory.js — one request to the registry, a page of faces, beacons and covers
     login/page.js              The door at an address — the same password form, for when a link will not do
     get/layout.js              The frame /get and /get/story share: the nav row, the measure, the type
     @layer/default.js          What the layer slot draws when nothing is open: nothing. The framework requires the file

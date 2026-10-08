@@ -47,6 +47,7 @@ import WaveSheet from './WaveSheet';
 import { carrySender, journalUrl, tidyJournal } from '../../library/return_address';
 import { useBookplate } from './Bookplate';
 import { fillFriends, useFriendsBeacons } from '../../hooks/useFriendsBeacons';
+import { DIRECTORY_URL } from '../../library/version';
 
 // The order the server keeps: pinned first in the order they were pinned,
 // then by name, or by address for anyone without one. Said twice — here and
@@ -1267,6 +1268,12 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null, 
           <Link href="/dashboard/people" className="fr-all">
             See all {people.length}
           </Link>
+        )}
+        {/* Under the grid, a quiet line to the directory, 2026-10-07 —
+            looking is separate from being listed, and anybody can look.
+            Not drawn at all on a copy with no directory. */}
+        {DIRECTORY_URL && (
+          <Link href="/directory" className="fr-find">Find more journals &rarr;</Link>
         )}
       </div>
 

@@ -246,3 +246,142 @@
 /* Opened as a layer over the door there is no nav row above the content, so
    the room reserved for it goes. */
 .get-layered .get-wrap { --get-nav-bottom: 0px; }
+
+/* ══ The directory, 2026-10-07 ═══════════════════════════════════════════
+   app/directory/Directory.js; the reasoning is there. A title, one line
+   about what this is, and the list: each journal its keeper's face in a
+   circle — lit as the book lights it when they are logging — their name,
+   their beacon in the label face, and the record they are on as its cover
+   at the end of the row. The community's two numbers beside the heading,
+   never one beside a person. Hairlines between, as the inbox has them.
+═══════════════════════════════════════════════════════════════════════ */
+.dir-screen { min-height: 100vh; background: var(--bg); }
+.dir-wrap {
+  max-width: 520px; margin: 0 auto;
+  padding: calc(80px + var(--safe-top) + 20px) 24px 96px;
+}
+.dir-title {
+  margin: 0; text-align: center;
+  font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
+  font-size: 40px; letter-spacing: -0.02em; color: var(--ink);
+}
+.dir-lede {
+  margin: 12px auto 0; max-width: 30em; text-align: center;
+  font-size: 15px; line-height: 1.55; color: var(--ink-soft);
+}
+.dir-list { margin-top: 32px; }
+.dir-head {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+  margin: 0; padding: 0 2px 12px;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
+  font-size: 14px; color: var(--ink);
+}
+.dir-count {
+  margin: 0; text-align: right;
+  font-family: var(--font-label); font-weight: 400;
+  font-size: 9.5px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--ink-faint);
+}
+/* A journal: face, who and what, and the cover. */
+.dir-row {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 14px;
+  padding: 16px 2px;
+  border-bottom: 1px solid var(--border);
+  color: inherit; text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.15s;
+}
+@media (hover: hover) { .dir-row:hover { opacity: 0.72; } }
+.dir-face { position: relative; width: 52px; height: 52px; }
+.dir-face-in {
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; height: 100%;
+  border-radius: 50%; overflow: hidden;
+  background: var(--panel);
+  color: var(--ink-faint);
+}
+.dir-face-in img {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+  -webkit-touch-callout: none; -webkit-user-select: none; user-select: none;
+  pointer-events: none;
+}
+/* Logging right now: the book's ring and dot, the same green and the same
+   place on the circle (forms.css, .fr-one--live). */
+.dir-face--live .dir-face-in { box-shadow: 0 0 0 1.5px var(--live-deep); }
+.dir-face--live::after {
+  content: '';
+  position: absolute; z-index: 1;
+  right: calc(14.64% - 6px); bottom: calc(14.64% - 6px);
+  width: 12px; height: 12px; box-sizing: border-box;
+  border-radius: 50%;
+  background: var(--live);
+  border: 2.5px solid var(--bg);
+}
+.dir-who { display: flex; flex-direction: column; min-width: 0; }
+.dir-name {
+  font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
+  font-size: 17px; line-height: 1.3; color: var(--ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.dir-name--none { font-size: 15px; color: var(--ink-soft); }
+.dir-state {
+  margin-top: 3px;
+  font-family: var(--font-label);
+  font-size: 9.5px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.dir-state--live { color: var(--ink-soft); }
+.dir-rec-title {
+  margin-top: 6px;
+  font-size: 14.5px; font-weight: 600; color: var(--ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.dir-rec-by {
+  font-size: 13px; color: var(--ink-soft);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.dir-cover {
+  width: 56px; height: 56px; border-radius: 8px; overflow: hidden; flex-shrink: 0;
+  box-sizing: border-box;
+  border: 1px solid var(--border);
+  background: var(--bg-warm);
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--ink-faint);
+}
+.dir-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.dir-more {
+  display: block; margin: 20px auto 0; padding: 8px 12px;
+  border: 0; background: none; cursor: pointer;
+  font-family: var(--font-label);
+  font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.dir-more:disabled { opacity: 0.5; cursor: default; }
+@media (hover: hover) { .dir-more:hover:not(:disabled) { color: var(--ink); } }
+.dir-quiet {
+  margin: 40px 0 0; text-align: center;
+  font-family: var(--font-label);
+  font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.dir-keeps {
+  margin: 56px 0 0; padding-top: 22px;
+  border-top: 1px solid var(--border);
+  font-size: 13px; line-height: 1.6; color: var(--ink-faint);
+}
+.dir-keeps b { color: var(--ink-soft); font-weight: var(--font-display-weight, 700); }
+.dir-get {
+  display: inline-block; margin-top: 14px;
+  font-family: var(--font-label);
+  font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--ink-soft); text-decoration: none;
+}
+@media (hover: hover) { .dir-get:hover { color: var(--ink); } }
+@media (prefers-reduced-motion: reduce) {
+  .dir-row { transition: none; }
+}

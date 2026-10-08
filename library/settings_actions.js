@@ -205,6 +205,25 @@ const SETTINGS_FIELDS = [
 const SETTINGS_SELECT = SETTINGS_FIELDS.map(f => `"${f}"`).join(', ')
   + `, (SELECT anthropic_key IS NOT NULL FROM secrets WHERE id = 1) AS has_anthropic_key`;
 
+// ── Being findable, 2026-10-07 ────────────────────────────────────────────
+// The code the directory issued this journal, which it serves at
+// /api/public/listing while it is listed, and null while it is not
+// (migrations/031_directory.sql). Read and written on its own and never by
+// pull_settings: the public settings read must not carry it, and its own
+// route is the one place it is public, and only while it is set.
+export async function pull_listing_code() {
+  try {
+    const [row] = await database`SELECT listing_code FROM settings WHERE id = 1`;
+    return String(row?.listing_code || '') || null;
+  } catch {
+    return null;
+  }
+}
+
+export async function save_listing_code(code) {
+  await database`UPDATE settings SET listing_code = ${code || null} WHERE id = 1`;
+}
+
 export async function pull_settings() {
   try {
     const [row] = await database.query(
