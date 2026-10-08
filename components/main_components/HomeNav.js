@@ -93,7 +93,7 @@ import PullDown from './PullDown';
 import { refreshFriends } from '../../hooks/useFriendsBeacons';
 // Everyone, the second word of the People tab: the journals that chose to be
 // findable, drawn here and again at its own address (2026-10-07).
-import { Everyone } from '../../app/directory/Directory';
+import { Everyone, readEveryone, useEveryone } from '../../app/directory/Directory';
 import { DIRECTORY_URL } from '../../library/version';
 // The feed sits under the book as that pane's second floor. It is handed the
 // journal's own records — the same list the wall draws — because the one
@@ -1418,6 +1418,15 @@ export default function HomeNav() {
   const onEveryone = Boolean(DIRECTORY_URL) && (!authed || room === 'everyone');
   const everyoneAgain = useRef(null);
   const askEveryoneAgain = useCallback(() => everyoneAgain.current?.(), []);
+  // How many journals are listed, beside the word Everyone the way the
+  // book's count stands beside Friends (Miyel: "can count be next to
+  // everyone?"). The same reading the list draws from, asked for as soon as
+  // People is on screen, so the number is there before the list is opened.
+  const { page: everyonePage } = useEveryone();
+  const listedCount = everyonePage?.listed || 0;
+  useEffect(() => {
+    if (pane === BOOK && DIRECTORY_URL && !everyonePage) readEveryone();
+  }, [pane, everyonePage]);
   // Whether the book has a field open in the bar's row. The name is drawn
   // absolutely on the middle of that row and a field opening there has to
   // have it — see the relay note on barSays.
@@ -2106,10 +2115,12 @@ export default function HomeNav() {
               onClick={() => chooseRoom('everyone')}
               aria-pressed={onEveryone}
             >
-              Everyone
+              Everyone{listedCount > 0 ? ` \u00b7 ${listedCount}` : ''}
             </button>
           ) : (
-            <span className="hn-bar-word hn-bar-word--on">Everyone</span>
+            <span className="hn-bar-word hn-bar-word--on">
+              Everyone{listedCount > 0 ? ` \u00b7 ${listedCount}` : ''}
+            </span>
           ))}
         </span>
       )}
@@ -2922,7 +2933,7 @@ export default function HomeNav() {
                     nothing measures it as a second floor to settle on. */}
                 {onEveryone && (
                   <div className="hn-everyone">
-                    <Everyone keeper={authed} refreshRef={everyoneAgain} />
+                    <Everyone keeper={authed} refreshRef={everyoneAgain} countInBar />
                   </div>
                 )}
               </>
