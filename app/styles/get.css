@@ -348,6 +348,111 @@
 .dir-shuffle-go:disabled { opacity: 0.5; cursor: default; }
 @media (hover: hover) { .dir-shuffle-go:hover:not(:disabled) { color: var(--ink); } }
 
+/* ── Records on the Board, piece three, 2026-10-08 ─────────────────────
+   "Also on your records": a card per record — the cover, the title, when
+   the keeper logged it — and under it the strangers who logged it too, each
+   a name, a line of what they wrote, their stars and their marks. "Being
+   logged everywhere": a wall of covers, three across, each with how many
+   keepers logged it in the last day and a check when the viewer did too. A
+   pressed cover opens the app's own sheet (forms.css, .sn-sheet). */
+.dir-shared {
+  margin-top: 12px;
+  border: 1px solid var(--border); border-radius: 15px;
+  background: var(--panel-strong);
+  overflow: hidden;
+}
+.dir-shared-top { display: flex; align-items: center; gap: 12px; padding: 13px; }
+.dir-shared-words { display: flex; flex-direction: column; min-width: 0; }
+.dir-shared-title {
+  font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
+  font-size: 15px; line-height: 1.25; color: var(--ink);
+}
+.dir-shared-by { margin-top: 1px; font-size: 13px; color: var(--ink-soft); }
+.dir-shared-mine {
+  margin-top: 5px;
+  font-family: var(--font-label);
+  font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.dir-shared-list { border-top: 1px solid var(--border); }
+.dir-keeper {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 3px;
+  width: 100%; box-sizing: border-box;
+  padding: 11px 13px;
+  border: 0; border-top: 1px solid var(--border); background: none;
+  font: inherit; text-align: left; color: inherit; text-decoration: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.dir-shared-list > :first-child > .dir-keeper,
+.dir-shared-list > .dir-keeper:first-child,
+.dir-sheet-list > :first-child > .dir-keeper,
+.dir-sheet-list > .dir-keeper:first-child { border-top: 0; }
+.dir-keeper-name {
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
+  font-size: 14px; color: var(--ink);
+}
+.dir-keeper-check { color: var(--ink-soft); }
+.dir-line { font-size: 13px; line-height: 1.5; color: var(--ink-soft); }
+.dir-keeper-marks { display: flex; align-items: center; gap: 8px; margin-top: 2px; color: var(--gold, #e3b341); }
+.dir-keeper-item--open > .dir-keeper { padding-bottom: 4px; }
+.dir-keeper-item .dir-doors { border-bottom: 0; padding-bottom: 12px; }
+.dir-wall {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px;
+  margin-top: 4px;
+}
+.dir-wall--found { margin-top: 18px; }
+.dir-tile {
+  position: relative; display: block;
+  aspect-ratio: 1; padding: 0;
+  border: 0; border-radius: 8px; overflow: hidden;
+  background: var(--bg-warm);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.dir-tile-art { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--ink-faint); }
+.dir-tile-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.dir-tile-pin {
+  position: absolute; left: 6px; bottom: 6px;
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 7px 3px 6px; border-radius: 8px;
+  background: rgba(10, 10, 10, 0.62);
+  font-family: var(--font-label);
+  font-size: 8.5px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: #fff;
+}
+.dir-tile-pin .fr-on-dot { width: 6px; height: 6px; box-shadow: none; }
+.dir-tile-yours {
+  position: absolute; right: 6px; top: 6px;
+  width: 17px; height: 17px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg); color: var(--ink);
+  border: 1px solid var(--border);
+}
+@media (hover: hover) { .dir-tile:hover .dir-tile-art { opacity: 0.85; } }
+.dir-sheet { padding-bottom: calc(18px + var(--safe-bottom, 0px)); }
+.dir-sheet-head {
+  display: flex; align-items: center; gap: 13px;
+  padding: 4px 20px 15px;
+  border-bottom: 1px solid var(--border);
+}
+.dir-sheet-art { width: 62px; height: 62px; }
+.dir-sheet-words { display: flex; flex-direction: column; min-width: 0; }
+.dir-sheet-title {
+  font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
+  font-size: 17px; line-height: 1.2; color: var(--ink);
+}
+.dir-sheet-by { margin-top: 2px; font-size: 13px; color: var(--ink-soft); }
+.dir-sheet-list { max-height: 52vh; overflow-y: auto; overscroll-behavior: contain; padding: 0 7px; }
+.dir-sheet-foot {
+  display: flex; flex-direction: column; gap: 6px;
+  margin: 0; padding: 15px 20px 0;
+  border-top: 1px solid var(--border);
+  font-size: 12.5px; line-height: 1.5; color: var(--ink-soft);
+}
+.dir-sheet-foot .dir-label { padding: 0; margin: 0; }
+
 /* A journal: face, who and what, and the cover. A link for a visitor, a
    button that opens its doors for the keeper, a plain row for the keeper's
    own — the same row each time. */

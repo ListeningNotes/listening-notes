@@ -10,8 +10,9 @@
 // ── From Miyel's Board brief, 2026-10-08 ───────────────────────────────────
 // Nearest first: who is logging right now, community-wide, as the same band
 // the Friends room draws; then a friend away — people the keeper's friends
-// added, each with the path to them; then — still to come — the people on
-// your records, and what is being logged everywhere; then everybody else,
+// added, each with the path to them; then strangers who logged the
+// keeper's records, with their stars, marks and a line of what they wrote;
+// then a wall of what is being logged everywhere; then everybody else,
 // shuffled, a dozen at a time. Search at the top. Being on the Board is the
 // default for everyone; the switch is in Settings, and the keeper meets one
 // note here until they dismiss it.
@@ -35,11 +36,15 @@
 // how much anybody logs — where there is no better order, shuffle; and
 // nothing is ever written to another keeper's journal.
 
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { ArrowsClockwise, BookOpen, Check, MagnifyingGlass, Plus, User, X } from '@phosphor-icons/react';
 import SiteNav from '../../components/main_components/SiteNav';
 import WaveSheet from '../../components/main_components/WaveSheet';
+import StarRating from '../../components/main_components/StarRating';
+import { Marks } from '../../components/main_components/Feed';
+import { splitNotes } from '../../library/entry_formatter';
+import { useHoldStill } from '../../hooks/useHoldStill';
 import { useBookplate } from '../../components/main_components/Bookplate';
 import { DIRECTORY_URL } from '../../library/version';
 import { carrySender, journalUrl, tidyJournal } from '../../library/return_address';
@@ -97,6 +102,7 @@ export function readEveryone({ shuffle = false } = {}) {
           logging: Number(d?.logging) || 0,
           live: Array.isArray(d?.live) ? d.live : [],
           further: Array.isArray(d?.further) ? d.further : [],
+          today: Array.isArray(d?.today) ? d.today : [],
         },
       });
     } catch {
@@ -111,6 +117,179 @@ export function readEveryone({ shuffle = false } = {}) {
 
 export function useEveryone() {
   return useSyncExternalStore(subscribe, () => reading, () => NOTHING_YET);
+}
+
+// ── Records, piece three, 2026-10-08 ───────────────────────────────────────
+// A record is asked about by the first sixteen characters of the sha256 of
+// its album_key — the same hash the directory keeps (directory_actions.js,
+// boardHash), so a journal's question is short and says nothing but which
+// records.
+async function hash16(text) {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(String(text || '')));
+  return [...new Uint8Array(digest)].slice(0, 8).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+// "You logged this last week", "in March", "in March 2025".
+function whenWords(iso) {
+  const at = new Date(iso);
+  if (Number.isNaN(at.getTime())) return '';
+  const days = (Date.now() - at.getTime()) / 86400000;
+  if (days < 7) return 'this week';
+  if (days < 14) return 'last week';
+  const now = new Date();
+  return at.getFullYear() === now.getFullYear() ? `in ${MONTHS[at.getMonth()]}` : `in ${MONTHS[at.getMonth()]} ${at.getFullYear()}`;
+}
+
+// ── A line from what they wrote ───────────────────────────────────────────
+// The opening of a keeper's own album note, read from their journal by this
+// browser when the line is shown (their /api/entries/[slug], which may be
+// read across origins) — never from the directory, which keeps no writing.
+// Cut at a sentence's end past halfway, or at a word with an ellipsis. A
+// journal too old to be read across origins simply has no line.
+const LINE_MOST = 150;
+const lines = new Map();
+function opening(text) {
+  const clean = String(text || '').replace(/\s+/g, ' ').trim();
+  if (clean.length <= LINE_MOST) return clean;
+  const cut = clean.slice(0, LINE_MOST);
+  const stop = Math.max(cut.lastIndexOf('. '), cut.lastIndexOf('! '), cut.lastIndexOf('? '));
+  if (stop > LINE_MOST / 2) return cut.slice(0, stop + 1);
+  return `${cut.slice(0, cut.lastIndexOf(' ') > 0 ? cut.lastIndexOf(' ') : LINE_MOST).replace(/[,;:\u2014-]$/, '')}\u2026`;
+}
+function readLine(address, slug) {
+  const key = `${address}|${slug}`;
+  if (!lines.has(key)) {
+    lines.set(key, fetch(`${journalUrl(address)}/api/entries/${encodeURIComponent(slug)}`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => opening(splitNotes(d?.entry?.notes || '').albumNotes) || null)
+      .catch(() => null));
+  }
+  return lines.get(key);
+}
+function Line({ address, slug }) {
+  const [line, setLine] = useState(null);
+  useEffect(() => {
+    let gone = false;
+    readLine(address, slug).then(l => { if (!gone) setLine(l); });
+    return () => { gone = true; };
+  }, [address, slug]);
+  if (!line) return null;
+  return <span className="dir-line">&ldquo;{line}&rdquo;</span>;
+}
+
+// One keeper of a record: their name — lit when they are logging — a line of
+// what they wrote, their stars and their marks. For the keeper a press opens
+// the doors: Visit, which goes to their entry for this record, and Add; for
+// anybody else the row is the way to that entry.
+function KeeperRow({ keeper, viewer }) {
+  const [open, setOpen] = useState(false);
+  const href = `${journalUrl(keeper.address)}/entries/${encodeURIComponent(keeper.slug)}`;
+  const inner = (
+    <>
+      <span className="dir-keeper-name">
+        {keeper.live && <span className="fr-on-dot" aria-hidden="true" />}
+        {keeper.name || NO_NAME}
+        {viewer?.inBook(keeper.address) && (
+          <Check size={13} weight="bold" className="dir-keeper-check" aria-label="In your address book" />
+        )}
+      </span>
+      <Line address={keeper.address} slug={keeper.slug} />
+      <span className="dir-keeper-marks">
+        {keeper.stars ? <StarRating rating={keeper.stars} size={12} /> : null}
+        <Marks entry={keeper} size={12} />
+      </span>
+    </>
+  );
+  if (!viewer) {
+    return <a className="dir-keeper" href={href} target="_blank" rel="noopener noreferrer">{inner}</a>;
+  }
+  const inBook = viewer.inBook(keeper.address);
+  return (
+    <div className={'dir-keeper-item' + (open ? ' dir-keeper-item--open' : '')}>
+      <button type="button" className="dir-keeper" onClick={() => setOpen(o => !o)} aria-expanded={open}>{inner}</button>
+      {open && (
+        <div className="dir-doors">
+          <div className="fr-doors-row">
+            <a className="fr-door" href={viewer.carry(href, inBook)} target="_blank" rel="noopener noreferrer">
+              <BookOpen size={22} weight="regular" aria-hidden="true" />
+              Visit
+            </a>
+            {!inBook && (
+              <button type="button" className="fr-door" onClick={() => viewer.add(keeper)} disabled={viewer.adding === keeper.address}>
+                <Plus size={22} weight="regular" aria-hidden="true" />
+                {viewer.adding === keeper.address ? 'Adding\u2026' : 'Add'}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// A tile on the wall: the cover, how many keepers logged it in the last day
+// — a count on a record, never beside a person (AGENTS, Never) — and a check
+// when the viewer logged it too.
+function Tile({ record, yours, onOpen }) {
+  const n = record.keepers.length;
+  return (
+    <button
+      type="button"
+      className="dir-tile"
+      onClick={() => onOpen(record)}
+      aria-label={`${record.album}${record.artist ? ` by ${record.artist}` : ''}, logged by ${n} ${n === 1 ? 'keeper' : 'keepers'}${yours ? ' — you logged it too' : ''}`}
+    >
+      <span className="dir-tile-art" aria-hidden="true">
+        {record.art ? <img src={record.art} alt="" loading="lazy" onError={e => { e.currentTarget.style.display = 'none'; }} /> : <span>&#9834;</span>}
+      </span>
+      <span className="dir-tile-pin" aria-hidden="true">
+        <span className="fr-on-dot" />
+        {n} {n === 1 ? 'keeper' : 'keepers'}
+      </span>
+      {yours && <span className="dir-tile-yours" aria-hidden="true"><Check size={10} weight="bold" /></span>}
+    </button>
+  );
+}
+
+// The sheet a pressed record opens: who logged it and what they said.
+function RecordSheet({ record, yours, viewer, onClose }) {
+  const sheetRef = useRef(null);
+  useHoldStill(sheetRef, Boolean(record));
+  useEffect(() => {
+    if (!record) return undefined;
+    const key = e => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', key);
+    return () => window.removeEventListener('keydown', key);
+  }, [record, onClose]);
+  if (!record) return null;
+  return (
+    <>
+      <div className="sn-scrim" onClick={onClose} aria-hidden="true" />
+      <section ref={sheetRef} className="sn-sheet dir-sheet" role="dialog" aria-modal="true" aria-label={`Who logged ${record.album}`}>
+        <div className="sn-pull" onClick={onClose} aria-hidden="true" />
+        <div className="dir-sheet-head">
+          <span className="dir-cover dir-sheet-art" aria-hidden="true">
+            {record.art ? <img src={record.art} alt="" /> : <span>&#9834;</span>}
+          </span>
+          <span className="dir-sheet-words">
+            <span className="dir-sheet-title">{record.album}</span>
+            {record.artist && <span className="dir-sheet-by">{record.artist}</span>}
+          </span>
+        </div>
+        <div className="dir-sheet-list">
+          {record.keepers.map(k => <KeeperRow key={`${k.address}|${k.slug}`} keeper={k} viewer={viewer} />)}
+        </div>
+        <p className="dir-sheet-foot">
+          <span className="dir-label">Where this came from</span>
+          {yours
+            ? 'You logged this too. Everybody here logged it in a journal that is on the board.'
+            : 'Nobody you\u2019ve added, necessarily. It\u2019s here because it was logged in a journal that is on the board.'}
+        </p>
+      </section>
+    </>
+  );
 }
 
 // Their journal's own portrait, read straight off it and never kept here,
@@ -228,8 +407,10 @@ function BoardNote() {
 // ── The Board ──────────────────────────────────────────────────────────────
 // `keeper` is whether the person looking keeps this journal (the cross's lock
 // has said so). `refreshRef`, when given, is handed the way to ask again, for
-// the pull at the top of the pane.
-export function Everyone({ keeper = false, refreshRef = null }) {
+// the pull at the top of the pane. `myEntries` is the keeper's own journal,
+// as the wall reads it, for "also on your records" and the checks on the wall
+// of what is being logged everywhere.
+export function Everyone({ keeper = false, refreshRef = null, myEntries = null }) {
   const { keeper_name: myName, site_address: myAddress } = useBookplate();
   const me = { name: myName, address: myAddress };
   const mine = tidyJournal(myAddress);
@@ -249,10 +430,44 @@ export function Everyone({ keeper = false, refreshRef = null }) {
   const [said, setSaid] = useState('');
   const [wavingTo, setWavingTo] = useState(null);
 
-  // A name being looked up, and what came back: null while nothing is typed.
+  // A name or a record being looked up, and what came back: null while
+  // nothing is typed.
   const [query, setQuery] = useState('');
   const [found, setFound] = useState(null);
   const typed = useRef(0);
+
+  // The keeper's own records, newest listen of each, hashed; who else logged
+  // them; and the record whose sheet is open.
+  const [mineHashed, setMineHashed] = useState(() => new Map());
+  const [alike, setAlike] = useState([]);
+  const [sheet, setSheet] = useState(null);
+  const myRecords = useMemo(() => {
+    const newest = new Map();
+    for (const e of Array.isArray(myEntries) ? myEntries : []) {
+      if (e?.song || !e?.album_key) continue;
+      const was = newest.get(e.album_key);
+      if (!was || new Date(e.posted_at) > new Date(was)) newest.set(e.album_key, e.posted_at);
+    }
+    return [...newest.entries()]
+      .sort((a, b) => new Date(b[1]) - new Date(a[1]))
+      .slice(0, 100);
+  }, [myEntries]);
+  useEffect(() => {
+    if (!keeper || myRecords.length === 0) return undefined;
+    let gone = false;
+    (async () => {
+      try {
+        const hashed = new Map();
+        for (const [key, at] of myRecords) hashed.set(await hash16(key), at);
+        if (gone) return;
+        setMineHashed(hashed);
+        const r = await fetch(`${DIRECTORY_URL}?alike=${[...hashed.keys()].join(',')}`, { cache: 'no-store' });
+        const d = r.ok ? await r.json() : null;
+        if (!gone && Array.isArray(d?.records)) setAlike(d.records);
+      } catch { /* the section simply stays away */ }
+    })();
+    return () => { gone = true; };
+  }, [keeper, myRecords]);
 
   const readBook = useCallback(async () => {
     if (!keeper) return;
@@ -283,9 +498,14 @@ export function Everyone({ keeper = false, refreshRef = null }) {
       try {
         const r = await fetch(`${DIRECTORY_URL}?q=${encodeURIComponent(term)}`, { cache: 'no-store' });
         const d = r.ok ? await r.json() : null;
-        if (ask === typed.current) setFound(Array.isArray(d?.journals) ? d.journals : []);
+        if (ask === typed.current) {
+          setFound({
+            journals: Array.isArray(d?.journals) ? d.journals : [],
+            records: Array.isArray(d?.records) ? d.records : [],
+          });
+        }
       } catch {
-        if (ask === typed.current) setFound([]);
+        if (ask === typed.current) setFound({ journals: [], records: [] });
       }
     }, 300);
     return () => clearTimeout(wait);
@@ -402,6 +622,25 @@ export function Everyone({ keeper = false, refreshRef = null }) {
     );
   }
 
+  // What the record parts need to know about the viewer: who is in the book,
+  // how to carry the keeper's name on a link out, and how to add somebody.
+  // Null for a visitor, whose rows are simply the way to an entry.
+  const viewer = keeper ? {
+    inBook: address => book.has(address),
+    carry: (href, known) => carrySender(href, me, { known }),
+    add: journal => add(journal),
+    adding,
+  } : null;
+  const yours = record => keeper && mineHashed.has(record.key_hash);
+
+  // Also on your records: strangers — nobody in the book, never the keeper —
+  // who logged something the keeper logged. Six records, three keepers each.
+  const onYours = keeper ? alike
+    .map(r => ({ ...r, keepers: r.keepers.filter(k => !(mine && k.address === mine) && !book.has(k.address)).slice(0, 3) }))
+    .filter(r => r.keepers.length > 0)
+    .slice(0, 6) : [];
+  const today = page ? page.today || [] : [];
+
   // Never the keeper on their own Board, and — further out — nobody already in
   // their book: the Friends half is where those are.
   const notMe = j => !(mine && j.address === mine);
@@ -422,21 +661,28 @@ export function Everyone({ keeper = false, refreshRef = null }) {
           type="search"
           value={query}
           onChange={e => setQuery(e.target.value)}
-          placeholder="Find someone by name"
-          aria-label="Find someone on the board by name"
+          placeholder="A name, or a record"
+          aria-label="Find someone or a record on the board"
           spellCheck={false}
           autoComplete="off"
         />
       </label>
 
       {query.trim() ? (
-        <section className="dir-section" aria-label="Names on the board">
+        <section className="dir-section" aria-label="Found on the board">
           {found === null ? (
             <p className="dir-quiet">Looking&hellip;</p>
-          ) : found.filter(notMe).length === 0 ? (
-            <p className="dir-quiet">Nobody on the board by that name.</p>
+          ) : found.journals.filter(notMe).length === 0 && found.records.length === 0 ? (
+            <p className="dir-quiet">Nobody and nothing on the board by that name.</p>
           ) : (
-            found.filter(notMe).map(row)
+            <>
+              {found.journals.filter(notMe).map(j => row(j))}
+              {found.records.length > 0 && (
+                <div className="dir-wall dir-wall--found">
+                  {found.records.map(r => <Tile key={r.key_hash} record={r} yours={yours(r)} onOpen={setSheet} />)}
+                </div>
+              )}
+            </>
           )}
         </section>
       ) : down ? (
@@ -468,6 +714,48 @@ export function Everyone({ keeper = false, refreshRef = null }) {
             </section>
           )}
 
+          {onYours.length > 0 && (
+            <section className="dir-section" aria-label="Also on your records">
+              <h2 className="dir-label">Also on your records</h2>
+              <p className="dir-sub">
+                Strangers who logged something you&rsquo;ve logged. Nobody you know yet, but they sat with the same
+                record.
+              </p>
+              {onYours.map(r => (
+                <div key={r.key_hash} className="dir-shared">
+                  <div className="dir-shared-top">
+                    <span className="dir-cover" aria-hidden="true">
+                      {r.art ? <img src={r.art} alt="" loading="lazy" /> : <span>&#9834;</span>}
+                    </span>
+                    <span className="dir-shared-words">
+                      <span className="dir-shared-title">{r.album}</span>
+                      {r.artist && <span className="dir-shared-by">{r.artist}</span>}
+                      {mineHashed.get(r.key_hash) && (
+                        <span className="dir-shared-mine">You logged this {whenWords(mineHashed.get(r.key_hash))}</span>
+                      )}
+                    </span>
+                  </div>
+                  <div className="dir-shared-list">
+                    {r.keepers.map(k => <KeeperRow key={`${k.address}|${k.slug}`} keeper={k} viewer={viewer} />)}
+                  </div>
+                </div>
+              ))}
+            </section>
+          )}
+
+          {today.length > 0 && (
+            <section className="dir-section" aria-label="Being logged everywhere">
+              <h2 className="dir-label">Being logged everywhere</h2>
+              <p className="dir-sub">
+                The last day across every journal on the board. Press a record to see who sat with it and what
+                they said.
+              </p>
+              <div className="dir-wall">
+                {today.map(r => <Tile key={r.key_hash} record={r} yours={yours(r)} onOpen={setSheet} />)}
+              </div>
+            </section>
+          )}
+
           <section className="dir-section" aria-label="Further out">
             <h2 className="dir-label">Further out</h2>
             <p className="dir-sub">
@@ -477,7 +765,7 @@ export function Everyone({ keeper = false, refreshRef = null }) {
             {further.length === 0 ? (
               <p className="dir-quiet">Nobody else yet.</p>
             ) : (
-              further.map(row)
+              further.map(j => row(j))
             )}
             <div className="dir-shuffle">
               <span className="dir-shuffle-of">
@@ -505,6 +793,7 @@ export function Everyone({ keeper = false, refreshRef = null }) {
         </>
       )}
       {keeper && <WaveSheet person={wavingTo} onClose={() => setWavingTo(null)} />}
+      <RecordSheet record={sheet} yours={sheet ? yours(sheet) : false} viewer={viewer} onClose={() => setSheet(null)} />
     </div>
   );
 }

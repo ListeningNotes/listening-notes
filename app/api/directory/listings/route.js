@@ -23,7 +23,7 @@
 import { journalUrl, tidyJournal } from '@/library/return_address';
 import { directoryCode } from '@/library/secrets';
 import { mayKnock, tooSoon } from '@/library/doorman';
-import { pull_listing, save_listing, remove_listing, read_journal, record_seen } from '@/library/directory_actions';
+import { pull_listing, save_listing, remove_listing, read_journal, record_seen, refresh_records } from '@/library/directory_actions';
 
 // Longer than the job's look: the journal is waiting on this answer, and a
 // sleeping serverless copy takes a moment to wake.
@@ -74,6 +74,9 @@ export async function POST(request) {
     // what it is logging rather than blank until the job's next run. This is
     // the keeper's press paying for one look, not a reader.
     try { await record_seen(address, await read_journal(address, { withName: true })); } catch { /* the job fills it */ }
+    // And its records, so it is on the Board's record sections from the start
+    // rather than from the job's next slow round (2026-10-08).
+    try { await refresh_records(address); } catch { /* the job fills it */ }
     return Response.json({ listed: true }, { status: 201 });
   } catch {
     return Response.json({ error: 'The directory could not do that just now. Nothing changed.' }, { status: 500 });
