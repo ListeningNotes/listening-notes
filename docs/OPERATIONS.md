@@ -151,3 +151,38 @@ in Settings. Failing that:
 **Never do step 2 without step 1.** A journal that is set up and has no
 password lets nobody in at all: the claim code only ever opens a copy nobody
 has claimed, so none is printed and none would be accepted.
+
+## The directory's job
+
+Only for the copy that keeps the directory (the one every other copy's
+`DIRECTORY_URL` names). Every other copy can skip this section.
+
+The directory shows what each listed journal is logging from a table, and a
+scheduled job is what keeps that table fresh: each run asks only the
+journals whose turn has come — every minute for one seen logging within the
+hour, every thirty minutes otherwise, slower for one that has not been
+answering. Nothing a visitor does sets it off.
+
+To run it:
+
+1. In the registry's Vercel project, add an environment variable
+   `CRON_SECRET` with a long random value, and redeploy.
+2. Point a schedule at
+   `https://www.listeningnotes.blog/api/directory/gather` — a `GET`, every
+   minute, with the header `Authorization: Bearer <the CRON_SECRET value>`.
+
+The schedule is deliberately not in `vercel.json`: that file goes to every
+copy, and Vercel's free plan refuses a schedule more often than once a day,
+so a per-minute cron there would stop every friend's copy deploying. Any
+outside scheduler that can send a header will do; a free web cron service
+can run it every minute, and a GitHub Actions schedule can run it every five
+minutes at best. Without a schedule the directory still lists journals, but
+each one's beacon stays at what it was when it was listed.
+
+To check it by hand:
+
+```bash
+curl -H "Authorization: Bearer $CRON_SECRET" https://www.listeningnotes.blog/api/directory/gather
+```
+
+It answers `{"asked": N}`, how many journals it asked on that run.

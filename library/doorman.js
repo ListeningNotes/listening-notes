@@ -93,6 +93,16 @@ export const DOORS = {
   // A problem written in from another copy's desk. A person writes one and
   // maybe a second; a script writing hundreds is the thing to stop.
   report:     { tries: 3,  windowMs: 10 * 60_000 },
+  // Asking the directory to list a journal, or to take it off, 2026-10-07.
+  // Counted against the journal named, since the request comes from that
+  // journal's server rather than a person's browser: a keeper pressing the
+  // switch a few times is fine, a script trying every address is not.
+  listing:    { tries: 10, windowMs: 60 * 60_000 },
+  // And every check the directory makes, whoever asks for it: both read the
+  // named address, and a script could name a new address every time to get
+  // round the door above. Counted for everybody at once, so the directory
+  // can never be made into a way of knocking on other people's servers.
+  directory:  { tries: 120, windowMs: 10 * 60_000 },
   // ── The two doors a send from home comes through, 2026-09-16 ────────────
   // A keeper can now send a record from their own copy, which means the
   // request arrives from their *server* rather than from their browser. That

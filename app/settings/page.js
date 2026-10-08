@@ -44,6 +44,8 @@ import AddToHomeScreen from '../../components/main_components/AddToHomeScreen';
 import UpdateSwitch from '../../components/main_components/UpdateSwitch';
 import JournalCopy from '../../components/main_components/JournalCopy';
 import { useJournalHost } from '../../hooks/useJournalHost';
+import { DIRECTORY_URL } from '../../library/version';
+import { tidyJournal } from '../../library/return_address';
 
 const PASSWORD_FLOOR = 8;
 
@@ -93,6 +95,72 @@ function Section({ title, note, onSave, children, saveLabel = 'Save' }) {
 
 // What a stored secret looks like on this page: a line saying it is set and
 // where from, and a field to replace it.
+// ── Be findable, 2026-10-07 ───────────────────────────────────────────────
+// One switch, off by default: looking and being listed are separate things,
+// and nobody has to be in the directory to read it. The consequence is said
+// before the press, not after (Miyel's directory instructions). The switch
+// moves only once the registry has answered, so it never says findable while
+// you are not, and the line under it says what happened when it could not.
+// The directory's own address is printed as the instructions write it,
+// without its www.
+function Findable() {
+  const [listed, setListed] = useState(null);   // null until asked
+  const [busy, setBusy] = useState(false);
+  const [trouble, setTrouble] = useState('');
+  const where = tidyJournal(DIRECTORY_URL).replace(/^www\./, '');
+
+  useEffect(() => {
+    fetch('/api/listing')
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => setListed(Boolean(d?.listed)))
+      .catch(() => setListed(false));
+  }, []);
+
+  async function flip(next) {
+    setBusy(true);
+    setTrouble('');
+    try {
+      const res = await fetch('/api/listing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ listed: next }),
+      });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok || d.error) throw new Error(d.error || 'That did not work. Nothing changed.');
+      setListed(Boolean(d.listed));
+    } catch (e) {
+      setTrouble(e.message);
+    }
+    setBusy(false);
+  }
+
+  return (
+    <>
+      <p className="st-note">
+        Your journal appears in the directory at {where}. Anyone can see your name and what
+        you&rsquo;re listening to. Your entries stay where they are.
+      </p>
+      <label className="st-switch">
+        <span>Be findable</span>
+        <input
+          type="checkbox"
+          role="switch"
+          className="ln-switch"
+          checked={Boolean(listed)}
+          disabled={busy || listed === null}
+          onChange={e => flip(e.target.checked)}
+        />
+      </label>
+      {(busy || trouble) && (
+        <div className="st-foot">
+          {busy && <span className="st-said" role="status">{listed ? 'Taking it off\u2026' : 'Listing\u2026'}</span>}
+          {trouble && <span className="st-trouble" role="alert">{trouble}</span>}
+        </div>
+      )}
+    </>
+  );
+}
+
 function secretLine(status) {
   if (!status) return 'Not set.';
   const where = status.source === 'environment' ? 'set in the environment' : 'set here';
@@ -160,6 +228,15 @@ export default function SettingsPage({ layered = false }) {
         >
           <input className="st-field" value={address} onChange={e => setAddress(e.target.value)} placeholder="yourname.example.com" inputMode="url" autoCapitalize="none" autoComplete="off" />
         </Section>
+
+        {/* Being findable, after the address it lists. Not drawn at all on a
+            copy with no directory. */}
+        {DIRECTORY_URL && (
+          <div className="st-section">
+            <h2 className="st-h">The directory</h2>
+            <Findable />
+          </div>
+        )}
 
         {/* "Your beacon" was here from 2026-09-16 to 2026-09-24: Now logging
             or Quiet. Every journal broadcasts now (Miyel), and a copy that

@@ -401,6 +401,15 @@ textarea.su-field { resize: vertical; min-height: 64px; }
 /* The grey line belongs to the bold one above it, so it closes most of the
    gap — /get's step text sits 5px under its title. */
 .st-note { margin: -7px 0 0; font-size: 13px; line-height: 1.5; color: var(--ink-soft); }
+/* A setting that is a switch rather than a field: the line and the shared
+   switch (.ln-switch, base.css) across from each other, as the send sheet's
+   quiet switch stands. Be findable's, 2026-10-07, under the line that says
+   what it does. */
+.st-switch {
+  display: flex; align-items: center; justify-content: space-between; gap: 14px;
+  min-height: 44px; font-size: 15px; line-height: 1.35; color: var(--ink); cursor: pointer;
+}
+.st-note + .st-switch { margin-top: 6px; }
 .st-note a { color: var(--ink); }
 .st-label {
   display: block; font-family: var(--font-label); font-size: 10px;
@@ -1771,6 +1780,17 @@ textarea.st-field { resize: vertical; min-height: 96px; }
   transition: color 0.15s;
 }
 .fr-all:hover { color: var(--ink); }
+/* The way to the directory, under the grid: the same quiet line. */
+.fr-find {
+  display: block;
+  margin: 6px auto 0;
+  padding: 6px 10px;
+  font-family: var(--font-label);
+  font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--ink-faint); text-decoration: none;
+  transition: color 0.15s;
+}
+.fr-find:hover { color: var(--ink); }
 
 /* ── Nobody filed ──────────────────────────────────────────────────────────
    The first screen of a new install. Centred in what the shelf leaves, which

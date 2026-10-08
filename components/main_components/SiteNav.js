@@ -63,6 +63,10 @@ export default function SiteNav({ tools = null, mark = null, lede = true }) {
   // About pane, and keeps the mark for the reason that pane does: a
   // colophon without it is a paragraph (Miyel's brief, About, /get and Give).
   const onGet = here === '/get' || Boolean(here && here.startsWith('/get/'));
+  // And on the directory, 2026-10-07: the page about everybody's journals,
+  // with the mark over it as the mock-up draws it — a list of strangers'
+  // names under no mark is a list, not a page.
+  const onDirectory = here === '/directory';
   // ── What is in the middle, 2026-09-20 ─────────────────────────────────
   // Whatever the page puts there, and on most pages nothing. It was the LN
   // mark, drawn on entries and nowhere else, until the entry asked for the
@@ -116,7 +120,7 @@ export default function SiteNav({ tools = null, mark = null, lede = true }) {
         </Link>
       </div>
 
-      {(onAnEntry || onGet) && lede && (
+      {(onAnEntry || onGet || onDirectory) && lede && (
       <Link href="/" className="sitenav-logo" aria-label={cover_name}>
         <svg viewBox="76 96 241 140" className="sitenav-logo-mark" xmlns="http://www.w3.org/2000/svg">
           <path

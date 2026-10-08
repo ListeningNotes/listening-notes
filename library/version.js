@@ -44,3 +44,13 @@ export const REPORTS_URL =
 // NEXT_PUBLIC_INSTAGRAM_URL, or leaves it empty and the line is not drawn.
 export const INSTAGRAM_URL =
   process.env.NEXT_PUBLIC_INSTAGRAM_URL ?? 'https://www.instagram.com/listeningnotes.blog';
+
+// Where the journals that chose to be listed are found. The same address on
+// every copy, the way REPORTS_URL and INSTAGRAM_URL are; a fork sets
+// NEXT_PUBLIC_DIRECTORY_URL, or leaves it empty and there is no directory.
+// `??`, not `||`, so a fork that empties it gets no directory rather than
+// falling back to this one; and a constant for the reason in GiveSheet.js —
+// a copy that could point it elsewhere could quietly stand in for the
+// original (Miyel's directory instructions, 2026-10-07).
+export const DIRECTORY_URL =
+  process.env.NEXT_PUBLIC_DIRECTORY_URL ?? 'https://www.listeningnotes.blog/api/directory';
