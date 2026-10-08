@@ -1245,10 +1245,10 @@ band of cards, where both are drawn. The rest of the site's faces wait on her.
 **The directory, 2026-10-07, Miyel's call, and no longer ruled out.**
 listeningnotes.blog keeps a table of the journals that chose to be findable —
 the address, the code it proved it with, when, and the last beacon seen — and
-nothing else; no entry or writing ever leaves a journal. Every copy's
-/directory makes one request to DIRECTORY_URL and fetches no beacon itself;
-it is public, and a stranger pressing through to /get is the point. Album
-search is phase two (her calls for it: cover first, stars, marks, quotes).
+nothing else; no entry or writing ever leaves a journal. A copy draws the
+list from one request to DIRECTORY_URL and fetches no beacon itself; it is
+public, and a stranger pressing through to /get is the point. Album search
+is phase two (her calls for it: cover first, stars, marks, quotes).
 
 **Counts of the whole community are not counts of a person, 2026-10-07.**
 The Never list's rule is about a number attached to somebody — listens,
@@ -1258,11 +1258,27 @@ anybody and neither can be grown. A row is a name and a beacon, never a
 number beside a person (Miyel, amending the rule rather than excepting it).
 
 **Being findable is a press, proved by the address, 2026-10-07.** Off by
-default; the consequence is said before the press. The registry issues a
+default; the consequence is said before the press, at the head of Everyone. The registry issues a
 code made from its secret and the address, the journal serves it at
 /api/public/listing, and the row is kept only if it comes back. Delisting
 needs the code and the journal to have forgotten it — the code is public
 while listed, so the code alone would let anybody delist anybody.
+
+**People is one tab: Friends · Everyone, 2026-10-07, Miyel's call.** The
+Friends tab became People, with two words at the top: Friends, with the
+book's count, and Everyone, the directory's list. The feed stays Friends'
+second floor. Being findable lives at the head of Everyone, not in Settings.
+A press on somebody opens Visit · Add; somebody already in the book wears a
+check and stays in the list, so the list and its count read the same for all.
+
+**A visitor's People holds Everyone and nothing of the keeper's,
+2026-10-07.** Miyel: "strangers and visitors can see this page." No Friends,
+no switch, no checks — a journal never shows whom its keeper added.
+
+**Reading the directory is not phone-home, 2026-10-07.** Everyone loads the
+list when it opens, with no press of its own. Miyel: "not what i meant by
+reporting home. dont worry about that here." The rule is about a copy
+reporting on itself — analytics, installs, banners — not reading a list.
 
 **The registry's job asks, the readers never do, 2026-10-07.** A schedule,
 not a cache miss: logging within the hour, every minute; otherwise every
