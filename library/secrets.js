@@ -21,7 +21,7 @@
 // changing it signs everybody out and a copy that set one on purpose should
 // not be signed out by a row it did not know existed.
 
-import { randomBytes, scrypt as scryptCallback, timingSafeEqual } from 'node:crypto';
+import { randomBytes, scrypt as scryptCallback, timingSafeEqual, createHmac } from 'node:crypto';
 import { promisify } from 'node:util';
 import database from './database_connection.js';
 
@@ -104,6 +104,22 @@ export async function sessionSecret() {
     RETURNING session_secret`;
   cachedSecret = new TextEncoder().encode(row.session_secret);
   return cachedSecret;
+}
+
+// ── The directory's code for a journal, 2026-10-07 ─────────────────────────
+// What the registry issues a journal that asks to be listed, for it to serve
+// at /api/public/listing so the registry can see the address is theirs. Made
+// from the session secret and the address rather than kept, so asking writes
+// nothing until the code has come back, and the same address is always issued
+// the same code. Not itself a secret once issued: the journal serves it to
+// anybody while it is listed, which is why taking a journal off asks for more
+// than the code (app/api/directory/listings/route.js).
+export async function directoryCode(address) {
+  const key = await sessionSecret();
+  return createHmac('sha256', Buffer.from(key))
+    .update(`directory:${address}`)
+    .digest('base64url')
+    .slice(0, 22);
 }
 
 // ── The password ──────────────────────────────────────────────────────────
