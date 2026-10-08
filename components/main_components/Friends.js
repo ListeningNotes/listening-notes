@@ -47,7 +47,6 @@ import WaveSheet from './WaveSheet';
 import { carrySender, journalUrl, tidyJournal } from '../../library/return_address';
 import { useBookplate } from './Bookplate';
 import { fillFriends, useFriendsBeacons } from '../../hooks/useFriendsBeacons';
-import { DIRECTORY_URL } from '../../library/version';
 
 // The order the server keeps: pinned first in the order they were pinned,
 // then by name, or by address for anyone without one. Said twice — here and
@@ -237,8 +236,10 @@ function travel(box, was) {
 // is this component's to know: it is the one that asks for the people.
 // `onScreen` is whether this pane is the one on screen, from the cross; off
 // the shelf it is left true. See the hook: the room listens for beacons only
-// while somebody could be looking at it.
-export default function Friends({ shelf = false, onCount = null, onBusy = null, onScreen = true }) {
+// while somebody could be looking at it. `away` is whether the People tab is
+// showing Everyone instead (2026-10-07): the book stays mounted underneath,
+// keeping what it has read, but its header leaves the bar to the two words.
+export default function Friends({ shelf = false, onCount = null, onBusy = null, onScreen = true, away = false }) {
   // Who this copy belongs to, carried on every link out to another journal so
   // the form there knows who is sending. See carrySender.
   const { keeper_name: myName, site_address: myAddress } = useBookplate();
@@ -389,6 +390,20 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null, 
         }).catch(() => {});
       }
     }).catch(() => setLoading(false));
+  }, []);
+
+  // ── Somebody added from Everyone, 2026-10-07 ────────────────────────────
+  // The same write as the + here (app/directory/Directory.js files them),
+  // told to the book by an event so the faces and the count on the word
+  // Friends are right the moment you come back, without reading the book
+  // again.
+  useEffect(() => {
+    const filed = event => {
+      const person = event.detail;
+      if (person?.id) setPeople(prev => inOrder([...prev.filter(p => p.id !== person.id), person]));
+    };
+    window.addEventListener('ln-book-filed', filed);
+    return () => window.removeEventListener('ln-book-filed', filed);
   }, []);
 
   // ── An address that arrived in the link ─────────────────────────────────
@@ -902,7 +917,7 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null, 
 
             `inert` on whichever one is away, so the keyboard and a screen
             reader only ever meet the field that is actually there. */}
-        {barSlot ? createPortal(head, barSlot) : head}
+        {barSlot ? (away ? null : createPortal(head, barSlot)) : head}
 
         {/* The Add / Scan row that stood here is gone, 2026-09-20. Both of
             them are in the header now — Add as a mark at the end of the
@@ -1269,12 +1284,9 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null, 
             See all {people.length}
           </Link>
         )}
-        {/* Under the grid, a quiet line to the directory, 2026-10-07 —
-            looking is separate from being listed, and anybody can look.
-            Not drawn at all on a copy with no directory. */}
-        {DIRECTORY_URL && (
-          <Link href="/directory" className="fr-find">Find more journals &rarr;</Link>
-        )}
+        {/* "Find more journals" stood under the grid for an evening,
+            2026-10-07. Everyone is the other word at the top of this tab
+            now, one press away, so the line went. */}
       </div>
 
       {/* One sheet for the page, told who it is for. Mounted outside the grid
