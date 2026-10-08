@@ -204,8 +204,11 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   Favorite, Formative) and the merge of the owner's edits over it.
 - `directory_actions.js` — the `directory` table, on the registry's copy:
   the list for readers (logging first, thirty and a cursor, the community's
-  two counts), listing and delisting, reading a journal's beacon, and
-  `gather`, the scheduled job's one run with its decaying rate.
+  two counts), the Board's first screen (`pull_board`: everybody logging and
+  a shuffled dozen), a name search, `boardHash` and `pull_among` (which of a
+  journal's hashed addresses are on the Board), listing and delisting,
+  reading a journal's beacon, and `gather`, the scheduled job's one run with
+  its decaying rate.
 - `doorman.js` — rate limiting, in memory: the doors (login, message, send,
   wave, listing and so on), how many tries each allows, who is knocking, and
   the 429 answer.
@@ -235,9 +238,11 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - `outbox.js` — a send, a wave or a reply leaving this copy for another,
   server to server: posts to their `/api/submissions`, `/api/waves` or
   `/api/messages` and reports what came back in plain words; and
-  `ask_directory`, this journal asking the registry to list or delist it.
+  `ask_directory`, this journal asking the registry to list or delist it, and
+  `ask_directory_among`, which of some hashed addresses are on the Board.
 - `people_actions.js` — the address book (`people`): list, file, pin (six at
-  most), remove, and asking a journal its keeper's name.
+  most), keep private, remove, the part that may be published
+  (`pull_public_people`), and asking a journal its keeper's name.
 - `portrait_code.js` — the press: the portrait made into the journal's QR
   code with a dot of ink per module, proved by decoding with jsQR on both page
   colours; `CODE_BUILD` is bumped whenever the drawing changes.
@@ -255,8 +260,10 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - `settings_actions.js` — the one `settings` row: read (without the two
   portrait blobs), write through an allow-list with write-once fields,
   `coverName` and `titleName`, `isSetUp` (the gate that fails closed),
-  `pull_keeper_name`, and the listing code read and written on its own
-  (`pull_listing_code`, `save_listing_code`), never with the rest.
+  `pull_keeper_name`, and the listing code and whether the journal is on the
+  Board, each read and written on its own (`pull_listing_code`,
+  `save_listing_code`, `pull_findable`, `save_findable`), never with the
+  rest.
 - `sitewide_visuals.js` — colours and fonts as JS objects, for canvas and
   chart code that cannot read a CSS custom property. The stylesheets are the
   source; this mirrors them.
@@ -289,9 +296,10 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - `useJournalHost.js` — the journal's host, used as the hidden username so a
   password manager files the password.
 - `useFriendsBeacons.js` — one shared poll, once a minute while the Friends
-  room is on screen, of `/api/friends/beacons`: what everyone in the address
-  book is logging, kept through a journal's failure; `refreshFriends` for the
-  pull, `fillFriends` for the whole book.
+  room or the Board is on screen, of `/api/friends/beacons`: what everyone in
+  the address book is logging, kept through a journal's failure, and `away`,
+  the Board's friends of friends; `refreshFriends` for the pull,
+  `fillFriends` for the whole book.
 - `useListeningBeacon.js` — one shared poll of this journal's own beacon,
   subscribed to by every component that draws it.
 - `useListeningSession.js` — all the state and API calls of a listen in
