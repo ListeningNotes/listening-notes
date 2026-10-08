@@ -1780,17 +1780,6 @@ textarea.st-field { resize: vertical; min-height: 96px; }
   transition: color 0.15s;
 }
 .fr-all:hover { color: var(--ink); }
-/* The way to the directory, under the grid: the same quiet line. */
-.fr-find {
-  display: block;
-  margin: 6px auto 0;
-  padding: 6px 10px;
-  font-family: var(--font-label);
-  font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
-  color: var(--ink-faint); text-decoration: none;
-  transition: color 0.15s;
-}
-.fr-find:hover { color: var(--ink); }
 
 /* ── Nobody filed ──────────────────────────────────────────────────────────
    The first screen of a new install. Centred in what the shelf leaves, which

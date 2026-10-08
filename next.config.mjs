@@ -19,7 +19,12 @@ const nextConfig = {
   // what the setting protects against, which is a public web page reaching
   // into your dev server — such a page's origin is its own domain and matches
   // none of these. What it allows is you, on your own network.
-  allowedDevOrigins: ['192.168.*.*', '10.*.*.*', '172.16.*.*', '*.local'],
+  //
+  // And 127.0.0.1, the same machine by number, 2026-10-07: the one way to see
+  // your own journal signed out in the same browser (the wristband belongs to
+  // localhost), and where a test's mock journals live. Without it the page
+  // there never starts — no error, just a page that does not answer a press.
+  allowedDevOrigins: ['127.0.0.1', '192.168.*.*', '10.*.*.*', '172.16.*.*', '*.local'],
   // Dev-only route indicator badge (bottom-left "N") — never shows in
   // production, just noise while testing locally.
   devIndicators: false,
