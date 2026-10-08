@@ -16,11 +16,13 @@
 // ── The Board, 2026-10-08 ──────────────────────────────────────────────────
 // `?board` is the Board's first screen in one answer: everybody logging
 // right now, and a shuffled dozen of everybody else (pull_board). `?q=` looks
-// a name up. `?among=` answers which of a journal's hashed addresses are on
-// the Board, and what each is playing (pull_among). The plain list stays as
-// it was for anything that still asks for it.
+// a name — and, since piece three, a record — up. `?among=` answers which
+// of a journal's hashed addresses are on the Board, and what each is playing
+// (pull_among). `?alike=` answers who else logged a journal's records, asked
+// by each record's hash (pull_alike). The plain list stays as it was for
+// anything that still asks for it.
 
-import { pull_directory_page, pull_board, find_by_name, pull_among } from '@/library/directory_actions';
+import { pull_directory_page, pull_board, find_by_name, pull_among, pull_alike } from '@/library/directory_actions';
 
 const ACROSS = {
   'Access-Control-Allow-Origin': '*',
@@ -33,6 +35,7 @@ export async function GET(request) {
     const page = asked.has('board') ? await pull_board()
       : asked.has('q') ? await find_by_name(asked.get('q'))
       : asked.has('among') ? await pull_among(String(asked.get('among')).split(',').filter(h => /^[0-9a-f]{16}$/.test(h)))
+      : asked.has('alike') ? await pull_alike(String(asked.get('alike')).split(',').filter(h => /^[0-9a-f]{16}$/.test(h)))
       : await pull_directory_page(asked.get('after') || '');
     return Response.json(page, {
       // The same for everybody: a shared cache may hold it for half a

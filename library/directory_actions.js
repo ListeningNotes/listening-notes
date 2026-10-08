@@ -140,6 +140,7 @@ export async function pull_board() {
     logging: counts?.logging || 0,
     live: live.map(shown),
     further: further.map(shown),
+    today: await pull_today(),
   };
 }
 
@@ -149,7 +150,7 @@ export async function pull_board() {
 // most.
 export async function find_by_name(q) {
   const term = String(q || '').trim().slice(0, 60);
-  if (!term) return { journals: [] };
+  if (!term) return { journals: [], records: [] };
   const like = `%${term.replace(/[\\%_]/g, c => '\\' + c)}%`;
   const rows = await database.query(
     `SELECT address, name, state, album, artist, art, ${LIVE_SQL} AS live
@@ -157,7 +158,7 @@ export async function find_by_name(q) {
      ORDER BY lower(name), address LIMIT $2`,
     [like, PAGE],
   );
-  return { journals: rows.map(shown) };
+  return { journals: rows.map(shown), records: await find_records(term) };
 }
 
 // ── Which of these are on the Board, 2026-10-08 ───────────────────────────
@@ -206,8 +207,10 @@ export async function save_listing(address, code) {
   `;
 }
 
-// Delisting removes the only thing that was there.
+// Delisting removes the only thing that was there — the row, and since
+// 2026-10-08 the records the job read from the journal.
 export async function remove_listing(address) {
+  await database`DELETE FROM directory_records WHERE address = ${address}`;
   await database`DELETE FROM directory WHERE address = ${address}`;
 }
 
@@ -272,7 +275,7 @@ export async function gather() {
   // The casts are needed: a CASE of two bare parameters is read as text, and
   // text times a number is an error, not a number.
   const due = await database.query(
-    `SELECT address, name, last_logging_at FROM directory
+    `SELECT address, name, last_logging_at, records_at, album, artist FROM directory
      WHERE checked_at IS NULL
         OR checked_at + LEAST(
              (CASE WHEN last_logging_at > now() - interval '1 hour' THEN $1::integer ELSE $2::integer END)
@@ -287,10 +290,174 @@ export async function gather() {
   await Promise.all(due.map(async row => {
     const idle = !row.last_logging_at || new Date(row.last_logging_at).getTime() < hour;
     try {
-      await record_seen(row.address, await read_journal(row.address, { withName: idle || !row.name }));
+      const seen = await read_journal(row.address, { withName: idle || !row.name });
+      await record_seen(row.address, seen);
+      // The records, on the slow round, or the moment the beacon says
+      // something new was logged: never on every minute's ask.
+      const stale = !row.records_at || Date.now() - new Date(row.records_at).getTime() > RECORDS_EVERY_MS;
+      const fresh = seen.state === 'logged' && (seen.album !== row.album || seen.artist !== row.artist);
+      if (stale || fresh) await refresh_records(row.address).catch(() => {});
     } catch {
       await record_missed(row.address).catch(() => {});
     }
   }));
   return due.length;
+}
+
+// ── The records, 2026-10-08 ───────────────────────────────────────────────
+// Each listed journal's records as its public feed shows them
+// (migrations/033_directory_records.sql): the record, the stars, the marks,
+// when — never the writing. Read on the slow round and when the beacon says
+// something new was logged; the newest two hundred kept, and an entry the
+// journal deleted goes from here too.
+const RECORDS_EVERY_MS = 30 * 60 * 1000;
+const RECORDS_WAIT_MS = 8000;
+const RECORDS_MOST = 200;
+
+// A journal too old to send its album_key gets the same fold its database
+// would have made (the generated column in migrations/001_initial.sql).
+const ACCENTS = 'àáâãäåèéêëìíîïòóôõöùúûüñçýÿšžāēīōūăąćčđěğıłńňőřşťůűźż';
+const PLAIN = 'aaaaaaeeeeiiiiooooouuuuncyyszaeiouaaccdegilnnorstuuzz';
+export function foldRecord(album, artist) {
+  const lowered = `${album || ''} ${artist || ''}`.toLowerCase();
+  const plain = [...lowered].map(c => { const i = ACCENTS.indexOf(c); return i >= 0 ? PLAIN[i] : c; }).join('');
+  return plain.replace(/&/g, 'and').replace(/[^a-z0-9]+/g, ' ').trim();
+}
+
+export async function refresh_records(address) {
+  const base = journalUrl(address);
+  if (!base) return;
+  const answer = await fetch(`${base}/api/public/entries`, {
+    signal: AbortSignal.timeout(RECORDS_WAIT_MS),
+    headers: { accept: 'application/json' },
+  });
+  if (!answer.ok) return;
+  const said = await answer.json();
+  const entries = (Array.isArray(said?.entries) ? said.entries : [])
+    .filter(e => e?.slug && (e.album || e.artist))
+    .sort((a, b) => new Date(b.posted_at || 0) - new Date(a.posted_at || 0))
+    .slice(0, RECORDS_MOST);
+  const rows = entries.map(e => {
+    const key = String(e.album_key || '').trim() || foldRecord(e.album, e.artist);
+    const stars = Number(e.rating_value);
+    return {
+      slug: String(e.slug),
+      album_key: key,
+      key_hash: boardHash(key),
+      album: String(e.album || ''),
+      artist: String(e.artist || ''),
+      art: String(e.album_art || ''),
+      song: e.song ? String(e.song) : null,
+      stars: Number.isFinite(stars) && stars > 0 ? stars : null,
+      favorite: e.favorite === true || e.favorite === 'true',
+      formative: e.formative === true || e.formative === 'true',
+      masterpiece: e.masterpiece === true || e.masterpiece === 'true',
+      posted_at: e.posted_at || null,
+    };
+  });
+  const column = name => rows.map(r => r[name]);
+  if (rows.length) {
+    await database.query(
+      `INSERT INTO directory_records
+         (address, slug, album_key, key_hash, album, artist, art, song, stars, favorite, formative, masterpiece, posted_at)
+       SELECT $1, * FROM unnest($2::text[], $3::text[], $4::text[], $5::text[], $6::text[], $7::text[], $8::text[],
+                                $9::numeric[], $10::boolean[], $11::boolean[], $12::boolean[], $13::timestamptz[])
+       ON CONFLICT (address, slug) DO UPDATE SET
+         album_key = EXCLUDED.album_key, key_hash = EXCLUDED.key_hash, album = EXCLUDED.album,
+         artist = EXCLUDED.artist, art = EXCLUDED.art, song = EXCLUDED.song, stars = EXCLUDED.stars,
+         favorite = EXCLUDED.favorite, formative = EXCLUDED.formative, masterpiece = EXCLUDED.masterpiece,
+         posted_at = EXCLUDED.posted_at`,
+      [address, column('slug'), column('album_key'), column('key_hash'), column('album'), column('artist'),
+        column('art'), column('song'), column('stars'), column('favorite'), column('formative'),
+        column('masterpiece'), column('posted_at')],
+    );
+  }
+  await database.query(
+    `DELETE FROM directory_records WHERE address = $1 AND NOT (slug = ANY($2::text[]))`,
+    [address, column('slug')],
+  );
+  await database`UPDATE directory SET records_at = now() WHERE address = ${address}`;
+}
+
+// A record's keepers, one row each — their newest listen of it — with their
+// name and whether they are logging right now. Never ordered by how much
+// anybody logs: the newest listen first.
+function keepersOf(rows) {
+  const byRecord = new Map();
+  for (const r of rows) {
+    const record = byRecord.get(r.key_hash) || {
+      key_hash: r.key_hash, album: r.album || '', artist: r.artist || '', art: r.art || '', keepers: [],
+    };
+    if (!record.art && r.art) record.art = r.art;
+    if (!record.keepers.some(k => k.address === r.address)) {
+      record.keepers.push({
+        address: r.address,
+        name: r.name || '',
+        live: Boolean(r.live),
+        slug: r.slug,
+        stars: r.stars === null || r.stars === undefined ? null : Number(r.stars),
+        favorite: Boolean(r.favorite),
+        formative: Boolean(r.formative),
+        masterpiece: Boolean(r.masterpiece),
+        posted_at: r.posted_at ? new Date(r.posted_at).toISOString() : null,
+      });
+    }
+    byRecord.set(r.key_hash, record);
+  }
+  return [...byRecord.values()];
+}
+
+const RECORD_ROWS = `r.address, r.slug, r.key_hash, r.album, r.artist, r.art, r.stars, r.favorite,
+  r.formative, r.masterpiece, r.posted_at, d.name, ${LIVE_SQL} AS live`;
+
+// ── Also on your records ──────────────────────────────────────────────────
+// Who else logged these, asked by the record's hash, a hundred at most. The
+// asking journal is left out by the Board itself, which knows its own
+// address. Track notes are not logging the record.
+export async function pull_alike(hashes) {
+  const asked = [...new Set(hashes)].slice(0, 100);
+  if (asked.length === 0) return { records: [] };
+  const rows = await database.query(
+    `SELECT ${RECORD_ROWS}
+     FROM directory_records r JOIN directory d ON d.address = r.address
+     WHERE r.key_hash = ANY($1::text[]) AND r.song IS NULL
+     ORDER BY r.posted_at DESC NULLS LAST
+     LIMIT 400`,
+    [asked],
+  );
+  const found = new Map(keepersOf(rows).map(r => [r.key_hash, r]));
+  return { records: asked.map(h => found.get(h)).filter(Boolean) };
+}
+
+// ── Being logged everywhere ───────────────────────────────────────────────
+// The last day's records across the Board, the most recently logged first —
+// never the most logged — with who logged each. Two dozen at most.
+const TODAY_MOST = 24;
+export async function pull_today() {
+  const rows = await database.query(
+    `SELECT ${RECORD_ROWS}
+     FROM directory_records r JOIN directory d ON d.address = r.address
+     WHERE r.posted_at > now() - interval '24 hours' AND r.song IS NULL
+     ORDER BY r.posted_at DESC
+     LIMIT 300`,
+  );
+  return keepersOf(rows).slice(0, TODAY_MOST);
+}
+
+// ── A record looked up ────────────────────────────────────────────────────
+// The Board's search, for a record: its title or its artist. A dozen records
+// at most, the most recently logged first.
+export async function find_records(q) {
+  const term = String(q || '').trim().slice(0, 60);
+  if (!term) return [];
+  const like = `%${term.replace(/[\\%_]/g, c => '\\' + c)}%`;
+  const rows = await database.query(
+    `SELECT ${RECORD_ROWS}
+     FROM directory_records r JOIN directory d ON d.address = r.address
+     WHERE r.song IS NULL AND (r.album ILIKE $1 OR r.artist ILIKE $1)
+     ORDER BY r.posted_at DESC NULLS LAST
+     LIMIT 200`,
+    [like],
+  );
+  return keepersOf(rows).slice(0, 12);
 }
