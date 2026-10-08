@@ -72,13 +72,18 @@ reasoning; these are inline so nobody has to go looking.
 - **No journal address is ever printed on a page.** A journal is shown by its
   keeper's name and face; the address lives in the link and in the QR code. A
   host is printed only when nothing else is known, never by choice.
-- **No counts, badges, streaks or follower numbers anywhere.** Presence is
+- **No counts, badges, streaks or follower numbers attached to a person** —
+  not listens, not gifts, not who added whom, not who is reading. Presence is
   outbound: a journal shows what its keeper is logging and never who is
-  reading, who added whom, or how many. Gifts are not counted either.
+  reading it. A count of the whole community is not that: the directory may
+  say how many journals are listed and how many are logging right now,
+  because neither names anybody and neither can be grown. A row is a name and
+  a beacon; never a number beside a person.
 - **Never write to another keeper's database.** The only things one copy may
-  put into another are a send, a wave and a message, each on a keeper's
-  press, through that copy's own public route. Everything else about another
-  journal is read from its public feed and routes.
+  put into another are a send, a wave, a message and — into the directory —
+  a listing, each on a keeper's press, through that copy's own public route.
+  Everything else about another journal is read from its public feed and
+  routes.
 - **Nobody's words are drawn on a journal but its keeper's.** No comments, no
   threads, nothing a visitor wrote shown on an entry or anywhere else. What
   somebody has to say goes to the keeper as a message and lives in the inbox;
@@ -116,8 +121,8 @@ reasoning; these are inline so nobody has to go looking.
   becomes a setting.** Titles read `{keeper_name} · Listening Notes` on every
   copy; the Source line and the version ship on every copy, at the foot of
   the card for a visitor, and cannot be switched off; the canonical address,
-  `REPORTS_URL` and `INSTAGRAM_URL` are constants, with an environment
-  variable for a fork.
+  `REPORTS_URL`, `INSTAGRAM_URL` and `DIRECTORY_URL` are constants, with an
+  environment variable for a fork.
 - **Nothing per entry that grows with the archive on a free tier.** Never
   base64 a picture into a row (a cover's code keeps only its dot); album art
   is a plain `<img>`, never the framework's metered image component; a query
@@ -184,9 +189,13 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   a sentence for the owner.
 - `definitions.js` — the shipped text for the three marks (Masterpiece,
   Favorite, Formative) and the merge of the owner's edits over it.
+- `directory_actions.js` — the `directory` table, on the registry's copy:
+  the list for readers (logging first, thirty and a cursor, the community's
+  two counts), listing and delisting, reading a journal's beacon, and
+  `gather`, the scheduled job's one run with its decaying rate.
 - `doorman.js` — rate limiting, in memory: the doors (login, message, send,
-  wave and so on), how many tries each allows, who is knocking, and the 429
-  answer.
+  wave, listing and so on), how many tries each allows, who is knocking, and
+  the 429 answer.
 - `entry_formatter.js` — the shapes an entry is written in: the horizon bar
   from track ratings, `flawless` (what Masterpiece means), tracks to and from
   prose, `lookup_key` (the fold drafts and briefings are keyed on), the edit
@@ -212,7 +221,8 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   deleted, and the recent listens drawn under the beacon.
 - `outbox.js` — a send, a wave or a reply leaving this copy for another,
   server to server: posts to their `/api/submissions`, `/api/waves` or
-  `/api/messages` and reports what came back in plain words.
+  `/api/messages` and reports what came back in plain words; and
+  `ask_directory`, this journal asking the registry to list or delist it.
 - `people_actions.js` — the address book (`people`): list, file, pin (six at
   most), remove, and asking a journal its keeper's name.
 - `portrait_code.js` — the press: the portrait made into the journal's QR
@@ -225,13 +235,15 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   `journalUrl`, the one spelling an address is kept in; and the `?from=` /
   `?as=` handling when a keeper arrives from their own copy.
 - `secrets.js` — the vault: the `secrets` table's only reader. The session
-  secret, password hashing, the claim code, the setup window, and what
-  Settings may be told (set or not, last four characters).
+  secret, password hashing, the claim code, the setup window, what Settings
+  may be told (set or not, last four characters), and `directoryCode`, the
+  code the registry issues an address, made from the secret.
 - `session_timers.js` — `TrackLength`: seconds to m:ss.
 - `settings_actions.js` — the one `settings` row: read (without the two
   portrait blobs), write through an allow-list with write-once fields,
   `coverName` and `titleName`, `isSetUp` (the gate that fails closed),
-  `pull_keeper_name`.
+  `pull_keeper_name`, and the listing code read and written on its own
+  (`pull_listing_code`, `save_listing_code`), never with the rest.
 - `sitewide_visuals.js` — colours and fonts as JS objects, for canvas and
   chart code that cannot read a CSS custom property. The stylesheets are the
   source; this mirrors them.
@@ -245,7 +257,7 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   `/updates/go`, the journal's own redirect that a phone's GitHub app cannot
   swallow.
 - `version.js` — this copy's version from `package.json`, the releases URL,
-  and `REPORTS_URL`.
+  `REPORTS_URL`, `INSTAGRAM_URL` and `DIRECTORY_URL`.
 - `wave_actions.js` — the `waves` table: waves that arrived here, one row per
   journal, seen, removed.
 - `whole_journal.mjs` — asks the database which tables it has and reads one
@@ -263,6 +275,10 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   nothing under it moves.
 - `useJournalHost.js` — the journal's host, used as the hidden username so a
   password manager files the password.
+- `useFriendsBeacons.js` — one shared poll, once a minute while the Friends
+  room is on screen, of `/api/friends/beacons`: what everyone in the address
+  book is logging, kept through a journal's failure; `refreshFriends` for the
+  pull, `fillFriends` for the whole book.
 - `useListeningBeacon.js` — one shared poll of this journal's own beacon,
   subscribed to by every component that draws it.
 - `useListeningSession.js` — all the state and API calls of a listen in

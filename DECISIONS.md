@@ -1242,6 +1242,34 @@ square on the grounds that a journal is a shelf of records. A person is a
 circle and a record a rounded square, which also tells the two apart in the
 band of cards, where both are drawn. The rest of the site's faces wait on her.
 
+**The directory, 2026-10-07, Miyel's call, and no longer ruled out.**
+listeningnotes.blog keeps a table of the journals that chose to be findable —
+the address, the code it proved it with, when, and the last beacon seen — and
+nothing else; no entry or writing ever leaves a journal. Every copy's
+/directory makes one request to DIRECTORY_URL and fetches no beacon itself;
+it is public, and a stranger pressing through to /get is the point. Album
+search is phase two (her calls for it: cover first, stars, marks, quotes).
+
+**Counts of the whole community are not counts of a person, 2026-10-07.**
+The Never list's rule is about a number attached to somebody — listens,
+gifts, who added whom, who is reading. The directory may say how many
+journals are listed and how many are logging right now, because neither names
+anybody and neither can be grown. A row is a name and a beacon, never a
+number beside a person (Miyel, amending the rule rather than excepting it).
+
+**Being findable is a press, proved by the address, 2026-10-07.** Off by
+default; the consequence is said before the press. The registry issues a
+code made from its secret and the address, the journal serves it at
+/api/public/listing, and the row is kept only if it comes back. Delisting
+needs the code and the journal to have forgotten it — the code is public
+while listed, so the code alone would let anybody delist anybody.
+
+**The registry's job asks, the readers never do, 2026-10-07.** A schedule,
+not a cache miss: logging within the hour, every minute; otherwise every
+thirty; doubled per failure up to three hours, reset on a good answer. Not a
+vercel.json cron: that file is every copy's, and Vercel's free plan refuses a
+schedule more often than daily, so it would stop friends' copies deploying.
+
 **A wave is the second thing one journal may put in another's inbox,
 2026-09-23.** A send was the first and a message is the third (below), and a
 wave carries a name and an address, never words — the route refuses any body
@@ -2198,9 +2226,6 @@ self-hosted app is.
 
 **Native app / iframe / proxy for viewing other journals.** All rebuild the
 platform behaviour being removed.
-
-**A directory of journals.** People arrive because somebody handed it to
-them. A directory doesn't solve discovery.
 
 ---
 

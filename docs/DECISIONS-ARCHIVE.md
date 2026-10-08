@@ -861,3 +861,18 @@ the card points at, and a track note was a song — it had its own address, not
 a place here. Formative reached the track notes on 2026-09-30 for the reason
 that undid this: a song can be the thing that made you, and so can be the
 thing you hold up.
+
+---
+
+## Ruled out — a directory of journals, until 2026-10-07
+
+The current rule is in DECISIONS.md, The network, *The directory*.
+
+**A directory of journals.** People arrive because somebody handed it to
+them. A directory doesn't solve discovery. (Ruled out from the first draft of
+DECISIONS until Miyel's friends-room brief of 2026-10-06 carried a
+background note and a mock-up for one, and her directory instructions of
+2026-10-07 had it built. The note's answer to this argument: hosting a
+journal and indexing journals are two different jobs, as podcasts show — a
+directory holds pointers, never the journals themselves — and being listed is
+a press, never a default.)

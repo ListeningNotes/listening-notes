@@ -39,6 +39,7 @@
 
 import { pull_settings } from './settings_actions.js';
 import { journalUrl, tidyJournal } from './return_address.js';
+import { DIRECTORY_URL } from './version.js';
 
 // Long enough for a cold serverless copy to wake up, which is the common case:
 // most journals are asleep most of the time, and the first request of the day
@@ -251,3 +252,29 @@ export async function send_message({ to, said, about = null, answering = '' }) {
   return { ok: false, error: back || 'Their copy would not take the message.' };
 }
 
+// ── Asking the directory, 2026-10-07 ─────────────────────────────────────
+// The fourth thing this copy puts into another, on a keeper's press and
+// through the other copy's own public route, like a send, a wave and a
+// message (AGENTS, Never): asking the registry to list this journal, or to
+// delist it (app/api/directory/listings/route.js; the switch is
+// app/api/listing/route.js). Returns { ok: true, status, ...what it said } or
+// { ok: false, error } in words for the switch, and never throws.
+export async function ask_directory(method, body) {
+  if (!DIRECTORY_URL) return { ok: false, error: 'This copy has no directory.' };
+  let answer;
+  try {
+    answer = await fetch(`${DIRECTORY_URL.replace(/\/+$/, '')}/listings`, {
+      method,
+      signal: AbortSignal.timeout(WAIT_MS),
+      headers: { 'content-type': 'application/json', accept: 'application/json' },
+      body: JSON.stringify(body),
+    });
+  } catch {
+    return { ok: false, error: 'The directory did not answer. Nothing changed; try again in a minute.' };
+  }
+  let said = null;
+  try { said = await answer.json(); } catch { /* not JSON: a directory too old, or none */ }
+  if (answer.ok && said && !said.error) return { ok: true, status: answer.status, ...said };
+  const why = String(said?.error || '').trim();
+  return { ok: false, status: answer.status, error: why || 'The directory would not take it. Nothing changed.' };
+}
