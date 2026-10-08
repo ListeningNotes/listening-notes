@@ -196,7 +196,7 @@ The hooks — reusable logic shared across pages
 The furniture — visual pieces
   components/
     main_components/           Everything on the public side
-      HomeNav.js               The cross itself — on a phone a rail of panes with the band at the foot (Card, Beacon, People, Inbox for the keeper; Card, Beacon, People for a visitor where there is a directory). People is the book's pane with two words in the bar, Friends · Everyone: the faces and the feed under one, the directory's list under the other; on a desk an open book — the spine on the left, the journal on the right, the fold, and a control in the spine's header to turn between its two pages
+      HomeNav.js               The cross itself — on a phone a rail of panes with the band at the foot (Card, Beacon, People, Inbox for the keeper; Card, Beacon, People for a visitor where there is a directory). People is the book's pane with two words in the bar, Friends · Hub, each with its count: the faces and the feed under one, the directory's list under the other; on a desk an open book — the spine on the left, the journal on the right, the fold, and a control in the spine's header to turn between its two pages
       About.js                 One face of the turning pane: the card, then the writing under it, in one scroll
       IdentityCard.js          The ID: the portrait full width and square — the same object an entry's album art is — then the name, four counts — albums, songs, and the two flags in their colours — and the pinned record or song. Send and Add left it on 2026-09-19, and left the beacon too on 2026-09-27; a visitor sees the keeper here and nowhere else. This is the About page
       IdentificationCardEditor.js  Editing the card in place
@@ -297,7 +297,7 @@ The rooms — full pages assembled from furniture
     printer/page.js            The share printer — the press on a record for the keeper (?entry=slug); the sentence for everyone else and for the card, whose plate is still to come
     setup/page.js              Claiming a copy, one screen at a time: the code, then name, photo, prompts, rig, updates, password, who gave it (GIFT_FROM, or a scan), and the home screen
     settings/page.js           The machinery, owner-only — the address, the password, the backup, updates, the home screen
-    directory/page.js          Everyone at its own address, on every copy, absent where DIRECTORY_URL is empty. directory/Directory.js holds `Everyone` — one request to the registry, a page of faces, beacons and covers; for the keeper, Be findable at its head, a check on people in the book, and Visit · Add on a press — drawn here and under People on the cross
+    directory/page.js          The Hub at its own address, on every copy, absent where DIRECTORY_URL is empty. directory/Directory.js holds `Everyone` (the Hub on screen) and the one shared reading of it, `readEveryone` — one request to the registry, a page of faces, beacons and covers; for the keeper, Be findable at its head, a check on people in the book, and Visit · Add on a press — drawn here and under People on the cross
     login/page.js              The door at an address — the same password form, for when a link will not do
     get/layout.js              The frame /get and /get/story share: the nav row, the measure, the type
     @layer/default.js          What the layer slot draws when nothing is open: nothing. The framework requires the file

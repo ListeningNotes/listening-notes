@@ -4,6 +4,8 @@
 
 // app/directory/Directory.js
 // Everyone: the journals that chose to be findable, as a page of people.
+// Called Hub on the screen (Miyel, 2026-10-07) — the second word in the People
+// tab's bar and the title of this page; `Everyone` here is what it is.
 //
 // From Miyel's directory instructions, 2026-10-07, in the look she settled
 // the same evening ("lets make it feel more like a true page, pfp"). It makes
@@ -446,7 +448,7 @@ export default function Directory() {
     <div className="dir-screen">
       <SiteNav />
       <main className="dir-wrap">
-        <h1 className="dir-title">Everyone</h1>
+        <h1 className="dir-title">Hub</h1>
         <p className="dir-lede">
           Journals that chose to be listed. Press one to read it &mdash; it lives at its own address, not here.
         </p>

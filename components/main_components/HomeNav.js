@@ -1407,8 +1407,11 @@ export default function HomeNav() {
   // screen above it: a header that said FEED while you were looking at the
   // faces would be naming the wrong floor. See the scroll effect below.
   const [atFeed, setAtFeed] = useState(false);
-  // ── Friends · Everyone, 2026-10-07 ───────────────────────────────────────
+  // ── Friends · Hub, 2026-10-07 ────────────────────────────────────────────
   // The two words at the top of the People tab, and which one is showing.
+  // The second word is Hub on the screen (Miyel's call, after Everyone,
+  // Commons and All Users); in the code it is still `everyone`, as the beacon
+  // is still the needle — what the list is, not what it is called.
   // The keeper starts on Friends; a visitor has only Everyone. Everyone is
   // drawn while it shows and taken down when it does not, so coming back to
   // it reads the list again; the book stays mounted under it either way, so
@@ -2115,11 +2118,11 @@ export default function HomeNav() {
               onClick={() => chooseRoom('everyone')}
               aria-pressed={onEveryone}
             >
-              Everyone{listedCount > 0 ? ` \u00b7 ${listedCount}` : ''}
+              Hub{listedCount > 0 ? ` \u00b7 ${listedCount}` : ''}
             </button>
           ) : (
             <span className="hn-bar-word hn-bar-word--on">
-              Everyone{listedCount > 0 ? ` \u00b7 ${listedCount}` : ''}
+              Hub{listedCount > 0 ? ` \u00b7 ${listedCount}` : ''}
             </span>
           ))}
         </span>
