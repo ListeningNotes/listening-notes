@@ -3206,6 +3206,9 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
      screen and has to measure one; the padding belongs inside each floor. */
   .hn-pane--friends {
     padding: 0;
+    /* The pull-down line's box, so it travels with this pane and not with
+       the cross (PullDown.js, .ln-pull). */
+    position: relative;
     /* None, for the reason written against .hn-pane--home above. */
     scroll-snap-type: none;
     /* Inherited from .hn now — the beacon wants the same number. */
@@ -4038,4 +4041,42 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   grid-row: 3;
   width: 100%;
   min-width: 0;
+}
+
+/* ── Pull down to refresh, 2026-10-06 ───────────────────────────────────────
+   As the brief's mock-up draws it: dragging down at the top opens a gap
+   above the page, and the mark and a line stand in it — the mark turning
+   while the ask is out. The gap is one number, --pull-room, written on the
+   scroller by components/main_components/PullDown.js (the reasoning is
+   there): the line is that tall, just under the bar, and the pane's first
+   floor stands that much lower. A pane carries the pull by giving its first
+   floor the margin, as the Friends pane does here. */
+.ln-pull {
+  position: absolute;
+  left: 0; right: 0;
+  top: var(--hn-bar-h);
+  z-index: 1;
+  height: min(var(--pull-room, 0px), 56px);
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  font-family: var(--font-label);
+  font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--ink-faint);
+  pointer-events: none;
+  transition: height var(--pull-ease, 0.22s) ease;
+}
+.ln-pull--release, .ln-pull--asking { color: var(--ink-soft); }
+.ln-pull-mark { display: inline-flex; }
+.ln-pull-svg { height: 13px; width: auto; display: block; }
+.ln-pull-svg path, .ln-pull-svg .hn-mark-dot { fill: currentColor; }
+.ln-pull-svg .hn-mark-dot--live { fill: var(--live); }
+.ln-pull--asking .ln-pull-mark { animation: ln-pull-turn 1.1s linear infinite; }
+@keyframes ln-pull-turn { to { transform: rotate(360deg); } }
+.hn-pane--friends > .hn-floor--book {
+  margin-top: var(--pull-room, 0px);
+  transition: margin-top var(--pull-ease, 0.22s) ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ln-pull, .hn-pane--friends > .hn-floor--book { transition: none; }
+  .ln-pull--asking .ln-pull-mark { animation: none; }
 }
