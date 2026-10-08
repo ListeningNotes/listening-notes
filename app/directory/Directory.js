@@ -41,7 +41,7 @@
 // Searching by album — who else has written about this — is a second phase,
 // and not here.
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 import { BookOpen, Check, Plus, User } from '@phosphor-icons/react';
 import SiteNav from '../../components/main_components/SiteNav';
 import WaveSheet from '../../components/main_components/WaveSheet';
@@ -62,6 +62,76 @@ const GET_URL = (() => {
 
 // Said by the switch: the directory's own host, without the www.
 const WHERE = tidyJournal(DIRECTORY_URL).replace(/^www\./, '');
+
+// ── One reading of the list, shared ────────────────────────────────────────
+// The list and the count beside the word in the People tab's bar come from
+// the same answer (Miyel, 2026-10-07: "can count be next to everyone?"), so
+// they are read once into this module and drawn from here: the bar asks when
+// People opens, the list asks again when it is drawn, on a pull, and after
+// the switch is pressed. A failed ask keeps whatever was read before — a list
+// on the screen is not taken away because the registry was slow a second
+// time — and says the list is down only when there was never anything.
+const NOTHING_YET = Object.freeze({ page: null, down: false });
+let reading = NOTHING_YET;
+let asking = null;
+const listening = new Set();
+function publish(next) {
+  reading = next;
+  listening.forEach(fn => fn());
+}
+function subscribe(fn) {
+  listening.add(fn);
+  return () => listening.delete(fn);
+}
+
+export function readEveryone() {
+  if (asking) return asking;
+  asking = (async () => {
+    try {
+      const r = await fetch(DIRECTORY_URL, { cache: 'no-store' });
+      if (!r.ok) throw new Error(String(r.status));
+      const d = await r.json();
+      publish({
+        down: false,
+        page: {
+          listed: Number(d?.listed) || 0,
+          logging: Number(d?.logging) || 0,
+          journals: Array.isArray(d?.journals) ? d.journals : [],
+          next: d?.next || null,
+        },
+      });
+    } catch {
+      if (!reading.page) publish({ page: null, down: true });
+    } finally {
+      asking = null;
+    }
+  })();
+  return asking;
+}
+
+// The next thirty, added to the end. What failed to come is simply not added.
+async function readMore() {
+  const after = reading.page?.next;
+  if (!after) return;
+  try {
+    const r = await fetch(`${DIRECTORY_URL}?after=${encodeURIComponent(after)}`, { cache: 'no-store' });
+    const d = r.ok ? await r.json() : null;
+    if (d && reading.page?.next === after) {
+      publish({
+        ...reading,
+        page: {
+          ...reading.page,
+          journals: [...reading.page.journals, ...(Array.isArray(d.journals) ? d.journals : [])],
+          next: d.next || null,
+        },
+      });
+    }
+  } catch { /* the press can be made again */ }
+}
+
+export function useEveryone() {
+  return useSyncExternalStore(subscribe, () => reading, () => NOTHING_YET);
+}
 
 // Their journal's own portrait, read straight off it and never kept here,
 // in a circle; the plain mark when there is none. Lit as the book lights a
@@ -194,18 +264,19 @@ function Findable({ onChange }) {
 // ── The list ────────────────────────────────────────────────────────────────
 // `keeper` is whether the person looking keeps this journal (the cross's lock
 // has said so). `refreshRef`, when given, is handed the way to ask again, for
-// the pull at the top of the pane.
-export function Everyone({ keeper = false, refreshRef = null }) {
+// the pull at the top of the pane. `countInBar` is true in the People tab,
+// where the number of journals stands beside the word in the bar, so the
+// line over the list keeps only how many are logging and the number is not
+// on the screen twice.
+export function Everyone({ keeper = false, refreshRef = null, countInBar = false }) {
   const { keeper_name: myName, site_address: myAddress } = useBookplate();
   const me = { name: myName, address: myAddress };
   const mine = tidyJournal(myAddress);
 
   // null until the registry has answered; `down` once it could not and there
-  // is nothing older to keep showing.
-  const [page, setPage] = useState(null);
-  const [down, setDown] = useState(false);
-  const [asking, setAsking] = useState(false);
-  const had = useRef(false);
+  // is nothing older to keep showing. See readEveryone.
+  const { page, down } = useEveryone();
+  const [more, setMore] = useState(false);
 
   // The keeper's book, by address, for the checks; the row whose doors are
   // open; the one being filed; what filing it said; the wave it offers.
@@ -214,26 +285,6 @@ export function Everyone({ keeper = false, refreshRef = null }) {
   const [adding, setAdding] = useState('');
   const [said, setSaid] = useState('');
   const [wavingTo, setWavingTo] = useState(null);
-
-  const load = useCallback(async () => {
-    try {
-      const r = await fetch(DIRECTORY_URL, { cache: 'no-store' });
-      if (!r.ok) throw new Error(String(r.status));
-      const d = await r.json();
-      had.current = true;
-      setDown(false);
-      setPage({
-        listed: Number(d?.listed) || 0,
-        logging: Number(d?.logging) || 0,
-        journals: Array.isArray(d?.journals) ? d.journals : [],
-        next: d?.next || null,
-      });
-    } catch {
-      // A list already on the screen stays there: a failed ask again is not
-      // a reason to take away what was read a minute ago.
-      if (!had.current) setDown(true);
-    }
-  }, []);
 
   const readBook = useCallback(async () => {
     if (!keeper) return;
@@ -244,33 +295,23 @@ export function Everyone({ keeper = false, refreshRef = null }) {
     } catch { /* no checks is the honest fallback */ }
   }, [keeper]);
 
-  // Read once, when the list is first drawn.
-  useEffect(() => { load(); }, [load]);
+  // Read again whenever the list is drawn, so coming back to it is fresh.
+  useEffect(() => { readEveryone(); }, []);
   useEffect(() => { readBook(); }, [readBook]);
 
   // The pull asks for both again.
   useEffect(() => {
     if (!refreshRef) return undefined;
-    refreshRef.current = () => Promise.all([load(), readBook()]);
+    refreshRef.current = () => Promise.all([readEveryone(), readBook()]);
     return () => { refreshRef.current = null; };
-  }, [refreshRef, load, readBook]);
+  }, [refreshRef, readBook]);
 
-  // The next thirty, on a press. What failed to come is simply not added.
-  async function more() {
-    if (!page?.next || asking) return;
-    setAsking(true);
-    try {
-      const r = await fetch(`${DIRECTORY_URL}?after=${encodeURIComponent(page.next)}`, { cache: 'no-store' });
-      const d = r.ok ? await r.json() : null;
-      if (d) {
-        setPage(was => ({
-          ...was,
-          journals: [...was.journals, ...(Array.isArray(d.journals) ? d.journals : [])],
-          next: d.next || null,
-        }));
-      }
-    } catch { /* the press can be made again */ }
-    setAsking(false);
+  // The next thirty, on a press.
+  async function askMore() {
+    if (more) return;
+    setMore(true);
+    await readMore();
+    setMore(false);
   }
 
   // Files somebody in the book, the same write the + in Friends makes. The
@@ -355,7 +396,7 @@ export function Everyone({ keeper = false, refreshRef = null }) {
 
   return (
     <div className="dir-everyone">
-      {keeper && <Findable onChange={load} />}
+      {keeper && <Findable onChange={readEveryone} />}
       {down ? (
         <p className="dir-quiet">The list can&rsquo;t be reached right now.</p>
       ) : page === null ? (
@@ -367,14 +408,15 @@ export function Everyone({ keeper = false, refreshRef = null }) {
           <h2 className="dir-head">
             <span>Listed</span>
             <span className="dir-count">
-              {journalsWord(page.listed)}
-              {page.logging > 0 && ` · ${page.logging} logging right now`}
+              {countInBar
+                ? (page.logging > 0 ? `${page.logging} logging right now` : '')
+                : <>{journalsWord(page.listed)}{page.logging > 0 && ` · ${page.logging} logging right now`}</>}
             </span>
           </h2>
           {page.journals.map(row)}
           {page.next && (
-            <button type="button" className="dir-more" onClick={more} disabled={asking}>
-              {asking ? 'Asking…' : 'More'}
+            <button type="button" className="dir-more" onClick={askMore} disabled={more}>
+              {more ? 'Asking…' : 'More'}
             </button>
           )}
         </section>
