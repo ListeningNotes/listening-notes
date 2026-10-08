@@ -14,6 +14,7 @@
 // unlucky visitor would set off a fetch to every listed journal (Miyel's
 // directory instructions, 2026-10-07).
 
+import { createHash } from 'node:crypto';
 import database from './database_connection.js';
 import { journalUrl } from './return_address.js';
 
@@ -155,6 +156,39 @@ export async function find_by_name(q) {
      FROM directory WHERE name ILIKE $1
      ORDER BY lower(name), address LIMIT $2`,
     [like, PAGE],
+  );
+  return { journals: rows.map(shown) };
+}
+
+// ── Which of these are on the Board, 2026-10-08 ───────────────────────────
+// A journal asking about its own book — to publish only the people on the
+// Board (app/api/public/people), or to learn what a friend's friend is
+// playing (app/api/friends/beacons) — asks with hashes, not addresses. So a
+// journal never names to the directory somebody who is not on the Board: the
+// directory recognises the hashes of the addresses it already lists, and the
+// rest are sixteen characters it cannot read. Two hundred at most.
+export function boardHash(address) {
+  return createHash('sha256').update(String(address || '')).digest('hex').slice(0, 16);
+}
+
+const HASHES_KEPT_MS = 60 * 1000;
+let hashed = { at: 0, map: new Map() };
+
+async function listedByHash() {
+  if (Date.now() - hashed.at < HASHES_KEPT_MS) return hashed.map;
+  const rows = await database`SELECT address FROM directory`;
+  hashed = { at: Date.now(), map: new Map(rows.map(r => [boardHash(r.address), r.address])) };
+  return hashed.map;
+}
+
+export async function pull_among(hashes) {
+  const map = await listedByHash();
+  const addresses = [...new Set(hashes)].slice(0, 200).map(h => map.get(h)).filter(Boolean);
+  if (addresses.length === 0) return { journals: [] };
+  const rows = await database.query(
+    `SELECT address, name, state, album, artist, art, ${LIVE_SQL} AS live
+     FROM directory WHERE address = ANY($1)`,
+    [addresses],
   );
   return { journals: rows.map(shown) };
 }

@@ -430,6 +430,10 @@
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .dir-name--none { font-size: 15px; color: var(--ink-soft); }
+/* The path to somebody a friend away, under their name: "Through Dez and
+   Wren". In the reading face, quiet, the way a line of somebody's own words
+   would sit — it is about them, not a label on them. */
+.dir-through { margin-top: 2px; font-size: 13px; color: var(--ink-soft); }
 .dir-state {
   margin-top: 3px;
   font-family: var(--font-label);
