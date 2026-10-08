@@ -106,6 +106,59 @@ export async function pull_directory_page(cursor = '') {
   };
 }
 
+// ── The Board's first screen, 2026-10-08 ──────────────────────────────────
+// Everybody logging right now, community-wide — the band — and a dozen of
+// everybody else, shuffled: "further out". One request draws the Board's
+// first screen. Neither half is ordered by how much anybody logs (AGENTS,
+// Never): the band is everyone on at this moment, in no order but chance,
+// and the dozen is a fresh draw; `shuffle` is only there to make a new draw
+// a new address for a shared cache.
+const BAND_MOST = 30;
+const DOZEN = 12;
+// A row the job has never seen, or one not logging, is not live.
+const NOT_LIVE_SQL = `NOT COALESCE(${LIVE_SQL}, false)`;
+
+export async function pull_board() {
+  const live = await database.query(
+    `SELECT address, name, state, album, artist, art, true AS live
+     FROM directory WHERE ${LIVE_SQL}
+     ORDER BY random() LIMIT $1`,
+    [BAND_MOST],
+  );
+  const further = await database.query(
+    `SELECT address, name, state, album, artist, art, false AS live
+     FROM directory WHERE ${NOT_LIVE_SQL}
+     ORDER BY random() LIMIT $1`,
+    [DOZEN],
+  );
+  const [counts] = await database.query(
+    `SELECT count(*)::int AS listed, count(*) FILTER (WHERE ${LIVE_SQL})::int AS logging FROM directory`,
+  );
+  return {
+    listed: counts?.listed || 0,
+    logging: counts?.logging || 0,
+    live: live.map(shown),
+    further: further.map(shown),
+  };
+}
+
+// ── Looking somebody up by name ───────────────────────────────────────────
+// The Board's search, for a name: never an address, which is not something a
+// person types and not something the Board prints. Alphabetical, thirty at
+// most.
+export async function find_by_name(q) {
+  const term = String(q || '').trim().slice(0, 60);
+  if (!term) return { journals: [] };
+  const like = `%${term.replace(/[\\%_]/g, c => '\\' + c)}%`;
+  const rows = await database.query(
+    `SELECT address, name, state, album, artist, art, ${LIVE_SQL} AS live
+     FROM directory WHERE name ILIKE $1
+     ORDER BY lower(name), address LIMIT $2`,
+    [like, PAGE],
+  );
+  return { journals: rows.map(shown) };
+}
+
 // ── Being listed ──────────────────────────────────────────────────────────
 export async function pull_listing(address) {
   const [row] = await database`SELECT address, code FROM directory WHERE address = ${address}`;

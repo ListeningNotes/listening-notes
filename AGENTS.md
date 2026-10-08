@@ -75,24 +75,34 @@ reasoning; these are inline so nobody has to go looking.
 - **No counts, badges, streaks or follower numbers attached to a person** —
   not listens, not gifts, not who added whom, not who is reading. Presence is
   outbound: a journal shows what its keeper is logging and never who is
-  reading it. A count of the whole community is not that: the directory may
-  say how many journals are listed and how many are logging right now,
-  because neither names anybody and neither can be grown. A row is a name and
-  a beacon; never a number beside a person.
+  reading it. A count may sit on a record ("3 keepers") and on the community
+  ("214 keepers · 7 logging"), because neither names anybody and neither can
+  be grown. A row is a name and a beacon; never a number beside a person.
+- **Nothing is ordered by how much someone logs.** Where there is no better
+  order — distance from the viewer, newest — shuffle. No "most active", no
+  ranking of people, anywhere.
 - **Never write to another keeper's database.** The only things one copy may
-  put into another are a send, a wave, a message and — into the directory —
-  a listing, each on a keeper's press, through that copy's own public route.
+  put into another are a send, a wave and a message, each on a keeper's press,
+  and — into the directory — a listing, which a journal makes unless its
+  keeper has switched it off; each through that copy's own public route.
   Everything else about another journal is read from its public feed and
   routes.
-- **Nobody's words are drawn on a journal but its keeper's.** No comments, no
-  threads, nothing a visitor wrote shown on an entry or anywhere else. What
-  somebody has to say goes to the keeper as a message and lives in the inbox;
-  it is public only if the keeper quotes it in their own writing.
+- **Nobody writes on anybody else's journal.** No comments, no threads, no
+  words about an album left on somebody else's entry, nothing a visitor wrote
+  shown on an entry or anywhere else. What somebody has to say goes to the
+  keeper as a message and lives in the inbox; it is public only if the keeper
+  quotes it in their own writing. The Board may quote a keeper's own words
+  from their own public entry, linked to it: that is them on their journal,
+  not somebody writing on yours (Miyel, 2026-10-08).
 - **No phone-home.** Nothing in a copy reports to the canonical copy or
   anywhere else: no analytics, no pushed banners or messages, no deploy
   redirect that would log installs, nothing that runs without a press. A copy
   learns of a new version by reading the public releases itself, at most once
-  a day; a problem report leaves only when a keeper presses Send.
+  a day; a problem report leaves only when a keeper presses Send. The one
+  exception, made on purpose: being on the Board. A journal lists itself in
+  the directory unless its keeper switches it off — on by default for
+  everyone, said plainly at setup, off with one switch in Settings (Miyel,
+  2026-10-08) — and the listing carries its address and nothing else.
 - **Never edit or rename a migration that has run, and never write a down
   migration.** The filename is the identity, so an edited or renamed file runs
   again on every copy. A change is a new numbered file, written with
@@ -109,7 +119,10 @@ reasoning; these are inline so nobody has to go looking.
 - **Public reads are allow-lists.** The feed (`PUBLIC_FIELDS`) and the wall
   never carry the writing; a new column stays private until somebody decides
   otherwise; the chain fields leave only through `withoutChain`, and only on a
-  Submission entry that was not marked quiet.
+  Submission entry that was not marked quiet. The address book leaves only
+  through `/api/public/people`: a name and an address for each person who is
+  on the Board themselves, never one added privately, and nothing at all
+  while the keeper is off the Board.
 - **Secrets never reach a browser.** The `secrets` table is read by
   `library/secrets.js` and nothing else, and is never selected with
   `settings`; a page is told whether a key is set and its last four

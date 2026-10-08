@@ -1243,12 +1243,11 @@ circle and a record a rounded square, which also tells the two apart in the
 band of cards, where both are drawn. The rest of the site's faces wait on her.
 
 **The directory, 2026-10-07, Miyel's call, and no longer ruled out.**
-listeningnotes.blog keeps a table of the journals that chose to be findable —
-the address, the code it proved it with, when, and the last beacon seen — and
-nothing else; no entry or writing ever leaves a journal. A copy draws the
-list from one request to DIRECTORY_URL and fetches no beacon itself; it is
-public, and a stranger pressing through to /get is the point. Album search
-is phase two (her calls for it: cover first, stars, marks, quotes).
+listeningnotes.blog keeps a table of the journals on the Board — the address,
+the code it proved it with, when, and the last beacon seen. A copy draws the
+Board from DIRECTORY_URL and fetches no beacon itself; it is public, and a
+stranger pressing through to /get is the point. Since 2026-10-08 it keeps
+each listed journal's records too (below); never the writing.
 
 **Counts of the whole community are not counts of a person, 2026-10-07.**
 The Never list's rule is about a number attached to somebody — listens,
@@ -1257,27 +1256,46 @@ journals are listed and how many are logging right now, because neither names
 anybody and neither can be grown. A row is a name and a beacon, never a
 number beside a person (Miyel, amending the rule rather than excepting it).
 
-**Being findable is a press, proved by the address, 2026-10-07.** Off by
-default; the consequence is said before the press, at the head of Keepers.
-The registry issues a code made from its secret and the address, the journal serves it at
-/api/public/listing, and the row is kept only if it comes back. Delisting
-needs the code and the journal to have forgotten it — the code is public
-while listed, so the code alone would let anybody delist anybody.
+**Being on the Board is the default, proved by the address, 2026-10-08.**
+Miyel: "on by default for everyone" — every journal already serves a public
+journal and beacon, so the Board publishes nothing new. Said plainly at
+setup; off with one switch in Settings; one note on the Board until it is
+dismissed. The proof is unchanged: a code from the registry's secret, served
+back at /api/public/listing; delisting needs the code and the journal to have
+forgotten it. (Off by default and a press, 2026-10-07, is what this replaced.)
 
-**People is one tab: Friends · Keepers, 2026-10-07, Miyel's call.** The
-Friends tab became People, with two words at the top, each with its count:
-Friends (the book) and Keepers (the directory's list — her word, after
-Everyone, Commons, All Users and Hub). The feed stays Friends' second
-floor. Being findable lives at the head of Keepers, not in Settings.
-A press on somebody opens Visit · Add; somebody already in the book wears a
-check and stays in the list, so the list and its count read the same for all.
+**People is one tab: Friends · Board, Miyel's call.** Two words in the bar,
+each with its count: Friends (the book, unchanged) and Board — her word on
+2026-10-08, after Everyone, Commons, All Users, Hub and Keepers. The Board is
+ordered by distance from the viewer: logging right now, a friend away, also
+on your records, being logged everywhere, further out (shuffled). Adding is
+a door on a press; somebody already in the book wears a check.
 
-**A visitor's People holds Keepers and nothing of the keeper's,
-2026-10-07.** Miyel: "strangers and visitors can see this page." No Friends,
-no switch, no checks — a journal never shows whom its keeper added.
+**A visitor's People holds the Board's public parts, 2026-10-07/08.** Miyel:
+"strangers and visitors can see this page." No Friends, no switch, no checks,
+and nothing ordered around the keeper — a friend away and your records are
+the viewer's own, so a visitor has neither.
 
-**Reading the directory is not phone-home, 2026-10-07.** Keepers loads the
-list when People opens, with no press of its own. Miyel: "not what i meant by
+**Address books are published, for a friend away, 2026-10-08.** Miyel: "all
+my testers are asking for this, they feel too alone, this will be how they
+find people." /api/public/people gives a name and an address for each person
+in the book who is on the Board themselves — never one added privately,
+nothing while the keeper is off. Two rings only: friends, and theirs; not
+their friends' friends, which is what other people's hosting cannot afford.
+
+**Quotes on the Board are a keeper's own words, 2026-10-08.** Miyel: the
+rule was "about people writing on other people's journals... nobody's words
+about albums or comments, not this." A line from a keeper's own public entry,
+linked to it, may stand on the Board; a visitor's words never do.
+
+**The directory keeps each listed journal's records, 2026-10-08.** Titles,
+stars and marks, read from the public feed by the same job — never the
+writing, which is fetched from the journal itself when a line is shown. It is
+what lets "also on your records" and "being logged everywhere" exist. Not
+yet, by the brief: forums, any "most active" view, any follower count.
+
+**Reading the directory is not phone-home, 2026-10-07.** The Board loads
+when People opens, with no press of its own. Miyel: "not what i meant by
 reporting home. dont worry about that here." The rule is about a copy
 reporting on itself — analytics, installs, banners — not reading a list.
 

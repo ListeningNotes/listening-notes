@@ -224,6 +224,25 @@ export async function save_listing_code(code) {
   await database`UPDATE settings SET listing_code = ${code || null} WHERE id = 1`;
 }
 
+// Whether this journal is on the Board (migrations/032_board.sql): true until
+// its keeper switches it off in Settings. Read on its own, like the listing
+// code beside it, and true when the column is not there yet — the default
+// the migration gives every journal. A database that cannot be read is not a
+// reason to publish anything, so a failed read says false.
+export async function pull_findable() {
+  try {
+    const [row] = await database`SELECT findable FROM settings WHERE id = 1`;
+    return row ? row.findable !== false : false;
+  } catch (error) {
+    if (/column "findable" does not exist/.test(String(error?.message))) return true;
+    return false;
+  }
+}
+
+export async function save_findable(on) {
+  await database`UPDATE settings SET findable = ${Boolean(on)} WHERE id = 1`;
+}
+
 export async function pull_settings() {
   try {
     const [row] = await database.query(
