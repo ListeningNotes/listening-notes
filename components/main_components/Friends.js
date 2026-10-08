@@ -47,6 +47,7 @@ import WaveSheet from './WaveSheet';
 import { carrySender, journalUrl, tidyJournal } from '../../library/return_address';
 import { useBookplate } from './Bookplate';
 import { fillFriends, useFriendsBeacons } from '../../hooks/useFriendsBeacons';
+import { DIRECTORY_URL } from '../../library/version';
 
 // The order the server keeps: pinned first in the order they were pinned,
 // then by name, or by address for anyone without one. Said twice — here and
@@ -504,6 +505,20 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null, 
       flight.current = whereEveryoneIs(shelfRef.current);
       setPeople(prev => inOrder(prev.map(q => (q.id === answer.person.id ? answer.person : q))));
     }
+  }
+
+  // ── Kept private, 2026-10-08 ────────────────────────────────────────────
+  // Somebody kept private is never published: they stay off the Board's "a
+  // friend away" for everyone but this keeper (Miyel's Board brief; the
+  // public route is app/api/public/people). The same PATCH as a pin, with the
+  // row it returns put back in place.
+  async function keepPrivate(id, on) {
+    const answer = await fetch(`/api/people/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ private: on }),
+    }).then(r => (r.ok ? r.json() : null)).catch(() => null);
+    if (answer?.person) setPeople(prev => inOrder(prev.map(q => (q.id === answer.person.id ? answer.person : q))));
   }
 
   // ── The + does not open the keyboard ────────────────────────────────────
@@ -1250,18 +1265,37 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null, 
                       back by a press anywhere else — the shape the entry's
                       Delete and the picker's discard already have. What
                       changed is where it sits, not how it behaves. */}
+                  {/* Keep private sits beside Remove, in the same quiet
+                      face: both are about the person's place in the book
+                      rather than things done with them (2026-10-08). Only
+                      where there is a Board for them to be kept off. */}
                   {mine && (
-                    <button
-                      ref={binRef}
-                      type="button"
-                      className={'fr-cut' + (sure ? ' fr-cut--sure' : '')}
-                      onClick={() => { if (!sure) { setSure(true); return; } cross(mine.id); }}
-                      title={sure
-                        ? `Press again to take ${mine.name || 'them'} out of your book`
-                        : `Take ${mine.name || 'them'} out of your book`}
-                    >
-                      {sure ? 'Remove from journal?' : 'Remove from journal'}
-                    </button>
+                    <div className="fr-quiets">
+                      {DIRECTORY_URL && (
+                        <button
+                          type="button"
+                          className={'fr-cut fr-keep' + (mine.private ? ' fr-keep--on' : '')}
+                          onClick={() => keepPrivate(mine.id, !mine.private)}
+                          aria-pressed={Boolean(mine.private)}
+                          title={mine.private
+                            ? `${mine.name || 'They'} stay off everyone's board but yours. Press to share them again.`
+                            : `Keep ${mine.name || 'them'} off everyone's board but yours`}
+                        >
+                          {mine.private ? 'Kept private' : 'Keep private'}
+                        </button>
+                      )}
+                      <button
+                        ref={binRef}
+                        type="button"
+                        className={'fr-cut' + (sure ? ' fr-cut--sure' : '')}
+                        onClick={() => { if (!sure) { setSure(true); return; } cross(mine.id); }}
+                        title={sure
+                          ? `Press again to take ${mine.name || 'them'} out of your book`
+                          : `Take ${mine.name || 'them'} out of your book`}
+                      >
+                        {sure ? 'Remove from journal?' : 'Remove from journal'}
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>

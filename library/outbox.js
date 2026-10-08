@@ -259,6 +259,26 @@ export async function send_message({ to, said, about = null, answering = '' }) {
 // delist it (app/api/directory/listings/route.js; the switch is
 // app/api/listing/route.js). Returns { ok: true, status, ...what it said } or
 // { ok: false, error } in words for the switch, and never throws.
+// Which of these hashed addresses are on the Board, and what each is playing
+// (the directory's `?among=`, library/directory_actions.js). A read, server
+// to server, on the keeper's own behalf. Null when the directory did not
+// answer — unknown, which the callers keep apart from nobody.
+export async function ask_directory_among(hashes) {
+  if (!DIRECTORY_URL) return [];
+  if (!hashes.length) return [];
+  try {
+    const answer = await fetch(`${DIRECTORY_URL}?among=${hashes.slice(0, 200).join(',')}`, {
+      signal: AbortSignal.timeout(WAIT_MS),
+      headers: { accept: 'application/json' },
+    });
+    if (!answer.ok) return null;
+    const said = await answer.json();
+    return Array.isArray(said?.journals) ? said.journals : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function ask_directory(method, body) {
   if (!DIRECTORY_URL) return { ok: false, error: 'This copy has no directory.' };
   let answer;

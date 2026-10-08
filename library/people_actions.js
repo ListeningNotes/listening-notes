@@ -16,7 +16,7 @@ import { tidyJournal, journalUrl } from './return_address.js';
 // the top without a second query or a sort in the page.
 export async function pull_people() {
   return await database`
-    SELECT id, address, name, added_at, pinned_at
+    SELECT id, address, name, added_at, pinned_at, private
     FROM people
     ORDER BY (pinned_at IS NULL), pinned_at, lower(coalesce(name, address)), added_at
   `;
@@ -50,7 +50,7 @@ export async function pin_person(id, on) {
     UPDATE people
     SET pinned_at = ${on ? new Date() : null}
     WHERE id = ${id}
-    RETURNING id, address, name, added_at, pinned_at
+    RETURNING id, address, name, added_at, pinned_at, private
   `;
   return row || null;
 }
@@ -66,14 +66,38 @@ export async function save_person({ address, name }) {
     VALUES (${host}, ${String(name || '').trim() || null})
     ON CONFLICT (address) DO UPDATE
       SET name = COALESCE(EXCLUDED.name, people.name)
-    RETURNING id, address, name, added_at, pinned_at
+    RETURNING id, address, name, added_at, pinned_at, private
   `;
   return row;
 }
 
+// ── Private, 2026-10-08 ─────────────────────────────────────────────────────
+// A person kept private is never published (migrations/032_board.sql): they
+// stay out of /api/public/people, so they are on nobody's board but their
+// keeper's own. Everybody else in the book may be published — and only if
+// they are on the Board themselves, which the public route asks the
+// directory (Miyel's Board brief).
+export async function set_private(id, on) {
+  const [row] = await database`
+    UPDATE people SET private = ${Boolean(on)} WHERE id = ${id}
+    RETURNING id, address, name, added_at, pinned_at, private
+  `;
+  return row || null;
+}
+
+// The part of the book that may be published, in the book's own order: the
+// address and the name it was filed under, and nothing else.
+export async function pull_public_people() {
+  return await database`
+    SELECT address, name FROM people
+    WHERE NOT private
+    ORDER BY (pinned_at IS NULL), pinned_at, lower(coalesce(name, address)), added_at
+  `;
+}
+
 export async function pull_person(id) {
   const [row] = await database`
-    SELECT id, address, name, added_at, pinned_at FROM people WHERE id = ${id} LIMIT 1
+    SELECT id, address, name, added_at, pinned_at, private FROM people WHERE id = ${id} LIMIT 1
   `;
   return row || null;
 }
