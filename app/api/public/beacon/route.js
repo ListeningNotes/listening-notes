@@ -72,6 +72,11 @@ const NOTHING = { state: 'none', album: '', artist: '', art: '', track: '', at: 
 // of the size. Used by the state whose record does not come out of this list;
 // the quiet session state simply takes the three under its own head, which is
 // the same rule stated more cheaply.
+// The covers under the beacon say what, never when: `at` is the room's and
+// stays off these rows, which is the allow-list rule — a new value is
+// private until somebody decides otherwise (2026-10-07).
+const plain = ({ album, artist, art, slug, track }) => ({ album, artist, art, slug, track });
+
 const beforeThat = (recent, album) => {
   const here = sameRecord(album);
   return recent.filter(row => !here || sameRecord(row.album) !== here).slice(0, BEFORE_THAT);
@@ -95,12 +100,12 @@ export async function GET() {
       return Response.json({
         state: 'logging',
         album: needle.album, artist: needle.artist, art: needle.art, track: needle.track,
-        // When, 2026-10-06: the last time the needle moved. Added for the
-        // friends' room on other copies ("logged Voodoo, 2 hours ago"); a
-        // copy older than this never sends it, and a reader treats it as
-        // optional. A new field an older copy can ignore, nothing renamed.
-        at: needle.at,
-        before: beforeThat(recent, needle.album),
+        // No time while a listen is open, 2026-10-07: the needle's last move
+        // is the second the keeper last touched their journal, which is a
+        // "last seen" and nobody's business. The room says NOW LOGGING with
+        // no time, and the listen's own time arrives once it is logged.
+        at: null,
+        before: beforeThat(recent, needle.album).map(plain),
       }, { headers: CACHED });
     }
 
@@ -118,8 +123,12 @@ export async function GET() {
     return Response.json({
       state: 'logged',
       album: last.album, artist: last.artist, art: last.art, track: last.track || '',
+      // When it was sat with, 2026-10-06, for the friends' room on other
+      // copies ("logged Voodoo, 2 hours ago"). A copy older than this never
+      // sends it and a reader treats it as optional: a new field an older
+      // copy can ignore, nothing renamed.
       at: last.at,
-      before: recent.slice(1, 1 + BEFORE_THAT),
+      before: recent.slice(1, 1 + BEFORE_THAT).map(plain),
     }, { headers: CACHED });
   } catch {
     // Cached like every other answer, deliberately. A database having a bad

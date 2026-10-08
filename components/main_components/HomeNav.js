@@ -2788,9 +2788,9 @@ export default function HomeNav() {
                     again, past the route's minute (PullDown.js). The first
                     scroller to carry it; the rest follow once this one is
                     seen (AGENTS: the shared piece first). */}
-                <PullDown scroller={friendsRef} onPull={refreshFriends} asking="Asking everyone…" />
+                <PullDown scroller={friendsRef} onPull={refreshFriends} asking="Asking everyone…" mark={mark('ln-pull-svg')} />
                 <div className="hn-floor hn-floor--book">
-                  <Friends shelf onCount={setBookSize} onBusy={setBookBusy} />
+                  <Friends shelf onCount={setBookSize} onBusy={setBookBusy} onScreen={pane === BOOK} />
                   {/* The feed's name lives here rather than at the top of
                       the feed (Miyel, 2026-09-19: "can i see feed living
                       above the down caret?"). It is the right place for it:

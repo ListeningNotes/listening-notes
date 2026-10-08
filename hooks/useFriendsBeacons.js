@@ -168,9 +168,17 @@ export function fillFriends() {
   return poll('all');
 }
 
-export function useFriendsBeacons() {
+// A subscription that subscribes to nothing, for a room that is mounted but
+// not on screen: the cross keeps the Friends pane built once it has been
+// visited, and a tab left open on the wall all afternoon must not ask thirty
+// other people's journals once a minute for a room nobody is looking at.
+// Letting go is what stops the timer; coming back asks at once, exactly as
+// coming back to the tab does. The last answer stays on the faces meanwhile.
+const unheard = () => () => {};
+
+export function useFriendsBeacons(listening = true) {
   return useSyncExternalStore(
-    subscribe,
+    listening ? subscribe : unheard,
     () => room.snapshot,
     // The server renders the book with nobody on; the browser has not asked
     // yet either, so anything else would be a hydration mismatch.
