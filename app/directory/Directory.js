@@ -17,11 +17,15 @@
 // default for everyone; the switch is in Settings, and the keeper meets one
 // note here until they dismiss it.
 //
-// It makes one request to DIRECTORY_URL for the first screen and draws what
-// comes back; it never asks any journal for its beacon itself — the registry
-// keeps the last beacon it saw from each, so a reader never waits on a
-// fetch. If the registry cannot be reached it says so in one line, and
-// nothing else in the journal is touched.
+// Everything it draws comes through one door on this journal, /api/board,
+// the way the friends' beacons come through /api/friends/beacons (Miyel,
+// 2026-10-08: "keep the fan-out behind a single route"). Behind it today is
+// the directory's answer and a line read from each keeper's own journal; it
+// can become one cached crawl on a server without this file changing. Never
+// a beacon asked of a journal from here: the registry keeps the last beacon
+// it saw from each, so a reader never waits on a fetch. If the Board cannot
+// be read it says so in one line, and nothing else in the journal is
+// touched.
 //
 // Drawn on the cross for the keeper and for anybody visiting, and again at
 // this page's own address for a stranger who was handed the link. For the
@@ -36,14 +40,13 @@
 // how much anybody logs — where there is no better order, shuffle; and
 // nothing is ever written to another keeper's journal.
 
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { ArrowsClockwise, BookOpen, Check, MagnifyingGlass, Plus, User, X } from '@phosphor-icons/react';
 import SiteNav from '../../components/main_components/SiteNav';
 import WaveSheet from '../../components/main_components/WaveSheet';
 import StarRating from '../../components/main_components/StarRating';
 import { Marks } from '../../components/main_components/Feed';
-import { splitNotes } from '../../library/entry_formatter';
 import { useHoldStill } from '../../hooks/useHoldStill';
 import { useBookplate } from '../../components/main_components/Bookplate';
 import { DIRECTORY_URL } from '../../library/version';
@@ -92,7 +95,7 @@ export function readEveryone({ shuffle = false } = {}) {
   if (asking && !shuffle) return asking;
   const ask = (async () => {
     try {
-      const r = await fetch(`${DIRECTORY_URL}?board=1${shuffle ? `&shuffle=${Date.now()}` : ''}`, { cache: 'no-store' });
+      const r = await fetch(`/api/board${shuffle ? `?shuffle=${Date.now()}` : ''}`, { cache: 'no-store' });
       if (!r.ok) throw new Error(String(r.status));
       const d = await r.json();
       publish({
@@ -120,14 +123,10 @@ export function useEveryone() {
 }
 
 // ── Records, piece three, 2026-10-08 ───────────────────────────────────────
-// A record is asked about by the first sixteen characters of the sha256 of
-// its album_key — the same hash the directory keeps (directory_actions.js,
-// boardHash), so a journal's question is short and says nothing but which
-// records.
-async function hash16(text) {
-  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(String(text || '')));
-  return [...new Uint8Array(digest)].slice(0, 8).map(b => b.toString(16).padStart(2, '0')).join('');
-}
+// Everything below reads through this journal's own /api/board — never the
+// directory, never another journal — so what stands behind that one door can
+// change without this file knowing (Miyel: "keep the fan-out behind a single
+// route, the way /api/friends/beacons already is").
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
@@ -145,28 +144,31 @@ function whenWords(iso) {
 }
 
 // ── A line from what they wrote ───────────────────────────────────────────
-// The opening of a keeper's own album note, read from their journal by this
-// browser when the line is shown (their /api/entries/[slug], which may be
-// read across origins) — never from the directory, which keeps no writing.
-// Cut at a sentence's end past halfway, or at a word with an ellipsis. A
-// journal too old to be read across origins simply has no line.
-const LINE_MOST = 150;
+// The opening of a keeper's own album note, which this journal's server reads
+// from theirs (app/api/board, `?lines`) and keeps ten minutes. Asked in one
+// go for everything drawn at once: each Line asks, and the asks made in the
+// same moment travel together, a dozen at a time.
 const lines = new Map();
-function opening(text) {
-  const clean = String(text || '').replace(/\s+/g, ' ').trim();
-  if (clean.length <= LINE_MOST) return clean;
-  const cut = clean.slice(0, LINE_MOST);
-  const stop = Math.max(cut.lastIndexOf('. '), cut.lastIndexOf('! '), cut.lastIndexOf('? '));
-  if (stop > LINE_MOST / 2) return cut.slice(0, stop + 1);
-  return `${cut.slice(0, cut.lastIndexOf(' ') > 0 ? cut.lastIndexOf(' ') : LINE_MOST).replace(/[,;:\u2014-]$/, '')}\u2026`;
+let waiting = [];
+function flushLines() {
+  const batch = waiting;
+  waiting = [];
+  for (let i = 0; i < batch.length; i += 12) {
+    const part = batch.slice(i, i + 12);
+    const asked = part.map(w => `${w.address}|${w.slug}`).join(',');
+    fetch(`/api/board?lines=${encodeURIComponent(asked)}`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => part.forEach(w => w.done(d?.lines?.[`${w.address}|${w.slug}`] || null)))
+      .catch(() => part.forEach(w => w.done(null)));
+  }
 }
 function readLine(address, slug) {
   const key = `${address}|${slug}`;
   if (!lines.has(key)) {
-    lines.set(key, fetch(`${journalUrl(address)}/api/entries/${encodeURIComponent(slug)}`)
-      .then(r => (r.ok ? r.json() : null))
-      .then(d => opening(splitNotes(d?.entry?.notes || '').albumNotes) || null)
-      .catch(() => null));
+    lines.set(key, new Promise(done => {
+      if (waiting.length === 0) setTimeout(flushLines, 0);
+      waiting.push({ address, slug, done });
+    }));
   }
   return lines.get(key);
 }
@@ -409,10 +411,8 @@ function BoardNote() {
 // ── The Board ──────────────────────────────────────────────────────────────
 // `keeper` is whether the person looking keeps this journal (the cross's lock
 // has said so). `refreshRef`, when given, is handed the way to ask again, for
-// the pull at the top of the pane. `myEntries` is the keeper's own journal,
-// as the wall reads it, for "also on your records" and the checks on the wall
-// of what is being logged everywhere.
-export function Everyone({ keeper = false, refreshRef = null, myEntries = null }) {
+// the pull at the top of the pane.
+export function Everyone({ keeper = false, refreshRef = null }) {
   const { keeper_name: myName, site_address: myAddress } = useBookplate();
   const me = { name: myName, address: myAddress };
   const mine = tidyJournal(myAddress);
@@ -438,38 +438,25 @@ export function Everyone({ keeper = false, refreshRef = null, myEntries = null }
   const [found, setFound] = useState(null);
   const typed = useRef(0);
 
-  // The keeper's own records, newest listen of each, hashed; who else logged
-  // them; and the record whose sheet is open.
+  // The keeper's own records, by hash, with when each was last logged; who
+  // else logged them; and the record whose sheet is open. All of it from the
+  // Board's own route, which reads the keeper's records on the server.
   const [mineHashed, setMineHashed] = useState(() => new Map());
   const [alike, setAlike] = useState([]);
   const [sheet, setSheet] = useState(null);
-  const myRecords = useMemo(() => {
-    const newest = new Map();
-    for (const e of Array.isArray(myEntries) ? myEntries : []) {
-      if (e?.song || !e?.album_key) continue;
-      const was = newest.get(e.album_key);
-      if (!was || new Date(e.posted_at) > new Date(was)) newest.set(e.album_key, e.posted_at);
-    }
-    return [...newest.entries()]
-      .sort((a, b) => new Date(b[1]) - new Date(a[1]))
-      .slice(0, 100);
-  }, [myEntries]);
   useEffect(() => {
-    if (!keeper || myRecords.length === 0) return undefined;
+    if (!keeper) return undefined;
     let gone = false;
-    (async () => {
-      try {
-        const hashed = new Map();
-        for (const [key, at] of myRecords) hashed.set(await hash16(key), at);
-        if (gone) return;
-        setMineHashed(hashed);
-        const r = await fetch(`${DIRECTORY_URL}?alike=${[...hashed.keys()].join(',')}`, { cache: 'no-store' });
-        const d = r.ok ? await r.json() : null;
-        if (!gone && Array.isArray(d?.records)) setAlike(d.records);
-      } catch { /* the section simply stays away */ }
-    })();
+    fetch('/api/board?alike=1', { cache: 'no-store' })
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => {
+        if (gone || !d) return;
+        setMineHashed(new Map(Object.entries(d.mine || {})));
+        setAlike(Array.isArray(d.records) ? d.records : []);
+      })
+      .catch(() => { /* the section simply stays away */ });
     return () => { gone = true; };
-  }, [keeper, myRecords]);
+  }, [keeper]);
 
   const readBook = useCallback(async () => {
     if (!keeper) return;
@@ -498,7 +485,7 @@ export function Everyone({ keeper = false, refreshRef = null, myEntries = null }
     const ask = ++typed.current;
     const wait = setTimeout(async () => {
       try {
-        const r = await fetch(`${DIRECTORY_URL}?q=${encodeURIComponent(term)}`, { cache: 'no-store' });
+        const r = await fetch(`/api/board?q=${encodeURIComponent(term)}`, { cache: 'no-store' });
         const d = r.ok ? await r.json() : null;
         if (ask === typed.current) {
           setFound({
