@@ -91,6 +91,7 @@ The library — logic, no visuals
     background_scale.js        The factor that shrinks the screensavers' artwork on a phone so it stays background; exactly 1 on a desk
     bioprompt.js               The nine sentence openings a keeper finishes on the card, the limit of three, and the reader that prints stored key-and-answer pairs
     came_back_actions.js       What came back: records this journal put somebody onto, logged on theirs — noticed by the feed, kept for the inbox
+    carbon_copy.js             The journal as pages anybody can read: a Markdown page per entry, saying what the entry page says, zipped beside journal.json — made in the browser by Back up your journal
     card_links.js              The marks a card can wear — which shape stands for the rig, which logo a link gets
     claim_notice.js            The box printed in the build log while a copy is unclaimed
     code_shape.js              Two numbers about a code's shape — the quiet zone and the least version — read by the press and by the browser that sizes its picture
@@ -131,7 +132,7 @@ The update button
 
 The other scripts — run by hand or by a machine, never by the site
   scripts/backup.mjs             Every table to $BACKUP_DIR/<timestamp>/ with migrations/ beside it; 30 kept; carries secrets (docs/OPERATIONS.md)
-  scripts/restore.mjs            Puts a backup or an export back — a dry run without --yes; empties only the tables the file holds
+  scripts/restore.mjs            Puts a backup or an export back — a folder, the zip from Make a copy, or a bare journal.json; a dry run without --yes; empties only the tables the file holds
   scripts/prepare_database.mjs   Runs before next build: migrates and prints the claim notice; never fails the build
 
 The lint gate — git runs it, on a machine that has opted in
@@ -169,7 +170,7 @@ The front doors — receive requests, hand them off, send back responses
     needle/route.js            Where a listen says what it is on — owner-only, write only; the read is public/beacon
     portrait/route.js          The keeper's picture: uploaded into a column, served back from it, removed
     portrait/code/route.js     POST: press the journal's code out of the stored portrait — owner-only, no body
-    export/route.js            The whole journal as one file — owner-only; leaves secrets out
+    export/route.js            The whole journal as one JSON file — owner-only; leaves secrets out. Settings zips it beside a readable page per entry
     update/route.js            Is there a newer Listening Notes — the latest public release against package.json, at most once an hour, owner-only
     public/beacon/route.js     What the keeper is listening to — anyone may ask; cached at the edge
     public/entries/route.js    The public feed another copy reads — PUBLIC_FIELDS only, with keeper_name beside them
@@ -227,7 +228,7 @@ The furniture — visual pieces
       WritingAccess.js         The lock at the foot of the card for a visitor — shut, open while the password field it opens in place
       ComingSoon.js            What a held copy shows instead of a site — unclaimed, no database, or database unreachable
       AddToHomeScreen.js       The one step the software cannot do: the last screen of setup, and a Settings section
-      JournalCopy.js           Back up your journal, in Settings: Make a copy fetches the export and holds it, then Share (a phone) or Download (a computer)
+      JournalCopy.js           Back up your journal, in Settings: Make a copy fetches the export and holds it as a zip — journal.json, Read me.txt and a page per entry (library/carbon_copy.js) — then Share (a phone) or Download (a computer)
       AlbumFinder.js           Type, see covers, pick one — the stranger's send form's search (/submit)
       MiniAddressBook.js       The address book as a strip of faces, for picking one person — the entry editor's Sent by, the inbox's send whose sender has since got a copy, and the send sheet's book, as a grid
       SendSheet.js             The one send sheet: a thing, an arrow, a person, centred over the screen — from an entry's tools, a track row mid-listen, or a person in the book; the session's picker and the book as its shelf; and the letter it becomes when Send is pressed

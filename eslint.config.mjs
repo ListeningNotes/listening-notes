@@ -22,6 +22,11 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Other checkouts of this repository, made beside it as worktrees. Each
+    // is linted in its own folder; read from here, their build output alone
+    // is hundreds of errors in code nobody wrote, and the commit hook refuses
+    // every commit until somebody deletes a worktree they may still want.
+    ".claude/**",
   ]),
 ]);
 
