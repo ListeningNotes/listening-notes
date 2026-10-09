@@ -103,6 +103,11 @@ export const DOORS = {
   // round the door above. Counted for everybody at once, so the directory
   // can never be made into a way of knocking on other people's servers.
   directory:  { tries: 120, windowMs: 10 * 60_000 },
+  // The Board's quoted lines, 2026-10-08: each ask makes this server read a
+  // few entries off other journals (app/api/board), so it is counted against
+  // whoever is asking. A person opening record after record is well inside
+  // it; a script trying to turn this copy into its crawler is not.
+  board:      { tries: 60, windowMs: 10 * 60_000 },
   // ── The two doors a send from home comes through, 2026-09-16 ────────────
   // A keeper can now send a record from their own copy, which means the
   // request arrives from their *server* rather than from their browser. That

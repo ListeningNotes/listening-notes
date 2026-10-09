@@ -75,24 +75,34 @@ reasoning; these are inline so nobody has to go looking.
 - **No counts, badges, streaks or follower numbers attached to a person** —
   not listens, not gifts, not who added whom, not who is reading. Presence is
   outbound: a journal shows what its keeper is logging and never who is
-  reading it. A count of the whole community is not that: the directory may
-  say how many journals are listed and how many are logging right now,
-  because neither names anybody and neither can be grown. A row is a name and
-  a beacon; never a number beside a person.
+  reading it. A count may sit on a record ("3 keepers") and on the community
+  ("214 keepers · 7 logging"), because neither names anybody and neither can
+  be grown. A row is a name and a beacon; never a number beside a person.
+- **Nothing is ordered by how much someone logs.** Where there is no better
+  order — distance from the viewer, newest — shuffle. No "most active", no
+  ranking of people, anywhere.
 - **Never write to another keeper's database.** The only things one copy may
-  put into another are a send, a wave, a message and — into the directory —
-  a listing, each on a keeper's press, through that copy's own public route.
+  put into another are a send, a wave and a message, each on a keeper's press,
+  and — into the directory — a listing, which a journal makes unless its
+  keeper has switched it off; each through that copy's own public route.
   Everything else about another journal is read from its public feed and
   routes.
-- **Nobody's words are drawn on a journal but its keeper's.** No comments, no
-  threads, nothing a visitor wrote shown on an entry or anywhere else. What
-  somebody has to say goes to the keeper as a message and lives in the inbox;
-  it is public only if the keeper quotes it in their own writing.
+- **Nobody writes on anybody else's journal.** No comments, no threads, no
+  words about an album left on somebody else's entry, nothing a visitor wrote
+  shown on an entry or anywhere else. What somebody has to say goes to the
+  keeper as a message and lives in the inbox; it is public only if the keeper
+  quotes it in their own writing. The Board may quote a keeper's own words
+  from their own public entry, linked to it: that is them on their journal,
+  not somebody writing on yours (Miyel, 2026-10-08).
 - **No phone-home.** Nothing in a copy reports to the canonical copy or
   anywhere else: no analytics, no pushed banners or messages, no deploy
   redirect that would log installs, nothing that runs without a press. A copy
   learns of a new version by reading the public releases itself, at most once
-  a day; a problem report leaves only when a keeper presses Send.
+  a day; a problem report leaves only when a keeper presses Send. The one
+  exception, made on purpose: being on the Board. A journal lists itself in
+  the directory unless its keeper switches it off — on by default for
+  everyone, said plainly at setup, off with one switch in Settings (Miyel,
+  2026-10-08) — and the listing carries its address and nothing else.
 - **Never edit or rename a migration that has run, and never write a down
   migration.** The filename is the identity, so an edited or renamed file runs
   again on every copy. A change is a new numbered file, written with
@@ -109,7 +119,10 @@ reasoning; these are inline so nobody has to go looking.
 - **Public reads are allow-lists.** The feed (`PUBLIC_FIELDS`) and the wall
   never carry the writing; a new column stays private until somebody decides
   otherwise; the chain fields leave only through `withoutChain`, and only on a
-  Submission entry that was not marked quiet.
+  Submission entry that was not marked quiet. The address book leaves only
+  through `/api/public/people`: a name and an address for each person who is
+  on the Board themselves, never one added privately, and nothing at all
+  while the keeper is off the Board.
 - **Secrets never reach a browser.** The `secrets` table is read by
   `library/secrets.js` and nothing else, and is never selected with
   `settings`; a page is told whether a key is set and its last four
@@ -183,7 +196,8 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - `database_actions.js` — entries: the wall's lean list, the public feed's
   allow-list, one entry, one record's folder, save/update/delete (with the
   derived Masterpiece and the edit stamps), slugs, the owner row, briefings and
-  drafts.
+  drafts, and `pull_record_keys`, each record the journal logged, for the
+  Board.
 - `database_connection.js` — the one Neon handle, opened on first use rather
   than on import, and `explainDatabaseError`, which says a database failure in
   a sentence for the owner.
@@ -191,11 +205,16 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   Favorite, Formative) and the merge of the owner's edits over it.
 - `directory_actions.js` — the `directory` table, on the registry's copy:
   the list for readers (logging first, thirty and a cursor, the community's
-  two counts), listing and delisting, reading a journal's beacon, and
-  `gather`, the scheduled job's one run with its decaying rate.
+  two counts), the Board's first screen (`pull_board`: everybody logging, a
+  shuffled dozen and the last day's records), a name or record search,
+  `boardHash` and `pull_among` (which of a journal's hashed addresses are on
+  the Board), the `directory_records` table (`refresh_records`, `pull_alike`
+  for "also on your records", `pull_today` for "being logged everywhere"),
+  listing and delisting, reading a journal's beacon, and `gather`, the
+  scheduled job's one run with its decaying rate.
 - `doorman.js` — rate limiting, in memory: the doors (login, message, send,
-  wave, listing and so on), how many tries each allows, who is knocking, and
-  the 429 answer.
+  wave, listing, the Board's lines and so on), how many tries each allows,
+  who is knocking, and the 429 answer.
 - `entry_formatter.js` — the shapes an entry is written in: the horizon bar
   from track ratings, `flawless` (what Masterpiece means), tracks to and from
   prose, `lookup_key` (the fold drafts and briefings are keyed on), the edit
@@ -222,9 +241,12 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - `outbox.js` — a send, a wave or a reply leaving this copy for another,
   server to server: posts to their `/api/submissions`, `/api/waves` or
   `/api/messages` and reports what came back in plain words; and
-  `ask_directory`, this journal asking the registry to list or delist it.
+  `ask_directory`, this journal asking the registry to list or delist it,
+  `ask_directory_among`, which of some hashed addresses are on the Board, and
+  `ask_directory_read`, any read of the registry's list, server to server.
 - `people_actions.js` — the address book (`people`): list, file, pin (six at
-  most), remove, and asking a journal its keeper's name.
+  most), keep private, remove, the part that may be published
+  (`pull_public_people`), and asking a journal its keeper's name.
 - `portrait_code.js` — the press: the portrait made into the journal's QR
   code with a dot of ink per module, proved by decoding with jsQR on both page
   colours; `CODE_BUILD` is bumped whenever the drawing changes.
@@ -242,8 +264,10 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - `settings_actions.js` — the one `settings` row: read (without the two
   portrait blobs), write through an allow-list with write-once fields,
   `coverName` and `titleName`, `isSetUp` (the gate that fails closed),
-  `pull_keeper_name`, and the listing code read and written on its own
-  (`pull_listing_code`, `save_listing_code`), never with the rest.
+  `pull_keeper_name`, and the listing code and whether the journal is on the
+  Board, each read and written on its own (`pull_listing_code`,
+  `save_listing_code`, `pull_findable`, `save_findable`), never with the
+  rest.
 - `sitewide_visuals.js` — colours and fonts as JS objects, for canvas and
   chart code that cannot read a CSS custom property. The stylesheets are the
   source; this mirrors them.
@@ -276,9 +300,10 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - `useJournalHost.js` — the journal's host, used as the hidden username so a
   password manager files the password.
 - `useFriendsBeacons.js` — one shared poll, once a minute while the Friends
-  room is on screen, of `/api/friends/beacons`: what everyone in the address
-  book is logging, kept through a journal's failure; `refreshFriends` for the
-  pull, `fillFriends` for the whole book.
+  room or the Board is on screen, of `/api/friends/beacons`: what everyone in
+  the address book is logging, kept through a journal's failure, and `away`,
+  the Board's friends of friends; `refreshFriends` for the pull,
+  `fillFriends` for the whole book.
 - `useListeningBeacon.js` — one shared poll of this journal's own beacon,
   subscribed to by every component that draws it.
 - `useListeningSession.js` — all the state and API calls of a listen in

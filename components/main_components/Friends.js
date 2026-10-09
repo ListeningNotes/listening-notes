@@ -47,6 +47,7 @@ import WaveSheet from './WaveSheet';
 import { carrySender, journalUrl, tidyJournal } from '../../library/return_address';
 import { useBookplate } from './Bookplate';
 import { fillFriends, useFriendsBeacons } from '../../hooks/useFriendsBeacons';
+import { DIRECTORY_URL } from '../../library/version';
 
 // The order the server keeps: pinned first in the order they were pinned,
 // then by name, or by address for anyone without one. Said twice — here and
@@ -506,6 +507,20 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null, 
     }
   }
 
+  // ── Kept private, 2026-10-08 ────────────────────────────────────────────
+  // Somebody kept private is never published: they stay off the Board's "a
+  // friend away" for everyone but this keeper (Miyel's Board brief; the
+  // public route is app/api/public/people). The same PATCH as a pin, with the
+  // row it returns put back in place.
+  async function keepPrivate(id, on) {
+    const answer = await fetch(`/api/people/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ private: on }),
+    }).then(r => (r.ok ? r.json() : null)).catch(() => null);
+    if (answer?.person) setPeople(prev => inOrder(prev.map(q => (q.id === answer.person.id ? answer.person : q))));
+  }
+
   // ── The + does not open the keyboard ────────────────────────────────────
   // It did, on the reasoning that a + which opens a box you then have to tap
   // is two presses for one act. Miyel, 2026-09-19, off a real phone: "this can
@@ -687,9 +702,15 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null, 
   // 2026-09-20, "the clicking and opening... needs to open and replace
   // address book text." So the fact travels up the way the count does and
   // the cross takes its word down. See barSays in HomeNav.js.
+  //
+  // Since 2026-10-07 the middle of that row is the People tab's two words,
+  // Friends · Board, and a search field sitting there for good once the book
+  // passed a dozen hid them — a keeper with thirteen friends could not get to
+  // the Board. So on the cross the search stands at the top of this floor
+  // (below), and only the + takes the row, while its field is open.
   useEffect(() => {
-    if (shelf) onBusy?.(adding || searchable);
-  }, [shelf, adding, searchable, onBusy]);
+    if (shelf) onBusy?.(adding);
+  }, [shelf, adding, onBusy]);
 
   // ── The rows ────────────────────────────────────────────────────────────
   // Built here rather than left to the grid, because the doors have to open
@@ -790,7 +811,7 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null, 
             {!loading && people.length > 0 && <span> &middot; {people.length}</span>}
           </p>
         )}
-        <label className={'fr-field fr-field--find' + (adding || !searchable ? ' fr-field--gone' : '')} inert={adding || !searchable ? true : undefined}>
+        <label className={'fr-field fr-field--find' + (adding || !searchable || shelf ? ' fr-field--gone' : '')} inert={adding || !searchable || shelf ? true : undefined}>
           <MagnifyingGlass size={15} weight="regular" aria-hidden="true" />
           <input
             value={finding}
@@ -958,6 +979,23 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null, 
             begins on it then browses the cards, and the rail's swipe is
             everywhere else. With one or two cards there is nothing to
             browse and the swipe is the rail's, as it should be. */}
+        {/* The book's search on the cross, 2026-10-08: at the top of the
+            floor, in the Board's own field, once the book passes a dozen —
+            the bar's middle is the two words now (see onBusy, above). */}
+        {shelf && searchable && (
+          <label className="dir-search fr-floor-find">
+            <MagnifyingGlass size={16} weight="regular" aria-hidden="true" />
+            <input
+              type="search"
+              value={finding}
+              onChange={e => setFinding(e.target.value)}
+              placeholder="Search your address book"
+              aria-label="Find somebody in your book"
+              spellCheck={false}
+              autoComplete="off"
+            />
+          </label>
+        )}
         {onNow.length > 0 ? (
           <div className="fr-now">
             <p className="fr-now-head">
@@ -1250,18 +1288,37 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null, 
                       back by a press anywhere else — the shape the entry's
                       Delete and the picker's discard already have. What
                       changed is where it sits, not how it behaves. */}
+                  {/* Keep private sits beside Remove, in the same quiet
+                      face: both are about the person's place in the book
+                      rather than things done with them (2026-10-08). Only
+                      where there is a Board for them to be kept off. */}
                   {mine && (
-                    <button
-                      ref={binRef}
-                      type="button"
-                      className={'fr-cut' + (sure ? ' fr-cut--sure' : '')}
-                      onClick={() => { if (!sure) { setSure(true); return; } cross(mine.id); }}
-                      title={sure
-                        ? `Press again to take ${mine.name || 'them'} out of your book`
-                        : `Take ${mine.name || 'them'} out of your book`}
-                    >
-                      {sure ? 'Remove from journal?' : 'Remove from journal'}
-                    </button>
+                    <div className="fr-quiets">
+                      {DIRECTORY_URL && (
+                        <button
+                          type="button"
+                          className={'fr-cut fr-keep' + (mine.private ? ' fr-keep--on' : '')}
+                          onClick={() => keepPrivate(mine.id, !mine.private)}
+                          aria-pressed={Boolean(mine.private)}
+                          title={mine.private
+                            ? `${mine.name || 'They'} stay off everyone's board but yours. Press to share them again.`
+                            : `Keep ${mine.name || 'them'} off everyone's board but yours`}
+                        >
+                          {mine.private ? 'Kept private' : 'Keep private'}
+                        </button>
+                      )}
+                      <button
+                        ref={binRef}
+                        type="button"
+                        className={'fr-cut' + (sure ? ' fr-cut--sure' : '')}
+                        onClick={() => { if (!sure) { setSure(true); return; } cross(mine.id); }}
+                        title={sure
+                          ? `Press again to take ${mine.name || 'them'} out of your book`
+                          : `Take ${mine.name || 'them'} out of your book`}
+                      >
+                        {sure ? 'Remove from journal?' : 'Remove from journal'}
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>

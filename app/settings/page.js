@@ -44,6 +44,8 @@ import AddToHomeScreen from '../../components/main_components/AddToHomeScreen';
 import UpdateSwitch from '../../components/main_components/UpdateSwitch';
 import JournalCopy from '../../components/main_components/JournalCopy';
 import { useJournalHost } from '../../hooks/useJournalHost';
+import { DIRECTORY_URL } from '../../library/version';
+import { tidyJournal } from '../../library/return_address';
 
 const PASSWORD_FLOOR = 8;
 
@@ -88,6 +90,73 @@ function Section({ title, note, onSave, children, saveLabel = 'Save' }) {
         {trouble && <span className="st-trouble" role="alert">{trouble}</span>}
       </div>
     </form>
+  );
+}
+
+// ── On the Board, 2026-10-08 ───────────────────────────────────────────────
+// Being on the Board is the default for everyone (Miyel's Board brief), and
+// this is the one switch that takes a journal off — off every board,
+// friends' included. What it means is said before the switch, not after.
+// The switch moves only once the registry has answered, so it never says
+// on while the journal is off, and the line under it says what happened
+// when it could not.
+const BOARD_AT = tidyJournal(DIRECTORY_URL).replace(/^www\./, '');
+
+function OnTheBoard() {
+  const [on, setOn] = useState(null);   // null until asked
+  const [busy, setBusy] = useState(false);
+  const [trouble, setTrouble] = useState('');
+
+  useEffect(() => {
+    fetch('/api/listing')
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => setOn(d ? Boolean(d.findable) : null))
+      .catch(() => setOn(null));
+  }, []);
+
+  async function flip(next) {
+    setBusy(true);
+    setTrouble('');
+    try {
+      const res = await fetch('/api/listing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ listed: next }),
+      });
+      const d = await res.json().catch(() => ({}));
+      if (typeof d.findable === 'boolean') setOn(d.findable);
+      if (!res.ok || d.error) throw new Error(d.error || 'That did not work. Nothing changed.');
+    } catch (e) {
+      setTrouble(e.message);
+    }
+    setBusy(false);
+  }
+
+  return (
+    <>
+      <p className="st-note">
+        Your name, your face and what you&rsquo;re playing are on the board at {BOARD_AT}{' '}&mdash; the same
+        things your journal already shows anyone who visits. Your entries stay where they are. Off takes you
+        off every board, your friends&rsquo; included.
+      </p>
+      <label className="st-switch">
+        <span>On the board</span>
+        <input
+          type="checkbox"
+          role="switch"
+          className="ln-switch"
+          checked={Boolean(on)}
+          disabled={busy || on === null}
+          onChange={e => flip(e.target.checked)}
+        />
+      </label>
+      {(busy || trouble) && (
+        <div className="st-foot">
+          {busy && <span className="st-said" role="status">{on ? 'Taking you off\u2026' : 'Putting you on\u2026'}</span>}
+          {trouble && <span className="st-trouble" role="alert">{trouble}</span>}
+        </div>
+      )}
+    </>
   );
 }
 
@@ -161,10 +230,17 @@ export default function SettingsPage({ layered = false }) {
           <input className="st-field" value={address} onChange={e => setAddress(e.target.value)} placeholder="yourname.example.com" inputMode="url" autoCapitalize="none" autoComplete="off" />
         </Section>
 
-        {/* "The directory" stood here for an evening, 2026-10-07: the Be
-            findable switch. It moved to the head of Everyone in the People
-            tab, beside the list it puts you in (Miyel: "joining can be on
-            this screen instead of burried in settings"). */}
+        {/* The Board, after the address it lists. The switch was here on
+            2026-10-07 as "Be findable", went to the head of the list that
+            evening, and came back on 2026-10-08 as the way off a Board
+            everybody is on by default (Miyel's Board brief: "put the switch
+            in Settings"). Not drawn on a copy with no directory. */}
+        {DIRECTORY_URL && (
+          <div className="st-section">
+            <h2 className="st-h">The board</h2>
+            <OnTheBoard />
+          </div>
+        )}
 
         {/* "Your beacon" was here from 2026-09-16 to 2026-09-24: Now logging
             or Quiet. Every journal broadcasts now (Miyel), and a copy that

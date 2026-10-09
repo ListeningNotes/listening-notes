@@ -53,10 +53,25 @@
 //
 // Nothing here is stored. A round is read when a page asks and gone when the
 // process is; there is no table, no column, and nothing to delete or leak.
+//
+// ── And their friends: a friend away, 2026-10-08 ─────────────────────────
+// The Board's second ring (Miyel's Board brief): the people the friends
+// added. Folded into this round rather than asked by the browser — "one more
+// fetch per friend on the same round, same 2.5s per-friend timeout, same 60s
+// cache, same per-friend back-off, same cap of thirty per round." Each
+// friend's /api/public/people is read beside their beacon; what it names,
+// less the keeper and the people already in the book, is `away`, each with
+// the friends it came through. Two rings only: nobody's friends' friends are
+// ever asked for their books — ten times ten times ten is where this stops
+// being affordable to other people's hosting. What each of them is playing
+// comes from the directory, asked once a round with hashes, never from them.
 
 import { requireWristband } from '@/library/wristband';
 import { pull_people } from '@/library/people_actions';
-import { journalUrl } from '@/library/return_address';
+import { pull_settings } from '@/library/settings_actions';
+import { boardHash } from '@/library/directory_actions';
+import { ask_directory_among } from '@/library/outbox';
+import { journalUrl, tidyJournal } from '@/library/return_address';
 
 // How long one friend's journal gets. Short, because this answer is wanted
 // now and a slow friend must not hold up nine fast ones; the feed gives a
@@ -78,11 +93,13 @@ const BACK_OFF_MOST_MS = 10 * 60 * 1000;
 // How long their needle stays down untouched (library/needle.js): a "logging"
 // heard longer ago than this, from a journal not asked since, is "logged".
 const LIFTS_AFTER_MS = 20 * 60 * 1000;
+// How many of the friends' friends one round hands back at most.
+const AWAY_MOST = 60;
 
 // The last round, when it was asked for, and whether it reached past the
 // first thirty; and the ask in flight — what it covers and its promise — so
 // two tabs arriving in the same second share one round rather than start two.
-let round = { at: 0, all: false, friends: [] };
+let round = { at: 0, all: false, friends: [], away: [] };
 let asking = null;
 // What each journal last said and when, how many times in a row it has not
 // answered, and when it may be asked again. By address, for as long as this
@@ -116,12 +133,34 @@ function lastHeard(person, now, settled = false) {
 // beacon instead of the name: the keeper's own server asking a public route
 // on the keeper's say-so. The beacon route does not say it may be read
 // across origins, and it should not have to.
+// Their book, beside their beacon (app/api/public/people): a list when it
+// answers, an empty one when they are off the Board or too old to say (404),
+// and null when it did not answer — unknown, which keeps the last list.
+async function askBook(url) {
+  try {
+    const answer = await fetch(`${url}/api/public/people`, {
+      signal: AbortSignal.timeout(EACH_MS),
+      headers: { accept: 'application/json' },
+    });
+    if (answer.status === 404) return [];
+    if (!answer.ok) return null;
+    const said = await answer.json();
+    if (!Array.isArray(said?.people)) return null;
+    return said.people
+      .map(p => ({ name: String(p?.name || ''), address: tidyJournal(p?.address) }))
+      .filter(p => p.address);
+  } catch {
+    return null;
+  }
+}
+
 async function ask(person, now, { settled = false, fresh = false } = {}) {
   const was = known.get(person.address);
   if (!fresh && was && now < was.nextAt) return lastHeard(person, now, settled);
   const url = journalUrl(person.address);
   if (!url) return lastHeard(person, now, settled);
   let heard = null;
+  const theirs = askBook(url);
   try {
     const answer = await fetch(`${url}/api/public/beacon`, {
       signal: AbortSignal.timeout(EACH_MS),
@@ -147,8 +186,9 @@ async function ask(person, now, { settled = false, fresh = false } = {}) {
   } catch {
     heard = null;
   }
+  const book = (await theirs) ?? was?.book ?? null;
   if (heard) {
-    known.set(person.address, { heard, heardAt: now, failures: 0, nextAt: 0 });
+    known.set(person.address, { heard, heardAt: now, failures: 0, nextAt: 0, book });
     return heard;
   }
   const failures = (was?.failures || 0) + 1;
@@ -157,8 +197,48 @@ async function ask(person, now, { settled = false, fresh = false } = {}) {
     heardAt: was?.heardAt || 0,
     failures,
     nextAt: now + Math.min(BACK_OFF_MOST_MS, BACK_OFF_MS * 2 ** (failures - 1)),
+    book,
   });
   return lastHeard(person, now, settled);
+}
+
+// The second ring: everybody the friends' books name, less the keeper and
+// the people already in the book, each with up to two of the friends they
+// came through, in the book's order. Only those the directory says are on
+// the Board, with what they are playing; in no order but chance (AGENTS,
+// Never: nothing ordered by how much anybody logs). When the directory does
+// not answer, the last round's second ring stands.
+async function friendsAway(people) {
+  const mine = tidyJournal((await pull_settings().catch(() => ({})))?.site_address);
+  const inBook = new Set(people.map(p => p.address));
+  const away = new Map();
+  for (const person of people) {
+    for (const theirs of known.get(person.address)?.book || []) {
+      if (theirs.address === mine || inBook.has(theirs.address)) continue;
+      const row = away.get(theirs.address) || { address: theirs.address, name: theirs.name, through: [] };
+      if (person.name && row.through.length < 2 && !row.through.includes(person.name)) row.through.push(person.name);
+      away.set(theirs.address, row);
+    }
+  }
+  if (away.size === 0) return [];
+  const rows = [...away.values()].slice(0, 200);
+  const on = await ask_directory_among(rows.map(r => boardHash(r.address)));
+  if (!on) return round.away;
+  const playing = new Map(on.map(j => [j.address, j]));
+  const found = rows.filter(r => playing.has(r.address)).map(r => {
+    const j = playing.get(r.address);
+    return {
+      address: r.address,
+      name: j.name || r.name || '',
+      state: j.state, album: j.album, artist: j.artist, art: j.art,
+      through: r.through,
+    };
+  });
+  for (let i = found.length - 1; i > 0; i--) {
+    const k = Math.floor(Math.random() * (i + 1));
+    [found[i], found[k]] = [found[k], found[i]];
+  }
+  return found.slice(0, AWAY_MOST);
 }
 
 // Everyone in the book, in its order. On the timer the first thirty are
@@ -177,9 +257,10 @@ async function askEveryone({ all, fresh }) {
     if (!past && recent) return Promise.resolve(lastHeard(person, now));
     return ask(person, now, { settled: past, fresh });
   }));
+  const away = await friendsAway(people);
   // A round that left the first thirty as they were keeps their clock, so
   // the timer asks them again when it would have anyway.
-  round = { at: recent ? since : now, all: all || (recent && round.all), friends };
+  round = { at: recent ? since : now, all: all || (recent && round.all), friends, away };
   return round;
 }
 
@@ -210,7 +291,7 @@ export async function GET(request) {
       answer = await (covered ? asking : startAsk({ all, fresh })).promise;
     }
     return Response.json(
-      { at: new Date(answer.at).toISOString(), friends: answer.friends },
+      { at: new Date(answer.at).toISOString(), friends: answer.friends, away: answer.away || [] },
       // The keeper's own, and about other people: never for a shared cache.
       { headers: { 'Cache-Control': 'private, no-store' } },
     );

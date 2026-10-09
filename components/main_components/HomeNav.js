@@ -1407,11 +1407,11 @@ export default function HomeNav() {
   // screen above it: a header that said FEED while you were looking at the
   // faces would be naming the wrong floor. See the scroll effect below.
   const [atFeed, setAtFeed] = useState(false);
-  // ── Friends · Keepers, 2026-10-07 ────────────────────────────────────────
+  // ── Friends · Board, 2026-10-07/08 ───────────────────────────────────────
   // The two words at the top of the People tab, and which one is showing.
-  // The second word is Keepers on the screen (Miyel's call, after Everyone,
-  // Commons, All Users and Hub); in the code it is still `everyone`, as the
-  // beacon is still the needle — what the list is, not what it is called.
+  // The second word is Board on the screen (Miyel's Board brief, 2026-10-08,
+  // after Everyone, Commons, All Users, Hub and Keepers); in the code it is
+  // still `everyone`, as the beacon is still the needle.
   // The keeper starts on Friends; a visitor has only Everyone. Everyone is
   // drawn while it shows and taken down when it does not, so coming back to
   // it reads the list again; the book stays mounted under it either way, so
@@ -1430,6 +1430,16 @@ export default function HomeNav() {
   useEffect(() => {
     if (pane === BOOK && DIRECTORY_URL && !everyonePage) readEveryone();
   }, [pane, everyonePage]);
+  // ── On the Board by default, 2026-10-08 ─────────────────────────────────
+  // Once the lock says the keeper is here, the journal asks its own listing
+  // route, which puts it on the Board if it is meant to be and is not yet —
+  // after setup, or the first time after the update — and takes it off if
+  // the keeper switched it off and the registry did not hear. Only while the
+  // keeper is here; the route asks the registry at most once in ten minutes
+  // (app/api/listing/route.js).
+  useEffect(() => {
+    if (authed && DIRECTORY_URL) fetch('/api/listing').catch(() => {});
+  }, [authed]);
   // Whether the book has a field open in the bar's row. The name is drawn
   // absolutely on the middle of that row and a field opening there has to
   // have it — see the relay note on barSays.
@@ -2118,11 +2128,11 @@ export default function HomeNav() {
               onClick={() => chooseRoom('everyone')}
               aria-pressed={onEveryone}
             >
-              Keepers{listedCount > 0 ? ` \u00b7 ${listedCount}` : ''}
+              Board{listedCount > 0 ? ` \u00b7 ${listedCount}` : ''}
             </button>
           ) : (
             <span className="hn-bar-word hn-bar-word--on">
-              Keepers{listedCount > 0 ? ` \u00b7 ${listedCount}` : ''}
+              Board{listedCount > 0 ? ` \u00b7 ${listedCount}` : ''}
             </span>
           ))}
         </span>
@@ -2936,7 +2946,7 @@ export default function HomeNav() {
                     nothing measures it as a second floor to settle on. */}
                 {onEveryone && (
                   <div className="hn-everyone">
-                    <Everyone keeper={authed} refreshRef={everyoneAgain} countInBar />
+                    <Everyone keeper={authed} refreshRef={everyoneAgain} />
                   </div>
                 )}
               </>
