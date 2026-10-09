@@ -1165,9 +1165,16 @@ journal as one file. A schedule needs somewhere to write and something always
 running, neither of which can be handed to a stranger without hosting them —
 so the automatic one never ships and the manual one always does.
 
-**One format, both paths.** `scripts/restore.mjs` reads either the folder or
-the downloaded file. The moment somebody needs a restore is the worst moment
-to learn their backup is the wrong sort.
+**One format, both paths.** `scripts/restore.mjs` reads the folder, the zip
+from Make a copy, or the file inside it. The moment somebody needs a restore
+is the worst moment to learn their backup is the wrong sort.
+
+**Make a copy is one zip: a page per entry anybody can read, beside the
+journal.json that puts it back, 2026-10-08.** Owning your writing means
+reading it with nothing installed, and the JSON is legible only to this
+software; one thing to keep was Miyel's pick over two. The pages say what the
+entry pages say — the same credit rule, so a page passed on never names a
+quiet sender — made in the browser (`library/carbon_copy.js`, no library).
 
 **Nothing lists the tables, 2026-09-23.** The backup, the export and the
 restore ask the database which it has (`library/whole_journal.mjs`), and the

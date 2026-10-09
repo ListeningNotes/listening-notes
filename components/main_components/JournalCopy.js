@@ -30,10 +30,16 @@
 // key that signs you in never leave in a file, because a file travels. The
 // line after the copy is made says what it holds, so pressing it is seeing
 // a backup rather than trusting one.
+//
+// One zip since 2026-10-08, made here from the export as it arrives
+// (library/carbon_copy.js): that export as journal.json, which puts the
+// journal back, and a page per entry that anybody can read with nothing
+// installed — Miyel's pick of one thing to keep over two.
 
 'use client';
 
 import { useState } from 'react';
+import { carbon_copy } from '../../library/carbon_copy';
 
 export default function JournalCopy() {
   const [copy, setCopy] = useState(null);
@@ -51,17 +57,19 @@ export default function JournalCopy() {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error || 'Your journal could not be copied. Try again.');
       }
-      const blob = await res.blob();
-      const tables = JSON.parse(await blob.text()).tables || {};
-      // The name the export gives itself, so a copy made here and one
-      // downloaded from the address are called the same thing.
-      const name = res.headers.get('Content-Disposition')?.match(/filename="([^"]+)"/)?.[1] || 'journal.json';
-      const file = new File([blob], name, { type: 'application/json' });
+      const text = await res.text();
+      const journal = JSON.parse(text);
+      const tables = journal.tables || {};
+      // The name the export gives itself, dated, as a zip — so a copy made
+      // here and the file at the address share a name but for what they are.
+      const name = (res.headers.get('Content-Disposition')?.match(/filename="([^"]+)"/)?.[1] || 'journal.json')
+        .replace(/\.json$/, '.zip');
+      const file = new File([carbon_copy(text, journal)], name, { type: 'application/zip' });
       const entries = tables.entries?.length ?? 0;
       const people = tables.people?.length ?? 0;
-      const size = blob.size < 1024 * 1024
-        ? `${Math.max(1, Math.round(blob.size / 1024))} KB`
-        : `${(blob.size / 1024 / 1024).toFixed(1)} MB`;
+      const size = file.size < 1024 * 1024
+        ? `${Math.max(1, Math.round(file.size / 1024))} KB`
+        : `${(file.size / 1024 / 1024).toFixed(1)} MB`;
       setCopy({
         file,
         // A finger, and a share sheet that will take this file: a phone.
