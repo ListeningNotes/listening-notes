@@ -1605,6 +1605,14 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 .fr-cut:hover { color: var(--ink-soft); }
 .fr-cut.fr-cut--sure { color: var(--fav); }
 .fr-cut:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 2px; border-radius: 4px; }
+/* Keep private beside Remove, on one quiet line (2026-10-08). Kept private
+   reads in ink, the way a pin that is on fills. */
+.fr-quiets { display: flex; justify-content: center; flex-wrap: wrap; gap: 4px 18px; margin-top: 14px; }
+.fr-quiets .fr-cut { margin: 0; }
+.fr-keep.fr-keep--on { color: var(--ink); }
+/* The book's search on the floor of the cross (2026-10-08), in the Board's
+   field (get.css, .dir-search), with the room the floor's top already has. */
+.fr-floor-find { margin: 0 0 18px; }
 
 @media (prefers-reduced-motion: reduce) {
   .fr-one, .fr-face, .fr-door, .fr-plus, .fr-give, .fr-doors { transition: none; }

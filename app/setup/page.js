@@ -73,6 +73,7 @@ import UpdateSwitch from '../../components/main_components/UpdateSwitch';
 import CodeScanner from '../../components/main_components/CodeScanner';
 import { useJournalHost } from '../../hooks/useJournalHost';
 import { tidyJournal, journalUrl } from '../../library/return_address';
+import { DIRECTORY_URL } from '../../library/version';
 
 // The password claims the journal; the home screen comes after, because it is
 // the one step the software cannot perform and the moment right after the
@@ -419,6 +420,17 @@ export default function WelcomeScreen() {
                 <div>
                   <input className="su-field" value={name} onChange={e => setName(e.target.value)} autoFocus autoComplete="name" placeholder="Your name" aria-label="Your name" />
                 </div>
+                {/* ── Said plainly, at the name, 2026-10-08 ─────────────────
+                    Every journal is on the Board unless its keeper switches
+                    it off (Miyel's Board brief: "say so plainly during
+                    setup"). Here, because the name is the first thing the
+                    Board shows; a copy with no directory has no Board. */}
+                {DIRECTORY_URL && (
+                  <p className="su-why">
+                    Your name and what you&rsquo;re playing go on the board, where other keepers can find you &mdash;
+                    the same things your journal shows anyone who visits. You can take yourself off in Settings.
+                  </p>
+                )}
                 <button type="submit" className="su-go" disabled={busy || !name.trim()}>Next</button>
               </form>
             )}

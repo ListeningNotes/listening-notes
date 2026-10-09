@@ -3,7 +3,7 @@
 // One person in the address book: reading them, pinning them, and crossing
 // them out. Owner-only, all three.
 
-import { pull_person, pin_person, remove_person } from '@/library/people_actions';
+import { pull_person, pin_person, remove_person, set_private } from '@/library/people_actions';
 import { requireWristband } from '@/library/wristband';
 
 export async function GET(request, { params }) {
@@ -23,6 +23,8 @@ export async function GET(request, { params }) {
 // Pinning and unpinning, 2026-09-20. The body says which — `{ pinned: true }`
 // or `{ pinned: false }` — and nothing else about a person is editable here:
 // their name is read off their journal and their address is what they are.
+// Since 2026-10-08 the body may say `{ private: true | false }` instead: kept
+// off the Board, or not (people_actions.js, set_private).
 //
 // A PATCH rather than two routes, because it is one field with two values and
 // a /pin and an /unpin would be the same handler written twice.
@@ -33,6 +35,11 @@ export async function PATCH(request, { params }) {
   try {
     const { id } = await params;
     const body = await request.json().catch(() => ({}));
+    if (typeof body?.private === 'boolean') {
+      const kept = await set_private(id, body.private);
+      if (!kept) return Response.json({ error: 'Nobody by that id.' }, { status: 404 });
+      return Response.json({ person: kept });
+    }
     if (typeof body?.pinned !== 'boolean') {
       return Response.json({ error: 'Say pinned: true or pinned: false.' }, { status: 400 });
     }

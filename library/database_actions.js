@@ -246,6 +246,22 @@ const PUBLIC_FIELDS = [
   'listen_number', 'listen_total', 'credit_by_hand', 'song',
 ];
 
+// ── The records, for the Board, 2026-10-08 ─────────────────────────────────
+// Each record this journal logged, by its album_key, with when it was last
+// logged — track notes left out, since a note about one song is not logging
+// the record. A hundred at most, the most recent first. What the Board's
+// "also on your records" asks the directory about (app/api/board).
+export async function pull_record_keys() {
+  return await database`
+    SELECT album_key, max(posted_at) AS posted_at
+    FROM entries
+    WHERE song IS NULL AND album_key IS NOT NULL AND album_key <> ''
+    GROUP BY album_key
+    ORDER BY max(posted_at) DESC
+    LIMIT 100
+  `;
+}
+
 export async function pull_public_entries() {
   // posted_at carries its zone, so it comes back as the instant it is and the
   // feed needs no workaround — the ::text trick that used to live here was

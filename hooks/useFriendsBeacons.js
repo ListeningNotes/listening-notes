@@ -8,6 +8,9 @@
 //   — id, name, address, state ('logging' | 'logged' | 'nothing' |
 //   'unknown'), album, artist, art, track, and `at`: when, from a journal new
 //   enough to say (an older copy never sends it, and the row says null).
+// - away: a friend away, the Board's second ring (2026-10-08) — people the
+//   friends added who are on the Board themselves, each with name, address,
+//   state, album, artist, art, and `through`: up to two friends' names.
 //
 // ── The sibling of useListeningBeacon, on a slower clock ──────────────────
 // The same shape exactly: one timer in the module, started by the first
@@ -37,7 +40,7 @@ const REFRESH_MS = 60 * 1000;  // ask our own server once a minute
 
 // Frozen and shared, for the same reason the beacon's EMPTY is: the store is
 // read by identity, and a fresh object per read would render forever.
-const EMPTY = Object.freeze({ friends: [] });
+const EMPTY = Object.freeze({ friends: [], away: [] });
 
 const room = {
   snapshot: EMPTY,
@@ -60,9 +63,33 @@ function sameFriend(a, b) {
     && a.at === b.at;
 }
 
+function sameAway(a, b) {
+  return a.address === b.address
+    && a.name === b.name
+    && a.state === b.state
+    && a.album === b.album
+    && a.art === b.art
+    && a.through.join('\n') === b.through.join('\n');
+}
+
 function same(a, b) {
   return a.friends.length === b.friends.length
-    && a.friends.every((x, i) => sameFriend(x, b.friends[i]));
+    && a.friends.every((x, i) => sameFriend(x, b.friends[i]))
+    && a.away.length === b.away.length
+    && a.away.every((x, i) => sameAway(x, b.away[i]));
+}
+
+// One of the friends' friends, as the route hands it back.
+function awayRow(f) {
+  return {
+    address: f?.address || '',
+    name: f?.name || '',
+    state: f?.state === 'logging' || f?.state === 'logged' ? f.state : 'nothing',
+    album: f?.album || '',
+    artist: f?.artist || '',
+    art: f?.art || '',
+    through: Array.isArray(f?.through) ? f.through.map(String).slice(0, 2) : [],
+  };
 }
 
 function publish(next) {
@@ -115,7 +142,8 @@ async function poll(how = '') {
     const was = heard.get(next.address);
     return was && was.state !== 'unknown' ? { ...was, id: next.id, name: next.name } : next;
   });
-  publish(friends.length === 0 ? EMPTY : { friends });
+  const away = (Array.isArray(data?.away) ? data.away : []).map(awayRow).filter(a => a.address);
+  publish(friends.length === 0 && away.length === 0 ? EMPTY : { friends, away });
 }
 
 // Coming back to the tab. One ask straight away, and the clock restarted so

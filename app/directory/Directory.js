@@ -3,58 +3,60 @@
 'use client';
 
 // app/directory/Directory.js
-// Everyone: the journals that chose to be findable, as a page of people.
-// Called Keepers on the screen (Miyel, 2026-10-07) — the second word in the
-// People tab's bar and the title of this page; `Everyone` here is what it is.
+// The Board: every journal on it, ordered by distance from whoever is looking.
+// The second word in the People tab's bar, and the title of this page.
+// `Everyone` in the code — what it is, as the beacon is still the needle.
 //
-// From Miyel's directory instructions, 2026-10-07, in the look she settled
-// the same evening ("lets make it feel more like a true page, pfp"). It makes
-// one request to DIRECTORY_URL and draws what comes back; it never asks any
-// journal for its beacon itself — the registry keeps the last beacon it saw
-// from each, so a reader never waits on a fetch. If the registry cannot be
-// reached it says so in one line, and nothing else in the journal is
+// ── From Miyel's Board brief, 2026-10-08 ───────────────────────────────────
+// Nearest first: who is logging right now, community-wide, as the same band
+// the Friends room draws; then a friend away — people the keeper's friends
+// added, each with the path to them; then strangers who logged the
+// keeper's records, with their stars, marks and a line of what they wrote;
+// then a wall of what is being logged everywhere; then everybody else,
+// shuffled, a dozen at a time. Search at the top. Being on the Board is the
+// default for everyone; the switch is in Settings, and the keeper meets one
+// note here until they dismiss it.
+//
+// Everything it draws comes through one door on this journal, /api/board,
+// the way the friends' beacons come through /api/friends/beacons (Miyel,
+// 2026-10-08: "keep the fan-out behind a single route"). Behind it today is
+// the directory's answer and a line read from each keeper's own journal; it
+// can become one cached crawl on a server without this file changing. Never
+// a beacon asked of a journal from here: the registry keeps the last beacon
+// it saw from each, so a reader never waits on a fetch. If the Board cannot
+// be read it says so in one line, and nothing else in the journal is
 // touched.
 //
-// ── Two places, one list, 2026-10-07 ───────────────────────────────────────
-// The same evening the list moved into the People tab (Miyel: "people is all
-// the users (directory style) and friends are also there"), as the second of
-// the tab's two words: Friends · Everyone. `Everyone` is that list, drawn on
-// the cross for the keeper and for anybody visiting, and drawn again at this
-// page's own address for a stranger who was handed the link.
+// Drawn on the cross for the keeper and for anybody visiting, and again at
+// this page's own address for a stranger who was handed the link. For the
+// keeper a press on somebody opens their doors, Visit and Add, the way a face
+// in Friends opens its own, and somebody already in the book wears a check. A
+// visitor gets the Board and nothing of the keeper's: no note, no checks,
+// nothing ordered around the keeper — a row is simply the way to a journal.
 //
-// For the keeper it carries what only a keeper can do: being findable, which
-// sits at the top of the list rather than in Settings ("joining can be on
-// this screen instead of burried in settings"), and adding somebody to the
-// address book — a press on a row opens its doors, Visit and Add, the way a
-// face in Friends opens its own ("I like a plus idea besides people maybe
-// when you click them"). Somebody already in the book wears a check instead
-// of the plus. A visitor gets the list and nothing of the keeper's: no
-// switch, no checks — which would say who the keeper added (AGENTS, Never) —
-// and a row is simply the way to that journal.
-//
-// A row is a name and a beacon — the keeper's face in a circle, lit as the
-// book lights it when they are logging, their name, what they are on or last
-// logged, and the record's cover — and never a number beside a person. The
-// only numbers are the community's: how many journals are listed and how
-// many are logging right now (AGENTS, Never). No journal's address is printed;
-// it lives in the link, as everywhere else, and this is exactly the page
-// where printing it is tempting.
-//
-// Searching by album — who else has written about this — is a second phase,
-// and not here.
+// The rules, pinned first in the brief (AGENTS, Never): no journal address is
+// printed — it lives in the link; no number beside a person — a count may sit
+// on a record or on the community, never beside a name; nothing is ordered by
+// how much anybody logs — where there is no better order, shuffle; and
+// nothing is ever written to another keeper's journal.
 
-import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
-import { BookOpen, Check, Plus, User } from '@phosphor-icons/react';
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import Link from 'next/link';
+import { ArrowsClockwise, BookOpen, Check, MagnifyingGlass, Plus, User, X } from '@phosphor-icons/react';
 import SiteNav from '../../components/main_components/SiteNav';
 import WaveSheet from '../../components/main_components/WaveSheet';
+import StarRating from '../../components/main_components/StarRating';
+import { Marks } from '../../components/main_components/Feed';
+import { useHoldStill } from '../../hooks/useHoldStill';
 import { useBookplate } from '../../components/main_components/Bookplate';
 import { DIRECTORY_URL } from '../../library/version';
 import { carrySender, journalUrl, tidyJournal } from '../../library/return_address';
+import { useFriendsBeacons } from '../../hooks/useFriendsBeacons';
 
 // The mock-up's words for a journal whose keeper has not said their name.
 const NO_NAME = 'A journal with no name yet';
 
-const journalsWord = n => `${n} ${n === 1 ? 'journal' : 'journals'}`;
+const NUMBER_WORDS = ['No', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve'];
 
 // Where the software is got from: /get on the copy the registry lives on,
 // which a stranger without a gift link meets as the handed-out page.
@@ -62,17 +64,18 @@ const GET_URL = (() => {
   try { return `${new URL(DIRECTORY_URL).origin}/get`; } catch { return ''; }
 })();
 
-// Said by the switch: the directory's own host, without the www.
-const WHERE = tidyJournal(DIRECTORY_URL).replace(/^www\./, '');
+// The one note, until the keeper dismisses it. Kept in this browser: a note
+// read once on a phone may be met once more on a desk, and that is all.
+const NOTE_KEY = 'ln-board-note';
 
-// ── One reading of the list, shared ────────────────────────────────────────
-// The list and the count beside the word in the People tab's bar come from
-// the same answer (Miyel, 2026-10-07: "can count be next to everyone?"), so
-// they are read once into this module and drawn from here: the bar asks when
-// People opens, the list asks again when it is drawn, on a pull, and after
-// the switch is pressed. A failed ask keeps whatever was read before — a list
-// on the screen is not taken away because the registry was slow a second
-// time — and says the list is down only when there was never anything.
+// ── One reading of the Board, shared ───────────────────────────────────────
+// The first screen and the count beside the word in the People tab's bar come
+// from the same answer (Miyel, 2026-10-07: "can count be next to everyone?"),
+// so they are read once into this module and drawn from here: the bar asks
+// when People opens, the Board asks again when it is drawn, on a pull, and on
+// Shuffle. A failed ask keeps whatever was read before — a Board on the
+// screen is not taken away because the registry was slow a second time — and
+// says it is down only when there was never anything.
 const NOTHING_YET = Object.freeze({ page: null, down: false });
 let reading = NOTHING_YET;
 let asking = null;
@@ -86,11 +89,13 @@ function subscribe(fn) {
   return () => listening.delete(fn);
 }
 
-export function readEveryone() {
-  if (asking) return asking;
-  asking = (async () => {
+// `shuffle` draws a new dozen: a new address, so a shared cache cannot hand
+// back the draw it already has.
+export function readEveryone({ shuffle = false } = {}) {
+  if (asking && !shuffle) return asking;
+  const ask = (async () => {
     try {
-      const r = await fetch(DIRECTORY_URL, { cache: 'no-store' });
+      const r = await fetch(`/api/board${shuffle ? `?shuffle=${Date.now()}` : ''}`, { cache: 'no-store' });
       if (!r.ok) throw new Error(String(r.status));
       const d = await r.json();
       publish({
@@ -98,41 +103,197 @@ export function readEveryone() {
         page: {
           listed: Number(d?.listed) || 0,
           logging: Number(d?.logging) || 0,
-          journals: Array.isArray(d?.journals) ? d.journals : [],
-          next: d?.next || null,
+          live: Array.isArray(d?.live) ? d.live : [],
+          further: Array.isArray(d?.further) ? d.further : [],
+          today: Array.isArray(d?.today) ? d.today : [],
         },
       });
     } catch {
       if (!reading.page) publish({ page: null, down: true });
     } finally {
-      asking = null;
+      if (asking === ask) asking = null;
     }
   })();
-  return asking;
-}
-
-// The next thirty, added to the end. What failed to come is simply not added.
-async function readMore() {
-  const after = reading.page?.next;
-  if (!after) return;
-  try {
-    const r = await fetch(`${DIRECTORY_URL}?after=${encodeURIComponent(after)}`, { cache: 'no-store' });
-    const d = r.ok ? await r.json() : null;
-    if (d && reading.page?.next === after) {
-      publish({
-        ...reading,
-        page: {
-          ...reading.page,
-          journals: [...reading.page.journals, ...(Array.isArray(d.journals) ? d.journals : [])],
-          next: d.next || null,
-        },
-      });
-    }
-  } catch { /* the press can be made again */ }
+  asking = ask;
+  return ask;
 }
 
 export function useEveryone() {
   return useSyncExternalStore(subscribe, () => reading, () => NOTHING_YET);
+}
+
+// ── Records, piece three, 2026-10-08 ───────────────────────────────────────
+// Everything below reads through this journal's own /api/board — never the
+// directory, never another journal — so what stands behind that one door can
+// change without this file knowing (Miyel: "keep the fan-out behind a single
+// route, the way /api/friends/beacons already is").
+
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+// "You logged this today", "a few days ago", "last week", "in March",
+// "in March 2025".
+function whenWords(iso) {
+  const at = new Date(iso);
+  if (Number.isNaN(at.getTime())) return '';
+  const days = (Date.now() - at.getTime()) / 86400000;
+  if (days < 1) return 'today';
+  if (days < 7) return 'a few days ago';
+  if (days < 14) return 'last week';
+  const now = new Date();
+  return at.getFullYear() === now.getFullYear() ? `in ${MONTHS[at.getMonth()]}` : `in ${MONTHS[at.getMonth()]} ${at.getFullYear()}`;
+}
+
+// ── A line from what they wrote ───────────────────────────────────────────
+// The opening of a keeper's own album note, which this journal's server reads
+// from theirs (app/api/board, `?lines`) and keeps ten minutes. Asked in one
+// go for everything drawn at once: each Line asks, and the asks made in the
+// same moment travel together, a dozen at a time.
+const lines = new Map();
+let waiting = [];
+function flushLines() {
+  const batch = waiting;
+  waiting = [];
+  for (let i = 0; i < batch.length; i += 12) {
+    const part = batch.slice(i, i + 12);
+    const asked = part.map(w => `${w.address}|${w.slug}`).join(',');
+    fetch(`/api/board?lines=${encodeURIComponent(asked)}`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => part.forEach(w => w.done(d?.lines?.[`${w.address}|${w.slug}`] || null)))
+      .catch(() => part.forEach(w => w.done(null)));
+  }
+}
+function readLine(address, slug) {
+  const key = `${address}|${slug}`;
+  if (!lines.has(key)) {
+    lines.set(key, new Promise(done => {
+      if (waiting.length === 0) setTimeout(flushLines, 0);
+      waiting.push({ address, slug, done });
+    }));
+  }
+  return lines.get(key);
+}
+function Line({ address, slug }) {
+  const [line, setLine] = useState(null);
+  useEffect(() => {
+    let gone = false;
+    readLine(address, slug).then(l => { if (!gone) setLine(l); });
+    return () => { gone = true; };
+  }, [address, slug]);
+  if (!line) return null;
+  return <span className="dir-line">&ldquo;{line}&rdquo;</span>;
+}
+
+// One keeper of a record: their name — lit when they are logging — a line of
+// what they wrote, their stars and their marks. For the keeper a press opens
+// the doors: Visit, which goes to their entry for this record, and Add; for
+// anybody else the row is the way to that entry.
+function KeeperRow({ keeper, viewer }) {
+  const [open, setOpen] = useState(false);
+  const href = `${journalUrl(keeper.address)}/entries/${encodeURIComponent(keeper.slug)}`;
+  const inner = (
+    <>
+      <span className="dir-keeper-name">
+        {keeper.live && <span className="fr-on-dot" aria-hidden="true" />}
+        {keeper.name || NO_NAME}
+        {viewer?.inBook(keeper.address) && (
+          <Check size={13} weight="bold" className="dir-keeper-check" aria-label="In your address book" />
+        )}
+      </span>
+      <Line address={keeper.address} slug={keeper.slug} />
+      <span className="dir-keeper-marks">
+        {keeper.stars ? <StarRating rating={keeper.stars} size={12} /> : null}
+        <Marks entry={keeper} size={12} />
+      </span>
+    </>
+  );
+  if (!viewer) {
+    return <a className="dir-keeper" href={href} target="_blank" rel="noopener noreferrer">{inner}</a>;
+  }
+  const inBook = viewer.inBook(keeper.address);
+  return (
+    <div className={'dir-keeper-item' + (open ? ' dir-keeper-item--open' : '')}>
+      <button type="button" className="dir-keeper" onClick={() => setOpen(o => !o)} aria-expanded={open}>{inner}</button>
+      {open && (
+        <div className="dir-doors">
+          <div className="fr-doors-row">
+            <a className="fr-door" href={viewer.carry(href, inBook)} target="_blank" rel="noopener noreferrer">
+              <BookOpen size={22} weight="regular" aria-hidden="true" />
+              Visit
+            </a>
+            {!inBook && (
+              <button type="button" className="fr-door" onClick={() => viewer.add(keeper)} disabled={viewer.adding === keeper.address}>
+                <Plus size={22} weight="regular" aria-hidden="true" />
+                {viewer.adding === keeper.address ? 'Adding\u2026' : 'Add'}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// A tile on the wall: the cover, how many keepers logged it in the last day
+// — a count on a record, never beside a person (AGENTS, Never) — and a check
+// when the viewer logged it too.
+function Tile({ record, yours, onOpen }) {
+  const n = record.keepers.length;
+  return (
+    <button
+      type="button"
+      className="dir-tile"
+      onClick={() => onOpen(record)}
+      aria-label={`${record.album}${record.artist ? ` by ${record.artist}` : ''}, logged by ${n} ${n === 1 ? 'keeper' : 'keepers'}${yours ? ' — you logged it too' : ''}`}
+    >
+      <span className="dir-tile-art" aria-hidden="true">
+        {record.art ? <img src={record.art} alt="" loading="lazy" onError={e => { e.currentTarget.style.display = 'none'; }} /> : <span>&#9834;</span>}
+      </span>
+      <span className="dir-tile-pin" aria-hidden="true">
+        <span className="fr-on-dot" />
+        {n} {n === 1 ? 'keeper' : 'keepers'}
+      </span>
+      {yours && <span className="dir-tile-yours" aria-hidden="true"><Check size={10} weight="bold" /></span>}
+    </button>
+  );
+}
+
+// The sheet a pressed record opens: who logged it and what they said.
+function RecordSheet({ record, yours, viewer, onClose }) {
+  const sheetRef = useRef(null);
+  useHoldStill(sheetRef, Boolean(record));
+  useEffect(() => {
+    if (!record) return undefined;
+    const key = e => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', key);
+    return () => window.removeEventListener('keydown', key);
+  }, [record, onClose]);
+  if (!record) return null;
+  return (
+    <>
+      <div className="sn-scrim" onClick={onClose} aria-hidden="true" />
+      <section ref={sheetRef} className="sn-sheet dir-sheet" role="dialog" aria-modal="true" aria-label={`Who logged ${record.album}`}>
+        <div className="sn-pull" onClick={onClose} aria-hidden="true" />
+        <div className="dir-sheet-head">
+          <span className="dir-cover dir-sheet-art" aria-hidden="true">
+            {record.art ? <img src={record.art} alt="" /> : <span>&#9834;</span>}
+          </span>
+          <span className="dir-sheet-words">
+            <span className="dir-sheet-title">{record.album}</span>
+            {record.artist && <span className="dir-sheet-by">{record.artist}</span>}
+          </span>
+        </div>
+        <div className="dir-sheet-list">
+          {record.keepers.map(k => <KeeperRow key={`${k.address}|${k.slug}`} keeper={k} viewer={viewer} />)}
+        </div>
+        <p className="dir-sheet-foot">
+          <span className="dir-label">Where this came from</span>
+          {yours
+            ? 'You logged this too. Everybody here logged it in a journal that is on the board.'
+            : 'Nobody you\u2019ve added, necessarily. It\u2019s here because it was logged in a journal that is on the board.'}
+        </p>
+      </section>
+    </>
+  );
 }
 
 // Their journal's own portrait, read straight off it and never kept here,
@@ -165,10 +326,17 @@ function Cover({ art }) {
   );
 }
 
+// The path to somebody a friend away: "Through Dez and Wren" — the friends
+// they came through, never a score, never more than two names.
+function throughWords(names) {
+  if (!names || names.length === 0) return 'Through a friend';
+  return `Through ${names.slice(0, 2).join(' and ')}`;
+}
+
 // What every row says, whoever is reading: the face, the name, the beacon,
-// the cover — and, for the keeper, one mark at the very end: a check for
-// somebody already in the book, YOU on their own row.
-function Inside({ journal, mark = null }) {
+// the cover — and, for the keeper, a check at the very end for somebody
+// already in the book; for somebody a friend away, the path to them.
+function Inside({ journal, inBook = false, through = null }) {
   const live = journal.state === 'logging';
   const said = journal.state === 'logging' || journal.state === 'logged';
   return (
@@ -176,6 +344,7 @@ function Inside({ journal, mark = null }) {
       <Face journal={journal} />
       <span className="dir-who">
         <span className={'dir-name' + (journal.name ? '' : ' dir-name--none')}>{journal.name || NO_NAME}</span>
+        {through && <span className="dir-through">{throughWords(through)}</span>}
         {said ? (
           <>
             <span className={'dir-state' + (live ? ' dir-state--live' : '')}>{live ? 'Now logging' : 'Last logged'}</span>
@@ -188,97 +357,72 @@ function Inside({ journal, mark = null }) {
       </span>
       <span className="dir-end">
         {said && <Cover art={journal.art} />}
-        {mark === 'book' && (
+        {inBook && (
           <span className="dir-mark" title="In your address book">
             <Check size={17} weight="bold" aria-label="In your address book" />
           </span>
         )}
-        {mark === 'you' && <span className="dir-mark dir-mark--you">You</span>}
       </span>
     </>
   );
 }
 
-// ── Being findable ──────────────────────────────────────────────────────────
-// The keeper's switch, at the head of the list it puts them in. What it means
-// is said before the press (her instructions: "say the consequence before the
-// press, not after"); pressing it lists or delists through /api/listing, and
-// `onChange` asks for the list again so the keeper's own row arrives or goes.
-function Findable({ onChange }) {
-  const [listed, setListed] = useState(null);   // null until asked
-  const [busy, setBusy] = useState(false);
-  const [trouble, setTrouble] = useState('');
-
+// ── The note ───────────────────────────────────────────────────────────────
+// What being on the Board means, said once to the keeper on the Board itself
+// (the brief: "say so plainly"), with the way off — which is the switch in
+// Settings — and a cross that puts it away for good in this browser. Only
+// while they are on the Board.
+function BoardNote() {
+  const [shown, setShown] = useState(false);
   useEffect(() => {
+    let gone = false;
+    let dismissed = false;
+    try { dismissed = localStorage.getItem(NOTE_KEY) === 'dismissed'; } catch { /* no storage: show it */ }
+    if (dismissed) return undefined;
     fetch('/api/listing')
       .then(r => (r.ok ? r.json() : null))
-      .then(d => setListed(Boolean(d?.listed)))
-      .catch(() => setListed(false));
+      .then(d => { if (!gone && d?.findable) setShown(true); })
+      .catch(() => {});
+    return () => { gone = true; };
   }, []);
-
-  async function flip(next) {
-    setBusy(true);
-    setTrouble('');
-    try {
-      const res = await fetch('/api/listing', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ listed: next }),
-      });
-      const d = await res.json().catch(() => ({}));
-      if (!res.ok || d.error) throw new Error(d.error || 'That did not work. Nothing changed.');
-      setListed(Boolean(d.listed));
-      onChange?.();
-    } catch (e) {
-      setTrouble(e.message);
-    }
-    setBusy(false);
+  if (!shown) return null;
+  function dismiss() {
+    try { localStorage.setItem(NOTE_KEY, 'dismissed'); } catch { /* it goes for now either way */ }
+    setShown(false);
   }
-
   return (
-    <div className="dir-join">
-      <p className="dir-join-said">
-        {listed
-          ? <>You&rsquo;re in the list below. Anyone can see your name, your face and what you&rsquo;re listening to. Your entries stay where they are.</>
-          : <>Anyone can see your name, your face and what you&rsquo;re listening to, here and at {WHERE}. Your entries stay where they are.</>}
-      </p>
-      <label className="dir-join-line">
-        <span>Be findable</span>
-        <input
-          type="checkbox"
-          role="switch"
-          className="ln-switch"
-          checked={Boolean(listed)}
-          disabled={busy || listed === null}
-          onChange={e => flip(e.target.checked)}
-        />
-      </label>
-      {(busy || trouble) && (
-        <p className="dir-join-foot">
-          {busy && <span role="status">{listed ? 'Taking it off…' : 'Listing…'}</span>}
-          {trouble && <span className="dir-join-trouble" role="alert">{trouble}</span>}
+    <div className="dir-note">
+      <div className="dir-note-words">
+        <p className="dir-note-head">You&rsquo;re on the board</p>
+        <p className="dir-note-said">
+          Your name and what you&rsquo;re playing, nothing else &mdash; the same things your journal already
+          serves to anyone who visits. Keep someone private in Friends and they stay off everyone&rsquo;s
+          board but yours.
         </p>
-      )}
+        <Link href="/settings" className="dir-note-off">Take me off &rarr;</Link>
+      </div>
+      <button type="button" className="dir-note-x" onClick={dismiss} aria-label="Put this note away">
+        <X size={16} weight="regular" aria-hidden="true" />
+      </button>
     </div>
   );
 }
 
-// ── The list ────────────────────────────────────────────────────────────────
+// ── The Board ──────────────────────────────────────────────────────────────
 // `keeper` is whether the person looking keeps this journal (the cross's lock
 // has said so). `refreshRef`, when given, is handed the way to ask again, for
-// the pull at the top of the pane. `countInBar` is true in the People tab,
-// where the number of journals stands beside the word in the bar, so the
-// line over the list keeps only how many are logging and the number is not
-// on the screen twice.
-export function Everyone({ keeper = false, refreshRef = null, countInBar = false }) {
+// the pull at the top of the pane.
+export function Everyone({ keeper = false, refreshRef = null }) {
   const { keeper_name: myName, site_address: myAddress } = useBookplate();
   const me = { name: myName, address: myAddress };
   const mine = tidyJournal(myAddress);
 
-  // null until the registry has answered; `down` once it could not and there
-  // is nothing older to keep showing. See readEveryone.
   const { page, down } = useEveryone();
-  const [more, setMore] = useState(false);
+  const [drawing, setDrawing] = useState(false);
+  // A friend away: the friends' round carries it (app/api/friends/beacons),
+  // asked while the keeper's Board is on screen and never for a visitor,
+  // who has no friends here to be a friend away from.
+  const { away } = useFriendsBeacons(keeper);
 
   // The keeper's book, by address, for the checks; the row whose doors are
   // open; the one being filed; what filing it said; the wave it offers.
@@ -287,6 +431,32 @@ export function Everyone({ keeper = false, refreshRef = null, countInBar = false
   const [adding, setAdding] = useState('');
   const [said, setSaid] = useState('');
   const [wavingTo, setWavingTo] = useState(null);
+
+  // A name or a record being looked up, and what came back: null while
+  // nothing is typed.
+  const [query, setQuery] = useState('');
+  const [found, setFound] = useState(null);
+  const typed = useRef(0);
+
+  // The keeper's own records, by hash, with when each was last logged; who
+  // else logged them; and the record whose sheet is open. All of it from the
+  // Board's own route, which reads the keeper's records on the server.
+  const [mineHashed, setMineHashed] = useState(() => new Map());
+  const [alike, setAlike] = useState([]);
+  const [sheet, setSheet] = useState(null);
+  useEffect(() => {
+    if (!keeper) return undefined;
+    let gone = false;
+    fetch('/api/board?alike=1', { cache: 'no-store' })
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => {
+        if (gone || !d) return;
+        setMineHashed(new Map(Object.entries(d.mine || {})));
+        setAlike(Array.isArray(d.records) ? d.records : []);
+      })
+      .catch(() => { /* the section simply stays away */ });
+    return () => { gone = true; };
+  }, [keeper]);
 
   const readBook = useCallback(async () => {
     if (!keeper) return;
@@ -297,7 +467,7 @@ export function Everyone({ keeper = false, refreshRef = null, countInBar = false
     } catch { /* no checks is the honest fallback */ }
   }, [keeper]);
 
-  // Read again whenever the list is drawn, so coming back to it is fresh.
+  // Read again whenever the Board is drawn, so coming back to it is fresh.
   useEffect(() => { readEveryone(); }, []);
   useEffect(() => { readBook(); }, [readBook]);
 
@@ -308,12 +478,34 @@ export function Everyone({ keeper = false, refreshRef = null, countInBar = false
     return () => { refreshRef.current = null; };
   }, [refreshRef, readBook]);
 
-  // The next thirty, on a press.
-  async function askMore() {
-    if (more) return;
-    setMore(true);
-    await readMore();
-    setMore(false);
+  // A name, looked up a beat after the typing stops; the last ask wins.
+  useEffect(() => {
+    const term = query.trim();
+    if (!term) { setFound(null); return undefined; }
+    const ask = ++typed.current;
+    const wait = setTimeout(async () => {
+      try {
+        const r = await fetch(`/api/board?q=${encodeURIComponent(term)}`, { cache: 'no-store' });
+        const d = r.ok ? await r.json() : null;
+        if (ask === typed.current) {
+          setFound({
+            journals: Array.isArray(d?.journals) ? d.journals : [],
+            records: Array.isArray(d?.records) ? d.records : [],
+          });
+        }
+      } catch {
+        if (ask === typed.current) setFound({ journals: [], records: [] });
+      }
+    }, 300);
+    return () => clearTimeout(wait);
+  }, [query]);
+
+  async function shuffle() {
+    if (drawing) return;
+    setDrawing(true);
+    setOpen('');
+    await readEveryone({ shuffle: true });
+    setDrawing(false);
   }
 
   // Files somebody in the book, the same write the + in Friends makes. The
@@ -341,21 +533,13 @@ export function Everyone({ keeper = false, refreshRef = null, countInBar = false
     }
   }
 
-  function row(journal) {
+  function row(journal, through = null) {
     // A visitor's row is the way to that journal and nothing else.
     if (!keeper) {
       return (
         <a key={journal.address} className="dir-row" href={journalUrl(journal.address)} target="_blank" rel="noopener noreferrer">
           <Inside journal={journal} />
         </a>
-      );
-    }
-    // The keeper's own row: there is nowhere to go and nobody to add.
-    if (mine && journal.address === mine) {
-      return (
-        <div key={journal.address} className="dir-row dir-row--own">
-          <Inside journal={journal} mark="you" />
-        </div>
       );
     }
     const inBook = book.has(journal.address);
@@ -368,7 +552,7 @@ export function Everyone({ keeper = false, refreshRef = null, countInBar = false
           onClick={() => { setSaid(''); setOpen(isOpen ? '' : journal.address); }}
           aria-expanded={isOpen}
         >
-          <Inside journal={journal} mark={inBook ? 'book' : null} />
+          <Inside journal={journal} inBook={inBook} through={through} />
         </button>
         {isOpen && (
           <div className="dir-doors">
@@ -396,39 +580,208 @@ export function Everyone({ keeper = false, refreshRef = null, countInBar = false
     );
   }
 
+  // The band's card: the record, the keeper with a live dot, the record's
+  // name and the artist — the Friends room's card (forms.css, .fr-on).
+  function card(journal) {
+    const href = keeper
+      ? carrySender(journalUrl(journal.address), me, { known: book.has(journal.address) })
+      : journalUrl(journal.address);
+    const name = journal.name || NO_NAME;
+    return (
+      <a
+        key={journal.address}
+        className="fr-on"
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={`${name} is logging ${journal.album}${journal.artist ? ` · ${journal.artist}` : ''}`}
+      >
+        <span className="fr-on-art" aria-hidden="true">
+          {journal.art
+            ? <img src={journal.art} alt="" loading="lazy" onError={e => { e.currentTarget.style.display = 'none'; }} />
+            : <span>&#9834;</span>}
+        </span>
+        <span className="fr-on-who">
+          <span className="fr-on-dot" aria-hidden="true" />
+          {name}
+        </span>
+        <span className="fr-on-rec">{journal.album}</span>
+        {journal.artist && <span className="fr-on-by">{journal.artist}</span>}
+      </a>
+    );
+  }
+
+  // What the record parts need to know about the viewer: who is in the book,
+  // how to carry the keeper's name on a link out, and how to add somebody.
+  // Null for a visitor, whose rows are simply the way to an entry.
+  const viewer = keeper ? {
+    inBook: address => book.has(address),
+    carry: (href, known) => carrySender(href, me, { known }),
+    add: journal => add(journal),
+    adding,
+  } : null;
+  const yours = record => keeper && mineHashed.has(record.key_hash);
+
+  // Also on your records: strangers — nobody in the book, never the keeper —
+  // who logged something the keeper logged. Six records, three keepers each.
+  const onYours = keeper ? alike
+    .map(r => ({ ...r, keepers: r.keepers.filter(k => !(mine && k.address === mine) && !book.has(k.address)).slice(0, 3) }))
+    .filter(r => r.keepers.length > 0)
+    .slice(0, 6) : [];
+  // The wall and found records, without the journal whose Board this is —
+  // its keeper is never a row on their own Board — and without a record
+  // nobody else logged. The count on a tile is the others; the check says
+  // the viewer logged it too.
+  const withoutMe = records => records
+    .map(r => ({ ...r, keepers: r.keepers.filter(k => !(mine && k.address === mine)) }))
+    .filter(r => r.keepers.length > 0);
+  const today = page ? withoutMe(page.today || []) : [];
+
+  // Never the keeper on their own Board, and — further out — nobody already in
+  // their book: the Friends half is where those are.
+  const notMe = j => !(mine && j.address === mine);
+  const live = page ? page.live.filter(notMe) : [];
+  const friendsAway = keeper ? away.filter(j => notMe(j) && !book.has(j.address)) : [];
+  const nearer = new Set(friendsAway.map(j => j.address));
+  const further = page
+    ? page.further.filter(j => notMe(j) && !(keeper && book.has(j.address)) && !nearer.has(j.address))
+    : [];
+
   return (
     <div className="dir-everyone">
-      {keeper && <Findable onChange={readEveryone} />}
-      {down ? (
-        <p className="dir-quiet">The list can&rsquo;t be reached right now.</p>
-      ) : page === null ? (
-        <p className="dir-quiet">Asking who&rsquo;s listed&hellip;</p>
-      ) : page.journals.length === 0 ? (
-        <p className="dir-quiet">Nobody is listed yet.</p>
-      ) : (
-        <section className="dir-list" aria-label="Listed journals">
-          <h2 className="dir-head">
-            <span>Listed</span>
-            <span className="dir-count">
-              {countInBar
-                ? (page.logging > 0 ? `${page.logging} logging right now` : '')
-                : <>{journalsWord(page.listed)}{page.logging > 0 && ` · ${page.logging} logging right now`}</>}
-            </span>
-          </h2>
-          {page.journals.map(row)}
-          {page.next && (
-            <button type="button" className="dir-more" onClick={askMore} disabled={more}>
-              {more ? 'Asking…' : 'More'}
-            </button>
+      {keeper && <BoardNote />}
+
+      <label className="dir-search">
+        <MagnifyingGlass size={16} weight="regular" aria-hidden="true" />
+        <input
+          type="search"
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+          placeholder="A name, or a record"
+          aria-label="Find someone or a record on the board"
+          spellCheck={false}
+          autoComplete="off"
+        />
+      </label>
+
+      {query.trim() ? (
+        <section className="dir-section" aria-label="Found on the board">
+          {found === null ? (
+            <p className="dir-quiet">Looking&hellip;</p>
+          ) : found.journals.filter(notMe).length === 0 && withoutMe(found.records).length === 0 ? (
+            <p className="dir-quiet">Nobody and nothing on the board by that name.</p>
+          ) : (
+            <>
+              {found.journals.filter(notMe).map(j => row(j))}
+              {withoutMe(found.records).length > 0 && (
+                <div className="dir-wall dir-wall--found">
+                  {withoutMe(found.records).map(r => <Tile key={r.key_hash} record={r} yours={yours(r)} onOpen={setSheet} />)}
+                </div>
+              )}
+            </>
           )}
         </section>
+      ) : down ? (
+        <p className="dir-quiet">The board can&rsquo;t be reached right now.</p>
+      ) : page === null ? (
+        <p className="dir-quiet">Asking who&rsquo;s on the board&hellip;</p>
+      ) : (
+        <>
+          {live.length > 0 ? (
+            <div className="fr-now dir-band">
+              <p className="fr-now-head">
+                <span className="fr-now-pulse" aria-hidden="true" />
+                Logging right now
+              </p>
+              <div className="fr-now-row">{live.map(card)}</div>
+            </div>
+          ) : (
+            <p className="dir-band-quiet">Nobody on the board is logging right now.</p>
+          )}
+
+          {friendsAway.length > 0 && (
+            <section className="dir-section" aria-label="A friend away">
+              <h2 className="dir-label">A friend away</h2>
+              <p className="dir-sub">
+                People your friends have added. Two doors down rather than across town &mdash; most of the names
+                you actually want are here.
+              </p>
+              {friendsAway.map(j => row(j, j.through))}
+            </section>
+          )}
+
+          {onYours.length > 0 && (
+            <section className="dir-section" aria-label="Also on your records">
+              <h2 className="dir-label">Also on your records</h2>
+              <p className="dir-sub">
+                Strangers who logged something you&rsquo;ve logged. Nobody you know yet, but they sat with the same
+                record.
+              </p>
+              {onYours.map(r => (
+                <div key={r.key_hash} className="dir-shared">
+                  <div className="dir-shared-top">
+                    <span className="dir-cover" aria-hidden="true">
+                      {r.art ? <img src={r.art} alt="" loading="lazy" /> : <span>&#9834;</span>}
+                    </span>
+                    <span className="dir-shared-words">
+                      <span className="dir-shared-title">{r.album}</span>
+                      {r.artist && <span className="dir-shared-by">{r.artist}</span>}
+                      {mineHashed.get(r.key_hash) && (
+                        <span className="dir-shared-mine">You logged this {whenWords(mineHashed.get(r.key_hash))}</span>
+                      )}
+                    </span>
+                  </div>
+                  <div className="dir-shared-list">
+                    {r.keepers.map(k => <KeeperRow key={`${k.address}|${k.slug}`} keeper={k} viewer={viewer} />)}
+                  </div>
+                </div>
+              ))}
+            </section>
+          )}
+
+          {today.length > 0 && (
+            <section className="dir-section" aria-label="Being logged everywhere">
+              <h2 className="dir-label">Being logged everywhere</h2>
+              <p className="dir-sub">
+                The last day across every journal on the board. Press a record to see who sat with it and what
+                they said.
+              </p>
+              <div className="dir-wall">
+                {today.map(r => <Tile key={r.key_hash} record={r} yours={yours(r)} onOpen={setSheet} />)}
+              </div>
+            </section>
+          )}
+
+          <section className="dir-section" aria-label="Further out">
+            <h2 className="dir-label">Further out</h2>
+            <p className="dir-sub">
+              Everyone else on the board. Shuffled, never ranked &mdash; the person who logs one record a month
+              is as findable as the one who logs four a day.
+            </p>
+            {further.length === 0 ? (
+              <p className="dir-quiet">Nobody else yet.</p>
+            ) : (
+              further.map(j => row(j))
+            )}
+            <div className="dir-shuffle">
+              <span className="dir-shuffle-of">
+                {further.length > 0 ? `${NUMBER_WORDS[further.length] || further.length} of ${page.listed}` : ''}
+              </span>
+              <button type="button" className="dir-shuffle-go" onClick={shuffle} disabled={drawing}>
+                <ArrowsClockwise size={14} weight="regular" aria-hidden="true" />
+                {drawing ? 'Shuffling…' : 'Shuffle'}
+              </button>
+            </div>
+          </section>
+        </>
       )}
+
       {!keeper && (
         <>
           <p className="dir-keeps">
             <b>What this page keeps:</b> an address, the day it was listed, a code for taking it off again,
-            and what each journal was last seen logging. No entries, no accounts. Delisting is one press and
-            leaves nothing behind.
+            and what each journal was last seen logging. No entries, no accounts. Coming off the board is one
+            switch in a journal&rsquo;s Settings, and leaves nothing behind.
           </p>
           {GET_URL && (
             <a className="dir-get" href={GET_URL}>Get your copy &rarr;</a>
@@ -436,21 +789,22 @@ export function Everyone({ keeper = false, refreshRef = null, countInBar = false
         </>
       )}
       {keeper && <WaveSheet person={wavingTo} onClose={() => setWavingTo(null)} />}
+      <RecordSheet record={sheet} yours={sheet ? yours(sheet) : false} viewer={viewer} onClose={() => setSheet(null)} />
     </div>
   );
 }
 
-// ── The list at its own address ─────────────────────────────────────────────
-// For a stranger who was handed the link: the list as a visitor sees it, under
-// the mark and a line saying what it is.
+// ── The Board at its own address ───────────────────────────────────────────
+// For a stranger who was handed the link: the Board as a visitor sees it,
+// under the mark and a line saying what it is.
 export default function Directory() {
   return (
     <div className="dir-screen">
       <SiteNav />
       <main className="dir-wrap">
-        <h1 className="dir-title">Keepers</h1>
+        <h1 className="dir-title">Board</h1>
         <p className="dir-lede">
-          Journals that chose to be listed. Press one to read it &mdash; it lives at its own address, not here.
+          Journals on the board. Press one to read it &mdash; it lives at its own address, not here.
         </p>
         <Everyone />
       </main>
