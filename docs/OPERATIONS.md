@@ -10,15 +10,25 @@ the keys that hold the thing together.
 Two ways, because they answer different questions.
 
 **A button — Settings → Back up your journal.** Press **Make a copy** and your
-whole journal is gathered into one JSON file: every table the database has —
-the entries and their notes, the settings, the messages, the address book, the
-sends, the waves and what came back — and the page says how many entries and
+whole journal is gathered into one zip, and the page says how many entries and
 people it holds. Then **Share** on a phone hands it to the share sheet (Mail,
 Save to Files, AirDrop), and **Download** on a computer puts it in Downloads.
-No setup, nothing to configure, works on any copy of this software. The same
-file is at `/api/export` for anyone who would rather use the address. It is
-owner-only — it hands over unpublished drafts, the messages in the inbox,
-the address book, and the return addresses people left with submissions.
+No setup, nothing to configure, works on any copy of this software. Inside:
+
+- **`entries/`** — a page for every entry, in plain text (Markdown), named by
+  the day it was posted. Each says what the entry page says — the record, the
+  stars and marks, who put you onto it, the note, every track with its own —
+  and opens in Notes, TextEdit, Files or any notes app, with nothing
+  installed. This is your writing readable without this software.
+- **`journal.json`** — every table the database has: the entries and their
+  notes, the settings, the messages, the address book, the sends, the waves
+  and what came back. This is what puts a journal back (below).
+- **`Read me.txt`** — what the other two are, for whoever opens the folder.
+
+`journal.json` alone is at `/api/export` for anyone who would rather use the
+address. Both are owner-only — they hand over unpublished drafts, the
+messages in the inbox, the address book, and the return addresses people
+left with submissions.
 
 **It never carries the `secrets` table** — the password and the key that signs
 you in. A download goes wherever downloads go, and whoever held that key could
@@ -53,7 +63,8 @@ npm run restore -- <path-to-a-backup>
 ```
 
 Prints what it would do and changes nothing. Add `--yes` to actually restore.
-It reads a downloaded export file just as happily as a backup folder, old ones
+It reads the zip from Make a copy — as it came, or unzipped and zipped again —
+just as happily as a backup folder or a bare `journal.json`, old ones
 included. What it does:
 
 - **Empties every table the file holds, and refills it.** It is a restore, not
