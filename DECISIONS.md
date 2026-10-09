@@ -1200,6 +1200,9 @@ does (no email anywhere, below).
 empty one, and emptying it would lose the address book to an old backup. The
 ledger is this database's shape, not the journal; written back, it would
 re-run migrations over restored rows. It is read to refuse a newer backup.
+**One exception, 2026-10-08:** a table outside the file that points at one
+it fills, and is already empty, is emptied with them — Postgres refuses
+otherwise, and a table a later migration adds would refuse every older copy.
 
 **The feed is pull-based.** Every copy publishes `/feed.xml`; each copy goes
 and checks. Nobody learns they were read. **One feed** — the two views of
@@ -1954,6 +1957,13 @@ goes looking for a log. The build step opens setup for thirty minutes on an
 unclaimed copy, and pressing the picture lands in setup with nothing typed.
 Only at build — a start can be woken by anybody's visit, a build only by the
 owner. Past the window: Redeploy, or the code from the log.
+
+**Bring your journal is setup's second way in, on a copy nobody has
+claimed, 2026-10-08.** Start a new journal or Bring your journal (Miyel's
+words); the zip is read in the browser and said back before anything is
+written, and the copy is claimed inside the restore's own transaction
+(`/api/restore`), so a journal never arrives without a password. The copy
+keeps its key and address; the Board's old code goes, so it lists itself.
 
 **The build migrates too.** `npm run build` runs the migrator before
 `next build`, purely so the claim code reaches the build log. A build that

@@ -69,6 +69,27 @@ export async function save_secrets(fields) {
   );
 }
 
+// ── The claim, inside somebody else's transaction, 2026-10-08 ─────────────
+// What the setup claim writes here — the password, and the end of the claim
+// code and the window — for a journal brought in rather than started
+// (app/api/restore). There it rides the restore's own transaction, so the
+// journal and the claim land together or not at all: a journal brought in
+// and claimed with no password would let nobody in. `query` takes (text,
+// params), as library/whole_journal.mjs's callers do; the SQL stays here,
+// with the rest of the vault's.
+export async function seal_claim(query, password_hash) {
+  await query(
+    `INSERT INTO secrets (id, password_hash, claim_code, setup_open_until)
+     VALUES (1, $1, NULL, NULL)
+     ON CONFLICT (id) DO UPDATE SET
+       password_hash = EXCLUDED.password_hash,
+       claim_code = NULL,
+       setup_open_until = NULL,
+       updated_at = now()`,
+    [password_hash],
+  );
+}
+
 // ── The API key ───────────────────────────────────────────────────────────
 // Database, then environment. Null when neither has one. There were two until
 // 2026-09-16; `lastfmKey()` went with Last.fm, and it had already stopped

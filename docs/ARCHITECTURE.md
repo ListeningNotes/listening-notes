@@ -80,7 +80,8 @@ wearing a wristband and is the machinery when you are. Nothing on the
 mark opens anything. `/login` is the same door at an address, for when a link will not
 do. `/setup` runs once, on a copy nobody has claimed yet — one screen at a
 time, opened with the claim code printed in the build log, and it is where
-the password is chosen.
+the password is chosen. Its first screen asks whether this is a new journal
+or one being brought in from a copy made in Settings.
 
 ---
 
@@ -113,13 +114,14 @@ The library — logic, no visuals
     people_actions.js          The address book: the people table, pinning, and asking a journal its keeper's name
     portrait_code.js           The press: the portrait made into the journal's QR code on the server — a dot of ink in every photo module, proved by the strictest reader on both page colours
     report_actions.js          Problems keepers wrote in from their desks — the reports table
-    return_address.js          The back of the envelope — a sender's name and journal kept in their own browser — and the one spelling an address is kept in
-    secrets.js                 The vault: the session secret, the password hash, the claim code, the setup window, and two retired key columns. Database first, environment second
+    return_address.js          The back of the envelope — a sender's name and journal kept in their own browser — the one spelling an address is kept in, and addressFrom, what a copy calls itself from the request that reached it
+    secrets.js                 The vault: the session secret, the password hash, the claim code, the setup window, and two retired key columns. Database first, environment second; seal_claim writes the claim inside a restore's own transaction
     session_timers.js          Track length display (m:ss)
     settings_actions.js        The settings row: read (never the portrait blobs), write through an allow-list, the name, isSetUp, and the one-column keeper-name reader the feed uses
     sitewide_visuals.js        Colours and fonts as JS, for canvas and chart code that cannot read a custom property; the stylesheets are the source
     slug_generator.js          Turns "Pet Sounds" into "pet-sounds" for the URL
     submission_actions.js      Albums other people sent you: saving one, its four outcomes, the record a send became, and naming its sender once they have a copy
+    unpacking.mjs              Putting a journal back: reading its file (a zip or journal.json), the plan — order from the foreign keys, refusals, what is left alone — and one transaction; shared by scripts/restore.mjs and /api/restore, so the terminal and setup restore alike
     updater_link.js            The pre-filled GitHub new-file page that installs the updater, on the copy's own branch — read by api/update and by /updates/go
     version.js                 Which version this copy is running (from package.json), where its release notes are, and where a report goes — read by the pitch pane, the desk and the report sheet
     wave_actions.js            The waves that arrived here: one row per waving journal, replaced not stacked, deleted when left
@@ -132,7 +134,7 @@ The update button
 
 The other scripts — run by hand or by a machine, never by the site
   scripts/backup.mjs             Every table to $BACKUP_DIR/<timestamp>/ with migrations/ beside it; 30 kept; carries secrets (docs/OPERATIONS.md)
-  scripts/restore.mjs            Puts a backup or an export back — a folder, the zip from Make a copy, or a bare journal.json; a dry run without --yes; empties only the tables the file holds
+  scripts/restore.mjs            Puts a backup or an export back — a folder, the zip from Make a copy, or a bare journal.json; a dry run without --yes; empties only the tables the file holds. The restore itself is library/unpacking.mjs
   scripts/prepare_database.mjs   Runs before next build: migrates and prints the claim notice; never fails the build
 
 The lint gate — git runs it, on a machine that has opted in
@@ -163,6 +165,7 @@ The front doors — receive requests, hand them off, send back responses
     reports/[id]/route.js      Marking one read or dismissed
     secrets/route.js           The vault — owner-only both ways; says what is set, never the value
     setup/route.js             GET: is this copy claimed. POST: the one write that claims it
+    restore/route.js           Bring your journal — POST, behind setup's wristband and only on a copy nobody has claimed: the journal from Make a copy and a password; restored with library/unpacking.mjs, never the vault, and claimed in the same transaction (the password, this copy's address, the Board's old code gone)
     auth/login/route.js        The password, the deploy-time variable, or — unclaimed — the claim code
     auth/check/route.js        Am I still wearing a valid wristband; renews an ageing one on the way
     auth/logout/route.js       Cuts the wristband off
@@ -298,7 +301,7 @@ The rooms — full pages assembled from furniture
     about/page.js              Redirect to / — the identity card is the about page
     session/page.js            The listen — picker, then four screens under one header
     printer/page.js            The share printer — the press on a record for the keeper (?entry=slug); the sentence for everyone else and for the card, whose plate is still to come
-    setup/page.js              Claiming a copy, one screen at a time: the code, then name, photo, prompts, rig, updates, password, who gave it (GIFT_FROM, or a scan), and the home screen
+    setup/page.js              Claiming a copy, one screen at a time: the code, then two ways — Start a new journal (name, photo, prompts, rig, password, updates, who gave it (GIFT_FROM, or a scan), the home screen) or Bring your journal (the zip from Make a copy, read and said back in the browser, then the password, updates and the home screen)
     settings/page.js           The machinery, owner-only — the address, On the board (the one switch off the Board), the password, the backup, updates, the home screen
     directory/page.js          The Board at its own address, on every copy, absent where DIRECTORY_URL is empty. directory/Directory.js holds `Everyone` (the Board on screen) and the one shared reading of it, `readEveryone`, all of it read through /api/board: for the keeper the one note until dismissed, then for everybody the search by name, logging right now (the Friends room's band, community-wide) and further out (a shuffled dozen); a check on people in the book and Visit · Add on a press for the keeper — drawn here and under People on the cross
     login/page.js              The door at an address — the same password form, for when a link will not do

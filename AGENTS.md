@@ -259,12 +259,14 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   their desks, received by the canonical copy.
 - `return_address.js` — a sender's name and journal kept in their own browser
   for the send and message forms; `tidyAddress`, `tidyJournal` and
-  `journalUrl`, the one spelling an address is kept in; and the `?from=` /
+  `journalUrl`, the one spelling an address is kept in; `addressFrom`, what
+  a copy calls itself from the request that reached it; and the `?from=` /
   `?as=` handling when a keeper arrives from their own copy.
 - `secrets.js` — the vault: the `secrets` table's only reader. The session
   secret, password hashing, the claim code, the setup window, what Settings
-  may be told (set or not, last four characters), and `directoryCode`, the
-  code the registry issues an address, made from the secret.
+  may be told (set or not, last four characters), `directoryCode`, the
+  code the registry issues an address, made from the secret, and
+  `seal_claim`, the claim written inside a restore's own transaction.
 - `session_timers.js` — `TrackLength`: seconds to m:ss.
 - `settings_actions.js` — the one `settings` row: read (without the two
   portrait blobs), write through an allow-list with write-once fields,
@@ -280,6 +282,13 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - `submission_actions.js` — the `submissions` table: saving a send, listing
   sends with the entry each became, counting, the four outcomes, marking one
   logged, naming a sender later.
+- `unpacking.mjs` — putting a journal back, for `scripts/restore.mjs` and
+  `/api/restore` alike: a journal file read (a zip from Make a copy or a
+  bare `journal.json`), the plan (the order the foreign keys give, empty
+  tables that point in emptied with the rest, refusals, what is left alone,
+  a file from before messages) and the one transaction, with a hook for
+  what has to land with it — setup's claim. `.mjs` because the script is
+  plain Node.
 - `updater_link.js` — the link that hands a keeper their updater: GitHub's
   new-file page on their repository with the workflow file already in it, on
   the branch the copy was built from; read by the update route and by
@@ -327,7 +336,8 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - `prepare_database.mjs` — runs before `next build`: migrates and prints the
   claim notice; never fails the build.
 - `restore.mjs` — puts a backup or an export back — a folder, the zip from
-  Make a copy, or a bare `journal.json`; a dry run without `--yes`.
+  Make a copy, or a bare `journal.json`; a dry run without `--yes`. The
+  restore itself is `library/unpacking.mjs`.
 - `update_copy.mjs` — what the update workflow does on a keeper's repository:
   graft, merge the latest release, push; fetched from upstream each run.
 

@@ -90,13 +90,25 @@ Without `DATABASE_URL` in front, it restores into the database in `.env.local`
 — for the copy this was written on, that is the live journal. Read the
 `target:` line of the dry run before adding `--yes`.
 
+**Bringing your journal into a new copy — no terminal.** A copy nobody has
+claimed yet opens setup on two choices: **Start a new journal** or **Bring
+your journal**. Choose the second, pick the zip from Make a copy, check the
+line that says whose journal it is and how much is in it, and choose a
+password. One request later the copy is yours, with everything in it: your
+writing, your card, your address book and your inbox. The copy keeps its own
+address and signing key, and lists itself on the Board at its new address
+the first time it is opened, if your journal was on the Board. Only a copy
+nobody has claimed can be brought into: putting a file over a journal
+somebody keeps is the terminal's job, below, with its dry run in front.
+
 **Restoring into a brand-new database** — your Neon project is gone and you
 have made another:
 
 1. Point the copy at the new database (in Vercel: Settings → Environment
    Variables → `DATABASE_URL`) and redeploy. It builds its own tables.
-2. Set it up as if it were new, choosing a password — an export does not carry
-   your old one.
+2. Open it and choose **Bring your journal** — or, from a terminal, set it up
+   as if it were new, choosing a password (an export does not carry your old
+   one), and then:
 3. Restore into it: `DATABASE_URL='…the new one…' npm run restore -- <file> --yes`.
 
 Your writing, your card and your address book come back, and the password is
