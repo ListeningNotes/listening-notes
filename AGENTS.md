@@ -204,11 +204,13 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   Favorite, Formative) and the merge of the owner's edits over it.
 - `directory_actions.js` — the `directory` table, on the registry's copy:
   the list for readers (logging first, thirty and a cursor, the community's
-  two counts), the Board's first screen (`pull_board`: everybody logging and
-  a shuffled dozen), a name search, `boardHash` and `pull_among` (which of a
-  journal's hashed addresses are on the Board), listing and delisting,
-  reading a journal's beacon, and `gather`, the scheduled job's one run with
-  its decaying rate.
+  two counts), the Board's first screen (`pull_board`: everybody logging, a
+  shuffled dozen and the last day's records), a name or record search,
+  `boardHash` and `pull_among` (which of a journal's hashed addresses are on
+  the Board), the `directory_records` table (`refresh_records`, `pull_alike`
+  for "also on your records", `pull_today` for "being logged everywhere"),
+  listing and delisting, reading a journal's beacon, and `gather`, the
+  scheduled job's one run with its decaying rate.
 - `doorman.js` — rate limiting, in memory: the doors (login, message, send,
   wave, listing and so on), how many tries each allows, who is knocking, and
   the 429 answer.

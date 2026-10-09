@@ -131,12 +131,14 @@ async function hash16(text) {
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
-// "You logged this last week", "in March", "in March 2025".
+// "You logged this today", "a few days ago", "last week", "in March",
+// "in March 2025".
 function whenWords(iso) {
   const at = new Date(iso);
   if (Number.isNaN(at.getTime())) return '';
   const days = (Date.now() - at.getTime()) / 86400000;
-  if (days < 7) return 'this week';
+  if (days < 1) return 'today';
+  if (days < 7) return 'a few days ago';
   if (days < 14) return 'last week';
   const now = new Date();
   return at.getFullYear() === now.getFullYear() ? `in ${MONTHS[at.getMonth()]}` : `in ${MONTHS[at.getMonth()]} ${at.getFullYear()}`;
@@ -776,7 +778,7 @@ export function Everyone({ keeper = false, refreshRef = null, myEntries = null }
             )}
             <div className="dir-shuffle">
               <span className="dir-shuffle-of">
-                {NUMBER_WORDS[further.length] || further.length} of {page.listed}
+                {further.length > 0 ? `${NUMBER_WORDS[further.length] || further.length} of ${page.listed}` : ''}
               </span>
               <button type="button" className="dir-shuffle-go" onClick={shuffle} disabled={drawing}>
                 <ArrowsClockwise size={14} weight="regular" aria-hidden="true" />
