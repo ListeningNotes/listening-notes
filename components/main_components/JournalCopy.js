@@ -110,8 +110,8 @@ export default function JournalCopy() {
     <>
       <p className="st-note">
         Everything you’ve written, your card and your address book, in one
-        file — email it to yourself, or keep it somewhere safe. Your password
-        isn’t in it.
+        file, with a page for every entry you can read anywhere. Email it to
+        yourself, or keep it somewhere safe. Your password isn’t in it.
       </p>
       <div className="st-foot">
         {copy ? (
