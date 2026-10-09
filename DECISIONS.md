@@ -1290,9 +1290,10 @@ linked to it, may stand on the Board; a visitor's words never do.
 
 **The directory keeps each listed journal's records, 2026-10-08.** Titles,
 stars and marks, read from the public feed by the same job — never the
-writing, which is fetched from the journal itself when a line is shown. It is
-what lets "also on your records" and "being logged everywhere" exist. Not
-yet, by the brief: forums, any "most active" view, any follower count.
+writing. A quoted line is read by the viewer's own browser from the keeper's
+own journal (one entry's GET is readable across origins, without
+credentials), so writing never passes through the directory or anybody's
+server. Not yet, by the brief: forums, a "most active" view, follower counts.
 
 **Reading the directory is not phone-home, 2026-10-07.** The Board loads
 when People opens, with no press of its own. Miyel: "not what i meant by
