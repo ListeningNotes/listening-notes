@@ -77,31 +77,73 @@ import { Client } from '@neondatabase/serverless';
 import { readFileSync, existsSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { inflateRawSync } from 'node:zlib';
 import { every_table } from '../library/whole_journal.mjs';
 
 const [source, ...flags] = process.argv.slice(2);
 const write = flags.includes('--yes');
 
 if (!source || !existsSync(source)) {
-  console.error('Usage: node scripts/restore.mjs <backup-dir | export.json> [--yes]');
+  console.error('Usage: node scripts/restore.mjs <backup-dir | journal.zip | export.json> [--yes]');
   process.exit(1);
 }
 
-// Two shapes hold the same thing. scripts/backup.mjs writes a folder — one
+// Three shapes hold the same thing. scripts/backup.mjs writes a folder — one
 // file per table, plus a manifest and a copy of migrations/. /api/export sends
 // a single file with every table inside it, because a download is one file or
-// it is a chore. Both are read here rather than making anyone convert one into
-// the other, since the moment somebody needs this is the worst possible moment
-// to be told their backup is the wrong sort.
+// it is a chore. And Settings' Make a copy hands over that same file inside a
+// zip, beside a page per entry anybody can read (2026-10-08). All three are
+// read here rather than making anyone convert one into another, since the
+// moment somebody needs this is the worst possible moment to be told their
+// backup is the wrong sort.
 //
 // Either way, which tables the file holds at all is part of what it says. A
 // table it does not mention is not an empty table; it is one the file cannot
 // speak for.
 const isFile = statSync(source).isFile();
 
+// The journal out of a zip from Make a copy: journal.json, found through the
+// zip's own directory rather than by trusting the first header, so a copy
+// that was unzipped and zipped again — a Mac's Compress puts the folder's
+// name in front and squeezes what Make a copy only stored — reads the same.
+// Null when there is no journal.json in it to read.
+function fromZip(bytes) {
+  // The directory's end record is the last 22 bytes, or a little before
+  // them when an archiver has left a comment after it.
+  let end = -1;
+  for (let i = bytes.length - 22; i >= Math.max(0, bytes.length - 22 - 0xffff); i--) {
+    if (bytes.readUInt32LE(i) === 0x06054b50) { end = i; break; }
+  }
+  if (end < 0) return null;
+  let at = bytes.readUInt32LE(end + 16);
+  for (let n = bytes.readUInt16LE(end + 10); n > 0; n--) {
+    if (bytes.readUInt32LE(at) !== 0x02014b50) return null;
+    const method = bytes.readUInt16LE(at + 10);
+    const packed = bytes.readUInt32LE(at + 20);
+    const named = bytes.readUInt16LE(at + 28);
+    const header = bytes.readUInt32LE(at + 42);
+    const name = bytes.toString('utf8', at + 46, at + 46 + named);
+    at += 46 + named + bytes.readUInt16LE(at + 30) + bytes.readUInt16LE(at + 32);
+    if (name.split('/').pop() !== 'journal.json') continue;
+    const start = header + 30 + bytes.readUInt16LE(header + 26) + bytes.readUInt16LE(header + 28);
+    const data = bytes.subarray(start, start + packed);
+    if (method === 0) return data.toString('utf8');
+    if (method === 8) return inflateRawSync(data).toString('utf8');
+    return null;
+  }
+  return null;
+}
+
 function load() {
   if (isFile) {
-    const doc = JSON.parse(readFileSync(source, 'utf8'));
+    const raw = readFileSync(source);
+    const zipped = raw.length >= 4 && raw.readUInt32LE(0) === 0x04034b50;
+    const text = zipped ? fromZip(raw) : raw.toString('utf8');
+    if (text == null) {
+      console.error(`${source} is a zip with no journal.json in it — is that a copy from Back up your journal?`);
+      process.exit(1);
+    }
+    const doc = JSON.parse(text);
     if (!doc.tables) {
       console.error(`${source} has no "tables" — is that a journal export?`);
       process.exit(1);

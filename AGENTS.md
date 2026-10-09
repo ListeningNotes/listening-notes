@@ -181,6 +181,11 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - `came_back_actions.js` — the `came_back` table: records this journal put
   somebody onto that they then logged, noticed by the feed and written down so
   the inbox can show them as arrivals.
+- `carbon_copy.js` — the journal as pages anybody can read: a Markdown page
+  per entry, saying what the entry page says (its credit rule, its listen
+  numbers, its edit stamps), and the zip that holds them beside the export
+  as `journal.json` with a `Read me.txt` — the zip written by hand, stored,
+  no library. Made in the browser by Back up your journal.
 - `card_links.js` — the marks a card can wear: the rig icons to choose from,
   and which logo a link gets from its hostname or the owner's override.
 - `claim_notice.js` — the boxed lines printed in the build and runtime logs
@@ -321,7 +326,8 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   beside it; 30 kept. Carries `secrets`.
 - `prepare_database.mjs` — runs before `next build`: migrates and prints the
   claim notice; never fails the build.
-- `restore.mjs` — puts a backup or an export back; a dry run without `--yes`.
+- `restore.mjs` — puts a backup or an export back — a folder, the zip from
+  Make a copy, or a bare `journal.json`; a dry run without `--yes`.
 - `update_copy.mjs` — what the update workflow does on a keeper's repository:
   graft, merge the latest release, push; fetched from upstream each run.
 
