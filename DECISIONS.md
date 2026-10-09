@@ -1290,10 +1290,16 @@ linked to it, may stand on the Board; a visitor's words never do.
 
 **The directory keeps each listed journal's records, 2026-10-08.** Titles,
 stars and marks, read from the public feed by the same job — never the
-writing. A quoted line is read by the viewer's own browser from the keeper's
-own journal (one entry's GET is readable across origins, without
-credentials), so writing never passes through the directory or anybody's
-server. Not yet, by the brief: forums, a "most active" view, follower counts.
+writing. A quoted line is read from the keeper's own journal by the viewing
+journal's server (below), kept ten minutes, and never goes to the directory.
+Not yet, by the brief: forums, a "most active" view, follower counts.
+
+**The Board reads through one route, 2026-10-08.** Miyel: "keep the fan-out
+behind a single route, the way /api/friends/beacons already is", so what is
+behind it can become one cached crawl on a server "without touching a single
+component". /api/board on every copy is the Board's only source: the first
+screen, search, the keeper's records matched, and the lines (read on demand,
+2.5 s each, back-off, only from journals on the Board). Never a browser crawl.
 
 **Reading the directory is not phone-home, 2026-10-07.** The Board loads
 when People opens, with no press of its own. Miyel: "not what i meant by

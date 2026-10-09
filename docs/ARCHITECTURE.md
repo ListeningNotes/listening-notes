@@ -144,7 +144,7 @@ Before the first request — two files whose names are Next's, not ours
 The front doors — receive requests, hand them off, send back responses
   app/api/
     entries/route.js           Load all entries / save a new one
-    entries/[slug]/route.js    Load, edit, or delete one specific entry — its GET may be read across origins, without credentials, so another journal's Board can quote a line (2026-10-08)
+    entries/[slug]/route.js    Load, edit, or delete one specific entry
     entries/[slug]/code/route.js  GET: the entry's code, pressed out of its cover — public, rate-limited, cached a day
     drafts/route.js            Unfinished listens — owner-only both ways, the read included
     drafts/[id]/route.js       DELETE one draft
@@ -178,6 +178,7 @@ The front doors — receive requests, hand them off, send back responses
     public/people/route.js     The people this journal's keeper added who are on the Board themselves — a name and an address each; never anybody kept private, nothing while the keeper is off the Board; checked against the directory with hashes; kept a minute. What makes "a friend away"
     friends/beacons/route.js   Everyone in the address book's beacon, through one door — owner-only; each journal's public beacon in parallel, a round kept a minute, a journal that fails asked less often, thirty on the timer — and each friend's /api/public/people on the same round, which makes `away`, the Board's friends of friends (two rings only)
     listing/route.js           On the Board — owner-only: GET says whether this journal is listed and on the Board, and lists it if it is meant to be and is not yet (on by default, 2026-10-08); POST is the switch in Settings, through library/outbox.js
+    board/route.js             Everything the Board reads, through one door on this journal (Miyel: keep the fan-out behind a single route): the first screen, a search, the keeper's own records matched (behind the wristband), and lines of keepers' own writing read from their journals by this server — 2.5 s each, kept ten minutes, back-off, only journals on the Board, counted per asker. The Board component talks to this and nothing else
     directory/route.js         The registry's list — public, read across origins: `?board` is the Board's first screen (everybody logging right now, a shuffled dozen of everybody else, the last day's records, and the community's two counts); `?q=` looks up a name or a record; `?among=` which of some hashed addresses are on the Board; `?alike=` who else logged some hashed records; plain, thirty journals and a cursor. Read from the tables, never from the journals
     directory/listings/route.js  A journal asking to be listed (POST: issue the code, read it back, keep the row) or to leave (DELETE: the code, and the journal having forgotten it)
     directory/gather/route.js  The scheduled job's one run, behind CRON_SECRET: the journals whose turn has come, asked what they are logging
@@ -298,7 +299,7 @@ The rooms — full pages assembled from furniture
     printer/page.js            The share printer — the press on a record for the keeper (?entry=slug); the sentence for everyone else and for the card, whose plate is still to come
     setup/page.js              Claiming a copy, one screen at a time: the code, then name, photo, prompts, rig, updates, password, who gave it (GIFT_FROM, or a scan), and the home screen
     settings/page.js           The machinery, owner-only — the address, On the board (the one switch off the Board), the password, the backup, updates, the home screen
-    directory/page.js          The Board at its own address, on every copy, absent where DIRECTORY_URL is empty. directory/Directory.js holds `Everyone` (the Board on screen) and the one shared reading of it, `readEveryone`: for the keeper the one note until dismissed, then for everybody the search by name, logging right now (the Friends room's band, community-wide) and further out (a shuffled dozen); a check on people in the book and Visit · Add on a press for the keeper — drawn here and under People on the cross
+    directory/page.js          The Board at its own address, on every copy, absent where DIRECTORY_URL is empty. directory/Directory.js holds `Everyone` (the Board on screen) and the one shared reading of it, `readEveryone`, all of it read through /api/board: for the keeper the one note until dismissed, then for everybody the search by name, logging right now (the Friends room's band, community-wide) and further out (a shuffled dozen); a check on people in the book and Visit · Add on a press for the keeper — drawn here and under People on the cross
     login/page.js              The door at an address — the same password form, for when a link will not do
     get/layout.js              The frame /get and /get/story share: the nav row, the measure, the type
     @layer/default.js          What the layer slot draws when nothing is open: nothing. The framework requires the file

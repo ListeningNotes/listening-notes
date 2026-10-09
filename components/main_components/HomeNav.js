@@ -2946,7 +2946,7 @@ export default function HomeNav() {
                     nothing measures it as a second floor to settle on. */}
                 {onEveryone && (
                   <div className="hn-everyone">
-                    <Everyone keeper={authed} refreshRef={everyoneAgain} myEntries={authed ? entries : null} />
+                    <Everyone keeper={authed} refreshRef={everyoneAgain} />
                   </div>
                 )}
               </>

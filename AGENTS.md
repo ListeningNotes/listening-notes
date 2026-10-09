@@ -196,7 +196,8 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - `database_actions.js` — entries: the wall's lean list, the public feed's
   allow-list, one entry, one record's folder, save/update/delete (with the
   derived Masterpiece and the edit stamps), slugs, the owner row, briefings and
-  drafts.
+  drafts, and `pull_record_keys`, each record the journal logged, for the
+  Board.
 - `database_connection.js` — the one Neon handle, opened on first use rather
   than on import, and `explainDatabaseError`, which says a database failure in
   a sentence for the owner.
@@ -212,8 +213,8 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   listing and delisting, reading a journal's beacon, and `gather`, the
   scheduled job's one run with its decaying rate.
 - `doorman.js` — rate limiting, in memory: the doors (login, message, send,
-  wave, listing and so on), how many tries each allows, who is knocking, and
-  the 429 answer.
+  wave, listing, the Board's lines and so on), how many tries each allows,
+  who is knocking, and the 429 answer.
 - `entry_formatter.js` — the shapes an entry is written in: the horizon bar
   from track ratings, `flawless` (what Masterpiece means), tracks to and from
   prose, `lookup_key` (the fold drafts and briefings are keyed on), the edit
@@ -240,8 +241,9 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - `outbox.js` — a send, a wave or a reply leaving this copy for another,
   server to server: posts to their `/api/submissions`, `/api/waves` or
   `/api/messages` and reports what came back in plain words; and
-  `ask_directory`, this journal asking the registry to list or delist it, and
-  `ask_directory_among`, which of some hashed addresses are on the Board.
+  `ask_directory`, this journal asking the registry to list or delist it,
+  `ask_directory_among`, which of some hashed addresses are on the Board, and
+  `ask_directory_read`, any read of the registry's list, server to server.
 - `people_actions.js` — the address book (`people`): list, file, pin (six at
   most), keep private, remove, the part that may be published
   (`pull_public_people`), and asking a journal its keeper's name.
