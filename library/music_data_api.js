@@ -366,22 +366,39 @@ export async function searchAlbums(searchQuery) {
       if (!byId.has(r.collectionId)) byId.set(r.collectionId, r);
     }
 
-    // Collapse pressings. The row kept is the one that reads as the record
-    // itself: fewest edition markers, and the earliest release among those —
-    // a remaster carries the original's year, so this picks the real issue.
+    // Collapse pressings. A row folds into a record already kept only when
+    // the two are plausibly one record: either name carries an edition marker
+    // (a bracketed qualifier, or one of the words in NOT_THE_ALBUM), or both
+    // came out the same year — a remaster carries the original's year, so a
+    // plainly titled reissue still folds in. Two plainly titled rows from
+    // different years are two records and both stay, 2026-10-13: an artist
+    // put out two records with one title, and the second never reached the
+    // list because the first had already taken its key, so a friend could
+    // send only one of them. The row kept for a record is the one that reads
+    // as the record itself: fewest edition markers, and the earliest release
+    // among those.
+    const yearOf = r => parseInt((r.releaseDate || '').slice(0, 4), 10) || null;
+    const marked = name => editionPenalty(name) > 0 || albumKey(name) !== norm(name).replace(/\s+/g, '');
+    const onePressing = (a, b) => {
+      if (marked(a.collectionName || '') || marked(b.collectionName || '')) return true;
+      const ya = yearOf(a), yb = yearOf(b);
+      return !ya || !yb || ya === yb;
+    };
     const groups = new Map();
     for (const r of byId.values()) {
       const key = `${norm(r.artistName)}|${albumKey(r.collectionName)}`;
-      const current = groups.get(key);
-      if (!current) { groups.set(key, r); continue; }
+      const kept = groups.get(key) || [];
+      const at = kept.findIndex(k => onePressing(k, r));
+      if (at === -1) { kept.push(r); groups.set(key, kept); continue; }
+      const current = kept[at];
       const mine = editionPenalty(r.collectionName || '');
       const theirs = editionPenalty(current.collectionName || '');
-      const myYear = parseInt((r.releaseDate || '').slice(0, 4), 10) || 9999;
-      const theirYear = parseInt((current.releaseDate || '').slice(0, 4), 10) || 9999;
-      if (mine < theirs || (mine === theirs && myYear < theirYear)) groups.set(key, r);
+      const myYear = yearOf(r) || 9999;
+      const theirYear = yearOf(current) || 9999;
+      if (mine < theirs || (mine === theirs && myYear < theirYear)) kept[at] = r;
     }
 
-    const albums = [...groups.values()].map(r => {
+    const albums = [...groups.values()].flat().map(r => {
       const name = r.collectionName || '';
       const artist = r.artistName || '';
       // Asked per row rather than once for the whole search: does this row's

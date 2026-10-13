@@ -2149,6 +2149,13 @@ cover and it is the listen. No stub for `/dashboard/echo` — the retired-route
 rule. The record on the desk is kept in the browser, so a reload reopens
 where you were.
 
+**Two records with one name are two rows, 2026-10-13.** The picker folds
+pressings of a record into one row by artist and title, and folds only a
+marked edition, or two rows from the same year — a remaster carries the
+original's year. Two plainly titled records from different years stay apart:
+an artist can put out two records called the same thing, and the second
+never reached the list, so a friend could send only the first.
+
 **The Echo framing is dropped throughout.** Less companion, more function:
 find the album, log the listen. The floating nodes assembling into album art
 were beautiful and sat between "I want to log this" and logging it; they are
