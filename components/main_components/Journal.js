@@ -95,11 +95,12 @@ const releaseYear = entry => {
 
 // ── One tile per record, 2026-09-24 ────────────────────────────────────────
 // The wall never shows a separate tile for a track note, and the tile says
-// what is inside it (the track-notes brief): plain for one album listen,
-// fanned for more than one, and dog-eared for a record known only by its
-// songs. So the wall draws records, not entries, gathered on album_key — the
-// key two journals already recognise one record by, and the one the listens
-// are numbered on.
+// what kind of thing is inside it (the track-notes brief): plain for a record
+// with a listen, dog-eared for a record known only by its songs (the folder,
+// fanned for more than one entry, went on 2026-10-13). So the wall draws
+// records, not entries, gathered on album_key and the year — the key two
+// journals already recognise one record by, with the year beside it since
+// 2026-10-13, and the pair the listens are numbered on.
 //
 // Each record carries its listens and its notes newest first; `face`, the
 // entry the tile draws and hands over, which is its newest listen, or its
@@ -120,7 +121,11 @@ const releaseYear = entry => {
 function gatherAlbums(entries) {
   const byKey = new Map();
   for (const e of entries) {
-    const key = e.album_key || `entry:${e.slug}`;
+    // The record's year beside its key, 2026-10-13: two records with one name
+    // from different years are two tiles (DECISIONS, A record is its title,
+    // its artist and its year). The same pair numbers the listens and fills
+    // the tabs at the foot (database_actions.js, RECORD_YEAR).
+    const key = e.album_key ? `${e.album_key}|${releaseYear(e) ?? ''}` : `entry:${e.slug}`;
     let album = byKey.get(key);
     if (!album) { album = { key, listens: [], notes: [], all: [] }; byKey.set(key, album); }
     album.all.push(e);

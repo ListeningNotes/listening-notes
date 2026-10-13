@@ -76,7 +76,7 @@ export default async function PostPage({ params }) {
   // The folder this entry is a page of, when its record has more than one
   // entry: the record's entries, oldest first, for the tabs and the swipe
   // (2026-09-25). A record whose key folds away to nothing is never one.
-  const record = entry.album_key ? await pull_album(entry.album_key) : [];
+  const record = entry.album_key ? await pull_album(entry.album_key, entry.year) : [];
   const folder = record.length > 1 ? [...record].reverse() : null;
 
   // A track note is its own card, not a shorter album entry (the track-notes

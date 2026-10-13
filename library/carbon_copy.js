@@ -165,12 +165,15 @@ function sent_word(entry, credit) {
 // ── Which listen each one was ─────────────────────────────────────────────
 // Counted the way the journal counts them (WITH_LISTEN_NUMBERS in
 // library/database_actions.js): album listens among album listens of the
-// same record, oldest first, and a track note never numbered at all.
+// same record, oldest first, and a track note never numbered at all. A record
+// is its key and its year (RECORD_YEAR there, 2026-10-13), so two records
+// with one name are numbered apart here as they are on the page.
 function numbered(entries) {
   const runs = new Map();
   for (const entry of entries) {
     if (entry.song) continue;
-    const key = entry.album_key || `${entry.album}\u0000${entry.artist}`;
+    const digits = String(entry.year || '').match(/\d{4}/)?.[0] || '';
+    const key = `${entry.album_key || `${entry.album}\u0000${entry.artist}`}\u0000${digits}`;
     if (!runs.has(key)) runs.set(key, []);
     runs.get(key).push(entry);
   }

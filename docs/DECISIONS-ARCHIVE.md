@@ -876,3 +876,27 @@ background note and a mock-up for one, and her directory instructions of
 journal and indexing journals are two different jobs, as podcasts show — a
 directory holds pointers, never the journals themselves — and being listed is
 a press, never a default.)
+
+---
+
+## The journal — the folder on the wall, 2026-09-24 to 2026-10-13
+
+Retired 2026-10-13 on Miyel's brief: "no more folder." The current rule is
+under The journal in DECISIONS.md (*Two shapes*).
+
+**Three shapes, by count, drawn like Finder's files, 2026-09-24/25.** A
+card is one album listen; a page, its corner folded over, is one track note
+and no listen; a folder is more than one entry, whatever the mix. Nothing
+else is encoded in the shape — a page in a folder was tried and retired. Flat,
+no shadow or curl, and the folder's tab and the page's flap take the album's
+own colour (Miyel chose it off a sheet of three). The folder was the cover
+lowered behind a tab standing up at the top left, the cover's own colours
+blurred down, after the way files look (Miyel, 2026-09-24: "once you have
+multiple things, you start putting it in a folder; when you have one, you
+just have one laid out there the way it is").
+
+**What replaced it.** A record with any album listen is the full card,
+however many entries it holds; only a record that is nothing but track notes
+keeps the bent flap, however many. The tabs at the foot of an entry
+(FolderFooter) still say what else a record holds, and the code still calls
+the set a folder.

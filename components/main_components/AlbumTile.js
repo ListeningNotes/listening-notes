@@ -25,21 +25,26 @@
 // standalone page and the journal would unmount underneath it.
 //
 // ── A record, not an entry, 2026-09-24 ───────────────────────────────────
-// One tile per record (gatherAlbums in Journal.js), and the tile says what is
-// inside it, by count, the way Finder's icons do — three shapes and nothing
-// else encoded in them (Miyel's brief, 2026-09-25): a card is one album
-// listen; a page, its corner folded over, is one track note and no listen;
-// a folder is more than one entry, whatever the mix — two songs, two listens,
-// a listen and a song. Flat, and the folder's tab and the page's flap are the
-// album's own colour: the cover, blurred down (.ln-fold-flap and .ft-tab in
-// base.css). A page in a folder was tried for an evening and retired: it said
-// two things at once and broke the count.
+// One tile per record (gatherAlbums in Journal.js), and the tile says what
+// kind of thing is inside it, the way Finder's icons do — two shapes since
+// 2026-10-13 and nothing else encoded in them: a card is a record with an
+// album listen behind it, however many entries it holds; a page, its corner
+// folded over, is a record known only by its track notes, however many. Flat,
+// and the page's flap is the album's own colour: the cover, blurred down
+// (.ln-fold-flap in base.css).
+//
+// The folder — a third shape for more than one entry, a tab standing up
+// behind a lowered cover, 2026-09-24/25 — is gone (Miyel, 2026-10-13: "no
+// more folder"): a record with any listen is the full card, and only a
+// record that is nothing but track notes keeps the bent flap. The tabs at
+// the foot still say what else is in a record. A page in a folder had gone
+// before it, for saying two things at once. The argument is in the archive.
 //
 // Every tile opens an entry, growing out of the cover as an entry always
-// has. A folder opens its earliest — you are looking at history, so you start
-// at the beginning — and the rest are a swipe away, with a tab for each at
-// the foot of the screen (FolderFooter, useFolder). There is no page listing
-// a folder's entries.
+// has. A record with more than one opens its earliest — you are looking at
+// history, so you start at the beginning — and the rest are a swipe away,
+// with a tab for each at the foot of the screen (FolderFooter, useFolder).
+// There is no page listing a record's entries.
 
 'use client';
 import Link from 'next/link';
@@ -48,8 +53,9 @@ import { handOff } from '../../library/handoff';
 export default function AlbumTile({ album, going = false }) {
   const face = album.face;
   const alone = album.all.length === 1;
-  const folder = !alone;
-  const folded = alone && album.notes.length === 1;
+  // A page is a record known only by its songs, however many; anything with
+  // a listen behind it is a card, however many entries (2026-10-13).
+  const folded = album.listens.length === 0;
   // The entry the tile opens: its only one, or a folder's earliest.
   const opens = album.all[album.all.length - 1];
   const href = `/entries/${opens.slug}`;
@@ -60,7 +66,7 @@ export default function AlbumTile({ album, going = false }) {
       /* `going` is this record being taken down: it shrinks where it stands
          for a third of a second and then the tiles after it file across into
          the space (closeTheGap in Journal.js). */
-      className={'ft' + (going ? ' ft--going' : '') + (folder ? ' ft--folder' : '') + (folded ? ' ft--page' : '')}
+      className={'ft' + (going ? ' ft--going' : '') + (folded ? ' ft--page' : '')}
       aria-label={face.album + (face.artist ? ' by ' + face.artist : '')
         + (alone && !folded ? '' : ', ' + [
           album.listens.length ? (album.listens.length === 1 ? '1 listen' : `${album.listens.length} listens`) : '',
@@ -80,13 +86,6 @@ export default function AlbumTile({ album, going = false }) {
       onClick={() => handOff(opens)}
     >
       <div className="ft-inner">
-        {/* The folder's tab, behind the cover: the same picture, blurred to
-            its colours. The browser already has it — it is the cover. */}
-        {folder && (
-          <span className="ft-tab" aria-hidden="true">
-            {face.album_art && <img src={face.album_art} alt="" loading="lazy" draggable={false} />}
-          </span>
-        )}
         {/* Nothing sits on top of the art at rest — the wall is just the album
             covers. The favourite and masterpiece marks used to float here and
             were moved off deliberately; they belong on the entry, not over

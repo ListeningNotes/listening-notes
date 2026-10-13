@@ -206,7 +206,7 @@ The furniture — visual pieces
       ListeningBeacon.js       The beacon — what is playing, or last played
       Journal.js               The wall of covers, with its search, filters and sort
       JournalFilters.js        The filter sheet — a popover on a desk, a pull-down sheet on a phone — and the year range
-      AlbumTile.js             One record on that wall — a card for one listen, a page with its corner folded for one track note, a folder for more than one entry (Journal.js gathers entries into records)
+      AlbumTile.js             One record on that wall — a card for a record with a listen behind it, a page with its corner folded for a record known only by its track notes; the folder shape went on 2026-10-13 (Journal.js gathers entries into records, by title, artist and year)
       FolderFooter.js          A folder's tabs at the foot of the screen — Listen 1, Listen 2 or the song, the one you are on in ink — the one piece of chrome a folder adds; useFolder in LayerEntry.js does the flipping
       CodeSlot.js              A square that holds a picture and turns into that picture's code — the card's portrait and an entry's cover: the two faces, the copy and its pill, the corner mark, the wait
       AddressCode.js           A plain code for an address, drawn in the browser — what CodeSlot shows when no pressed picture can be had

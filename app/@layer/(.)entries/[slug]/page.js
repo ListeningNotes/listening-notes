@@ -58,7 +58,7 @@ async function Entry({ slug }) {
   if (!entry) return null;
 
   // The folder it is a page of, as on the standalone page.
-  const record = entry.album_key ? await pull_album(entry.album_key) : [];
+  const record = entry.album_key ? await pull_album(entry.album_key, entry.year) : [];
   const folder = record.length > 1 ? [...record].reverse() : null;
 
   // A track note is its own card (see the standalone page).

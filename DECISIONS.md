@@ -957,6 +957,13 @@ and no Formative.
 **An album has many listens, numbered.** The number is computed from existing
 entries, never chosen. Entries are never overwritten; a relisten is a new one.
 
+**A record is its title, its artist and its year, 2026-10-13.** The wall
+gathers, the listens are numbered and the tabs at the foot flip on
+`album_key` and the four digits of `year` together: an artist can put out two
+records with one name, and the second was filed as a relisten of the first.
+Accepted with it: a relisten logged from a differently dated pressing stands
+as its own record. Between journals the key is still `album_key` alone.
+
 **A track note is its own entry, about one song, 2026-09-24.** Never a shorter
 album entry and never part of one: `song` beside the record's `album`
 (migration 025). Stars, words, Favorite and Formative — no tracklist, horizon,
@@ -982,19 +989,21 @@ opens. The one entry already written that way is fixed by asking its
 keeper. The rule under the brief stands: nothing in a journal changes
 unless its keeper changes it — no update or migration edits an entry.
 
-**Three shapes, by count, drawn like Finder's files, 2026-09-24/25.** A
-card is one album listen; a page, its corner folded over, is one track note
-and no listen; a folder is more than one entry, whatever the mix. Nothing
-else is encoded in the shape — a page in a folder was tried and retired. Flat,
-no shadow or curl, and the folder's tab and the page's flap take the album's
-own colour (Miyel chose it off a sheet of three).
+**Two shapes, 2026-10-13: a card, and a page for a record known only by its
+songs.** A record with an album listen behind it is a card however many
+entries it holds; one with only track notes is a page, its corner folded over,
+however many, flat and in the album's own colour. The folder — a third shape
+for more than one entry, 2026-09-24/25 — is gone (Miyel: "no more folder");
+the tabs at the foot already say what else is in a record. Archive has it.
 
-**A folder opens to an entry and flips, 2026-09-25.** No index and no landing
-screen — the record's own page was built and taken out the same day. The only
-chrome is a band of tabs at the foot (Listen, Listen 2, or the song; the one
-you are on in ink), and the header keeps the mark — dots in its place were
-tried for a day. From the wall it opens on the earliest entry; from anywhere
-else on the one pressed, with only its folder either side. Dates show once.
+**A record with more than one entry opens to one and flips, 2026-09-25.** No
+index and no landing screen — the record's own page was built and taken out
+the same day. The only chrome is a band of tabs at the foot (Listen, Listen 2,
+or the song; the one you are on in ink), and the header keeps the mark — dots
+in its place were tried for a day. From the wall it opens on the earliest
+entry; from anywhere else on the one pressed, with only its record either
+side. Dates show once. The code still calls the set a folder (useFolder,
+FolderFooter): since 2026-10-13 the word names the set, not a shape.
 
 **The journal wall is ordered by a record's first entry, and never reorders,
 2026-09-24.** A second listen or a song marked on a record leaves its tile
