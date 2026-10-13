@@ -62,7 +62,7 @@ async function findCollectionId(albumName, artistName) {
   const searchRes = await fetch(`https://itunes.apple.com/search?term=${query}&entity=album&limit=25`);
   const searchData = await searchRes.json();
   const results = (searchData.results || []).filter(r => r.wrapperType === 'collection' && r.collectionId);
-  if (!results.length) return null;
+  if (!results.length) return fromTheArtist(albumName, artistName);
 
   const nAlbum = norm(albumName), nArtist = norm(artistName);
   let best = null, bestScore = -Infinity;
@@ -77,7 +77,27 @@ async function findCollectionId(albumName, artistName) {
     if (/\b(deluxe|expanded|special|anniversary)\b/.test(ra)) score -= 3;
     if (score > bestScore) { bestScore = score; best = r; }
   }
-  return best ? best.collectionId : null;
+  // The album's name has to be in the answer for it to be this record.
+  if (best && bestScore >= 20 + 15) return best.collectionId;
+  return (await fromTheArtist(albumName, artistName)) || (best ? best.collectionId : null);
+}
+
+// ── When the search does not know the record, 2026-10-13 ──────────────────
+// Apple's search index leaves some records out while the artist's own list
+// still holds them: "King Krule The OOZ" finds nothing at all, and King
+// Krule's albums include The OOZ. So the artist is found by name, their
+// albums are read, and the one whose title is the album's is taken — only an
+// exact title, since there is no search score here to weigh a near one.
+async function fromTheArtist(albumName, artistName) {
+  if (!artistName) return null;
+  const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(artistName)}&entity=musicArtist&limit=5`);
+  const data = await res.json();
+  const artist = (data.results || []).find(a => norm(a.artistName) === norm(artistName));
+  if (!artist) return null;
+  const look = await fetch(`https://itunes.apple.com/lookup?id=${artist.artistId}&entity=album&limit=200`);
+  const lookData = await look.json();
+  const albums = (lookData.results || []).filter(r => r.wrapperType === 'collection' && norm(r.collectionName) === norm(albumName));
+  return albums[0]?.collectionId || null;
 }
 
 // Step 2: every song under one id, in order, with the record's facts off the
@@ -95,9 +115,9 @@ async function songsOf(id) {
   // one lookup, both halves (Miyel's contents brief, 2026-09-18).
   const album = rows.find(r => r.wrapperType === 'collection') || null;
 
+  songs.sort((a, b) => (a.discNumber || 1) - (b.discNumber || 1) || (a.trackNumber || 0) - (b.trackNumber || 0));
   return {
     tracks: songs
-      .sort((a, b) => (a.discNumber || 1) - (b.discNumber || 1) || (a.trackNumber || 0) - (b.trackNumber || 0))
       .map((s, i) => ({
         number: i + 1,
         title: s.trackName,
@@ -109,6 +129,12 @@ async function songsOf(id) {
     facts: factsFrom(album),
     // The id these songs came from — the one worth keeping.
     collectionId: String(id),
+    // Thirty seconds of each song, and its address on Apple, for the previews
+    // (hooks/useSnippet.js), 2026-10-13. Beside the tracks rather than on
+    // them, so a listen's draft, which keeps `tracks`, never stores a link
+    // Apple may retire.
+    clips: songs.map(s => ({ title: s.trackName, clip: s.previewUrl || '', songUrl: s.trackViewUrl || '' })),
+    recordUrl: album?.collectionViewUrl || '',
   };
 }
 

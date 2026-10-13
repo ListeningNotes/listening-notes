@@ -1119,6 +1119,89 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
   white-space: pre-wrap;
 }
 .ln-track-edited { margin-left: 28px; }
+
+/* ── A preview, on a track ─────────────────────────────────────────────────
+   2026-10-13, Miyel's previews brief: thirty seconds of the song, from a 30px
+   ring at the left of the row (SnippetButton.js). Idle it is a hairline and a
+   faint play mark; playing it fills with the page's ink. A track with no clip
+   keeps the empty column and nothing in it. The line and the time appear
+   under the playing row only, and the note under a row with a column moves
+   to start under the number, as in the brief's mock-up. */
+.ln-snippet {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-faint);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 18%, transparent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease, box-shadow 120ms ease;
+}
+.ln-snippet:hover { color: var(--ink); }
+.ln-snippet--on { background: var(--ink); color: var(--bg); box-shadow: none; }
+.ln-snippet--on:hover { color: var(--bg); }
+.ln-snippet[aria-busy] svg { opacity: 0.45; }
+.ln-snippet:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+.ln-snippet--large { width: 44px; height: 44px; }
+.ln-snippet-space { width: 30px; height: 30px; flex-shrink: 0; }
+.ln-track--gutter .ln-track-note,
+.ln-track--gutter .ln-track-edited { margin-left: 42px; }
+.ln-snippet-meter { display: flex; align-items: center; gap: 10px; margin: 0 0 10px 42px; }
+.ln-snippet-bar {
+  flex: 1;
+  height: 2px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ink) 16%, transparent);
+  position: relative;
+  overflow: hidden;
+}
+.ln-snippet-bar span { position: absolute; inset: 0 auto 0 0; border-radius: 999px; background: var(--ink); }
+.ln-snippet-clock {
+  font-family: var(--font-label);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  color: var(--ink-faint);
+  white-space: nowrap;
+}
+.ln-snippet-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 18px;
+}
+.ln-snippet-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 44px;
+  font-family: var(--font-label);
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  text-decoration: none;
+}
+.ln-snippet-link:hover { color: var(--ink); }
+.ln-snippet-caption {
+  margin: 0;
+  font-family: var(--font-label);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+/* The track note's: the large button with the meter running the rest of
+   the width beside it, the caption and the link centred under. */
+.tn-snippet { display: flex; flex-direction: column; align-items: center; gap: 8px; margin: 28px 0 8px; }
+.tn-snippet-play { display: flex; align-items: center; gap: 14px; width: 100%; }
+.tn-snippet-play .ln-snippet-meter { flex: 1; margin: 0; }
 /* The count at the far end of a section's heading (MetadataLabel's `aside`):
    a step fainter than the heading's own name, which is what the line is. */
 .ln-meta-label-aside { opacity: 0.7; white-space: nowrap; }

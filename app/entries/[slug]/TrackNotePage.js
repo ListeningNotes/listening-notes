@@ -84,6 +84,8 @@ import Chip from '../../../components/main_components/Slug_Page/Chip';
 import { useBookplate } from '../../../components/main_components/Bookplate';
 import { useTheme } from '../../../components/main_components/Lightswitch';
 import { useEntryEditor } from '../../../hooks/useEntryEditor';
+import { useSnippet } from '../../../hooks/useSnippet';
+import SnippetButton, { SnippetMeter, SnippetLink } from '../../../components/main_components/Slug_Page/SnippetButton';
 import { PENDING_KEY, TRACK_NOTE_KEY, TRACK_NOTE_WRITING, saidSoAboutTheDesk } from '../../../hooks/useListeningSession';
 
 const COVER_LABELS = { toCode: 'Show the code for this entry', toPicture: 'Show the cover' };
@@ -98,6 +100,12 @@ const NOTHING_WRITTEN = { rating: 0, favorite: false, formative: false, note: ''
 // the note is then a page of a folder, with its tabs at the foot of the
 // screen (FolderFooter, useFolder).
 export default function TrackNotePage({ entry, authed = false, layered = false, writing = false, onSaved = null, onLeave = null, folder = null }) {
+  // Thirty seconds of the song, and the way out to it (hooks/useSnippet.js).
+  // A track note is about one song, so its preview gets the room: the large
+  // button, a meter the width of the page, and the link under it.
+  const snippet = useSnippet(entry.album, entry.artist);
+  const songClip = snippet.clipFor(null, entry.song);
+  const songLink = snippet.songLinkFor(null, entry.song);
   const router = useRouter();
   const turnTo = useFolder(writing ? null : folder, entry.slug);
   const edit = useEntryEditor(entry, { layered });
@@ -390,6 +398,21 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
                 <Fingerprint size={24} weight={isFormative ? 'bold' : 'regular'} aria-hidden="true" />
                 <span className="ses-mark-word">Formative</span>
               </button>
+            </div>
+          )}
+
+          {!composing && (songClip || songLink) && (
+            <div className="tn-snippet">
+              {songClip && (
+                <>
+                  <div className="tn-snippet-play">
+                    <SnippetButton snippetKey={`${entry.slug}:song`} clip={songClip} title={entry.song} large />
+                    <SnippetMeter snippetKey={`${entry.slug}:song`} always />
+                  </div>
+                  <p className="ln-snippet-caption">A 30-second preview</p>
+                </>
+              )}
+              <SnippetLink href={songLink}>Open in Apple Music</SnippetLink>
             </div>
           )}
 
