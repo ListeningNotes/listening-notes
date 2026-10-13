@@ -104,7 +104,7 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
   // A track note is about one song, so its preview gets the room: the large
   // button, a meter the width of the page, and the link under it.
   const snippet = useSnippet(entry.album, entry.artist);
-  const songClip = snippet.clipFor(null, entry.song);
+  const songPlay = snippet.playFor(null, entry.song);
   const songLink = snippet.songLinkFor(null, entry.song);
   const router = useRouter();
   const turnTo = useFolder(writing ? null : folder, entry.slug);
@@ -401,15 +401,18 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
             </div>
           )}
 
-          {!composing && (songClip || songLink) && (
+          {!composing && (songPlay || songLink) && (
             <div className="tn-snippet">
-              {songClip && (
+              {songPlay && (
                 <>
                   <div className="tn-snippet-play">
-                    <SnippetButton snippetKey={`${entry.slug}:song`} clip={songClip} title={entry.song} large />
-                    <SnippetMeter snippetKey={`${entry.slug}:song`} always />
+                    <SnippetButton snippetKey={`${entry.slug}:song`} play={songPlay} title={entry.song} large />
+                    <SnippetMeter snippetKey={`${entry.slug}:song`} duration={songPlay.duration} always />
                   </div>
-                  <p className="ln-snippet-caption">A 30-second preview</p>
+                  {/* Said only of a preview: a whole song needs no caption. */}
+                  {songPlay.kind === 'preview' && songPlay.duration > 0 && (
+                    <p className="ln-snippet-caption">A {songPlay.duration}-second preview</p>
+                  )}
                 </>
               )}
               <SnippetLink href={songLink}>Open in Apple Music</SnippetLink>

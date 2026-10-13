@@ -18,12 +18,13 @@ import { editStamp } from '../../../library/entry_formatter';
 //
 // `gutter` is the column at the left of the row where a preview's button
 // stands (SnippetButton.js), kept on every row of a record that has any, so
-// the numbers still start on one line. `clip` is this track's — empty, and
-// the column stays empty, where Apple has none. Never while correcting.
+// the numbers still start on one line. `play` is this track's, from the
+// resolver (hooks/useSnippet.js) — null, and the column stays empty, where
+// there is nothing to play. Never while correcting.
 export default function TrackThread({
   track, note, trackIndex,
   editing = false, draft, onField, onOpenDial, dialOpen = false,
-  gutter = false, clip = '', snippetKey = '',
+  gutter = false, play = null, snippetKey = '',
 }) {
   // Under this track's note, if this track's note has been rewritten. Stored
   // on the track itself rather than on the entry — see the stamps in
@@ -57,8 +58,8 @@ export default function TrackThread({
     // song either way.
     <div id={'track-' + trackIndex} className={'ln-track' + (editing ? ' ln-track--editing' : '') + (gutter && !editing ? ' ln-track--gutter' : '')}>
       <div className={'ln-track-row' + (under ? ' ln-track-row--open' : '')}>
-        {gutter && !editing && (clip
-          ? <SnippetButton snippetKey={snippetKey} clip={clip} title={track.name} />
+        {gutter && !editing && (play
+          ? <SnippetButton snippetKey={snippetKey} play={play} title={track.name} />
           : <span className="ln-snippet-space" aria-hidden="true" />)}
         {/* Number reads left, flush with the page edge — right-aligning it in
             a fixed box was what made the row look indented. The box is
@@ -129,7 +130,7 @@ export default function TrackThread({
         </div>
       </div>
 
-      {clip && !editing && <SnippetMeter snippetKey={snippetKey} />}
+      {play && !editing && <SnippetMeter snippetKey={snippetKey} />}
 
       {editing && dialOpen && (
         <TrackDial

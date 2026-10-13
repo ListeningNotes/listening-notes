@@ -1837,7 +1837,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
                   onOpenDial={setDialTrack}
                   dialOpen={dialTrack === i}
                   gutter={snippetGutter}
-                  clip={snippet.clipFor(t.num, t.name)}
+                  play={snippet.playFor(t.num, t.name)}
                   snippetKey={`${entry.slug}:${i}`}
                 />
                 );

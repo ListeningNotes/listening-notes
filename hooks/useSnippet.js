@@ -5,6 +5,16 @@
 // 2026-09-24). Somebody reads a note about track four and wants to hear what
 // is meant; this is what they press.
 //
+// ── Two halves: what to play, and the player ────────────────────────────────
+// The player does not know it plays a thirty-second clip from Apple. It is
+// handed a play — `{ source, duration, kind }`, kind `'preview'` or `'full'`
+// — and plays it, ending at `duration`, or at the media's own end when there
+// is none. Knowing where the audio comes from is `resolve`, below, and
+// nothing else (Miyel's source brief, 2026-10-13). Today it answers with
+// Apple's preview; a full song, later and only inside a listen, is a change
+// to what `resolve` returns rather than to the player. Previews stay where
+// they are and never ask anybody to sign in.
+//
 // ── Where the clip comes from ───────────────────────────────────────────────
 // Apple's catalogue lookup — the same one the tracklist was matched from
 // (library/music_data_api.js) — returns a `previewUrl` per song. The brief
@@ -24,15 +34,13 @@
 // There is one <audio> for the whole site, held on the window rather than in
 // a component, so starting a clip anywhere stops whatever else was playing.
 // Pausing keeps the place; starting something else ends it. It ends itself
-// at thirty seconds and never rolls on into the next song. Nothing plays on
+// at its play's length and never rolls on into the next song. Nothing plays on
 // load; a clip plays on across the site until it ends, and waits while the
 // page is hidden.
 'use client';
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { fetchTracklist } from '../library/music_data_api';
 import { lookup_key } from '../library/entry_formatter';
-
-export const SNIPPET_SECONDS = 30;
 
 // ── The lookup, once per record per visit ─────────────────────────────────
 // An entry does not keep Apple's id for its record — only a draft and a send
@@ -78,9 +86,22 @@ function find(songs, number, title) {
   return songs.find(s => s.title === want) || null;
 }
 
-// What a page asks for: the clip and the song's link for a track, by its
+// ── What to play ───────────────────────────────────────────────────────────
+// The one place that knows where audio comes from. Given a song off Apple's
+// list, the play for it, or null where there is nothing to play. Apple's
+// previews run thirty seconds, so that is the length a preview is given;
+// the number lives here and nowhere in the player.
+const PREVIEW_SECONDS = 30;
+
+function resolve(song) {
+  if (!song?.clip) return null;
+  return { source: song.clip, duration: PREVIEW_SECONDS, kind: 'preview' };
+}
+
+// What a page asks for: the play and the song's link for a track, by its
 // number and title, and the record's link. `ready` is false until Apple has
-// answered; `any` says whether a single track on this record has a clip.
+// answered; `any` says whether a single track on this record has anything
+// to play.
 //
 // ── The link out ───────────────────────────────────────────────────────────
 // Open in Apple Music, on the record and on a track note's song: Apple's own
@@ -103,15 +124,16 @@ export function useSnippet(album, artist) {
   const songs = found?.songs || [];
   return {
     ready: !!found,
-    any: songs.some(s => s.clip),
+    any: songs.some(s => resolve(s)),
     recordLink: found?.recordLink || '',
-    clipFor: (number, title) => find(songs, number, title)?.clip || '',
+    playFor: (number, title) => resolve(find(songs, number, title)),
     songLinkFor: (number, title) => find(songs, number, title)?.songUrl || '',
   };
 }
 
 // ── The one player ─────────────────────────────────────────────────────────
-// `key` names whose clip is loaded; `at` is where it is, in seconds.
+// `key` names whose play is loaded; `at` is where it is and `duration` how
+// long it is, in seconds; `kind` is the play's.
 //
 // Kept on the window rather than in this module, 2026-10-13: two copies of
 // this file loaded at once — a page and the layer over it, or the old and
@@ -123,9 +145,11 @@ export function useSnippet(album, artist) {
 // A clip plays on when its page is left — down the wall, into another entry —
 // and stops only when it ends, is paused, or another one starts (her call,
 // the same day; the brief had it stop with the entry).
+const idle = { key: null, playing: false, waiting: false, at: 0, duration: 0, kind: null };
+
 function deck() {
   if (!globalThis.__lnSnippet) {
-    globalThis.__lnSnippet = { state: { key: null, playing: false, waiting: false, at: 0 }, listeners: new Set(), audio: null };
+    globalThis.__lnSnippet = { state: { ...idle }, listeners: new Set(), audio: null };
   }
   return globalThis.__lnSnippet;
 }
@@ -140,7 +164,7 @@ function reset() {
   const d = deck();
   if (!d.state.key) return;
   if (d.audio) { d.audio.pause(); d.audio.removeAttribute('src'); d.audio.load(); }
-  set({ key: null, playing: false, waiting: false, at: 0 });
+  set({ ...idle });
 }
 
 function player() {
@@ -159,8 +183,13 @@ function player() {
   // Only while something is loaded: emptying the player can raise an error
   // of its own, and resetting on that would empty it again.
   audio.addEventListener('error', () => { if (deck().state.key) reset(); });
+  // A play that came without a length takes the media's own, once known.
+  audio.addEventListener('loadedmetadata', () => {
+    if (!deck().state.duration && Number.isFinite(audio.duration)) set({ duration: audio.duration });
+  });
   audio.addEventListener('timeupdate', () => {
-    if (audio.currentTime >= SNIPPET_SECONDS) { reset(); return; }
+    const { duration } = deck().state;
+    if (duration && audio.currentTime >= duration) { reset(); return; }
     set({ at: audio.currentTime });
   });
   // Locked phone, another tab: the clip waits where it was.
@@ -177,7 +206,8 @@ function start(a, key) {
   a.play().catch(() => { if (deck().state.key === key) reset(); });
 }
 
-export function toggleSnippet(key, clip) {
+// `play` is what resolve answered: { source, duration, kind }.
+export function toggleSnippet(key, play) {
   const a = player();
   if (deck().state.key === key) {
     if (a.paused) { set({ waiting: true }); start(a, key); }
@@ -186,13 +216,12 @@ export function toggleSnippet(key, clip) {
   }
   // Whatever was playing ends here, before the new clip is loaded.
   reset();
-  a.src = clip;
-  set({ key, waiting: true, at: 0 });
+  a.src = play.source;
+  set({ key, waiting: true, at: 0, duration: play.duration || 0, kind: play.kind || 'preview' });
   start(a, key);
 }
 
 function subscribe(fn) { const d = deck(); d.listeners.add(fn); return () => d.listeners.delete(fn); }
-const idle = { key: null, playing: false, waiting: false, at: 0 };
 
 // The player as one button sees it: itself, or nothing.
 export function useSnippetState(key) {
