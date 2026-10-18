@@ -1322,11 +1322,12 @@ when People opens, with no press of its own. Miyel: "not what i meant by
 reporting home. dont worry about that here." The rule is about a copy
 reporting on itself — analytics, installs, banners — not reading a list.
 
-**The registry's job asks, the readers never do, 2026-10-07.** A schedule,
-not a cache miss: logging within the hour, every minute; otherwise every
-thirty; doubled per failure up to three hours, reset on a good answer. Not a
-vercel.json cron: that file is every copy's, and Vercel's free plan refuses a
-schedule more often than daily, so it would stop friends' copies deploying.
+**The Board refreshes itself when it is looked at, 2026-10-17.** Miyel: "go
+with option 1", over an outside cron or GitHub's scheduler — nothing to set
+up, nothing runs while nobody looks. After a read of /api/directory, one
+round asks only the journals due (logging within the hour, every minute;
+otherwise every thirty; doubled per failure up to three hours), each claimed
+so two looks never ask one twice. Never a vercel.json cron (every copy's).
 
 **A wave is the second thing one journal may put in another's inbox,
 2026-09-23.** A send was the first and a message is the third (below), and a

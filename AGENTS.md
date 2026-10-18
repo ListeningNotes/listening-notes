@@ -224,8 +224,9 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   `boardHash` and `pull_among` (which of a journal's hashed addresses are on
   the Board), the `directory_records` table (`refresh_records`, `pull_alike`
   for "also on your records", `pull_today` for "being logged everywhere"),
-  listing and delisting, reading a journal's beacon, and `gather`, the
-  scheduled job's one run with its decaying rate.
+  listing and delisting, reading a journal's beacon, and `gather`, one round
+  of the refresh with its decaying rate — run after a Board is read, its due
+  journals claimed so no two rounds ask one twice.
 - `doorman.js` — rate limiting, in memory: the doors (login, message, send,
   wave, listing, the Board's lines and so on), how many tries each allows,
   who is knocking, and the 429 answer.

@@ -269,21 +269,35 @@ export async function record_missed(address) {
   `;
 }
 
-// ── The scheduled job's one run ───────────────────────────────────────────
+// ── One round of the refresh ──────────────────────────────────────────────
 // Every journal whose turn has come, the most overdue first, asked at once.
+// Run after a Board is read (app/api/directory/route.js, since 2026-10-17)
+// and by the optional scheduled route; either way only the journals that
+// are due are asked, so a journal is never asked more often than its turn.
+//
+// Claimed, not just read: the rows whose turn has come are marked as asked
+// in the same statement that picks them, and rows another round already has
+// in hand are passed over (FOR UPDATE SKIP LOCKED). Two looks a moment apart
+// therefore never ask one journal twice. A round cut short leaves its rows
+// marked, and they come due again at their next turn.
 export async function gather() {
   // The casts are needed: a CASE of two bare parameters is read as text, and
   // text times a number is an error, not a number.
   const due = await database.query(
-    `SELECT address, name, last_logging_at, records_at, album, artist FROM directory
-     WHERE checked_at IS NULL
-        OR checked_at + LEAST(
-             (CASE WHEN last_logging_at > now() - interval '1 hour' THEN $1::integer ELSE $2::integer END)
-               * power(2, fail_count),
-             $3::integer
-           ) * interval '1 second' <= now()
-     ORDER BY checked_at ASC NULLS FIRST
-     LIMIT $4`,
+    `UPDATE directory SET checked_at = now()
+     WHERE address IN (
+       SELECT address FROM directory
+       WHERE checked_at IS NULL
+          OR checked_at + LEAST(
+               (CASE WHEN last_logging_at > now() - interval '1 hour' THEN $1::integer ELSE $2::integer END)
+                 * power(2, fail_count),
+               $3::integer
+             ) * interval '1 second' <= now()
+       ORDER BY checked_at ASC NULLS FIRST
+       LIMIT $4
+       FOR UPDATE SKIP LOCKED
+     )
+     RETURNING address, name, last_logging_at, records_at, album, artist`,
     [LIVE_SECONDS, IDLE_SECONDS, SLOWEST_SECONDS, MOST_PER_RUN],
   );
   const hour = Date.now() - 60 * 60 * 1000;
