@@ -902,6 +902,12 @@ textarea.st-field { resize: vertical; min-height: 96px; }
    Pressing a row opens it where it sits (DECISIONS: a control opens where it
    belongs); it never takes you into a listen on its own. */
 .ib-list { display: flex; flex-direction: column; }
+/* The Sent door, 2026-10-15: one door above the list, at its right, that
+   turns the inbox to what this journal has sent and back (SentList.js). A
+   glyph over a word, as the Friends pane's doors are. */
+.ib-top { display: flex; justify-content: flex-end; margin: -6px 0 10px; }
+.ib-top-door { gap: 6px; font-size: 12px; }
+.ib-top-door[aria-pressed="true"] { color: var(--ink); }
 .ib-r { border-bottom: 1px solid var(--border); }
 .ib-r:last-child { border-bottom: none; }
 /* Put away, and still readable — it opens like any other row, and its one
