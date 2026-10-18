@@ -24,7 +24,7 @@
 // The session preview's foot. That is the same band by design and says so in
 // its own file, but it is a different class at a different height over a
 // different surface (`.ses-preview-bar`, z-index 220, outside the cross), and
-// its words are Go back and Save to journal — a different act, deliberately
+// its words are Go back and Post? — a different act, deliberately
 // worded differently. Borrowing the look is not the same as being the thing.
 //
 // ── And the band it changes places with ───────────────────────────────────

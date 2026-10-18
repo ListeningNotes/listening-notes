@@ -652,7 +652,7 @@ export function useListeningSession({ step }) {
       // redeploying under a listen when an update lands (the workflow runs
       // hourly, on its own).
       setTrouble({
-        says: 'That did not save. Your listen is still here — press Save to journal again.',
+        says: 'That did not save. Your listen is still here — press Post? again.',
         because: err.message,
       });
     }
