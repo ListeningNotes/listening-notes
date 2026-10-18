@@ -1,0 +1,17 @@
+-- Copyright (C) 2026 Miyel Brown
+-- SPDX-License-Identifier: AGPL-3.0-or-later
+-- A send has been seen, 2026-10-17.
+--
+-- The records somebody set aside for you stand as covers at the top of the
+-- inbox, and the new ones wear its dot. Until now new meant only that no
+-- listen had been started from it (status 'pending'), so a record looked at
+-- and left kept its dot. Miyel: they "should only have an unread dot if they
+-- haven't been opened, not that a listen has started." So a send now keeps
+-- when it was first opened — pressed open in the inbox, or one of its doors
+-- pressed — the same mark messages, waves and what came back already carry
+-- (027, 024, 023). A record that opens by itself because it is the newest has
+-- not been opened by anybody (her call), and does not set it.
+--
+-- Null is unseen. Nothing fills it for sends that were here before: one
+-- whose listen has begun was plainly opened, and the inbox reads it so.
+ALTER TABLE submissions ADD COLUMN IF NOT EXISTS seen_at timestamptz;

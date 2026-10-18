@@ -1566,6 +1566,13 @@ Dismiss — a door to the keeper's own entry was built and cut the same day.
 A message that has been answered says *Replied*, first in its small line;
 that is a note to the keeper, and nothing is sent because of it.
 
+**The inbox is drawn from the People page, 2026-10-17, Miyel's pick.**
+Records waiting: a grid of covers four across, one row until See all,
+opening under their row as a face does. The rest: a soft grey mark, who did
+what, and a face, stars or Add at the end — no line under, no dates, no card.
+Inbox · Outbox are words in the bar. A record's dot lasts until a press
+opens it. Overlapping covers were rejected the same evening.
+
 **The way in to an entry is words, once: *Message* and the keeper's name,
 under the album note, 2026-09-29.** Not the comment's bubble, and not an
 envelope, which on an entry means a record somebody sent. Not under each

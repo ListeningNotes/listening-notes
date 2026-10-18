@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { Fragment, useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Archive, ArrowCounterClockwise, ArrowUUpLeft, Article, BookOpen, Broadcast, Check, Envelope, HandWaving, LinkSimple, MusicNoteSimple, PaperPlaneTilt, PencilSimple, PencilSimpleLine, Plus, Shuffle, Tray, User, VinylRecord, X } from '@phosphor-icons/react';
+import { Archive, ArrowCounterClockwise, ArrowUUpLeft, Article, BookOpen, Broadcast, Check, Envelope, HandWaving, LinkSimple, MusicNoteSimple, PencilSimple, PencilSimpleLine, Plus, Shuffle, User, VinylRecord, X } from '@phosphor-icons/react';
 import Link from 'next/link';
 import SiteNav from '../../../components/main_components/SiteNav';
 import MiniAddressBook from '../../../components/main_components/MiniAddressBook';
@@ -12,6 +12,7 @@ import SentList from '../../../components/main_components/SentList';
 import WaveSheet from '../../../components/main_components/WaveSheet';
 import MessageForm from '../../../components/main_components/Slug_Page/MessageForm';
 import { Compared } from '../../../components/main_components/Feed';
+import StarRating from '../../../components/main_components/StarRating';
 import { carrySender, journalUrl, tidyJournal } from '../../../library/return_address';
 import { useBookplate } from '../../../components/main_components/Bookplate';
 import { albumKey } from '../../../hooks/useListeningBeacon';
@@ -45,35 +46,14 @@ import { REPORTS_URL } from '../../../library/version';
 const UNOPENED = 'pending';
 const ARCHIVED = 'dismissed';
 
-// A score said in words, for what came back: "Came back · four and a half
-// stars". Words rather than drawn stars because the line under an inbox
-// row's title is the caption face, and the mock-up says it this way.
+// A score said in words, for what came back. Drawn as stars on the row
+// since 2026-10-17; these are what a screen reader says for them.
 const STARS_SAID = {
   0: 'no stars', 0.5: 'half a star', 1: 'one star', 1.5: 'one and a half stars',
   2: 'two stars', 2.5: 'two and a half stars', 3: 'three stars', 3.5: 'three and a half stars',
   4: 'four stars', 4.5: 'four and a half stars', 5: 'five stars',
 };
 
-// What the subtitle says on an opened row. A date only where there is one
-// worth printing: a logged send carries its record's own posted date, and
-// the other two have nothing better than the day the send arrived, which is
-// already the row above it.
-function became(sent) {
-  if (sent.status === 'logged') {
-    const when = sent.entry_posted_at
-      ? ` ${new Date(sent.entry_posted_at).toLocaleDateString(undefined, { day: 'numeric', month: 'long' }).toLowerCase()}`
-      : '';
-    return `logged${when}`;
-  }
-  if (sent.status === 'reviewed') return 'in progress';
-  if (sent.status === ARCHIVED) return 'archived';
-  // Anything else is waiting on you, including a status nothing here knows
-  // about. The fallback used to be 'archived', which is how every new send
-  // in the inbox came up saying it had been put away (Miyel, 2026-09-15) —
-  // a fallthrough that names the rarest state is a fallthrough that lies
-  // about the commonest one.
-  return 'new';
-}
 // ── What kind of thing a row is, 2026-09-28 ────────────────────────────────
 // Miyel: "each thing in the inbox should hold an icon" — sends, waves,
 // messages, what came back. Four kinds of arrival share one list, and a
@@ -96,14 +76,23 @@ const KIND = {
   back: ArrowUUpLeft,
 };
 
+// Small and soft, from 2026-10-17: Miyel chose the marks in the page's
+// faint grey over coloured ones and over none — they say what kind of row
+// it is without colouring the list, and the title says what happened.
 function Kind({ of }) {
   const Mark = KIND[of];
   return (
     <span className="ib-kind" aria-hidden="true">
-      <Mark size={17} weight="regular" />
+      <Mark size={18} weight="regular" />
     </span>
   );
 }
+
+// ── Records waiting, as a grid, 2026-10-17 ─────────────────────────────────
+// Four across, the way People has faces, and one row of them until See all
+// (Miyel's pick of the People-style drawings, version A). How many a row
+// holds is fixed rather than fitted, so the grid is one shape everywhere.
+const ACROSS = 4;
 
 // ── An open row's doors, 2026-09-28 ────────────────────────────────────────
 // Miyel, on seeing a message open as a line of who it was from, a black
@@ -163,10 +152,6 @@ function noteOn(entry, song) {
 // that was not needed or three lines that were all there was.
 const runsLong = words => words.length > 150 || (words.match(/\n/g) || []).length >= 3;
 
-// The first line of a message, for the small line under a row that is about
-// no entry: the words are all it has to say what it is.
-const opening = said => String(said || '').trim().split(/\n/)[0];
-
 // NoteModal is gone. It existed because the submissions view was a table with
 // no room in it for a paragraph, so the one part of a send that mattered — why
 // somebody sent it — was hidden behind a button marked "Note". The view is a
@@ -180,7 +165,11 @@ const opening = said => String(said || '').trim().split(/\n/)[0];
 // and no redirect when the check says no, because the cross has already asked
 // the same question and would not be drawing this if the answer were no. The
 // standalone address stays exactly as it was; a bookmark is a promise.
-export default function Inbox({ layered = false, inPane = false }) {
+// `sent`, from 2026-10-17: on the cross the top bar holds the words Inbox and
+// Outbox, the way it holds Friends and Board on People (HomeNav.js), and says
+// which is showing. Drawn anywhere else — its own address, a desk's sheet —
+// the inbox puts the same two words at its own head.
+export default function Inbox({ layered = false, inPane = false, sent: sentFromBar = null }) {
   const router = useRouter();
   // Who this copy belongs to, carried on every link out to another journal
   // so the form there knows who is sending. See carrySender.
@@ -199,10 +188,12 @@ export default function Inbox({ layered = false, inPane = false }) {
   // sit among the sends by date, with the dot until opened and no count on
   // the folder — nothing about them is waiting on you.
   const [cameBack, setCameBack] = useState([]);
-  // The Sent door at the top of the list (SentList.js): what this journal has
-  // sent that has not come back. The inbox stays what arrives; this is the
-  // one page of it that is what went out (Miyel, 2026-10-14).
-  const [showSent, setShowSent] = useState(false);
+  // The Outbox (SentList.js): what this journal has sent that has not come back.
+  // The inbox stays what arrives; this is the one page of it that is what
+  // went out (Miyel, 2026-10-14). A word at the head since 2026-10-17, the
+  // second of two, where it was a door over the list.
+  const [sentHere, setSentHere] = useState(false);
+  const showSent = sentFromBar ?? sentHere;
   // ── Waves, 2026-09-23 ──────────────────────────────────────────────────
   // Somebody added this journal and said so (the waves brief). A wave sits
   // among the sends by when it arrived, opens where it sits like any row,
@@ -252,6 +243,16 @@ export default function Inbox({ layered = false, inPane = false }) {
   // and two of them is a list of controls again.
   const [openRow, setOpenRow] = useState(null);
   const [showArchived, setShowArchived] = useState(false);
+  // ── Records waiting, 2026-10-17 ────────────────────────────────────────
+  // Which one is open under its row of covers: its id; null once the open
+  // one has been pressed shut; and, until anything is pressed, 'newest' —
+  // the newest arrives open, so the first thing anybody sees is what opening
+  // a record looks like (Miyel: "if someone didn't know they could click it
+  // and see options"). Then whether every row of covers is showing or only
+  // the first, and which one's long note is showing whole.
+  const [heldOpen, setHeldOpen] = useState('newest');
+  const [heldAll, setHeldAll] = useState(false);
+  const [binWhole, setBinWhole] = useState(null);
   // Problem reports sit behind a line at the foot of the sends, the way the
   // archived ones do, on the one copy that receives any (takesReports).
   const [showReports, setShowReports] = useState(false);
@@ -802,11 +803,30 @@ export default function Inbox({ layered = false, inPane = false }) {
   }
 
   const unopened = s => s.status === UNOPENED;
+  // ── New until opened, 2026-10-17 ──────────────────────────────────────────
+  // A record waiting wears the dot until it has been opened — pressed open,
+  // or one of its doors pressed — and not merely until a listen begins
+  // (Miyel). The newest opening by itself does not count. A listen begun
+  // from it means it was opened, whatever the mark says (migrations/035).
+  const unseen = s => s.status === UNOPENED && !s.seen_at;
+  function markSeen(sent) {
+    if (!unseen(sent)) return;
+    const now = new Date().toISOString();
+    setSubmissions(prev => prev.map(x => (x.id === sent.id ? { ...x, seen_at: now } : x)));
+    fetch(`/api/submissions/${sent.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ seen: true }) }).catch(() => {});
+  }
+  // ── Waiting on you, 2026-10-17 ──────────────────────────────────────────
+  // A record somebody set aside for you that you have not finished with —
+  // new, or a listen started and not yet posted — stands in the grid of
+  // covers over the list rather than in it (heldBlock). It leaves when it is
+  // logged or archived, so a listen begun and abandoned is still there
+  // tomorrow. Newest first, which is how the rows arrive.
+  const held = submissions.filter(s => s.status === UNOPENED || s.status === 'reviewed');
   // One list, newest first — which is how the rows arrive. Archived come out
   // of it and sit behind a line at the foot; opened, they go on the end
   // rather than back into the order, so nothing a keeper has put away
   // reappears in the middle of what has not been dealt with.
-  const live = submissions.filter(s => s.status !== ARCHIVED);
+  const live = submissions.filter(s => s.status !== ARCHIVED && !held.includes(s));
   const archivedRows = submissions.filter(s => s.status === ARCHIVED);
   const archivedCount = archivedRows.length;
   // What came back goes in among the live sends, newest first: a send by
@@ -855,6 +875,791 @@ export default function Inbox({ layered = false, inPane = false }) {
       .slice(0, 8);
   }
 
+  // ── Records waiting, drawn, 2026-10-17 ─────────────────────────────────
+  // Miyel's pick of three drawings made from the People page (version A,
+  // with soft marks): the records somebody set aside for you are a plain
+  // grid of covers, four across, each named under it, the way People has
+  // faces — one row of them, and See all for the rest, so it never runs
+  // long. Pressing a cover opens it right under its row, as a face opens on
+  // People, and the others step back; pressing it again shuts it. Nothing
+  // here overlaps, slides or counts. With nothing waiting there is no grid,
+  // and the list starts at the top.
+  //
+  // It replaced, the same evening, a bin of overlapping covers with the
+  // open record above a list grouped by day (the inbox-bin brief, kept on
+  // the branch inbox-bin): "nothing is overlapped on the site", and the
+  // inbox should live "on the page like the people pages".
+  function heldBlock() {
+    if (held.length === 0) return null;
+    const shown = heldAll ? held : held.slice(0, ACROSS);
+    const rows = [];
+    for (let i = 0; i < shown.length; i += ACROSS) rows.push(shown.slice(i, i + ACROSS));
+    const open = heldOpen === 'newest' ? shown[0] : (shown.find(s => s.id === heldOpen) || null);
+    return (
+      <div className="ib-held">
+        {rows.map((row, r) => (
+          <Fragment key={r}>
+            <div className="ib-held-row">
+              {row.map(s => (
+                <button
+                  key={s.id}
+                  type="button"
+                  className={'ib-held-one' + (open && open.id !== s.id ? ' ib-held-one--back' : '')}
+                  aria-expanded={open?.id === s.id}
+                  aria-label={`${s.song || s.album}, from ${s.submitter_name || 'someone'}`}
+                  onClick={() => {
+                    const opening = open?.id !== s.id;
+                    setHeldOpen(opening ? s.id : null);
+                    setHolding(null);
+                    if (opening || heldOpen === 'newest') markSeen(s);
+                  }}
+                >
+                  <span className="ib-held-cover">
+                    {s.album_art
+                      ? <img src={s.album_art} alt="" loading="lazy" />
+                      : <span className="ib-nocover" aria-hidden="true">&#9834;</span>}
+                    {unseen(s) && <span className="ib-held-new" aria-hidden="true" />}
+                    {/* Who handed it to you, on its corner — a record from
+                        a person reads as one, and invites the press
+                        (Miyel, 2026-10-17). */}
+                    <span className="ib-held-face" aria-hidden="true">
+                      <User size={12} weight="regular" />
+                      {tidyJournal(s.sender_url) && (
+                        <img src={`${journalUrl(tidyJournal(s.sender_url))}/api/portrait`} alt="" loading="lazy" onError={e => { e.currentTarget.style.display = 'none'; }} />
+                      )}
+                    </span>
+                  </span>
+                  <span className="ib-held-name">{s.song || s.album}</span>
+                </button>
+              ))}
+            </div>
+            {open && row.includes(open) && heldDetail(open)}
+          </Fragment>
+        ))}
+        {held.length > ACROSS && (
+          <button
+            type="button"
+            className="ib-showarch ib-held-all"
+            onClick={() => { if (heldAll && open && !held.slice(0, ACROSS).includes(open)) setHeldOpen(null); setHeldAll(v => !v); }}
+          >
+            {heldAll ? 'See less' : 'See all'}
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  // The record pressed, under its row: who it is from, what it is, their
+  // note (three lines and See all past that, her pick), and its doors —
+  // Listen, or Resume once a listen has begun; Read when they have it
+  // posted; Add when they are not in the book (her ask, and no Visit);
+  // Archive, always last.
+  function heldDetail(sent) {
+    const host = tidyJournal(sent.sender_url);
+    const who = sent.submitter_name || 'someone';
+    const theirs = host ? theirListen(host, albumKey(sent.album, sent.artist), sent.song || '') : null;
+    const posted = !host ? '' : sent.sender_entry || theirs?.slug || '';
+    // How they rated it themselves, off their own journal, beside their
+    // name (Miyel, 2026-10-17: "the rating they gave can be a part of
+    // opening"). Only when they have logged it and given it stars.
+    const theirStars = theirs && theirs.rating_value !== null && theirs.rating_value !== undefined && theirs.rating_value !== ''
+      ? Number(theirs.rating_value) : null;
+    const theirSaid = theirStars !== null ? STARS_SAID[theirStars] : null;
+    return (
+      <div className="ib-held-open">
+        <div className="ib-held-from">
+          From {who}
+          {theirStars !== null && theirStars > 0 && (
+            <span className="ib-held-stars" role="img" aria-label={`They gave it ${theirSaid || `${theirStars} stars`}${theirs.masterpiece ? ', a masterpiece' : ''}`}>
+              <StarRating rating={theirStars} size={11} glow={!!theirs.masterpiece} />
+            </span>
+          )}
+        </div>
+        <p className="ib-held-what">
+          <span className="ib-held-title">{sent.song || sent.album}</span>
+          <span className="ib-held-meta">
+            {sent.song
+              ? ` · ${sent.album} · ${sent.artist}`
+              : ` · ${sent.artist}${sent.year ? ` · ${sent.year}` : ''}`}
+          </span>
+        </p>
+        {sent.note && (
+          <p className={'ib-msg' + (binWhole === sent.id || !runsLong(sent.note) ? '' : ' ib-msg--short')}>{sent.note}</p>
+        )}
+        {sent.note && runsLong(sent.note) && (
+          <button
+            type="button"
+            className="ib-seeall"
+            aria-expanded={binWhole === sent.id}
+            onClick={() => setBinWhole(w => (w === sent.id ? null : sent.id))}
+          >
+            {binWhole === sent.id ? 'See less' : 'See all'}
+          </button>
+        )}
+        <div className="ib-doors fr-doors-row">
+          {sent.status === 'reviewed' ? (
+            <button type="button" className="fr-door" onClick={() => resumeListen(sent)}>
+              <Broadcast size={22} weight="regular" aria-hidden="true" />
+              Resume
+            </button>
+          ) : (
+            <button type="button" className="fr-door" onClick={() => startListen(sent)}>
+              <Broadcast size={22} weight="regular" aria-hidden="true" />
+              Listen
+            </button>
+          )}
+          {posted && (
+            <a
+              className="fr-door"
+              href={carrySender(`${journalUrl(host)}/entries/${posted}`, me, { known: filed.has(host) })}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => markSeen(sent)}
+            >
+              <Article size={22} weight="regular" aria-hidden="true" />
+              Read
+            </a>
+          )}
+          {host && !filed.has(host) && (
+            <button type="button" className="fr-door" onClick={() => { markSeen(sent); file(sent.sender_url); }}>
+              <Plus size={22} weight="regular" aria-hidden="true" />
+              Add
+            </button>
+          )}
+          <button type="button" className="fr-door" onClick={() => { setHolding(null); setHeldOpen('newest'); updateStatus(sent.id, ARCHIVED); }}>
+            <Archive size={22} weight="regular" aria-hidden="true" />
+            Archive
+          </button>
+        </div>
+        {/* The listen already open, asked about where the press was — the
+            same panel a row in the list holds (rowFor). */}
+        {holding?.id === sent.id && (
+          <div className="own-panel ib-holding">
+            <p className="ib-holding-said">
+              You have <strong>{holding.held.album}</strong> open, with writing in it.
+            </p>
+            <div className="ib-holding-acts">
+              <button className="ib-primary" disabled={keeping} onClick={() => keepThenStart(sent, holding.held)}>
+                {keeping ? 'Saving the draft…' : 'Save it as a draft, then start'}
+              </button>
+              <button className="ib-act" onClick={() => setHolding(null)}>
+                Never mind
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // One row of the list, whatever kind it is. Drawn the way it always was;
+  // from 2026-10-17 the list calls it under a heading for each day.
+  function rowFor(sent) {
+    // ── A record that came back ──────────────────────
+    // "[name] logged MAGDALENE", then how they rated it.
+    // Opening it is what puts the dot out.
+    // ── A wave ──────────────────────────────────────
+    // "Omar waved", and whether they are in the book.
+    // Add sits on the row itself when they are not —
+    // beside the row's own button rather than inside
+    // it, since a button cannot hold a button — and
+    // pressing the row opens it where it sits, which is
+    // also what puts its dot out.
+    if (sent.waved) {
+      const w = sent;
+      const inBook = filed.has(w.address);
+      const isOpen = openWave === w.id;
+      const who = w.name || tidyJournal(w.address);
+      return (
+        <div key={`wave-${w.id}`} className={'ib-r ib-r--wave' + (isOpen ? ' ib-r--open' : '')}>
+          <div className="ib-rline">
+            <button
+              className="ib-rhead"
+              aria-expanded={isOpen}
+              onClick={() => {
+                shutOthers('wave');
+                setOpenWave(isOpen ? null : w.id);
+                if (w.seen_at) return;
+                fetch('/api/waves', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: w.id }) }).catch(() => {});
+                setWaves(prev => prev.map(x => (x.id === w.id ? { ...x, seen_at: new Date().toISOString() } : x)));
+              }}
+            >
+              <span className={'ib-newdot' + (w.seen_at ? ' ib-newdot--off' : '')} aria-hidden="true" />
+              <Kind of="wave" />
+              {/* The title alone, from 2026-10-17: the small line under
+                  every row went on Miyel's word ("not a fan of the
+                  subtext"). Add at the end says they are not in the book;
+                  their face stands there when they are. */}
+              <span className="ib-rsaid">
+                <span className="ib-rttl">{who} waved</span>
+              </span>
+              {(inBook || isOpen) && (
+                <span className="ib-rface" aria-hidden="true">
+                  <User size={15} weight="regular" />
+                  <img src={`${journalUrl(w.address)}/api/portrait`} alt="" loading="lazy" onError={e => { e.currentTarget.style.display = 'none'; }} />
+                </span>
+              )}
+            </button>
+            {/* On the row while it is shut; once it is
+                open, Add is one of its doors, and the
+                same word twice is one too many. */}
+            {!inBook && !isOpen && (
+              <button className="ib-radd" onClick={() => file(w.address)}>Add</button>
+            )}
+          </div>
+          {isOpen && (
+            <div className="ib-open ib-open--doors">
+              <div className="ib-doors fr-doors-row">
+                <a
+                  className="fr-door"
+                  href={carrySender(journalUrl(w.address), me, { known: inBook })}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <BookOpen size={22} weight="regular" aria-hidden="true" />
+                  Visit
+                </a>
+                {!inBook && (
+                  <button type="button" className="fr-door" onClick={() => file(w.address)}>
+                    <Plus size={22} weight="regular" aria-hidden="true" />
+                    Add
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className="fr-door"
+                  onClick={() => {
+                    fetch('/api/waves', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: w.id }) }).catch(() => {});
+                    setWaves(prev => prev.filter(x => x.id !== w.id));
+                    setOpenWave(null);
+                  }}
+                >
+                  <X size={22} weight="regular" aria-hidden="true" />
+                  Leave it
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+    // ── A message ───────────────────────────────────
+    // "Message from [name]", and nothing under it since
+    // 2026-10-17. The cover when it is about a record,
+    // the writer's face when it is not.
+    //
+    // Open, it is the line it answers, greyed; what they
+    // said; and the doors — Reply, Compare when they
+    // have logged the record too, Add for somebody who
+    // is not in the book, Dismiss (Miyel, 2026-09-29).
+    // The keeper's own replies came across with the
+    // comments they answered, and read "You wrote".
+    if (sent.wrote) {
+      const m = sent;
+      const host = tidyJournal(m.from_journal);
+      // The keeper's own words, brought across with
+      // the comments they answered. Known by this
+      // journal's address — or, for a comment from
+      // before the address was stamped on, by the
+      // keeper's name, which is how replies knew them
+      // too. By name only on a row that was a comment:
+      // anybody can type a name into a form.
+      const own = host
+        ? bare(host) === bare(myJournal)
+        : Boolean(m.written_at) && Boolean(myName)
+          && String(m.from_name || '').trim().toLowerCase() === String(myName).trim().toLowerCase();
+      const who = own ? 'You' : (m.from_name || 'Someone');
+      const isOpen = openMessage === m.id;
+      const key = `message-${m.id}`;
+      const sure = sureOf === key;
+      const face = host && (
+        <img src={`${journalUrl(host)}/api/portrait`} alt="" loading="lazy" onError={e => { e.currentTarget.style.display = 'none'; }} />
+      );
+      const first = isOpen ? saidFirst(m) : null;
+      const whole = wholeLine === m.id;
+      // The two listens a comparison sets side by side:
+      // yours of the record this is about, and theirs.
+      const record = m.about_album ? albumKey(m.about_album, m.about_artist) : '';
+      const yours = isOpen && record && !m.about_journal ? myListen(record) : null;
+      const theirs = isOpen && record && host && !own ? theirListen(host, record) : null;
+      return (
+        <div key={key} className={'ib-r ib-r--message' + (isOpen ? ' ib-r--open' : '')}>
+          <button className="ib-rhead" aria-expanded={isOpen} onClick={() => openWords(m)}>
+            <span className={'ib-newdot' + (m.seen_at ? ' ib-newdot--off' : '')} aria-hidden="true" />
+            <Kind of="message" />
+            <span className="ib-rsaid">
+              {/* "Message from", 2026-10-17 (the inbox-bin brief): a
+                  byline is not what arrived, a message is. The line under
+                  it — Replied, what it was about, the day — and the cover
+                  before it went the same day (Miyel: "not a fan of the
+                  subtext"; the mock-up's row). What it answers is shown
+                  once it is open. */}
+              <span className="ib-rttl">Message from {own ? 'you' : who}</span>
+            </span>
+            <span className="ib-rface" aria-hidden="true">
+              <User size={15} weight="regular" />
+              {face}
+            </span>
+          </button>
+
+          {isOpen && (
+            <div className="ib-open ib-open--doors">
+              {/* What it answers, greyed, the way replies
+                  were drawn: three lines of it, and all
+                  of it on a press. */}
+              {first && (
+                <p className={'ib-answering' + (whole || !runsLong(first.words) ? '' : ' ib-answering--short')}>
+                  {first.who} said: {first.words}
+                </p>
+              )}
+              {first && runsLong(first.words) && (
+                <button
+                  type="button"
+                  className="ib-seeall"
+                  aria-expanded={whole}
+                  onClick={() => setWholeLine(w => (w === m.id ? null : m.id))}
+                >
+                  {whole ? 'See less' : 'See all'}
+                </button>
+              )}
+
+              <p className="ib-msg">{m.said}</p>
+
+              <div className="ib-doors fr-doors-row">
+                {host && !own && (
+                  <button
+                    type="button"
+                    className="fr-door"
+                    aria-expanded={replying === m.id}
+                    onClick={() => { setOnItsWay(null); setReplying(r => (r === m.id ? null : m.id)); }}
+                  >
+                    <PencilSimpleLine size={22} weight="regular" aria-hidden="true" />
+                    Reply
+                  </button>
+                )}
+                {yours && theirs && (
+                  <button
+                    type="button"
+                    className="fr-door"
+                    aria-expanded={comparing === key}
+                    onClick={() => toggleCompare(key)}
+                  >
+                    <Shuffle size={22} weight="regular" aria-hidden="true" />
+                    Compare
+                  </button>
+                )}
+                {host && !own && !filed.has(host) && (
+                  <button type="button" className="fr-door" onClick={() => file(m.from_journal)}>
+                    <Plus size={22} weight="regular" aria-hidden="true" />
+                    Add
+                  </button>
+                )}
+                {/* Last, and red only once it has been
+                    asked: the first press asks, the
+                    second deletes, a press anywhere else
+                    puts it back. */}
+                <button
+                  type="button"
+                  data-sure
+                  className={'fr-door' + (sure ? ' ib-door--sure' : '')}
+                  onClick={() => dismiss(m)}
+                  title={sure ? 'Press again to delete this message for good' : 'Delete this message'}
+                >
+                  <X size={22} weight="regular" aria-hidden="true" />
+                  {sure ? 'Dismiss?' : 'Dismiss'}
+                </button>
+              </div>
+
+              {/* The reply unfolds under the doors, where
+                  it was asked for. What is typed is kept
+                  by the form until it has landed. */}
+              {replying === m.id && (
+                <div className="ib-reply">
+                  <MessageForm
+                    draftKey={`reply-${m.id}`}
+                    label={`Your reply to ${who}`}
+                    placeholder={`Reply to ${who}`}
+                    send={said => reply(m, said)}
+                    onSent={() => {
+                      setReplying(null);
+                      setOnItsWay(m.id);
+                      setTimeout(() => setOnItsWay(w => (w === m.id ? null : w)), 2600);
+                    }}
+                    onLeave={() => setReplying(null)}
+                  />
+                </div>
+              )}
+              {onItsWay === m.id && (
+                <p className="ib-said-by ib-onitsway" role="status">On its way to {who}</p>
+              )}
+
+              {yours && theirs && (comparing === key || shutting === key) && (
+                <Compared mine={yours} theirs={theirs} name={who} closing={shutting === key} theirStars />
+              )}
+            </div>
+          )}
+        </div>
+      );
+    }
+    if (sent.backed) {
+      const row = sent;
+      const who = row.name || tidyJournal(row.journal);
+      const rated = row.rating === null || row.rating === undefined ? null : STARS_SAID[Number(row.rating)];
+      const isOpen = openBack === row.id;
+      const key = `back-${row.id}`;
+      const sure = sureOf === key;
+      const record = albumKey(row.album, row.artist);
+      const yours = isOpen ? myListen(record) : null;
+      // Theirs by its own address when their shelf
+      // holds it, since that is the entry the row is.
+      const theirs = isOpen
+        ? (shelves[tidyJournal(row.journal)] || []).find(e => e.slug === row.slug) || null
+        : null;
+      return (
+        <div key={key} className={'ib-r ib-r--back' + (isOpen ? ' ib-r--open' : '')}>
+          <button className="ib-rhead" aria-expanded={isOpen} onClick={() => openReturned(row)}>
+            <span className={'ib-newdot' + (row.seen_at ? ' ib-newdot--off' : '')} aria-hidden="true" />
+            <Kind of="back" />
+            {/* No cover before the title, from 2026-10-17 —
+                the mock-up's row: the red arrow says what the
+                row is, and the title says which record. */}
+            <span className="ib-rsaid">
+              {/* A note that came back is named by its song
+                  (migration 030); the record is the row's
+                  own, under Compare and the rest.
+
+                  ── Credited, 2026-10-17 ──
+                  A credit they added by hand — with the Credit
+                  tool on their entry, for a record this journal
+                  never sent them — arrives the same way and is
+                  said for what it is (Miyel: "you get a message
+                  saying that person credited you"). A record that
+                  went through a send keeps "logged". */}
+              <span className="ib-rttl">
+                {row.by_hand ? `${who} credited you on ${row.song || row.album}` : `${who} logged ${row.song || row.album}`}
+              </span>
+            </span>
+            {/* How they rated it, drawn, at the row's end, 2026-10-17
+                (Miyel: "the stars should show as stars not text"). The
+                line under the title that said it in words, and "Came
+                back" before that, went with every row's small line. Who
+                it was is in the title, so the stars take the face's
+                place; a record they did not rate keeps the face. */}
+            {rated ? (
+              <span className="ib-rstars" role="img" aria-label={`${rated}${row.masterpiece ? ', and a masterpiece' : ''}`}>
+                <StarRating rating={Number(row.rating)} size={12} glow={!!row.masterpiece} />
+              </span>
+            ) : (
+              <span className="ib-rface" aria-hidden="true">
+                <User size={13} weight="regular" />
+                <img src={`${journalUrl(row.journal)}/api/portrait`} alt="" loading="lazy" onError={e => { e.currentTarget.style.display = 'none'; }} />
+              </span>
+            )}
+          </button>
+
+          {/* It opened their entry on a press until
+              2026-09-29. It opens where it sits now,
+              like every other row, and their entry is
+              the first of its doors. Read, Compare,
+              Dismiss, in her order — and nothing that
+              leads to the keeper's own entry, which is
+              on their own wall and not what arrived. */}
+          {isOpen && (
+            <div className="ib-open ib-open--doors">
+              <div className="ib-doors fr-doors-row">
+                <a
+                  className="fr-door"
+                  href={carrySender(`${journalUrl(row.journal)}/entries/${row.slug}`, me, { known: filed.has(row.journal) })}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Article size={22} weight="regular" aria-hidden="true" />
+                  Read
+                </a>
+                {yours && theirs && (
+                  <button
+                    type="button"
+                    className="fr-door"
+                    aria-expanded={comparing === key}
+                    onClick={() => toggleCompare(key)}
+                  >
+                    <Shuffle size={22} weight="regular" aria-hidden="true" />
+                    Compare
+                  </button>
+                )}
+                <button
+                  type="button"
+                  data-sure
+                  className={'fr-door' + (sure ? ' ib-door--sure' : '')}
+                  onClick={() => dismissReturned(row)}
+                  title={sure ? 'Press again to take this out of your inbox' : 'Take this out of your inbox'}
+                >
+                  <X size={22} weight="regular" aria-hidden="true" />
+                  {sure ? 'Dismiss?' : 'Dismiss'}
+                </button>
+              </div>
+              {yours && theirs && (comparing === key || shutting === key) && (
+                <Compared mine={yours} theirs={theirs} name={who} closing={shutting === key} theirStars />
+              )}
+            </div>
+          )}
+        </div>
+      );
+    }
+    const archived = sent.status === ARCHIVED;
+    const open = openRow === sent.id;
+    const host = tidyJournal(sent.sender_url);
+    const who = sent.submitter_name || 'someone';
+    const draft = draftFor(sent);
+    // Where the sender has it posted: the entry they
+    // sent it from, when the send carried one, or the
+    // one on their shelf for this record. Read leads
+    // there, and Visit stands in only when there is
+    // nothing of theirs to read (Miyel, 2026-09-29).
+    const posted = !host ? ''
+      : sent.sender_entry
+        || theirListen(host, albumKey(sent.album, sent.artist), sent.song || '')?.slug
+        || '';
+    return (
+      <div key={sent.id} className={'ib-r' + (archived ? ' ib-r--arch' : '') + (open ? ' ib-r--open' : '')}>
+        {/* Closed, a row is the cover, the album, what
+            state it is in, and whose face it came from.
+            Pressing it opens it where it sits — it does
+            not take you into a listen, which is the
+            thing this replaced. */}
+        <button
+          className="ib-rhead"
+          onClick={() => openSend(sent)}
+          aria-expanded={open}
+        >
+          {/* New is a property of the row, the way unread
+              is in mail. A dot, not a tab. */}
+          <span className={'ib-newdot' + (unopened(sent) ? '' : ' ib-newdot--off')} aria-hidden="true" />
+          {/* A song send (migrations/026) is named by the
+              song and marked with the note; a record, by
+              its title and the disc. No cover before the
+              title, and no line under it, from 2026-10-17
+              (the mock-up's row; Miyel). Logged or
+              archived, its first door says which. */}
+          <Kind of={sent.song ? 'song' : 'album'} />
+          <span className="ib-rsaid">
+            <span className="ib-rttl">{sent.song || sent.album}</span>
+          </span>
+          <span className="ib-rface" aria-hidden="true">
+            <User size={13} weight="regular" />
+            {host && <img src={`${journalUrl(host)}/api/portrait`} alt="" loading="lazy" onError={e => { e.currentTarget.style.display = 'none'; }} />}
+          </span>
+        </button>
+
+        {open && (
+          <div className="ib-open ib-open--doors">
+            {/* Who sent it and when, in the caption face.
+                A send's title is the record, so this is
+                the one place the sender is named; their
+                journal is a door below. */}
+            <p className="ib-said-by">From {who} &middot; {shortDay(sent.created_at)}</p>
+
+            {/* The message is here and only here. It is
+                what you read in order to decide, so it
+                is out while you are deciding and folded
+                away when you are not. */}
+            {sent.note && <p className="ib-msg">{sent.note}</p>}
+
+            {/* ── The doors, 2026-09-28 ─────────────────
+                Miyel's words for them: Listen, Logged,
+                Read, and the rare two only when there is
+                something behind them. The first is
+                chosen by the state the send is in — an
+                archived row's is the way back, which is
+                why archiving needs no undo of its own.
+                The sender's are here whatever state the
+                send is in. Six is the most a phone's row
+                holds, so it is Read or Visit and never
+                both: both lead to their journal. */}
+            <div className="ib-doors fr-doors-row">
+              {archived ? (
+                <button type="button" className="fr-door" onClick={() => updateStatus(sent.id, UNOPENED)}>
+                  <ArrowCounterClockwise size={22} weight="regular" aria-hidden="true" />
+                  Put back
+                </button>
+              ) : sent.status === 'logged' && sent.entry_slug ? (
+                <Link className="fr-door" href={`/entries/${sent.entry_slug}`}>
+                  <VinylRecord size={22} weight="regular" aria-hidden="true" />
+                  Open
+                </Link>
+              ) : sent.status === 'reviewed' ? (
+                <button type="button" className="fr-door" onClick={() => resumeListen(sent, draft)}>
+                  <Broadcast size={22} weight="regular" aria-hidden="true" />
+                  Resume
+                </button>
+              ) : (
+                <button type="button" className="fr-door" onClick={() => startListen(sent)}>
+                  <Broadcast size={22} weight="regular" aria-hidden="true" />
+                  Listen
+                </button>
+              )}
+
+              {/* What they wrote about it, on their
+                  journal. Their journal plus their slug
+                  is a URL, which is the only kind of
+                  reference that means the same thing in
+                  two databases (migrations/016) — and
+                  it is the one door on this row that is
+                  about what THEY thought of it, so it
+                  leads out. */}
+              {posted && (
+                <a
+                  className="fr-door"
+                  href={carrySender(`${journalUrl(host)}/entries/${posted}`, me, { known: filed.has(host) })}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Article size={22} weight="regular" aria-hidden="true" />
+                  Read
+                </a>
+              )}
+
+              {/* The record was here before they sent it
+                  (DECISIONS, The network). Pressed again,
+                  the picker it opened shuts. */}
+              {unopened(sent) && (
+                <button type="button" className="fr-door" aria-expanded={naming === sent.id} onClick={() => openNaming(sent)}>
+                  <Check size={22} weight="regular" aria-hidden="true" />
+                  Logged
+                </button>
+              )}
+
+              {host && !posted && (
+                <a
+                  className="fr-door"
+                  href={carrySender(journalUrl(host), me, { known: filed.has(host) })}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <BookOpen size={22} weight="regular" aria-hidden="true" />
+                  Visit
+                </a>
+              )}
+
+              {host
+                ? !filed.has(host) && (
+                  <button type="button" className="fr-door" onClick={() => file(sent.sender_url)}>
+                    <Plus size={22} weight="regular" aria-hidden="true" />
+                    Add
+                  </button>
+                )
+                : people.length > 0 && (
+                  <button type="button" className="fr-door" aria-expanded={whose === sent.id} onClick={() => { setWhose(w => (w === sent.id ? null : sent.id)); setNaming(null); }}>
+                    <LinkSimple size={22} weight="regular" aria-hidden="true" />
+                    Link
+                  </button>
+                )}
+
+              {/* Only where it is not the first door
+                  already: resuming a listen *is* opening
+                  its draft. */}
+              {draft && sent.status !== 'reviewed' && (
+                <button type="button" className="fr-door" onClick={() => resumeListen(sent, draft)}>
+                  <PencilSimple size={22} weight="regular" aria-hidden="true" />
+                  Draft
+                </button>
+              )}
+
+              {!archived && (
+                <button type="button" className="fr-door" onClick={() => updateStatus(sent.id, ARCHIVED)}>
+                  <Archive size={22} weight="regular" aria-hidden="true" />
+                  Archive
+                </button>
+              )}
+            </div>
+
+            {whose === sent.id && (
+              <MiniAddressBook
+                tight
+                people={people}
+                linked={tidyJournal(sent.sender_url)}
+                onPick={person => nameSender(sent, person)}
+                label={`Who sent ${sent.album}`}
+              />
+            )}
+
+            {/* ── The listen already open ──────────────
+                Not a dialog. The row asked the question,
+                so the row holds the answer, in the place
+                the other two panels on this row open.
+                Saving it first is the one offered as the
+                press, because it is the one that loses
+                nothing. */}
+            {holding?.id === sent.id && (
+              <div className="own-panel ib-holding">
+                <p className="ib-holding-said">
+                  You have <strong>{holding.held.album}</strong> open, with writing in it.
+                </p>
+                <div className="ib-holding-acts">
+                  <button
+                    className="ib-primary"
+                    disabled={keeping}
+                    onClick={() => keepThenStart(sent, holding.held)}
+                  >
+                    {keeping ? 'Saving the draft\u2026' : 'Save it as a draft, then start'}
+                  </button>
+                  <button className="ib-act" onClick={() => setHolding(null)}>
+                    Never mind
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {naming === sent.id && (
+              <div className="ib-which">
+                {mine === null ? (
+                  <div className="ib-which-none">Reading your journal&#8230;</div>
+                ) : (
+                  <>
+                    {candidates(sent).map(entry => (
+                      <button key={entry.id} className="ib-which-one" onClick={() => alreadyLogged(sent, entry)}>
+                        <span className={'ib-which-art' + (entry.song && entry.album_art ? ' ln-fold' : '')}>
+                          {entry.album_art && <img src={entry.album_art} alt="" loading="lazy" />}
+                          {entry.song && entry.album_art && (
+                            <span className="ln-fold-flap" aria-hidden="true"><img src={entry.album_art} alt="" /></span>
+                          )}
+                        </span>
+                        <span className="ib-which-said">
+                          {/* A note is named by its song, with the record under it. */}
+                          <span className="ib-which-album">{entry.song || entry.album}</span>
+                          <span className="ib-which-artist">
+                            {entry.song
+                              ? `${entry.album} · ${entry.artist}`
+                              : entry.listen_total > 1
+                                ? `Listen ${entry.listen_number} of ${entry.listen_total}`
+                                : entry.artist}
+                            {entry.posted_at ? ` · ${new Date(entry.posted_at).toLocaleDateString()}` : ''}
+                          </span>
+                        </span>
+                      </button>
+                    ))}
+                    {candidates(sent).length === 0 && (
+                      <div className="ib-which-none">
+                        {look.trim() ? 'Nothing under that name.' : 'Nothing in your journal for this album.'}
+                      </div>
+                    )}
+                    <input
+                      className="ib-which-field"
+                      value={look}
+                      onChange={e => setLook(e.target.value)}
+                      placeholder={candidates(sent).length > 0 ? 'Logged under another name?' : 'Search your journal'}
+                      aria-label="Find the record in your journal"
+                    />
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   if (checking) return <div style={{ minHeight: '100vh', background: 'var(--bg)' }} />;
   if (!authed) { if (!inPane && typeof window !== 'undefined') window.location.replace('/login'); return null; }
 
@@ -877,16 +1682,19 @@ export default function Inbox({ layered = false, inPane = false }) {
         <div className="own-panel ib-panel">
           <div className="ib-scroll">
 
-            {/* One door, at the top: Sent, and from there back to the inbox.
-                A glyph over one word, the Friends pane's door. */}
-            <div className="ib-top">
-              <button type="button" className="fr-door ib-top-door" onClick={() => setShowSent(v => !v)} aria-pressed={showSent}>
-                {showSent
-                  ? <Tray size={22} weight="regular" aria-hidden="true" />
-                  : <PaperPlaneTilt size={22} weight="regular" aria-hidden="true" />}
-                {showSent ? 'Inbox' : 'Sent'}
-              </button>
-            </div>
+            {/* ── Inbox · Outbox, 2026-10-17 ─────────────────────────────
+                Two words at the head, the way People has Friends · Board —
+                Outbox in Miyel's word, where the page had said Sent —
+                in the cross's own bar when the inbox is a pane (HomeNav),
+                and here when it is drawn anywhere else. Sent was a door over
+                the list, a glyph over a word at its right, and "the sent
+                button at the top looks terrible" (Miyel). */}
+            {sentFromBar === null && (
+              <div className="ib-words">
+                <button type="button" className={'hn-bar-word' + (showSent ? '' : ' hn-bar-word--on')} aria-pressed={!showSent} onClick={() => setSentHere(false)}>Inbox</button>
+                <button type="button" className={'hn-bar-word' + (showSent ? ' hn-bar-word--on' : '')} aria-pressed={showSent} onClick={() => setSentHere(true)}>Outbox</button>
+              </div>
+            )}
 
             {showSent ? <SentList /> : (
               <>
@@ -898,646 +1706,13 @@ export default function Inbox({ layered = false, inPane = false }) {
                   <div className="own-empty">Nothing has been sent to you yet.</div>
                 ) : (
                   <>
+                    {heldBlock()}
+                    {/* Everything else, newest first: a soft mark, who did
+                        what, and one thing at the row's end. No dates and no
+                        headings (Miyel: "I don't understand the dates being
+                        here"). */}
                     <div className="ib-list">
-                      {shown.map(sent => {
-                        // ── A record that came back ──────────────────────
-                        // "[name] logged MAGDALENE", then "Came back" and how
-                        // they rated it. Opening it is what puts the dot out.
-                        // ── A wave ──────────────────────────────────────
-                        // "Omar waved", and whether they are in the book.
-                        // Add sits on the row itself when they are not —
-                        // beside the row's own button rather than inside
-                        // it, since a button cannot hold a button — and
-                        // pressing the row opens it where it sits, which is
-                        // also what puts its dot out.
-                        if (sent.waved) {
-                          const w = sent;
-                          const inBook = filed.has(w.address);
-                          const isOpen = openWave === w.id;
-                          const who = w.name || tidyJournal(w.address);
-                          return (
-                            <div key={`wave-${w.id}`} className={'ib-r ib-r--wave' + (isOpen ? ' ib-r--open' : '')}>
-                              <div className="ib-rline">
-                                <button
-                                  className="ib-rhead"
-                                  aria-expanded={isOpen}
-                                  onClick={() => {
-                                    shutOthers('wave');
-                                    setOpenWave(isOpen ? null : w.id);
-                                    if (w.seen_at) return;
-                                    fetch('/api/waves', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: w.id }) }).catch(() => {});
-                                    setWaves(prev => prev.map(x => (x.id === w.id ? { ...x, seen_at: new Date().toISOString() } : x)));
-                                  }}
-                                >
-                                  <span className={'ib-newdot' + (w.seen_at ? ' ib-newdot--off' : '')} aria-hidden="true" />
-                                  <Kind of="wave" />
-                                  <span className="ib-rart ib-rart--face" aria-hidden="true">
-                                    <User size={18} weight="regular" />
-                                    <img src={`${journalUrl(w.address)}/api/portrait`} alt="" loading="lazy" onError={e => { e.currentTarget.style.display = 'none'; }} />
-                                  </span>
-                                  <span className="ib-rsaid">
-                                    <span className="ib-rttl">{who} waved</span>
-                                    <span className="ib-rsub">{inBook ? 'Already in your book' : 'Not in your book'}</span>
-                                  </span>
-                                </button>
-                                {/* On the row while it is shut; once it is
-                                    open, Add is one of its doors, and the
-                                    same word twice is one too many. */}
-                                {!inBook && !isOpen && (
-                                  <button className="ib-radd" onClick={() => file(w.address)}>Add</button>
-                                )}
-                              </div>
-                              {isOpen && (
-                                <div className="ib-open ib-open--doors">
-                                  <div className="ib-doors fr-doors-row">
-                                    <a
-                                      className="fr-door"
-                                      href={carrySender(journalUrl(w.address), me, { known: inBook })}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                    >
-                                      <BookOpen size={22} weight="regular" aria-hidden="true" />
-                                      Visit
-                                    </a>
-                                    {!inBook && (
-                                      <button type="button" className="fr-door" onClick={() => file(w.address)}>
-                                        <Plus size={22} weight="regular" aria-hidden="true" />
-                                        Add
-                                      </button>
-                                    )}
-                                    <button
-                                      type="button"
-                                      className="fr-door"
-                                      onClick={() => {
-                                        fetch('/api/waves', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: w.id }) }).catch(() => {});
-                                        setWaves(prev => prev.filter(x => x.id !== w.id));
-                                        setOpenWave(null);
-                                      }}
-                                    >
-                                      <X size={22} weight="regular" aria-hidden="true" />
-                                      Leave it
-                                    </button>
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          );
-                        }
-                        // ── A message ───────────────────────────────────
-                        // "[name] wrote", and what about: the entry it was
-                        // written from, the song when it was written from a
-                        // track's note, or the opening of the words when it
-                        // is about nothing. One that used to be a comment on
-                        // an entry says so. The cover when it is about a
-                        // record, the writer's face when it is not.
-                        //
-                        // Open, it is the line it answers, greyed; what they
-                        // said; and the doors — Reply, Compare when they
-                        // have logged the record too, Add for somebody who
-                        // is not in the book, Dismiss (Miyel, 2026-09-29).
-                        // The keeper's own replies came across with the
-                        // comments they answered, and read "You wrote".
-                        if (sent.wrote) {
-                          const m = sent;
-                          const host = tidyJournal(m.from_journal);
-                          // The keeper's own words, brought across with
-                          // the comments they answered. Known by this
-                          // journal's address — or, for a comment from
-                          // before the address was stamped on, by the
-                          // keeper's name, which is how replies knew them
-                          // too. By name only on a row that was a comment:
-                          // anybody can type a name into a form.
-                          const own = host
-                            ? bare(host) === bare(myJournal)
-                            : Boolean(m.written_at) && Boolean(myName)
-                              && String(m.from_name || '').trim().toLowerCase() === String(myName).trim().toLowerCase();
-                          const who = own ? 'You' : (m.from_name || 'Someone');
-                          const isOpen = openMessage === m.id;
-                          const key = `message-${m.id}`;
-                          const sure = sureOf === key;
-                          const about = m.about_song || m.about_album || '';
-                          const under = m.was_comment
-                            ? `Was a comment${about ? ` · ${about}` : ''}`
-                            : about ? `About ${about}` : opening(m.said);
-                          const face = host && (
-                            <img src={`${journalUrl(host)}/api/portrait`} alt="" loading="lazy" onError={e => { e.currentTarget.style.display = 'none'; }} />
-                          );
-                          const first = isOpen ? saidFirst(m) : null;
-                          const whole = wholeLine === m.id;
-                          // The two listens a comparison sets side by side:
-                          // yours of the record this is about, and theirs.
-                          const record = m.about_album ? albumKey(m.about_album, m.about_artist) : '';
-                          const yours = isOpen && record && !m.about_journal ? myListen(record) : null;
-                          const theirs = isOpen && record && host && !own ? theirListen(host, record) : null;
-                          return (
-                            <div key={key} className={'ib-r ib-r--message' + (isOpen ? ' ib-r--open' : '')}>
-                              <button className="ib-rhead" aria-expanded={isOpen} onClick={() => openWords(m)}>
-                                <span className={'ib-newdot' + (m.seen_at ? ' ib-newdot--off' : '')} aria-hidden="true" />
-                                <Kind of="message" />
-                                {m.about_slug ? (
-                                  <span className={'ib-rart' + (m.about_song && m.about_art ? ' ln-fold' : '')}>
-                                    {m.about_art
-                                      ? <img src={m.about_art} alt="" loading="lazy" />
-                                      : <span className="ib-nocover" aria-hidden="true">&#9834;</span>}
-                                    {m.about_song && m.about_art && (
-                                      <span className="ln-fold-flap" aria-hidden="true"><img src={m.about_art} alt="" /></span>
-                                    )}
-                                  </span>
-                                ) : (
-                                  <span className="ib-rart ib-rart--face" aria-hidden="true">
-                                    <User size={18} weight="regular" />
-                                    {face}
-                                  </span>
-                                )}
-                                <span className="ib-rsaid">
-                                  <span className="ib-rttl">{who} wrote</span>
-                                  {/* Whether it has been answered, what it
-                                      is about, and the day once it is open.
-                                      Replied leads the line: the line is cut
-                                      short on a phone, and what is cut
-                                      should be the song's name sooner than
-                                      the one word that says where things
-                                      stand. */}
-                                  <span className="ib-rsub">
-                                    {m.replied_at ? 'Replied · ' : ''}
-                                    {under}
-                                    {isOpen && shortDay(m.written_at || m.arrived_at) ? ` · ${shortDay(m.written_at || m.arrived_at)}` : ''}
-                                  </span>
-                                </span>
-                                {m.about_slug && (
-                                  <span className="ib-rface" aria-hidden="true">
-                                    <User size={13} weight="regular" />
-                                    {face}
-                                  </span>
-                                )}
-                              </button>
-
-                              {isOpen && (
-                                <div className="ib-open ib-open--doors">
-                                  {/* What it answers, greyed, the way replies
-                                      were drawn: three lines of it, and all
-                                      of it on a press. */}
-                                  {first && (
-                                    <p className={'ib-answering' + (whole || !runsLong(first.words) ? '' : ' ib-answering--short')}>
-                                      {first.who} said: {first.words}
-                                    </p>
-                                  )}
-                                  {first && runsLong(first.words) && (
-                                    <button
-                                      type="button"
-                                      className="ib-seeall"
-                                      aria-expanded={whole}
-                                      onClick={() => setWholeLine(w => (w === m.id ? null : m.id))}
-                                    >
-                                      {whole ? 'See less' : 'See all'}
-                                    </button>
-                                  )}
-
-                                  <p className="ib-msg">{m.said}</p>
-
-                                  <div className="ib-doors fr-doors-row">
-                                    {host && !own && (
-                                      <button
-                                        type="button"
-                                        className="fr-door"
-                                        aria-expanded={replying === m.id}
-                                        onClick={() => { setOnItsWay(null); setReplying(r => (r === m.id ? null : m.id)); }}
-                                      >
-                                        <PencilSimpleLine size={22} weight="regular" aria-hidden="true" />
-                                        Reply
-                                      </button>
-                                    )}
-                                    {yours && theirs && (
-                                      <button
-                                        type="button"
-                                        className="fr-door"
-                                        aria-expanded={comparing === key}
-                                        onClick={() => toggleCompare(key)}
-                                      >
-                                        <Shuffle size={22} weight="regular" aria-hidden="true" />
-                                        Compare
-                                      </button>
-                                    )}
-                                    {host && !own && !filed.has(host) && (
-                                      <button type="button" className="fr-door" onClick={() => file(m.from_journal)}>
-                                        <Plus size={22} weight="regular" aria-hidden="true" />
-                                        Add
-                                      </button>
-                                    )}
-                                    {/* Last, and red only once it has been
-                                        asked: the first press asks, the
-                                        second deletes, a press anywhere else
-                                        puts it back. */}
-                                    <button
-                                      type="button"
-                                      data-sure
-                                      className={'fr-door' + (sure ? ' ib-door--sure' : '')}
-                                      onClick={() => dismiss(m)}
-                                      title={sure ? 'Press again to delete this message for good' : 'Delete this message'}
-                                    >
-                                      <X size={22} weight="regular" aria-hidden="true" />
-                                      {sure ? 'Dismiss?' : 'Dismiss'}
-                                    </button>
-                                  </div>
-
-                                  {/* The reply unfolds under the doors, where
-                                      it was asked for. What is typed is kept
-                                      by the form until it has landed. */}
-                                  {replying === m.id && (
-                                    <div className="ib-reply">
-                                      <MessageForm
-                                        draftKey={`reply-${m.id}`}
-                                        label={`Your reply to ${who}`}
-                                        placeholder={`Reply to ${who}`}
-                                        send={said => reply(m, said)}
-                                        onSent={() => {
-                                          setReplying(null);
-                                          setOnItsWay(m.id);
-                                          setTimeout(() => setOnItsWay(w => (w === m.id ? null : w)), 2600);
-                                        }}
-                                        onLeave={() => setReplying(null)}
-                                      />
-                                    </div>
-                                  )}
-                                  {onItsWay === m.id && (
-                                    <p className="ib-said-by ib-onitsway" role="status">On its way to {who}</p>
-                                  )}
-
-                                  {yours && theirs && (comparing === key || shutting === key) && (
-                                    <Compared mine={yours} theirs={theirs} name={who} closing={shutting === key} theirStars />
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          );
-                        }
-                        if (sent.backed) {
-                          const row = sent;
-                          const who = row.name || tidyJournal(row.journal);
-                          const rated = row.rating === null || row.rating === undefined ? null : STARS_SAID[Number(row.rating)];
-                          const isOpen = openBack === row.id;
-                          const key = `back-${row.id}`;
-                          const sure = sureOf === key;
-                          const record = albumKey(row.album, row.artist);
-                          const yours = isOpen ? myListen(record) : null;
-                          // Theirs by its own address when their shelf
-                          // holds it, since that is the entry the row is.
-                          const theirs = isOpen
-                            ? (shelves[tidyJournal(row.journal)] || []).find(e => e.slug === row.slug) || null
-                            : null;
-                          return (
-                            <div key={key} className={'ib-r ib-r--back' + (isOpen ? ' ib-r--open' : '')}>
-                              <button className="ib-rhead" aria-expanded={isOpen} onClick={() => openReturned(row)}>
-                                <span className={'ib-newdot' + (row.seen_at ? ' ib-newdot--off' : '')} aria-hidden="true" />
-                                <Kind of="back" />
-                                {/* No envelope in the cover's corner, from
-                                    2026-09-29 (Miyel: it "must go"). In this
-                                    list the envelope is anything written,
-                                    and the arrow before the cover already
-                                    says what the row is. */}
-                                <span className={'ib-rart' + (row.song && row.album_art ? ' ln-fold' : '')}>
-                                  {row.album_art
-                                    ? <img src={row.album_art} alt="" loading="lazy" />
-                                    : <span className="ib-nocover" aria-hidden="true">&#9834;</span>}
-                                  {row.song && row.album_art && (
-                                    <span className="ln-fold-flap" aria-hidden="true"><img src={row.album_art} alt="" /></span>
-                                  )}
-                                </span>
-                                <span className="ib-rsaid">
-                                  {/* A note that came back is named by its song
-                                      (migration 030); the record is the row's
-                                      own, under Compare and the rest. */}
-                                  <span className="ib-rttl">{who} logged {row.song || row.album}</span>
-                                  <span className="ib-rsub">
-                                    Came back
-                                    {rated ? ` · ${rated}` : ''}
-                                    {row.masterpiece ? ', and a masterpiece' : ''}
-                                  </span>
-                                </span>
-                                <span className="ib-rface" aria-hidden="true">
-                                  <User size={13} weight="regular" />
-                                  <img src={`${journalUrl(row.journal)}/api/portrait`} alt="" loading="lazy" onError={e => { e.currentTarget.style.display = 'none'; }} />
-                                </span>
-                              </button>
-
-                              {/* It opened their entry on a press until
-                                  2026-09-29. It opens where it sits now,
-                                  like every other row, and their entry is
-                                  the first of its doors. Read, Compare,
-                                  Dismiss, in her order — and nothing that
-                                  leads to the keeper's own entry, which is
-                                  on their own wall and not what arrived. */}
-                              {isOpen && (
-                                <div className="ib-open ib-open--doors">
-                                  <div className="ib-doors fr-doors-row">
-                                    <a
-                                      className="fr-door"
-                                      href={carrySender(`${journalUrl(row.journal)}/entries/${row.slug}`, me, { known: filed.has(row.journal) })}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                    >
-                                      <Article size={22} weight="regular" aria-hidden="true" />
-                                      Read
-                                    </a>
-                                    {yours && theirs && (
-                                      <button
-                                        type="button"
-                                        className="fr-door"
-                                        aria-expanded={comparing === key}
-                                        onClick={() => toggleCompare(key)}
-                                      >
-                                        <Shuffle size={22} weight="regular" aria-hidden="true" />
-                                        Compare
-                                      </button>
-                                    )}
-                                    <button
-                                      type="button"
-                                      data-sure
-                                      className={'fr-door' + (sure ? ' ib-door--sure' : '')}
-                                      onClick={() => dismissReturned(row)}
-                                      title={sure ? 'Press again to take this out of your inbox' : 'Take this out of your inbox'}
-                                    >
-                                      <X size={22} weight="regular" aria-hidden="true" />
-                                      {sure ? 'Dismiss?' : 'Dismiss'}
-                                    </button>
-                                  </div>
-                                  {yours && theirs && (comparing === key || shutting === key) && (
-                                    <Compared mine={yours} theirs={theirs} name={who} closing={shutting === key} theirStars />
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          );
-                        }
-                        const archived = sent.status === ARCHIVED;
-                        const open = openRow === sent.id;
-                        const host = tidyJournal(sent.sender_url);
-                        const who = sent.submitter_name || 'someone';
-                        const draft = draftFor(sent);
-                        // Where the sender has it posted: the entry they
-                        // sent it from, when the send carried one, or the
-                        // one on their shelf for this record. Read leads
-                        // there, and Visit stands in only when there is
-                        // nothing of theirs to read (Miyel, 2026-09-29).
-                        const posted = !host ? ''
-                          : sent.sender_entry
-                            || theirListen(host, albumKey(sent.album, sent.artist), sent.song || '')?.slug
-                            || '';
-                        return (
-                          <div key={sent.id} className={'ib-r' + (archived ? ' ib-r--arch' : '') + (open ? ' ib-r--open' : '')}>
-                            {/* Closed, a row is the cover, the album, what
-                                state it is in, and whose face it came from.
-                                Pressing it opens it where it sits — it does
-                                not take you into a listen, which is the
-                                thing this replaced. */}
-                            <button
-                              className="ib-rhead"
-                              onClick={() => openSend(sent)}
-                              aria-expanded={open}
-                            >
-                              {/* New is a property of the row, the way unread
-                                  is in mail. A dot, not a tab. */}
-                              <span className={'ib-newdot' + (unopened(sent) ? '' : ' ib-newdot--off')} aria-hidden="true" />
-                              <Kind of={sent.song ? 'song' : 'album'} />
-                              {/* A song send (migrations/026) wears the folded
-                                  corner a track note wears on the wall, and
-                                  is named by the song, with the record it is
-                                  off on the line under. Start a listen still
-                                  starts the record. */}
-                              <span className={'ib-rart' + (sent.song && sent.album_art ? ' ln-fold' : '')}>
-                                {sent.album_art
-                                  ? <img src={sent.album_art} alt="" loading="lazy" />
-                                  : <span className="ib-nocover" aria-hidden="true">&#9834;</span>}
-                                {sent.song && sent.album_art && (
-                                  <span className="ln-fold-flap" aria-hidden="true"><img src={sent.album_art} alt="" /></span>
-                                )}
-                              </span>
-                              <span className="ib-rsaid">
-                                <span className="ib-rttl">{sent.song || sent.album}</span>
-                                {/* Open, the state is the actions below, so
-                                    the line goes back to being about the
-                                    record. */}
-                                <span className="ib-rsub">
-                                  {sent.song ? `${sent.album} · ${sent.artist}` : sent.artist}
-                                  {open
-                                    ? (sent.year ? ` · ${sent.year}` : '')
-                                    : ` · ${became(sent)}`}
-                                </span>
-                              </span>
-                              <span className="ib-rface" aria-hidden="true">
-                                <User size={13} weight="regular" />
-                                {host && <img src={`${journalUrl(host)}/api/portrait`} alt="" loading="lazy" onError={e => { e.currentTarget.style.display = 'none'; }} />}
-                              </span>
-                            </button>
-
-                            {open && (
-                              <div className="ib-open ib-open--doors">
-                                {/* Who sent it and when, in the caption face.
-                                    A send's title is the record, so this is
-                                    the one place the sender is named; their
-                                    journal is a door below. */}
-                                <p className="ib-said-by">From {who} &middot; {shortDay(sent.created_at)}</p>
-
-                                {/* The message is here and only here. It is
-                                    what you read in order to decide, so it
-                                    is out while you are deciding and folded
-                                    away when you are not. */}
-                                {sent.note && <p className="ib-msg">{sent.note}</p>}
-
-                                {/* ── The doors, 2026-09-28 ─────────────────
-                                    Miyel's words for them: Listen, Logged,
-                                    Read, and the rare two only when there is
-                                    something behind them. The first is
-                                    chosen by the state the send is in — an
-                                    archived row's is the way back, which is
-                                    why archiving needs no undo of its own.
-                                    The sender's are here whatever state the
-                                    send is in. Six is the most a phone's row
-                                    holds, so it is Read or Visit and never
-                                    both: both lead to their journal. */}
-                                <div className="ib-doors fr-doors-row">
-                                  {archived ? (
-                                    <button type="button" className="fr-door" onClick={() => updateStatus(sent.id, UNOPENED)}>
-                                      <ArrowCounterClockwise size={22} weight="regular" aria-hidden="true" />
-                                      Put back
-                                    </button>
-                                  ) : sent.status === 'logged' && sent.entry_slug ? (
-                                    <Link className="fr-door" href={`/entries/${sent.entry_slug}`}>
-                                      <VinylRecord size={22} weight="regular" aria-hidden="true" />
-                                      Open
-                                    </Link>
-                                  ) : sent.status === 'reviewed' ? (
-                                    <button type="button" className="fr-door" onClick={() => resumeListen(sent, draft)}>
-                                      <Broadcast size={22} weight="regular" aria-hidden="true" />
-                                      Resume
-                                    </button>
-                                  ) : (
-                                    <button type="button" className="fr-door" onClick={() => startListen(sent)}>
-                                      <Broadcast size={22} weight="regular" aria-hidden="true" />
-                                      Listen
-                                    </button>
-                                  )}
-
-                                  {/* What they wrote about it, on their
-                                      journal. Their journal plus their slug
-                                      is a URL, which is the only kind of
-                                      reference that means the same thing in
-                                      two databases (migrations/016) — and
-                                      it is the one door on this row that is
-                                      about what THEY thought of it, so it
-                                      leads out. */}
-                                  {posted && (
-                                    <a
-                                      className="fr-door"
-                                      href={carrySender(`${journalUrl(host)}/entries/${posted}`, me, { known: filed.has(host) })}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                    >
-                                      <Article size={22} weight="regular" aria-hidden="true" />
-                                      Read
-                                    </a>
-                                  )}
-
-                                  {/* The record was here before they sent it
-                                      (DECISIONS, The network). Pressed again,
-                                      the picker it opened shuts. */}
-                                  {unopened(sent) && (
-                                    <button type="button" className="fr-door" aria-expanded={naming === sent.id} onClick={() => openNaming(sent)}>
-                                      <Check size={22} weight="regular" aria-hidden="true" />
-                                      Logged
-                                    </button>
-                                  )}
-
-                                  {host && !posted && (
-                                    <a
-                                      className="fr-door"
-                                      href={carrySender(journalUrl(host), me, { known: filed.has(host) })}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                    >
-                                      <BookOpen size={22} weight="regular" aria-hidden="true" />
-                                      Visit
-                                    </a>
-                                  )}
-
-                                  {host
-                                    ? !filed.has(host) && (
-                                      <button type="button" className="fr-door" onClick={() => file(sent.sender_url)}>
-                                        <Plus size={22} weight="regular" aria-hidden="true" />
-                                        Add
-                                      </button>
-                                    )
-                                    : people.length > 0 && (
-                                      <button type="button" className="fr-door" aria-expanded={whose === sent.id} onClick={() => { setWhose(w => (w === sent.id ? null : sent.id)); setNaming(null); }}>
-                                        <LinkSimple size={22} weight="regular" aria-hidden="true" />
-                                        Link
-                                      </button>
-                                    )}
-
-                                  {/* Only where it is not the first door
-                                      already: resuming a listen *is* opening
-                                      its draft. */}
-                                  {draft && sent.status !== 'reviewed' && (
-                                    <button type="button" className="fr-door" onClick={() => resumeListen(sent, draft)}>
-                                      <PencilSimple size={22} weight="regular" aria-hidden="true" />
-                                      Draft
-                                    </button>
-                                  )}
-
-                                  {!archived && (
-                                    <button type="button" className="fr-door" onClick={() => updateStatus(sent.id, ARCHIVED)}>
-                                      <Archive size={22} weight="regular" aria-hidden="true" />
-                                      Archive
-                                    </button>
-                                  )}
-                                </div>
-
-                                {whose === sent.id && (
-                                  <MiniAddressBook
-                                    tight
-                                    people={people}
-                                    linked={tidyJournal(sent.sender_url)}
-                                    onPick={person => nameSender(sent, person)}
-                                    label={`Who sent ${sent.album}`}
-                                  />
-                                )}
-
-                                {/* ── The listen already open ──────────────
-                                    Not a dialog. The row asked the question,
-                                    so the row holds the answer, in the place
-                                    the other two panels on this row open.
-                                    Saving it first is the one offered as the
-                                    press, because it is the one that loses
-                                    nothing. */}
-                                {holding?.id === sent.id && (
-                                  <div className="own-panel ib-holding">
-                                    <p className="ib-holding-said">
-                                      You have <strong>{holding.held.album}</strong> open, with writing in it.
-                                    </p>
-                                    <div className="ib-holding-acts">
-                                      <button
-                                        className="ib-primary"
-                                        disabled={keeping}
-                                        onClick={() => keepThenStart(sent, holding.held)}
-                                      >
-                                        {keeping ? 'Saving the draft\u2026' : 'Save it as a draft, then start'}
-                                      </button>
-                                      <button className="ib-act" onClick={() => setHolding(null)}>
-                                        Never mind
-                                      </button>
-                                    </div>
-                                  </div>
-                                )}
-
-                                {naming === sent.id && (
-                                  <div className="ib-which">
-                                    {mine === null ? (
-                                      <div className="ib-which-none">Reading your journal&#8230;</div>
-                                    ) : (
-                                      <>
-                                        {candidates(sent).map(entry => (
-                                          <button key={entry.id} className="ib-which-one" onClick={() => alreadyLogged(sent, entry)}>
-                                            <span className={'ib-which-art' + (entry.song && entry.album_art ? ' ln-fold' : '')}>
-                                              {entry.album_art && <img src={entry.album_art} alt="" loading="lazy" />}
-                                              {entry.song && entry.album_art && (
-                                                <span className="ln-fold-flap" aria-hidden="true"><img src={entry.album_art} alt="" /></span>
-                                              )}
-                                            </span>
-                                            <span className="ib-which-said">
-                                              {/* A note is named by its song, with the record under it. */}
-                                              <span className="ib-which-album">{entry.song || entry.album}</span>
-                                              <span className="ib-which-artist">
-                                                {entry.song
-                                                  ? `${entry.album} · ${entry.artist}`
-                                                  : entry.listen_total > 1
-                                                    ? `Listen ${entry.listen_number} of ${entry.listen_total}`
-                                                    : entry.artist}
-                                                {entry.posted_at ? ` · ${new Date(entry.posted_at).toLocaleDateString()}` : ''}
-                                              </span>
-                                            </span>
-                                          </button>
-                                        ))}
-                                        {candidates(sent).length === 0 && (
-                                          <div className="ib-which-none">
-                                            {look.trim() ? 'Nothing under that name.' : 'Nothing in your journal for this album.'}
-                                          </div>
-                                        )}
-                                        <input
-                                          className="ib-which-field"
-                                          value={look}
-                                          onChange={e => setLook(e.target.value)}
-                                          placeholder={candidates(sent).length > 0 ? 'Logged under another name?' : 'Search your journal'}
-                                          aria-label="Find the record in your journal"
-                                        />
-                                      </>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
+                      {shown.map(rowFor)}
                     </div>
 
                     {/* Archived sits behind one line at the foot rather than

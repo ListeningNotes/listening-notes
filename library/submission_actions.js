@@ -49,7 +49,7 @@ export async function pull_submissions() {
   return await database`
     SELECT s.id, s.album, s.artist, s.year, s.note, s.submitter_name,
            s.album_art, s.collection_id, s.sender_url, s.status, s.created_at,
-           s.quiet, s.sender_entry, s.song,
+           s.quiet, s.sender_entry, s.song, s.seen_at,
            s.entry_id, e.slug AS entry_slug, e.album AS entry_album,
            e.posted_at AS entry_posted_at
     FROM submissions s
@@ -64,6 +64,15 @@ export async function count_pending_submissions() {
     SELECT COUNT(*)::int AS n FROM submissions WHERE status = 'pending'
   `;
   return row?.n ?? 0;
+}
+
+// Opened in the inbox, 2026-10-17: the moment its dot goes out. Only the
+// first time — when it was first seen is the fact (migrations/035).
+export async function see_submission(id) {
+  const [row] = await database`
+    UPDATE submissions SET seen_at = now() WHERE id = ${id} AND seen_at IS NULL RETURNING id, seen_at
+  `;
+  return row || null;
 }
 
 export async function update_submission_status(id, status) {
