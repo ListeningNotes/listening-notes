@@ -5,12 +5,21 @@
 // then newest listed, thirty at a time, with how many are listed and how
 // many are logging right now.
 //
-// What every copy's /directory asks, once, from the reader's browser
-// (DIRECTORY_URL in library/version.js) — so it is public, and may be read
-// across origins. It is read straight from the table the scheduled job keeps
-// and never fetches a journal on a reader's behalf. Names, beacons and
-// covers, all of them already public on the journals themselves; never an
-// entry, never anybody's writing, and never a number beside a person.
+// What every copy's Board asks, through its own /api/board (DIRECTORY_URL in
+// library/version.js) — public, and readable across origins. The answer is
+// read straight from the table and never waits on a journal. Names, beacons
+// and covers, all of them already public on the journals themselves; never
+// an entry, never anybody's writing, and never a number beside a person.
+//
+// ── And the Board refreshes itself when it is looked at, 2026-10-17 ───────
+// Miyel chose this over a schedule ("go with option 1"): nothing to set up,
+// and nothing runs while nobody is looking. After the answer has gone, one
+// round of the refresh (`gather`) asks the journals whose turn has come —
+// every minute for one logging within the hour, every half hour otherwise,
+// slower for one not answering, forty at most. A look never asks every
+// journal: only the due ones, each claimed so two looks never ask one twice.
+// The answer is kept at the edge for half a minute, so most looks never
+// reach this code at all.
 // `?after=` is the cursor the last page handed back.
 //
 // ── The Board, 2026-10-08 ──────────────────────────────────────────────────
@@ -22,7 +31,13 @@
 // by each record's hash (pull_alike). The plain list stays as it was for
 // anything that still asks for it.
 
-import { pull_directory_page, pull_board, find_by_name, pull_among, pull_alike } from '@/library/directory_actions';
+import { after } from 'next/server';
+import { pull_directory_page, pull_board, find_by_name, pull_among, pull_alike, gather } from '@/library/directory_actions';
+
+// A round can take a few seconds after the answer has gone: up to forty
+// journals at once, 2.5 seconds for a beacon and eight for a journal's
+// records. The host keeps the route alive this long for it.
+export const maxDuration = 30;
 
 const ACROSS = {
   'Access-Control-Allow-Origin': '*',
@@ -30,6 +45,7 @@ const ACROSS = {
 };
 
 export async function GET(request) {
+  after(() => gather().catch(() => {}));
   const asked = new URL(request.url).searchParams;
   try {
     const page = asked.has('board') ? await pull_board()

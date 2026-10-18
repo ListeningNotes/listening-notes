@@ -168,27 +168,27 @@ has claimed, so none is printed and none would be accepted.
 Only for the copy that keeps the directory (the one every other copy's
 `DIRECTORY_URL` names). Every other copy can skip this section.
 
-The directory shows what each listed journal is logging from a table, and a
-scheduled job is what keeps that table fresh: each run asks only the
-journals whose turn has come — every minute for one seen logging within the
-hour, every thirty minutes otherwise, slower for one that has not been
-answering. Nothing a visitor does sets it off.
+The directory shows what each listed journal is logging from a table, and
+the table keeps itself fresh: whenever a Board is read, one round of the job
+runs after the answer has gone. Each round asks only the journals whose turn
+has come — every minute for one seen logging within the hour, every thirty
+minutes otherwise, slower for one that has not been answering — and claims
+them, so two looks a moment apart never ask a journal twice. There is
+nothing to set up, and while nobody looks at a Board nothing runs.
 
-To run it:
+**Optional: a schedule as well.** A Board that should stay fresh while
+nobody is looking can also be refreshed on a clock:
 
 1. In the registry's Vercel project, add an environment variable
    `CRON_SECRET` with a long random value, and redeploy.
 2. Point a schedule at
-   `https://www.listeningnotes.blog/api/directory/gather` — a `GET`, every
-   minute, with the header `Authorization: Bearer <the CRON_SECRET value>`.
+   `https://www.listeningnotes.blog/api/directory/gather` — a `GET`, with the
+   header `Authorization: Bearer <the CRON_SECRET value>`.
 
 The schedule is deliberately not in `vercel.json`: that file goes to every
 copy, and Vercel's free plan refuses a schedule more often than once a day,
 so a per-minute cron there would stop every friend's copy deploying. Any
-outside scheduler that can send a header will do; a free web cron service
-can run it every minute, and a GitHub Actions schedule can run it every five
-minutes at best. Without a schedule the directory still lists journals, but
-each one's beacon stays at what it was when it was listed.
+outside scheduler that can send a header will do.
 
 To check it by hand:
 
