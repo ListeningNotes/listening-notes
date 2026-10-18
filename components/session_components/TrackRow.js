@@ -44,6 +44,16 @@
 // leaves it and when the name is pressed again, and when another track
 // lights; a written note is a press on any row, lit or not; and the row is
 // memoised, so typing in one note redraws one row and not the record.
+//
+// ── Only a note's own words open it, 2026-10-17 ───────────────────────────
+// Miyel, after two listens: "if I click on a song, just to click on a song
+// to go to it, to highlight it on the beacon or to re-rate it or something,
+// it should not open the notes with the keyboard." Add notes, Edit notes and
+// the written note itself are the only presses that bring the keyboard up.
+// A name, a star or a heart lights the track and puts any other track's
+// note away, keyboard and all (letGo, app/session/page.js) — the box used to
+// be taken off the screen with the cursor still in it, and iOS kept the
+// keyboard up over nothing.
 'use client';
 import { memo, useLayoutEffect, useRef } from 'react';
 import { Heart } from '@phosphor-icons/react';
@@ -67,12 +77,32 @@ function TrackRow({
   // The cursor goes in as the field arrives, because pressing the offer was
   // asking to write — in the layout pass, while the press is still on the
   // stack, which is the only moment a phone raises its keyboard for it.
+  // First the page is asked to move the box onto where the keyboard will be
+  // (app/session/page.js), so iOS is shown a field already in view and has
+  // no slide of its own to make — the same order a tap on a note keeps.
+  //
+  // ── The cursor is placed before the keyboard comes, 2026-10-17 ─────────
+  // It was put at the end of the writing just after the focus, with the
+  // keyboard already starting. iOS's keyboard keeps its own copy of the
+  // words around the cursor, to correct and suggest from, and a cursor moved
+  // by the page once it has started is a move it can miss — WebKit's own
+  // reports describe the copy going stale, the next word left uncapitalised
+  // and corrections made against text that is not there (bugs 236937,
+  // 265856). Miyel, 2026-10-17: autocorrect "feels funny… choosing weird
+  // words to change". So the cursor goes in first and the focus second, the
+  // order the tap on a note already kept, and the keyboard starts from the
+  // right place. Where it goes: the letter pressed, when the note was pressed
+  // (letterUnder, below), or the end.
   const field = useRef(null);
+  const caret = useRef(null);
   useLayoutEffect(() => {
     const el = field.current;
     if (!noting || !el) return;
+    el.dispatchEvent(new Event('ses-note-opening', { bubbles: true }));
+    const at = Math.min(caret.current ?? el.value.length, el.value.length);
+    caret.current = null;
+    el.setSelectionRange(at, at);
     el.focus({ preventScroll: true });
-    el.setSelectionRange(el.value.length, el.value.length);
   }, [noting]);
 
   return (
@@ -123,7 +153,7 @@ function TrackRow({
       {!noting && (written || onAir) && (
         <div className="ses-row-under">
           {written && (
-            <button type="button" className="ses-row-note" onClick={() => onNote(index)} aria-label={`Notes on ${title}: ${note}. Press to edit`}>
+            <button type="button" className="ses-row-note" onClick={e => { caret.current = letterUnder(e); onNote(index); }} aria-label={`Notes on ${title}: ${note}. Press to edit`}>
               {note}
             </button>
           )}
@@ -154,6 +184,7 @@ function TrackRow({
               <textarea
                 ref={field}
                 className="ses-textarea"
+                data-track={index}
                 value={note}
                 onChange={e => onNoteChange(index, e.target.value)}
                 onBlur={onNoteShut}
@@ -167,6 +198,22 @@ function TrackRow({
       )}
     </li>
   );
+}
+
+// Which letter of a written note a press landed on, so the box opens with
+// the cursor there: fixing a word starts with the cursor on the word, and it
+// used to open at the end of the note, a second tap away (Miyel, 2026-10-17:
+// "it's hard to highlight to fix the spelling of a word"). The note on the
+// row is the note's text and nothing else, so a place in it is a place in
+// the field. Null for a press with no point — a key — which opens at the end.
+function letterUnder(e) {
+  const box = e.currentTarget;
+  if (!e.clientX && !e.clientY) return null;
+  const range = document.caretRangeFromPoint?.(e.clientX, e.clientY);
+  if (range && box.contains(range.startContainer)) return range.startOffset;
+  const spot = document.caretPositionFromPoint?.(e.clientX, e.clientY);
+  if (spot && box.contains(spot.offsetNode)) return spot.offset;
+  return null;
 }
 
 export default memo(TrackRow);

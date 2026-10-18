@@ -57,13 +57,16 @@ export default function MessageForm({
 
   // The cursor is in the field when it opens, so the keyboard is already up.
   // A layout effect, because iOS grants a focus that is still the tap's and a
-  // plain effect runs after the paint, which is past it (SendSheet.js).
+  // plain effect runs after the paint, which is past it (SendSheet.js). The
+  // cursor is placed before the focus, not after: a cursor the page moves
+  // once the keyboard has started is one iOS's corrections can lose track of
+  // (TrackRow.js, 2026-10-17).
   useLayoutEffect(() => {
     const box = field.current;
     if (!box) return;
-    box.focus();
     const end = box.value.length;
     box.setSelectionRange(end, end);
+    box.focus();
   }, []);
 
   function write(value) {

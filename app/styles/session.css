@@ -103,6 +103,16 @@
   background: var(--bg);
   border-top: 1px solid var(--border);
 }
+/* Two words since "Previewing" left, 2026-10-17: the session foot's own
+   spacing, so the press that leads here and the one that posts read as the
+   same band. */
+.ses-preview-bar:not(.ses-preview-bar--done) { gap: 26px; }
+/* Post?, the press that posts, in the green this site keeps for live — the
+   other end of Discard?'s red (Miyel, 2026-10-17: "the button can turn green
+   and say post?"). The deep one: the mint is a glow, and nine-pixel capitals
+   in it on a pale page all but vanish. Its line is the same green. */
+.ln-word.ses-post,
+.ln-word.ses-post:hover:not(:disabled) { color: var(--live-deep); }
 /* Saved, there are three: the word, the way to the entry and the way to the
    next record. Nothing else changes — same bar, same spacing. */
 /* "Read it" is a link rather than a button, because it goes somewhere. It had
@@ -161,6 +171,55 @@
   z-index: 221; margin: 0; text-align: center; pointer-events: none;
   font-family: var(--font-label); font-size: 9px;
   letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-faint);
+}
+
+/* ── The stars stood up over the thumb, 2026-10-17 ─────────────────────────
+   components/session_components/StarRating.js. The five stars large, on a
+   piece of page lifted off the page, while a finger is on a row of stars on
+   a touch screen. It arrives from the row's direction on the site's curve,
+   quickly, because it is answering a thumb. Never pressed, never in the way
+   of a press: the finger it follows is under it. */
+.ses-loupe {
+  position: fixed; z-index: 1000;
+  display: flex; align-items: center;
+  background: var(--bg);
+  border: 1px solid var(--border); border-radius: 22px;
+  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.18);
+  pointer-events: none; user-select: none; -webkit-user-select: none;
+  animation: ses-loupe-up 0.16s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+@keyframes ses-loupe-up {
+  from { opacity: 0; transform: translateY(8px) scale(0.94); }
+}
+@media (prefers-reduced-motion: reduce) { .ses-loupe { animation: none; } }
+
+/* ── No stars, no save: the screen shakes no, 2026-10-17 ───────────────────
+   Save to journal on a record with no stars (SessionPreview.js). The sheet
+   moves by its own left and right rather than by a transform: a transform
+   on it would make it the frame its fixed bar is drawn against, and the bar
+   would leave the foot of the screen for the length of the shake. The bar
+   has nothing fixed inside it, so it shakes the plain way, in step. Then the
+   listen comes back to its stars and they shake once more, the same no
+   (app/session/page.js, askForStars). */
+@keyframes ses-no {
+  20% { transform: translateX(-10px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-5px); }
+  80% { transform: translateX(2px); }
+}
+@keyframes ses-no-sheet {
+  20% { left: -10px; right: 10px; }
+  40% { left: 8px; right: -8px; }
+  60% { left: -5px; right: 5px; }
+  80% { left: 2px; right: -2px; }
+}
+.ses-preview--refused { animation: ses-no-sheet 0.42s ease-out; }
+.ses-preview--refused .ses-preview-bar,
+.ses-record-marks[data-asked] > [role="slider"] { animation: ses-no 0.42s ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  .ses-preview--refused,
+  .ses-preview--refused .ses-preview-bar,
+  .ses-record-marks[data-asked] > [role="slider"] { animation: none; }
 }
 .ses-quiet--lead { color: var(--ink-soft); border-bottom-color: var(--ink-faint); }
 .ses-quiet:disabled { opacity: 0.4; cursor: default; }
@@ -899,7 +958,14 @@
 /* ── The foot: Discard · Save draft · Preview ─────────────────────────────
    The entry's correction bar (.ln-editing-bar, entry.css) with three words.
    Discard is faint until it is pressed once, then asks in red. */
-.ses-bar { gap: 26px; }
+.ses-bar { gap: 26px; transition: transform 0.3s cubic-bezier(0.22, 0.61, 0.36, 1); }
+/* It steps down while a note is being written on a phone, out of the gap
+   between the writing and the keys (app/session/page.js, typing). Not on a
+   desk, where it is a row at the top and there is no keyboard to share the
+   foot with. */
+@media (pointer: coarse) {
+  .ses--typing:not(.ses--wide) .ses-bar { transform: translateY(100%); pointer-events: none; }
+}
 .ses-bar-discard { color: var(--ink-faint); }
 /* Over the word's own hover rule, which a phone keeps lit after a tap and
    which was turning the question back to ink. */

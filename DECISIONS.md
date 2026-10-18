@@ -2224,6 +2224,24 @@ still is a tap. Every row's stars are live because of it. The lock — a row
 dead until pressed — was tried for an hour and was "super awkward" the other
 way.
 
+**On a touch screen the stars stand up over the thumb, 2026-10-17, Miyel's
+idea.** A slide, or a rest, raises the five stars large, centred and nearly
+screen-wide; the big star over the thumb is the rating — read off the small
+row, it ran five stars off the screen's edge. While they are up the page
+holds still; a touch that starts up or down is still a scroll. Not the
+send's popup: a magnifier that is never pressed.
+
+**An album is saved with its stars, 2026-10-17, Miyel's call.** Save to
+journal on a record with no album stars shakes no and takes you back up to
+them; a Masterpiece counts, being five. Amends "anything at all" of
+2026-09-18 for albums. A track note is not held to it — not asked.
+
+**A note being written sits on the keyboard, 2026-10-17.** The foot of its
+box just over the keys, nothing between — the session's foot steps down
+while typing — and nothing scrolls back when the keyboard goes. Replaces
+lifting the track's name to the top (2026-09-22). Only Add notes, Edit notes
+and the written note open a track's note; a name, star or heart never does.
+
 **Under a lit track, two words: Add notes and Send track, centred.** A word,
 not the envelope: it was tried beside the heart (it moved the stars), at the
 end of the line, and under the live dot, and none read right. The note opens
@@ -2236,10 +2254,12 @@ it rather than behind the clock. It is sixteen short of the inset, because
 that is where the site's fixed rows start (`--safe-top`); at the inset's
 full height it cut their tops off. Nothing where the inset is zero.
 
-**Discard · Save draft · Preview at the foot; on a desk, in a row at the
+**Discard · Save draft · Post at the foot; on a desk, in a row at the
 top.** Discard asks twice. Save draft is the pull down as a word: the draft
-was always saving itself, this is the visible way out. Posting is on the
-preview.
+was always saving itself, this is the visible way out. Post opens the entry
+as it will look, with Go back and a green Post? that posts — Miyel's pick,
+2026-10-17, over posting straight from the session. The word was Preview
+until then; testers did not know what a preview was.
 
 **The cover lands on the record's own cover at the top of the session.**
 There is no header for it to land in.

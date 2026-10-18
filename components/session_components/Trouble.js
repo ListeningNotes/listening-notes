@@ -38,7 +38,7 @@
 //
 // ── The shape ─────────────────────────────────────────────────────────────
 // The band at the foot, which is the site's one place for something you act
-// on: the entry's editing bar, the preview's Go back and Save to journal.
+// on: the entry's editing bar, the preview's Go back and Post?.
 // Not a box in the middle of the screen — this software has no such thing,
 // and inventing one for bad news would make the bad news feel bigger than it
 // usually is.

@@ -1,7 +1,8 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 'use client';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 // The stars inside a listen: the album's score, and a track's.
 //
@@ -43,6 +44,45 @@ import { useRef, useState } from 'react';
 // plainly sideways becomes the drag, captured and followed as before; and a
 // press that goes nowhere is a tap, set where it lifted. Nothing is set on
 // the way down any more, which is the whole change.
+//
+// ── The stars come up to meet the thumb, 2026-10-17 ───────────────────────
+// Miyel, and a tester before her: rating a track "is difficult… it's too
+// small. It's too hard to switch between half and full stars." A track's
+// stars are sixteen pixels and a half star is eleven pixels of thumb travel,
+// under the thumb that is doing the travelling. Her idea: "a magnifying
+// screen, almost like a pop-up that's big so that you can accurately choose
+// the stars… only there when your thumb is on the stars." So on a touch
+// screen, once a finger has said it means the stars — sliding along them, or
+// resting on them a moment — the five stars stand up large over it, clear of
+// the thumb, and the big ones are the control: the star over the thumb is the
+// rating. They go the moment the finger lifts.
+// A mouse never sees them — a pointer is already precise, and has the hover.
+//
+// ── The big ones, not the small, 2026-10-17 ──────────────────────────────
+// The first build only showed the rating large and still read it off how far
+// the thumb had travelled from where it landed on the small row. Miyel, on
+// her phone the same evening: "it is following my thumb on small stars not
+// the bigger view… the screen scrolls up and down while I try to assign
+// stars, I can't even get to 5 stars because my thumb hits the side of the
+// page" — a track's stars sit at the right edge, and counting from there ran
+// five stars off the screen. So the big stars stand centred, as wide as the
+// screen allows, and the thumb is read against them; the big star over the
+// thumb is filled to the half it is on. And while they are up the page holds
+// still: the gesture is the rating's until the finger lifts. A thumb that
+// rested by mistake leaves by moving well up or down, and sets nothing.
+
+// The stars at the size they stand up at — as big as the screen's width
+// allows, up to this — and the room between and round them.
+const BIG_MOST = 56;
+const BIG_GAP = 10;
+const BIG_PAD = 14;
+const EDGE = 12;
+// How long a finger rests on the stars before they come up without a slide.
+// Long enough that a thumb landing on a row on its way to scrolling the list
+// does not raise them; short enough to feel like a response.
+const REST_MS = 220;
+// How far up or down a rested thumb moves to put the big stars away unset.
+const LEAVE_PX = 40;
 
 // What the row is worth at this point along it.
 function valueAt(clientX, row) {
@@ -51,6 +91,15 @@ function valueAt(clientX, row) {
   const along = (clientX - box.left) / box.width;
   const raw = Math.round(along * 10) / 2;
   return Math.min(5, Math.max(0, raw));
+}
+
+// What the big stars are worth under a thumb at this point: filled to the
+// half of the star it is over, so the right half of the third star is three
+// and its left half two and a half; nothing left of the first, five past
+// the last.
+function valueOn(clientX, span) {
+  const along = (clientX - span.left) / span.width;
+  return Math.min(5, Math.max(0, Math.ceil(along * 10) / 2));
 }
 
 // `roomy` is the same stars with a thumb-sized row under them: the height
@@ -79,12 +128,16 @@ function valueAt(clientX, row) {
 // whole reason this is behind a press.
 export default function StarRating({ value, onChange, size = 18, roomy = false, ghost = 0 }) {
   const row = useRef(null);
-  const [dragging, setDragging] = useState(false);
+  // A ref, not state: the timer that raises the stars on a rest has to read
+  // it as it is, not as it was when the timer was set.
+  const dragging = useRef(false);
   // What a mouse is pointing at, for the preview a pointer can afford and a
   // finger cannot. Null on a touch screen, where the only preview is the drag
   // itself.
   const [hover, setHover] = useState(null);
-  const display = hover ?? value;
+  // The stars standing up over a thumb, while they are (below).
+  const [loupe, setLoupe] = useState(null);
+  const display = hover ?? loupe?.showing ?? value;
   // The fill goes the moment there is something real in the row — a hint
   // under an answer is in the way. The tick stays, because a hairline under a
   // row of stars is a second fact beside them rather than a smudge on them.
@@ -104,13 +157,111 @@ export default function StarRating({ value, onChange, size = 18, roomy = false, 
   const SIDEWAYS = 6;
   const STILL = 8;
 
+  // ── The stars standing up over the thumb ─────────────────────────────────
+  // `zoom` is where the big stars run across the screen, which is what a
+  // thumb is read against while they are up. `loupe` is where they are drawn
+  // and, while they came up on a rest and nothing is set yet, the rating they
+  // show. A rest only shows: it is set when the finger lifts.
+  const zoom = useRef(null);
+  const resting = useRef(null);
+  useEffect(() => () => clearTimeout(resting.current), []);
+  const standUp = (y, x) => {
+    const across = window.innerWidth;
+    const big = Math.max(32, Math.min(BIG_MOST, Math.floor((across - 2 * EDGE - 2 * BIG_PAD - 4 * BIG_GAP) / 5)));
+    const width = 5 * big + 4 * BIG_GAP + 2 * BIG_PAD;
+    const height = big + 2 * BIG_PAD;
+    const left = Math.round((across - width) / 2);
+    // Over the thumb with room for it; under it only where there is no room
+    // above, which is a row at the very top of the screen.
+    let top = y - 72 - height;
+    if (top < EDGE) top = y + 56;
+    // The stars themselves, inside the hairline and the padding.
+    zoom.current = { left: left + 1 + BIG_PAD, width: 5 * big + 4 * BIG_GAP };
+    setLoupe({ left, top, big, showing: valueOn(x, zoom.current) });
+  };
+  const sitDown = () => {
+    clearTimeout(resting.current);
+    zoom.current = null;
+    setLoupe(null);
+  };
+  const slide = clientX => {
+    const next = valueOn(clientX, zoom.current);
+    if (next !== value) onChange(next);
+  };
+
+  // ── The page holds still while the stars are being set ──────────────────
+  // `touch-action: pan-y` gives the browser every vertical movement, and a
+  // thumb sliding along five stars is never perfectly level — the page
+  // scrolled under the rating (Miyel, 2026-10-17). So a touch on the row that
+  // starts sideways, or one the big stars are up for, is the rating's: its
+  // moves are refused to the page until it lifts. A touch that starts up or
+  // down is still a scroll. Listened for here and not through React, whose
+  // touch listeners cannot refuse anything.
+  useEffect(() => {
+    const el = row.current;
+    if (!el) return undefined;
+    let from = null;
+    let ours = false;
+    const begin = e => {
+      const t = e.touches[0];
+      from = t ? { x: t.clientX, y: t.clientY } : null;
+      ours = false;
+    };
+    const hold = e => {
+      if (zoom.current || dragging.current) ours = true;
+      else if (from && e.touches.length === 1) {
+        const t = e.touches[0];
+        const dx = Math.abs(t.clientX - from.x);
+        if (dx > 3 && dx > Math.abs(t.clientY - from.y)) ours = true;
+      }
+      if (ours && e.cancelable) e.preventDefault();
+    };
+    el.addEventListener('touchstart', begin, { passive: true });
+    el.addEventListener('touchmove', hold, { passive: false });
+    return () => {
+      el.removeEventListener('touchstart', begin);
+      el.removeEventListener('touchmove', hold);
+    };
+  }, []);
+
   const down = e => {
     if (e.button > 0) return;
-    press.current = { x: e.clientX, y: e.clientY, id: e.pointerId, target: e.currentTarget };
+    const touch = e.pointerType !== 'mouse';
+    press.current = { x: e.clientX, y: e.clientY, at: { x: e.clientX, y: e.clientY }, id: e.pointerId, target: e.currentTarget, touch };
     setHover(null);
+    clearTimeout(resting.current);
+    if (!touch) return;
+    resting.current = setTimeout(() => {
+      const p = press.current;
+      if (!p || dragging.current) return;
+      if (Math.abs(p.at.x - p.x) > STILL || Math.abs(p.at.y - p.y) > STILL) return;
+      standUp(p.y, p.x);
+    }, REST_MS);
   };
   const move = e => {
-    if (dragging) { set(e.clientX); return; }
+    if (press.current) press.current.at = { x: e.clientX, y: e.clientY };
+    if (dragging.current) {
+      if (zoom.current) slide(e.clientX); else set(e.clientX);
+      return;
+    }
+    // Up on a rest, and nothing set yet: they show the star over the thumb;
+    // a move well up or down puts them away; a move sideways sets as it goes.
+    const r = press.current;
+    if (r && zoom.current) {
+      const dx = e.clientX - r.x;
+      const dy = e.clientY - r.y;
+      if (Math.abs(dy) > LEAVE_PX && Math.abs(dy) > Math.abs(dx)) { press.current = null; sitDown(); return; }
+      if (Math.abs(dx) > SIDEWAYS) {
+        try { r.target.setPointerCapture?.(r.id); } catch { /* the slide still works */ }
+        dragging.current = true;
+        setLoupe(l => l && { ...l, showing: null });
+        slide(e.clientX);
+        return;
+      }
+      const shown = valueOn(e.clientX, zoom.current);
+      setLoupe(l => (l && l.showing !== shown ? { ...l, showing: shown } : l));
+      return;
+    }
     let p = press.current;
     // A press that was let go somewhere else never told this row: the row
     // only hears a pointerup that lands on it. Left standing, the next mouse
@@ -128,8 +279,15 @@ export default function StarRating({ value, onChange, size = 18, roomy = false, 
         // already gone has no id to capture — and an exception here would
         // take the drag with it.
         try { p.target.setPointerCapture?.(p.id); } catch { /* the drag still works */ }
-        setDragging(true);
-        set(e.clientX);
+        dragging.current = true;
+        clearTimeout(resting.current);
+        if (!p.touch) set(e.clientX);
+        // Up now, and read against at once: the star over the thumb.
+        else {
+          standUp(p.y, e.clientX);
+          setLoupe(l => l && { ...l, showing: null });
+          slide(e.clientX);
+        }
       }
       return;
     }
@@ -137,11 +295,16 @@ export default function StarRating({ value, onChange, size = 18, roomy = false, 
   };
   const up = e => {
     const p = press.current;
+    const span = zoom.current;
     press.current = null;
-    if (dragging) { setDragging(false); return; }
-    if (p && Math.abs(e.clientX - p.x) < STILL && Math.abs(e.clientY - p.y) < STILL) set(e.clientX);
+    sitDown();
+    if (dragging.current) { dragging.current = false; return; }
+    if (!p) return;
+    // Up on a rest and let go without a slide: the star over the thumb.
+    if (span) { const next = valueOn(e.clientX, span); if (next !== value) onChange(next); return; }
+    if (Math.abs(e.clientX - p.x) < STILL && Math.abs(e.clientY - p.y) < STILL) set(e.clientX);
   };
-  const cancel = () => { press.current = null; setDragging(false); };
+  const cancel = () => { press.current = null; dragging.current = false; sitDown(); };
 
   return (
     <div
@@ -159,7 +322,7 @@ export default function StarRating({ value, onChange, size = 18, roomy = false, 
       onPointerMove={move}
       onPointerUp={up}
       onPointerCancel={cancel}
-      onPointerLeave={() => { setHover(null); if (!dragging) press.current = null; }}
+      onPointerLeave={() => { setHover(null); if (!dragging.current) { press.current = null; if (zoom.current) sitDown(); } }}
       onKeyDown={e => {
         // The keyboard gets the same half steps the finger does.
         if (e.key === 'ArrowRight') { e.preventDefault(); onChange(Math.min(5, (value || 0) + 0.5)); }
@@ -223,6 +386,27 @@ export default function StarRating({ value, onChange, size = 18, roomy = false, 
           </span>
         );
       })}
+
+      {/* The stars, stood up over the thumb. Drawn on the body, not in the
+          row: the row lives inside sheets that scroll and are pinned to the
+          screen, and these have to stand still over all of it. */}
+      {loupe && createPortal(
+        <div className="ses-loupe" aria-hidden="true" style={{ left: loupe.left, top: loupe.top, padding: BIG_PAD, gap: BIG_GAP }}>
+          {[1, 2, 3, 4, 5].map(n => {
+            const filled = n <= display;
+            const half = !filled && display >= n - 0.5 && display < n;
+            return (
+              <span key={n} style={{ position: 'relative', display: 'inline-block', width: loupe.big, height: loupe.big, flexShrink: 0 }}>
+                <span style={{ position: 'absolute', inset: 0, color: '#d0ccc5', fontSize: loupe.big, lineHeight: 1 }}>★</span>
+                {(filled || half) && (
+                  <span style={{ position: 'absolute', inset: 0, overflow: 'hidden', width: filled ? loupe.big : loupe.big / 2, color: '#E8B84B', fontSize: loupe.big, lineHeight: 1 }}>★</span>
+                )}
+              </span>
+            );
+          })}
+        </div>,
+        document.body,
+      )}
     </div>
   );
 }

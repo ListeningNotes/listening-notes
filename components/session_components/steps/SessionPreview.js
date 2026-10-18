@@ -24,10 +24,13 @@ import { LayerHeaderSlot } from '../../main_components/LayerEntry';
 // lives. A bar along the foot holds the way back and the save.
 //
 // Viewable at any time, from any step — a look at the page so far is how you
-// find out what the note still needs. Saving waits for an album note. The
+// find out what the note still needs. Saving waits for the album's stars. The
 // pencil over the save is the way back to the writing — the same mark the
 // entry's own keeper tools use for editing — and a swipe right or Escape
 // does the same.
+
+// How long the refusal shakes before the listen takes you to the stars.
+const REFUSE_MS = 420;
 
 export default function SessionPreview({
   album, artist, year, albumArt, genre,
@@ -36,7 +39,33 @@ export default function SessionPreview({
   tracks, trackRatings, trackFavorites, trackNotes,
   saving, saved, savedEntry,
   doSave, onBack, onAnother,
+  // No stars on the record: Post? shakes no and hands back to the
+  // listen, which takes you up to them (app/session/page.js, askForStars).
+  unrated = false, onUnrated,
 }) {
+  // ── An album is saved with its stars, 2026-10-17 ────────────────────────
+  // Miyel: "since it's at the top and I finish my notes at the bottom, I
+  // forget to, I post the entry without it even having any rating… it can
+  // shake the screen and maybe bring you up to the rating area so that you
+  // know why you're not able to post." The word stays pressable — a dim one
+  // would say there is a condition without saying which — and the press is
+  // answered: the sheet shakes where the press was, then gives way to the
+  // listen, at its stars. Reduced motion skips the shake and goes straight.
+  const [refused, setRefused] = useState(false);
+  const refusing = useRef(null);
+  useEffect(() => () => clearTimeout(refusing.current), []);
+  function save() {
+    if (!unrated) { doSave(); return; }
+    if (refusing.current) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { onUnrated?.(); return; }
+    setRefused(true);
+    refusing.current = setTimeout(() => {
+      refusing.current = null;
+      setRefused(false);
+      onUnrated?.();
+    }, REFUSE_MS);
+  }
+
   // The row as create_entry would receive it, built the same way doSave
   // builds its payload so the two cannot disagree. No slug: nothing on the
   // page fetches by one, and the preview flag keeps it that way.
@@ -115,7 +144,7 @@ export default function SessionPreview({
     <LayerHeaderSlot.Provider value={null}>
     <div
       ref={sheet}
-      className="lay ses-preview"
+      className={'lay ses-preview' + (refused ? ' ses-preview--refused' : '')}
       role="dialog"
       aria-label="Preview"
       tabIndex={-1}
@@ -160,13 +189,11 @@ export default function SessionPreview({
       <div className={'ses-preview-bar' + (saved ? ' ses-preview-bar--done' : '')}>
         {!saved ? (
           <>
-            {/* The word for what you are in the middle of, in the slot the
-                bar keeps for it — "Editing" on an entry, "Crediting" on a
-                send, "Previewing" here (Miyel, 2026-09-18). It is the one
-                thing on a bar that is not a button, and it is what stops
-                three borrowed controls reading as a toolbar that follows you
-                everywhere. */}
-            <span className="ln-editing-label">Previewing</span>
+            {/* "Previewing" stood here, in the slot the bar keeps for the word
+                for what you are in the middle of (Miyel, 2026-09-18), and
+                went on 2026-10-17 with the word it was made of: testers did
+                not know what a preview was. Two words now, the way back and
+                the way on, as she drew it. */}
             <button type="button" className="ln-word" onClick={onBack} disabled={saving}>
               Go back
             </button>
@@ -180,14 +207,22 @@ export default function SessionPreview({
                 a listen is worth keeping as a draft, so the two can never
                 disagree about whether you have done something. What is left
                 is not a rule about what to write; it is what stops a press on
-                a record you opened and never touched becoming an entry. */}
+                a record you opened and never touched becoming an entry.
+                And from 2026-10-17 the album's stars as well — see `save`
+                above, which answers the press rather than greying it.
+
+                Post?, in green, 2026-10-17: the session's foot says Post,
+                and this is the press that asks whether you are sure — the
+                Discard? of the other end, in the colour this site keeps for
+                live, and asked by being here at all, so one press posts.
+                Save to journal was the word until then. */}
             <button
               type="button"
-              className="ln-word ln-word--on"
-              onClick={doSave}
+              className="ln-word ln-word--on ses-post"
+              onClick={save}
               disabled={saving || !hasWriting}
             >
-              {saving ? 'Saving' : 'Save to journal'}
+              {saving ? 'Posting' : 'Post?'}
             </button>
           </>
         ) : (
