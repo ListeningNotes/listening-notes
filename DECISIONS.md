@@ -1366,9 +1366,16 @@ teaches the new inbox. Both hellos are chosen; skipping is never mentioned.
 somebody in the book logs a record this journal put them onto, the feed's
 match hands it to this copy's server and the inbox shows it among the sends —
 "Came back", the dot until opened, no count. A table of its own (`came_back`),
-because a copy keeps no record of what it sends. **The first write of its
+because a copy kept no record of what it sent (it does from 2026-10-15, below). **The first write of its
 kind:** the browser telling its own server what it read on somebody else's
 public journal — within the model, since everything social lives on your copy.
+
+**A copy keeps what it sent, 2026-10-15.** A send made from this copy is
+written to `sent` once the other journal takes it, for the inbox's Sent door
+(Miyel: "waiting to be returned, basically"). It waits until a `came_back`
+row names the same record from the same journal, or until its keeper removes
+it; a send the other keeper archived is never known. No count, no age, no
+reminder, and nothing before that day was kept.
 
 **Everything social lives on the visitor's own copy, 2026-09-12.** Their
 copy holds their addresses and does their comparing; other people's journals

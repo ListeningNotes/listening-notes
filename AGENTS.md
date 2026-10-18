@@ -274,6 +274,10 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   secret, password hashing, the claim code, the setup window, what Settings
   may be told (set or not, last four characters), and `directoryCode`, the
   code the registry issues an address, made from the secret.
+- `sent_actions.js` — the `sent` table: a send from this copy written down
+  once it landed, the list of what is still out (a row goes when a
+  `came_back` row names the same record from the same journal, matched as it
+  is read), and removing one.
 - `session_timers.js` — `TrackLength`: seconds to m:ss.
 - `settings_actions.js` — the one `settings` row: read (without the two
   portrait blobs), write through an allow-list with write-once fields,
@@ -372,6 +376,8 @@ do not say what they hold.
 - `.githooks/pre-commit` — the lint gate: git runs it before a commit on a
   machine that has pointed `core.hooksPath` at the folder, and refuses the
   commit on a lint error (Commands).
+- `.githooks/commit-msg` — the authorship gate: refuses a commit made as a
+  tool, naming one in a trailer, or not signed off (Commands).
 - `.agents/skills/neon-postgres/SKILL.md` — a vendor-written guide to Neon for
   coding agents. Not read for this index beyond its header.
 - `migrations/` — numbered SQL, applied in order; each file's header says why

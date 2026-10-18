@@ -4,10 +4,11 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Archive, ArrowCounterClockwise, ArrowUUpLeft, Article, BookOpen, Broadcast, Check, Envelope, HandWaving, LinkSimple, MusicNoteSimple, PencilSimple, PencilSimpleLine, Plus, Shuffle, User, VinylRecord, X } from '@phosphor-icons/react';
+import { Archive, ArrowCounterClockwise, ArrowUUpLeft, Article, BookOpen, Broadcast, Check, Envelope, HandWaving, LinkSimple, MusicNoteSimple, PaperPlaneTilt, PencilSimple, PencilSimpleLine, Plus, Shuffle, Tray, User, VinylRecord, X } from '@phosphor-icons/react';
 import Link from 'next/link';
 import SiteNav from '../../../components/main_components/SiteNav';
 import MiniAddressBook from '../../../components/main_components/MiniAddressBook';
+import SentList from '../../../components/main_components/SentList';
 import WaveSheet from '../../../components/main_components/WaveSheet';
 import MessageForm from '../../../components/main_components/Slug_Page/MessageForm';
 import { Compared } from '../../../components/main_components/Feed';
@@ -198,6 +199,10 @@ export default function Inbox({ layered = false, inPane = false }) {
   // sit among the sends by date, with the dot until opened and no count on
   // the folder — nothing about them is waiting on you.
   const [cameBack, setCameBack] = useState([]);
+  // The Sent door at the top of the list (SentList.js): what this journal has
+  // sent that has not come back. The inbox stays what arrives; this is the
+  // one page of it that is what went out (Miyel, 2026-10-14).
+  const [showSent, setShowSent] = useState(false);
   // ── Waves, 2026-09-23 ──────────────────────────────────────────────────
   // Somebody added this journal and said so (the waves brief). A wave sits
   // among the sends by when it arrived, opens where it sits like any row,
@@ -872,6 +877,18 @@ export default function Inbox({ layered = false, inPane = false }) {
         <div className="own-panel ib-panel">
           <div className="ib-scroll">
 
+            {/* One door, at the top: Sent, and from there back to the inbox.
+                A glyph over one word, the Friends pane's door. */}
+            <div className="ib-top">
+              <button type="button" className="fr-door ib-top-door" onClick={() => setShowSent(v => !v)} aria-pressed={showSent}>
+                {showSent
+                  ? <Tray size={22} weight="regular" aria-hidden="true" />
+                  : <PaperPlaneTilt size={22} weight="regular" aria-hidden="true" />}
+                {showSent ? 'Inbox' : 'Sent'}
+              </button>
+            </div>
+
+            {showSent ? <SentList /> : (
               <>
                 {subLoading ? (
                   <div className="ib-list" style={{ gap: 10 }}>
@@ -1533,6 +1550,7 @@ export default function Inbox({ layered = false, inPane = false }) {
                   </>
                 )}
               </>
+            )}
 
             {/* ── REPORTS, 2026-09-22 ──────────────────────────────────
                 A tab of their own until Replies arrived and four tabs would
@@ -1540,7 +1558,7 @@ export default function Inbox({ layered = false, inPane = false }) {
                 tab. maybe my reports tab can go somewhere else" — so they
                 are a line at the foot of the sends, the archived rows'
                 shape, and only on the copy they are sent to. */}
-            {takesReports && !repLoading && (() => {
+            {!showSent && takesReports && !repLoading && (() => {
               const kept = reports.filter(r => r.status !== 'dismissed');
               const fresh = kept.filter(r => r.status === 'pending').length;
               if (kept.length === 0) return null;

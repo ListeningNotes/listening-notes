@@ -60,9 +60,9 @@ const NO_ANSWER  = 'Their copy did not answer. It may be offline — nothing was
 // every caller's job on a failure is the same: say so and keep what was
 // written. **A send that does not land must never cost somebody their note**
 // (DECISIONS: a dismissed layer must never eat a written message). Nothing is
-// stored on this side either way: what you have sent is only ever known by
-// what comes back through the feed, which is the honest version of that number
-// and the reason there is no outbox table to go stale.
+// stored here: since 2026-10-15 the route that calls this writes a send that
+// landed into the `sent` table (library/sent_actions.js), for the inbox's
+// Sent list. Before then a copy kept no record of what it sent.
 export async function send_record({
   to, album, artist, year = '', note,
   album_art = '', collection_id = '', quiet = false, sender_entry = '', song = '',

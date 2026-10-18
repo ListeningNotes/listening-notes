@@ -31,6 +31,7 @@ import { requireWristband } from '@/library/wristband';
 import { pull_person } from '@/library/people_actions';
 import { send_record, send_wave, send_message } from '@/library/outbox';
 import { SAID_MOST, ANSWERING_MOST, pull_message, mark_replied } from '@/library/message_actions';
+import { save_sent } from '@/library/sent_actions';
 
 export async function POST(request) {
   const blocked = await requireWristband(request);
@@ -139,6 +140,15 @@ export async function POST(request) {
     // written. A status would have the browser's own error handling decide
     // that for it.
     if (!result.ok) return Response.json({ ok: false, error: result.error });
+    // Landed, so it is written down for the inbox's Sent list
+    // (library/sent_actions.js). After the send and never in its way: a
+    // failure here costs a row in a list, not the send.
+    await save_sent({
+      journal: person.address,
+      name: person.name,
+      album, artist, album_art, note,
+      song: typeof song === 'string' ? song.trim() : '',
+    }).catch(() => null);
     return Response.json({ ok: true, to: person.name || null, sent: result.sent });
   } catch (error) {
     return Response.json({ ok: false, error: error.message }, { status: 500 });
