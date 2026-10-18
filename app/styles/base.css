@@ -78,6 +78,8 @@
   /* The same green with the light off: a ring or a line that says live
      without glowing, beside the dot that does. The friends' faces. */
   --live-deep:    #2e9c55;
+  /* The sandbox's mark and nothing else (.ln-sandbox, below). */
+  --sandbox:      #9b5de5;
   --card-blur:    blur(48px);
   --shadow-soft:  0 2px 12px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.04);
   --shadow-lift:  0 4px 20px rgba(0,0,0,0.06), 0 16px 48px rgba(0,0,0,0.06);
@@ -706,3 +708,15 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   background: var(--bg);
 }
 
+/* ── The sandbox's mark, 2026-10-17 ──────────────────────────────────────
+   SANDBOX in the top-left corner of every page of a preview built as one
+   (library/version.js), in the one colour this site uses for nothing else,
+   so the sandbox is never taken for the journal it was copied from. Just
+   under the clock, above everything, and inert: a tap goes through it. */
+.ln-sandbox {
+  position: fixed; z-index: 2147483647; pointer-events: none;
+  top: max(6px, calc(env(safe-area-inset-top, 0px) - 10px));
+  left: max(12px, env(safe-area-inset-left, 0px));
+  font-family: var(--font-label); font-size: 11px; line-height: 1;
+  letter-spacing: 0.16em; text-transform: uppercase; color: var(--sandbox);
+}

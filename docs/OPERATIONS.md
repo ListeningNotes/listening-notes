@@ -175,6 +175,38 @@ in Settings. Failing that:
 password lets nobody in at all: the claim code only ever opens a copy nobody
 has claimed, so none is printed and none would be accepted.
 
+## A sandbox to try things on
+
+A preview — the copy Vercel builds for each branch pushed to GitHub — can be
+a sandbox: your journal copied to an address of its own, with a database of
+its own, where nothing you do reaches your journal or anybody else's.
+Everything works as it does on your journal, except that nothing leaves: no
+send, wave, reply, Board listing or problem report — each says *Nothing
+leaves the sandbox.* — and SANDBOX stands in the top-left corner of every
+page, so it is never mistaken for the real one.
+
+**Its database must be its own.** Building the site brings the database it
+is pointed at up to date, so a preview pointed at your live database would
+change it. Set it up once:
+
+1. In Neon, make a branch called `sandbox` from your main branch, with its
+   data, and keep it from expiring. It is your journal as it was that moment;
+   Neon's *Reset from parent* brings it up to date later.
+2. In Vercel, Settings → Environment Variables: tick `DATABASE_URL` — and
+   `DATABASE_URL_UNPOOLED`, if you have it — for **Production** only. Then
+   add each again for **Preview** only, with the sandbox branch's connection
+   strings: the pooled one for `DATABASE_URL`, the direct one for
+   `DATABASE_URL_UNPOOLED`.
+3. Add `NEXT_PUBLIC_SANDBOX` with the value `1`, **Preview** only. Never on
+   Production: that journal could then send nothing.
+4. Push a branch called `sandbox`. Its preview keeps one address however
+   often it is pushed, so it can live on a home screen; push to it whatever
+   is being tried.
+
+Vercel locks a preview to the project's owner, so opening one asks you to
+sign in to Vercel once. It also means no other journal can reach a sandbox:
+something that arrives from another journal cannot be tried there.
+
 ## The directory's job
 
 Only for the copy that keeps the directory (the one every other copy's
