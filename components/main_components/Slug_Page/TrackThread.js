@@ -4,6 +4,7 @@
 import { Heart } from '@phosphor-icons/react';
 import StarRating from '../StarRating';
 import TrackDial from './TrackDial';
+import SnippetButton, { SnippetMeter } from './SnippetButton';
 import { editStamp } from '../../../library/entry_formatter';
 
 // `note` is the track's own note with any cross-references already turned
@@ -14,9 +15,16 @@ import { editStamp } from '../../../library/entry_formatter';
 // editing: the two have different key names, and handing the stored shape in
 // where the display one was expected is exactly how the number, the title and
 // the stars once vanished the moment edit mode opened.
+//
+// `gutter` is the column at the left of the row where a preview's button
+// stands (SnippetButton.js), kept on every row of a record that has any, so
+// the numbers still start on one line. `play` is this track's, from the
+// resolver (hooks/useSnippet.js) — null, and the column stays empty, where
+// there is nothing to play. Never while correcting.
 export default function TrackThread({
   track, note, trackIndex,
   editing = false, draft, onField, onOpenDial, dialOpen = false,
+  gutter = false, play = null, snippetKey = '',
 }) {
   // Under this track's note, if this track's note has been rewritten. Stored
   // on the track itself rather than on the entry — see the stamps in
@@ -48,8 +56,11 @@ export default function TrackThread({
     // The rule under a track is the track's own, so it sits under the note
     // when there is one and under the row when there is not — one line per
     // song either way.
-    <div id={'track-' + trackIndex} className={'ln-track' + (editing ? ' ln-track--editing' : '')}>
+    <div id={'track-' + trackIndex} className={'ln-track' + (editing ? ' ln-track--editing' : '') + (gutter && !editing ? ' ln-track--gutter' : '')}>
       <div className={'ln-track-row' + (under ? ' ln-track-row--open' : '')}>
+        {gutter && !editing && (play
+          ? <SnippetButton snippetKey={snippetKey} play={play} title={track.name} />
+          : <span className="ln-snippet-space" aria-hidden="true" />)}
         {/* Number reads left, flush with the page edge — right-aligning it in
             a fixed box was what made the row look indented. The box is
             fixed-width and left-aligned, so the titles start on one line
@@ -118,6 +129,8 @@ export default function TrackThread({
           ) : null}
         </div>
       </div>
+
+      {play && !editing && <SnippetMeter snippetKey={snippetKey} />}
 
       {editing && dialOpen && (
         <TrackDial

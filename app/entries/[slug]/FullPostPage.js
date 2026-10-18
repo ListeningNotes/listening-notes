@@ -45,6 +45,8 @@ import StarRating from '../../../components/main_components/StarRating';
 import StarPicker from '../../../components/session_components/StarRating';
 import { editStamp } from '../../../library/entry_formatter';
 import { useEntryEditor } from '../../../hooks/useEntryEditor';
+import { useSnippet } from '../../../hooks/useSnippet';
+import { SnippetLink } from '../../../components/main_components/Slug_Page/SnippetButton';
 
 // ── Printing, 2026-09-13 ──────────────────────────────────────────────────
 // The printer is a mode of this page, the way correcting is: press the
@@ -139,6 +141,14 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   // through: a sheet over the journal closes with back, and a push would hold
   // the sheet up with nothing in it. See the note in `remove`.
   const edit = useEntryEditor(entry, { layered });
+
+  // ── Previews ──────────────────────────────────────────────────────────────
+  // Thirty seconds of a track, from Apple, asked for by the reader's own
+  // browser as the page opens (hooks/useSnippet.js). The column for the
+  // buttons is held while Apple is being asked, so the rows do not jump right
+  // when it answers; it goes again on a record where no track has a clip.
+  const snippet = useSnippet(entry.album, entry.artist);
+  const snippetGutter = !!entry.album && (!snippet.ready || snippet.any);
 
   // ── The cover ─────────────────────────────────────────────────────────────
   // Whether the address under the art is showing. The art is the button: press
@@ -1826,10 +1836,21 @@ export default function FullPostPage({ entry, references = [], authed = false, l
                   onField={(key, value) => edit.setTrack(i, key, value)}
                   onOpenDial={setDialTrack}
                   dialOpen={dialTrack === i}
+                  gutter={snippetGutter}
+                  play={snippet.playFor(t.num, t.name)}
+                  snippetKey={`${entry.slug}:${i}`}
                 />
                 );
               })}
             </div>
+            {/* The way out to the record (the previews brief). The caption
+                that stood beside it, Previews · 30s, came off the same day
+                it went on (Miyel, 2026-10-13). Not while correcting. */}
+            {!edit.editing && snippet.recordLink && (
+              <div className="ln-snippet-foot">
+                <SnippetLink href={snippet.recordLink}>Open in Apple Music</SnippetLink>
+              </div>
+            )}
             {/* The way in, here, only where there is no album note for it
                 to stand under. */}
             {!albumNotes && wayIn && <div className="ln-message-foot">{wayIn}</div>}

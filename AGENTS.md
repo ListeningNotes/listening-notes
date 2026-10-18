@@ -59,6 +59,15 @@ is typed by hand anyway, the check and the commit share one statement,
 build stays out of the hook: it cannot run beside the dev server, and a
 commit should take seconds.
 
+**Commits are the keeper's, and git checks that too.** `.githooks/commit-msg`
+refuses a commit whose author, committer or trailers name a tool, or that is
+not signed off. Before the first commit of a session, in any checkout — a
+cloud copy included — run `git config core.hooksPath .githooks` and check
+that `git config user.name` is a person. If it is a tool's name, or empty,
+stop and ask; never commit as the tool. Three commits reached main as a
+tool, 2026-10-01 and 2026-10-13, and undoing them was a rewrite of main's
+history and a force-push.
+
 # Never
 
 Hard constraints. Each one, broken, breaks a journal that is not this one — a
