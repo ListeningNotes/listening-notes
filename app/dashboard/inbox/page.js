@@ -1339,33 +1339,37 @@ export default function Inbox({ layered = false, inPane = false, sent: sentFromB
                 {row.by_hand ? `${who} credited you on ${row.song || row.album}` : `${who} logged ${row.song || row.album}`}
               </span>
             </span>
-            {/* How they rated it, drawn, at the row's end, 2026-10-17
-                (Miyel: "the stars should show as stars not text"). The
-                line under the title that said it in words, and "Came
-                back" before that, went with every row's small line. Who
-                it was is in the title, so the stars take the face's
-                place; a record they did not rate keeps the face. */}
-            {rated ? (
-              <span className="ib-rstars" role="img" aria-label={`${rated}${row.masterpiece ? ', and a masterpiece' : ''}`}>
-                <StarRating rating={Number(row.rating)} size={12} glow={!!row.masterpiece} />
-              </span>
-            ) : (
-              <span className="ib-rface" aria-hidden="true">
-                <User size={13} weight="regular" />
-                <img src={`${journalUrl(row.journal)}/api/portrait`} alt="" loading="lazy" onError={e => { e.currentTarget.style.display = 'none'; }} />
-              </span>
-            )}
+            {/* Their face at the row's end, like every other row. How
+                they rated it waits for the row to open (Miyel,
+                2026-10-17: the stars "should only be on open"). */}
+            <span className="ib-rface" aria-hidden="true">
+              <User size={13} weight="regular" />
+              <img src={`${journalUrl(row.journal)}/api/portrait`} alt="" loading="lazy" onError={e => { e.currentTarget.style.display = 'none'; }} />
+            </span>
           </button>
 
           {/* It opened their entry on a press until
               2026-09-29. It opens where it sits now,
               like every other row, and their entry is
-              the first of its doors. Read, Compare,
-              Dismiss, in her order — and nothing that
-              leads to the keeper's own entry, which is
-              on their own wall and not what arrived. */}
+              the first of its doors. Read, then Dismiss —
+              and nothing that leads to the keeper's own
+              entry, which is on their own wall and not
+              what arrived.
+
+              ── Open onto the comparison, 2026-10-17 ──
+              Miyel: "when opening just have compare show,
+              no button." With both listens to hand it is
+              the comparison — their stars beside yours —
+              and with only theirs, their stars alone. */}
           {isOpen && (
             <div className="ib-open ib-open--doors">
+              {yours && theirs ? (
+                <Compared mine={yours} theirs={theirs} name={who} closing={false} theirStars />
+              ) : rated ? (
+                <div className="ib-back-stars" role="img" aria-label={`${who} gave it ${rated}${row.masterpiece ? ', and a masterpiece' : ''}`}>
+                  <StarRating rating={Number(row.rating)} size={15} glow={!!row.masterpiece} />
+                </div>
+              ) : null}
               <div className="ib-doors fr-doors-row">
                 <a
                   className="fr-door"
@@ -1376,17 +1380,6 @@ export default function Inbox({ layered = false, inPane = false, sent: sentFromB
                   <Article size={22} weight="regular" aria-hidden="true" />
                   Read
                 </a>
-                {yours && theirs && (
-                  <button
-                    type="button"
-                    className="fr-door"
-                    aria-expanded={comparing === key}
-                    onClick={() => toggleCompare(key)}
-                  >
-                    <Shuffle size={22} weight="regular" aria-hidden="true" />
-                    Compare
-                  </button>
-                )}
                 <button
                   type="button"
                   data-sure
@@ -1398,9 +1391,6 @@ export default function Inbox({ layered = false, inPane = false, sent: sentFromB
                   {sure ? 'Dismiss?' : 'Dismiss'}
                 </button>
               </div>
-              {yours && theirs && (comparing === key || shutting === key) && (
-                <Compared mine={yours} theirs={theirs} name={who} closing={shutting === key} theirStars />
-              )}
             </div>
           )}
         </div>
