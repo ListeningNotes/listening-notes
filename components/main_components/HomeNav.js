@@ -1419,6 +1419,12 @@ export default function HomeNav() {
   // list hands up for the pull to ask it again.
   const [room, setRoom] = useState('friends');
   const onEveryone = Boolean(DIRECTORY_URL) && (!authed || room === 'everyone');
+  // ── Inbox · Outbox, 2026-10-17 ──────────────────────────────────────────
+  // The inbox's two words, in this bar the way Friends and Board are on
+  // People — the Sent door that stood over the list "looks terrible" (Miyel),
+  // and People already has the shape for two rooms in one tab. Which one is
+  // showing is kept here and handed to the inbox (Inbox, `sent`).
+  const [inboxSent, setInboxSent] = useState(false);
   const everyoneAgain = useRef(null);
   const askEveryoneAgain = useCallback(() => everyoneAgain.current?.(), []);
   // How many journals are listed, beside the word Everyone the way the
@@ -2048,6 +2054,13 @@ export default function HomeNav() {
   // The words step aside for the field the + opens, which arrives in this
   // same row: "it needs to open and replace address book text."
   const barWords = onBook && !(authed && !onEveryone && (atFeed || bookBusy));
+  const onInbox = pane === INBOX && authed;
+  // A word pressed: the other room, or the top of this one, as on People.
+  function chooseInboxRoom(sent) {
+    setInboxSent(sent);
+    const el = paneRefs[INBOX]?.current;
+    if (el) el.scrollTop = 0;
+  }
 
   const header = (
     <div className={'hn-bar' + (down[pane] || choosing ? ' hn-bar--scrolled' : '')}>
@@ -2135,6 +2148,29 @@ export default function HomeNav() {
               Board{listedCount > 0 ? ` \u00b7 ${listedCount}` : ''}
             </span>
           ))}
+        </span>
+      )}
+      {/* Inbox · Outbox, on the inbox pane — no count beside Inbox: what is
+          new says so with its own dot, and a number would be the unread
+          badge this site does not have. */}
+      {onInbox && (
+        <span className="hn-bar-words">
+          <button
+            type="button"
+            className={'hn-bar-word' + (inboxSent ? '' : ' hn-bar-word--on')}
+            onClick={() => chooseInboxRoom(false)}
+            aria-pressed={!inboxSent}
+          >
+            Inbox
+          </button>
+          <button
+            type="button"
+            className={'hn-bar-word' + (inboxSent ? ' hn-bar-word--on' : '')}
+            onClick={() => chooseInboxRoom(true)}
+            aria-pressed={inboxSent}
+          >
+            Outbox
+          </button>
         </span>
       )}
       {/* ── The way out of the picker ────────────────────────────────────
@@ -2848,7 +2884,7 @@ export default function HomeNav() {
             is at the address is what is here. */}
         {authed && (
           <section className="hn-pane hn-pane--inbox" ref={inboxRef} aria-label="What has arrived">
-            {visited[INBOX] && <Inbox inPane />}
+            {visited[INBOX] && <Inbox inPane sent={inboxSent} />}
           </section>
         )}
 

@@ -1029,6 +1029,118 @@ textarea.st-field { resize: vertical; min-height: 96px; }
    armed door must not go quiet at the moment it arms (.fr-cut--sure). */
 .fr-door.ib-door--sure, .fr-door.ib-door--sure:hover { color: var(--fav, #f0484f); opacity: 1; }
 
+/* ── The inbox, drawn from People, 2026-10-17 ──────────────────────────────
+   Miyel's pick of three drawings made from the People page (version A, with
+   soft marks): the records waiting as a grid of covers over a quiet list,
+   the whole of it on the page rather than in a card, and Inbox · Sent as
+   two words at its head. What it replaced the same evening — a bin of
+   overlapping covers over a list grouped by day — is on the branch
+   inbox-bin: "nothing is overlapped on the site". */
+
+/* On the page, not a card on it: the card's ground, edge and corners go and
+   the page's gutter is the only one (Miyel: it should live "on the page
+   like the people pages"). */
+.ib-body { padding: 0 0 40px; }
+.ib-panel { background: none; border: 0; border-radius: 0; overflow: visible; }
+.ib-scroll, .lay--over-spine .ib-scroll { padding: 8px 24px 24px; }
+
+/* Inbox · Sent at the head when the inbox is drawn anywhere but the cross,
+   where the bar has them (HomeNav). The bar's own words, in a row. */
+.ib-words { display: flex; justify-content: center; gap: 28px; padding: 6px 0 18px; }
+
+/* ── The marks, small and soft ─────────────────────────────────────────────
+   Her call over coloured marks and over none: they say what kind of row it
+   is without colouring the list (page.js, Kind). */
+.ib-kind { width: 20px; color: var(--ink-faint); }
+
+/* ── A row is a mark, its title, and one thing at its end ──────────────────
+   No cover or face before the title and no line under it: who did what, and
+   then the face of whoever it is from, their stars for what came back, or
+   Add for somebody not in the book. */
+.ib-list .ib-rhead { gap: 12px; padding: 13px 0; }
+.ib-list .ib-rface { width: 30px; }
+/* A record that came back, opened: their stars, or the comparison of the two
+   listens when there are both, over its doors (page.js, 2026-10-17 — "only
+   on open", and the comparison without a button). */
+.ib-back-stars { margin: 2px 2px 14px; display: flex; }
+.ib-r--back .ib-open .fd-cmp { margin: 2px 0 16px; }
+/* With nothing under it, a title may take a second line before it is cut. */
+.ib-list .ib-rttl {
+  white-space: normal; line-height: 1.25;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+}
+
+/* ── Records waiting: a grid of covers, as People has faces ────────────────
+   Four across, one row until See all; the one pressed opens under its row
+   and the others step back, the way the faces do (.fr-one). */
+.ib-held { padding: 18px 0 6px; border-bottom: 1px solid var(--border); }
+.ib-held-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.ib-held-row + .ib-held-row { margin-top: 18px; }
+.ib-held-one {
+  display: flex; flex-direction: column; align-items: center; gap: 9px;
+  min-width: 0; padding: 0; border: 0; background: none; cursor: pointer;
+  font: inherit; color: inherit; transition: opacity 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.ib-held-one--back { opacity: 0.42; }
+.ib-held-one:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 4px; border-radius: 8px; }
+.ib-held-cover {
+  position: relative; width: 100%; aspect-ratio: 1; border-radius: 8px;
+  background: var(--panel);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+  display: flex; align-items: center; justify-content: center; color: var(--ink-faint);
+}
+.ib-held-cover img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 8px; }
+/* Who handed it to you, on the cover's corner, ringed so it reads on any
+   cover (Miyel, 2026-10-17). */
+.ib-held-face {
+  position: absolute; right: 5px; bottom: 5px; width: 22px; height: 22px;
+  border-radius: 999px; overflow: hidden;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--panel-strong); color: var(--ink-faint);
+  box-shadow: 0 0 0 2px var(--bg);
+}
+.ib-held-face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 999px; }
+/* Their own stars, beside their name when the record opens. */
+.ib-held-stars { display: inline-flex; vertical-align: -1px; margin-left: 8px; }
+/* New, while it is: the inbox's own ink dot, over the cover's corner. */
+.ib-held-new {
+  position: absolute; top: -9px; left: 0;
+  width: 6px; height: 6px; border-radius: 999px; background: var(--ink);
+}
+.ib-held-name {
+  max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
+  font-size: 13px; line-height: 1.2; color: var(--ink); text-align: center;
+}
+.ib-held-all { display: block; margin: 16px auto 0; }
+
+/* The record pressed, under its row: who it is from, what it is, their note,
+   its doors. */
+.ib-held-open { padding: 18px 0 14px; animation: ib-unfold 0.18s ease-out; }
+.ib-held-from {
+  margin: 0;
+  font-family: var(--font-label); font-size: 9px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--ink-faint);
+}
+.ib-held-what { margin: 6px 0 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ib-held-title {
+  font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
+  font-size: 17px; color: var(--ink);
+}
+.ib-held-meta { font-size: 14px; color: var(--ink-soft); }
+.ib-held-open .ib-msg { margin: 8px 0 0; }
+/* A long note, three lines of it until See all (page.js, runsLong). */
+.ib-held-open .ib-msg--short {
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3;
+  overflow: hidden;
+}
+.ib-held-open .ib-seeall { margin: 2px 0 0; }
+.ib-held-open .ib-doors { padding-top: 16px; }
+.ib-held-open .ib-holding { margin-top: 14px; }
+.ib-bin .ib-doors { margin-top: 12px; padding-top: 13px; border-top: 1px solid var(--border); }
+.ib-bin .ib-holding { margin-top: 14px; }
+
 /* The one thing that happens next, chosen by the state the send is in. */
 .ib-primary {
   display: inline-flex; align-items: center; width: fit-content;

@@ -1,11 +1,11 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // One send: settling it, saying it was already logged (which points it at
-// the post and writes nothing on the post), and naming who it came from.
-// Owner-only, all three.
+// the post and writes nothing on the post), naming who it came from, and
+// marking it seen. Owner-only, all four.
 import {
   update_submission_status, log_submission, name_submission_sender,
-  pull_submissions,
+  pull_submissions, see_submission,
 } from '@/library/submission_actions';
 import database from '@/library/database_connection';
 import { requireWristband } from '@/library/wristband';
@@ -59,6 +59,14 @@ export async function PATCH(request, { params }) {
       if (!submission) return Response.json({ error: 'No such send.' }, { status: 404 });
       const submissions = await pull_submissions();
       return Response.json({ submission, submissions });
+    }
+
+    // ── Seen, 2026-10-17 ──────────────────────────────────────────────────
+    // Opened in the inbox: its dot goes out, here and on every device. Says
+    // nothing about what becomes of the send (migrations/035).
+    if (body.seen === true) {
+      const seen = await see_submission(id);
+      return Response.json({ ok: true, seen_at: seen?.seen_at ?? null });
     }
 
     // ── Pending, started, logged, dismissed ───────────────────────────────
