@@ -32,6 +32,14 @@ const nextConfig = {
   // native binary and does not survive being folded into a route handler.
   // Only the press behind /api/portrait/code asks for it.
   serverExternalPackages: ['sharp'],
+  // The migration files, shipped beside /api/restore. A journal brought in
+  // from a copy made before messages has its comments brought into the inbox
+  // by two statements read out of migrations 027 and 028, so there is one
+  // copy of them (library/unpacking.mjs) — and a file read at run time only
+  // travels with a route when the route is told about it.
+  outputFileTracingIncludes: {
+    '/api/restore': ['./migrations/*.sql'],
+  },
 };
 
 export default nextConfig;

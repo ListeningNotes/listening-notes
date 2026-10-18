@@ -93,6 +93,19 @@ export function journalUrl(address) {
   return (local ? 'http://' : 'https://') + host;
 }
 
+// Where this copy is reached, from the request that reached it — what a
+// copy calls itself the moment it becomes somebody's, whether it was set up
+// (app/api/setup) or a journal was brought into it (app/api/restore). Vercel
+// and every proxy in front of it say so in x-forwarded-host; a bare `next
+// start` says so in host. A local run has no address worth printing on a
+// card, so localhost is left blank rather than stored.
+export function addressFrom(request) {
+  const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || '';
+  const bare = host.split(',')[0].trim();
+  if (/^(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/i.test(bare)) return '';
+  return tidyAddress(bare);
+}
+
 // What to put in the fields when a form opens. Always both strings, never
 // null: they go straight into controlled inputs, and null would make one
 // uncontrolled halfway through the first keystroke.

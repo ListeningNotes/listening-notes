@@ -25,7 +25,7 @@ import { NextResponse } from 'next/server';
 import { requireWristband } from '@/library/wristband';
 import { isSetUp, save_settings } from '@/library/settings_actions';
 import { claim_journal } from '@/library/database_actions';
-import { tidyAddress, tidyJournal } from '@/library/return_address';
+import { addressFrom, tidyJournal } from '@/library/return_address';
 import { ask_journal_name } from '@/library/people_actions';
 import { mayKnock, whoIsKnocking } from '@/library/doorman';
 import { hashPassword, passwordSource, save_secrets, setupWindowOpen } from '@/library/secrets';
@@ -132,15 +132,6 @@ export async function POST(request) {
   } catch (error) {
     return NextResponse.json({ error: error?.message || 'Setup failed' }, { status: 500 });
   }
-}
-
-// Where this copy is reached. Vercel and every proxy in front of it say so in
-// x-forwarded-host; a bare `next start` says so in host.
-function addressFrom(request) {
-  const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || '';
-  const bare = host.split(',')[0].trim();
-  if (/^(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/i.test(bare)) return '';
-  return tidyAddress(bare);
 }
 
 // Ten characters from an alphabet with no 0/O or 1/I/l in it, so it survives

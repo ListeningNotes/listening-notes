@@ -58,6 +58,12 @@
 // (it is the one field that can fail on its own terms). The name and the
 // password wait for the last screen, because they are what the claim is made
 // of, and the claim is the one write that has to be all or nothing.
+//
+// ── Or a journal is brought, 2026-10-08 ───────────────────────────────────
+// The first screen asks which: Start a new journal, or Bring your journal
+// from the copy made in Settings. Bringing one writes nothing until the
+// password either — the file is read and said back here, in the browser,
+// and the journal and the claim go in one request (app/api/restore).
 
 'use client';
 
@@ -74,6 +80,7 @@ import CodeScanner from '../../components/main_components/CodeScanner';
 import { useJournalHost } from '../../hooks/useJournalHost';
 import { tidyJournal, journalUrl } from '../../library/return_address';
 import { DIRECTORY_URL } from '../../library/version';
+import { journal_in } from '../../library/carbon_copy';
 
 // The password claims the journal; the home screen comes after, because it is
 // the one step the software cannot perform and the moment right after the
@@ -100,6 +107,16 @@ import { DIRECTORY_URL } from '../../library/version';
 // name, openings and rig are still unwritten, so leaving costs them. After
 // it, leaving costs nothing.
 const STEPS = ['name', 'photo', 'prompts', 'rig', 'password', 'updates', 'gift', 'homescreen'];
+// ── Bring your journal, 2026-10-08 ────────────────────────────────────────
+// The other way through, chosen on the first screen: Start a new journal, or
+// Bring your journal (Miyel's words). Bringing one is the copy from Settings
+// → Back up your journal — chosen, read here, and said back as whose journal
+// and how much is in it before anything is written, so a wrong file is
+// caught while it costs nothing — then the password, which claims the copy
+// with the journal in it (app/api/restore), then the same housekeeping. No
+// name, photo, prompts or rig: the card comes with the journal. No gift
+// screen either: whoever gave this journal is in the address book it brought.
+const BRING_STEPS = ['bring', 'password', 'updates', 'homescreen'];
 const PASSWORD_FLOOR = 8;
 
 async function patchSettings(fields) {
@@ -120,9 +137,16 @@ export default function WelcomeScreen() {
   // locked the old way — which decides what the gate asks for and whether
   // the password screen may be skipped.
   const [hasPassword, setHasPassword] = useState(false);
+  // Which way through: nothing until the first screen is answered, then
+  // 'new' (the name, the photo and the rest) or 'bring'. `step` counts within
+  // the way chosen.
+  const [path, setPath] = useState(null);
   const [step, setStep] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  // The journal being brought, once a file has been read: its name, the
+  // journal itself, and the line that says whose it is and how much is in it.
+  const [copy, setCopy] = useState(null);
 
   const [name, setName] = useState('');
   const [portrait, setPortrait] = useState('');
@@ -215,8 +239,9 @@ export default function WelcomeScreen() {
     });
   }, [router]);
 
-  const current = STEPS[step];
-  const last = step === STEPS.length - 1;
+  const steps = path === 'bring' ? BRING_STEPS : STEPS;
+  const current = path ? steps[step] : 'start';
+  const last = Boolean(path) && step === steps.length - 1;
   // Which of the three openings the prompts screen is showing. One at a
   // time on one screen, rather than three screens: separate screens lost
   // the thread — you could not tell a new question from a new step, or how
@@ -287,6 +312,61 @@ export default function WelcomeScreen() {
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok || data.error) throw new Error(data.error || 'Setup failed');
+  }
+
+  // ── The journal being brought ─────────────────────────────────────────────
+  // Read here, in the browser, out of whatever was chosen — the zip from
+  // Make a copy, the same zipped again, or a bare journal.json
+  // (library/carbon_copy.js) — and said back before it goes anywhere.
+  async function chooseCopy(event) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    setBusy(true);
+    setError('');
+    try {
+      const text = await journal_in(file);
+      const journal = text ? JSON.parse(text) : null;
+      const tables = journal?.tables;
+      if (!Array.isArray(tables?.entries) || !tables.settings?.length) throw new Error('not a journal');
+      const keeper = String(tables.settings[0].keeper_name || '').trim();
+      const entries = tables.entries.length;
+      const people = tables.people?.length ?? 0;
+      const taken = journal.taken_at
+        ? new Date(journal.taken_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+        : '';
+      setCopy({
+        name: file.name,
+        journal,
+        said: [
+          keeper ? `${keeper}’s journal` : 'A journal',
+          `${entries} ${entries === 1 ? 'entry' : 'entries'}`,
+          `${people} ${people === 1 ? 'person' : 'people'}`,
+          taken && `copied ${taken}`,
+        ].filter(Boolean).join(' · '),
+      });
+    } catch {
+      setCopy(null);
+      setError('That file isn’t a copy of a journal. It’s the zip from Settings → Back up your journal.');
+    }
+    setBusy(false);
+  }
+
+  // The claim, with the journal in it: one request, and the copy is theirs
+  // with everything in it, or nothing changed (app/api/restore). Squeezed on
+  // the way where the browser can — a journal is mostly text, and a request
+  // past a few megabytes is turned away before it arrives.
+  async function bring() {
+    const body = JSON.stringify({ password, journal: copy.journal });
+    let sent = { headers: { 'Content-Type': 'application/json' }, body };
+    if (typeof CompressionStream === 'function') {
+      const squeezed = new Blob([body]).stream().pipeThrough(new CompressionStream('gzip'));
+      sent = { headers: { 'Content-Type': 'application/gzip' }, body: await new Response(squeezed).arrayBuffer() };
+    }
+    const res = await fetch('/api/restore', { method: 'POST', ...sent });
+    if (res.status === 413) throw new Error('That journal is too large to bring in this way.');
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || data.error) throw new Error(data.error || 'Your journal couldn’t be brought in. Try again.');
   }
 
   // ── The photo ─────────────────────────────────────────────────────────────
@@ -378,17 +458,17 @@ export default function WelcomeScreen() {
                 order and Back is underneath. None on the last screen
                 (Miyel, 2026-09-23): the journal is made by then, and the
                 mark above has become its icon. */}
-            {current !== 'homescreen' && (
+            {path && current !== 'homescreen' && (
               <div
                 className="su-lights"
                 role="progressbar"
                 aria-label="Setup progress"
                 aria-valuemin={1}
-                aria-valuemax={STEPS.length}
+                aria-valuemax={steps.length}
                 aria-valuenow={step + 1}
-                aria-valuetext={`Step ${step + 1} of ${STEPS.length}`}
+                aria-valuetext={`Step ${step + 1} of ${steps.length}`}
               >
-                {STEPS.map((name, i) => (
+                {steps.map((name, i) => (
                   <span
                     key={name}
                     aria-hidden="true"
@@ -402,8 +482,11 @@ export default function WelcomeScreen() {
                 label and a why-line used to sit as a pair. The pair was two
                 things to read where one would do; the second line survives
                 only where a screen genuinely needs a second thought. */}
-            <p className="su-ask">
+            {/* The first screen has no sentence: its two ways in say what
+                they are, in Miyel's words (2026-10-08). */}
+            {current !== 'start' && <p className="su-ask">
               {{
+                  bring: 'Choose your copy.',
                   name: 'Whose journal is this?',
                   photo: 'A picture of you.',
                   prompts: 'A little about yourself.',
@@ -413,7 +496,41 @@ export default function WelcomeScreen() {
                   gift: giver ? `${giver.name} gifted you this journal.` : 'Did someone give you this journal?',
                   homescreen: 'It’s yours. Put it on your home screen.',
               }[current]}
-            </p>
+            </p>}
+
+            {current === 'start' && (
+              <div className="su-ways">
+                <button type="button" className="su-way" onClick={() => { setError(''); setPath('new'); setStep(0); }}>
+                  <span className="su-way-h">Start a new journal</span>
+                  <span className="su-way-note">Begin with an empty one.</span>
+                </button>
+                <button type="button" className="su-way" onClick={() => { setError(''); setPath('bring'); setStep(0); }}>
+                  <span className="su-way-h">Bring your journal</span>
+                  <span className="su-way-note">From a copy you made in Settings.</span>
+                </button>
+              </div>
+            )}
+
+            {current === 'bring' && (
+              <div className="su-fields">
+                {/* The photo's chooser, the width of a field: pressed, the
+                    phone's own file picker; once a file is read, its name
+                    and the line that says whose journal it is. Pressed
+                    again, another file. */}
+                <label className="su-copy">
+                  <input className="su-file" type="file" accept=".zip,.json,application/zip,application/json" onChange={chooseCopy} disabled={busy} />
+                  {copy ? (
+                    <>
+                      <span className="su-copy-name">{copy.name}</span>
+                      <span className="su-copy-said">{copy.said}</span>
+                    </>
+                  ) : (
+                    <span className="su-copy-pick">{busy ? 'Reading…' : 'Choose the file'}</span>
+                  )}
+                </label>
+                <button type="button" className="su-go" disabled={busy || !copy} onClick={() => advance()}>Next</button>
+              </div>
+            )}
 
             {current === 'name' && (
               <form className="su-fields" onSubmit={e => { e.preventDefault(); if (name.trim()) advance(); }}>
@@ -570,7 +687,7 @@ export default function WelcomeScreen() {
                   // would; only the saving is skipped.
                   if (password.length < PASSWORD_FLOOR) { setError(`At least ${PASSWORD_FLOOR} characters.`); return; }
                   if (password !== confirm) { setError('The two passwords do not match.'); return; }
-                  advance(claim);
+                  advance(path === 'bring' ? bring : claim);
                 }}
               >
 
@@ -722,7 +839,7 @@ export default function WelcomeScreen() {
 
             {error && <div className="su-error">{error}</div>}
 
-            {step > 0 && !claimed && (
+            {path && !claimed && (
               <div className="su-under">
                 <button
                   type="button"
@@ -736,14 +853,19 @@ export default function WelcomeScreen() {
                       setPromptIndex(i => i - 1);
                       return;
                     }
+                    // From the first screen of either way, back to the
+                    // choice between them.
+                    if (step === 0) { setPath(null); return; }
                     setStep(s => s - 1);
                   }}
                 >Back</button>
                 {/* No Skip on the password screen. Under this flow nobody
                     typed one at deploy, so there is nothing to keep; a
                     developer who set SESSION_PASSWORD by hand can find
-                    Settings. */}
-                {current !== 'password' && (
+                    Settings. None on the first screen of either way either:
+                    the name is the one thing a new journal needs, and the
+                    copy is the whole of bringing one. */}
+                {step > 0 && current !== 'password' && (
                   <button type="button" className="su-skip" disabled={busy} onClick={() => advance()}>Skip</button>
                 )}
               </div>

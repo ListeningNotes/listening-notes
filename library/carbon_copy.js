@@ -335,6 +335,46 @@ export function zip(files, made = new Date()) {
   return join([...body, ...directory, new Uint8Array(end.buffer)]);
 }
 
+// ── Reading a copy back, 2026-10-08 ───────────────────────────────────────
+// The journal out of a file somebody chose in setup (Bring your journal): the
+// zip from Make a copy — as it came, or unzipped and zipped again by a Mac,
+// which puts the folder's name in front and squeezes what this file only
+// stored — or a bare journal.json. Found through the zip's own directory,
+// the way scripts/restore.mjs finds it. Returns the journal's text, or null
+// when the file holds none.
+export async function journal_in(file) {
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const text = data => new TextDecoder().decode(data);
+  if (bytes.length < 4 || view.getUint32(0, true) !== 0x04034b50) return text(bytes);
+
+  let end = -1;
+  for (let i = bytes.length - 22; i >= Math.max(0, bytes.length - 22 - 0xffff); i--) {
+    if (view.getUint32(i, true) === 0x06054b50) { end = i; break; }
+  }
+  if (end < 0) return null;
+  let at = view.getUint32(end + 16, true);
+  for (let n = view.getUint16(end + 10, true); n > 0; n--) {
+    if (view.getUint32(at, true) !== 0x02014b50) return null;
+    const method = view.getUint16(at + 10, true);
+    const packed = view.getUint32(at + 20, true);
+    const named = view.getUint16(at + 28, true);
+    const header = view.getUint32(at + 42, true);
+    const name = text(bytes.subarray(at + 46, at + 46 + named));
+    at += 46 + named + view.getUint16(at + 30, true) + view.getUint16(at + 32, true);
+    if (name.split('/').pop() !== 'journal.json') continue;
+    const start = header + 30 + view.getUint16(header + 26, true) + view.getUint16(header + 28, true);
+    const data = bytes.subarray(start, start + packed);
+    if (method === 0) return text(data);
+    if (method === 8) {
+      const opened = new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+      return text(new Uint8Array(await new Response(opened).arrayBuffer()));
+    }
+    return null;
+  }
+  return null;
+}
+
 let table = null;
 
 // The checksum every zip carries for each file, so an unzipper can tell a
