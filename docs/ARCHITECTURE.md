@@ -239,7 +239,7 @@ The furniture — visual pieces
       ComingSoon.js            What a held copy shows instead of a site — unclaimed, no database, or database unreachable
       AddToHomeScreen.js       The one step the software cannot do: the last screen of setup, and a Settings section
       Keyring.js               Your keys, in Settings: each device's key, + Add this device (Face ID or its like), a key off in two presses; then the password (changed in place) and the spare key (made, and shown once). Also the browser's half of keys — whether it can hold one, whether it has unlocked with one — KeyOffer, Use Face ID next time?, drawn after the password and at the card's foot, and KeeperFoot, the foot's one question a visit: Face ID, then the spare key
-      JournalCopy.js           Back up your journal, in Settings: Make a copy fetches the export and holds it as a zip — journal.json, Read me.txt and a page per entry (library/carbon_copy.js) — then Share (a phone) or Download (a computer)
+      JournalCopy.js           Back up your journal, in Settings: Make a copy fetches the export and holds it as a zip — journal.json, Read me.txt and a page per entry (library/carbon_copy.js) — then Save (a phone, the share sheet) or Download (a computer)
       AlbumFinder.js           Type, see covers, pick one — the stranger's send form's search (/submit)
       MiniAddressBook.js       The address book as a strip of faces, for picking one person — the entry editor's Sent by, the inbox's send whose sender has since got a copy, and the send sheet's book, as a grid
       SentList.js              The inbox's Sent page, behind the door at its top: what this journal sent that has not come back, each row opening on what was said with it, Visit and Remove
