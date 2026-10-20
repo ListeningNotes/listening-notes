@@ -1872,6 +1872,10 @@ a building anybody may walk into.
 its own password against its own server; there is no shared system to be let
 into and no database of everybody. That is a structural consequence of
 self-hosting, and the thing a hosted service can never offer.
+**A keeper signs in at their own journal's address and nowhere else**
+(Miyel, 2026-10-20: "keep the lock on each journal"). Never through another
+address, the canonical one included: a shared sign-in is one door to every
+journal, and a home-screen app keeps its own sign-in, apart from Safari.
 
 **The way in is the right pane, and nothing on the mark opens it,
 2026-09-02.** The pitch's key when you are out — pressed, the password field
