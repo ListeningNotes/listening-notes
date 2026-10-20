@@ -54,9 +54,9 @@ async function open(request) {
   if (!address || (onThisMachine(address) && process.env.NODE_ENV !== 'development')) {
     return { refused: Response.json({ error: 'That is not a journal address.' }, { status: 400 }) };
   }
-  const one = mayKnock('listing', address);
+  const one = await mayKnock('listing', address);
   if (!one.allowed) return { refused: tooSoon(one.retryAfter) };
-  const all = mayKnock('directory', 'everyone');
+  const all = await mayKnock('directory', 'everyone');
   if (!all.allowed) return { refused: tooSoon(all.retryAfter) };
   return { address, body };
 }

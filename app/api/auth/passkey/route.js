@@ -34,7 +34,7 @@ export async function GET(request) {
 
 export async function POST(request) {
   const caller = whoIsKnocking(request);
-  const knock = mayKnock('login', caller);
+  const knock = await mayKnock('login', caller);
   if (!knock.allowed) return tooSoon(knock.retryAfter);
   try {
     const body = await request.json().catch(() => ({}));
@@ -43,7 +43,7 @@ export async function POST(request) {
       await new Promise(r => setTimeout(r, 400));
       return NextResponse.json({ error: done.error, unknown: Boolean(done.unknown) }, { status: 401 });
     }
-    forgetKnocks('login', caller);
+    await forgetKnocks('login', caller);
     const response = NextResponse.json({ ok: true });
     response.cookies.set(WRISTBAND_COOKIE.name, await issueWristband(), WRISTBAND_COOKIE.options);
     const used = spent('unlock');

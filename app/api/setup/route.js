@@ -62,7 +62,7 @@ export async function GET(request) {
       const gift = tidyJournal(process.env.GIFT_FROM || '');
       if (gift) answer.gift = gift;
       const asked = tidyJournal(new URL(request.url).searchParams.get('giver') || '');
-      if (asked && mayKnock('relay', whoIsKnocking(request)).allowed) {
+      if (asked && (await mayKnock('relay', whoIsKnocking(request))).allowed) {
         answer.giver = { address: asked, name: await ask_journal_name(asked, 4000) };
       }
     }

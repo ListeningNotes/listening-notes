@@ -58,7 +58,7 @@ export async function POST(request) {
     // turns centuries-to-crack into centuries-to-crack; without it a strong
     // password is worth an afternoon.
     const caller = whoIsKnocking(request);
-    const knock = mayKnock('login', caller);
+    const knock = await mayKnock('login', caller);
     if (!knock.allowed) return tooSoon(knock.retryAfter);
 
     const { password, spare } = await request.json();
@@ -79,7 +79,7 @@ export async function POST(request) {
 
     // Somebody who mistyped four times and then got it right should not still
     // be counted against on their next device.
-    forgetKnocks('login', caller);
+    await forgetKnocks('login', caller);
 
     const token = await issueWristband();
     const response = NextResponse.json({ ok: true });

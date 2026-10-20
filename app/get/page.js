@@ -103,7 +103,7 @@ export async function generateMetadata({ searchParams }) {
   let giverName = null;
   if (giver && giver === tidyJournal(settings.site_address)) {
     giverName = String(settings.keeper_name || '').trim() || null;
-  } else if (giver && mayKnock('relay', whoIsKnocking({ headers: await headers() })).allowed) {
+  } else if (giver && (await mayKnock('relay', whoIsKnocking({ headers: await headers() }))).allowed) {
     giverName = await ask_journal_name(giver, 2500);
   }
   if (!giverName) return { title };
@@ -189,7 +189,7 @@ export default async function GetPage({ searchParams }) {
   let giverName = null;
   if (giver && giver === tidyJournal(settings.site_address)) {
     giverName = String(settings.keeper_name || '').trim() || null;
-  } else if (giver && mayKnock('relay', whoIsKnocking({ headers: await headers() })).allowed) {
+  } else if (giver && (await mayKnock('relay', whoIsKnocking({ headers: await headers() }))).allowed) {
     giverName = await ask_journal_name(giver, 2500);
   }
   // The button, with the giver in it when there is one. The description is

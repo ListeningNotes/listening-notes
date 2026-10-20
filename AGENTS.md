@@ -239,7 +239,8 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   journals claimed so no two rounds ask one twice.
 - `doorman.js` — rate limiting, in memory: the doors (login, message, send,
   wave, listing, the Board's lines and so on), how many tries each allows,
-  who is knocking, and the 429 answer.
+  who is knocking, and the 429 answer. Every count is filed under the
+  journal it was made at, so `mayKnock` is awaited.
 - `entry_formatter.js` — the shapes an entry is written in: the horizon bar
   from track ratings, `flawless` (what Masterpiece means), tracks to and from
   prose, `lookup_key` (the fold drafts and briefings are keyed on), the edit
@@ -353,7 +354,11 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   backup is plain Node.
 - `wristband.js` — the login cookie: signed tokens issued and checked with the
   session secret — a band is one that holds `authed: true` — renewal, the
-  route guard `requireWristband`, and `wristbandOnHand` for pages.
+  route guard `requireWristband`, and `wristbandOnHand` for pages. In
+  production the cookie is `__Host-ln_session`, locked to the exact address
+  (an old `ln_session` is still read on a one-journal copy and moved), and
+  `fromItsOwnPages` reads a band only off a request from the journal's own
+  pages or the address bar.
 
 ## `hooks/` — reusable browser logic
 

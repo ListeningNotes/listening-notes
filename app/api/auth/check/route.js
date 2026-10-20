@@ -12,7 +12,7 @@
 // being locked out of your own journal with no visible way back in.
 
 import { NextResponse } from 'next/server';
-import { readWristband, shouldRenewWristband, issueWristband, WRISTBAND_COOKIE } from '@/library/wristband';
+import { readWristband, shouldRenewWristband, issueWristband, wornUnderOldName, WRISTBAND_COOKIE, OLD_WRISTBAND_COOKIE } from '@/library/wristband';
 
 export async function GET(request) {
   const wristband = await readWristband(request);
@@ -21,9 +21,14 @@ export async function GET(request) {
   const response = NextResponse.json({ authed: true });
 
   // Only past a third of its life, so this isn't signing a token and setting a
-  // cookie on every single page load.
-  if (shouldRenewWristband(wristband)) {
+  // cookie on every single page load — or when it is still worn under the old
+  // name, which moves it to the locked one (library/wristband.js).
+  const moving = wornUnderOldName(request);
+  if (moving || shouldRenewWristband(wristband)) {
     response.cookies.set(WRISTBAND_COOKIE.name, await issueWristband(), WRISTBAND_COOKIE.options);
+  }
+  if (moving && OLD_WRISTBAND_COOKIE) {
+    response.cookies.set(OLD_WRISTBAND_COOKIE.name, '', OLD_WRISTBAND_COOKIE.options);
   }
 
   return response;

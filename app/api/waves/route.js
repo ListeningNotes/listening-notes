@@ -44,9 +44,9 @@ export async function POST(request) {
       return Response.json({ error: 'A journal cannot wave at itself.' }, { status: 400 });
     }
 
-    const counted = mayKnock('wave', journal);
+    const counted = await mayKnock('wave', journal);
     if (!counted.allowed) return tooSoon(counted.retryAfter);
-    const relayed = mayKnock('relay', whoIsKnocking(request));
+    const relayed = await mayKnock('relay', whoIsKnocking(request));
     if (!relayed.allowed) return tooSoon(relayed.retryAfter);
 
     // Real, and called what it says it is called — or not kept at all.

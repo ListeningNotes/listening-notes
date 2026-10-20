@@ -46,6 +46,8 @@
 // If a copy ever does need the strict version, the seam is here: swap the Map
 // for a store and nothing that calls this has to change.
 
+import { memoryOf } from './hosting_directory.js';
+
 // One bucket per caller per door, holding the timestamps of recent attempts.
 // Trimmed on read rather than swept on a timer — a timer would keep a
 // serverless instance alive for no reason, and a bucket nobody touches again
@@ -161,12 +163,17 @@ export const DOORS = {
 // would let somebody hammer away as long as they kept getting it right, which
 // is not a thing that happens on a login but is exactly what a flood of
 // messages looks like.
-export function mayKnock(door, caller) {
+// Async since 2026-10-20, and every count filed under the journal it was
+// made at: on a deployment that hosts many, a stranger hammering one
+// journal's lock must not shut another's keeper out, and one journal's sends
+// must not spend another's allowance (library/hosting_directory.js). On a
+// copy that hosts one, the journal is '' and the counts are as they were.
+export async function mayKnock(door, caller) {
   const rule = DOORS[door];
   if (!rule) return { allowed: true, retryAfter: 0 };
 
   const now = Date.now();
-  const key = `${door}:${caller}`;
+  const key = `${await memoryOf()}|${door}:${caller}`;
   const since = now - rule.windowMs;
 
   const recent = (buckets.get(key) || []).filter(at => at > since);
@@ -187,8 +194,8 @@ export function mayKnock(door, caller) {
 // Let a caller off the count. Called after a successful login, so that
 // somebody who mistyped their password four times and then got it right is not
 // still being counted against on their next device.
-export function forgetKnocks(door, caller) {
-  buckets.delete(`${door}:${caller}`);
+export async function forgetKnocks(door, caller) {
+  buckets.delete(`${await memoryOf()}|${door}:${caller}`);
 }
 
 // The refusal itself, as a Response. 429 is the status that says "you are not

@@ -1897,6 +1897,13 @@ self-hosting, and the thing a hosted service can never offer.
 address, the canonical one included: a shared sign-in is one door to every
 journal, and a home-screen app keeps its own sign-in, apart from Safari.
 
+**The wristband is locked to its address and read only from its own pages,
+2026-10-20 (Miyel's picks, learned from Tumblr).** In production the cookie
+is `__Host-ln_session`, which no other address under the same domain can
+plant or replace, and a band is read only off a request from the journal's
+own pages or the address bar (`Sec-Fetch-Site`, else Origin). A route that
+needs a band from anywhere else is the wrong route.
+
 **The way in is the right pane, and nothing on the mark opens it,
 2026-09-02.** The pitch's key when you are out — pressed, the password field
 opens under it in place (2026-09-10: a whole screen saying SIGN IN on

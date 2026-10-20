@@ -56,12 +56,12 @@ export async function POST(request) {
   if (server) {
     // The loose one first, and it is not about pacing anybody: it is what
     // stops a script making this journal fetch a thousand made-up addresses.
-    const relay = mayKnock('relay', from);
+    const relay = await mayKnock('relay', from);
     if (!relay.allowed) return tooSoon(relay.retryAfter);
     // Then the one that means something. Counted against the journal rather
     // than the machine, because every copy on a platform leaves from the same
     // few addresses and counting those would count every keeper as one sender.
-    const knock = mayKnock('send', journal);
+    const knock = await mayKnock('send', journal);
     if (!knock.allowed) return tooSoon(knock.retryAfter);
     // And a journal is only worth counting if it is really there. This is the
     // same question filing an address in the book asks, of the same public
@@ -77,7 +77,7 @@ export async function POST(request) {
   } else {
     // A person on the form. Open to anyone, which is the point, and therefore
     // open to a script. See library/doorman.js.
-    const knock = mayKnock('submission', from);
+    const knock = await mayKnock('submission', from);
     if (!knock.allowed) return tooSoon(knock.retryAfter);
   }
 

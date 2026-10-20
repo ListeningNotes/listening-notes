@@ -101,7 +101,7 @@ The library — logic, no visuals
     database_actions.js        Everything to do with saving and loading entries — the wall's lean list, the public feed's allow-list, one entry, a record's folder, save/update/delete, drafts, briefings
     database_connection.js     Opens the connection to the database, on first use — on a deployment that hosts journals, the database of the journal the request is for, brought up to date the first time it is opened; and says a database failure in a sentence
     definitions.js             The shipped text for the three marks, and the merge of the owner's edits over it
-    doorman.js                 Rate limiting, in memory: the doors, how many tries each allows, who is knocking, and the 429 answer
+    doorman.js                 Rate limiting, in memory: the doors, how many tries each allows, who is knocking, and the 429 answer — every count filed under its journal
     entry_formatter.js         The shapes an entry is written in: the horizon from track ratings, flawless (what Masterpiece means), tracks to and from prose, lookup_key, the edit stamp
     gold_burst.js              The gold sparkle fired when a Masterpiece is marked
     handoff.js                 What the wall leaves for the entry layer: the tapped record's first screen, the wall's order for swiping to neighbours, and how a layer arrived
@@ -130,7 +130,7 @@ The library — logic, no visuals
     version.js                 Which version this copy is running (from package.json), where its release notes are, and where a report goes — read by the pitch pane, the desk and the report sheet; and SANDBOX, whether this build is a preview nothing may leave (docs/OPERATIONS.md)
     wave_actions.js            The waves that arrived here: one row per waving journal, replaced not stacked, deleted when left
     whole_journal.mjs          Which tables the journal has, asked of the database, and one table's rows as Postgres writes them — shared by the nightly backup and the export, so neither keeps a list; and when a copy was last made (copy_begins)
-    wristband.js               Session auth — issues and checks the JWT cookie, renews it, guards routes and pages
+    wristband.js               Session auth — issues and checks the JWT cookie (__Host-ln_session in production, locked to its address), renews it, guards routes and pages, and reads a band only from the journal's own pages
 
 The update button
   .github/workflows/update.yml   Ships in every copy: Actions → Update this copy → Run workflow, and once an hour on its own

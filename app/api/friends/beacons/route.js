@@ -72,6 +72,7 @@ import { pull_settings } from '@/library/settings_actions';
 import { boardHash } from '@/library/directory_actions';
 import { ask_directory_among } from '@/library/outbox';
 import { journalUrl, tidyJournal } from '@/library/return_address';
+import { memoryOf } from '@/library/hosting_directory';
 
 // How long one friend's journal gets. Short, because this answer is wanted
 // now and a slow friend must not hold up nine fast ones; the feed gives a
@@ -99,11 +100,24 @@ const AWAY_MOST = 60;
 // The last round, when it was asked for, and whether it reached past the
 // first thirty; and the ask in flight — what it covers and its promise — so
 // two tabs arriving in the same second share one round rather than start two.
-let round = { at: 0, all: false, friends: [], away: [] };
-let asking = null;
+//
+// One of each per journal, 2026-10-20: on a deployment that hosts many, a
+// round is one book's, and handing it to another journal would show that
+// journal somebody else's friends (library/hosting_directory.js, memoryOf).
+const rounds = new Map();
+function roundsOf(whose) {
+  let mine = rounds.get(whose);
+  if (!mine) {
+    mine = { round: { at: 0, all: false, friends: [], away: [] }, asking: null };
+    rounds.set(whose, mine);
+  }
+  return mine;
+}
 // What each journal last said and when, how many times in a row it has not
 // answered, and when it may be asked again. By address, for as long as this
-// instance lives.
+// instance lives — shared between the journals a deployment hosts, because
+// it is only what each friend's public beacon and book said, and one ask of
+// a friend then serves every journal that keeps them.
 const known = new Map();
 
 // A journal this instance has never heard from. The one honest answer, and
@@ -208,7 +222,7 @@ async function ask(person, now, { settled = false, fresh = false } = {}) {
 // the Board, with what they are playing; in no order but chance (AGENTS,
 // Never: nothing ordered by how much anybody logs). When the directory does
 // not answer, the last round's second ring stands.
-async function friendsAway(people) {
+async function friendsAway(people, here) {
   const mine = tidyJournal((await pull_settings().catch(() => ({})))?.site_address);
   const inBook = new Set(people.map(p => p.address));
   const away = new Map();
@@ -223,7 +237,7 @@ async function friendsAway(people) {
   if (away.size === 0) return [];
   const rows = [...away.values()].slice(0, 200);
   const on = await ask_directory_among(rows.map(r => boardHash(r.address)));
-  if (!on) return round.away;
+  if (!on) return here.round.away;
   const playing = new Map(on.map(j => [j.address, j]));
   const found = rows.filter(r => playing.has(r.address)).map(r => {
     const j = playing.get(r.address);
@@ -245,10 +259,10 @@ async function friendsAway(people) {
 // asked and the rest handed back as they last stood; `all` asks the rest as
 // well, and leaves the first thirty alone when their round is still within
 // the minute; `fresh` asks everyone, now.
-async function askEveryone({ all, fresh }) {
+async function askEveryone({ all, fresh }, here) {
   const now = Date.now();
-  if (fresh && now - round.at < FRESH_FLOOR_MS) return round;
-  const since = round.at;
+  if (fresh && now - here.round.at < FRESH_FLOOR_MS) return here.round;
+  const since = here.round.at;
   const recent = !fresh && now - since < KEEP_MS;
   const people = await pull_people();
   const friends = await Promise.all(people.map((person, i) => {
@@ -257,22 +271,22 @@ async function askEveryone({ all, fresh }) {
     if (!past && recent) return Promise.resolve(lastHeard(person, now));
     return ask(person, now, { settled: past, fresh });
   }));
-  const away = await friendsAway(people);
+  const away = await friendsAway(people, here);
   // A round that left the first thirty as they were keeps their clock, so
   // the timer asks them again when it would have anyway.
-  round = { at: recent ? since : now, all: all || (recent && round.all), friends, away };
-  return round;
+  here.round = { at: recent ? since : now, all: all || (recent && here.round.all), friends, away };
+  return here.round;
 }
 
 // One ask at a time. An ask that wants more than the one in flight waits
 // its turn rather than joining it, so opening the whole book during a timer
 // round still reaches past thirty, and a pull during one is still a pull.
-function startAsk(want) {
-  const after = asking ? asking.promise.catch(() => {}) : Promise.resolve();
-  const mine = { all: want.all, promise: after.then(() => askEveryone(want)) };
-  const clear = () => { if (asking === mine) asking = null; };
+function startAsk(want, here) {
+  const after = here.asking ? here.asking.promise.catch(() => {}) : Promise.resolve();
+  const mine = { all: want.all, promise: after.then(() => askEveryone(want, here)) };
+  const clear = () => { if (here.asking === mine) here.asking = null; };
   mine.promise.then(clear, clear);
-  asking = mine;
+  here.asking = mine;
   return mine;
 }
 
@@ -281,14 +295,15 @@ export async function GET(request) {
   if (blocked) return blocked;
 
   try {
+    const here = roundsOf(await memoryOf());
     const asked = new URL(request.url).searchParams;
-    const fresh = asked.has('fresh') && Date.now() - round.at >= FRESH_FLOOR_MS;
+    const fresh = asked.has('fresh') && Date.now() - here.round.at >= FRESH_FLOOR_MS;
     const all = fresh || asked.has('all');
-    const stale = Date.now() - round.at >= KEEP_MS;
-    let answer = round;
-    if (fresh || stale || (all && !round.all)) {
-      const covered = asking && !fresh && (!all || asking.all);
-      answer = await (covered ? asking : startAsk({ all, fresh })).promise;
+    const stale = Date.now() - here.round.at >= KEEP_MS;
+    let answer = here.round;
+    if (fresh || stale || (all && !here.round.all)) {
+      const covered = here.asking && !fresh && (!all || here.asking.all);
+      answer = await (covered ? here.asking : startAsk({ all, fresh }, here)).promise;
     }
     return Response.json(
       { at: new Date(answer.at).toISOString(), friends: answer.friends, away: answer.away || [] },
