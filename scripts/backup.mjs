@@ -45,7 +45,7 @@
 import { neon } from '@neondatabase/serverless';
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, rmSync, cpSync } from 'node:fs';
 import { join } from 'node:path';
-import { every_table, pull_table } from '../library/whole_journal.mjs';
+import { every_table, pull_table, copy_begins, copy_failed } from '../library/whole_journal.mjs';
 
 const KEEP = 30;   // a month of nights; older ones are pruned
 
@@ -114,6 +114,12 @@ console.log(`  into ${root}\n`);
 const manifest = { taken_at: new Date().toISOString(), host, tables: {}, total_rows: 0 };
 let failed = false;
 
+// A backup is a copy, so the journal stops asking for one, 2026-10-20 (a
+// copy that backs up every night never sees the letter): written down before
+// anything is read, and put back below if a table fails
+// (library/whole_journal.mjs).
+const was = await copy_begins(sql.query);
+
 for (const table of tables) {
   try {
     const rows = await pull_table(sql.query, table);
@@ -147,6 +153,7 @@ for (const old of kept.slice(0, Math.max(0, kept.length - KEEP))) {
 
 console.log(`\n  ${manifest.total_rows} rows -> ${dir}`);
 if (failed) {
+  await copy_failed(sql.query, was);
   console.error('\n  A table failed. This backup is INCOMPLETE — see manifest.json.');
   process.exit(1);   // so a scheduled run reports a failure rather than a success
 }

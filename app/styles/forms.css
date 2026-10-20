@@ -1267,6 +1267,10 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 .ib-letter-from { font-family: var(--font-display); font-weight: var(--font-display-weight, 700); font-size: 15px; color: var(--ink); }
 .ib-letter-said { margin: 0; font-size: 15px; line-height: 1.6; color: var(--ink); white-space: pre-wrap; overflow-wrap: anywhere; }
 .ib-letter-safe { margin: 0; font-family: var(--font-label); font-size: 10px; line-height: 1.5; letter-spacing: 0.02em; color: var(--ink-faint); }
+/* The one door a letter can have, on the letter a journal writes asking for
+   a copy (2026-10-20): Make a copy, under the fixed line and a hairline, the
+   way a message's doors sit under its words. */
+.ib-letter-safe + .ib-doors { padding-top: 14px; border-top: 1px solid var(--border); }
 /* A record that came back, opened: their stars, or the comparison of the two
    listens when there are both, over its doors (page.js, 2026-10-17 — "only
    on open", and the comparison without a button). */

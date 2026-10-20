@@ -190,6 +190,56 @@ export default function SettingsPage({ layered = false }) {
       .catch(() => setChecking(false));
   }, [load]);
 
+  // Opened at #back-up, 2026-10-20 — the door on the letter a journal writes
+  // when it wants a copy of itself (library/letterhead.js) — Settings starts
+  // at Back up your journal rather than at its top. The section is drawn only
+  // once the sign-in check has answered, too late for the browser's own jump
+  // to an anchor, and over the journal Settings is a sheet with a scroller of
+  // its own: so the nearest scroller is moved, and nothing under it. What is
+  // above the section is still arriving — Your keys reads its rows on its
+  // own — and would push it out of view, so it is put back as that settles,
+  // until the keeper scrolls or a couple of seconds have passed.
+  useEffect(() => {
+    if (!authed || window.location.hash !== '#back-up') return undefined;
+    const section = document.getElementById('back-up');
+    if (!section) return undefined;
+    // The nearest box that really scrolls: one that may and has more than it
+    // shows. Not the style alone — a box clipped sideways reads as scrolling
+    // up and down too, and moving it moves nothing.
+    const scrollerOf = () => {
+      for (let box = section.parentElement; box && box !== document.body; box = box.parentElement) {
+        if (/^(auto|scroll)$/.test(getComputedStyle(box).overflowY) && box.scrollHeight > box.clientHeight + 1) return box;
+      }
+      return null;
+    };
+    const scroller = scrollerOf();
+    // Clear of the bar over the page, with the section's heading in view.
+    const above = 96;
+    const place = () => {
+      const off = section.getBoundingClientRect().top - (scroller ? scroller.getBoundingClientRect().top : 0) - above;
+      if (scroller) scroller.scrollTop += off;
+      else window.scrollTo({ top: window.scrollY + off });
+    };
+    place();
+    // As the page grows, and on a few beats besides, for a page the browser
+    // is not drawing — a home-screen app waking — where the first never
+    // fires.
+    const settling = new ResizeObserver(place);
+    settling.observe(section.parentElement);
+    const beats = [300, 800, 1500].map(ms => setTimeout(place, ms));
+    const target = scroller || window;
+    const stop = () => {
+      settling.disconnect();
+      beats.forEach(clearTimeout);
+      target.removeEventListener('wheel', stop);
+      target.removeEventListener('touchstart', stop);
+    };
+    target.addEventListener('wheel', stop, { passive: true });
+    target.addEventListener('touchstart', stop, { passive: true });
+    const enough = setTimeout(stop, 2000);
+    return () => { clearTimeout(enough); stop(); };
+  }, [authed]);
+
   if (checking) return <div style={{ minHeight: '100dvh', background: 'var(--bg)' }} />;
   // Signed out, this page *is* the sign-in: the three taps on the mark and
   // the pitch pane's line both land here. See WritingAccess.
@@ -260,7 +310,7 @@ export default function SettingsPage({ layered = false }) {
 
         {/* The export, which nothing led to until 2026-09-23. Two presses —
             make a copy, then hand it over — and JournalCopy says why. */}
-        <div className="st-section">
+        <div className="st-section" id="back-up">
           <h2 className="st-h">Back up your journal</h2>
           <JournalCopy />
         </div>

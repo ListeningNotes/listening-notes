@@ -4,7 +4,7 @@
 
 import { Fragment, useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Archive, ArrowCounterClockwise, ArrowUUpLeft, Article, BookOpen, Broadcast, Check, Envelope, HandWaving, LinkSimple, MusicNoteSimple, PencilSimple, PencilSimpleLine, Plus, Shuffle, User, VinylRecord, X } from '@phosphor-icons/react';
+import { Archive, ArrowCounterClockwise, ArrowUUpLeft, Article, BookOpen, Broadcast, Check, Envelope, Files, HandWaving, LinkSimple, MusicNoteSimple, PencilSimple, PencilSimpleLine, Plus, Shuffle, User, VinylRecord, X } from '@phosphor-icons/react';
 import Link from 'next/link';
 import SiteNav, { LnMark } from '../../../components/main_components/SiteNav';
 import MiniAddressBook from '../../../components/main_components/MiniAddressBook';
@@ -19,6 +19,7 @@ import { albumKey } from '../../../hooks/useListeningBeacon';
 import { lookup_key, splitNotes } from '../../../library/entry_formatter';
 import { TRACK_NOTE_KEY } from '../../../hooks/useListeningSession';
 import { REPORTS_URL } from '../../../library/version';
+import { COPY_MADE } from '../../../components/main_components/JournalCopy';
 
 // ── What became of a send ──────────────────────────────────────────────────
 // Four outcomes in the database: pending, reviewed (a listen was started
@@ -169,7 +170,11 @@ const runsLong = words => words.length > 150 || (words.match(/\n/g) || []).lengt
 // Outbox, the way it holds Friends and Board on People (HomeNav.js), and says
 // which is showing. Drawn anywhere else — its own address, a desk's sheet —
 // the inbox puts the same two words at its own head.
-export default function Inbox({ layered = false, inPane = false, sent: sentFromBar = null }) {
+// `again`, from 2026-10-20: a number the cross raises to have the pane read
+// its rows once more. A pane stays built for the whole visit, so without it
+// what arrived after the first visit to the inbox showed its dot on the door
+// and nothing inside.
+export default function Inbox({ layered = false, inPane = false, sent: sentFromBar = null, again = 0 }) {
   const router = useRouter();
   // Who this copy belongs to, carried on every link out to another journal
   // so the form there knows who is sending. See carrySender.
@@ -314,7 +319,16 @@ export default function Inbox({ layered = false, inPane = false, sent: sentFromB
     fetch('/api/waves').then(r => (r.ok ? r.json() : { waves: [] })).then(d => setWaves(d.waves || [])).catch(() => {});
     fetch('/api/messages').then(r => (r.ok ? r.json() : { messages: [] })).then(d => setMessages(d.messages || [])).catch(() => {});
     fetch('/api/people').then(r => r.json()).then(d => setPeople(d.people || [])).catch(() => {});
-  }, [authed]);
+  }, [authed, again]);
+
+  // A copy made in Settings takes the letter asking for one with it on the
+  // server (library/whole_journal.mjs); this takes it off the screen too, so
+  // closing Settings never comes back to a letter that has already gone.
+  useEffect(() => {
+    const made = () => setMessages(prev => prev.filter(m => m.door !== 'copy'));
+    window.addEventListener(COPY_MADE, made);
+    return () => window.removeEventListener(COPY_MADE, made);
+  }, []);
 
   // Their shelves, asked for as the rows arrive.
   useEffect(() => {
@@ -451,6 +465,11 @@ export default function Inbox({ layered = false, inPane = false, sent: sentFromB
   // like a blind rolling up (her words the same day: "disappearing up not
   // to the right also slow the animation down"). Deleted on the server as
   // it goes; a delete that fails brings it back.
+  //
+  // The letter a journal writes itself, asking for a copy, carries one door
+  // under the fixed line (Miyel's pick, 2026-10-20): Make a copy, to Back up
+  // your journal in Settings — a stack of pages, since the box is Archive
+  // here. No letter that arrives has one (library/letterhead.js).
   function letterCard(m) {
     return (
       <div key={`message-${m.id}`} ref={letterRoom} className={'ib-letter-room' + (letterGoing ? ' ib-letter-room--up' : '')}>
@@ -470,6 +489,14 @@ export default function Inbox({ layered = false, inPane = false, sent: sentFromB
           </div>
           <p className="ib-letter-said">{m.said}</p>
           <p className="ib-letter-safe">LN. Admin never asks for your password or your spare key.</p>
+          {m.door === 'copy' && (
+            <div className="ib-doors fr-doors-row">
+              <Link className="fr-door" href="/settings#back-up">
+                <Files size={22} weight="regular" aria-hidden="true" />
+                Make a copy
+              </Link>
+            </div>
+          )}
         </section>
       </div>
     );

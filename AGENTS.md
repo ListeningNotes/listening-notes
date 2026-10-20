@@ -259,7 +259,10 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - `letterhead.js` — LN. Admin letters: the canonical keeper's public key
   (`LETTERHEAD_KEY`), `read_letter`, which checks a letter's Ed25519 seal,
   that it is for this journal and newer than the last one kept, and
-  `keep_letter`, which pins it in `messages` as the one letter there is.
+  `keep_letter`, which pins it in `messages` as the one letter there is;
+  and `ask_for_copy`, the letter a journal writes itself asking for a copy
+  — sixty days on, with writing no copy holds — which carries the one door
+  a letter has, Make a copy.
 - `message_actions.js` — the `messages` table: somebody's words to the
   keeper, kept, listed for the inbox, opened, marked replied to, and
   dismissed — which deletes, and takes the comment a message was with it.
@@ -336,7 +339,9 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   journal, seen, removed.
 - `whole_journal.mjs` — asks the database which tables it has and reads one
   table as Postgres writes it; shared by backup, export and restore so no list
-  is kept. `.mjs` because the backup is plain Node.
+  is kept; and `copy_begins` / `copy_failed`, the moment a copy was made,
+  written the same way by the backup and the export. `.mjs` because the
+  backup is plain Node.
 - `wristband.js` — the login cookie: signed tokens issued and checked with the
   session secret — a band is one that holds `authed: true` — renewal, the
   route guard `requireWristband`, and `wristbandOnHand` for pages.
@@ -368,7 +373,8 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 ## `scripts/` — run by hand or by a machine, not by the site
 
 - `backup.mjs` — every table to `$BACKUP_DIR/<timestamp>/` with `migrations/`
-  beside it; 30 kept. Carries `secrets`.
+  beside it; 30 kept. Carries `secrets`. Counts as a copy, so a journal
+  backed up nightly is never asked for one.
 - `prepare_database.mjs` — runs before `next build`: migrates and prints the
   claim notice; never fails the build.
 - `restore.mjs` — puts a backup or an export back — a folder, the zip from

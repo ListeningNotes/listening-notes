@@ -42,6 +42,11 @@
 import { useState } from 'react';
 import { carbon_copy } from '../../library/carbon_copy';
 
+// Said to the page once a copy is made, 2026-10-20: the export has taken the
+// letter asking for one off the server (library/whole_journal.mjs), and the
+// inbox takes it off the screen when it hears this.
+export const COPY_MADE = 'ln-copy-made';
+
 export default function JournalCopy() {
   const [copy, setCopy] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -79,6 +84,7 @@ export default function JournalCopy() {
         share: navigator.maxTouchPoints > 0 && Boolean(navigator.canShare?.({ files: [file] })),
         said: `Ready — ${entries} ${entries === 1 ? 'entry' : 'entries'}, ${people} ${people === 1 ? 'person' : 'people'} · ${size}`,
       });
+      window.dispatchEvent(new Event(COPY_MADE));
     } catch (error) {
       setTrouble(error?.message || 'Your journal could not be copied. Try again.');
     }
@@ -115,9 +121,14 @@ export default function JournalCopy() {
         yourself, or keep it somewhere safe. Your password isn’t in it.
       </p>
       <div className="st-foot">
+        {/* Save, on a phone and on a computer alike (Miyel, 2026-10-20: "save
+            not share", and then "save on computer too"): keeping the copy is
+            what the press is for, and Save is the printer's word for the same
+            two presses (PrintBar.js). A phone's Save is the share sheet, a
+            computer's is Downloads. */}
         {copy ? (
           <button type="button" className="st-save ln-word ln-word--on" onClick={handOver}>
-            {copy.share ? 'Share' : 'Download'}
+            Save
           </button>
         ) : (
           <button type="button" className="st-save ln-word ln-word--on" onClick={makeCopy} disabled={busy}>

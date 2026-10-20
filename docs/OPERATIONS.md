@@ -11,8 +11,9 @@ Two ways, because they answer different questions.
 
 **A button — Settings → Back up your journal.** Press **Make a copy** and your
 whole journal is gathered into one zip, and the page says how many entries and
-people it holds. Then **Share** on a phone hands it to the share sheet (Mail,
-Save to Files, AirDrop), and **Download** on a computer puts it in Downloads.
+people it holds. Then **Save**: on a phone it hands the copy to the share
+sheet (Mail, Save to Files, AirDrop), and on a computer it puts it in
+Downloads.
 No setup, nothing to configure, works on any copy of this software. Inside:
 
 - **`entries/`** — a page for every entry, in plain text (Markdown), named by
@@ -30,6 +31,14 @@ address. Both are owner-only — they hand over unpublished drafts, the
 messages in the inbox, the address book, and the return addresses people
 left with submissions.
 
+**The journal asks for one.** When it has writing no copy holds, sixty days
+after the last copy — or after its first entry, when it knows of none — a
+journal puts a letter of its own at the top of its inbox asking for a copy,
+with a **Make a copy** door to this button. It asks once: dismissed, it
+waits another sixty days. Making a copy, here or with the nightly backup
+below, takes it away. Each copy remembers the moment it was made, so a
+journal brought back from one knows it has one.
+
 **It never carries the `secrets` table** — the password and the key that signs
 you in. A download goes wherever downloads go, and whoever held that key could
 sign in as you without the password. Nor the keyring, your passkeys: each
@@ -46,7 +55,9 @@ Writes every table to `$BACKUP_DIR/<timestamp>/` with a copy of `migrations/`
 beside it, keeps the last 30 and prunes the rest. Nothing lists the tables: it
 asks the database each time, so a table added by next month's update is in
 that night's backup without anyone remembering to add it. It prints which
-database it read and writes that into `manifest.json`.
+database it read and writes that into `manifest.json`. Each run counts as a
+copy — it writes down when it was made, and nothing else, in the journal it
+reads — so a journal backed up every night is never asked for one.
 
 **The backup does carry `secrets`**, so a restore from it brings your password
 back with your writing — and the folder holds the same keys your `.env.local`
@@ -254,7 +265,8 @@ npm run letterhead -- send some.journal.example another.example --said "Words."
 
 Each says whether it was kept. A journal keeps one letter: a new one
 replaces the last, and one already dismissed cannot be sent again — send a
-new one.
+new one. A letter that arrives also replaces the journal's own letter
+asking for a copy, which asks again once yours is dismissed.
 
 **If the key is lost or might have been seen**, make a new one (delete the
 Keychain item, run `keys` again), put the new public half in

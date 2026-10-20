@@ -16,8 +16,15 @@
 //
 // Gated: the counts say something about the journal that isn't public — how
 // much is pending and unanswered — so a stranger gets 401, not a zero.
+//
+// And where the journal asks for a copy of itself, 2026-10-20, when it has
+// something to lose (library/letterhead.js, ask_for_copy): this route is
+// asked whenever the keeper opens the journal or comes back to it, so the
+// asking needs no timer of its own, and the letter's dot is decided in the
+// same answer. Never the reason this route fails.
 
 import { requireWristband } from '@/library/wristband';
+import { ask_for_copy } from '@/library/letterhead';
 import { count_pending_submissions, any_unseen_sends } from '@/library/submission_actions';
 import { count_pending_reports } from '@/library/report_actions';
 import { any_unseen_messages } from '@/library/message_actions';
@@ -29,9 +36,10 @@ export async function GET(request) {
   if (blocked) return blocked;
 
   try {
-    const [submissions, reports, ...unseen] = await Promise.all([
+    const [submissions, reports, asked, ...unseen] = await Promise.all([
       count_pending_submissions(),
       count_pending_reports(),
+      ask_for_copy().catch(() => false),
       any_unseen_sends(),
       any_unseen_messages(),
       any_unseen_waves(),
@@ -39,8 +47,9 @@ export async function GET(request) {
     ]);
     // `fresh`, 2026-10-20: whether anything in the inbox is new — the one dot
     // on its door (Miyel's pick: letters, messages, sends, waves). Never a
-    // number, and never anybody's but the keeper's.
-    return Response.json({ submissions, reports, total: submissions + reports, fresh: unseen.some(Boolean) });
+    // number, and never anybody's but the keeper's. A letter asked for just
+    // now counts, though the read beside it may have missed the row.
+    return Response.json({ submissions, reports, total: submissions + reports, fresh: asked || unseen.some(Boolean) });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
