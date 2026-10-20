@@ -251,8 +251,8 @@ export default function Inbox({ layered = false, inPane = false, sent: sentFromB
   // like. Then whether every row of covers is showing or only the first, and
   // which one's long note is showing whole.
   const [heldOpen, setHeldOpen] = useState(null);
-  // An LN. Admin letter being put away: 'out' while it slides off sideways,
-  // 'shut' while the space it held closes (letterCard).
+  // An LN. Admin letter being put away: 'up' while it rises out of sight and
+  // the space it held closes (letterCard).
   const [letterGoing, setLetterGoing] = useState(null);
   const letterRoom = useRef(null);
   const [heldAll, setHeldAll] = useState(false);
@@ -445,15 +445,16 @@ export default function Inbox({ layered = false, inPane = false, sent: sentFromB
   //
   // Put away by an X in its top right corner, 2026-10-20 (Miyel: "dismiss,
   // let's have it look different [from] the other messages ... just an x.
-  // LN admin note stays there until x is clicked ... smooth too, horizontal
-  // closing"): one press, no second asking — it is the software's, not
-  // somebody's words — and it slides out sideways before the space it held
-  // closes up. Deleted on the server as it goes; a delete that fails brings
-  // it back.
+  // LN admin note stays there until x is clicked ... smooth too"): one
+  // press, no second asking — it is the software's, not somebody's words.
+  // It rises and is gone, slowly, the space under it closing as it goes,
+  // like a blind rolling up (her words the same day: "disappearing up not
+  // to the right also slow the animation down"). Deleted on the server as
+  // it goes; a delete that fails brings it back.
   function letterCard(m) {
     return (
-      <div key={`message-${m.id}`} ref={letterRoom} className={'ib-letter-room' + (letterGoing === 'shut' ? ' ib-letter-room--shut' : '')}>
-        <section className={'ib-letter' + (letterGoing ? ' ib-letter--out' : '')} aria-label="A letter from LN. Admin">
+      <div key={`message-${m.id}`} ref={letterRoom} className={'ib-letter-room' + (letterGoing ? ' ib-letter-room--up' : '')}>
+        <section className={'ib-letter' + (letterGoing ? ' ib-letter--up' : '')} aria-label="A letter from LN. Admin">
           <button
             type="button"
             className="ib-letter-x"
@@ -477,17 +478,18 @@ export default function Inbox({ layered = false, inPane = false, sent: sentFromB
   async function putLetterAway(m) {
     if (letterGoing) return;
     const room = letterRoom.current;
-    if (room) room.style.maxHeight = `${room.offsetHeight}px`;
+    if (room) {
+      room.style.maxHeight = `${room.offsetHeight}px`;
+      room.getBoundingClientRect();
+    }
     const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-    setLetterGoing('out');
+    setLetterGoing('up');
     const gone = fetch('/api/messages', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: m.id }),
     }).then(r => r.ok).catch(() => false);
-    await new Promise(r => setTimeout(r, still ? 0 : 280));
-    setLetterGoing('shut');
-    await new Promise(r => setTimeout(r, still ? 0 : 260));
+    await new Promise(r => setTimeout(r, still ? 0 : 680));
     if (await gone) {
       setMessages(prev => prev.filter(x => x.id !== m.id));
     } else if (room) {

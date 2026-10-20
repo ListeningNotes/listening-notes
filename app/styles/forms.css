@@ -1228,19 +1228,23 @@ textarea.st-field { resize: vertical; min-height: 96px; }
    "missable ... too small or losable up there"): the panel's colour and a
    hairline, the LN. mark where a face goes, the name, the words at reading
    size, the fixed line quieter than them, and Dismiss. */
-/* The room it stands in holds the margin and closes up after it, and clips
-   it as it slides out, so nothing pushes the page sideways. */
-.ib-letter-room { margin: 4px 0 18px; overflow: hidden; transition: max-height 0.26s ease, margin 0.26s ease; }
-.ib-letter-room--shut { max-height: 0 !important; margin: 0; }
+/* The room it stands in holds the margin, and clips it as it rises; the room
+   closes from below while the letter goes up into its top edge, so the two
+   together read as one blind rolling up. Slow on purpose (Miyel). */
+.ib-letter-room {
+  margin: 4px 0 18px; overflow: hidden;
+  transition: max-height 0.62s cubic-bezier(0.4, 0, 0.2, 1), margin 0.62s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.ib-letter-room--up { max-height: 0 !important; margin: 0; }
 .ib-letter {
   position: relative;
   display: flex; flex-direction: column; gap: 12px;
   padding: 16px 16px 18px;
   border-radius: 14px; background: var(--panel); border: 1px solid var(--border);
-  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.28s ease;
+  transition: transform 0.62s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease;
 }
-/* Put away: out sideways (Miyel: "horizontal closing"), then the room shuts. */
-.ib-letter--out { transform: translateX(105%); opacity: 0; }
+/* Put away: up and out of sight (Miyel: "disappearing up not to the right"). */
+.ib-letter--up { transform: translateY(-100%); opacity: 0; }
 @media (prefers-reduced-motion: reduce) {
   .ib-letter, .ib-letter-room { transition: none; }
 }
