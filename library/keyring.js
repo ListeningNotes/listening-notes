@@ -45,7 +45,7 @@ import {
 import { SignJWT, jwtVerify } from 'jose';
 import database from './database_connection.js';
 import { sessionSecret } from './secrets.js';
-import { pull_settings, titleName, coverName } from './settings_actions.js';
+import { pull_settings, titleName, coverName, isSetUp } from './settings_actions.js';
 
 const CEREMONY_SECONDS = 5 * 60;
 const COOKIE = { add: 'ln-ceremony-add', unlock: 'ln-ceremony-unlock' };
@@ -148,20 +148,51 @@ function tidyDevice(value) {
 export async function begin_adding(request) {
   const { rpID } = addressOf(request);
   const settings = await pull_settings();
-  const keys = await credentials();
+  // While a copy is being set up nothing is held back: a device making its
+  // key again, after a setup that did not finish, replaces the one it made
+  // before, and the claim keeps only the key it was made with (keep_only).
+  const keys = (await isSetUp()) ? await credentials() : [];
   const options = await generateRegistrationOptions({
     rpName: titleName(settings),
     rpID,
     // What the device files the key under: the journal's address, the same
-    // name the password is filed under (hooks/useJournalHost.js).
+    // name the password is filed under (hooks/useJournalHost.js). The
+    // address is the key's user too, so a key made during setup and one made
+    // after are the same person to the device, which replaces rather than
+    // stacks them.
     userName: rpID,
-    userID: new TextEncoder().encode(String(settings?.serial || rpID)),
+    userID: new TextEncoder().encode(rpID),
     userDisplayName: coverName(settings) || rpID,
     attestationType: 'none',
     excludeCredentials: keys.map(k => ({ id: k.credential_id, transports: k.transports || undefined })),
     authenticatorSelection: { residentKey: 'required', userVerification: 'required' },
   });
   return { options, cookie: await seal('add', options.challenge, rpID) };
+}
+
+// ── At the claim, 2026-10-20 ──────────────────────────────────────────────
+// A journal can be claimed with a key and no password (Miyel's brief: "a
+// new journal is claimed with a passkey and no password"; her pick, Face ID
+// first at setup). Whoever reaches a copy before it is claimed can put a key
+// on its ring, so the claim keeps only the keys it was made with — the ones
+// the claiming browser made a moment before and names — and drops the
+// rest. `holds_any` is how a claim without a password proves it has a key.
+export async function holds_any(ids) {
+  const named = (Array.isArray(ids) ? ids : []).map(String).filter(Boolean);
+  if (!named.length) return false;
+  const [row] = await database`SELECT count(*)::int AS n FROM keyring WHERE credential_id = ANY(${named})`;
+  return row.n > 0;
+}
+
+export async function keep_only(ids) {
+  const named = (Array.isArray(ids) ? ids : []).map(String).filter(Boolean);
+  await database`DELETE FROM keyring WHERE NOT (credential_id = ANY(${named}))`;
+}
+
+// The same inside a transaction that is not this handle's (the restore's).
+export async function keep_only_within(query, ids) {
+  const named = (Array.isArray(ids) ? ids : []).map(String).filter(Boolean);
+  await query('DELETE FROM keyring WHERE NOT (credential_id = ANY($1::text[]))', [named]);
 }
 
 // The device's answer: checked, and kept. Returns { ok } or { ok, error }.

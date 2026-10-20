@@ -211,6 +211,11 @@ textarea.sb-field {
   .su-mark, .su-logo, .su-dot { transition: none; }
 }
 .su-fields { display: flex; flex-direction: column; gap: 22px; }
+/* Face ID first on the password screen, 2026-10-20 (Miyel's pick): the
+   card's own offer door, a size up, with or choose a password under it. */
+.su-face { align-items: center; gap: 20px; padding: 6px 0 2px; }
+.su-face-use { font-size: 12px; gap: 10px; }
+.su-fields .pg-or { align-self: center; }
 .su-label {
   display: block; font-family: var(--font-label); font-size: 10px;
   letter-spacing: 0.12em; text-transform: uppercase;
@@ -618,7 +623,7 @@ textarea.st-field { resize: vertical; min-height: 96px; }
    is let off — at 16px it was the biggest thing in the panel. */
 @media (max-width: 768px) {
   .pg-who { font-size: 8px !important; }
-  .st-who { font-size: 10px !important; }
+  .st-who, .su-who { font-size: 10px !important; }
 }
 /* The soft field, Miyel's pick, 2026-10-20: a well with no line round it,
    the password centred in it and an arrow at its end that is the submit. A

@@ -244,8 +244,10 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - `keyring.js` — the passkeys (`keyring`): a row per device's key, the
   public half only; the two ceremonies, making a key and opening the door
   with one, checked by `@simplewebauthn/server`; the challenge kept between
-  them in a cookie signed with a key derived from the secret; and
-  `addressOf`, the exact host a key belongs to.
+  them in a cookie signed with a key derived from the secret;
+  `addressOf`, the exact host a key belongs to; and, at the claim,
+  `holds_any` and `keep_only`, so a journal claimed keeps only the keys its
+  claim made.
 - `message_actions.js` — the `messages` table: somebody's words to the
   keeper, kept, listed for the inbox, opened, marked replied to, and
   dismissed — which deletes, and takes the comment a message was with it.

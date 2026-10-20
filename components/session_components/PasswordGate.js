@@ -54,14 +54,17 @@ import { canHoldKeys, markKeyHere, readyToOffer, KeyOffer } from '../main_compon
 // The lock's options, fetched before anything is pressed: Safari lets Face
 // ID be asked for only straight from a press, and a press that waited on the
 // network first would be refused. The challenge lasts five minutes, so a
-// caller asks again every four. Returns { options, any, spare }, or null:
-// `spare` is whether a spare key is waiting.
+// caller asks again every four. Returns { options, any, spare, password },
+// or null: `spare` is whether a spare key is waiting, `password` whether the
+// journal has one at all.
 export async function askTheLock() {
   try {
     const r = await fetch('/api/auth/passkey', { cache: 'no-store' });
     if (!r.ok) return null;
     const d = await r.json();
-    return d?.options ? { options: d.options, any: Boolean(d.any), spare: Boolean(d.spare) } : null;
+    return d?.options
+      ? { options: d.options, any: Boolean(d.any), spare: Boolean(d.spare), password: d.password !== false }
+      : null;
   } catch {
     return null;
   }
@@ -144,11 +147,14 @@ export default function PasswordGate({ onAuth, bare = false, asking = 'password'
   // Unlock where there are keys, the field where there are none.
   const offerKey = keyed && asked?.any && !way;
   const showField = !keyed || Boolean(way) || (asked !== undefined && !asked?.any);
-  const spareWay = way === 'spare';
+  // A journal with no password (claimed with Face ID) is never offered one:
+  // where it has no key either, the field is the spare key's.
+  const noPassword = asked?.password === false;
+  const spareWay = way === 'spare' || (!way && showField && noPassword && Boolean(asked?.spare));
   // The other ways in, as words under the door: the password where it is not
-  // already the field, and the spare key where one is waiting.
+  // already the field and there is one, and the spare key where one waits.
   const others = [];
-  if (!claiming && !(showField && !spareWay)) others.push(['password', 'use your password']);
+  if (!claiming && !noPassword && !(showField && !spareWay)) others.push(['password', 'use your password']);
   if (!claiming && asked?.spare && !spareWay) others.push(['spare', 'use your spare key']);
   function choose(chosen) { setWay(chosen); setPw(''); setError(''); }
   const name = String(keeper_name || '').trim();

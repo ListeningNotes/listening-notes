@@ -70,6 +70,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { CaretDown, Check, Eye, EyeSlash, Gift, User } from '@phosphor-icons/react';
+import { startRegistration } from '@simplewebauthn/browser';
 import { fonts } from '../../library/sitewide_visuals';
 import { BIO_PROMPTS, BIO_LIMIT } from '../../library/bioprompt';
 import PasswordGate from '../../components/session_components/PasswordGate';
@@ -81,6 +82,7 @@ import { useJournalHost } from '../../hooks/useJournalHost';
 import { tidyJournal, journalUrl } from '../../library/return_address';
 import { DIRECTORY_URL } from '../../library/version';
 import { journal_in } from '../../library/carbon_copy';
+import { canHoldKeys, markKeyHere, thisDevice, wayIn, SpareKeyShown } from '../../components/main_components/Keyring';
 
 // The password claims the journal; the home screen comes after, because it is
 // the one step the software cannot perform and the moment right after the
@@ -106,7 +108,15 @@ import { journal_in } from '../../library/carbon_copy';
 // to another site, and before the password the journal is not claimed — the
 // name, openings and rig are still unwritten, so leaving costs them. After
 // it, leaving costs nothing.
-const STEPS = ['name', 'photo', 'prompts', 'rig', 'password', 'updates', 'gift', 'homescreen'];
+//
+// ── Face ID first, 2026-10-20 ─────────────────────────────────────────────
+// The password screen offers Face ID first, with *or choose a password*
+// under it (Miyel's pick, as the lock offers Unlock before the password),
+// wherever the device can make a key; elsewhere it is the password, as it
+// was. Claimed with a key there is no password at all, so a spare key is
+// made next and shown once — only then (her pick): with a password, the
+// foot of the card asks for one later. Bringing a journal is the same.
+const STEPS = ['name', 'photo', 'prompts', 'rig', 'password', 'spare', 'updates', 'gift', 'homescreen'];
 // ── Bring your journal, 2026-10-08 ────────────────────────────────────────
 // The other way through, chosen on the first screen: Start a new journal, or
 // Bring your journal (Miyel's words). Bringing one is the copy from Settings
@@ -116,7 +126,10 @@ const STEPS = ['name', 'photo', 'prompts', 'rig', 'password', 'updates', 'gift',
 // with the journal in it (app/api/restore), then the same housekeeping. No
 // name, photo, prompts or rig: the card comes with the journal. No gift
 // screen either: whoever gave this journal is in the address book it brought.
-const BRING_STEPS = ['bring', 'password', 'updates', 'homescreen'];
+const BRING_STEPS = ['bring', 'password', 'spare', 'updates', 'homescreen'];
+// What a rehearsal shows for the spare key: nothing is made on a journal
+// that only walks through setup.
+const SAMPLE_SPARE = 'K7QM-3XRT-9PWD-H2NV';
 const PASSWORD_FLOOR = 8;
 
 async function patchSettings(fields) {
@@ -161,6 +174,16 @@ export default function WelcomeScreen() {
   // Whether the password is shown as typed. One switch for both fields: the
   // confirm follows the first, so a typo can be seen in either.
   const [peeking, setPeeking] = useState(false);
+  // The key's half of the password screen: how this device unlocks, where it
+  // can make a key at all; the options to make one with, fetched before the
+  // press for Safari; the keys made here, which the claim names; and how the
+  // journal was claimed, which decides whether the spare key screen comes.
+  const [faceWay, setFaceWay] = useState(null);
+  const [typingPassword, setTypingPassword] = useState(false);
+  const [makeOptions, setMakeOptions] = useState(null);
+  const [madeKeys, setMadeKeys] = useState([]);
+  const [claimedWith, setClaimedWith] = useState(null);
+  const [spareCode, setSpareCode] = useState('');
 
   // ── Rehearsal ─────────────────────────────────────────────────────────────
   // /setup?rehearse shows the screens on a copy that is already claimed, for
@@ -239,7 +262,7 @@ export default function WelcomeScreen() {
     });
   }, [router]);
 
-  const steps = path === 'bring' ? BRING_STEPS : STEPS;
+  const steps = (path === 'bring' ? BRING_STEPS : STEPS).filter(s => s !== 'spare' || claimedWith === 'key');
   const current = path ? steps[step] : 'start';
   const last = Boolean(path) && step === steps.length - 1;
   // Which of the three openings the prompts screen is showing. One at a
@@ -253,7 +276,92 @@ export default function WelcomeScreen() {
   // The journal is claimed on the password screen; the screens after it only
   // go forward. Once claimed, Back is no longer offered — there is nothing
   // behind it that could still be changed here.
-  const claimed = current === 'updates' || current === 'gift' || current === 'homescreen';
+  const claimed = current === 'spare' || current === 'updates' || current === 'gift' || current === 'homescreen';
+
+  // ── Face ID, on the password screen ──────────────────────────────────────
+  // Offered where this device can make a key and has Face ID or its like.
+  // The options come with the setup's own wristband, and again every four
+  // minutes, because the challenge in them lasts five.
+  useEffect(() => {
+    if (current !== 'password') return undefined;
+    let gone = false;
+    let again = null;
+    (async () => {
+      if (!canHoldKeys()) return;
+      let able = false;
+      try { able = await window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable(); } catch { /* no */ }
+      if (!able || gone) return;
+      const ask = async () => {
+        try {
+          const r = await fetch('/api/keyring', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+          const d = await r.json().catch(() => ({}));
+          if (!gone && d.options) setMakeOptions(d.options);
+        } catch { /* the password stays */ }
+      };
+      await ask();
+      if (gone) return;
+      setFaceWay(wayIn());
+      again = setInterval(ask, 4 * 60 * 1000);
+    })();
+    return () => { gone = true; if (again) clearInterval(again); };
+  }, [current]);
+
+  // Claimed with Face ID: the key made here, then the claim naming it. A
+  // rehearsal makes nothing and walks on.
+  async function claimWithFace() {
+    if (busy) return;
+    setError('');
+    if (rehearsing) { setClaimedWith('key'); await advance(); return; }
+    if (!makeOptions) { setError('Face ID isn’t ready yet. Try again in a moment.'); return; }
+    let response;
+    try {
+      response = await startRegistration({ optionsJSON: makeOptions });
+    } catch (e) {
+      // Told no is not a fault; anything else is said.
+      if (e?.name !== 'NotAllowedError' && e?.name !== 'AbortError') setError(`${faceWay?.word || 'Face ID'} didn’t finish. Try again, or choose a password.`);
+      return;
+    }
+    setBusy(true);
+    try {
+      const r = await fetch('/api/keyring', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ response, device: thisDevice() }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d.error || 'The key could not be made. Try again, or choose a password.');
+    } catch (e) {
+      setBusy(false);
+      setError(e.message);
+      return;
+    }
+    setBusy(false);
+    markKeyHere(true);
+    const keys = [...madeKeys, response.id];
+    setMadeKeys(keys);
+    setClaimedWith('key');
+    await advance(path === 'bring' ? () => bring(keys) : () => claim(keys));
+  }
+
+  // ── The spare key, made once the journal is claimed with a key ─────────
+  async function makeSpareNow() {
+    setError('');
+    if (rehearsing) { setSpareCode(SAMPLE_SPARE); return; }
+    try {
+      const r = await fetch('/api/keyring', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ spare: true }) });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || !d.code) throw new Error(d.error || 'Your spare key couldn’t be made just now.');
+      setSpareCode(d.code);
+    } catch (e) {
+      setError(e.message);
+    }
+  }
+  useEffect(() => {
+    if (current !== 'spare' || spareCode) return;
+    // Asked once on arriving; a failure leaves a Try again.
+    Promise.resolve().then(makeSpareNow);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [current]);
 
   // ── Finding the giver, on the gift screen ─────────────────────────────────
   // Asked here and not when the page loads: on a real install the first
@@ -303,12 +411,16 @@ export default function WelcomeScreen() {
   }
 
   // ── The claim ─────────────────────────────────────────────────────────────
-  async function claim() {
-    const chosen = password;
+  // With a password, or — `keys` given — with the key just made and no
+  // password. Either way the claim names the keys this setup made, and the
+  // ring keeps only those (app/api/setup).
+  async function claim(keys = null) {
     const res = await fetch('/api/setup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ keeper_name: name, password: chosen }),
+      body: JSON.stringify(keys
+        ? { keeper_name: name, keys }
+        : { keeper_name: name, password, keys: madeKeys }),
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok || data.error) throw new Error(data.error || 'Setup failed');
@@ -356,8 +468,10 @@ export default function WelcomeScreen() {
   // with everything in it, or nothing changed (app/api/restore). Squeezed on
   // the way where the browser can — a journal is mostly text, and a request
   // past a few megabytes is turned away before it arrives.
-  async function bring() {
-    const body = JSON.stringify({ password, journal: copy.journal });
+  async function bring(keys = null) {
+    const body = JSON.stringify(keys
+      ? { keys, journal: copy.journal }
+      : { password, keys: madeKeys, journal: copy.journal });
     let sent = { headers: { 'Content-Type': 'application/json' }, body };
     if (typeof CompressionStream === 'function') {
       const squeezed = new Blob([body]).stream().pipeThrough(new CompressionStream('gzip'));
@@ -492,7 +606,8 @@ export default function WelcomeScreen() {
                   prompts: 'A little about yourself.',
                   rig: 'What you listen on.',
                   updates: 'Keep your journal up to date automatically.',
-                  password: 'What you’ll type to get back in.',
+                  password: faceWay && !typingPassword ? 'How you’ll get back in.' : 'What you’ll type to get back in.',
+                  spare: 'Your spare key.',
                   gift: giver ? `${giver.name} gifted you this journal.` : 'Did someone give you this journal?',
                   homescreen: 'It’s yours. Put it on your home screen.',
               }[current]}
@@ -675,7 +790,19 @@ export default function WelcomeScreen() {
               </form>
             )}
 
-            {current === 'password' && (
+            {current === 'password' && faceWay && !typingPassword && (
+              <div className="su-fields su-face">
+                <button type="button" className="ko-use su-face-use" onClick={claimWithFace} disabled={busy}>
+                  <faceWay.Glyph size={32} aria-hidden="true" />
+                  <span>{busy ? 'Claiming…' : `Use ${faceWay.word}`}</span>
+                </button>
+                <button type="button" className="pg-or" disabled={busy} onClick={() => { setTypingPassword(true); setError(''); }}>
+                  or choose a password
+                </button>
+              </div>
+            )}
+
+            {current === 'password' && (!faceWay || typingPassword) && (
               <form
                 className="su-fields"
                 onSubmit={e => {
@@ -731,7 +858,24 @@ export default function WelcomeScreen() {
                 <button type="submit" className="su-go" disabled={busy || !password || !confirm}>
                   {busy ? 'Claiming…' : 'Claim the journal'}
                 </button>
+                {faceWay && (
+                  <button type="button" className="pg-or" disabled={busy} onClick={() => { setTypingPassword(false); setError(''); }}>
+                    or use {faceWay.word}
+                  </button>
+                )}
               </form>
+            )}
+
+            {current === 'spare' && (
+              <div className="su-fields">
+                {spareCode ? (
+                  <SpareKeyShown code={spareCode} heading={false} withPassword={false} onSaved={() => advance()} />
+                ) : !error ? (
+                  <p className="su-hint" style={{ textAlign: 'center' }}>Making your spare key…</p>
+                ) : (
+                  <button type="button" className="pg-or" onClick={makeSpareNow}>Try again</button>
+                )}
+              </div>
             )}
 
             {current === 'updates' && (

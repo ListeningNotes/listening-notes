@@ -1919,6 +1919,13 @@ password has. A hash in the vault; the sign-in spends it in the statement
 that checks it. The card's foot asks for one when there is none and when it
 has been used, after Face ID; Your keys holds it beside the password.
 
+**Setup offers Face ID first, and a claim keeps only its own keys,
+2026-10-20 (Miyel's picks).** The password screen is Face ID with *or choose
+a password* under it, for a new journal and a brought one alike; claimed
+with a key, there is no password and the spare key is made next. Anybody
+reaching an unclaimed copy can leave a key on its ring, so the claim names
+the keys it made and the rest are dropped (library/keyring.js, keep_only).
+
 **A wristband says it is one, 2026-10-20.** A band holds `authed: true`, and
 nothing without it passes. Anything else signed with the session secret would
 otherwise be a band; the passkey's challenge cookies are handed to anybody

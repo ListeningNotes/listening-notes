@@ -54,7 +54,7 @@ export function canHoldKeys() {
 }
 
 // What a device is called in the list, from what its browser says it is.
-function thisDevice() {
+export function thisDevice() {
   const ua = navigator.userAgent || '';
   if (/iPhone/.test(ua)) return 'iPhone';
   if (/iPad/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) return 'iPad';
@@ -68,7 +68,7 @@ function thisDevice() {
 // How this device unlocks, in its own words, for the offer: Face ID on an
 // iPhone — Touch ID on one with a home button, which the screen's size
 // gives away — Touch ID on a Mac, and the general name elsewhere.
-function wayIn() {
+export function wayIn() {
   const device = thisDevice();
   if (device === 'iPhone') {
     const homeButton = Math.max(window.screen.width, window.screen.height) <= 736;
@@ -217,7 +217,9 @@ export function KeyOffer({ ready = null, onDone = null, onNothing = null, place 
 // The one time it is ever seen — library/secrets.js keeps only its hash — in
 // Miyel's words: the key, what it is for, Copy drawn as a button (her ask)
 // and I've saved it, which puts it away for good.
-export function SpareKeyShown({ code, replaced = false, onSaved }) {
+// `heading` is false where the page over it already says what it is (setup);
+// `withPassword` false on a journal that has none, which is told so.
+export function SpareKeyShown({ code, replaced = false, onSaved, heading = true, withPassword = true }) {
   const [copied, setCopied] = useState(false);
   async function copy() {
     try {
@@ -228,9 +230,9 @@ export function SpareKeyShown({ code, replaced = false, onSaved }) {
   }
   return (
     <div className="sk" role="group" aria-label="Your spare key">
-      <p className="sk-h">Your spare key</p>
+      {heading && <p className="sk-h">Your spare key</p>}
       <p className="sk-code">{code}</p>
-      <p className="sk-note">If you lose your phone and your password, this opens your journal once. Write it down or save it somewhere safe — you won’t see it again.</p>
+      <p className="sk-note">{withPassword ? 'If you lose your phone and your password, this' : 'If you lose your phone, this'} opens your journal once. Write it down or save it somewhere safe — you won’t see it again.</p>
       {replaced && <p className="sk-note">The one before no longer works.</p>}
       <div className="sk-do">
         <button type="button" className="sk-copy" onClick={copy}>{copied ? 'Copied' : 'Copy'}</button>
@@ -260,6 +262,7 @@ const SPARE_NOT_NOW = 'ln-spare-not-now';
 
 function SpareOffer() {
   const [state, setState] = useState(null);
+  const [withPassword, setWithPassword] = useState(true);
   const [shown, setShown] = useState(null);
   const [busy, setBusy] = useState(false);
   const [trouble, setTrouble] = useState('');
@@ -277,6 +280,7 @@ function SpareOffer() {
         try { saidAt = localStorage.getItem(SPARE_NOT_NOW); } catch { /* asks */ }
         const usedSince = spare.used_at && saidAt && new Date(spare.used_at) > new Date(saidAt);
         if (saidAt && !usedSince) return;
+        setWithPassword(d.password !== null);
         setState(spare);
       } catch { /* nothing to ask */ }
     })();
@@ -304,7 +308,7 @@ function SpareOffer() {
   if (shown) {
     return (
       <div className="ko--foot">
-        <SpareKeyShown code={shown} onSaved={() => { setShown(null); setFinished(true); }} />
+        <SpareKeyShown code={shown} withPassword={withPassword} onSaved={() => { setShown(null); setFinished(true); }} />
       </div>
     );
   }
@@ -313,7 +317,7 @@ function SpareOffer() {
   return (
     <div className="ko ko--foot">
       <p className="ko-line">{used ? 'Your spare key is used up.' : 'Make a spare key?'}</p>
-      {!used && <p className="ko-note">It opens your journal if you lose every device and your password.</p>}
+      {!used && <p className="ko-note">{withPassword ? 'It opens your journal if you lose every device and your password.' : 'It opens your journal if you lose every device.'}</p>}
       <button type="button" className="ko-use" onClick={make} disabled={busy}>
         <Key size={26} aria-hidden="true" />
         <span>{used ? 'Make a new one' : 'Make one'}</span>
@@ -593,7 +597,7 @@ export default function Keyring() {
           </li>
           {shown && (
             <li className="kr-more">
-              <SpareKeyShown code={shown.code} replaced={shown.replaced} onSaved={() => setShown(null)} />
+              <SpareKeyShown code={shown.code} replaced={shown.replaced} withPassword={password !== null} onSaved={() => setShown(null)} />
             </li>
           )}
         </ul>

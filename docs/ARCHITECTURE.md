@@ -167,8 +167,8 @@ The front doors — receive requests, hand them off, send back responses
     reports/route.js           A problem written in — POST from any copy (rate-limited, cross-origin), GET for the owner
     reports/[id]/route.js      Marking one read or dismissed
     secrets/route.js           The vault — owner-only both ways; says what is set, never the value
-    setup/route.js             GET: is this copy claimed. POST: the one write that claims it
-    restore/route.js           Bring your journal — POST, behind setup's wristband and only on a copy nobody has claimed: the journal from Make a copy and a password; restored with library/unpacking.mjs, never the vault, and claimed in the same transaction (the password, this copy's address, the Board's old code gone)
+    setup/route.js             GET: is this copy claimed. POST: the one write that claims it — with a password, or with the key just made and none; the ring keeps only the keys the claim names
+    restore/route.js           Bring your journal — POST, behind setup's wristband and only on a copy nobody has claimed: the journal from Make a copy and a password or the key just made; restored with library/unpacking.mjs, never the vault or the keyring, and claimed in the same transaction (the password if any, the keys the claim names and no others, this copy's address, the Board's old code gone)
     auth/login/route.js        The password, the deploy-time variable, the spare key (once, and spent by it), or — unclaimed — the claim code
     auth/check/route.js        Am I still wearing a valid wristband; renews an ageing one on the way
     auth/logout/route.js       Cuts the wristband off
@@ -308,7 +308,7 @@ The rooms — full pages assembled from furniture
     about/page.js              Redirect to / — the identity card is the about page
     session/page.js            The listen — picker, then four screens under one header
     printer/page.js            The share printer — the press on a record for the keeper (?entry=slug); the sentence for everyone else and for the card, whose plate is still to come
-    setup/page.js              Claiming a copy, one screen at a time: the code, then two ways — Start a new journal (name, photo, prompts, rig, password, updates, who gave it (GIFT_FROM, or a scan), the home screen) or Bring your journal (the zip from Make a copy, read and said back in the browser, then the password, updates and the home screen)
+    setup/page.js              Claiming a copy, one screen at a time: the code, then two ways — Start a new journal (name, photo, prompts, rig, the way back in — Face ID first, or a password — the spare key when there is no password, updates, who gave it (GIFT_FROM, or a scan), the home screen) or Bring your journal (the zip from Make a copy, read and said back in the browser, then the same way back in, updates and the home screen)
     settings/page.js           The machinery, owner-only — the address, On the board (the one switch off the Board), the password, the backup, updates, the home screen
     directory/page.js          The Board at its own address, on every copy, absent where DIRECTORY_URL is empty. directory/Directory.js holds `Everyone` (the Board on screen) and the one shared reading of it, `readEveryone`, all of it read through /api/board: for the keeper the one note until dismissed, then for everybody the search by name, logging right now (the Friends room's band, community-wide) and further out (a shuffled dozen); a check on people in the book and Visit · Add on a press for the keeper — drawn here and under People on the cross
     login/page.js              The door at an address — the same password form, for when a link will not do

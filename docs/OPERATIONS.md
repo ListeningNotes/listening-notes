@@ -186,8 +186,15 @@ in Settings. Failing that:
    variable can go.
 
 **Never do step 2 without step 1.** A journal that is set up and has no
-password lets nobody in at all: the claim code only ever opens a copy nobody
-has claimed, so none is printed and none would be accepted.
+password, no key and no spare key lets nobody in at all: the claim code only
+ever opens a copy nobody has claimed, so none is printed and none would be
+accepted.
+
+**A journal claimed with Face ID** has no password: its ways in are its keys
+and its spare key. With every device and the spare key lost, step 1 alone
+gets back in — set `SESSION_PASSWORD` in Vercel and redeploy; a journal with
+no password in its database takes the variable — and then a key or a
+password can be made in Settings → Your keys.
 
 ## A sandbox to try things on
 
