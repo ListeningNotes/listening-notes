@@ -182,8 +182,8 @@ a sandbox: your journal copied to an address of its own, with a database of
 its own, where nothing you do reaches your journal or anybody else's.
 Everything works as it does on your journal, except that nothing leaves: no
 send, wave, reply, Board listing or problem report — each says *Nothing
-leaves the sandbox.* — and SANDBOX stands in the top-left corner of every
-page, so it is never mistaken for the real one.
+leaves the sandbox.* — and a violet glow runs round the edge of the screen,
+with SANDBOX in the top-left corner, so it is never mistaken for the real one.
 
 **Its database must be its own.** Building the site brings the database it
 is pointed at up to date, so a preview pointed at your live database would

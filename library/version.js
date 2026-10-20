@@ -60,9 +60,9 @@ export const DIRECTORY_URL =
 // Vercel's Preview environment and nowhere else, beside a database of its
 // own — is a sandbox: a copy of the journal to try things on, and nothing
 // leaves it. No send, wave, reply, Board listing or problem report reaches
-// anybody (library/outbox.js and the report page ask this), and SANDBOX
-// stands in the corner of every page so it is never taken for the journal
-// it was copied from (app/layout.js). Reading is untouched — friends'
+// anybody (library/outbox.js and the report page ask this), and it glows
+// violet round the screen with SANDBOX in the corner, so it is never taken
+// for the journal it was copied from (app/layout.js). Reading is untouched — friends'
 // beacons, the Board, a record search — because reading bothers nobody.
 // Both the mark and the words are Miyel's.
 export const SANDBOX = process.env.NEXT_PUBLIC_SANDBOX === '1';

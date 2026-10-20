@@ -281,9 +281,13 @@ export default async function RootLayout({ children, layer }) {
             the content passes under. Nothing on a desk, where the inset is
             zero and the band has no height. */}
         <div className="ln-brow" aria-hidden="true" />
-        {/* SANDBOX in the corner of every page of a preview built as one
-            (library/version.js), so it is never taken for the journal it
-            was copied from. Miyel's pick of the three, 2026-10-17. */}
+        {/* A preview built as a sandbox (library/version.js) glows violet
+            round the edge of the screen and says SANDBOX in the corner, on
+            every page and wherever it is scrolled, so it is never taken for
+            the journal it was copied from. The word was Miyel's pick of
+            three on 2026-10-17; the glow her ask once she had seen it,
+            2026-10-19. */}
+        {SANDBOX && <div className="ln-sandbox-glow" aria-hidden="true" />}
         {SANDBOX && <div className="ln-sandbox">Sandbox</div>}
         <script
           suppressHydrationWarning

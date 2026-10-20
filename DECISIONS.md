@@ -1771,11 +1771,11 @@ is cut when there is something to tell a keeper: it is what makes every desk
 say a newer version exists, one interruption per thing worth saying.
 
 **A preview is a sandbox, and nothing leaves it, 2026-10-17.** Built with
-`NEXT_PUBLIC_SANDBOX` on Vercel's Preview environment, beside a database of
-its own, it refuses every send, wave, reply, Board listing and problem report
-— *Nothing leaves the sandbox.* — and wears SANDBOX in the corner (Miyel's
-words). Every write leaving a copy lives in library/outbox.js for this; a new
-one outside it must ask SANDBOX, or a test reaches a real person.
+`NEXT_PUBLIC_SANDBOX` on Preview, beside a database of its own, it refuses
+every send, wave, reply, Board listing and problem report (*Nothing leaves
+the sandbox.*) and glows violet with SANDBOX in the corner (Miyel's). Every
+write leaving a copy lives in library/outbox.js for this; one outside it must
+ask SANDBOX, or a test reaches a real person.
 
 ---
 

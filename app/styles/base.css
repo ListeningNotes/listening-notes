@@ -78,7 +78,7 @@
   /* The same green with the light off: a ring or a line that says live
      without glowing, beside the dot that does. The friends' faces. */
   --live-deep:    #2e9c55;
-  /* The sandbox's mark and nothing else (.ln-sandbox, below). */
+  /* The sandbox's glow and mark, and nothing else (.ln-sandbox, below). */
   --sandbox:      #9b5de5;
   --card-blur:    blur(48px);
   --shadow-soft:  0 2px 12px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.04);
@@ -713,6 +713,17 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
    (library/version.js), in the one colour this site uses for nothing else,
    so the sandbox is never taken for the journal it was copied from. Just
    under the clock, above everything, and inert: a tap goes through it. */
+/* And a glow round the whole screen, 2026-10-19 (Miyel: "a violet border
+   that feels like a glow around the screen no matter where I am on the
+   page"): fixed to the window rather than the page, so no scroll moves it —
+   a hairline at the very edge and a soft light falling inward from it. It
+   sits under the word and over everything else, and takes no taps. */
+.ln-sandbox-glow {
+  position: fixed; inset: 0; z-index: 2147483646; pointer-events: none;
+  box-shadow:
+    inset 0 0 0 2px color-mix(in srgb, var(--sandbox) 85%, transparent),
+    inset 0 0 26px 6px color-mix(in srgb, var(--sandbox) 38%, transparent);
+}
 .ln-sandbox {
   position: fixed; z-index: 2147483647; pointer-events: none;
   top: max(6px, calc(env(safe-area-inset-top, 0px) - 10px));
