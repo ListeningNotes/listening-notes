@@ -18,19 +18,29 @@
 // much is pending and unanswered — so a stranger gets 401, not a zero.
 
 import { requireWristband } from '@/library/wristband';
-import { count_pending_submissions } from '@/library/submission_actions';
+import { count_pending_submissions, any_unseen_sends } from '@/library/submission_actions';
 import { count_pending_reports } from '@/library/report_actions';
+import { any_unseen_messages } from '@/library/message_actions';
+import { any_unseen_waves } from '@/library/wave_actions';
+import { any_unseen_came_back } from '@/library/came_back_actions';
 
 export async function GET(request) {
   const blocked = await requireWristband(request);
   if (blocked) return blocked;
 
   try {
-    const [submissions, reports] = await Promise.all([
+    const [submissions, reports, ...unseen] = await Promise.all([
       count_pending_submissions(),
       count_pending_reports(),
+      any_unseen_sends(),
+      any_unseen_messages(),
+      any_unseen_waves(),
+      any_unseen_came_back(),
     ]);
-    return Response.json({ submissions, reports, total: submissions + reports });
+    // `fresh`, 2026-10-20: whether anything in the inbox is new — the one dot
+    // on its door (Miyel's pick: letters, messages, sends, waves). Never a
+    // number, and never anybody's but the keeper's.
+    return Response.json({ submissions, reports, total: submissions + reports, fresh: unseen.some(Boolean) });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

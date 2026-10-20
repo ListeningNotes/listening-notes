@@ -55,7 +55,7 @@ import { VERSION, RELEASE_URL } from '../../library/version';
 // journal; a second one that only its owner could see was a CMS grown beside a
 // site that did not need one.
 const DOORS = [
-  { href: '/dashboard/inbox',   label: 'Inbox',   note: 'Records sent to you, waiting on you', Icon: Envelope, count: w => w?.total },
+  { href: '/dashboard/inbox',   label: 'Inbox',   note: 'Records sent to you, waiting on you', Icon: Envelope, count: w => w?.total, fresh: w => w?.fresh },
   // What the people in the address book logged. It ran on down this pane's own
   // scroll until 2026-09-15, under the rows; the desk is a hero and its rows
   // and stops there now, so the feed is a door like the others (Miyel's
@@ -220,8 +220,9 @@ export default function Dashboard({ waiting, mark = null }) {
         </Link>
 
         <div className="db-doors">
-          {DOORS.map(({ href, label, note, Icon, count }) => {
+          {DOORS.map(({ href, label, note, Icon, count, fresh }) => {
             const n = count ? count(waiting) : 0;
+            const isNew = Boolean(fresh && fresh(waiting));
             return (
               <Link key={href} href={href} className="ln-tile db-door" title={note}>
                 <Icon size={22} weight="regular" aria-hidden="true" className="db-door-mark" />
@@ -235,6 +236,9 @@ export default function Dashboard({ waiting, mark = null }) {
                     is a reason to. Null until asked, so a row never flashes a
                     zero on the way to a number. */}
                 {n > 0 && <span className="db-count">{n}</span>}
+                {/* And where no count stands, a dot when something there is
+                    new — a letter, a message, a wave (2026-10-20). */}
+                {n === 0 && isNew && <span className="db-fresh" aria-label="Something new" />}
               </Link>
             );
           })}

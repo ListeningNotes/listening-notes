@@ -106,6 +106,7 @@ The library — logic, no visuals
     gold_burst.js              The gold sparkle fired when a Masterpiece is marked
     handoff.js                 What the wall leaves for the entry layer: the tapped record's first screen, the wall's order for swiping to neighbours, and how a layer arrived
     install_guide.js           What /get needs: the deploy button's URL and the ten steps with their screenshots
+    letterhead.js              LN. Admin letters: the canonical keeper's public key, checking a letter's seal, that it is for this journal and newer than the last, and pinning it as the one letter in messages
     keyring.js                 The passkeys: a row per device's key, the public half only; making a key and opening the door with one (@simplewebauthn/server); a key belongs to the exact address it was made at
     message_actions.js         Messages: somebody's words to the keeper — kept, listed for the inbox, opened, marked replied to, and dismissed, which deletes
     migrator.js                Brings the database up to date — from instrumentation.js on start, and from scripts/prepare_database.mjs at build
@@ -136,6 +137,7 @@ The update button
 
 The other scripts — run by hand or by a machine, never by the site
   scripts/backup.mjs             Every table to $BACKUP_DIR/<timestamp>/ with migrations/ beside it; 30 kept; carries secrets (docs/OPERATIONS.md)
+  scripts/letterhead.mjs         The canonical keeper's, on her Mac: makes the LN. Admin key (its private half in the Keychain) and seals and posts a letter to the journals it concerns
   scripts/restore.mjs            Puts a backup or an export back — a folder, the zip from Make a copy, or a bare journal.json; a dry run without --yes; empties only the tables the file holds. The restore itself is library/unpacking.mjs
   scripts/prepare_database.mjs   Runs before next build: migrates and prints the claim notice; never fails the build
 
@@ -154,7 +156,7 @@ The front doors — receive requests, hand them off, send back responses
     drafts/route.js            Unfinished listens — owner-only both ways, the read included
     drafts/[id]/route.js       DELETE one draft
     format/route.js            Assemble your notes into a post (local, no model)
-    messages/route.js          Messages — POST is public: from a person on an entry here, or from another copy's server replying; GET, PATCH and DELETE are the keeper's
+    messages/route.js          Messages — POST is public: from a person on an entry here, from another copy's server replying, or an LN. Admin letter, kept only with a good seal (library/letterhead.js); GET, PATCH and DELETE are the keeper's
     submissions/route.js       POST: a send arrives — from the visitor form or from another copy's server; GET for the owner
     submissions/[id]/route.js  One send: settling it, saying it was already logged, naming who it came from; owner-only
     settings/route.js          The settings row — public to read, owner-only to write
@@ -327,7 +329,7 @@ The rooms — full pages assembled from furniture
     @layer/(.)printer/page.js  The printer, as a sheet over the entry or the card
     dashboard/
       page.js                  Redirect to / — the desk is a face of the cross's turning pane
-      inbox/page.js            Everything that arrives, in one list: each row carries the mark of its kind and opens where it sits to its doors — plain, on the tokens, and a sheet over the desk
+      inbox/page.js            Everything that arrives, in one list: each row carries the mark of its kind and opens where it sits to its doors — plain, on the tokens, and a sheet over the desk; an LN. Admin letter pinned above it, the LN. mark for a face, Dismiss its only door
       feed/page.js             What the journals in the address book have logged
       people/page.js           The address book — the list, the field, the scanner
       people/[id]/page.js      Your page about one person — the whole-journal compare, and what they sent you

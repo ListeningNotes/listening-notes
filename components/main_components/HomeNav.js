@@ -69,7 +69,7 @@
 'use client';
 import { startTransition, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { ArrowsLeftRight, CaretDown, X } from '@phosphor-icons/react';
 import { CAPTION, announce, useListeningBeacon } from '../../hooks/useListeningBeacon';
 import MarqueeTitle from './MarqueeTitle';
@@ -485,6 +485,15 @@ export default function HomeNav() {
       })
       .catch(() => {});
   }, [askWaiting]);
+  // And asked again, 2026-10-20, when the journal comes back to the front —
+  // a home-screen app wakes where it was left, and what arrived meanwhile
+  // should put its dot on Inbox — never on a timer.
+  useEffect(() => {
+    if (!authed) return undefined;
+    const back = () => { if (document.visibilityState === 'visible') askWaiting(); };
+    document.addEventListener('visibilitychange', back);
+    return () => document.removeEventListener('visibilitychange', back);
+  }, [authed, askWaiting]);
   // The lock on the pitch pane opened. The pane it is on becomes the desk,
   // with nothing reloaded: the wristband was just issued and the cross never
   // unmounted. The lock is at the foot of the card since 2026-09-28.
@@ -1074,6 +1083,17 @@ export default function HomeNav() {
   }, [beginListen]);
 
   const [pane, setPane] = useState(HOME);
+  // Coming away from the inbox asks again what is new — leaving its pane on a
+  // phone, or its sheet closing over the desk — so the dot on Inbox goes once
+  // what it was for has been opened (2026-10-20).
+  const path = usePathname();
+  const wasHere = useRef({ pane, path });
+  useEffect(() => {
+    const was = wasHere.current;
+    wasHere.current = { pane, path };
+    if (!authed) return;
+    if ((was.pane === INBOX && pane !== INBOX) || (was.path !== path && path === '/')) askWaiting();
+  }, [pane, path, authed, askWaiting]);
   // ── A room is built the first time you walk into it ───────────────────────
   // The card and the beacon are always drawn: you land on one and the other is
   // one swipe away, and both are this journal's own pages. The inbox and the
@@ -2151,7 +2171,8 @@ export default function HomeNav() {
         </span>
       )}
       {/* Inbox · Outbox, on the inbox pane — no count beside Inbox: what is
-          new says so with its own dot, and a number would be the unread
+          new says so with its own dot, here and, since 2026-10-20, as one
+          dot on the Inbox stop of the footer; a number would be the unread
           badge this site does not have. */}
       {onInbox && (
         <span className="hn-bar-words">
@@ -3043,7 +3064,7 @@ export default function HomeNav() {
         />
       )}
 
-      <Footer pane={pane} goTo={goTo} onHere={goBack} authed={authed} />
+      <Footer pane={pane} goTo={goTo} onHere={goBack} authed={authed} fresh={Boolean(waiting?.fresh)} />
     </div>
   );
 }

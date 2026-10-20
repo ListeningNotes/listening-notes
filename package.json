@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "backup": "node scripts/backup.mjs",
-    "restore": "node scripts/restore.mjs"
+    "restore": "node scripts/restore.mjs",
+    "letterhead": "node scripts/letterhead.mjs"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",

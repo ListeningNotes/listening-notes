@@ -59,6 +59,15 @@ export async function pull_submissions() {
 }
 
 // The desk wants a number, not the rows.
+// Whether a record waits that has not been opened yet — the inbox's own dot
+// on a cover, gathered onto its door (app/api/waiting, 2026-10-20).
+export async function any_unseen_sends() {
+  const [row] = await database`
+    SELECT EXISTS (SELECT 1 FROM submissions WHERE status = 'pending' AND seen_at IS NULL) AS any
+  `;
+  return row?.any === true;
+}
+
 export async function count_pending_submissions() {
   const [row] = await database`
     SELECT COUNT(*)::int AS n FROM submissions WHERE status = 'pending'

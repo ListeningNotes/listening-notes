@@ -228,6 +228,40 @@ Vercel locks a preview to the project's owner, so opening one asks you to
 sign in to Vercel once. It also means no other journal can reach a sandbox:
 something that arrives from another journal cannot be tried there.
 
+## LN. Admin letters
+
+A letter is the one way to tell keepers something they cannot learn from
+their own journal — an outage, what is new. It lands pinned at the top of
+their inbox as *Message from LN. Admin*, words only, under a fixed line that
+LN. Admin never asks for a password or a spare key. Nothing about it comes
+back: not that it arrived, not that it was read.
+
+**The key** lives only on the canonical keeper's Mac, in the Keychain as
+`ln-letterhead`. Made once:
+
+```bash
+npm run letterhead -- keys
+```
+
+It prints the public half, which belongs in `library/letterhead.js`
+(`CANONICAL_KEY`) and ships in every copy.
+
+**Sending** — to each journal it concerns, by address:
+
+```bash
+npm run letterhead -- send some.journal.example another.example --said "Words."
+```
+
+Each says whether it was kept. A journal keeps one letter: a new one
+replaces the last, and one already dismissed cannot be sent again — send a
+new one.
+
+**If the key is lost or might have been seen**, make a new one (delete the
+Keychain item, run `keys` again), put the new public half in
+`library/letterhead.js` and release: copies on the updater take it within the
+hour, and from then on the old key's letters are refused. A fork sets
+`LETTERHEAD_KEY` to its own key's public half, or to nothing to take none.
+
 ## The directory's job
 
 Only for the copy that keeps the directory (the one every other copy's

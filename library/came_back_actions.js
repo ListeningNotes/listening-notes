@@ -61,6 +61,15 @@ function tidy(row) {
 }
 
 // Newest first, by when they logged it.
+// Whether a record came back that has not been seen and was not put away
+// (app/api/waiting, 2026-10-20).
+export async function any_unseen_came_back() {
+  const [row] = await database`
+    SELECT EXISTS (SELECT 1 FROM came_back WHERE seen_at IS NULL AND dismissed_at IS NULL) AS any
+  `;
+  return row?.any === true;
+}
+
 export async function pull_came_back() {
   return await database`
     SELECT id, journal, slug, name, album, artist, song, album_art, rating,

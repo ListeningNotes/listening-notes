@@ -1223,6 +1223,50 @@ textarea.st-field { resize: vertical; min-height: 96px; }
    Add for somebody not in the book. */
 .ib-list .ib-rhead { gap: 12px; padding: 13px 0; }
 .ib-list .ib-rface { width: 30px; }
+/* ── An LN. Admin letter, 2026-10-20 ───────────────────────────────────────
+   A card at the top of the inbox with its words showing (Miyel: a row was
+   "missable ... too small or losable up there"): the panel's colour and a
+   hairline, the LN. mark where a face goes, the name, the words at reading
+   size, the fixed line quieter than them, and Dismiss. */
+/* The room it stands in holds the margin, and clips it as it rises; the room
+   closes from below while the letter goes up into its top edge, so the two
+   together read as one blind rolling up. Slow on purpose (Miyel). */
+.ib-letter-room {
+  margin: 4px 0 18px; overflow: hidden;
+  transition: max-height 0.62s cubic-bezier(0.4, 0, 0.2, 1), margin 0.62s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.ib-letter-room--up { max-height: 0 !important; margin: 0; }
+.ib-letter {
+  position: relative;
+  display: flex; flex-direction: column; gap: 12px;
+  padding: 16px 16px 18px;
+  border-radius: 14px; background: var(--panel); border: 1px solid var(--border);
+  transition: transform 0.62s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease;
+}
+/* Put away: up and out of sight (Miyel: "disappearing up not to the right"). */
+.ib-letter--up { transform: translateY(-100%); opacity: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .ib-letter, .ib-letter-room { transition: none; }
+}
+/* Its own way out, unlike every other message: an X in the top right corner,
+   one press (Miyel, 2026-10-20). */
+.ib-letter-x {
+  position: absolute; top: 8px; right: 8px;
+  width: 36px; height: 36px; padding: 0; border: 0; border-radius: 999px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: none; color: var(--ink-faint); cursor: pointer; transition: color 0.15s;
+}
+.ib-letter-x:hover { color: var(--ink); }
+.ib-letter-head { display: flex; align-items: center; gap: 10px; padding-right: 36px; }
+.ib-letter-face {
+  width: 32px; height: 32px; border-radius: 999px; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center; background: var(--ink);
+}
+.ib-letter-face svg { width: 19px; height: auto; display: block; }
+.ib-letter-face path, .ib-letter-face circle { fill: var(--bg); }
+.ib-letter-from { font-family: var(--font-display); font-weight: var(--font-display-weight, 700); font-size: 15px; color: var(--ink); }
+.ib-letter-said { margin: 0; font-size: 15px; line-height: 1.6; color: var(--ink); white-space: pre-wrap; overflow-wrap: anywhere; }
+.ib-letter-safe { margin: 0; font-family: var(--font-label); font-size: 10px; line-height: 1.5; letter-spacing: 0.02em; color: var(--ink-faint); }
 /* A record that came back, opened: their stars, or the comparison of the two
    listens when there are both, over its doors (page.js, 2026-10-17 — "only
    on open", and the comparison without a button). */

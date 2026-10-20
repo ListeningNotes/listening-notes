@@ -6,7 +6,7 @@ import { Fragment, useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Archive, ArrowCounterClockwise, ArrowUUpLeft, Article, BookOpen, Broadcast, Check, Envelope, HandWaving, LinkSimple, MusicNoteSimple, PencilSimple, PencilSimpleLine, Plus, Shuffle, User, VinylRecord, X } from '@phosphor-icons/react';
 import Link from 'next/link';
-import SiteNav from '../../../components/main_components/SiteNav';
+import SiteNav, { LnMark } from '../../../components/main_components/SiteNav';
 import MiniAddressBook from '../../../components/main_components/MiniAddressBook';
 import SentList from '../../../components/main_components/SentList';
 import WaveSheet from '../../../components/main_components/WaveSheet';
@@ -244,13 +244,17 @@ export default function Inbox({ layered = false, inPane = false, sent: sentFromB
   const [openRow, setOpenRow] = useState(null);
   const [showArchived, setShowArchived] = useState(false);
   // ── Records waiting, 2026-10-17 ────────────────────────────────────────
-  // Which one is open under its row of covers: its id; null once the open
-  // one has been pressed shut; and, until anything is pressed, 'newest' —
-  // the newest arrives open, so the first thing anybody sees is what opening
-  // a record looks like (Miyel: "if someone didn't know they could click it
-  // and see options"). Then whether every row of covers is showing or only
-  // the first, and which one's long note is showing whole.
-  const [heldOpen, setHeldOpen] = useState('newest');
+  // Which one is open under its row of covers: its id, or null for none.
+  // None until one is pressed, 2026-10-20 (Miyel: "can you not have the
+  // first send be automatically open i haven't been liking it"); from
+  // 2026-10-17 the newest had arrived open, to show what opening one looks
+  // like. Then whether every row of covers is showing or only the first, and
+  // which one's long note is showing whole.
+  const [heldOpen, setHeldOpen] = useState(null);
+  // An LN. Admin letter being put away: 'up' while it rises out of sight and
+  // the space it held closes (letterCard).
+  const [letterGoing, setLetterGoing] = useState(null);
+  const letterRoom = useRef(null);
   const [heldAll, setHeldAll] = useState(false);
   const [binWhole, setBinWhole] = useState(null);
   // Problem reports sit behind a line at the foot of the sends, the way the
@@ -427,6 +431,71 @@ export default function Inbox({ layered = false, inPane = false, sent: sentFromB
     if (message.seen_at) return;
     fetch('/api/messages', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: message.id }) }).catch(() => {});
     setMessages(prev => prev.map(m => (m.id === message.id ? { ...m, seen_at: new Date().toISOString() } : m)));
+  }
+
+  // ── An LN. Admin letter, 2026-10-20 ──────────────────────────────────────
+  // A card at the top of the inbox with its words showing (Miyel's pick, the
+  // same day, over a row that had to be pressed: "it's missable ... too small
+  // or losable up there"): the LN. mark where a face would be, the name, the
+  // words, the line no letter can leave off — the software never asks for a
+  // secret — and Dismiss, in the two presses every message takes. No Reply:
+  // nobody is there to read one, and nothing about it goes back
+  // (library/letterhead.js). On screen is read, so it is marked seen as it
+  // is drawn, and the dot on Inbox goes with it.
+  //
+  // Put away by an X in its top right corner, 2026-10-20 (Miyel: "dismiss,
+  // let's have it look different [from] the other messages ... just an x.
+  // LN admin note stays there until x is clicked ... smooth too"): one
+  // press, no second asking — it is the software's, not somebody's words.
+  // It rises and is gone, slowly, the space under it closing as it goes,
+  // like a blind rolling up (her words the same day: "disappearing up not
+  // to the right also slow the animation down"). Deleted on the server as
+  // it goes; a delete that fails brings it back.
+  function letterCard(m) {
+    return (
+      <div key={`message-${m.id}`} ref={letterRoom} className={'ib-letter-room' + (letterGoing ? ' ib-letter-room--up' : '')}>
+        <section className={'ib-letter' + (letterGoing ? ' ib-letter--up' : '')} aria-label="A letter from LN. Admin">
+          <button
+            type="button"
+            className="ib-letter-x"
+            onClick={() => putLetterAway(m)}
+            aria-label="Dismiss this letter"
+            title="Dismiss"
+          >
+            <X size={18} weight="regular" aria-hidden="true" />
+          </button>
+          <div className="ib-letter-head">
+            <span className="ib-letter-face" aria-hidden="true"><LnMark /></span>
+            <span className="ib-letter-from">LN. Admin</span>
+          </div>
+          <p className="ib-letter-said">{m.said}</p>
+          <p className="ib-letter-safe">LN. Admin never asks for your password or your spare key.</p>
+        </section>
+      </div>
+    );
+  }
+
+  async function putLetterAway(m) {
+    if (letterGoing) return;
+    const room = letterRoom.current;
+    if (room) {
+      room.style.maxHeight = `${room.offsetHeight}px`;
+      room.getBoundingClientRect();
+    }
+    const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    setLetterGoing('up');
+    const gone = fetch('/api/messages', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: m.id }),
+    }).then(r => r.ok).catch(() => false);
+    await new Promise(r => setTimeout(r, still ? 0 : 680));
+    if (await gone) {
+      setMessages(prev => prev.filter(x => x.id !== m.id));
+    } else if (room) {
+      room.style.maxHeight = '';
+    }
+    setLetterGoing(null);
   }
 
   // What stands greyed over a message: the words it answers, and whose.
@@ -806,7 +875,7 @@ export default function Inbox({ layered = false, inPane = false, sent: sentFromB
   // ── New until opened, 2026-10-17 ──────────────────────────────────────────
   // A record waiting wears the dot until it has been opened — pressed open,
   // or one of its doors pressed — and not merely until a listen begins
-  // (Miyel). The newest opening by itself does not count. A listen begun
+  // (Miyel). A listen begun
   // from it means it was opened, whatever the mark says (migrations/035).
   const unseen = s => s.status === UNOPENED && !s.seen_at;
   function markSeen(sent) {
@@ -836,8 +905,17 @@ export default function Inbox({ layered = false, inPane = false, sent: sentFromB
     ...live.map(s => ({ ...s, at: s.created_at })),
     ...cameBack.map(row => ({ ...row, backed: true, at: row.posted_at || row.noticed_at })),
     ...waves.map(w => ({ ...w, waved: true, at: w.arrived_at })),
-    ...messages.map(m => ({ ...m, wrote: true, at: m.arrived_at })),
+    ...messages.filter(m => !m.admin).map(m => ({ ...m, wrote: true, at: m.arrived_at })),
   ].sort((a, b) => new Date(b.at) - new Date(a.at));
+  // An LN. Admin letter is pinned above all of it, never in among it, and
+  // there is only ever one (library/letterhead.js).
+  const letter = messages.find(m => m.admin) || null;
+  const letterId = letter && !letter.seen_at ? letter.id : null;
+  useEffect(() => {
+    if (!letterId) return;
+    fetch('/api/messages', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: letterId }) }).catch(() => {});
+    Promise.resolve().then(() => setMessages(prev => prev.map(m => (m.id === letterId ? { ...m, seen_at: new Date().toISOString() } : m))));
+  }, [letterId]);
   const shown = showArchived ? [...liveWithReturns, ...archivedRows] : liveWithReturns;
 
   // The draft behind a send, if there is one. Matched on the fold that keys
@@ -894,7 +972,7 @@ export default function Inbox({ layered = false, inPane = false, sent: sentFromB
     const shown = heldAll ? held : held.slice(0, ACROSS);
     const rows = [];
     for (let i = 0; i < shown.length; i += ACROSS) rows.push(shown.slice(i, i + ACROSS));
-    const open = heldOpen === 'newest' ? shown[0] : (shown.find(s => s.id === heldOpen) || null);
+    const open = shown.find(s => s.id === heldOpen) || null;
     return (
       <div className="ib-held">
         {rows.map((row, r) => (
@@ -911,7 +989,7 @@ export default function Inbox({ layered = false, inPane = false, sent: sentFromB
                     const opening = open?.id !== s.id;
                     setHeldOpen(opening ? s.id : null);
                     setHolding(null);
-                    if (opening || heldOpen === 'newest') markSeen(s);
+                    if (opening) markSeen(s);
                   }}
                 >
                   <span className="ib-held-cover">
@@ -1026,7 +1104,7 @@ export default function Inbox({ layered = false, inPane = false, sent: sentFromB
               Add
             </button>
           )}
-          <button type="button" className="fr-door" onClick={() => { setHolding(null); setHeldOpen('newest'); updateStatus(sent.id, ARCHIVED); }}>
+          <button type="button" className="fr-door" onClick={() => { setHolding(null); setHeldOpen(null); updateStatus(sent.id, ARCHIVED); }}>
             <Archive size={22} weight="regular" aria-hidden="true" />
             Archive
           </button>
@@ -1696,6 +1774,9 @@ export default function Inbox({ layered = false, inPane = false, sent: sentFromB
                   <div className="own-empty">Nothing has been sent to you yet.</div>
                 ) : (
                   <>
+                    {/* An LN. Admin letter first of everything: the top of the
+                        inbox is where the brief pins it. */}
+                    {letter && letterCard(letter)}
                     {heldBlock()}
                     {/* Everything else, newest first: a soft mark, who did
                         what, and one thing at the row's end. No dates and no

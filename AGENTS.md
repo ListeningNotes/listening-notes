@@ -34,6 +34,7 @@ The real ones, from `package.json`. There are no others.
 | `npm run lint` | `eslint`, configured in `eslint.config.mjs`. |
 | `npm run backup` | Every table to `$BACKUP_DIR/<timestamp>/` (`scripts/backup.mjs`; see docs/OPERATIONS.md). |
 | `npm run restore -- <path>` | Dry run of a restore; add `--yes` to write (`scripts/restore.mjs`). |
+| `npm run letterhead -- …` | The canonical keeper's, on her Mac: `keys` makes the LN. Admin key, `send <journal> --said "…"` seals and posts a letter (`scripts/letterhead.mjs`; see docs/OPERATIONS.md). |
 
 **Migrations have no command.** The files in `migrations/` apply themselves,
 in filename order, on every server start (`instrumentation.js` →
@@ -93,7 +94,9 @@ reasoning; these are inline so nobody has to go looking.
 - **Never write to another keeper's database.** The only things one copy may
   put into another are a send, a wave and a message, each on a keeper's press,
   and — into the directory — a listing, which a journal makes unless its
-  keeper has switched it off; each through that copy's own public route.
+  keeper has switched it off; each through that copy's own public route. One
+  more thing may arrive by that route: an LN. Admin message, signed, which
+  only the canonical keeper can make (Miyel, 2026-10-20).
   Everything else about another journal is read from its public feed and
   routes.
 - **Nobody writes on anybody else's journal.** No comments, no threads, no
@@ -104,7 +107,10 @@ reasoning; these are inline so nobody has to go looking.
   from their own public entry, linked to it: that is them on their journal,
   not somebody writing on yours (Miyel, 2026-10-08).
 - **No phone-home.** Nothing in a copy reports to the canonical copy or
-  anywhere else: no analytics, no pushed banners or messages, no deploy
+  anywhere else: no analytics, no pushed banners, and one kind of pushed
+  message only — LN. Admin, sealed with the canonical keeper's key and
+  refused without it, sent only to the journals it concerns, with nothing
+  reported back, not even that it was read (Miyel, 2026-10-20) — no deploy
   redirect that would log installs, nothing that runs without a press. A copy
   learns of a new version by reading the public releases itself, at most once
   a day; a problem report leaves only when a keeper presses Send. The one
@@ -144,7 +150,9 @@ reasoning; these are inline so nobody has to go looking.
   copy; the Source line and the version ship on every copy, at the foot of
   the card for a visitor, and cannot be switched off; the canonical address,
   `REPORTS_URL`, `INSTAGRAM_URL` and `DIRECTORY_URL` are constants, with an
-  environment variable for a fork.
+  environment variable for a fork; so is the public half of the LN. Admin
+  key (`LETTERHEAD_KEY`, in `library/letterhead.js`), which a fork sets to its
+  own or to nothing.
 - **Nothing per entry that grows with the archive on a free tier.** Never
   base64 a picture into a row (a cover's code keeps only its dot); album art
   is a plain `<img>`, never the framework's metered image component; a query
@@ -248,6 +256,10 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   `addressOf`, the exact host a key belongs to; and, at the claim,
   `holds_any` and `keep_only`, so a journal claimed keeps only the keys its
   claim made.
+- `letterhead.js` — LN. Admin letters: the canonical keeper's public key
+  (`LETTERHEAD_KEY`), `read_letter`, which checks a letter's Ed25519 seal,
+  that it is for this journal and newer than the last one kept, and
+  `keep_letter`, which pins it in `messages` as the one letter there is.
 - `message_actions.js` — the `messages` table: somebody's words to the
   keeper, kept, listed for the inbox, opened, marked replied to, and
   dismissed — which deletes, and takes the comment a message was with it.
@@ -364,6 +376,9 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   restore itself is `library/unpacking.mjs`.
 - `update_copy.mjs` — what the update workflow does on a keeper's repository:
   graft, merge the latest release, push; fetched from upstream each run.
+- `letterhead.mjs` — the canonical keeper's sender of LN. Admin letters: makes
+  the key and keeps its private half in her Mac's Keychain (`keys`), and
+  seals and posts a letter to the journals it concerns (`send`).
 
 ## Top-level files whose names are Next's, not ours
 

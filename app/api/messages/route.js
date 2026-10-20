@@ -50,6 +50,7 @@ import { pull_settings } from '@/library/settings_actions';
 import {
   SAID_MOST, sameJournal, pull_messages, save_message, see_message, remove_message,
 } from '@/library/message_actions';
+import { read_letter, keep_letter } from '@/library/letterhead';
 
 // Whether this looks like one copy's server talking to another rather than
 // a person's browser: no Origin and no Referer, with a journal named. A hint
@@ -63,6 +64,24 @@ export async function POST(request) {
   const body = await request.json().catch(() => null);
   if (!body || typeof body !== 'object' || Array.isArray(body)) {
     return Response.json({ error: 'Nothing readable was sent.' }, { status: 400 });
+  }
+
+  // ── An LN. Admin letter, 2026-10-20 ──────────────────────────────────
+  // Through this same door, and kept only when its seal is the canonical
+  // keeper's and it is for this journal (library/letterhead.js). Counted by
+  // the loose door, so a flood of bad seals costs its sender, not this copy.
+  // Nothing is said back but whether it was kept.
+  if (body.letterhead !== undefined) {
+    const knocked = mayKnock('relay', whoIsKnocking(request));
+    if (!knocked.allowed) return tooSoon(knocked.retryAfter);
+    try {
+      const read = await read_letter(body);
+      if (!read.ok) return Response.json({ error: read.why }, { status: read.status });
+      await keep_letter(read.letter);
+      return Response.json({ ok: true });
+    } catch {
+      return Response.json({ error: 'The letter could not be kept just now.' }, { status: 500 });
+    }
   }
 
   const said = typeof body.said === 'string' ? body.said.trim() : '';
