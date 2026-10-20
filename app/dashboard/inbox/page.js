@@ -6,7 +6,7 @@ import { Fragment, useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Archive, ArrowCounterClockwise, ArrowUUpLeft, Article, BookOpen, Broadcast, Check, Envelope, HandWaving, LinkSimple, MusicNoteSimple, PencilSimple, PencilSimpleLine, Plus, Shuffle, User, VinylRecord, X } from '@phosphor-icons/react';
 import Link from 'next/link';
-import SiteNav from '../../../components/main_components/SiteNav';
+import SiteNav, { LnMark } from '../../../components/main_components/SiteNav';
 import MiniAddressBook from '../../../components/main_components/MiniAddressBook';
 import SentList from '../../../components/main_components/SentList';
 import WaveSheet from '../../../components/main_components/WaveSheet';
@@ -429,6 +429,48 @@ export default function Inbox({ layered = false, inPane = false, sent: sentFromB
     setMessages(prev => prev.map(m => (m.id === message.id ? { ...m, seen_at: new Date().toISOString() } : m)));
   }
 
+  // ── An LN. Admin letter, 2026-10-20 ──────────────────────────────────────
+  // Pinned at the top, the LN. mark where the kind's glyph goes and "pinned"
+  // where a face would be (the look Miyel chose). Open, it is the words, the
+  // line no letter can leave off — the software never asks for a secret —
+  // and Dismiss, in the two presses every message takes. No Reply: nobody is
+  // there to read one, and nothing about it goes back (library/letterhead.js).
+  function letterRow(m) {
+    const isOpen = openMessage === m.id;
+    const key = `message-${m.id}`;
+    const sure = sureOf === key;
+    return (
+      <div key={key} className={'ib-r ib-r--message ib-r--letter' + (isOpen ? ' ib-r--open' : '')}>
+        <button className="ib-rhead" aria-expanded={isOpen} onClick={() => openWords(m)}>
+          <span className={'ib-newdot' + (m.seen_at ? ' ib-newdot--off' : '')} aria-hidden="true" />
+          <span className="ib-kind ib-kind--mark" aria-hidden="true"><LnMark /></span>
+          <span className="ib-rsaid">
+            <span className="ib-rttl">Message from LN. Admin</span>
+          </span>
+          <span className="ib-pinned">pinned</span>
+        </button>
+        {isOpen && (
+          <div className="ib-open ib-open--doors">
+            <p className="ib-msg">{m.said}</p>
+            <p className="ib-letter-safe">LN. Admin never asks for your password or your spare key.</p>
+            <div className="ib-doors fr-doors-row">
+              <button
+                type="button"
+                data-sure
+                className={'fr-door' + (sure ? ' ib-door--sure' : '')}
+                onClick={() => dismiss(m)}
+                title={sure ? 'Press again to delete this message for good' : 'Delete this message'}
+              >
+                <X size={22} weight="regular" aria-hidden="true" />
+                {sure ? 'Dismiss?' : 'Dismiss'}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   // What stands greyed over a message: the words it answers, and whose.
   function saidFirst(message) {
     if (message.answering) {
@@ -836,8 +878,11 @@ export default function Inbox({ layered = false, inPane = false, sent: sentFromB
     ...live.map(s => ({ ...s, at: s.created_at })),
     ...cameBack.map(row => ({ ...row, backed: true, at: row.posted_at || row.noticed_at })),
     ...waves.map(w => ({ ...w, waved: true, at: w.arrived_at })),
-    ...messages.map(m => ({ ...m, wrote: true, at: m.arrived_at })),
+    ...messages.filter(m => !m.admin).map(m => ({ ...m, wrote: true, at: m.arrived_at })),
   ].sort((a, b) => new Date(b.at) - new Date(a.at));
+  // An LN. Admin letter is pinned above all of it, never in among it, and
+  // there is only ever one (library/letterhead.js).
+  const letter = messages.find(m => m.admin) || null;
   const shown = showArchived ? [...liveWithReturns, ...archivedRows] : liveWithReturns;
 
   // The draft behind a send, if there is one. Matched on the fold that keys
@@ -1696,6 +1741,9 @@ export default function Inbox({ layered = false, inPane = false, sent: sentFromB
                   <div className="own-empty">Nothing has been sent to you yet.</div>
                 ) : (
                   <>
+                    {/* An LN. Admin letter first of everything: the top of the
+                        inbox is where the brief pins it. */}
+                    {letter && <div className="ib-list ib-list--pinned">{letterRow(letter)}</div>}
                     {heldBlock()}
                     {/* Everything else, newest first: a soft mark, who did
                         what, and one thing at the row's end. No dates and no

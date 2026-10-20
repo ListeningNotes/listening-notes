@@ -82,7 +82,7 @@ export async function pull_messages() {
     SELECT m.id, m.from_name, m.from_journal, m.said,
            m.about_journal, m.about_slug, m.about_album, m.about_artist,
            m.about_art, m.about_song, m.answering, m.answering_name,
-           m.was_comment, m.written_at, m.arrived_at, m.seen_at, m.replied_at,
+           m.was_comment, m.written_at, m.arrived_at, m.seen_at, m.replied_at, m.admin,
            (e.id IS NOT NULL) AS entry_here
     FROM messages m
     LEFT JOIN entries e ON m.about_journal IS NULL AND e.slug = m.about_slug

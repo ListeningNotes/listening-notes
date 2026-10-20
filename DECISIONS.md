@@ -1698,10 +1698,19 @@ is cached at the edge for ten seconds and repeat asks never reach the
 database — which is what makes the cost stop growing with the number of
 people watching.
 
-**No banner or message system pushed into copies.** That would require every
-copy to phone home, producing a log of who is running one. A copy asks its
-own server, which reads the public releases at most once a day and says one
-line on the desk when a newer one exists — the only thing it can ever say.
+**No banner pushed into copies, and no copy asks for messages.** Asking would
+require every copy to phone home, producing a log of who is running one. A
+copy asks its own server, which reads the public releases at most once a day
+and says one line on the desk when a newer one exists. The one thing pushed
+is an LN. Admin letter (below): posted to the journals it concerns, by
+address, and nothing comes back.
+
+**LN. Admin letters are sealed, words only, and pushed, 2026-10-20 (Miyel's
+picks).** The messages door is open to anybody, so a letter carries an
+Ed25519 seal from a key that lives only on her Mac — on a server, one
+break-in could write to every journal. Words, no door, no link, under a
+fixed line: LN. Admin never asks for your password or your spare key. One
+pinned at a time; dismissing deletes it; nothing reports back.
 
 **A copy updates itself once an hour, takes releases and never main, and
 never crosses a major on its own, 2026-09-15.** The `Update this copy`

@@ -224,6 +224,23 @@ export async function save_listing_code(code) {
   await database`UPDATE settings SET listing_code = ${code || null} WHERE id = 1`;
 }
 
+// When the newest LN. Admin letter this journal kept was sent
+// (migrations/038_letterhead.sql, library/letterhead.js): a letter no newer
+// is refused. Read and written on its own, like the listing code; a failed
+// read says nothing was heard, and the seal is still checked.
+export async function pull_letterhead_heard() {
+  try {
+    const [row] = await database`SELECT letterhead_heard_at FROM settings WHERE id = 1`;
+    return row?.letterhead_heard_at || null;
+  } catch {
+    return null;
+  }
+}
+
+export async function save_letterhead_heard(at) {
+  await database`UPDATE settings SET letterhead_heard_at = ${at} WHERE id = 1`;
+}
+
 // Whether this journal is on the Board (migrations/032_board.sql): true until
 // its keeper switches it off in Settings. Read on its own, like the listing
 // code beside it, and true when the column is not there yet — the default
