@@ -9,8 +9,9 @@
 // the ring with two presses, the × and then the word, so a stray tap takes
 // nothing; the last way into a journal with no password does not come off
 // at all (app/api/keyring). The device's options are fetched before the
-// press and again every four minutes, for the reason the lock's are: Safari
-// asks for Face ID only straight from a press (PasswordGate.js).
+// press and again every four minutes while the page is on screen
+// (keepFresh, below), for the reason the lock's are: Safari asks for Face ID
+// only straight from a press (PasswordGate.js).
 //
 // A browser that cannot hold a key — the dev server on a phone, over plain
 // http — is told where it can, rather than shown a button that fails.
@@ -51,6 +52,46 @@ export function canHoldKeys() {
   if (typeof window === 'undefined' || !window.isSecureContext || !('PublicKeyCredential' in window)) return false;
   const host = window.location.hostname;
   return !/^[\d.]+$/.test(host) && !host.startsWith('[');
+}
+
+// ── A fresh challenge, only while the page is on screen ──────────────────
+// Every Unlock and Use Face ID holds options fetched before the press,
+// because Safari asks for Face ID only straight from one, and the challenge
+// in them lasts five minutes (library/keyring.js), so they are asked for
+// again every four. Only while the page is on screen, 2026-10-20: each ask
+// reads the database, and four minutes is under the five Neon waits before
+// it sleeps, so one sign-in tab left behind another window kept the
+// journal's database awake all day. Hidden, nothing is asked; back on
+// screen with options four minutes old, they are asked for at once.
+//
+// `ask` has just been called by the caller; this keeps it fresh from there.
+// Returns the stop, for the effect's cleanup.
+const FRESH_MS = 4 * 60 * 1000;
+
+export function keepFresh(ask) {
+  let at = Date.now();
+  let timer = null;
+  const wait = ms => { clearTimeout(timer); timer = setTimeout(renew, ms); };
+  function renew() {
+    // A clock that runs out while hidden asks nothing and stops; coming
+    // back starts it again.
+    if (document.visibilityState !== 'visible') return;
+    at = Date.now();
+    ask();
+    wait(FRESH_MS);
+  }
+  function back() {
+    if (document.visibilityState !== 'visible') return;
+    const left = FRESH_MS - (Date.now() - at);
+    if (left <= 0) renew();
+    else wait(left);
+  }
+  wait(FRESH_MS);
+  document.addEventListener('visibilitychange', back);
+  return () => {
+    clearTimeout(timer);
+    document.removeEventListener('visibilitychange', back);
+  };
 }
 
 // What a device is called in the list, from what its browser says it is.
@@ -145,12 +186,13 @@ export function KeyOffer({ ready = null, onDone = null, onNothing = null, place 
       if (!found) nothing.current?.();
     };
     if (!ready) ask();
-    // The challenge lasts five minutes, so a fresh one every four.
-    const again = setInterval(async () => {
+    // The challenge lasts five minutes, so a fresh one every four while
+    // the offer is on screen.
+    const stop = keepFresh(async () => {
       const options = await makingOptions();
       if (!gone && options) setOffer(was => (was ? { ...was, options } : was));
-    }, 4 * 60 * 1000);
-    return () => { gone = true; clearInterval(again); };
+    });
+    return () => { gone = true; stop(); };
   }, [ready]);
 
   async function use() {
@@ -416,8 +458,8 @@ export default function Keyring() {
     };
     if (can) ask();
     else Promise.resolve().then(() => { if (!gone) setAble(false); });
-    const again = can ? setInterval(ask, 4 * 60 * 1000) : null;
-    return () => { gone = true; if (again) clearInterval(again); };
+    const stop = can ? keepFresh(ask) : null;
+    return () => { gone = true; stop?.(); };
   }, []);
 
   async function addThisDevice() {

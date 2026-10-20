@@ -82,7 +82,7 @@ import { useJournalHost } from '../../hooks/useJournalHost';
 import { tidyJournal, journalUrl } from '../../library/return_address';
 import { DIRECTORY_URL } from '../../library/version';
 import { journal_in } from '../../library/carbon_copy';
-import { canHoldKeys, markKeyHere, thisDevice, wayIn, SpareKeyShown } from '../../components/main_components/Keyring';
+import { canHoldKeys, keepFresh, markKeyHere, thisDevice, wayIn, SpareKeyShown } from '../../components/main_components/Keyring';
 
 // The password claims the journal; the home screen comes after, because it is
 // the one step the software cannot perform and the moment right after the
@@ -281,11 +281,12 @@ export default function WelcomeScreen() {
   // ── Face ID, on the password screen ──────────────────────────────────────
   // Offered where this device can make a key and has Face ID or its like.
   // The options come with the setup's own wristband, and again every four
-  // minutes, because the challenge in them lasts five.
+  // minutes while the page is on screen, because the challenge in them lasts
+  // five.
   useEffect(() => {
     if (current !== 'password') return undefined;
     let gone = false;
-    let again = null;
+    let stop = null;
     (async () => {
       if (!canHoldKeys()) return;
       let able = false;
@@ -301,9 +302,9 @@ export default function WelcomeScreen() {
       await ask();
       if (gone) return;
       setFaceWay(wayIn());
-      again = setInterval(ask, 4 * 60 * 1000);
+      stop = keepFresh(ask);
     })();
-    return () => { gone = true; if (again) clearInterval(again); };
+    return () => { gone = true; stop?.(); };
   }, [current]);
 
   // Claimed with Face ID: the key made here, then the claim naming it. A

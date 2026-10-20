@@ -7,7 +7,7 @@ import { ArrowRight } from '@phosphor-icons/react';
 import { fonts } from '../../library/sitewide_visuals';
 import { useBookplate } from '../main_components/Bookplate';
 import { useJournalHost } from '../../hooks/useJournalHost';
-import { canHoldKeys, markKeyHere, readyToOffer, KeyOffer } from '../main_components/Keyring';
+import { canHoldKeys, keepFresh, markKeyHere, readyToOffer, KeyOffer } from '../main_components/Keyring';
 
 // `bare` returns the form and nothing around it, for WritingAccess to put in
 // its panel. The alternative was a second copy of these fields, and a second
@@ -54,7 +54,8 @@ import { canHoldKeys, markKeyHere, readyToOffer, KeyOffer } from '../main_compon
 // The lock's options, fetched before anything is pressed: Safari lets Face
 // ID be asked for only straight from a press, and a press that waited on the
 // network first would be refused. The challenge lasts five minutes, so a
-// caller asks again every four. Returns { options, any, spare, password },
+// caller asks again every four, while the page is on screen (keepFresh, in
+// Keyring.js). Returns { options, any, spare, password },
 // or null: `spare` is whether a spare key is waiting, `password` whether the
 // journal has one at all.
 export async function askTheLock() {
@@ -139,8 +140,8 @@ export default function PasswordGate({ onAuth, bare = false, asking = 'password'
     let gone = false;
     const ask = async () => { const a = await askTheLock(); if (!gone) setAsked(a); };
     ask();
-    const again = can ? setInterval(ask, 4 * 60 * 1000) : null;
-    return () => { gone = true; if (again) clearInterval(again); };
+    const stop = can ? keepFresh(ask) : null;
+    return () => { gone = true; stop?.(); };
   }, [claiming]);
 
   // Before the lock has answered there is nothing to draw but the line; after,
