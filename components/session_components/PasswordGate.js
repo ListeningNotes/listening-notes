@@ -3,9 +3,11 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { startAuthentication } from '@simplewebauthn/browser';
+import { ArrowRight } from '@phosphor-icons/react';
 import { fonts } from '../../library/sitewide_visuals';
 import { useBookplate } from '../main_components/Bookplate';
 import { useJournalHost } from '../../hooks/useJournalHost';
+import { canHoldKeys, markKeyHere, readyToOffer, KeyOffer } from '../main_components/Keyring';
 
 // `bare` returns the form and nothing around it, for WritingAccess to put in
 // its panel. The alternative was a second copy of these fields, and a second
@@ -30,33 +32,16 @@ import { useJournalHost } from '../../hooks/useJournalHost';
 // words, 2026-10-17: the line names the person and what the lock guards, so
 // it reads the same to somebody who calls this a journal or a blog). Where
 // it has none, the password field is the door, as it always was. The claim
-// code is untouched.
-
-// The browser's note that it has unlocked this journal with a key before,
-// so the lock can go straight to Face ID next time — one tap (Miyel's pick).
-// Only a yes is kept: the key itself never leaves the device.
-export const KEY_HERE = 'ln-key-here';
-
-export function keyHere() {
-  try { return localStorage.getItem(KEY_HERE) === '1'; } catch { return false; }
-}
-
-export function markKeyHere(on) {
-  try {
-    if (on) localStorage.setItem(KEY_HERE, '1');
-    else localStorage.removeItem(KEY_HERE);
-  } catch { /* a private window keeps nothing, and asks every time */ }
-}
-
-// Whether this browser can hold a key at all: a secure page, at a named
-// address, in a browser that knows passkeys. The dev server on a phone, over
-// plain http, cannot; nor can a bare number like 127.0.0.1, which no browser
-// will file a key under.
-export function canHoldKeys() {
-  if (typeof window === 'undefined' || !window.isSecureContext || !('PublicKeyCredential' in window)) return false;
-  const host = window.location.hostname;
-  return !/^[\d.]+$/.test(host) && !host.startsWith('[');
-}
+// code is untouched. After the password opens it, on a device that could
+// use Face ID instead, the door asks *Use Face ID next time?* before letting
+// the keeper through (KeyOffer, in Keyring.js; Miyel's words).
+//
+// ── A soft field, 2026-10-20 ──────────────────────────────────────────────
+// Miyel's pick over a boxed field and a faint Enter: the password sits in a
+// soft well with an arrow at its end, and the journal's address — the name
+// a password manager files it under — is a small line under it. Under it to
+// the eye only: in the markup it still comes first, because a manager takes
+// the field before a password for its username.
 
 // The lock's options, fetched before anything is pressed: Safari lets Face
 // ID be asked for only straight from a press, and a press that waited on the
@@ -130,6 +115,9 @@ export default function PasswordGate({ onAuth, bare = false, asking = 'password'
   const [asked, setAsked] = useState(undefined);
   const [typing, setTyping] = useState(false);
   const [unlocking, setUnlocking] = useState(false);
+  // The offer to make this device a key, once the password has opened the
+  // door: what readyToOffer found, or null.
+  const [offering, setOffering] = useState(null);
   useEffect(() => {
     if (claiming || !canHoldKeys()) return undefined;
     setKeyed(true);
@@ -172,6 +160,10 @@ export default function PasswordGate({ onAuth, bare = false, asking = 'password'
         body: JSON.stringify({ password: pw }),
       });
       if (res.ok) {
+        // In, and asked first whether this device should open it with Face
+        // ID from now on, where it could.
+        const ready = claiming ? null : await readyToOffer();
+        if (ready) { setOffering(ready); return; }
         onAuth();
       } else if (res.status === 429) {
         // The doorman, not a wrong password. Saying so matters: five bad
@@ -217,27 +209,29 @@ export default function PasswordGate({ onAuth, bare = false, asking = 'password'
             aria-label="Journal"
             tabIndex={-1}
           />
-          <input
-            type={claiming ? 'text' : 'password'}
-            name="password"
-            autoComplete={claiming ? 'off' : 'current-password'}
-            placeholder={claiming ? 'claim code' : 'password'}
-            className={'pg-pw' + (error ? ' pg-pw--wrong' : '')}
-            value={pw}
-            onChange={e => { setPw(e.target.value); setError(''); }}
-            disabled={loading}
-            autoFocus={autoFocus || typing}
-          />
+          <div className={'pg-well' + (error ? ' pg-well--wrong' : '')}>
+            <input
+              type={claiming ? 'text' : 'password'}
+              name="password"
+              autoComplete={claiming ? 'off' : 'current-password'}
+              placeholder={claiming ? 'claim code' : 'password'}
+              className="pg-pw"
+              value={pw}
+              onChange={e => { setPw(e.target.value); setError(''); }}
+              disabled={loading}
+              autoFocus={autoFocus || typing}
+            />
+            <button type="submit" className="pg-arrow" disabled={loading} aria-label={loading ? 'Checking' : 'Enter'}>
+              <ArrowRight size={16} aria-hidden="true" />
+            </button>
+          </div>
           {error && <div className="pg-said">{error}</div>}
-          <button type="submit" className="pg-go" disabled={loading}>
-            {loading ? 'Checking…' : 'Enter →'}
-          </button>
         </form>
   );
 
   // The door: the line, then Unlock and the password under it where there
   // are keys, or the field where there are none.
-  const door = (
+  const door = offering ? <KeyOffer ready={offering} onDone={onAuth} /> : (
     <>
       {line && <p className="pg-line">{line}</p>}
       {offerKey && (

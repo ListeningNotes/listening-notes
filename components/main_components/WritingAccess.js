@@ -43,7 +43,8 @@
 
 import { useEffect, useState } from 'react';
 import { LockSimple, LockSimpleOpen } from '@phosphor-icons/react';
-import PasswordGate, { askTheLock, unlockWith, keyHere, canHoldKeys } from '../session_components/PasswordGate';
+import PasswordGate, { askTheLock, unlockWith } from '../session_components/PasswordGate';
+import { keyHere, canHoldKeys } from './Keyring';
 
 // ── One tap, 2026-10-20 ───────────────────────────────────────────────────
 // On a device that has opened this journal with a passkey before, the lock
@@ -53,6 +54,13 @@ import PasswordGate, { askTheLock, unlockWith, keyHere, canHoldKeys } from '../s
 // no, or not recognised, the lock opens as it does everywhere else — the
 // line, Unlock, and the password (PasswordGate). Anywhere that has never
 // unlocked with a key, nothing is fetched and the lock works as it did.
+//
+// ── Unlock under it, 2026-10-20 ───────────────────────────────────────────
+// The lock alone read as possibly anything (Miyel: "is it too ambiguous?"),
+// so it is a door now, like the book's: the glyph over one word, Unlock, her
+// pick over Keeper and over the sentence beside it. The word says what the
+// press does on her own phone; to anybody else the press says the rest —
+// *Only [keeper] can write here.*
 
 export default function WritingAccess({ onSignedIn }) {
   const [open, setOpen] = useState(false);
@@ -93,9 +101,7 @@ export default function WritingAccess({ onSignedIn }) {
         type="button"
         className={'pt-key' + (open ? ' pt-key--open' : '')}
         onClick={press}
-        aria-label={open ? 'Close the sign-in' : 'Sign in'}
         aria-expanded={open}
-        title="Sign in"
       >
         {/* A lock, shut at rest and open while the field is up (Miyel,
             2026-09-28: "lock turning to locksimpleopen"). It was a key until
@@ -103,9 +109,12 @@ export default function WritingAccess({ onSignedIn }) {
             keys on one pane read as one thing. The plain lock rather than
             the one with a keyhole, so the body is the same in both states
             and only the shackle moves. */}
-        {open
-          ? <LockSimpleOpen size={18} aria-hidden="true" />
-          : <LockSimple size={18} aria-hidden="true" />}
+        <span className="pt-key-ring">
+          {open
+            ? <LockSimpleOpen size={18} aria-hidden="true" />
+            : <LockSimple size={18} aria-hidden="true" />}
+        </span>
+        <span className="pt-key-word">Unlock</span>
       </button>
       {open && (
         <div className="pt-lock-field">

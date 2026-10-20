@@ -52,6 +52,7 @@ import {
 import { useIdentificationCardEditor } from './IdentificationCardEditor';
 import EditingBar from './EditingBar';
 import WritingAccess from './WritingAccess';
+import { KeyOffer } from './Keyring';
 import { useBookplate } from './Bookplate';
 import { BIO_PROMPTS, readBioAnswers } from '../../library/bioprompt';
 import { VERSION, RELEASE_URL, SOURCE_URL } from '../../library/version';
@@ -1074,6 +1075,10 @@ export default function About({ stamps, authed = false, pinned = null, entries =
           this copy is running. */}
       {authed && (
         <section className="ab-keep" aria-label="This copy">
+          {/* Use Face ID next time? — once, for a keeper already signed in on
+              a device that could, who would otherwise not see the lock for
+              months (Miyel, 2026-10-20). Draws nothing anywhere else. */}
+          <KeyOffer place="foot" />
           {/* The one line about the software rather than the journal: which
               version this is, and — only when it is true — that there is a
               newer one. No Source: §13 is owed to visitors and this is the

@@ -555,29 +555,57 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 }
 
 /* ── from components/session_components/PasswordGate.js ─────────────────────────────────────────── */
-.pg-form { display: flex; flex-direction: column; gap: 12px; }
+.pg-form { display: flex; flex-direction: column; gap: 10px; }
 /* The journal's address, as the thing the password is filed
    under. A real input rather than a label, because that is what
    a password manager pairs the password with — and visible,
    because managers ignore fields they consider hidden, and not
    read-only, because Safari skips those too. Typing into it does
-   nothing; it is the address. */
+   nothing; it is the address. Drawn under the well and small,
+   2026-10-20 (Miyel: "make the URL smaller"), while the markup keeps
+   it first, where a manager looks for the username. */
 .pg-who {
+  order: 2;
   width: 100%; box-sizing: border-box; text-align: center;
   background: none; border: 0; outline: none; padding: 0;
-  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.12em;
-  text-transform: uppercase; color: var(--ink-faint);
+  font-family: var(--font-label); font-size: 8px; letter-spacing: 0.04em;
+  color: var(--ink-faint);
 }
+/* A phone sizes every field at 16px, !important, so Safari does not zoom in
+   on the one being written in (base.css). Nobody writes in this one, so it
+   is let off — at 16px it was the biggest thing in the panel. */
+@media (max-width: 768px) {
+  .pg-who { font-size: 8px !important; }
+}
+/* The soft field, Miyel's pick, 2026-10-20: a well with no line round it,
+   the password centred in it and an arrow at its end that is the submit. A
+   hairline comes only while it is being written in, and red when wrong. */
+.pg-well {
+  order: 1;
+  display: flex; align-items: center;
+  background: var(--panel); border: 1px solid transparent; border-radius: 10px;
+  transition: border-color 0.15s;
+}
+.pg-well:focus-within { border-color: var(--border); }
+.pg-well--wrong, .pg-well--wrong:focus-within { border-color: #e05555; }
+/* The left padding is the arrow's width, so the writing sits in the middle
+   of the well rather than the middle of what the arrow leaves. */
 .pg-pw {
-  width: 100%; box-sizing: border-box; text-align: center;
-  background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
-  padding: 12px 16px; font-family: var(--font-mono); font-size: 16px;
-  color: var(--ink); outline: none; transition: border-color 0.15s;
+  flex: 1; min-width: 0; box-sizing: border-box; text-align: center;
+  background: none; border: 0; outline: none;
+  padding: 12px 0 12px 36px; font-family: var(--font-mono); font-size: 16px;
+  color: var(--ink);
 }
-.pg-pw:focus { border-color: var(--ink-faint); }
 .pg-pw::placeholder { color: var(--ink-faint); }
-.pg-pw--wrong { border-color: #e05555; }
-.pg-said { font-family: var(--font-label); font-size: 10px; color: #e05555; line-height: 1.5; text-align: center; }
+.pg-arrow {
+  flex: none; display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; margin-right: 4px; padding: 0;
+  border: 0; border-radius: 8px; background: none; cursor: pointer;
+  color: var(--ink-faint); transition: color 0.15s;
+}
+.pg-arrow:hover { color: var(--ink); }
+.pg-arrow:disabled { opacity: 0.4; cursor: default; }
+.pg-said { order: 3; font-family: var(--font-label); font-size: 10px; color: #e05555; line-height: 1.5; text-align: center; }
 .pg-go {
   width: 100%; padding: 12px 0; border-radius: 999px; cursor: pointer;
   background: var(--ink); color: var(--bg); border: 1px solid var(--ink);
@@ -585,6 +613,14 @@ textarea.st-field { resize: vertical; min-height: 96px; }
   text-transform: uppercase;
 }
 .pg-go:disabled { opacity: 0.5; cursor: default; }
+/* Unlock is a word in ink, not the black button the page had for Enter —
+   it sits over the soft field and is answered by Face ID, 2026-10-20. */
+.pg-go.pg-unlock {
+  width: auto; align-self: center; padding: 8px 16px;
+  background: none; color: var(--ink); border-color: transparent;
+  font-size: 11px;
+}
+.pg-go.pg-unlock:hover { border-color: var(--border); }
 /* The door's one line, 2026-10-20: who may write here, over Unlock. The
    reading face, quiet, centred — it is said to a visitor as much as to the
    keeper, and asks nothing of either. */
@@ -596,6 +632,23 @@ textarea.st-field { resize: vertical; min-height: 96px; }
   color: var(--ink-faint); cursor: pointer;
 }
 .pg-or:hover { color: var(--ink-soft); }
+/* Use Face ID next time? — after the password, and once at the foot of the
+   card, 2026-10-20 (Keyring.js). The question in the reading face, the
+   device's way in as a glyph over its name in the label face, not now
+   under it, as the door's own Unlock and use your password are. */
+.ko { display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
+.ko-line { margin: 0; font-size: 13px; line-height: 1.5; color: var(--ink-soft); text-wrap: balance; }
+.ko-use {
+  display: inline-flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 4px 10px; border: 0; background: none; cursor: pointer;
+  color: var(--ink); font-family: var(--font-label); font-size: 11px;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  transition: opacity 0.15s;
+}
+.ko-use:hover { opacity: 0.65; }
+.ko-use:disabled { opacity: 0.5; cursor: default; }
+.ko-said { margin: 0; font-size: 13px; line-height: 1.5; color: var(--ink-soft); text-align: center; }
+.ko--foot { margin: 0 0 22px; }
 
 /* ── from components/main_components/AddToHomeScreen.js ─────────────────────────────────────────── */
 .a2h { display: flex; flex-direction: column; gap: 14px; }
