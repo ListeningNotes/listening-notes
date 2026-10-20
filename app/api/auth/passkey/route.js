@@ -5,7 +5,8 @@
 //
 // GET hands the device a challenge, and says whether this journal has any
 // keys at all, so the lock offers Unlock only where there is something to
-// unlock with. POST is the device's signed answer; when library/keyring.js
+// unlock with — and whether a spare key is waiting, so it offers *use your
+// spare key* only where one is. POST is the device's signed answer; when library/keyring.js
 // says it holds, the visitor leaves wearing the same wristband the password
 // gives (app/api/auth/login), and nothing past the door knows the
 // difference. Counted by the doorman's login door like a password, because
@@ -15,11 +16,13 @@ import { NextResponse } from 'next/server';
 import { begin_unlocking, finish_unlocking, spent } from '@/library/keyring';
 import { issueWristband, WRISTBAND_COOKIE } from '@/library/wristband';
 import { mayKnock, forgetKnocks, tooSoon, whoIsKnocking } from '@/library/doorman';
+import { spareKeyState } from '@/library/secrets';
 
 export async function GET(request) {
   try {
     const { options, any, cookie } = await begin_unlocking(request);
-    const response = NextResponse.json({ options, any }, { headers: { 'Cache-Control': 'no-store' } });
+    const { ready: spare } = await spareKeyState();
+    const response = NextResponse.json({ options, any, spare }, { headers: { 'Cache-Control': 'no-store' } });
     response.cookies.set(cookie.name, cookie.value, cookie.options);
     return response;
   } catch {

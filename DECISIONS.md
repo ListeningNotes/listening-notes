@@ -1912,6 +1912,13 @@ After the password, *Use Face ID next time?* with not now; a keeper already
 signed in, who may not see the lock for months, is asked once at the foot of
 the card — never a sheet that pops up. Not now is kept per device.
 
+**The spare key is sixteen letters and numbers, shown once and good once,
+2026-10-20 (Miyel's picks).** The brief's floor: the way back when every
+device and the password are gone, and the only one a journal without a
+password has. A hash in the vault; the sign-in spends it in the statement
+that checks it. The card's foot asks for one when there is none and when it
+has been used, after Face ID; Your keys holds it beside the password.
+
 **A wristband says it is one, 2026-10-20.** A band holds `authed: true`, and
 nothing without it passes. Anything else signed with the session secret would
 otherwise be a band; the passkey's challenge cookies are handed to anybody

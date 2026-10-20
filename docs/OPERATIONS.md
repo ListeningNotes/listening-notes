@@ -167,6 +167,13 @@ ID, but take it off anyway: Settings → Your keys, from any device you are
 signed in on, or sign in with your password first. The password always
 stays as a second way in.
 
+**The spare key.** Sixteen letters and numbers, made in Settings → Your keys
+(or when the foot of your card asks) and shown once: write it down or keep
+it in your Passwords app. It opens your journal once, from the lock's *use
+your spare key*, when every device and the password are gone, and the
+sign-in spends it; make a new one straight after. Making a new one retires
+the old. Neither the export nor Bring your journal carries it.
+
 **Locked out.** With the password in the database there is no variable to
 edit. Get in with a wristband you still hold on another device and change it
 in Settings. Failing that:

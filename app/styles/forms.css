@@ -496,6 +496,48 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 }
 .kr-x:hover { color: var(--ink-soft); }
 .kr-x--sure { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: #e05555; }
+/* The other ways in, under the devices, 2026-10-20: the password and the
+   spare key as rows of their own, the word that acts on each at its end. */
+.kr-list--ways { margin-top: 16px; border-top: 1px solid var(--border); }
+.kr-list--ways .kr-row:first-child { border-top: 0; }
+.kr-do {
+  background: none; border: 0; padding: 10px 8px; margin: -10px -8px; cursor: pointer;
+  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.kr-do:hover { color: var(--ink); }
+.kr-do:disabled { opacity: 0.5; cursor: default; }
+.kr-said { margin-left: 10px; }
+.kr-more { padding: 4px 0 16px; }
+.kr-change { display: flex; flex-direction: column; gap: 8px; }
+/* The spare key, shown the once it ever is: the key in the mono face, big
+   enough to copy by hand, what it is for, Copy and I've saved it. */
+.sk {
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  padding: 18px 14px; border-radius: 12px; background: var(--bg); text-align: center;
+}
+.ko--foot .sk { background: var(--panel); }
+.sk-h { margin: 0; font-family: var(--font-display); font-weight: var(--font-display-weight, 700); font-size: 15px; color: var(--ink); }
+.sk-code {
+  margin: 0; font-family: var(--font-mono); font-size: 18px; letter-spacing: 0.08em; color: var(--ink);
+  user-select: all; -webkit-user-select: all; overflow-wrap: anywhere;
+}
+.sk-note { margin: 0; max-width: 300px; font-size: 13px; line-height: 1.5; color: var(--ink-soft); text-wrap: balance; }
+.sk-do { display: flex; align-items: center; justify-content: center; gap: 22px; margin-top: 2px; }
+/* Copy looks like a button (Miyel, 2026-10-20): a hairline box with square-ish
+   corners, never a pill. I've saved it stays a word beside it. */
+.sk-copy {
+  padding: 8px 18px; border: 1px solid var(--border); border-radius: 8px; background: var(--panel); cursor: pointer;
+  font-family: var(--font-label); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink);
+  transition: border-color 0.15s;
+}
+.sk-copy:hover { border-color: var(--ink-faint); }
+.sk-saved {
+  padding: 8px 4px; border: 0; background: none; cursor: pointer;
+  font-family: var(--font-label); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink);
+  transition: opacity 0.15s;
+}
+.sk-saved:hover { opacity: 0.65; }
 /* Sign out is not a section: a word under the tiles, where setup keeps Back. */
 .st-section--out {
   align-items: center; margin: 16px 0 0; padding: 14px 0 0;
@@ -576,6 +618,7 @@ textarea.st-field { resize: vertical; min-height: 96px; }
    is let off — at 16px it was the biggest thing in the panel. */
 @media (max-width: 768px) {
   .pg-who { font-size: 8px !important; }
+  .st-who { font-size: 10px !important; }
 }
 /* The soft field, Miyel's pick, 2026-10-20: a well with no line round it,
    the password centred in it and an arrow at its end that is the submit. A
@@ -648,6 +691,13 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 .ko-use:hover { opacity: 0.65; }
 .ko-use:disabled { opacity: 0.5; cursor: default; }
 .ko-said { margin: 0; font-size: 13px; line-height: 1.5; color: var(--ink-soft); text-align: center; }
+.ko-note { margin: -6px 0 0; max-width: 260px; font-size: 12px; line-height: 1.5; color: var(--ink-faint); text-wrap: balance; }
+/* The other ways in, under the door: use your password · use your spare key. */
+.pg-ways {
+  display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 2px 8px;
+  margin: 0; font-family: var(--font-label); font-size: 10px; color: var(--ink-faint);
+}
+.pg-ways .pg-or { margin: 0; padding: 6px 2px; }
 .ko--foot { margin: 0 0 22px; }
 
 /* ── from components/main_components/AddToHomeScreen.js ─────────────────────────────────────────── */

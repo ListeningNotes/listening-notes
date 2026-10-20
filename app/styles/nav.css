@@ -3685,6 +3685,10 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
 /* Unlock, where the journal has keys: the panel's one press, at the size of
    a word, in ink. */
 .pt-lock-field .pg-go.pg-unlock { padding: 6px 14px; }
+/* The other ways in, one to a line: the panel is too narrow for both on one,
+   and a dot left at the end of a line points at nothing. */
+.pt-lock-field .pg-ways { flex-direction: column; gap: 0; }
+.pt-lock-field .pg-dot { display: none; }
 
 /* The card's header used to be pinned to the window, which meant its pencil
    floated over the wall while the pane beside it was showing — so it was

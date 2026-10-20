@@ -116,7 +116,7 @@ The library — logic, no visuals
     portrait_code.js           The press: the portrait made into the journal's QR code on the server — a dot of ink in every photo module, proved by the strictest reader on both page colours
     report_actions.js          Problems keepers wrote in from their desks — the reports table
     return_address.js          The back of the envelope — a sender's name and journal kept in their own browser — the one spelling an address is kept in, and addressFrom, what a copy calls itself from the request that reached it
-    secrets.js                 The vault: the session secret, the password hash, the claim code, the setup window, and two retired key columns. Database first, environment second; seal_claim writes the claim inside a restore's own transaction
+    secrets.js                 The vault: the session secret, the password hash, the spare key's hash, the claim code, the setup window, and two retired key columns. Database first, environment second; seal_claim writes the claim inside a restore's own transaction; the spare key is made, described and spent here
     sent_actions.js            The `sent` table: a send that landed, written down; what is still out, read against came_back; a row removed
     session_timers.js          Track length display (m:ss)
     settings_actions.js        The settings row: read (never the portrait blobs), write through an allow-list, the name, isSetUp, and the one-column keeper-name reader the feed uses
@@ -169,11 +169,11 @@ The front doors — receive requests, hand them off, send back responses
     secrets/route.js           The vault — owner-only both ways; says what is set, never the value
     setup/route.js             GET: is this copy claimed. POST: the one write that claims it
     restore/route.js           Bring your journal — POST, behind setup's wristband and only on a copy nobody has claimed: the journal from Make a copy and a password; restored with library/unpacking.mjs, never the vault, and claimed in the same transaction (the password, this copy's address, the Board's old code gone)
-    auth/login/route.js        The password, the deploy-time variable, or — unclaimed — the claim code
+    auth/login/route.js        The password, the deploy-time variable, the spare key (once, and spent by it), or — unclaimed — the claim code
     auth/check/route.js        Am I still wearing a valid wristband; renews an ageing one on the way
     auth/logout/route.js       Cuts the wristband off
     auth/passkey/route.js      Opening the door with a passkey: GET hands the device a challenge and says whether there are keys; POST is its signed answer, counted by the login door, and leaves wearing the wristband the password gives
-    keyring/route.js           Your keys — owner-only: the list, making a key on this device, taking one off; never the last way into a journal with no password
+    keyring/route.js           Your keys — owner-only: the list with the spare key's state and where the password comes from, making a key on this device, making a spare key (shown once), taking a key off; never the last way in
     waiting/route.js           How many sends are waiting on the keeper — the desk's number; messages are never counted
     needle/route.js            Where a listen says what it is on — owner-only, write only; the read is public/beacon
     portrait/route.js          The keeper's picture: uploaded into a column, served back from it, removed
@@ -236,7 +236,7 @@ The furniture — visual pieces
       WritingAccess.js         The lock at the foot of the card for a visitor, the glyph over Unlock — shut, open while the door it opens in place; on a device that has unlocked with a key before, one press goes straight to Face ID
       ComingSoon.js            What a held copy shows instead of a site — unclaimed, no database, or database unreachable
       AddToHomeScreen.js       The one step the software cannot do: the last screen of setup, and a Settings section
-      Keyring.js               Your keys, in Settings: each device's key, + Add this device (Face ID or its like), a key off in two presses; where this browser cannot hold a key, it says where one can be made. Also the browser's half of keys — whether it can hold one, whether it has unlocked with one — and KeyOffer, Use Face ID next time?, drawn after the password and once at the card's foot
+      Keyring.js               Your keys, in Settings: each device's key, + Add this device (Face ID or its like), a key off in two presses; then the password (changed in place) and the spare key (made, and shown once). Also the browser's half of keys — whether it can hold one, whether it has unlocked with one — KeyOffer, Use Face ID next time?, drawn after the password and at the card's foot, and KeeperFoot, the foot's one question a visit: Face ID, then the spare key
       JournalCopy.js           Back up your journal, in Settings: Make a copy fetches the export and holds it as a zip — journal.json, Read me.txt and a page per entry (library/carbon_copy.js) — then Share (a phone) or Download (a computer)
       AlbumFinder.js           Type, see covers, pick one — the stranger's send form's search (/submit)
       MiniAddressBook.js       The address book as a strip of faces, for picking one person — the entry editor's Sent by, the inbox's send whose sender has since got a copy, and the send sheet's book, as a grid

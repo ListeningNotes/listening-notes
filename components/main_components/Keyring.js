@@ -24,8 +24,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { startRegistration } from '@simplewebauthn/browser';
-import { Fingerprint, ScanSmiley } from '@phosphor-icons/react';
-import { SANDBOX } from '../../library/version';
+import { Fingerprint, Key, ScanSmiley } from '@phosphor-icons/react';
+import { useJournalHost } from '../../hooks/useJournalHost';
 
 // The browser's note that it has unlocked this journal with a key before,
 // so the lock can go straight to Face ID next time — one tap (Miyel's pick).
@@ -125,20 +125,24 @@ export async function readyToOffer() {
 // `ready` is what readyToOffer found, when the caller has already asked (the
 // door, which waits on it before letting the keeper in); without it the
 // offer asks for itself and draws nothing until it knows (the card's foot).
-// `onDone` is called once it is answered, either way.
-export function KeyOffer({ ready = null, onDone = null, place = 'door' }) {
+// `onDone` is called once it is answered, either way; `onNothing` when it
+// asked for itself and found nothing to offer.
+export function KeyOffer({ ready = null, onDone = null, onNothing = null, place = 'door' }) {
   const [offer, setOffer] = useState(ready);
   const [busy, setBusy] = useState(false);
   const [said, setSaid] = useState('');
   const [trouble, setTrouble] = useState('');
   const done = useRef(onDone);
-  useEffect(() => { done.current = onDone; });
+  const nothing = useRef(onNothing);
+  useEffect(() => { done.current = onDone; nothing.current = onNothing; });
 
   useEffect(() => {
     let gone = false;
     const ask = async () => {
       const found = await readyToOffer();
-      if (!gone) setOffer(found);
+      if (gone) return;
+      setOffer(found);
+      if (!found) nothing.current?.();
     };
     if (!ready) ask();
     // The challenge lasts five minutes, so a fresh one every four.
@@ -209,13 +213,161 @@ export function KeyOffer({ ready = null, onDone = null, place = 'door' }) {
   );
 }
 
+// ── The spare key, shown, 2026-10-20 ──────────────────────────────────────
+// The one time it is ever seen — library/secrets.js keeps only its hash — in
+// Miyel's words: the key, what it is for, Copy drawn as a button (her ask)
+// and I've saved it, which puts it away for good.
+export function SpareKeyShown({ code, replaced = false, onSaved }) {
+  const [copied, setCopied] = useState(false);
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch { /* it is on screen to be written down */ }
+  }
+  return (
+    <div className="sk" role="group" aria-label="Your spare key">
+      <p className="sk-h">Your spare key</p>
+      <p className="sk-code">{code}</p>
+      <p className="sk-note">If you lose your phone and your password, this opens your journal once. Write it down or save it somewhere safe — you won’t see it again.</p>
+      {replaced && <p className="sk-note">The one before no longer works.</p>}
+      <div className="sk-do">
+        <button type="button" className="sk-copy" onClick={copy}>{copied ? 'Copied' : 'Copy'}</button>
+        <button type="button" className="sk-saved" onClick={onSaved}>I’ve saved it</button>
+      </div>
+    </div>
+  );
+}
+
+async function makeSpare() {
+  const r = await fetch('/api/keyring', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ spare: true }),
+  });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok || !d.code) throw new Error(d.error || 'A spare key could not be made just now.');
+  return d;
+}
+
+// ── Make a spare key? at the card's foot, 2026-10-20 ──────────────────────
+// Miyel's pick: the foot brings the spare key up when there is none, and
+// again when the one there was has been used, once Face ID has nothing to
+// ask — one question a visit. Not now is kept on this device with the time
+// it was said, so a key used after it brings the question back.
+const SPARE_NOT_NOW = 'ln-spare-not-now';
+
+function SpareOffer() {
+  const [state, setState] = useState(null);
+  const [shown, setShown] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [trouble, setTrouble] = useState('');
+  const [finished, setFinished] = useState(false);
+
+  useEffect(() => {
+    let gone = false;
+    (async () => {
+      try {
+        const r = await fetch('/api/keyring', { cache: 'no-store' });
+        const d = await r.json();
+        const spare = d?.spare;
+        if (gone || !spare || spare.ready) return;
+        let saidAt = null;
+        try { saidAt = localStorage.getItem(SPARE_NOT_NOW); } catch { /* asks */ }
+        const usedSince = spare.used_at && saidAt && new Date(spare.used_at) > new Date(saidAt);
+        if (saidAt && !usedSince) return;
+        setState(spare);
+      } catch { /* nothing to ask */ }
+    })();
+    return () => { gone = true; };
+  }, []);
+
+  async function make() {
+    if (busy) return;
+    setBusy(true);
+    setTrouble('');
+    try {
+      const d = await makeSpare();
+      setShown(d.code);
+    } catch (error) {
+      setTrouble(error?.message || 'A spare key could not be made just now.');
+    }
+    setBusy(false);
+  }
+
+  function notNow() {
+    try { localStorage.setItem(SPARE_NOT_NOW, new Date().toISOString()); } catch { /* asks again */ }
+    setFinished(true);
+  }
+
+  if (shown) {
+    return (
+      <div className="ko--foot">
+        <SpareKeyShown code={shown} onSaved={() => { setShown(null); setFinished(true); }} />
+      </div>
+    );
+  }
+  if (!state || finished) return null;
+  const used = Boolean(state.used_at);
+  return (
+    <div className="ko ko--foot">
+      <p className="ko-line">{used ? 'Your spare key is used up.' : 'Make a spare key?'}</p>
+      {!used && <p className="ko-note">It opens your journal if you lose every device and your password.</p>}
+      <button type="button" className="ko-use" onClick={make} disabled={busy}>
+        <Key size={26} aria-hidden="true" />
+        <span>{used ? 'Make a new one' : 'Make one'}</span>
+      </button>
+      {trouble && <p className="pg-said">{trouble}</p>}
+      <button type="button" className="pg-or" onClick={notNow}>not now</button>
+    </div>
+  );
+}
+
+// The foot of the keeper's own card asks one thing a visit: Face ID first,
+// and the spare key once Face ID has nothing to ask.
+export function KeeperFoot() {
+  const [faceAnswered, setFaceAnswered] = useState(false);
+  return (
+    <>
+      <KeyOffer place="foot" onNothing={() => setFaceAnswered(true)} />
+      {faceAnswered && <SpareOffer />}
+    </>
+  );
+}
+
+const PASSWORD_FLOOR = 8;
+
+// The spare key's row, in a few words: when it was made, when it was used,
+// or that there is none yet.
+function spareSaid(spare) {
+  if (!spare) return '';
+  if (spare.ready) return ` · made ${added(spare.made_at)}`;
+  if (spare.used_at) return ` · used ${added(spare.used_at)}`;
+  return ' · none yet';
+}
+
 function added(at) {
   const d = new Date(at);
   return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
 export default function Keyring() {
+  const host = useJournalHost();
   const [keys, setKeys] = useState(null);
+  // The other ways in, folded into Your keys (2026-10-20): where the password
+  // comes from ('journal', 'environment', or null for none), the spare key's
+  // state, the one shown just now, and the password being changed in place.
+  const [password, setPassword] = useState(undefined);
+  const [spare, setSpare] = useState(null);
+  const [shown, setShown] = useState(null);
+  const [making, setMaking] = useState(false);
+  const [changing, setChanging] = useState(false);
+  const [pw, setPw] = useState('');
+  const [pwAgain, setPwAgain] = useState('');
+  const [pwBusy, setPwBusy] = useState(false);
+  const [pwSaid, setPwSaid] = useState('');
+  const [pwTrouble, setPwTrouble] = useState('');
   const [able, setAble] = useState(null);
   const [offer, setOffer] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -226,28 +378,6 @@ export default function Keyring() {
   // work says so, rather than sitting there pressable and silent.
   const [offerLost, setOfferLost] = useState(false);
 
-  // ── The sandbox's readout, 2026-10-20 — TEMPORARY, out before merge ────
-  // What this phone says about keys, and what the last press came to, drawn
-  // under Your keys on the sandbox only, so a try on the phone says what
-  // happened without a cable to read its console.
-  const [readout, setReadout] = useState(null);
-  const [offerSaid, setOfferSaid] = useState('');
-  const [lastPress, setLastPress] = useState('');
-  useEffect(() => {
-    if (!SANDBOX) return undefined;
-    let gone = false;
-    (async () => {
-      const r = {
-        secure: window.isSecureContext,
-        api: 'PublicKeyCredential' in window,
-        homeScreen: navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches,
-        faceId: false,
-      };
-      try { r.faceId = await window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable(); } catch { /* stays no */ }
-      if (!gone) setReadout(r);
-    })();
-    return () => { gone = true; };
-  }, []);
 
   // The ring, and — where this browser can make a key — the options to make
   // one with, fetched ahead of the press.
@@ -255,7 +385,12 @@ export default function Keyring() {
     let gone = false;
     fetch('/api/keyring', { cache: 'no-store' })
       .then(r => r.json())
-      .then(d => { if (!gone) setKeys(d.keys || []); })
+      .then(d => {
+        if (gone) return;
+        setKeys(d.keys || []);
+        setSpare(d.spare || null);
+        setPassword(d.password ?? null);
+      })
       .catch(() => { if (!gone) setTrouble('Your keys could not be read just now.'); });
     const can = canHoldKeys();
     const ask = async () => {
@@ -270,10 +405,9 @@ export default function Keyring() {
           setAble(can);
           setOffer(d.options || null);
           setOfferLost(!d.options);
-          setOfferSaid(d.options ? 'ready' : `${r.status} ${d.error || ''}`.trim());
         }
-      } catch (error) {
-        if (!gone) { setAble(can); setOfferLost(true); setOfferSaid(`unreached: ${error?.message || error}`); }
+      } catch {
+        if (!gone) { setAble(can); setOfferLost(true); }
       }
     };
     if (can) ask();
@@ -288,13 +422,10 @@ export default function Keyring() {
     setSaid('');
     setTrouble('');
     const device = thisDevice();
-    const pressed = performance.now();
     let response;
     try {
       response = await startRegistration({ optionsJSON: offer });
-      setLastPress('the device answered');
     } catch (error) {
-      setLastPress(`${error?.name || 'Error'}${error?.code ? ` ${error.code}` : ''} after ${Math.round(performance.now() - pressed)} ms: ${error?.message || ''}`);
       setBusy(false);
       // Told no is not a fault. A device that already holds a key for this
       // journal is told so, because pressing again would only say it again.
@@ -309,7 +440,6 @@ export default function Keyring() {
       });
       const d = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(d.error || 'The key could not be added.');
-      setLastPress('the device answered, and the key was kept');
       setKeys(d.keys || []);
       markKeyHere(true);
       setSaid(`Added. This ${device} can unlock your journal.`);
@@ -325,6 +455,50 @@ export default function Keyring() {
       setOfferLost(!d.options);
     } catch { setOffer(null); setOfferLost(true); }
     setBusy(false);
+  }
+
+  async function newSpare() {
+    if (making) return;
+    setMaking(true);
+    setTrouble('');
+    setSaid('');
+    try {
+      const had = Boolean(spare?.ready);
+      const d = await makeSpare();
+      setSpare(d.spare || null);
+      setShown({ code: d.code, replaced: had });
+    } catch (error) {
+      setTrouble(error?.message || 'A spare key could not be made just now.');
+    }
+    setMaking(false);
+  }
+
+  async function changePassword(event) {
+    event.preventDefault();
+    if (pwBusy) return;
+    setPwSaid('');
+    setPwTrouble('');
+    if (pw.length < PASSWORD_FLOOR) { setPwTrouble(`At least ${PASSWORD_FLOOR} characters.`); return; }
+    if (pw !== pwAgain) { setPwTrouble('The two passwords do not match.'); return; }
+    setPwBusy(true);
+    try {
+      const r = await fetch('/api/secrets', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pw }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || d.error) throw new Error(d.error || 'That did not save. Try again.');
+      setPassword(d.password ?? 'journal');
+      setPw('');
+      setPwAgain('');
+      setChanging(false);
+      setPwSaid('Saved');
+      setTimeout(() => setPwSaid(''), 2200);
+    } catch (error) {
+      setPwTrouble(error?.message || 'That did not save. Try again.');
+    }
+    setPwBusy(false);
   }
 
   async function remove(id) {
@@ -380,11 +554,49 @@ export default function Keyring() {
           <span className="st-trouble" role="alert">Keys can’t be added just now. Try again in a moment.</span>
         )}
       </div>
-      {SANDBOX && readout && (
-        <p style={{ margin: '12px 0 0', fontFamily: 'var(--font-label)', fontSize: 10, lineHeight: 1.6, color: 'var(--sandbox)', overflowWrap: 'anywhere' }}>
-          {`secure ${readout.secure ? 'yes' : 'no'} · passkeys ${readout.api ? 'yes' : 'no'} · face id ${readout.faceId ? 'yes' : 'no'} · home screen ${readout.homeScreen ? 'yes' : 'no'} · options ${offerSaid || '…'}`}
-          {lastPress && <><br />{`last press: ${lastPress}`}</>}
-        </p>
+      {password !== undefined && (
+        <ul className="kr-list kr-list--ways">
+          <li className="kr-row">
+            <span className="kr-name">
+              Password{password === null ? ' · none' : ''}
+              {pwSaid && <span className="st-said kr-said" role="status">{pwSaid}</span>}
+            </span>
+            <button
+              type="button"
+              className="kr-do"
+              onClick={() => { setChanging(was => !was); setPwTrouble(''); setPwSaid(''); }}
+            >
+              {changing ? 'cancel' : password === null ? 'set one' : 'change'}
+            </button>
+          </li>
+          {changing && (
+            <li className="kr-more">
+              <form className="kr-change" onSubmit={changePassword}>
+                {/* The address the password is filed under — a real, visible,
+                    writable input, because that is what a password manager
+                    pairs the password with. Typing into it changes nothing. */}
+                <input className="st-field st-who" type="text" name="username" autoComplete="username" value={host} onChange={() => {}} aria-label="Journal" tabIndex={-1} />
+                <input className="st-field" type="password" autoComplete="new-password" value={pw} onChange={e => setPw(e.target.value)} placeholder="New password" aria-label="New password" />
+                <input className="st-field" type="password" autoComplete="new-password" value={pwAgain} onChange={e => setPwAgain(e.target.value)} placeholder="Re-type password" aria-label="Re-type password" />
+                <div className="st-foot">
+                  <button type="submit" className="st-save ln-word ln-word--on" disabled={pwBusy}>{pwBusy ? 'Saving…' : password === null ? 'Set password' : 'Change password'}</button>
+                  {pwTrouble && <span className="st-trouble" role="alert">{pwTrouble}</span>}
+                </div>
+              </form>
+            </li>
+          )}
+          <li className="kr-row">
+            <span className="kr-name">Spare key{spareSaid(spare)}</span>
+            <button type="button" className="kr-do" onClick={newSpare} disabled={making}>
+              {spare?.ready || spare?.used_at ? 'make a new one' : 'make one'}
+            </button>
+          </li>
+          {shown && (
+            <li className="kr-more">
+              <SpareKeyShown code={shown.code} replaced={shown.replaced} onSaved={() => setShown(null)} />
+            </li>
+          )}
+        </ul>
       )}
     </>
   );

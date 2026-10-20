@@ -280,8 +280,10 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - `secrets.js` — the vault: the `secrets` table's only reader. The session
   secret, password hashing, the claim code, the setup window, what Settings
   may be told (set or not, last four characters), `directoryCode`, the
-  code the registry issues an address, made from the secret, and
-  `seal_claim`, the claim written inside a restore's own transaction.
+  code the registry issues an address, made from the secret,
+  `seal_claim`, the claim written inside a restore's own transaction, and
+  the spare key — made (`makeSpareKey`), described (`spareKeyState`) and
+  spent by the sign-in it opens (`spendSpareKey`), kept only as a hash.
 - `sent_actions.js` — the `sent` table: a send from this copy written down
   once it landed, the list of what is still out (a row goes when a
   `came_back` row names the same record from the same journal, matched as it

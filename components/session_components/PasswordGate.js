@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 'use client';
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { startAuthentication } from '@simplewebauthn/browser';
 import { ArrowRight } from '@phosphor-icons/react';
 import { fonts } from '../../library/sitewide_visuals';
@@ -42,17 +42,26 @@ import { canHoldKeys, markKeyHere, readyToOffer, KeyOffer } from '../main_compon
 // a password manager files it under — is a small line under it. Under it to
 // the eye only: in the markup it still comes first, because a manager takes
 // the field before a password for its username.
+//
+// ── The spare key, 2026-10-20 ─────────────────────────────────────────────
+// Where one is waiting, *use your spare key* sits beside *use your password*
+// (Miyel's words, 2026-10-17), and under the field where the field is the
+// door. It asks for the sixteen characters in the same well, through the
+// same route, and opens once: the sign-in spends it (library/secrets.js).
+// The field it uses is no password, so it carries no username for a manager
+// to file it under, and is never offered to be saved over the password.
 
 // The lock's options, fetched before anything is pressed: Safari lets Face
 // ID be asked for only straight from a press, and a press that waited on the
 // network first would be refused. The challenge lasts five minutes, so a
-// caller asks again every four. Returns { options, any }, or null.
+// caller asks again every four. Returns { options, any, spare }, or null:
+// `spare` is whether a spare key is waiting.
 export async function askTheLock() {
   try {
     const r = await fetch('/api/auth/passkey', { cache: 'no-store' });
     if (!r.ok) return null;
     const d = await r.json();
-    return d?.options ? { options: d.options, any: Boolean(d.any) } : null;
+    return d?.options ? { options: d.options, any: Boolean(d.any), spare: Boolean(d.spare) } : null;
   } catch {
     return null;
   }
@@ -109,29 +118,39 @@ export default function PasswordGate({ onAuth, bare = false, asking = 'password'
   const [loading, setLoading] = useState(false);
 
   // The key's half of the door. `asked` is undefined until the lock has
-  // answered, null if it could not, and { options, any } once it has.
-  // `typing` is the password chosen over the key.
+  // answered, null if it could not, and { options, any, spare } once it has.
+  // `way` is what was chosen over the key: 'password' or 'spare'.
   const [keyed, setKeyed] = useState(false);
   const [asked, setAsked] = useState(undefined);
-  const [typing, setTyping] = useState(false);
+  const [way, setWay] = useState(null);
   const [unlocking, setUnlocking] = useState(false);
   // The offer to make this device a key, once the password has opened the
   // door: what readyToOffer found, or null.
   const [offering, setOffering] = useState(null);
+  // Asked on every device, keys or none, because the answer also says whether
+  // a spare key is waiting; only a device that can hold a key asks again.
   useEffect(() => {
-    if (claiming || !canHoldKeys()) return undefined;
-    setKeyed(true);
+    if (claiming) return undefined;
+    const can = canHoldKeys();
+    if (can) setKeyed(true);
     let gone = false;
     const ask = async () => { const a = await askTheLock(); if (!gone) setAsked(a); };
     ask();
-    const again = setInterval(ask, 4 * 60 * 1000);
-    return () => { gone = true; clearInterval(again); };
+    const again = can ? setInterval(ask, 4 * 60 * 1000) : null;
+    return () => { gone = true; if (again) clearInterval(again); };
   }, [claiming]);
 
   // Before the lock has answered there is nothing to draw but the line; after,
   // Unlock where there are keys, the field where there are none.
-  const offerKey = keyed && asked?.any && !typing;
-  const showField = !keyed || typing || (asked !== undefined && !asked?.any);
+  const offerKey = keyed && asked?.any && !way;
+  const showField = !keyed || Boolean(way) || (asked !== undefined && !asked?.any);
+  const spareWay = way === 'spare';
+  // The other ways in, as words under the door: the password where it is not
+  // already the field, and the spare key where one is waiting.
+  const others = [];
+  if (!claiming && !(showField && !spareWay)) others.push(['password', 'use your password']);
+  if (!claiming && asked?.spare && !spareWay) others.push(['spare', 'use your spare key']);
+  function choose(chosen) { setWay(chosen); setPw(''); setError(''); }
   const name = String(keeper_name || '').trim();
   const line = !claiming && name ? `Only ${name} can write here.` : '';
 
@@ -157,7 +176,7 @@ export default function PasswordGate({ onAuth, bare = false, asking = 'password'
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password: pw }),
+        body: JSON.stringify(spareWay ? { spare: pw } : { password: pw }),
       });
       if (res.ok) {
         // In, and asked first whether this device should open it with Face
@@ -173,7 +192,7 @@ export default function PasswordGate({ onAuth, bare = false, asking = 'password'
         setError(body?.error || 'Too many attempts. Wait a minute.');
         setPw('');
       } else {
-        setError(claiming ? 'That code did not match' : 'Incorrect password');
+        setError(claiming ? 'That code did not match' : spareWay ? 'That spare key didn’t work.' : 'Incorrect password');
         setPw('');
       }
     } catch {
@@ -199,27 +218,33 @@ export default function PasswordGate({ onAuth, bare = false, asking = 'password'
   // is not set yet when the password is first chosen.
   const fields = (
         <form onSubmit={handleAuth} className="pg-form">
-          <input
-            type="text"
-            name="username"
-            autoComplete="username"
-            className="pg-who"
-            value={host}
-            onChange={() => {}}
-            aria-label="Journal"
-            tabIndex={-1}
-          />
+          {!spareWay && (
+            <input
+              type="text"
+              name="username"
+              autoComplete="username"
+              className="pg-who"
+              value={host}
+              onChange={() => {}}
+              aria-label="Journal"
+              tabIndex={-1}
+            />
+          )}
           <div className={'pg-well' + (error ? ' pg-well--wrong' : '')}>
             <input
-              type={claiming ? 'text' : 'password'}
-              name="password"
-              autoComplete={claiming ? 'off' : 'current-password'}
-              placeholder={claiming ? 'claim code' : 'password'}
+              key={spareWay ? 'spare' : 'password'}
+              type={claiming || spareWay ? 'text' : 'password'}
+              name={spareWay ? 'spare-key' : 'password'}
+              autoComplete={claiming || spareWay ? 'off' : 'current-password'}
+              autoCapitalize={spareWay ? 'characters' : undefined}
+              autoCorrect={spareWay ? 'off' : undefined}
+              spellCheck={spareWay ? false : undefined}
+              placeholder={claiming ? 'claim code' : spareWay ? 'spare key' : 'password'}
               className="pg-pw"
               value={pw}
               onChange={e => { setPw(e.target.value); setError(''); }}
               disabled={loading}
-              autoFocus={autoFocus || typing}
+              autoFocus={autoFocus || Boolean(way)}
             />
             <button type="submit" className="pg-arrow" disabled={loading} aria-label={loading ? 'Checking' : 'Enter'}>
               <ArrowRight size={16} aria-hidden="true" />
@@ -240,12 +265,19 @@ export default function PasswordGate({ onAuth, bare = false, asking = 'password'
             {unlocking ? 'Unlocking…' : 'Unlock'}
           </button>
           {error && <div className="pg-said">{error}</div>}
-          <button type="button" className="pg-or" onClick={() => { setTyping(true); setError(''); }}>
-            use your password
-          </button>
         </>
       )}
       {showField && fields}
+      {others.length > 0 && (offerKey || showField) && (
+        <p className="pg-ways">
+          {others.map(([chosen, words], i) => (
+            <Fragment key={chosen}>
+              {i > 0 && <span className="pg-dot" aria-hidden="true">·</span>}
+              <button type="button" className="pg-or" onClick={() => choose(chosen)}>{words}</button>
+            </Fragment>
+          ))}
+        </p>
+      )}
     </>
   );
 
