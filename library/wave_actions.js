@@ -11,6 +11,13 @@ import database from './database_connection.js';
 import { tidyJournal } from './return_address.js';
 
 // Newest first.
+// Whether a wave has arrived that has not been seen (app/api/waiting,
+// 2026-10-20).
+export async function any_unseen_waves() {
+  const [row] = await database`SELECT EXISTS (SELECT 1 FROM waves WHERE seen_at IS NULL) AS any`;
+  return row?.any === true;
+}
+
 export async function pull_waves() {
   return await database`
     SELECT id, address, name, arrived_at, seen_at

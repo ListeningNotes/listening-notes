@@ -430,44 +430,38 @@ export default function Inbox({ layered = false, inPane = false, sent: sentFromB
   }
 
   // ── An LN. Admin letter, 2026-10-20 ──────────────────────────────────────
-  // Pinned at the top, the LN. mark where the kind's glyph goes and "pinned"
-  // where a face would be (the look Miyel chose). Open, it is the words, the
-  // line no letter can leave off — the software never asks for a secret —
-  // and Dismiss, in the two presses every message takes. No Reply: nobody is
-  // there to read one, and nothing about it goes back (library/letterhead.js).
-  function letterRow(m) {
-    const isOpen = openMessage === m.id;
+  // A card at the top of the inbox with its words showing (Miyel's pick, the
+  // same day, over a row that had to be pressed: "it's missable ... too small
+  // or losable up there"): the LN. mark where a face would be, the name, the
+  // words, the line no letter can leave off — the software never asks for a
+  // secret — and Dismiss, in the two presses every message takes. No Reply:
+  // nobody is there to read one, and nothing about it goes back
+  // (library/letterhead.js). On screen is read, so it is marked seen as it
+  // is drawn, and the dot on Inbox goes with it.
+  function letterCard(m) {
     const key = `message-${m.id}`;
     const sure = sureOf === key;
     return (
-      <div key={key} className={'ib-r ib-r--message ib-r--letter' + (isOpen ? ' ib-r--open' : '')}>
-        <button className="ib-rhead" aria-expanded={isOpen} onClick={() => openWords(m)}>
-          <span className={'ib-newdot' + (m.seen_at ? ' ib-newdot--off' : '')} aria-hidden="true" />
-          <span className="ib-kind ib-kind--mark" aria-hidden="true"><LnMark /></span>
-          <span className="ib-rsaid">
-            <span className="ib-rttl">Message from LN. Admin</span>
-          </span>
-          <span className="ib-pinned">pinned</span>
-        </button>
-        {isOpen && (
-          <div className="ib-open ib-open--doors">
-            <p className="ib-msg">{m.said}</p>
-            <p className="ib-letter-safe">LN. Admin never asks for your password or your spare key.</p>
-            <div className="ib-doors fr-doors-row">
-              <button
-                type="button"
-                data-sure
-                className={'fr-door' + (sure ? ' ib-door--sure' : '')}
-                onClick={() => dismiss(m)}
-                title={sure ? 'Press again to delete this message for good' : 'Delete this message'}
-              >
-                <X size={22} weight="regular" aria-hidden="true" />
-                {sure ? 'Dismiss?' : 'Dismiss'}
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
+      <section key={key} className="ib-letter" aria-label="A letter from LN. Admin">
+        <div className="ib-letter-head">
+          <span className="ib-letter-face" aria-hidden="true"><LnMark /></span>
+          <span className="ib-letter-from">LN. Admin</span>
+        </div>
+        <p className="ib-letter-said">{m.said}</p>
+        <p className="ib-letter-safe">LN. Admin never asks for your password or your spare key.</p>
+        <div className="ib-doors fr-doors-row">
+          <button
+            type="button"
+            data-sure
+            className={'fr-door' + (sure ? ' ib-door--sure' : '')}
+            onClick={() => dismiss(m)}
+            title={sure ? 'Press again to delete this letter for good' : 'Delete this letter'}
+          >
+            <X size={22} weight="regular" aria-hidden="true" />
+            {sure ? 'Dismiss?' : 'Dismiss'}
+          </button>
+        </div>
+      </section>
     );
   }
 
@@ -883,6 +877,12 @@ export default function Inbox({ layered = false, inPane = false, sent: sentFromB
   // An LN. Admin letter is pinned above all of it, never in among it, and
   // there is only ever one (library/letterhead.js).
   const letter = messages.find(m => m.admin) || null;
+  const letterId = letter && !letter.seen_at ? letter.id : null;
+  useEffect(() => {
+    if (!letterId) return;
+    fetch('/api/messages', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: letterId }) }).catch(() => {});
+    Promise.resolve().then(() => setMessages(prev => prev.map(m => (m.id === letterId ? { ...m, seen_at: new Date().toISOString() } : m))));
+  }, [letterId]);
   const shown = showArchived ? [...liveWithReturns, ...archivedRows] : liveWithReturns;
 
   // The draft behind a send, if there is one. Matched on the fold that keys
@@ -1743,7 +1743,7 @@ export default function Inbox({ layered = false, inPane = false, sent: sentFromB
                   <>
                     {/* An LN. Admin letter first of everything: the top of the
                         inbox is where the brief pins it. */}
-                    {letter && <div className="ib-list ib-list--pinned">{letterRow(letter)}</div>}
+                    {letter && letterCard(letter)}
                     {heldBlock()}
                     {/* Everything else, newest first: a soft mark, who did
                         what, and one thing at the row's end. No dates and no

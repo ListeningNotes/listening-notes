@@ -2136,6 +2136,9 @@
 /* At the end of the row now rather than tucked against the label — the row
    has a whole line and the number belongs at the far end of it, where a
    number on a list of things always is. */
+/* Something new where no count stands, 2026-10-20: the inbox's own dot,
+   carried onto its door. */
+.db-fresh { margin-left: auto; flex-shrink: 0; width: 7px; height: 7px; border-radius: 999px; background: var(--ink); }
 .db-count {
   margin-left: auto;
   flex-shrink: 0;
@@ -2869,6 +2872,12 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
      reads as two controls in one box. */
   .hn-foot-stop--here { color: var(--ink); opacity: 1; }
   .hn-foot-mark { display: block; }
+  /* Something new in the inbox, 2026-10-20: one dot on the Inbox mark — the
+     inbox's own new dot, carried onto its door — and the stop lit enough for
+     the dot to read. Never a number (DECISIONS). */
+  .hn-foot-glyph { position: relative; display: inline-flex; }
+  .hn-foot-dot { position: absolute; top: -2px; right: -5px; width: 6px; height: 6px; border-radius: 999px; background: var(--ink); }
+  .hn-foot-stop--fresh { opacity: 1; }
   .hn-foot-word {
     font-family: var(--font-label);
     font-size: 9px;

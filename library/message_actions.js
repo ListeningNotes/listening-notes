@@ -94,6 +94,13 @@ export async function pull_messages() {
 // One, for writing back to: who it was from, what it was about and what it
 // said, read off the row on the server so a page is never trusted with
 // where a reply goes (app/api/outbox/route.js).
+// Whether a message — a person's, or an LN. Admin letter — has not been
+// opened yet (app/api/waiting, 2026-10-20).
+export async function any_unseen_messages() {
+  const [row] = await database`SELECT EXISTS (SELECT 1 FROM messages WHERE seen_at IS NULL) AS any`;
+  return row?.any === true;
+}
+
 export async function pull_message(id) {
   const [row] = await database`
     SELECT id, from_name, from_journal, said,

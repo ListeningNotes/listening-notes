@@ -88,7 +88,13 @@ function stops(authed) {
 // `onHere` is the stop you are already on, pressed: back to the top of the
 // floor you are on, and twice inside half a second to floor one (HomeNav,
 // goBack). Pressing any other stop moves the rail (goTo).
-export default function Footer({ pane, goTo, onHere = null, authed = false }) {
+//
+// `fresh`, 2026-10-20: something in the inbox is new — a letter, a message,
+// a record waiting, a wave, a record that came back — and Inbox wears one
+// dot until it has been opened (Miyel: "we don't have any type of
+// notification on inbox to show there is a new message"). Never a number;
+// the keeper's own, and nobody else's (DECISIONS).
+export default function Footer({ pane, goTo, onHere = null, authed = false, fresh = false }) {
   const here = stops(authed);
   return (
     <nav className="hn-foot" aria-label="The panes">
@@ -96,15 +102,19 @@ export default function Footer({ pane, goTo, onHere = null, authed = false }) {
         <button
           key={stop.key}
           type="button"
-          className={'hn-foot-stop' + (pane === i ? ' hn-foot-stop--here' : '')}
+          className={'hn-foot-stop' + (pane === i ? ' hn-foot-stop--here' : '') + (stop.key === 'inbox' && fresh ? ' hn-foot-stop--fresh' : '')}
           onClick={() => (pane === i && onHere ? onHere(i) : goTo(i))}
           /* aria-current rather than aria-disabled on the pane you are on: it
              is still pressable, and pressing it is how you get back to the top
              of a pane you have scrolled down (and, twice, to its first screen). */
           aria-current={pane === i ? 'true' : undefined}
           title={stop.label}
+          aria-label={stop.key === 'inbox' && fresh ? `${stop.word}, something new` : undefined}
         >
-          <stop.Icon size={17} weight="regular" aria-hidden="true" className="hn-foot-mark" />
+          <span className="hn-foot-glyph">
+            <stop.Icon size={17} weight="regular" aria-hidden="true" className="hn-foot-mark" />
+            {stop.key === 'inbox' && fresh && <span className="hn-foot-dot" aria-hidden="true" />}
+          </span>
           <span className="hn-foot-word">{stop.word}</span>
         </button>
       ))}
