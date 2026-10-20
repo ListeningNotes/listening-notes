@@ -121,12 +121,14 @@ export default function JournalCopy() {
         yourself, or keep it somewhere safe. Your password isn’t in it.
       </p>
       <div className="st-foot">
-        {/* Save, not Share, on a phone (Miyel, 2026-10-20): keeping the copy
-            is what the press is for, and Save is the word the printer
-            already gives its share sheet (PrintBar.js). */}
+        {/* Save, on a phone and on a computer alike (Miyel, 2026-10-20: "save
+            not share", and then "save on computer too"): keeping the copy is
+            what the press is for, and Save is the printer's word for the same
+            two presses (PrintBar.js). A phone's Save is the share sheet, a
+            computer's is Downloads. */}
         {copy ? (
           <button type="button" className="st-save ln-word ln-word--on" onClick={handOver}>
-            {copy.share ? 'Save' : 'Download'}
+            Save
           </button>
         ) : (
           <button type="button" className="st-save ln-word ln-word--on" onClick={makeCopy} disabled={busy}>

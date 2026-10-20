@@ -11,8 +11,9 @@ Two ways, because they answer different questions.
 
 **A button — Settings → Back up your journal.** Press **Make a copy** and your
 whole journal is gathered into one zip, and the page says how many entries and
-people it holds. Then **Save** on a phone hands it to the share sheet (Mail,
-Save to Files, AirDrop), and **Download** on a computer puts it in Downloads.
+people it holds. Then **Save**: on a phone it hands the copy to the share
+sheet (Mail, Save to Files, AirDrop), and on a computer it puts it in
+Downloads.
 No setup, nothing to configure, works on any copy of this software. Inside:
 
 - **`entries/`** — a page for every entry, in plain text (Markdown), named by
