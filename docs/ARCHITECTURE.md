@@ -106,6 +106,7 @@ The library — logic, no visuals
     gold_burst.js              The gold sparkle fired when a Masterpiece is marked
     handoff.js                 What the wall leaves for the entry layer: the tapped record's first screen, the wall's order for swiping to neighbours, and how a layer arrived
     install_guide.js           What /get needs: the deploy button's URL and the ten steps with their screenshots
+    keyring.js                 The passkeys: a row per device's key, the public half only; making a key and opening the door with one (@simplewebauthn/server); a key belongs to the exact address it was made at
     message_actions.js         Messages: somebody's words to the keeper — kept, listed for the inbox, opened, marked replied to, and dismissed, which deletes
     migrator.js                Brings the database up to date — from instrumentation.js on start, and from scripts/prepare_database.mjs at build
     music_data_api.js          Fetches album art and tracklists from iTunes, and the searches: records (searchAlbums) and songs (searchSongs)
@@ -115,7 +116,7 @@ The library — logic, no visuals
     portrait_code.js           The press: the portrait made into the journal's QR code on the server — a dot of ink in every photo module, proved by the strictest reader on both page colours
     report_actions.js          Problems keepers wrote in from their desks — the reports table
     return_address.js          The back of the envelope — a sender's name and journal kept in their own browser — the one spelling an address is kept in, and addressFrom, what a copy calls itself from the request that reached it
-    secrets.js                 The vault: the session secret, the password hash, the claim code, the setup window, and two retired key columns. Database first, environment second; seal_claim writes the claim inside a restore's own transaction
+    secrets.js                 The vault: the session secret, the password hash, the spare key's hash, the claim code, the setup window, and two retired key columns. Database first, environment second; seal_claim writes the claim inside a restore's own transaction; the spare key is made, described and spent here
     sent_actions.js            The `sent` table: a send that landed, written down; what is still out, read against came_back; a row removed
     session_timers.js          Track length display (m:ss)
     settings_actions.js        The settings row: read (never the portrait blobs), write through an allow-list, the name, isSetUp, and the one-column keeper-name reader the feed uses
@@ -166,11 +167,13 @@ The front doors — receive requests, hand them off, send back responses
     reports/route.js           A problem written in — POST from any copy (rate-limited, cross-origin), GET for the owner
     reports/[id]/route.js      Marking one read or dismissed
     secrets/route.js           The vault — owner-only both ways; says what is set, never the value
-    setup/route.js             GET: is this copy claimed. POST: the one write that claims it
-    restore/route.js           Bring your journal — POST, behind setup's wristband and only on a copy nobody has claimed: the journal from Make a copy and a password; restored with library/unpacking.mjs, never the vault, and claimed in the same transaction (the password, this copy's address, the Board's old code gone)
-    auth/login/route.js        The password, the deploy-time variable, or — unclaimed — the claim code
+    setup/route.js             GET: is this copy claimed. POST: the one write that claims it — with a password, or with the key just made and none; the ring keeps only the keys the claim names
+    restore/route.js           Bring your journal — POST, behind setup's wristband and only on a copy nobody has claimed: the journal from Make a copy and a password or the key just made; restored with library/unpacking.mjs, never the vault or the keyring, and claimed in the same transaction (the password if any, the keys the claim names and no others, this copy's address, the Board's old code gone)
+    auth/login/route.js        The password, the deploy-time variable, the spare key (once, and spent by it), or — unclaimed — the claim code
     auth/check/route.js        Am I still wearing a valid wristband; renews an ageing one on the way
     auth/logout/route.js       Cuts the wristband off
+    auth/passkey/route.js      Opening the door with a passkey: GET hands the device a challenge and says whether there are keys; POST is its signed answer, counted by the login door, and leaves wearing the wristband the password gives
+    keyring/route.js           Your keys — owner-only: the list with the spare key's state and where the password comes from, making a key on this device, making a spare key (shown once), taking a key off; never the last way in
     waiting/route.js           How many sends are waiting on the keeper — the desk's number; messages are never counted
     needle/route.js            Where a listen says what it is on — owner-only, write only; the read is public/beacon
     portrait/route.js          The keeper's picture: uploaded into a column, served back from it, removed
@@ -230,9 +233,10 @@ The furniture — visual pieces
       KeeperTools.js           The owner's ··· — top right on both, Edit/Print/Delete on an entry and Edit/Print on the ID pane; the door stays put and the tools file out of it
       SharePrinter.js          The press's toolbox, not the press: the paper sizes (FRAMES), the page's two colours, and the canvas tools a plate draws with. The press itself has been hooks/usePress.js since 2026-09-13
       EntryPlate.js            A record cut as a plate — the entry page's first screen on the record's blurred colour: mark, keeper, cover, album, artist and year, stars, chips, date, horizon; no code, the press copies the address
-      WritingAccess.js         The lock at the foot of the card for a visitor — shut, open while the password field it opens in place
+      WritingAccess.js         The lock at the foot of the card for a visitor, the glyph over Unlock — shut, open while the door it opens in place; on a device that has unlocked with a key before, one press goes straight to Face ID
       ComingSoon.js            What a held copy shows instead of a site — unclaimed, no database, or database unreachable
       AddToHomeScreen.js       The one step the software cannot do: the last screen of setup, and a Settings section
+      Keyring.js               Your keys, in Settings: each device's key, + Add this device (Face ID or its like), a key off in two presses; then the password (changed in place) and the spare key (made, and shown once). Also the browser's half of keys — whether it can hold one, whether it has unlocked with one — KeyOffer, Use Face ID next time?, drawn after the password and at the card's foot, and KeeperFoot, the foot's one question a visit: Face ID, then the spare key
       JournalCopy.js           Back up your journal, in Settings: Make a copy fetches the export and holds it as a zip — journal.json, Read me.txt and a page per entry (library/carbon_copy.js) — then Share (a phone) or Download (a computer)
       AlbumFinder.js           Type, see covers, pick one — the stranger's send form's search (/submit)
       MiniAddressBook.js       The address book as a strip of faces, for picking one person — the entry editor's Sent by, the inbox's send whose sender has since got a copy, and the send sheet's book, as a grid
@@ -258,7 +262,7 @@ The furniture — visual pieces
         TrackDial.js           One track, full screen, while you decide what it is worth; unfolds in the row, never over it
         PrintBar.js            The bar at the foot of the entry while it is being printed: the ground, the paper size, Save and Done
     session_components/        Everything in the private dashboard
-      PasswordGate.js          The password screen
+      PasswordGate.js          The door: Only [keeper] can write here., Unlock and use your password where the journal has keys; the password in a soft well where it has none; the claim code on a copy nobody has claimed; and, after the password, the offer to use Face ID next time
       AlbumPicker.js           Type, see a grid of covers with songs under them, tap one — the screen before a listen, or before a track note
       StarRating.js            The interactive stars you click to rate
       TrackRow.js              One track in the session's list — number or the live dot, the name, stars and heart set in place; on the track being logged, *Any notes?* or the note, and the field under the row when it is open, with the envelope at its foot
@@ -304,7 +308,7 @@ The rooms — full pages assembled from furniture
     about/page.js              Redirect to / — the identity card is the about page
     session/page.js            The listen — picker, then four screens under one header
     printer/page.js            The share printer — the press on a record for the keeper (?entry=slug); the sentence for everyone else and for the card, whose plate is still to come
-    setup/page.js              Claiming a copy, one screen at a time: the code, then two ways — Start a new journal (name, photo, prompts, rig, password, updates, who gave it (GIFT_FROM, or a scan), the home screen) or Bring your journal (the zip from Make a copy, read and said back in the browser, then the password, updates and the home screen)
+    setup/page.js              Claiming a copy, one screen at a time: the code, then two ways — Start a new journal (name, photo, prompts, rig, the way back in — Face ID first, or a password — the spare key when there is no password, updates, who gave it (GIFT_FROM, or a scan), the home screen) or Bring your journal (the zip from Make a copy, read and said back in the browser, then the same way back in, updates and the home screen)
     settings/page.js           The machinery, owner-only — the address, On the board (the one switch off the Board), the password, the backup, updates, the home screen
     directory/page.js          The Board at its own address, on every copy, absent where DIRECTORY_URL is empty. directory/Directory.js holds `Everyone` (the Board on screen) and the one shared reading of it, `readEveryone`, all of it read through /api/board: for the keeper the one note until dismissed, then for everybody the search by name, logging right now (the Friends room's band, community-wide) and further out (a shuffled dozen); a check on people in the book and Visit · Add on a press for the keeper — drawn here and under People on the cross
     login/page.js              The door at an address — the same password form, for when a link will not do

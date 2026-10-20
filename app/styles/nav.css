@@ -3650,37 +3650,45 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   gap: 14px;
   width: 100%;
 }
+/* A door since 2026-10-20: the lock over the word Unlock (Miyel: "is it too
+   ambiguous? maybe there should be some text"). The ring round the glyph is
+   drawn only while the door is open. */
 .pt-key {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 34px; height: 34px; padding: 0;
-  border-radius: 999px;
-  background: none; border: 1px solid transparent;
+  display: inline-flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 0; background: none; border: 0;
   color: var(--ink-faint); cursor: pointer;
-  transition: color 0.15s, border-color 0.15s;
+  transition: color 0.15s;
+}
+.pt-key-ring {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px; border-radius: 999px;
+  border: 1px solid transparent; transition: border-color 0.15s;
 }
 .pt-key:hover, .pt-key--open { color: var(--ink); }
-.pt-key--open { border-color: var(--border); }
-/* The box itself is smaller and quieter than the gate's: no panel behind
-   it, a hairline, a faint Enter. On a phone the type stays 16px — the
-   Safari zoom rule in forms.css — and is 13px wherever there is a mouse. */
-.pt-lock-field { width: 100%; max-width: 150px; }
-.pt-lock-field .pg-form { gap: 6px; align-items: center; }
+.pt-key--open .pt-key-ring { border-color: var(--border); }
+.pt-key-word { font-family: var(--font-label); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; }
+/* The well is smaller here than on the gate's page, and its arrow too. On a
+   phone the type stays 16px — the Safari zoom rule in forms.css — and is
+   12px wherever there is a mouse. */
+.pt-lock-field { width: 100%; max-width: 200px; }
+.pt-lock-field .pg-form { gap: 6px; }
 /* Still a real, visible, writable field — the password manager's filing
    label — but as quiet as one can be and stay that. */
 .pt-lock-field .pg-who {
-  font-size: 8px; letter-spacing: 0; text-transform: none; opacity: 0.6;
+  font-size: 7px; letter-spacing: 0.02em; opacity: 0.6;
 }
-.pt-lock-field .pg-pw {
-  padding: 6px 10px; border-radius: 7px;
-  background: none; font-size: 12px;
-}
+.pt-lock-field .pg-well { border-radius: 9px; }
+.pt-lock-field .pg-pw { padding: 8px 0 8px 30px; font-size: 12px; }
+.pt-lock-field .pg-arrow { width: 26px; height: 26px; margin-right: 2px; }
 .pt-lock-field .pg-pw::placeholder { font-size: 11px; }
 @media (pointer: coarse) { .pt-lock-field .pg-pw { font-size: 16px; } }
-.pt-lock-field .pg-go {
-  width: auto; padding: 4px 12px; font-size: 8px; letter-spacing: 0.1em;
-  background: none; color: var(--ink-faint); border-color: transparent;
-}
-.pt-lock-field .pg-go:hover { color: var(--ink); border-color: var(--border); }
+/* Unlock, where the journal has keys: the panel's one press, at the size of
+   a word, in ink. */
+.pt-lock-field .pg-go.pg-unlock { padding: 6px 14px; }
+/* The other ways in, one to a line: the panel is too narrow for both on one,
+   and a dot left at the end of a line points at nothing. */
+.pt-lock-field .pg-ways { flex-direction: column; gap: 0; }
+.pt-lock-field .pg-dot { display: none; }
 
 /* The card's header used to be pinned to the window, which meant its pencil
    floated over the wall while the pane beside it was showing — so it was

@@ -38,6 +38,7 @@ import { requireWristband } from '@/library/wristband';
 import { isSetUp } from '@/library/settings_actions';
 import { directDatabaseUrl } from '@/library/migrator';
 import { hashPassword, seal_claim } from '@/library/secrets';
+import { holds_any, keep_only_within } from '@/library/keyring';
 import { addressFrom } from '@/library/return_address';
 import { from_document, plan_unpacking, unpack } from '@/library/unpacking.mjs';
 
@@ -60,25 +61,31 @@ export async function POST(request) {
   }
 
   let password;
+  let keys;
   let journal;
   try {
     const raw = Buffer.from(await request.arrayBuffer());
     const squeezed = (request.headers.get('content-type') || '').includes('gzip');
-    ({ password, journal } = JSON.parse((squeezed ? gunzipSync(raw, { maxOutputLength: UNFOLDED_MOST }) : raw).toString('utf8')));
+    ({ password, keys, journal } = JSON.parse((squeezed ? gunzipSync(raw, { maxOutputLength: UNFOLDED_MOST }) : raw).toString('utf8')));
   } catch {
     return NextResponse.json({ error: 'That journal couldn’t be read. Choose the file again.' }, { status: 400 });
   }
 
+  // A password, or a key this browser has just made, as the claim at setup
+  // takes either (app/api/setup); the ring keeps only the keys named.
   const chosen = String(password || '');
-  if (chosen.length < PASSWORD_FLOOR) {
+  if (chosen && chosen.length < PASSWORD_FLOOR) {
     return NextResponse.json({ error: `At least ${PASSWORD_FLOOR} characters.` }, { status: 400 });
+  }
+  if (!chosen && !(await holds_any(keys))) {
+    return NextResponse.json({ error: 'Use Face ID or choose a password first.' }, { status: 400 });
   }
   if (!Array.isArray(journal?.tables?.entries) || !journal.tables.settings?.length) {
     return NextResponse.json({ error: 'That file has no journal in it.' }, { status: 400 });
   }
 
   const backup = from_document(journal);
-  const password_hash = await hashPassword(chosen);
+  const password_hash = chosen ? await hashPassword(chosen) : null;
   const address = addressFrom(request);
 
   // A session from BEGIN to COMMIT, on the direct endpoint for the
@@ -87,7 +94,9 @@ export async function POST(request) {
   const client = new Client(directDatabaseUrl());
   try {
     await client.connect();
-    const planned = await plan_unpacking(client, backup, { leave: ['secrets'] });
+    // The vault and the keyring stay as they are: a journal never brings
+    // either, and the key it is being claimed with is already on the ring.
+    const planned = await plan_unpacking(client, backup, { leave: ['secrets', 'keyring'] });
     if (planned.refusals.length) {
       // The refusals are written for a terminal, which prints how to bring a
       // database up to date under them; here the first one is enough.
@@ -110,6 +119,7 @@ export async function POST(request) {
           'UPDATE settings SET site_address = $1, setup_complete = true, listing_code = NULL WHERE id = 1',
           [address],
         );
+        await keep_only_within(query, keys);
         await seal_claim(query, password_hash);
       },
     });

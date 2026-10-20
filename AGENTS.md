@@ -241,6 +241,13 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   by going back, alone).
 - `install_guide.js` — what `/get` needs: the deploy button's URL and the ten
   install steps with their screenshots and the rings drawn over them.
+- `keyring.js` — the passkeys (`keyring`): a row per device's key, the
+  public half only; the two ceremonies, making a key and opening the door
+  with one, checked by `@simplewebauthn/server`; the challenge kept between
+  them in a cookie signed with a key derived from the secret;
+  `addressOf`, the exact host a key belongs to; and, at the claim,
+  `holds_any` and `keep_only`, so a journal claimed keeps only the keys its
+  claim made.
 - `message_actions.js` — the `messages` table: somebody's words to the
   keeper, kept, listed for the inbox, opened, marked replied to, and
   dismissed — which deletes, and takes the comment a message was with it.
@@ -275,8 +282,10 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - `secrets.js` — the vault: the `secrets` table's only reader. The session
   secret, password hashing, the claim code, the setup window, what Settings
   may be told (set or not, last four characters), `directoryCode`, the
-  code the registry issues an address, made from the secret, and
-  `seal_claim`, the claim written inside a restore's own transaction.
+  code the registry issues an address, made from the secret,
+  `seal_claim`, the claim written inside a restore's own transaction, and
+  the spare key — made (`makeSpareKey`), described (`spareKeyState`) and
+  spent by the sign-in it opens (`spendSpareKey`), kept only as a hash.
 - `sent_actions.js` — the `sent` table: a send from this copy written down
   once it landed, the list of what is still out (a row goes when a
   `came_back` row names the same record from the same journal, matched as it
@@ -317,8 +326,8 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   table as Postgres writes it; shared by backup, export and restore so no list
   is kept. `.mjs` because the backup is plain Node.
 - `wristband.js` — the login cookie: signed tokens issued and checked with the
-  session secret, renewal, the route guard `requireWristband`, and
-  `wristbandOnHand` for pages.
+  session secret — a band is one that holds `authed: true` — renewal, the
+  route guard `requireWristband`, and `wristbandOnHand` for pages.
 
 ## `hooks/` — reusable browser logic
 

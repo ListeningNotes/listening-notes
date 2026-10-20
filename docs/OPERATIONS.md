@@ -32,7 +32,9 @@ left with submissions.
 
 **It never carries the `secrets` table** — the password and the key that signs
 you in. A download goes wherever downloads go, and whoever held that key could
-sign in as you without the password. The file says what it left out.
+sign in as you without the password. Nor the keyring, your passkeys: each
+opens only the address it was made at, so in a journal brought somewhere new
+it would open nothing. The file says what it left out.
 
 **A schedule, if you want one.** The repo ships two scripts:
 
@@ -160,6 +162,18 @@ One worth knowing without opening the file:
   if you think it leaked — and whoever has it can sign in as you, which is why
   the export never carries it.
 
+**A lost phone.** Its passkey opens nothing without the phone and its Face
+ID, but take it off anyway: Settings → Your keys, from any device you are
+signed in on, or sign in with your password first. The password always
+stays as a second way in.
+
+**The spare key.** Sixteen letters and numbers, made in Settings → Your keys
+(or when the foot of your card asks) and shown once: write it down or keep
+it in your Passwords app. It opens your journal once, from the lock's *use
+your spare key*, when every device and the password are gone, and the
+sign-in spends it; make a new one straight after. Making a new one retires
+the old. Neither the export nor Bring your journal carries it.
+
 **Locked out.** With the password in the database there is no variable to
 edit. Get in with a wristband you still hold on another device and change it
 in Settings. Failing that:
@@ -172,8 +186,15 @@ in Settings. Failing that:
    variable can go.
 
 **Never do step 2 without step 1.** A journal that is set up and has no
-password lets nobody in at all: the claim code only ever opens a copy nobody
-has claimed, so none is printed and none would be accepted.
+password, no key and no spare key lets nobody in at all: the claim code only
+ever opens a copy nobody has claimed, so none is printed and none would be
+accepted.
+
+**A journal claimed with Face ID** has no password: its ways in are its keys
+and its spare key. With every device and the spare key lost, step 1 alone
+gets back in — set `SESSION_PASSWORD` in Vercel and redeploy; a journal with
+no password in its database takes the variable — and then a key or a
+password can be made in Settings → Your keys.
 
 ## A sandbox to try things on
 

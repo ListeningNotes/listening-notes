@@ -21,7 +21,7 @@
 // changing it signs everybody out and a copy that set one on purpose should
 // not be signed out by a row it did not know existed.
 
-import { randomBytes, scrypt as scryptCallback, timingSafeEqual, createHmac } from 'node:crypto';
+import { randomBytes, randomInt, scrypt as scryptCallback, timingSafeEqual, createHmac } from 'node:crypto';
 import { promisify } from 'node:util';
 import database from './database_connection.js';
 
@@ -248,6 +248,66 @@ export async function claimCodeMatches(given) {
   const a = Buffer.from(typed);
   const b = Buffer.from(tidyClaimCode(claim_code));
   return a.length === b.length && timingSafeEqual(a, b);
+}
+
+// ── The spare key, 2026-10-20 ─────────────────────────────────────────────
+// The floor (Miyel's brief, passkeys): the one way back into a journal when
+// every device that held a key is gone and the password with it, and the
+// only one on a journal that never had a password. Sixteen characters from
+// the claim code's alphabet, in fours (her pick over six words), drawn
+// without the modulo's lean; shown once when made and kept here only as a
+// hash, the password's kind. It opens the door once (her pick): the sign-in
+// spends it in the same statement that checks it is still there, so two at
+// once cannot both get through. Made again from Your keys while signed in,
+// which retires the one before. Never in pull_secrets, and never in an
+// export, which leaves the vault behind.
+const SPARE_LENGTH = 16;
+
+export function tidySpareKey(value) {
+  return String(value || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+}
+
+// Makes a new spare key, retiring any before it, and returns it in fours for
+// the one time it is shown.
+export async function makeSpareKey() {
+  const chars = Array.from({ length: SPARE_LENGTH }, () => CODE_ALPHABET[randomInt(CODE_ALPHABET.length)]).join('');
+  const hash = await hashPassword(chars);
+  await database`
+    INSERT INTO secrets (id, spare_key_hash, spare_key_made_at, spare_key_used_at)
+    VALUES (1, ${hash}, now(), NULL)
+    ON CONFLICT (id) DO UPDATE SET
+      spare_key_hash = EXCLUDED.spare_key_hash,
+      spare_key_made_at = EXCLUDED.spare_key_made_at,
+      spare_key_used_at = NULL`;
+  return chars.match(/.{4}/g).join('-');
+}
+
+// What Your keys and the lock may know: whether one is ready, when it was
+// made, and when the last one was used. Never the hash.
+export async function spareKeyState() {
+  const [row] = await database`
+    SELECT spare_key_hash IS NOT NULL AS ready, spare_key_made_at, spare_key_used_at
+    FROM secrets WHERE id = 1`;
+  return {
+    ready: row?.ready === true,
+    made_at: row?.spare_key_made_at || null,
+    used_at: row?.spare_key_used_at || null,
+  };
+}
+
+// True when the key given is the one kept, which is then spent. A key that
+// matched but was spent by another sign-in a moment before is refused.
+export async function spendSpareKey(given) {
+  const typed = tidySpareKey(given);
+  if (typed.length !== SPARE_LENGTH) return false;
+  const [row] = await database`SELECT spare_key_hash FROM secrets WHERE id = 1`;
+  const hash = row?.spare_key_hash;
+  if (!hash || !(await verifyPassword(typed, hash))) return false;
+  const spent = await database`
+    UPDATE secrets SET spare_key_hash = NULL, spare_key_used_at = now()
+    WHERE id = 1 AND spare_key_hash = ${hash}
+    RETURNING id`;
+  return spent.length > 0;
 }
 
 // What the owner's settings page is allowed to know: whether each thing is

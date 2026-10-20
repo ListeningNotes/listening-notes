@@ -29,6 +29,7 @@ import { addressFrom, tidyJournal } from '@/library/return_address';
 import { ask_journal_name } from '@/library/people_actions';
 import { mayKnock, whoIsKnocking } from '@/library/doorman';
 import { hashPassword, passwordSource, save_secrets, setupWindowOpen } from '@/library/secrets';
+import { holds_any, keep_only } from '@/library/keyring';
 
 // Eight is the floor. There is no strength meter — one password, chosen once,
 // saved by a password manager the field is shaped for — but a floor keeps
@@ -82,20 +83,29 @@ export async function POST(request) {
       return NextResponse.json({ error: 'This journal is already set up.' }, { status: 409 });
     }
 
-    const { keeper_name, password } = await request.json();
+    const { keeper_name, password, keys } = await request.json();
 
     // The keeper's name is the only thing asked for that anything depends on,
     // and even it is allowed to be blank — coverName() has a fallback and the
     // schema note says somebody may finish setup without naming themselves.
     const name = String(keeper_name || '').trim();
 
-    // A password is required, even on a copy that has SESSION_PASSWORD in
-    // its environment: under this flow nobody typed one at deploy, so there
-    // is nothing to keep, and the one chosen here takes over.
+    // A password, or a key, 2026-10-20 (Miyel's brief: a journal claimed
+    // with a passkey and no password). A password chosen here is required to
+    // be a real one even on a copy with SESSION_PASSWORD in its environment:
+    // under this flow nobody typed one at deploy, so there is nothing to
+    // keep, and the one chosen here takes over. Without one, the claim must
+    // name a key this browser has just made, and the ring keeps only the
+    // keys the claim names — a key somebody else left on an unclaimed copy
+    // goes (library/keyring.js, keep_only).
     const chosen = String(password || '');
-    if (chosen.length < PASSWORD_FLOOR) {
+    if (chosen && chosen.length < PASSWORD_FLOOR) {
       return NextResponse.json({ error: `At least ${PASSWORD_FLOOR} characters.` }, { status: 400 });
     }
+    if (!chosen && !(await holds_any(keys))) {
+      return NextResponse.json({ error: 'Use Face ID or choose a password first.' }, { status: 400 });
+    }
+    await keep_only(keys);
 
     // The owner row first, and separately, because it is the half with no
     // other writer. Every entry files against it through a COALESCE, and until
@@ -121,9 +131,10 @@ export async function POST(request) {
 
     // The password, and the end of the claim code. Both in one write: from
     // here the code is not an answer to anything, and a stale one left in the
-    // row would be a second key to a door that now has a real one.
+    // row would be a second key to a door that now has a real one. Claimed
+    // with a key, there is no password to write.
     await save_secrets({
-      password_hash: await hashPassword(chosen),
+      ...(chosen ? { password_hash: await hashPassword(chosen) } : {}),
       claim_code: null,
       setup_open_until: null,
     });

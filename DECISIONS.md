@@ -1196,7 +1196,9 @@ Miyel's call.** Whoever holds the session secret can sign in as the keeper
 without the password. A backup stays on the keeper's machine beside the same
 keys in `.env.local`; a download travels, and no keeper can change the key
 after. The cost: restoring an export into a new database means setting the
-copy up first, with a new password.
+copy up first, with a new password. **The keyring stays out with it,
+2026-10-20:** a passkey opens only the address it was made at, so brought
+somewhere new it opens nothing. The backup takes both.
 
 **Back up your journal is two presses in Settings, 2026-09-23.** Make a copy,
 then hand it over: the share sheet on a phone, Downloads on a computer. The
@@ -1870,6 +1872,10 @@ a building anybody may walk into.
 its own password against its own server; there is no shared system to be let
 into and no database of everybody. That is a structural consequence of
 self-hosting, and the thing a hosted service can never offer.
+**A keeper signs in at their own journal's address and nowhere else**
+(Miyel, 2026-10-20: "keep the lock on each journal"). Never through another
+address, the canonical one included: a shared sign-in is one door to every
+journal, and a home-screen app keeps its own sign-in, apart from Safari.
 
 **The way in is the right pane, and nothing on the mark opens it,
 2026-09-02.** The pitch's key when you are out — pressed, the password field
@@ -1891,6 +1897,40 @@ password (see Setting a copy up).
 **Six months on the wristband.** A lock on one person's own room, opened on
 the same two or three devices. Monthly logins are how a password gets weaker.
 The trade is stated: an unlocked phone is dashboard access, and that is accepted.
+
+**Passkeys open the same door, 2026-10-17 (Miyel's brief).** Face ID or its
+like hands out the same wristband the password does; the checking is
+@simplewebauthn's, never written here. The password stays as the second door,
+and the last way into a journal with no password cannot be removed. A key
+opens the exact address it was made at, www. and all, so a move means signing
+in once another way and adding a key there.
+
+**The lock says Unlock, and Face ID is offered where the keeper is,
+2026-10-20 (Miyel's picks).** The lock is a door, the glyph over Unlock (over
+Keeper, and over the sentence beside it); the password sits in a soft well.
+After the password, *Use Face ID next time?* with not now; a keeper already
+signed in, who may not see the lock for months, is asked once at the foot of
+the card — never a sheet that pops up. Not now is kept per device.
+
+**The spare key is sixteen letters and numbers, shown once and good once,
+2026-10-20 (Miyel's picks).** The brief's floor: the way back when every
+device and the password are gone, and the only one a journal without a
+password has. A hash in the vault; the sign-in spends it in the statement
+that checks it. The card's foot asks for one when there is none and when it
+has been used, after Face ID; Your keys holds it beside the password.
+
+**Setup offers Face ID first, and a claim keeps only its own keys,
+2026-10-20 (Miyel's picks).** The password screen is Face ID with *or choose
+a password* under it, for a new journal and a brought one alike; claimed
+with a key, there is no password and the spare key is made next. Anybody
+reaching an unclaimed copy can leave a key on its ring, so the claim names
+the keys it made and the rest are dropped (library/keyring.js, keep_only).
+
+**A wristband says it is one, 2026-10-20.** A band holds `authed: true`, and
+nothing without it passes. Anything else signed with the session secret would
+otherwise be a band; the passkey's challenge cookies are handed to anybody
+who asks, so they are signed with a key derived from the secret, never the
+secret itself.
 
 **Rate limiting is in memory, and the limits it can honestly promise are
 written down.** A managed store needs an account elsewhere most copies will

@@ -25,9 +25,9 @@
 // "not here" was the page apologising for it.
 //
 // ── Secrets go in and never come back out ─────────────────────────────────
-// The keys and the password are written through /api/secrets and the page is
-// only ever told whether one is set and its last four characters. A key that
-// has been typed is replaced by typing another, or cleared; it is not shown.
+// The password is written through /api/secrets, from Your keys (Keyring.js),
+// and the page is only ever told whether one is set and where it comes from.
+// A secret that has been typed is replaced by typing another; it is not shown.
 //
 // ── One Save per section ──────────────────────────────────────────────────
 // Rather than one at the foot of the page, so that "that did not save" can
@@ -43,11 +43,9 @@ import PasswordGate from '../../components/session_components/PasswordGate';
 import AddToHomeScreen from '../../components/main_components/AddToHomeScreen';
 import UpdateSwitch from '../../components/main_components/UpdateSwitch';
 import JournalCopy from '../../components/main_components/JournalCopy';
-import { useJournalHost } from '../../hooks/useJournalHost';
+import Keyring from '../../components/main_components/Keyring';
 import { DIRECTORY_URL } from '../../library/version';
 import { tidyJournal } from '../../library/return_address';
-
-const PASSWORD_FLOOR = 8;
 
 async function send(url, body) {
   const res = await fetch(url, {
@@ -169,24 +167,16 @@ function secretLine(status) {
 }
 
 export default function SettingsPage({ layered = false }) {
-  const host = useJournalHost();
   const [checking, setChecking] = useState(true);
   const [authed, setAuthed] = useState(false);
   const [settings, setSettings] = useState(null);
-  const [secrets, setSecrets] = useState(null);
 
   const [address, setAddress] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirm, setConfirm] = useState('');
 
   const load = useCallback(async () => {
-    const [s, k] = await Promise.all([
-      fetch('/api/settings').then(r => r.json()),
-      fetch('/api/secrets').then(r => r.json()),
-    ]);
+    const s = await fetch('/api/settings').then(r => r.json());
     const row = s.settings || {};
     setSettings(row);
-    setSecrets(k);
     setAddress(row.site_address || '');
   }, []);
 
@@ -258,25 +248,15 @@ export default function SettingsPage({ layered = false }) {
             is what a retirement is — the plumbing stays, nothing is connected
             to it. */}
 
-        <Section
-          title="Password"
-          note="The one you sign in with. At least eight characters."
-          saveLabel="Change password"
-          onSave={async () => {
-            if (password.length < PASSWORD_FLOOR) throw new Error(`At least ${PASSWORD_FLOOR} characters.`);
-            if (password !== confirm) throw new Error('The two passwords do not match.');
-            setSecrets(await send('/api/secrets', { password }));
-            setPassword(''); setConfirm('');
-          }}
-        >
-          {/* The address the password is filed under — a real, visible,
-              writable input, because that is what a password manager will
-              pair the password with. Typing into it changes nothing. */}
-          <input className="st-field st-who" type="text" name="username" autoComplete="username" value={host} onChange={() => {}} aria-label="Journal" tabIndex={-1} />
-          {/* Placeholders where labels were, the way setup asks. */}
-          <input className="st-field" type="password" autoComplete="new-password" value={password} onChange={e => setPassword(e.target.value)} placeholder="New password" aria-label="New password" />
-          <input className="st-field" type="password" autoComplete="new-password" value={confirm} onChange={e => setConfirm(e.target.value)} placeholder="Re-type password" aria-label="Re-type password" />
-        </Section>
+        {/* Your keys, 2026-10-20: every way into this journal in one place —
+            the passkeys and Add this device, then the password and the spare
+            key, each a row with its word at the end
+            (components/main_components/Keyring.js). The password was a
+            section of its own under it until it was folded in the same day. */}
+        <div className="st-section">
+          <h2 className="st-h">Your keys</h2>
+          <Keyring />
+        </div>
 
         {/* The export, which nothing led to until 2026-09-23. Two presses —
             make a copy, then hand it over — and JournalCopy says why. */}

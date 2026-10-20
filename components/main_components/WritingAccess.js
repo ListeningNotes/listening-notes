@@ -43,10 +43,48 @@
 
 import { useEffect, useState } from 'react';
 import { LockSimple, LockSimpleOpen } from '@phosphor-icons/react';
-import PasswordGate from '../session_components/PasswordGate';
+import PasswordGate, { askTheLock, unlockWith } from '../session_components/PasswordGate';
+import { keyHere, canHoldKeys } from './Keyring';
+
+// ── One tap, 2026-10-20 ───────────────────────────────────────────────────
+// On a device that has opened this journal with a passkey before, the lock
+// goes straight to Face ID (Miyel's pick): no panel, no line, the door just
+// opens. Its challenge is fetched as the lock is drawn and again every four
+// minutes, because Safari asks for Face ID only straight from a press. Told
+// no, or not recognised, the lock opens as it does everywhere else — the
+// line, Unlock, and the password (PasswordGate). Anywhere that has never
+// unlocked with a key, nothing is fetched and the lock works as it did.
+//
+// ── Unlock under it, 2026-10-20 ───────────────────────────────────────────
+// The lock alone read as possibly anything (Miyel: "is it too ambiguous?"),
+// so it is a door now, like the book's: the glyph over one word, Unlock, her
+// pick over Keeper and over the sentence beside it. The word says what the
+// press does on her own phone; to anybody else the press says the rest —
+// *Only [keeper] can write here.*
 
 export default function WritingAccess({ onSignedIn }) {
   const [open, setOpen] = useState(false);
+  const [asked, setAsked] = useState(null);
+
+  useEffect(() => {
+    if (!keyHere() || !canHoldKeys()) return undefined;
+    let gone = false;
+    const ask = async () => { const a = await askTheLock(); if (!gone) setAsked(a); };
+    ask();
+    const again = setInterval(ask, 4 * 60 * 1000);
+    return () => { gone = true; clearInterval(again); };
+  }, []);
+
+  async function press() {
+    if (!open && asked?.any) {
+      const done = await unlockWith(asked);
+      if (done.ok) { onSignedIn?.(); return; }
+      setAsked(null);
+      setOpen(true);
+      return;
+    }
+    setOpen(was => !was);
+  }
 
   // Escape closes it, the way it closes everything else that opened on a
   // press. A tap outside does not: a form in the page keeps what was typed.
@@ -62,10 +100,8 @@ export default function WritingAccess({ onSignedIn }) {
       <button
         type="button"
         className={'pt-key' + (open ? ' pt-key--open' : '')}
-        onClick={() => setOpen(was => !was)}
-        aria-label={open ? 'Close the sign-in' : 'Sign in'}
+        onClick={press}
         aria-expanded={open}
-        title="Sign in"
       >
         {/* A lock, shut at rest and open while the field is up (Miyel,
             2026-09-28: "lock turning to locksimpleopen"). It was a key until
@@ -73,9 +109,12 @@ export default function WritingAccess({ onSignedIn }) {
             keys on one pane read as one thing. The plain lock rather than
             the one with a keyhole, so the body is the same in both states
             and only the shackle moves. */}
-        {open
-          ? <LockSimpleOpen size={18} aria-hidden="true" />
-          : <LockSimple size={18} aria-hidden="true" />}
+        <span className="pt-key-ring">
+          {open
+            ? <LockSimpleOpen size={18} aria-hidden="true" />
+            : <LockSimple size={18} aria-hidden="true" />}
+        </span>
+        <span className="pt-key-word">Unlock</span>
       </button>
       {open && (
         <div className="pt-lock-field">

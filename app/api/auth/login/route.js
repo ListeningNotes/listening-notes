@@ -17,7 +17,7 @@ import { NextResponse } from 'next/server';
 import { issueWristband, WRISTBAND_COOKIE } from '@/library/wristband';
 import { mayKnock, forgetKnocks, tooSoon, whoIsKnocking } from '@/library/doorman';
 import { isSetUp } from '@/library/settings_actions';
-import { pull_secrets, verifyPassword, claimCodeMatches, setupWindowOpen } from '@/library/secrets';
+import { pull_secrets, verifyPassword, claimCodeMatches, setupWindowOpen, spendSpareKey } from '@/library/secrets';
 import { timingSafeEqual } from 'node:crypto';
 
 // Compares in constant time, so the answer takes as long for a password that
@@ -59,9 +59,17 @@ export async function POST(request) {
     const knock = mayKnock('login', caller);
     if (!knock.allowed) return tooSoon(knock.retryAfter);
 
-    const { password } = await request.json();
+    const { password, spare } = await request.json();
 
-    if (!(await opens(String(password || '')))) {
+    // The spare key, 2026-10-20: the floor, through this same door and
+    // counted by the same doorman. It opens once, and opening spends it
+    // (library/secrets.js).
+    if (spare !== undefined) {
+      if (!(await spendSpareKey(spare))) {
+        await new Promise(r => setTimeout(r, 400));
+        return NextResponse.json({ error: 'That spare key didn’t work.' }, { status: 401 });
+      }
+    } else if (!(await opens(String(password || '')))) {
       // Small delay makes brute-force slow without bothering a real human
       await new Promise(r => setTimeout(r, 400));
       return NextResponse.json({ error: 'Wrong password' }, { status: 401 });
