@@ -99,12 +99,13 @@ The library — logic, no visuals
     cover_code.js              The same press for an entry's cover: the code for that entry's address, redrawn from the art on each ask, with only the proved dot kept on the row
     cross_references.js        Display-time linking: a mention of an album or artist in the archive becomes a link; [[brackets]] force one; COMMON_WORD_NAMES is the hand-edited blocklist
     database_actions.js        Everything to do with saving and loading entries — the wall's lean list, the public feed's allow-list, one entry, a record's folder, save/update/delete, drafts, briefings
-    database_connection.js     Opens the connection to the database, on first use; and says a database failure in a sentence
+    database_connection.js     Opens the connection to the database, on first use — on a deployment that hosts journals, the database of the journal the request is for, brought up to date the first time it is opened; and says a database failure in a sentence
     definitions.js             The shipped text for the three marks, and the merge of the owner's edits over it
     doorman.js                 Rate limiting, in memory: the doors, how many tries each allows, who is knocking, and the 429 answer
     entry_formatter.js         The shapes an entry is written in: the horizon from track ratings, flawless (what Masterpiece means), tracks to and from prose, lookup_key, the edit stamp
     gold_burst.js              The gold sparkle fired when a Masterpiece is marked
     handoff.js                 What the wall leaves for the entry layer: the tapped record's first screen, the wall's order for swiping to neighbours, and how a layer arrived
+    hosting_directory.js       On a deployment that hosts many journals: which journal lives at which address, the way into each one's database sealed, and the journal a request is for
     install_guide.js           What /get needs: the deploy button's URL and the ten steps with their screenshots
     letterhead.js              LN. Admin letters: the canonical keeper's public key, checking a letter's seal, that it is for this journal and newer than the last, and pinning it as the one letter in messages; and the letter a journal writes itself asking for a copy (ask_for_copy), the one with a door
     keyring.js                 The passkeys: a row per device's key, the public half only; making a key and opening the door with one (@simplewebauthn/server); a key belongs to the exact address it was made at

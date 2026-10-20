@@ -24,7 +24,11 @@ const nextConfig = {
   // your own journal signed out in the same browser (the wristband belongs to
   // localhost), and where a test's mock journals live. Without it the page
   // there never starts — no error, just a page that does not answer a press.
-  allowedDevOrigins: ['127.0.0.1', '192.168.*.*', '10.*.*.*', '172.16.*.*', '*.local'],
+  //
+  // And *.localhost, 2026-10-20: two test journals on one dev server, each at
+  // its own address (one.localhost, two.localhost), the way a deployment that
+  // hosts journals tells them apart (library/hosting_directory.js).
+  allowedDevOrigins: ['127.0.0.1', '192.168.*.*', '10.*.*.*', '172.16.*.*', '*.local', '*.localhost'],
   // Dev-only route indicator badge (bottom-left "N") — never shows in
   // production, just noise while testing locally.
   devIndicators: false,
@@ -37,8 +41,13 @@ const nextConfig = {
   // by two statements read out of migrations 027 and 028, so there is one
   // copy of them (library/unpacking.mjs) — and a file read at run time only
   // travels with a route when the route is told about it.
+  //
+  // And with every route since 2026-10-20: a deployment that hosts journals
+  // brings each one up to date the first time it is opened, from whichever
+  // route opens it (library/database_connection.js).
   outputFileTracingIncludes: {
-    '/api/restore': ['./migrations/*.sql'],
+    '/*': ['./migrations/*.sql'],
+    '/**': ['./migrations/*.sql'],
   },
 };
 

@@ -16,6 +16,7 @@ import { PATH_HEADER } from '../proxy';
 import { headers } from 'next/headers';
 import { isSetUp, pull_settings, coverName, titleName } from '../library/settings_actions';
 import { hasDatabase, explainDatabaseError } from '../library/database_connection';
+import { journalHere, NoJournalHere } from '../library/hosting_directory';
 import { isCurrentCode } from '../library/portrait_code';
 import { SANDBOX } from '../library/version';
 
@@ -204,10 +205,21 @@ const SETUP_PATH = '/setup';
 // and for a fresh copy with a mistyped string is a dead end with nobody to
 // ask. A page that says the database cannot be reached is true in both cases
 // and points the owner at the one thing to check.
+//
+// 'nobody', 2026-10-20: on a deployment that hosts journals, an address the
+// hosting directory does not know. Nobody's journal is drawn there — not a
+// default, not the nearest (library/hosting_directory.js) — and /setup is
+// held too, because there is nothing at the address to set up.
 async function holdTheDoor() {
   const path = (await headers()).get(PATH_HEADER) || '';
   if (path.startsWith('/api/')) return null;
   if (!hasDatabase()) return 'database';
+  try {
+    await journalHere();
+  } catch (error) {
+    if (error instanceof NoJournalHere) return 'nobody';
+    return { reason: 'unreachable', said: explainDatabaseError(error) };
+  }
   if (path === SETUP_PATH) return null;
   try {
     return (await isSetUp()) ? null : 'setup';

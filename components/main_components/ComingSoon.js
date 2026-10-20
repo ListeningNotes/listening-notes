@@ -43,6 +43,10 @@
 // all — it built and started anyway, and the only useful page is one that
 // says what to set. That one is addressed to the owner alone, because nobody
 // else can be looking at it yet.
+//
+// A third, 'nobody', 2026-10-20: on a deployment that hosts journals, an
+// address with no journal at it. One sentence and no door — there is nothing
+// here to set up, and no hint of whose journal it might have been.
 
 // The mark, drawn rather than spelled. Third copy of this path data — SiteNav
 // and HomeNav carry the other two — and consistent with how the site already
@@ -64,6 +68,7 @@ const SOURCE_URL =
 export default function ComingSoon({ reason = 'setup', said = '' }) {
   const noDatabase = reason === 'database';
   const unreachable = reason === 'unreachable';
+  const nobody = reason === 'nobody';
   return (
     <div className="cs-page">
       <style>{`
@@ -130,7 +135,11 @@ export default function ComingSoon({ reason = 'setup', said = '' }) {
         />
         </svg>
       </div>
-      {noDatabase ? (
+      {nobody ? (
+        <p className="cs-said">
+          There’s no journal at this address.
+        </p>
+      ) : noDatabase ? (
         <>
           <p className="cs-said">
             This copy has no database yet.

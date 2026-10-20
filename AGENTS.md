@@ -221,8 +221,10 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   drafts, and `pull_record_keys`, each record the journal logged, for the
   Board.
 - `database_connection.js` — the one Neon handle, opened on first use rather
-  than on import, and `explainDatabaseError`, which says a database failure in
-  a sentence for the owner.
+  than on import — on a deployment that hosts journals, the database of the
+  journal the request is for, brought up to date the first time a server
+  instance opens it — and `explainDatabaseError`, which says a database
+  failure in a sentence for the owner.
 - `definitions.js` — the shipped text for the three marks (Masterpiece,
   Favorite, Formative) and the merge of the owner's edits over it.
 - `directory_actions.js` — the `directory` table, on the registry's copy:
@@ -247,6 +249,13 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   tapped record's first-screen fields so the layer opens without a wait, the
   wall's order for swiping to neighbours, and how a layer arrived (by swipe,
   by going back, alone).
+- `hosting_directory.js` — the hosting directory, on a deployment that hosts
+  many journals: which journal lives at which address, the way into each
+  one's database sealed with `HOSTING_DIRECTORY_KEY`, `journalHere` (the
+  journal a request is for, or `NoJournalHere`), `memoryOf` (what a server's
+  memory of one journal is filed under) and `deploymentSetting` (the
+  deployment's settings, which speak for no hosted journal). Nothing runs
+  without `HOSTING_DIRECTORY_URL`.
 - `install_guide.js` — what `/get` needs: the deploy button's URL and the ten
   install steps with their screenshots and the rings drawn over them.
 - `keyring.js` — the passkeys (`keyring`): a row per device's key, the

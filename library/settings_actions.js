@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import database from './database_connection.js';
 import { DEFAULT_DEFINITIONS, mergeDefinitions } from './definitions.js';
+import { memoryOf } from './hosting_directory.js';
 
 // The journal's own details — what it is called, who keeps it, the portrait on
 // the cover, the links in the nav. One row, always id 1.
@@ -296,13 +297,18 @@ export async function pull_settings() {
 // sets it back to false, and a journal that has been claimed stays claimed.
 // That turns a per-request read into one read per server instance, which
 // matters because this is checked on the way to every public page.
-let claimed = false;
+//
+// Remembered per journal, 2026-10-20: on a deployment that hosts many, one
+// journal's yes would otherwise answer for a journal nobody has claimed.
+const claimed = new Set();
 
 export async function isSetUp() {
-  if (claimed) return true;
+  const whose = await memoryOf();
+  if (claimed.has(whose)) return true;
   const [row] = await database`SELECT setup_complete FROM settings WHERE id = 1`;
-  if (row?.setup_complete === true) claimed = true;
-  return claimed;
+  if (row?.setup_complete !== true) return false;
+  claimed.add(whose);
+  return true;
 }
 
 // ── One field, for what another copy asks ────────────────────────────────

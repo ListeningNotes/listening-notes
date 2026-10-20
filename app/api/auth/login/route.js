@@ -19,6 +19,7 @@ import { mayKnock, forgetKnocks, tooSoon, whoIsKnocking } from '@/library/doorma
 import { isSetUp } from '@/library/settings_actions';
 import { pull_secrets, verifyPassword, claimCodeMatches, setupWindowOpen, spendSpareKey } from '@/library/secrets';
 import { timingSafeEqual } from 'node:crypto';
+import { deploymentSetting } from '@/library/hosting_directory';
 
 // Compares in constant time, so the answer takes as long for a password that
 // is wrong in the first character as for one wrong in the last. A plain !==
@@ -36,7 +37,8 @@ function sameSecret(given, actual) {
 async function opens(password) {
   const { password_hash } = await pull_secrets();
   if (password_hash) return await verifyPassword(password, password_hash);
-  if (process.env.SESSION_PASSWORD) return sameSecret(password, process.env.SESSION_PASSWORD);
+  const fromDeployment = deploymentSetting('SESSION_PASSWORD');
+  if (fromDeployment) return sameSecret(password, fromDeployment);
   // No password of any kind. Only an unclaimed copy is in this state. For
   // half an hour after its build the door is simply open — see the window
   // in library/secrets.js — and after that only the claim code gets
