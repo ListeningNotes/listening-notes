@@ -106,6 +106,7 @@ The library — logic, no visuals
     gold_burst.js              The gold sparkle fired when a Masterpiece is marked
     handoff.js                 What the wall leaves for the entry layer: the tapped record's first screen, the wall's order for swiping to neighbours, and how a layer arrived
     install_guide.js           What /get needs: the deploy button's URL and the ten steps with their screenshots
+    keyring.js                 The passkeys: a row per device's key, the public half only; making a key and opening the door with one (@simplewebauthn/server); a key belongs to the exact address it was made at
     message_actions.js         Messages: somebody's words to the keeper — kept, listed for the inbox, opened, marked replied to, and dismissed, which deletes
     migrator.js                Brings the database up to date — from instrumentation.js on start, and from scripts/prepare_database.mjs at build
     music_data_api.js          Fetches album art and tracklists from iTunes, and the searches: records (searchAlbums) and songs (searchSongs)
@@ -171,6 +172,8 @@ The front doors — receive requests, hand them off, send back responses
     auth/login/route.js        The password, the deploy-time variable, or — unclaimed — the claim code
     auth/check/route.js        Am I still wearing a valid wristband; renews an ageing one on the way
     auth/logout/route.js       Cuts the wristband off
+    auth/passkey/route.js      Opening the door with a passkey: GET hands the device a challenge and says whether there are keys; POST is its signed answer, counted by the login door, and leaves wearing the wristband the password gives
+    keyring/route.js           Your keys — owner-only: the list, making a key on this device, taking one off; never the last way into a journal with no password
     waiting/route.js           How many sends are waiting on the keeper — the desk's number; messages are never counted
     needle/route.js            Where a listen says what it is on — owner-only, write only; the read is public/beacon
     portrait/route.js          The keeper's picture: uploaded into a column, served back from it, removed
@@ -230,9 +233,10 @@ The furniture — visual pieces
       KeeperTools.js           The owner's ··· — top right on both, Edit/Print/Delete on an entry and Edit/Print on the ID pane; the door stays put and the tools file out of it
       SharePrinter.js          The press's toolbox, not the press: the paper sizes (FRAMES), the page's two colours, and the canvas tools a plate draws with. The press itself has been hooks/usePress.js since 2026-09-13
       EntryPlate.js            A record cut as a plate — the entry page's first screen on the record's blurred colour: mark, keeper, cover, album, artist and year, stars, chips, date, horizon; no code, the press copies the address
-      WritingAccess.js         The lock at the foot of the card for a visitor — shut, open while the password field it opens in place
+      WritingAccess.js         The lock at the foot of the card for a visitor — shut, open while the door it opens in place; on a device that has unlocked with a key before, one press goes straight to Face ID
       ComingSoon.js            What a held copy shows instead of a site — unclaimed, no database, or database unreachable
       AddToHomeScreen.js       The one step the software cannot do: the last screen of setup, and a Settings section
+      Keyring.js               Your keys, in Settings: each device's key, + Add this device (Face ID or its like), a key off in two presses; where this browser cannot hold a key, it says where one can be made
       JournalCopy.js           Back up your journal, in Settings: Make a copy fetches the export and holds it as a zip — journal.json, Read me.txt and a page per entry (library/carbon_copy.js) — then Share (a phone) or Download (a computer)
       AlbumFinder.js           Type, see covers, pick one — the stranger's send form's search (/submit)
       MiniAddressBook.js       The address book as a strip of faces, for picking one person — the entry editor's Sent by, the inbox's send whose sender has since got a copy, and the send sheet's book, as a grid
@@ -258,7 +262,7 @@ The furniture — visual pieces
         TrackDial.js           One track, full screen, while you decide what it is worth; unfolds in the row, never over it
         PrintBar.js            The bar at the foot of the entry while it is being printed: the ground, the paper size, Save and Done
     session_components/        Everything in the private dashboard
-      PasswordGate.js          The password screen
+      PasswordGate.js          The door: Only [keeper] can write here., Unlock and use your password where the journal has keys; the password field where it has none; the claim code on a copy nobody has claimed
       AlbumPicker.js           Type, see a grid of covers with songs under them, tap one — the screen before a listen, or before a track note
       StarRating.js            The interactive stars you click to rate
       TrackRow.js              One track in the session's list — number or the live dot, the name, stars and heart set in place; on the track being logged, *Any notes?* or the note, and the field under the row when it is open, with the envelope at its foot

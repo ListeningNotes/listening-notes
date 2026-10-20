@@ -60,12 +60,20 @@ export async function issueWristband() {
 // Returns the wristband's contents if the wax seal holds, or null. Callers that
 // only want a yes/no should use checkWristband below — this one exists because
 // renewal needs to know how old the band is, which a boolean throws away.
+//
+// ── A wristband says it is one, 2026-10-20 ──
+// The seal alone is not enough: anything signed with this key would pass,
+// and once a second token existed — a passkey ceremony's, signed on the way
+// to a sign-in that anybody may start — one could be worn as the other. So
+// a band is a token that holds `authed: true`, which every band issued here
+// always has (issueWristband), and nothing else is. Every other token is
+// signed with a key of its own as well (library/keyring.js).
 export async function readWristband(request) {
   const token = request.cookies.get(COOKIE_NAME)?.value;
   if (!token) return null;
   try {
     const { payload } = await jwtVerify(token, await getSecret());
-    return payload;
+    return payload?.authed === true ? payload : null;
   } catch {
     return null;
   }
@@ -94,8 +102,8 @@ export async function wristbandOnHand() {
   const token = jar.get(COOKIE_NAME)?.value;
   if (!token) return false;
   try {
-    await jwtVerify(token, await getSecret());
-    return true;
+    const { payload } = await jwtVerify(token, await getSecret());
+    return payload?.authed === true;
   } catch {
     return false;
   }

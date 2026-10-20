@@ -26,8 +26,9 @@
 // desk means by keeping a copy.
 //
 // ── What is in it ─────────────────────────────────────────────────────────
-// Every table but the vault (app/api/export/route.js): the password and the
-// key that signs you in never leave in a file, because a file travels. The
+// Every table but the vault and the keyring (app/api/export/route.js): the
+// password and the key that signs you in never leave in a file, because a
+// file travels, and a passkey opens nothing anywhere but here. The
 // line after the copy is made says what it holds, so pressing it is seeing
 // a backup rather than trusting one.
 //

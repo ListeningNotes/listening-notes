@@ -3681,6 +3681,10 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   background: none; color: var(--ink-faint); border-color: transparent;
 }
 .pt-lock-field .pg-go:hover { color: var(--ink); border-color: var(--border); }
+/* Unlock, where the journal has keys, 2026-10-20: the panel's one press, so
+   it reads at the size of a word, in ink, rather than as the faint Enter
+   that sits beside a field Return already submits. */
+.pt-lock-field .pg-go.pg-unlock { font-size: 11px; letter-spacing: 0.14em; color: var(--ink); padding: 6px 14px; }
 
 /* The card's header used to be pinned to the window, which meant its pencil
    floated over the wall while the pane beside it was showing — so it was

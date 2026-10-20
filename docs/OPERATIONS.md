@@ -32,7 +32,9 @@ left with submissions.
 
 **It never carries the `secrets` table** — the password and the key that signs
 you in. A download goes wherever downloads go, and whoever held that key could
-sign in as you without the password. The file says what it left out.
+sign in as you without the password. Nor the keyring, your passkeys: each
+opens only the address it was made at, so in a journal brought somewhere new
+it would open nothing. The file says what it left out.
 
 **A schedule, if you want one.** The repo ships two scripts:
 
@@ -159,6 +161,11 @@ One worth knowing without opening the file:
   password. Disruptive, not dangerous. Don't rotate it casually; do rotate it
   if you think it leaked — and whoever has it can sign in as you, which is why
   the export never carries it.
+
+**A lost phone.** Its passkey opens nothing without the phone and its Face
+ID, but take it off anyway: Settings → Your keys, from any device you are
+signed in on, or sign in with your password first. The password always
+stays as a second way in.
 
 **Locked out.** With the password in the database there is no variable to
 edit. Get in with a wristband you still hold on another device and change it

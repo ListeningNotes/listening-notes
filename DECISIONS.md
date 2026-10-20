@@ -1196,7 +1196,9 @@ Miyel's call.** Whoever holds the session secret can sign in as the keeper
 without the password. A backup stays on the keeper's machine beside the same
 keys in `.env.local`; a download travels, and no keeper can change the key
 after. The cost: restoring an export into a new database means setting the
-copy up first, with a new password.
+copy up first, with a new password. **The keyring stays out with it,
+2026-10-20:** a passkey opens only the address it was made at, so brought
+somewhere new it opens nothing. The backup takes both.
 
 **Back up your journal is two presses in Settings, 2026-09-23.** Make a copy,
 then hand it over: the share sheet on a phone, Downloads on a computer. The
@@ -1891,6 +1893,19 @@ password (see Setting a copy up).
 **Six months on the wristband.** A lock on one person's own room, opened on
 the same two or three devices. Monthly logins are how a password gets weaker.
 The trade is stated: an unlocked phone is dashboard access, and that is accepted.
+
+**Passkeys open the same door, 2026-10-17 (Miyel's brief).** Face ID or its
+like hands out the same wristband the password does; the checking is
+@simplewebauthn's, never written here. The password stays as the second door,
+and the last way into a journal with no password cannot be removed. A key
+opens the exact address it was made at, www. and all, so a move means signing
+in once another way and adding a key there.
+
+**A wristband says it is one, 2026-10-20.** A band holds `authed: true`, and
+nothing without it passes. Anything else signed with the session secret would
+otherwise be a band; the passkey's challenge cookies are handed to anybody
+who asks, so they are signed with a key derived from the secret, never the
+secret itself.
 
 **Rate limiting is in memory, and the limits it can honestly promise are
 written down.** A managed store needs an account elsewhere most copies will

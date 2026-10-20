@@ -480,6 +480,22 @@ textarea.st-field { resize: vertical; min-height: 96px; }
   color: var(--ink-faint); border-bottom: 1px solid var(--border);
 }
 .st-clear:hover { color: var(--ink-soft); }
+/* Your keys, 2026-10-20: one row per device, its × at the end. The × asks
+   once — it turns into the word Remove — and takes the key on the second
+   press. */
+.kr-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.kr-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  min-height: 40px; border-top: 1px solid var(--border);
+}
+.kr-row:first-child { border-top: 0; }
+.kr-name { font-size: 14px; line-height: 1.4; color: var(--ink); }
+.kr-x {
+  background: none; border: 0; padding: 10px 8px; margin: -10px -8px;
+  font-family: var(--font-label); font-size: 13px; color: var(--ink-faint); cursor: pointer;
+}
+.kr-x:hover { color: var(--ink-soft); }
+.kr-x--sure { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: #e05555; }
 /* Sign out is not a section: a word under the tiles, where setup keeps Back. */
 .st-section--out {
   align-items: center; margin: 16px 0 0; padding: 14px 0 0;
@@ -569,6 +585,17 @@ textarea.st-field { resize: vertical; min-height: 96px; }
   text-transform: uppercase;
 }
 .pg-go:disabled { opacity: 0.5; cursor: default; }
+/* The door's one line, 2026-10-20: who may write here, over Unlock. The
+   reading face, quiet, centred — it is said to a visitor as much as to the
+   keeper, and asks nothing of either. */
+.pg-line { margin: 0; font-size: 13px; line-height: 1.5; color: var(--ink-soft); text-align: center; text-wrap: balance; }
+/* "use your password" under Unlock: a plain word, not a second button. */
+.pg-or {
+  align-self: center; background: none; border: 0; padding: 6px 8px; margin: -6px -8px;
+  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.08em;
+  color: var(--ink-faint); cursor: pointer;
+}
+.pg-or:hover { color: var(--ink-soft); }
 
 /* ── from components/main_components/AddToHomeScreen.js ─────────────────────────────────────────── */
 .a2h { display: flex; flex-direction: column; gap: 14px; }

@@ -1,7 +1,8 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { startAuthentication } from '@simplewebauthn/browser';
 import { fonts } from '../../library/sitewide_visuals';
 import { useBookplate } from '../main_components/Bookplate';
 import { useJournalHost } from '../../hooks/useJournalHost';
@@ -21,13 +22,99 @@ import { useJournalHost } from '../../hooks/useJournalHost';
 // can see it and press Enter rather than find the log again.
 // `autoFocus` puts the cursor in the field as it appears — for the lock on
 // the pitch pane, where the field only exists because a key was just pressed.
+//
+// ── A key first, 2026-10-20 ───────────────────────────────────────────────
+// Where the journal has a passkey on its ring (library/keyring.js), the door
+// opens to one line, *Only [keeper] can write here.*, an Unlock that asks the
+// device for Face ID or its like, and *use your password* under it (Miyel's
+// words, 2026-10-17: the line names the person and what the lock guards, so
+// it reads the same to somebody who calls this a journal or a blog). Where
+// it has none, the password field is the door, as it always was. The claim
+// code is untouched.
+
+// The browser's note that it has unlocked this journal with a key before,
+// so the lock can go straight to Face ID next time — one tap (Miyel's pick).
+// Only a yes is kept: the key itself never leaves the device.
+export const KEY_HERE = 'ln-key-here';
+
+export function keyHere() {
+  try { return localStorage.getItem(KEY_HERE) === '1'; } catch { return false; }
+}
+
+export function markKeyHere(on) {
+  try {
+    if (on) localStorage.setItem(KEY_HERE, '1');
+    else localStorage.removeItem(KEY_HERE);
+  } catch { /* a private window keeps nothing, and asks every time */ }
+}
+
+// Whether this browser can hold a key at all: a secure page, at a named
+// address, in a browser that knows passkeys. The dev server on a phone, over
+// plain http, cannot; nor can a bare number like 127.0.0.1, which no browser
+// will file a key under.
+export function canHoldKeys() {
+  if (typeof window === 'undefined' || !window.isSecureContext || !('PublicKeyCredential' in window)) return false;
+  const host = window.location.hostname;
+  return !/^[\d.]+$/.test(host) && !host.startsWith('[');
+}
+
+// The lock's options, fetched before anything is pressed: Safari lets Face
+// ID be asked for only straight from a press, and a press that waited on the
+// network first would be refused. The challenge lasts five minutes, so a
+// caller asks again every four. Returns { options, any }, or null.
+export async function askTheLock() {
+  try {
+    const r = await fetch('/api/auth/passkey', { cache: 'no-store' });
+    if (!r.ok) return null;
+    const d = await r.json();
+    return d?.options ? { options: d.options, any: Boolean(d.any) } : null;
+  } catch {
+    return null;
+  }
+}
+
+// Open the door with this device's key. Called straight from a press, with
+// what askTheLock fetched. Returns { ok }, or { ok: false } with `error` to
+// say, `cancelled` when the device was told no, and `unknown` when the key
+// is not on the journal's ring any more.
+export async function unlockWith(asked) {
+  let response;
+  try {
+    response = await startAuthentication({ optionsJSON: asked.options });
+  } catch {
+    // Face ID dismissed, or no key for this journal on this device: the
+    // browser does not say which, and neither is worth a sentence.
+    return { ok: false, cancelled: true };
+  }
+  try {
+    const r = await fetch('/api/auth/passkey', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ response }),
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) {
+      if (d.unknown) markKeyHere(false);
+      return {
+        ok: false,
+        unknown: Boolean(d.unknown),
+        error: d.error || (r.status === 429 ? 'Too many attempts. Wait a minute.' : 'That key didn’t work.'),
+      };
+    }
+    markKeyHere(true);
+    return { ok: true };
+  } catch {
+    return { ok: false, error: 'Something went wrong. Try again.' };
+  }
+}
+
 export default function PasswordGate({ onAuth, bare = false, asking = 'password', initial = '', autoFocus = false }) {
   const claiming = asking === 'claim code';
   // The journal's own name over the password box, rather than the name of the
   // journal this software was written for. The owner is the only person who
   // ever sees this screen, and seeing a stranger's name on the way into your
   // own writing is the exact wrong first impression for a copy to make.
-  const { cover_name } = useBookplate();
+  const { cover_name, keeper_name } = useBookplate();
   const host = useJournalHost();
   const [pw, setPw] = useState(initial);
   // A string now rather than a flag, because there are two things that can go
@@ -35,6 +122,42 @@ export default function PasswordGate({ onAuth, bare = false, asking = 'password'
   // other one.
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // The key's half of the door. `asked` is undefined until the lock has
+  // answered, null if it could not, and { options, any } once it has.
+  // `typing` is the password chosen over the key.
+  const [keyed, setKeyed] = useState(false);
+  const [asked, setAsked] = useState(undefined);
+  const [typing, setTyping] = useState(false);
+  const [unlocking, setUnlocking] = useState(false);
+  useEffect(() => {
+    if (claiming || !canHoldKeys()) return undefined;
+    setKeyed(true);
+    let gone = false;
+    const ask = async () => { const a = await askTheLock(); if (!gone) setAsked(a); };
+    ask();
+    const again = setInterval(ask, 4 * 60 * 1000);
+    return () => { gone = true; clearInterval(again); };
+  }, [claiming]);
+
+  // Before the lock has answered there is nothing to draw but the line; after,
+  // Unlock where there are keys, the field where there are none.
+  const offerKey = keyed && asked?.any && !typing;
+  const showField = !keyed || typing || (asked !== undefined && !asked?.any);
+  const name = String(keeper_name || '').trim();
+  const line = !claiming && name ? `Only ${name} can write here.` : '';
+
+  async function unlock() {
+    if (!asked?.options || unlocking) return;
+    setUnlocking(true);
+    setError('');
+    const done = await unlockWith(asked);
+    setUnlocking(false);
+    if (done.ok) { onAuth(); return; }
+    if (!done.cancelled) setError(done.error);
+    // The challenge is spent either way: the next press needs a fresh one.
+    setAsked(await askTheLock());
+  }
 
   async function handleAuth(event) {
     // A real submit event now, so Enter and the button are the same path and
@@ -103,7 +226,7 @@ export default function PasswordGate({ onAuth, bare = false, asking = 'password'
             value={pw}
             onChange={e => { setPw(e.target.value); setError(''); }}
             disabled={loading}
-            autoFocus={autoFocus}
+            autoFocus={autoFocus || typing}
           />
           {error && <div className="pg-said">{error}</div>}
           <button type="submit" className="pg-go" disabled={loading}>
@@ -112,17 +235,39 @@ export default function PasswordGate({ onAuth, bare = false, asking = 'password'
         </form>
   );
 
-  // In a panel: the fields, and the words the panel puts over them are its own.
-  if (bare) return <div style={{ display: 'flex', flexDirection: 'column', gap: 14, fontFamily: fonts.sans }}>{fields}</div>;
+  // The door: the line, then Unlock and the password under it where there
+  // are keys, or the field where there are none.
+  const door = (
+    <>
+      {line && <p className="pg-line">{line}</p>}
+      {offerKey && (
+        <>
+          <button type="button" className="pg-go pg-unlock" onClick={unlock} disabled={unlocking}>
+            {unlocking ? 'Unlocking…' : 'Unlock'}
+          </button>
+          {error && <div className="pg-said">{error}</div>}
+          <button type="button" className="pg-or" onClick={() => { setTyping(true); setError(''); }}>
+            use your password
+          </button>
+        </>
+      )}
+      {showField && fields}
+    </>
+  );
+
+  // In a panel: the door, and the words the panel puts over it are its own.
+  if (bare) return <div style={{ display: 'flex', flexDirection: 'column', gap: 14, fontFamily: fonts.sans }}>{door}</div>;
 
   return (
     <div style={{ minHeight: '100dvh', background: 'var(--bg)', color: 'var(--ink)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, fontFamily: fonts.sans }}>
       <div style={{ width: '100%', maxWidth: 340, display: 'flex', flexDirection: 'column', gap: 20, textAlign: 'center' }}>
         <div>
           <div style={{ fontFamily: 'var(--font-display)', fontWeight: 'var(--font-display-weight)', fontSize: 24, letterSpacing: '-0.02em' }}>{cover_name}</div>
-          <div style={{ fontFamily: 'var(--font-label)', fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-faint)', marginTop: 4 }}>Sign in</div>
+          {/* The line says what this door is once a keeper is named; until
+              then — a copy being set up — the old label does. */}
+          {!line && <div style={{ fontFamily: 'var(--font-label)', fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-faint)', marginTop: 4 }}>Sign in</div>}
         </div>
-        {fields}
+        {door}
       </div>
     </div>
   );

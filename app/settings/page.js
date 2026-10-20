@@ -43,6 +43,7 @@ import PasswordGate from '../../components/session_components/PasswordGate';
 import AddToHomeScreen from '../../components/main_components/AddToHomeScreen';
 import UpdateSwitch from '../../components/main_components/UpdateSwitch';
 import JournalCopy from '../../components/main_components/JournalCopy';
+import Keyring from '../../components/main_components/Keyring';
 import { useJournalHost } from '../../hooks/useJournalHost';
 import { DIRECTORY_URL } from '../../library/version';
 import { tidyJournal } from '../../library/return_address';
@@ -257,6 +258,14 @@ export default function SettingsPage({ layered = false }) {
             resolves it, because the schema is additive-only and because that
             is what a retirement is — the plumbing stays, nothing is connected
             to it. */}
+
+        {/* Your keys, 2026-10-20: the passkeys that open this journal, and
+            Add this device (components/main_components/Keyring.js). Above
+            the password, the way the lock offers a key before it. */}
+        <div className="st-section">
+          <h2 className="st-h">Your keys</h2>
+          <Keyring />
+        </div>
 
         <Section
           title="Password"

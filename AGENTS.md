@@ -241,6 +241,11 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   by going back, alone).
 - `install_guide.js` — what `/get` needs: the deploy button's URL and the ten
   install steps with their screenshots and the rings drawn over them.
+- `keyring.js` — the passkeys (`keyring`): a row per device's key, the
+  public half only; the two ceremonies, making a key and opening the door
+  with one, checked by `@simplewebauthn/server`; the challenge kept between
+  them in a cookie signed with a key derived from the secret; and
+  `addressOf`, the exact host a key belongs to.
 - `message_actions.js` — the `messages` table: somebody's words to the
   keeper, kept, listed for the inbox, opened, marked replied to, and
   dismissed — which deletes, and takes the comment a message was with it.
@@ -317,8 +322,8 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   table as Postgres writes it; shared by backup, export and restore so no list
   is kept. `.mjs` because the backup is plain Node.
 - `wristband.js` — the login cookie: signed tokens issued and checked with the
-  session secret, renewal, the route guard `requireWristband`, and
-  `wristbandOnHand` for pages.
+  session secret — a band is one that holds `authed: true` — renewal, the
+  route guard `requireWristband`, and `wristbandOnHand` for pages.
 
 ## `hooks/` — reusable browser logic
 
