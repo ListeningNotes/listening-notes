@@ -244,13 +244,13 @@ export default function Inbox({ layered = false, inPane = false, sent: sentFromB
   const [openRow, setOpenRow] = useState(null);
   const [showArchived, setShowArchived] = useState(false);
   // ── Records waiting, 2026-10-17 ────────────────────────────────────────
-  // Which one is open under its row of covers: its id; null once the open
-  // one has been pressed shut; and, until anything is pressed, 'newest' —
-  // the newest arrives open, so the first thing anybody sees is what opening
-  // a record looks like (Miyel: "if someone didn't know they could click it
-  // and see options"). Then whether every row of covers is showing or only
-  // the first, and which one's long note is showing whole.
-  const [heldOpen, setHeldOpen] = useState('newest');
+  // Which one is open under its row of covers: its id, or null for none.
+  // None until one is pressed, 2026-10-20 (Miyel: "can you not have the
+  // first send be automatically open i haven't been liking it"); from
+  // 2026-10-17 the newest had arrived open, to show what opening one looks
+  // like. Then whether every row of covers is showing or only the first, and
+  // which one's long note is showing whole.
+  const [heldOpen, setHeldOpen] = useState(null);
   const [heldAll, setHeldAll] = useState(false);
   const [binWhole, setBinWhole] = useState(null);
   // Problem reports sit behind a line at the foot of the sends, the way the
@@ -848,7 +848,7 @@ export default function Inbox({ layered = false, inPane = false, sent: sentFromB
   // ── New until opened, 2026-10-17 ──────────────────────────────────────────
   // A record waiting wears the dot until it has been opened — pressed open,
   // or one of its doors pressed — and not merely until a listen begins
-  // (Miyel). The newest opening by itself does not count. A listen begun
+  // (Miyel). A listen begun
   // from it means it was opened, whatever the mark says (migrations/035).
   const unseen = s => s.status === UNOPENED && !s.seen_at;
   function markSeen(sent) {
@@ -939,7 +939,7 @@ export default function Inbox({ layered = false, inPane = false, sent: sentFromB
     const shown = heldAll ? held : held.slice(0, ACROSS);
     const rows = [];
     for (let i = 0; i < shown.length; i += ACROSS) rows.push(shown.slice(i, i + ACROSS));
-    const open = heldOpen === 'newest' ? shown[0] : (shown.find(s => s.id === heldOpen) || null);
+    const open = shown.find(s => s.id === heldOpen) || null;
     return (
       <div className="ib-held">
         {rows.map((row, r) => (
@@ -956,7 +956,7 @@ export default function Inbox({ layered = false, inPane = false, sent: sentFromB
                     const opening = open?.id !== s.id;
                     setHeldOpen(opening ? s.id : null);
                     setHolding(null);
-                    if (opening || heldOpen === 'newest') markSeen(s);
+                    if (opening) markSeen(s);
                   }}
                 >
                   <span className="ib-held-cover">
@@ -1071,7 +1071,7 @@ export default function Inbox({ layered = false, inPane = false, sent: sentFromB
               Add
             </button>
           )}
-          <button type="button" className="fr-door" onClick={() => { setHolding(null); setHeldOpen('newest'); updateStatus(sent.id, ARCHIVED); }}>
+          <button type="button" className="fr-door" onClick={() => { setHolding(null); setHeldOpen(null); updateStatus(sent.id, ARCHIVED); }}>
             <Archive size={22} weight="regular" aria-hidden="true" />
             Archive
           </button>
