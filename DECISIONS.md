@@ -1901,6 +1901,13 @@ and the last way into a journal with no password cannot be removed. A key
 opens the exact address it was made at, www. and all, so a move means signing
 in once another way and adding a key there.
 
+**The lock says Unlock, and Face ID is offered where the keeper is,
+2026-10-20 (Miyel's picks).** The lock is a door, the glyph over Unlock (over
+Keeper, and over the sentence beside it); the password sits in a soft well.
+After the password, *Use Face ID next time?* with not now; a keeper already
+signed in, who may not see the lock for months, is asked once at the foot of
+the card — never a sheet that pops up. Not now is kept per device.
+
 **A wristband says it is one, 2026-10-20.** A band holds `authed: true`, and
 nothing without it passes. Anything else signed with the session secret would
 otherwise be a band; the passkey's challenge cookies are handed to anybody

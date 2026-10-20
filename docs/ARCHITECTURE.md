@@ -233,10 +233,10 @@ The furniture — visual pieces
       KeeperTools.js           The owner's ··· — top right on both, Edit/Print/Delete on an entry and Edit/Print on the ID pane; the door stays put and the tools file out of it
       SharePrinter.js          The press's toolbox, not the press: the paper sizes (FRAMES), the page's two colours, and the canvas tools a plate draws with. The press itself has been hooks/usePress.js since 2026-09-13
       EntryPlate.js            A record cut as a plate — the entry page's first screen on the record's blurred colour: mark, keeper, cover, album, artist and year, stars, chips, date, horizon; no code, the press copies the address
-      WritingAccess.js         The lock at the foot of the card for a visitor — shut, open while the door it opens in place; on a device that has unlocked with a key before, one press goes straight to Face ID
+      WritingAccess.js         The lock at the foot of the card for a visitor, the glyph over Unlock — shut, open while the door it opens in place; on a device that has unlocked with a key before, one press goes straight to Face ID
       ComingSoon.js            What a held copy shows instead of a site — unclaimed, no database, or database unreachable
       AddToHomeScreen.js       The one step the software cannot do: the last screen of setup, and a Settings section
-      Keyring.js               Your keys, in Settings: each device's key, + Add this device (Face ID or its like), a key off in two presses; where this browser cannot hold a key, it says where one can be made
+      Keyring.js               Your keys, in Settings: each device's key, + Add this device (Face ID or its like), a key off in two presses; where this browser cannot hold a key, it says where one can be made. Also the browser's half of keys — whether it can hold one, whether it has unlocked with one — and KeyOffer, Use Face ID next time?, drawn after the password and once at the card's foot
       JournalCopy.js           Back up your journal, in Settings: Make a copy fetches the export and holds it as a zip — journal.json, Read me.txt and a page per entry (library/carbon_copy.js) — then Share (a phone) or Download (a computer)
       AlbumFinder.js           Type, see covers, pick one — the stranger's send form's search (/submit)
       MiniAddressBook.js       The address book as a strip of faces, for picking one person — the entry editor's Sent by, the inbox's send whose sender has since got a copy, and the send sheet's book, as a grid
@@ -262,7 +262,7 @@ The furniture — visual pieces
         TrackDial.js           One track, full screen, while you decide what it is worth; unfolds in the row, never over it
         PrintBar.js            The bar at the foot of the entry while it is being printed: the ground, the paper size, Save and Done
     session_components/        Everything in the private dashboard
-      PasswordGate.js          The door: Only [keeper] can write here., Unlock and use your password where the journal has keys; the password field where it has none; the claim code on a copy nobody has claimed
+      PasswordGate.js          The door: Only [keeper] can write here., Unlock and use your password where the journal has keys; the password in a soft well where it has none; the claim code on a copy nobody has claimed; and, after the password, the offer to use Face ID next time
       AlbumPicker.js           Type, see a grid of covers with songs under them, tap one — the screen before a listen, or before a track note
       StarRating.js            The interactive stars you click to rate
       TrackRow.js              One track in the session's list — number or the live dot, the name, stars and heart set in place; on the track being logged, *Any notes?* or the note, and the field under the row when it is open, with the envelope at its foot
