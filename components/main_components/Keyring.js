@@ -20,6 +20,7 @@
 import { useEffect, useState } from 'react';
 import { startRegistration } from '@simplewebauthn/browser';
 import { canHoldKeys, markKeyHere } from '../session_components/PasswordGate';
+import { SANDBOX } from '../../library/version';
 
 // What a device is called in the list, from what its browser says it is.
 function thisDevice() {
@@ -50,6 +51,29 @@ export default function Keyring() {
   // work says so, rather than sitting there pressable and silent.
   const [offerLost, setOfferLost] = useState(false);
 
+  // ── The sandbox's readout, 2026-10-20 — TEMPORARY, out before merge ────
+  // What this phone says about keys, and what the last press came to, drawn
+  // under Your keys on the sandbox only, so a try on the phone says what
+  // happened without a cable to read its console.
+  const [readout, setReadout] = useState(null);
+  const [offerSaid, setOfferSaid] = useState('');
+  const [lastPress, setLastPress] = useState('');
+  useEffect(() => {
+    if (!SANDBOX) return undefined;
+    let gone = false;
+    (async () => {
+      const r = {
+        secure: window.isSecureContext,
+        api: 'PublicKeyCredential' in window,
+        homeScreen: navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches,
+        faceId: false,
+      };
+      try { r.faceId = await window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable(); } catch { /* stays no */ }
+      if (!gone) setReadout(r);
+    })();
+    return () => { gone = true; };
+  }, []);
+
   // The ring, and — where this browser can make a key — the options to make
   // one with, fetched ahead of the press.
   useEffect(() => {
@@ -71,9 +95,10 @@ export default function Keyring() {
           setAble(can);
           setOffer(d.options || null);
           setOfferLost(!d.options);
+          setOfferSaid(d.options ? 'ready' : `${r.status} ${d.error || ''}`.trim());
         }
-      } catch {
-        if (!gone) { setAble(can); setOfferLost(true); }
+      } catch (error) {
+        if (!gone) { setAble(can); setOfferLost(true); setOfferSaid(`unreached: ${error?.message || error}`); }
       }
     };
     if (can) ask();
@@ -88,10 +113,13 @@ export default function Keyring() {
     setSaid('');
     setTrouble('');
     const device = thisDevice();
+    const pressed = performance.now();
     let response;
     try {
       response = await startRegistration({ optionsJSON: offer });
+      setLastPress('the device answered');
     } catch (error) {
+      setLastPress(`${error?.name || 'Error'}${error?.code ? ` ${error.code}` : ''} after ${Math.round(performance.now() - pressed)} ms: ${error?.message || ''}`);
       setBusy(false);
       // Told no is not a fault. A device that already holds a key for this
       // journal is told so, because pressing again would only say it again.
@@ -106,6 +134,7 @@ export default function Keyring() {
       });
       const d = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(d.error || 'The key could not be added.');
+      setLastPress('the device answered, and the key was kept');
       setKeys(d.keys || []);
       markKeyHere(true);
       setSaid(`Added. This ${device} can unlock your journal.`);
@@ -173,6 +202,12 @@ export default function Keyring() {
           <span className="st-trouble" role="alert">Keys can’t be added just now. Try again in a moment.</span>
         )}
       </div>
+      {SANDBOX && readout && (
+        <p style={{ margin: '12px 0 0', fontFamily: 'var(--font-label)', fontSize: 10, lineHeight: 1.6, color: 'var(--sandbox)', overflowWrap: 'anywhere' }}>
+          {`secure ${readout.secure ? 'yes' : 'no'} · passkeys ${readout.api ? 'yes' : 'no'} · face id ${readout.faceId ? 'yes' : 'no'} · home screen ${readout.homeScreen ? 'yes' : 'no'} · options ${offerSaid || '…'}`}
+          {lastPress && <><br />{`last press: ${lastPress}`}</>}
+        </p>
+      )}
     </>
   );
 }
