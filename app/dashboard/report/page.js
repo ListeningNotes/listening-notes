@@ -19,7 +19,7 @@
 import { useState } from 'react';
 import SiteNav from '../../../components/main_components/SiteNav';
 import { useBookplate } from '../../../components/main_components/Bookplate';
-import { REPORTS_URL, VERSION } from '../../../library/version';
+import { REPORTS_URL, VERSION, SANDBOX, SANDBOX_SAID } from '../../../library/version';
 import { tidyJournal } from '../../../library/return_address';
 
 export default function ReportPage({ layered = false }) {
@@ -31,6 +31,9 @@ export default function ReportPage({ layered = false }) {
   async function send(event) {
     event.preventDefault();
     if (!said.trim() || state === 'sending') return;
+    // A sandbox sends nothing (library/version.js), and the words stay in
+    // the box, as they do after any report that could not go.
+    if (SANDBOX) { setState('error'); setTrouble(SANDBOX_SAID); return; }
     setState('sending');
     setTrouble('');
     try {

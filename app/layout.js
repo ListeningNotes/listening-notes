@@ -17,6 +17,7 @@ import { headers } from 'next/headers';
 import { isSetUp, pull_settings, coverName, titleName } from '../library/settings_actions';
 import { hasDatabase, explainDatabaseError } from '../library/database_connection';
 import { isCurrentCode } from '../library/portrait_code';
+import { SANDBOX } from '../library/version';
 
 // 300 was added here for an hour, for prompt answers set light. They are set
 // the way an album title is now — display weight — so nothing reads 300 and it
@@ -280,6 +281,14 @@ export default async function RootLayout({ children, layer }) {
             the content passes under. Nothing on a desk, where the inset is
             zero and the band has no height. */}
         <div className="ln-brow" aria-hidden="true" />
+        {/* A preview built as a sandbox (library/version.js) glows violet
+            round the edge of the screen and says SANDBOX in the corner, on
+            every page and wherever it is scrolled, so it is never taken for
+            the journal it was copied from. The word was Miyel's pick of
+            three on 2026-10-17; the glow her ask once she had seen it,
+            2026-10-19. */}
+        {SANDBOX && <div className="ln-sandbox-glow" aria-hidden="true" />}
+        {SANDBOX && <div className="ln-sandbox">Sandbox</div>}
         <script
           suppressHydrationWarning
           dangerouslySetInnerHTML={{

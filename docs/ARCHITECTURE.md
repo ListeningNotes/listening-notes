@@ -124,7 +124,7 @@ The library — logic, no visuals
     submission_actions.js      Albums other people sent you: saving one, its four outcomes, the record a send became, and naming its sender once they have a copy
     unpacking.mjs              Putting a journal back: reading its file (a zip or journal.json), the plan — order from the foreign keys, refusals, what is left alone — and one transaction; shared by scripts/restore.mjs and /api/restore, so the terminal and setup restore alike
     updater_link.js            The pre-filled GitHub new-file page that installs the updater, on the copy's own branch — read by api/update and by /updates/go
-    version.js                 Which version this copy is running (from package.json), where its release notes are, and where a report goes — read by the pitch pane, the desk and the report sheet
+    version.js                 Which version this copy is running (from package.json), where its release notes are, and where a report goes — read by the pitch pane, the desk and the report sheet; and SANDBOX, whether this build is a preview nothing may leave (docs/OPERATIONS.md)
     wave_actions.js            The waves that arrived here: one row per waving journal, replaced not stacked, deleted when left
     whole_journal.mjs          Which tables the journal has, asked of the database, and one table's rows as Postgres writes them — shared by the nightly backup and the export, so neither keeps a list
     wristband.js               Session auth — issues and checks the JWT cookie, renews it, guards routes and pages

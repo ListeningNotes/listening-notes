@@ -54,3 +54,16 @@ export const INSTAGRAM_URL =
 // original (Miyel's directory instructions, 2026-10-07).
 export const DIRECTORY_URL =
   process.env.NEXT_PUBLIC_DIRECTORY_URL ?? 'https://www.listeningnotes.blog/api/directory';
+
+// ── A sandbox, 2026-10-17 ─────────────────────────────────────────────────
+// A preview of this copy built with NEXT_PUBLIC_SANDBOX set to 1 — on
+// Vercel's Preview environment and nowhere else, beside a database of its
+// own — is a sandbox: a copy of the journal to try things on, and nothing
+// leaves it. No send, wave, reply, Board listing or problem report reaches
+// anybody (library/outbox.js and the report page ask this), and it glows
+// violet round the screen with SANDBOX in the corner, so it is never taken
+// for the journal it was copied from (app/layout.js). Reading is untouched — friends'
+// beacons, the Board, a record search — because reading bothers nobody.
+// Both the mark and the words are Miyel's.
+export const SANDBOX = process.env.NEXT_PUBLIC_SANDBOX === '1';
+export const SANDBOX_SAID = 'Nothing leaves the sandbox.';

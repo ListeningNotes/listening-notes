@@ -309,7 +309,8 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   `/updates/go`, the journal's own redirect that a phone's GitHub app cannot
   swallow.
 - `version.js` — this copy's version from `package.json`, the releases URL,
-  `REPORTS_URL`, `INSTAGRAM_URL` and `DIRECTORY_URL`.
+  `REPORTS_URL`, `INSTAGRAM_URL` and `DIRECTORY_URL`, and `SANDBOX`: whether
+  this build is a preview nothing may leave.
 - `wave_actions.js` — the `waves` table: waves that arrived here, one row per
   journal, seen, removed.
 - `whole_journal.mjs` — asks the database which tables it has and reads one

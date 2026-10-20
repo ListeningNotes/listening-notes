@@ -36,10 +36,17 @@
 // the form already sends, bar `sender_entry`, and a copy too old to know that
 // word drops it on the floor and stores the rest — which is the whole reason
 // the send is a POST of plain fields rather than anything cleverer.
+//
+// ── A sandbox, 2026-10-17 ─────────────────────────────────────────────────
+// Every write that leaves this copy for another journal or the directory is
+// in this file, and in a sandbox each returns at once without leaving
+// (library/version.js). A new way out belongs here for that reason; one
+// outside it has to ask SANDBOX itself, as the report page does, or a test
+// reaches a real person.
 
 import { pull_settings } from './settings_actions.js';
 import { journalUrl, tidyJournal } from './return_address.js';
-import { DIRECTORY_URL } from './version.js';
+import { DIRECTORY_URL, SANDBOX, SANDBOX_SAID } from './version.js';
 
 // Long enough for a cold serverless copy to wake up, which is the common case:
 // most journals are asleep most of the time, and the first request of the day
@@ -67,6 +74,9 @@ export async function send_record({
   to, album, artist, year = '', note,
   album_art = '', collection_id = '', quiet = false, sender_entry = '', song = '',
 }) {
+  // A sandbox sends nothing (library/version.js); the caller says why and
+  // keeps whatever was written.
+  if (SANDBOX) return { ok: false, error: SANDBOX_SAID };
   const host = tidyJournal(to);
   if (!host) return { ok: false, error: NO_ADDRESS };
 
@@ -147,6 +157,9 @@ const TOO_OLD = "Their journal is on an older version and can't take a wave yet.
 const OWN = "That's your own journal.";
 
 export async function send_wave({ to }) {
+  // A sandbox sends nothing (library/version.js); the caller says why and
+  // keeps whatever was written.
+  if (SANDBOX) return { ok: false, error: SANDBOX_SAID };
   const host = tidyJournal(to);
   if (!host) return { ok: false, error: NO_ADDRESS };
 
@@ -205,6 +218,9 @@ const TOO_OLD_FOR_WORDS = "Their journal is on an older version and can't take a
 const bare = host => String(host || '').replace(/^www\./, '');
 
 export async function send_message({ to, said, about = null, answering = '' }) {
+  // A sandbox sends nothing (library/version.js); the caller says why and
+  // keeps whatever was written.
+  if (SANDBOX) return { ok: false, error: SANDBOX_SAID };
   const host = tidyJournal(to);
   if (!host) return { ok: false, error: NO_ADDRESS };
 
@@ -297,6 +313,9 @@ export async function ask_directory_among(hashes) {
 }
 
 export async function ask_directory(method, body) {
+  // A sandbox sends nothing (library/version.js); the caller says why and
+  // keeps whatever was written.
+  if (SANDBOX) return { ok: false, error: SANDBOX_SAID };
   if (!DIRECTORY_URL) return { ok: false, error: 'This copy has no directory.' };
   let answer;
   try {
