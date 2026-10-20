@@ -62,9 +62,12 @@ home screen there is no address bar, so the code is not hiding the address —
 it is the only form the address takes. Scanning someone's face to reach
 their journal is the native gesture, not a workaround.
 
-**No follower counts, no notifications, no unread badges.** Presence is
-outbound: a journal shows what its keeper is logging, and it never shows who
-is reading. It was opt-in until 2026-09-24 (the archive has why it stopped).
+**No follower counts, no notifications, and no unread badges but one,
+2026-10-20 (Miyel).** Presence is outbound: a journal shows what its keeper
+is logging, and it never shows who is reading. It was opt-in until 2026-09-24
+(the archive has why it stopped). The one mark is a dot, in ink, on the
+keeper's own Inbox while something there is new: never a number, never seen
+by a visitor, never a ping. Green stays the glow of logging now.
 
 **The schema is additive-only, from 2026-09-06.** Migrations add columns and
 tables and never rename or drop them: copies in the wild have to survive every
