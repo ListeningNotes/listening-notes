@@ -44,13 +44,14 @@
 import { useEffect, useState } from 'react';
 import { LockSimple, LockSimpleOpen } from '@phosphor-icons/react';
 import PasswordGate, { askTheLock, unlockWith } from '../session_components/PasswordGate';
-import { keyHere, canHoldKeys } from './Keyring';
+import { keyHere, canHoldKeys, keepFresh } from './Keyring';
 
 // ── One tap, 2026-10-20 ───────────────────────────────────────────────────
 // On a device that has opened this journal with a passkey before, the lock
 // goes straight to Face ID (Miyel's pick): no panel, no line, the door just
 // opens. Its challenge is fetched as the lock is drawn and again every four
-// minutes, because Safari asks for Face ID only straight from a press. Told
+// minutes while the page is on screen, because Safari asks for Face ID only
+// straight from a press. Told
 // no, or not recognised, the lock opens as it does everywhere else — the
 // line, Unlock, and the password (PasswordGate). Anywhere that has never
 // unlocked with a key, nothing is fetched and the lock works as it did.
@@ -71,8 +72,8 @@ export default function WritingAccess({ onSignedIn }) {
     let gone = false;
     const ask = async () => { const a = await askTheLock(); if (!gone) setAsked(a); };
     ask();
-    const again = setInterval(ask, 4 * 60 * 1000);
-    return () => { gone = true; clearInterval(again); };
+    const stop = keepFresh(ask);
+    return () => { gone = true; stop(); };
   }, []);
 
   async function press() {
