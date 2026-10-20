@@ -8,7 +8,8 @@
 //
 // ── What one is ───────────────────────────────────────────────────────────
 // Words, and only words (her pick): no door, no link, nothing to press but
-// Dismiss. It arrives through the copy's own public messages route, the
+// Dismiss — every letter that arrives, which is every letter but the one a
+// journal writes itself (below). It arrives through the copy's own public messages route, the
 // door a person's message comes through, and is kept as a row in `messages`
 // marked `admin`, pinned at the top of the inbox with the LN. mark. One at a
 // time: a new letter replaces the last. Dismissing deletes it. Nothing about
@@ -36,6 +37,28 @@
 // in the Mac's Keychain. The inbox draws a letter under a fixed line, never
 // part of what is sent: LN. Admin never asks for your password or your
 // spare key.
+//
+// ── The one the journal writes itself, 2026-10-20 ─────────────────────────
+// A journal asks for a copy of itself when it has something to lose
+// (Miyel's brief, backup reminders): writing no copy holds, sixty days after
+// the last copy — or after its first entry, when it knows of none. It asks
+// in a letter it writes here rather than receives (ask_for_copy), once, and
+// not again for sixty days. Make a copy in Settings and the nightly backup
+// are both copies, and either takes the letter away
+// (library/whole_journal.mjs, copy_begins).
+//
+// It is the one letter with a door: Make a copy, to Back up your journal in
+// Settings (her pick). Letters that arrive stay words only, for the reason
+// they were made so — a letter that could carry a door could lead every
+// keeper somewhere, with nothing but the seal between that and anyone. This
+// one is written in this file by the journal itself, nothing that arrives
+// can give a letter a door, and the door goes nowhere but the journal's own
+// Settings.
+//
+// Still one letter at a time. The journal asks only while none is pinned,
+// so a letter that arrived is never pushed aside by it; a letter arriving
+// while it is pinned takes its place and gives it its turn back
+// (keep_letter), so it asks again once that one is put away.
 
 import { createPublicKey, verify } from 'node:crypto';
 import database from './database_connection.js';
@@ -104,12 +127,72 @@ export async function read_letter(body) {
 }
 
 // Keeps a letter: the one before it goes, this one is pinned, and when it
-// was sent is remembered, so it can never be posted in again.
+// was sent is remembered, so it can never be posted in again. When the one
+// that went was the journal asking for a copy, it may ask again once this
+// one is put away.
 export async function keep_letter(letter) {
-  await database`DELETE FROM messages WHERE admin = true`;
+  const gone = await database`DELETE FROM messages WHERE admin = true RETURNING door`;
   await database`
     INSERT INTO messages (from_name, from_journal, said, written_at, admin)
     VALUES (${LETTERHEAD_NAME}, NULL, ${letter.said.trim()}, ${letter.sent_at}, true)
   `;
   await save_letterhead_heard(letter.sent_at);
+  if (gone.some(row => row.door === COPY_DOOR)) {
+    await database`UPDATE settings SET copy_asked_at = NULL WHERE id = 1`;
+  }
+}
+
+// ── Asking for a copy ─────────────────────────────────────────────────────
+
+// How long a journal waits after its last copy before asking for another,
+// and after asking before asking again: the brief's sixty days, "tune it in
+// place".
+const COPY_WAIT = '60 days';
+
+// What a letter the journal wrote itself opens (migrations/039): Back up
+// your journal in Settings. The only door a letter has.
+export const COPY_DOOR = 'copy';
+
+// What it says, in Miyel's words (2026-10-20): one for a journal whose last
+// copy it has outgrown, and one for a journal that knows of none. That one
+// says "doesn't seem" because copies made before migrations/039 were never
+// written down, so a journal that knows of no copy may still have one.
+const OUTGROWN = 'It’s been a while since your last backup, and you’ve written more since. Would you like to make a fresh copy?';
+const NONE_KNOWN = 'Your journal doesn’t seem to have a backup yet. Would you like to make a copy to keep somewhere safe?';
+
+// Asks, when the journal has something to lose and has not asked lately:
+// writing no copy holds — an entry posted or corrected since the last copy,
+// or any entry at all when it knows of none — sixty days after that copy, or
+// after its first entry; no letter pinned; and sixty days since it last
+// asked. Called by /api/waiting, the check that decides the dot on Inbox, so
+// nothing runs on a timer and the dot arrives with the letter. True when it
+// asked.
+//
+// One statement, so the asking and the letter cannot come apart, and two
+// screens opening at once ask once: the first takes the settings row, and
+// the second finds it already asked.
+export async function ask_for_copy() {
+  const rows = await database`
+    WITH asking AS (
+      UPDATE settings s SET copy_asked_at = now()
+      WHERE s.id = 1
+        AND (s.copy_asked_at IS NULL OR s.copy_asked_at < now() - ${COPY_WAIT}::interval)
+        AND NOT EXISTS (SELECT 1 FROM messages WHERE admin)
+        AND COALESCE(s.copied_at, (SELECT min(posted_at) FROM entries)) < now() - ${COPY_WAIT}::interval
+        AND EXISTS (
+          SELECT 1 FROM entries e
+          WHERE s.copied_at IS NULL
+             OR e.posted_at > s.copied_at
+             OR (e.edited_at AT TIME ZONE 'UTC') > s.copied_at
+        )
+      RETURNING s.copied_at
+    )
+    INSERT INTO messages (from_name, from_journal, said, written_at, admin, door)
+    SELECT ${LETTERHEAD_NAME}, NULL,
+           CASE WHEN asking.copied_at IS NULL THEN ${NONE_KNOWN} ELSE ${OUTGROWN} END,
+           now(), true, ${COPY_DOOR}
+    FROM asking
+    RETURNING id
+  `;
+  return rows.length > 0;
 }

@@ -106,7 +106,7 @@ The library — logic, no visuals
     gold_burst.js              The gold sparkle fired when a Masterpiece is marked
     handoff.js                 What the wall leaves for the entry layer: the tapped record's first screen, the wall's order for swiping to neighbours, and how a layer arrived
     install_guide.js           What /get needs: the deploy button's URL and the ten steps with their screenshots
-    letterhead.js              LN. Admin letters: the canonical keeper's public key, checking a letter's seal, that it is for this journal and newer than the last, and pinning it as the one letter in messages
+    letterhead.js              LN. Admin letters: the canonical keeper's public key, checking a letter's seal, that it is for this journal and newer than the last, and pinning it as the one letter in messages; and the letter a journal writes itself asking for a copy (ask_for_copy), the one with a door
     keyring.js                 The passkeys: a row per device's key, the public half only; making a key and opening the door with one (@simplewebauthn/server); a key belongs to the exact address it was made at
     message_actions.js         Messages: somebody's words to the keeper — kept, listed for the inbox, opened, marked replied to, and dismissed, which deletes
     migrator.js                Brings the database up to date — from instrumentation.js on start, and from scripts/prepare_database.mjs at build
@@ -128,7 +128,7 @@ The library — logic, no visuals
     updater_link.js            The pre-filled GitHub new-file page that installs the updater, on the copy's own branch — read by api/update and by /updates/go
     version.js                 Which version this copy is running (from package.json), where its release notes are, and where a report goes — read by the pitch pane, the desk and the report sheet; and SANDBOX, whether this build is a preview nothing may leave (docs/OPERATIONS.md)
     wave_actions.js            The waves that arrived here: one row per waving journal, replaced not stacked, deleted when left
-    whole_journal.mjs          Which tables the journal has, asked of the database, and one table's rows as Postgres writes them — shared by the nightly backup and the export, so neither keeps a list
+    whole_journal.mjs          Which tables the journal has, asked of the database, and one table's rows as Postgres writes them — shared by the nightly backup and the export, so neither keeps a list; and when a copy was last made (copy_begins)
     wristband.js               Session auth — issues and checks the JWT cookie, renews it, guards routes and pages
 
 The update button
@@ -136,7 +136,7 @@ The update button
   scripts/update_copy.mjs        What the button does — fetched from upstream each run: graft, merge the latest release, push, or stop and say which files clash
 
 The other scripts — run by hand or by a machine, never by the site
-  scripts/backup.mjs             Every table to $BACKUP_DIR/<timestamp>/ with migrations/ beside it; 30 kept; carries secrets (docs/OPERATIONS.md)
+  scripts/backup.mjs             Every table to $BACKUP_DIR/<timestamp>/ with migrations/ beside it; 30 kept; carries secrets; counts as a copy (docs/OPERATIONS.md)
   scripts/letterhead.mjs         The canonical keeper's, on her Mac: makes the LN. Admin key (its private half in the Keychain) and seals and posts a letter to the journals it concerns
   scripts/restore.mjs            Puts a backup or an export back — a folder, the zip from Make a copy, or a bare journal.json; a dry run without --yes; empties only the tables the file holds. The restore itself is library/unpacking.mjs
   scripts/prepare_database.mjs   Runs before next build: migrates and prints the claim notice; never fails the build
@@ -176,11 +176,11 @@ The front doors — receive requests, hand them off, send back responses
     auth/logout/route.js       Cuts the wristband off
     auth/passkey/route.js      Opening the door with a passkey: GET hands the device a challenge and says whether there are keys; POST is its signed answer, counted by the login door, and leaves wearing the wristband the password gives
     keyring/route.js           Your keys — owner-only: the list with the spare key's state and where the password comes from, making a key on this device, making a spare key (shown once), taking a key off; never the last way in
-    waiting/route.js           How many sends are waiting on the keeper — the desk's number; messages are never counted
+    waiting/route.js           How many sends are waiting on the keeper — the desk's number; messages are never counted; whether anything is new (the dot on Inbox); and where the journal asks for a copy of itself
     needle/route.js            Where a listen says what it is on — owner-only, write only; the read is public/beacon
     portrait/route.js          The keeper's picture: uploaded into a column, served back from it, removed
     portrait/code/route.js     POST: press the journal's code out of the stored portrait — owner-only, no body
-    export/route.js            The whole journal as one JSON file — owner-only; leaves secrets out. Settings zips it beside a readable page per entry
+    export/route.js            The whole journal as one JSON file — owner-only; leaves secrets out. Settings zips it beside a readable page per entry. Written down as a copy, which takes the letter asking for one away
     update/route.js            Is there a newer Listening Notes — the latest public release against package.json, at most once an hour, owner-only
     public/beacon/route.js     What the keeper is listening to — anyone may ask; cached at the edge
     public/entries/route.js    The public feed another copy reads — PUBLIC_FIELDS only, with keeper_name beside them

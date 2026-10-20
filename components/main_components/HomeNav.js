@@ -469,10 +469,22 @@ export default function HomeNav() {
   // Only asked once the wristband is confirmed — the endpoint answers 401 to
   // anyone else, and a failed request on every public visit is noise in the
   // log for no reason.
+  //
+  // In the inbox with something new, the inbox is read again, 2026-10-20 —
+  // the pane is built once a visit and holds what was there then, so what
+  // the dot is for would otherwise not be in it: a letter the journal wrote
+  // while it sat in the background, for one. `inInbox` is kept by the pane
+  // effect further down; `inboxAgain` is what the pane is handed.
+  const inInbox = useRef(false);
+  const [inboxAgain, setInboxAgain] = useState(0);
   const askWaiting = useCallback(() => {
     fetch('/api/waiting')
       .then(r => (r.ok ? r.json() : null))
-      .then(w => w && setWaiting(w))
+      .then(w => {
+        if (!w) return;
+        setWaiting(w);
+        if (w.fresh && inInbox.current) setInboxAgain(n => n + 1);
+      })
       .catch(() => {});
   }, []);
   useEffect(() => {
@@ -1091,6 +1103,7 @@ export default function HomeNav() {
   useEffect(() => {
     const was = wasHere.current;
     wasHere.current = { pane, path };
+    inInbox.current = pane === INBOX;
     if (!authed) return;
     if ((was.pane === INBOX && pane !== INBOX) || (was.path !== path && path === '/')) askWaiting();
   }, [pane, path, authed, askWaiting]);
@@ -1117,6 +1130,18 @@ export default function HomeNav() {
   useEffect(() => {
     setVisited(seen => (seen[pane] ? seen : { ...seen, [pane]: true }));
   }, [pane]);
+  // Walking back into an inbox already built, while its door wears the dot,
+  // reads it again (askWaiting has why). The first walk in builds it, and
+  // building it reads it.
+  const fresh = waiting?.fresh === true;
+  const wasPane = useRef(pane);
+  useEffect(() => {
+    const before = wasPane.current;
+    wasPane.current = pane;
+    if (authed && fresh && pane === INBOX && before !== INBOX && visited[INBOX]) {
+      Promise.resolve().then(() => setInboxAgain(n => n + 1));
+    }
+  }, [pane, authed, fresh, visited]);
   // Whether anything is moving right now. The controls sit over the page
   // rather than beside it, so while a wall of covers is going past underneath
   // they are three marks on top of somebody's album art. They fade out on the
@@ -2905,7 +2930,7 @@ export default function HomeNav() {
             is at the address is what is here. */}
         {authed && (
           <section className="hn-pane hn-pane--inbox" ref={inboxRef} aria-label="What has arrived">
-            {visited[INBOX] && <Inbox inPane sent={inboxSent} />}
+            {visited[INBOX] && <Inbox inPane sent={inboxSent} again={inboxAgain} />}
           </section>
         )}
 

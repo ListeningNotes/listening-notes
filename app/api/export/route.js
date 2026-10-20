@@ -23,7 +23,7 @@
 
 import { requireWristband } from '@/library/wristband';
 import database from '@/library/database_connection';
-import { every_table, pull_table } from '@/library/whole_journal.mjs';
+import { every_table, pull_table, copy_begins, copy_failed } from '@/library/whole_journal.mjs';
 
 // Every table the database has, read the way scripts/backup.mjs reads them,
 // so a file from here and a folder from there describe the same thing —
@@ -52,12 +52,18 @@ export async function GET(request) {
 
   const out = { taken_at: new Date().toISOString(), tables: {}, left_out: [] };
 
+  // A copy, so the journal stops asking for one, 2026-10-20: written down
+  // before the journal is read, so the file carries it, and put back if the
+  // read fails (library/whole_journal.mjs).
+  const was = await copy_begins(database.query);
+
   try {
     for (const table of await every_table(database.query)) {
       if (LEFT_OUT.includes(table)) out.left_out.push(table);
       else out.tables[table] = await pull_table(database.query, table);
     }
   } catch (error) {
+    await copy_failed(database.query, was);
     // Nothing rather than most of it. A file missing a table looks exactly
     // like a complete one until the day it is restored.
     return Response.json(

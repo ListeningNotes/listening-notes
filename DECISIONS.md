@@ -1715,6 +1715,14 @@ break-in could write to every journal. Words, no door, no link, under a
 fixed line: LN. Admin never asks for your password or your spare key. One
 pinned at a time; dismissing deletes it; nothing reports back.
 
+**A journal asks for a copy of itself, once, 2026-10-20 (Miyel's brief).**
+Sixty days after its last copy (or first entry, knowing of none), with
+writing since, it writes itself an LN. Admin letter, checked where the Inbox
+dot is decided, never on a timer, and not again for sixty days. Make a copy
+and the nightly backup both count and take it away. Its door, Make a copy,
+is the one a letter has: it is the journal's own; letters that arrive stay
+words only, and go first.
+
 **A copy updates itself once an hour, takes releases and never main, and
 never crosses a major on its own, 2026-09-15.** The `Update this copy`
 workflow runs on a schedule as well as on its button: it merges upstream's

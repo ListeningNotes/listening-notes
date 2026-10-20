@@ -42,6 +42,11 @@
 import { useState } from 'react';
 import { carbon_copy } from '../../library/carbon_copy';
 
+// Said to the page once a copy is made, 2026-10-20: the export has taken the
+// letter asking for one off the server (library/whole_journal.mjs), and the
+// inbox takes it off the screen when it hears this.
+export const COPY_MADE = 'ln-copy-made';
+
 export default function JournalCopy() {
   const [copy, setCopy] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -79,6 +84,7 @@ export default function JournalCopy() {
         share: navigator.maxTouchPoints > 0 && Boolean(navigator.canShare?.({ files: [file] })),
         said: `Ready — ${entries} ${entries === 1 ? 'entry' : 'entries'}, ${people} ${people === 1 ? 'person' : 'people'} · ${size}`,
       });
+      window.dispatchEvent(new Event(COPY_MADE));
     } catch (error) {
       setTrouble(error?.message || 'Your journal could not be copied. Try again.');
     }
