@@ -46,6 +46,9 @@ export default function Keyring() {
   const [said, setSaid] = useState('');
   const [trouble, setTrouble] = useState('');
   const [doubting, setDoubting] = useState(null);
+  // Whether the options for making a key could be had: a button that cannot
+  // work says so, rather than sitting there pressable and silent.
+  const [offerLost, setOfferLost] = useState(false);
 
   // The ring, and — where this browser can make a key — the options to make
   // one with, fetched ahead of the press.
@@ -63,10 +66,14 @@ export default function Keyring() {
           headers: { 'Content-Type': 'application/json' },
           body: '{}',
         });
-        const d = await r.json();
-        if (!gone) { setAble(can); setOffer(d.options || null); }
+        const d = await r.json().catch(() => ({}));
+        if (!gone) {
+          setAble(can);
+          setOffer(d.options || null);
+          setOfferLost(!d.options);
+        }
       } catch {
-        if (!gone) setAble(can);
+        if (!gone) { setAble(can); setOfferLost(true); }
       }
     };
     if (can) ask();
@@ -111,7 +118,8 @@ export default function Keyring() {
       const r = await fetch('/api/keyring', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
       const d = await r.json();
       setOffer(d.options || null);
-    } catch { setOffer(null); }
+      setOfferLost(!d.options);
+    } catch { setOffer(null); setOfferLost(true); }
     setBusy(false);
   }
 
@@ -161,6 +169,9 @@ export default function Keyring() {
         )}
         {said && !trouble && <span className="st-said" role="status">{said}</span>}
         {trouble && <span className="st-trouble" role="alert">{trouble}</span>}
+        {!trouble && able && offerLost && (
+          <span className="st-trouble" role="alert">Keys can’t be added just now. Try again in a moment.</span>
+        )}
       </div>
     </>
   );
