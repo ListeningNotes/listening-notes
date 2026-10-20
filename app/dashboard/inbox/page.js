@@ -251,6 +251,10 @@ export default function Inbox({ layered = false, inPane = false, sent: sentFromB
   // like. Then whether every row of covers is showing or only the first, and
   // which one's long note is showing whole.
   const [heldOpen, setHeldOpen] = useState(null);
+  // An LN. Admin letter being put away: 'out' while it slides off sideways,
+  // 'shut' while the space it held closes (letterCard).
+  const [letterGoing, setLetterGoing] = useState(null);
+  const letterRoom = useRef(null);
   const [heldAll, setHeldAll] = useState(false);
   const [binWhole, setBinWhole] = useState(null);
   // Problem reports sit behind a line at the foot of the sends, the way the
@@ -438,31 +442,58 @@ export default function Inbox({ layered = false, inPane = false, sent: sentFromB
   // nobody is there to read one, and nothing about it goes back
   // (library/letterhead.js). On screen is read, so it is marked seen as it
   // is drawn, and the dot on Inbox goes with it.
+  //
+  // Put away by an X in its top right corner, 2026-10-20 (Miyel: "dismiss,
+  // let's have it look different [from] the other messages ... just an x.
+  // LN admin note stays there until x is clicked ... smooth too, horizontal
+  // closing"): one press, no second asking — it is the software's, not
+  // somebody's words — and it slides out sideways before the space it held
+  // closes up. Deleted on the server as it goes; a delete that fails brings
+  // it back.
   function letterCard(m) {
-    const key = `message-${m.id}`;
-    const sure = sureOf === key;
     return (
-      <section key={key} className="ib-letter" aria-label="A letter from LN. Admin">
-        <div className="ib-letter-head">
-          <span className="ib-letter-face" aria-hidden="true"><LnMark /></span>
-          <span className="ib-letter-from">LN. Admin</span>
-        </div>
-        <p className="ib-letter-said">{m.said}</p>
-        <p className="ib-letter-safe">LN. Admin never asks for your password or your spare key.</p>
-        <div className="ib-doors fr-doors-row">
+      <div key={`message-${m.id}`} ref={letterRoom} className={'ib-letter-room' + (letterGoing === 'shut' ? ' ib-letter-room--shut' : '')}>
+        <section className={'ib-letter' + (letterGoing ? ' ib-letter--out' : '')} aria-label="A letter from LN. Admin">
           <button
             type="button"
-            data-sure
-            className={'fr-door' + (sure ? ' ib-door--sure' : '')}
-            onClick={() => dismiss(m)}
-            title={sure ? 'Press again to delete this letter for good' : 'Delete this letter'}
+            className="ib-letter-x"
+            onClick={() => putLetterAway(m)}
+            aria-label="Dismiss this letter"
+            title="Dismiss"
           >
-            <X size={22} weight="regular" aria-hidden="true" />
-            {sure ? 'Dismiss?' : 'Dismiss'}
+            <X size={18} weight="regular" aria-hidden="true" />
           </button>
-        </div>
-      </section>
+          <div className="ib-letter-head">
+            <span className="ib-letter-face" aria-hidden="true"><LnMark /></span>
+            <span className="ib-letter-from">LN. Admin</span>
+          </div>
+          <p className="ib-letter-said">{m.said}</p>
+          <p className="ib-letter-safe">LN. Admin never asks for your password or your spare key.</p>
+        </section>
+      </div>
     );
+  }
+
+  async function putLetterAway(m) {
+    if (letterGoing) return;
+    const room = letterRoom.current;
+    if (room) room.style.maxHeight = `${room.offsetHeight}px`;
+    const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    setLetterGoing('out');
+    const gone = fetch('/api/messages', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: m.id }),
+    }).then(r => r.ok).catch(() => false);
+    await new Promise(r => setTimeout(r, still ? 0 : 280));
+    setLetterGoing('shut');
+    await new Promise(r => setTimeout(r, still ? 0 : 260));
+    if (await gone) {
+      setMessages(prev => prev.filter(x => x.id !== m.id));
+    } else if (room) {
+      room.style.maxHeight = '';
+    }
+    setLetterGoing(null);
   }
 
   // What stands greyed over a message: the words it answers, and whose.

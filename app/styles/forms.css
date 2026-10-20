@@ -1228,12 +1228,32 @@ textarea.st-field { resize: vertical; min-height: 96px; }
    "missable ... too small or losable up there"): the panel's colour and a
    hairline, the LN. mark where a face goes, the name, the words at reading
    size, the fixed line quieter than them, and Dismiss. */
+/* The room it stands in holds the margin and closes up after it, and clips
+   it as it slides out, so nothing pushes the page sideways. */
+.ib-letter-room { margin: 4px 0 18px; overflow: hidden; transition: max-height 0.26s ease, margin 0.26s ease; }
+.ib-letter-room--shut { max-height: 0 !important; margin: 0; }
 .ib-letter {
+  position: relative;
   display: flex; flex-direction: column; gap: 12px;
-  margin: 4px 0 18px; padding: 16px 16px 4px;
+  padding: 16px 16px 18px;
   border-radius: 14px; background: var(--panel); border: 1px solid var(--border);
+  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.28s ease;
 }
-.ib-letter-head { display: flex; align-items: center; gap: 10px; }
+/* Put away: out sideways (Miyel: "horizontal closing"), then the room shuts. */
+.ib-letter--out { transform: translateX(105%); opacity: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .ib-letter, .ib-letter-room { transition: none; }
+}
+/* Its own way out, unlike every other message: an X in the top right corner,
+   one press (Miyel, 2026-10-20). */
+.ib-letter-x {
+  position: absolute; top: 8px; right: 8px;
+  width: 36px; height: 36px; padding: 0; border: 0; border-radius: 999px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: none; color: var(--ink-faint); cursor: pointer; transition: color 0.15s;
+}
+.ib-letter-x:hover { color: var(--ink); }
+.ib-letter-head { display: flex; align-items: center; gap: 10px; padding-right: 36px; }
 .ib-letter-face {
   width: 32px; height: 32px; border-radius: 999px; flex-shrink: 0;
   display: inline-flex; align-items: center; justify-content: center; background: var(--ink);
@@ -1243,7 +1263,6 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 .ib-letter-from { font-family: var(--font-display); font-weight: var(--font-display-weight, 700); font-size: 15px; color: var(--ink); }
 .ib-letter-said { margin: 0; font-size: 15px; line-height: 1.6; color: var(--ink); white-space: pre-wrap; overflow-wrap: anywhere; }
 .ib-letter-safe { margin: 0; font-family: var(--font-label); font-size: 10px; line-height: 1.5; letter-spacing: 0.02em; color: var(--ink-faint); }
-.ib-letter .ib-doors { margin-top: 2px; padding-top: 6px; border-top: 1px solid var(--border); }
 /* A record that came back, opened: their stars, or the comparison of the two
    listens when there are both, over its doors (page.js, 2026-10-17 — "only
    on open", and the comparison without a button). */
