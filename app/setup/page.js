@@ -79,7 +79,6 @@ import AddToHomeScreen from '../../components/main_components/AddToHomeScreen';
 import UpdateSwitch from '../../components/main_components/UpdateSwitch';
 import { useJournalHost } from '../../hooks/useJournalHost';
 import { tidyJournal, journalUrl } from '../../library/return_address';
-import { DIRECTORY_URL } from '../../library/version';
 import { journal_in } from '../../library/carbon_copy';
 import { canHoldKeys, markKeyHere, thisDevice, wayIn, SpareKeyShown } from '../../components/main_components/Keyring';
 
@@ -683,19 +682,19 @@ export default function WelcomeScreen() {
             {current === 'name' && (
               <form className="su-fields" onSubmit={e => { e.preventDefault(); if (name.trim()) advance(); }}>
                 <div>
-                  <input className="su-field" value={name} onChange={e => setName(e.target.value)} autoFocus autoComplete="name" placeholder="Your name" aria-label="Your name" />
+                  <input className="su-field su-name" value={name} onChange={e => setName(e.target.value)} autoFocus autoComplete="name" placeholder="Your name" aria-label="Your name" />
                 </div>
                 {/* ── Said plainly, at the name, 2026-10-08 ─────────────────
                     Every journal is on the Board unless its keeper switches
                     it off (Miyel's Board brief: "say so plainly during
                     setup"). Here, because the name is the first thing the
                     Board shows; a copy with no directory has no Board. */}
-                {/* One line since 2026-10-20 (Miyel: "people know what a name
-                    is ... that paragraph has got to go"); still said here,
-                    because being on the Board is said at setup (AGENTS). */}
-                {DIRECTORY_URL && (
-                  <p className="su-why">Your name goes on the Board. You can switch that off in Settings.</p>
-                )}
+                {/* The Board's line was here until 2026-10-20, a paragraph and
+                    then one line, and is off for now (Miyel: "we don't even
+                    know if it's called the board, it's being re-worked. just
+                    leave it off for now"). Being on the Board is still meant
+                    to be said at setup (AGENTS); its line comes back with
+                    the rework. */}
                 <button type="submit" className="su-go" disabled={busy || !name.trim()}>Next</button>
               </form>
             )}
