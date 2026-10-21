@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { pull_wall_entries, save_new_entry } from '@/library/database_actions';
 import { requireWristband } from '@/library/wristband';
+import { answerNoJournal } from '@/library/hosting_directory';
 
 // A list of records, without the writing in them. Everything that reads this
 // is drawing a grid of covers, filtering one, or picking one — see
@@ -14,6 +15,8 @@ export async function GET() {
     const entries = await pull_wall_entries();
     return Response.json({ entries });
   } catch (error) {
+    const nowhere = answerNoJournal(error);
+    if (nowhere) return nowhere;
     return Response.json({ error: error.message }, { status: 500 });
   }
 }

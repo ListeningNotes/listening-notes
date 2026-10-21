@@ -102,6 +102,22 @@ export class NoJournalHere extends Error {
   }
 }
 
+// ── What a door says at an address with no journal, 2026-10-21 ───────────
+// A 404 in the page's own words, so a journal asking after one that is not
+// there — a mistyped address, one taken down — is told it is not there,
+// rather than that it is failing (a 500, which it would ask again) or that it
+// is there and empty (a 200 with nothing in it, which is what the beacon and
+// the counts said). The routes a stranger or another journal can reach ask
+// this first in their failure; null for any other failure. `headers` for a
+// door read across addresses, which says so on its 404 as well.
+export function answerNoJournal(error, headers = {}) {
+  if (!(error instanceof NoJournalHere)) return null;
+  return Response.json(
+    { error: 'There’s no journal at this address.' },
+    { status: 404, headers: { 'Cache-Control': 'no-store', ...headers } },
+  );
+}
+
 // ── The directory itself ──────────────────────────────────────────────────
 
 let book = null;

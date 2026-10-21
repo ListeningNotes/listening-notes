@@ -5,6 +5,7 @@ import { mayKnock, tooSoon, whoIsKnocking } from '@/library/doorman';
 import { requireWristband } from '@/library/wristband';
 import { tidyAddress, tidyJournal } from '@/library/return_address';
 import { ask_journal_name } from '@/library/people_actions';
+import { answerNoJournal } from '@/library/hosting_directory';
 
 // The email check that used to live here is gone with the field. Anything a
 // caller still sends under that key is dropped on the floor rather than
@@ -132,6 +133,8 @@ export async function POST(request) {
     });
     return Response.json({ submission });
   } catch (error) {
+    const nowhere = answerNoJournal(error);
+    if (nowhere) return nowhere;
     return Response.json({ error: error.message }, { status: 500 });
   }
 }

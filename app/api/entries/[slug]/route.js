@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { pull_entry_by_slug, update_entry, delete_entry } from '@/library/database_actions';
 import { checkWristband, requireWristband } from '@/library/wristband';
+import { answerNoJournal } from '@/library/hosting_directory';
 
 export async function GET(request, { params }) {
   try {
@@ -10,6 +11,8 @@ export async function GET(request, { params }) {
     if (!entry) return Response.json({ error: 'Not found' }, { status: 404 });
     return Response.json({ entry });
   } catch (error) {
+    const nowhere = answerNoJournal(error);
+    if (nowhere) return nowhere;
     return Response.json({ error: error.message }, { status: 500 });
   }
 }

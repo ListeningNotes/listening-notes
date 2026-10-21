@@ -33,6 +33,7 @@
 
 import { after } from 'next/server';
 import { pull_directory_page, pull_board, find_by_name, pull_among, pull_alike, gather } from '@/library/directory_actions';
+import { answerNoJournal } from '@/library/hosting_directory';
 
 // A round can take a few seconds after the answer has gone: up to forty
 // journals at once, 2.5 seconds for a beacon and eight for a journal's
@@ -58,7 +59,9 @@ export async function GET(request) {
       // minute, and a browser asks again every time.
       headers: { ...ACROSS, 'Cache-Control': 'public, max-age=0, s-maxage=30, stale-while-revalidate=60' },
     });
-  } catch {
+  } catch (error) {
+    const nowhere = answerNoJournal(error, ACROSS);
+    if (nowhere) return nowhere;
     return Response.json({ error: 'The directory could not be read just now.' }, { status: 503, headers: ACROSS });
   }
 }

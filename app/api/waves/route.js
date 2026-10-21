@@ -24,6 +24,7 @@ import { ask_journal_name } from '@/library/people_actions';
 import { tidyJournal } from '@/library/return_address';
 import { pull_settings } from '@/library/settings_actions';
 import { pull_waves, save_wave, see_wave, remove_wave } from '@/library/wave_actions';
+import { answerNoJournal } from '@/library/hosting_directory';
 
 const CARRIES = ['journal', 'name'];
 
@@ -57,6 +58,8 @@ export async function POST(request) {
     await save_wave({ address: journal, name });
     return Response.json({ ok: true });
   } catch (error) {
+    const nowhere = answerNoJournal(error);
+    if (nowhere) return nowhere;
     return Response.json({ error: error.message }, { status: 500 });
   }
 }

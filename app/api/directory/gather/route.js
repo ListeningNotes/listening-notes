@@ -18,6 +18,7 @@
 // The directory's job). On a copy with no CRON_SECRET this answers nothing.
 
 import { gather } from '@/library/directory_actions';
+import { answerNoJournal } from '@/library/hosting_directory';
 
 export async function GET(request) {
   const secret = process.env.CRON_SECRET;
@@ -28,6 +29,8 @@ export async function GET(request) {
   try {
     return Response.json({ asked: await gather() }, { headers: { 'Cache-Control': 'no-store' } });
   } catch (error) {
+    const nowhere = answerNoJournal(error);
+    if (nowhere) return nowhere;
     return Response.json({ error: error.message }, { status: 500 });
   }
 }

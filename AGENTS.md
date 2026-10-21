@@ -267,7 +267,8 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - `hosting_directory.js` — the hosting directory, on a deployment that hosts
   many journals: which journal lives at which address, the way into each
   one's database sealed with `HOSTING_DIRECTORY_KEY`, `journalHere` (the
-  journal a request is for, or `NoJournalHere`), `memoryOf` (what a server's
+  journal a request is for, or `NoJournalHere`; `answerNoJournal`, the 404 the
+  public doors give at an address with no journal), `memoryOf` (what a server's
   memory of one journal is filed under), `deploymentSetting` (the
   deployment's settings, which speak for no hosted journal), and
   `forwarding` and `journalAddress`: with `FORWARDING_ADDRESS`, the front

@@ -24,6 +24,7 @@ import { journalUrl, tidyJournal } from '@/library/return_address';
 import { directoryCode } from '@/library/secrets';
 import { mayKnock, tooSoon } from '@/library/doorman';
 import { pull_listing, save_listing, remove_listing, read_journal, record_seen, refresh_records } from '@/library/directory_actions';
+import { answerNoJournal } from '@/library/hosting_directory';
 
 // Longer than the job's look: the journal is waiting on this answer, and a
 // sleeping serverless copy takes a moment to wake.
@@ -78,7 +79,9 @@ export async function POST(request) {
     // rather than from the job's next slow round (2026-10-08).
     try { await refresh_records(address); } catch { /* the job fills it */ }
     return Response.json({ listed: true }, { status: 201 });
-  } catch {
+  } catch (error) {
+    const nowhere = answerNoJournal(error);
+    if (nowhere) return nowhere;
     return Response.json({ error: 'The directory could not do that just now. Nothing changed.' }, { status: 500 });
   }
 }
@@ -99,7 +102,9 @@ export async function DELETE(request) {
     }
     await remove_listing(address);
     return Response.json({ listed: false });
-  } catch {
+  } catch (error) {
+    const nowhere = answerNoJournal(error);
+    if (nowhere) return nowhere;
     return Response.json({ error: 'The directory could not do that just now. Nothing changed.' }, { status: 500 });
   }
 }

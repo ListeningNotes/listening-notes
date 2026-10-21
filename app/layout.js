@@ -64,6 +64,14 @@ export async function generateMetadata() {
   if (isFrontDoor(await hostHere())) {
     return { title: 'Listening Notes', description: 'A listening journal of your own.' };
   }
+  // An address with no journal is the software's page too, saying so, and
+  // no page to keep: every name under the domain answers, so a search engine
+  // is told not to file it (2026-10-21).
+  try {
+    await journalHere();
+  } catch (error) {
+    if (error instanceof NoJournalHere) return { title: 'Listening Notes', robots: { index: false, follow: false } };
+  }
   const settings = await pull_settings();
   // titleName, not coverName. Everything in this function is read by a machine
   // — a browser tab, a home-screen label, a link preview on somebody else's
