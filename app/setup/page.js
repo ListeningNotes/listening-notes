@@ -77,7 +77,6 @@ import PasswordGate from '../../components/session_components/PasswordGate';
 import { shrink } from '../../components/main_components/IdentificationCardEditor';
 import AddToHomeScreen from '../../components/main_components/AddToHomeScreen';
 import UpdateSwitch from '../../components/main_components/UpdateSwitch';
-import CodeScanner from '../../components/main_components/CodeScanner';
 import { useJournalHost } from '../../hooks/useJournalHost';
 import { tidyJournal, journalUrl } from '../../library/return_address';
 import { DIRECTORY_URL } from '../../library/version';
@@ -182,6 +181,11 @@ export default function WelcomeScreen() {
   // press for Safari; the keys made here, which the claim names; and how the
   // journal was claimed, which decides whether the spare key screen comes.
   const [faceWay, setFaceWay] = useState(null);
+  // Whether this device has been asked if it can use Face ID: until it has
+  // answered, the password screen draws neither way, so the password never
+  // shows first only to be replaced (Miyel, 2026-10-20: "Touch ID should be
+  // the default and then password comes next").
+  const [wayKnown, setWayKnown] = useState(false);
   const [typingPassword, setTypingPassword] = useState(false);
   const [makeOptions, setMakeOptions] = useState(null);
   const [madeKeys, setMadeKeys] = useState([]);
@@ -210,8 +214,6 @@ export default function WelcomeScreen() {
   // brief, handed out, 2026-09-28: "the setup finishes anyway and says so
   // plainly").
   const [helloTrouble, setHelloTrouble] = useState('');
-  const [scanningGift, setScanningGift] = useState(false);
-  const [giftTrouble, setGiftTrouble] = useState('');
 
   // The code, if the person arrived by the link in the build log. Tried
   // once, silently, before anything is drawn: if it opens the door the first
@@ -265,6 +267,13 @@ export default function WelcomeScreen() {
         // and should not sit in the history or get pasted on somewhere.
         window.history.replaceState(null, '', '/setup');
       }
+      // Who gave it is told only to a journal's own wristband, so asked again
+      // once the door has opened: the gift screen is a step only for a
+      // journal that was a gift (Miyel, 2026-10-20).
+      if (admitted && !status?.gift) {
+        const told = await fetch('/api/setup').then(r => r.json()).catch(() => ({}));
+        if (told?.gift) setGiftFrom(told.gift);
+      }
       setAuthed(admitted);
       setChecking(false);
     });
@@ -272,7 +281,8 @@ export default function WelcomeScreen() {
 
   const steps = (path === 'bring' ? BRING_STEPS : STEPS)
     .filter(s => s !== 'spare' || claimedWith === 'key')
-    .filter(s => s !== 'updates' || !hosted);
+    .filter(s => s !== 'updates' || !hosted)
+    .filter(s => s !== 'gift' || Boolean(giftFrom));
   const current = path ? steps[step] : 'start';
   const last = Boolean(path) && step === steps.length - 1;
   // Which of the three openings the prompts screen is showing. One at a
@@ -296,11 +306,15 @@ export default function WelcomeScreen() {
     if (current !== 'password') return undefined;
     let gone = false;
     let again = null;
+    const known = () => { if (!gone) setWayKnown(true); };
+    // A device slow to answer gets the password after three seconds.
+    const late = setTimeout(known, 3000);
     (async () => {
-      if (!canHoldKeys()) return;
+      await Promise.resolve();
+      if (!canHoldKeys()) { known(); return; }
       let able = false;
       try { able = await window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable(); } catch { /* no */ }
-      if (!able || gone) return;
+      if (!able || gone) { known(); return; }
       const ask = async () => {
         try {
           const r = await fetch('/api/keyring', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
@@ -311,9 +325,10 @@ export default function WelcomeScreen() {
       await ask();
       if (gone) return;
       setFaceWay(wayIn());
+      known();
       again = setInterval(ask, 4 * 60 * 1000);
     })();
-    return () => { gone = true; if (again) clearInterval(again); };
+    return () => { gone = true; clearTimeout(late); if (again) clearInterval(again); };
   }, [current]);
 
   // Claimed with Face ID: the key made here, then the claim naming it. A
@@ -378,8 +393,10 @@ export default function WelcomeScreen() {
   // question goes out before the door is opened, and only a request carrying
   // this journal's wristband is told who gave it. By the gift screen the
   // journal is claimed and the question can be asked. A giver whose journal
-  // does not say its name is not shown — never a card with an address on it —
-  // and the screen falls back to asking.
+  // does not say its name is not shown — never a card with an address on it.
+  // Since 2026-10-20 the screen is only ever a gift's (Miyel: "only pop up
+  // ... if you get it through Gift"), so a giver who cannot be named is passed
+  // by, and the next screen says so once, as a failed hello does.
   useEffect(() => {
     if (current !== 'gift' || giver) return undefined;
     let gone = false;
@@ -389,11 +406,19 @@ export default function WelcomeScreen() {
         const status = await fetch('/api/setup').then(r => r.json()).catch(() => ({}));
         from = status?.gift || '';
       }
-      if (!from || gone) return;
-      const answer = await fetch(`/api/setup?giver=${encodeURIComponent(from)}`).then(r => r.json()).catch(() => ({}));
-      if (!gone && answer?.giver?.name) setGiver(answer.giver);
+      const answer = from
+        ? await fetch(`/api/setup?giver=${encodeURIComponent(from)}`).then(r => r.json()).catch(() => ({}))
+        : {};
+      if (gone) return;
+      if (answer?.giver?.name) {
+        setGiver(answer.giver);
+        return;
+      }
+      setHelloTrouble('Whoever gave you this journal couldn’t be reached just now. You can add them later from your book.');
+      advance();
     })();
     return () => { gone = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [current, giftFrom, giver]);
 
   // Move on, after doing whatever this screen's Next does. Skip calls it with
@@ -616,9 +641,9 @@ export default function WelcomeScreen() {
                   prompts: 'A little about yourself.',
                   rig: 'What you listen on.',
                   updates: 'Keep your journal up to date automatically.',
-                  password: faceWay && !typingPassword ? 'How you’ll get back in.' : 'What you’ll type to get back in.',
+                  password: !wayKnown || (faceWay && !typingPassword) ? 'How you’ll get back in.' : 'What you’ll type to get back in.',
                   spare: 'Your spare key.',
-                  gift: giver ? `${giver.name} gifted you this journal.` : 'Did someone give you this journal?',
+                  gift: giver ? `${giver.name} gifted you this journal.` : '\u00a0',
                   homescreen: 'It’s yours. Put it on your home screen.',
               }[current]}
             </p>}
@@ -627,11 +652,9 @@ export default function WelcomeScreen() {
               <div className="su-ways">
                 <button type="button" className="su-way" onClick={() => { setError(''); setPath('new'); setStep(0); }}>
                   <span className="su-way-h">Start from scratch</span>
-                  <span className="su-way-note">Begin with an empty one.</span>
                 </button>
                 <button type="button" className="su-way" onClick={() => { setError(''); setPath('bring'); setStep(0); }}>
                   <span className="su-way-h">Import an existing journal</span>
-                  <span className="su-way-note">From a copy you made in Settings.</span>
                 </button>
               </div>
             )}
@@ -667,11 +690,11 @@ export default function WelcomeScreen() {
                     it off (Miyel's Board brief: "say so plainly during
                     setup"). Here, because the name is the first thing the
                     Board shows; a copy with no directory has no Board. */}
+                {/* One line since 2026-10-20 (Miyel: "people know what a name
+                    is ... that paragraph has got to go"); still said here,
+                    because being on the Board is said at setup (AGENTS). */}
                 {DIRECTORY_URL && (
-                  <p className="su-why">
-                    Your name and what you&rsquo;re playing go on the board, where other keepers can find you &mdash;
-                    the same things your journal shows anyone who visits. You can take yourself off in Settings.
-                  </p>
+                  <p className="su-why">Your name goes on the Board. You can switch that off in Settings.</p>
                 )}
                 <button type="submit" className="su-go" disabled={busy || !name.trim()}>Next</button>
               </form>
@@ -800,7 +823,7 @@ export default function WelcomeScreen() {
               </form>
             )}
 
-            {current === 'password' && faceWay && !typingPassword && (
+            {current === 'password' && wayKnown && faceWay && !typingPassword && (
               <div className="su-fields su-face">
                 <button type="button" className="ko-use su-face-use" onClick={claimWithFace} disabled={busy}>
                   <faceWay.Glyph size={32} aria-hidden="true" />
@@ -812,7 +835,7 @@ export default function WelcomeScreen() {
               </div>
             )}
 
-            {current === 'password' && (!faceWay || typingPassword) && (
+            {current === 'password' && wayKnown && (!faceWay || typingPassword) && (
               <form
                 className="su-fields"
                 onSubmit={e => {
@@ -952,31 +975,7 @@ export default function WelcomeScreen() {
                       })}
                     >Next</button>
                   </>
-                ) : (
-                  <>
-                    <p className="su-why">If a friend handed you this, scan the code they showed you — the gift, or their card.</p>
-                    <button type="button" className="su-go" disabled={busy} onClick={() => { setGiftTrouble(''); setScanningGift(true); }}>Scan their code</button>
-                    {giftTrouble && <p className="su-why">{giftTrouble}</p>}
-                  </>
-                )}
-                {scanningGift && (
-                  <CodeScanner
-                    onClose={() => setScanningGift(false)}
-                    onRead={async text => {
-                      setScanningGift(false);
-                      setGiftTrouble('');
-                      // The Give code is /get?gift=<their journal>; a card's
-                      // code, or a cover's, is their journal itself.
-                      let address = '';
-                      try { address = tidyJournal(new URL(text).searchParams.get('gift') || '') || tidyJournal(text); } catch { address = tidyJournal(text); }
-                      if (!address) { setGiftTrouble('That code isn’t a journal.'); return; }
-                      if (address === tidyJournal(host)) { setGiftTrouble('That’s this journal’s own code.'); return; }
-                      const answer = await fetch(`/api/setup?giver=${encodeURIComponent(address)}`).then(r => r.json()).catch(() => ({}));
-                      if (answer?.giver?.name) setGiver(answer.giver);
-                      else setGiftTrouble('That journal isn’t answering just now. You can add them later from your book.');
-                    }}
-                  />
-                )}
+                ) : null}
               </div>
             )}
 
