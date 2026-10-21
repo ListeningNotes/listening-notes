@@ -911,7 +911,11 @@ run forwards is as misleading as one run backwards. (The build-out and the
 
 **The flags are marks, not words, and there are no tags.** Heart, SketchLogo
 and Fingerprint in `--fav`, `--mp` and `--formative`. Worded chips are too
-wide for a strip that has to leave room for an album title. **A sent record
+wide for a strip that has to leave room for an album title. **Fingerprint
+stays, 2026-10-21:** a sprout was printed to cure its smudge at 12px and nine
+other glyphs set beside it, and Miyel kept the fingerprint — heart, diamond
+and a round print are three solid shapes; a sprout or a plant read oblong and
+eco. Don't re-propose a new Formative glyph. **A sent record
 wears an envelope, 2026-09-13**, in faint ink rather than a colour: it says
 where a record came from, not what the keeper thought of it. The same mark
 everywhere the others are drawn — the strip, the feed, the key. **Not
