@@ -15,26 +15,69 @@
 //
 // The shape is preserved: `database` is callable as a tagged template and
 // carries .query, which is the whole of what the callers use.
+//
+// ── Whose database, 2026-10-20 ────────────────────────────────────────────
+// On a copy that hosts many journals (library/hosting_directory.js) the
+// handle works out which journal a request is for from the address it was
+// made to, and opens that journal's database — so the hundred and more
+// queries written against `database` stay exactly as they are (Miyel,
+// 2026-10-08). A journal is brought up to date the first time a server
+// instance opens it, rather than at the build: a deployment that hosts many
+// journals has no one database to migrate at start, and a journal that
+// fails to migrate fails alone. On a copy that hosts one, it is
+// DATABASE_URL, as it always was.
 
 import { neon } from '@neondatabase/serverless';
+import { hosting, journalHere } from './hosting_directory.js';
 
-let client = null;
-
-export function hasDatabase() {
-  return Boolean(process.env.DATABASE_URL);
-}
-
-function connect() {
-  if (client) return client;
-  if (!hasDatabase()) {
-    throw new Error('No database connection string was provided. Set DATABASE_URL.');
+// One client per database, made on first use. A client is only a way of
+// asking over HTTP, so keeping one per journal costs nothing between asks.
+const clients = new Map();
+function clientFor(way) {
+  let client = clients.get(way);
+  if (!client) {
+    client = neon(way);
+    clients.set(way, client);
   }
-  client = neon(process.env.DATABASE_URL);
   return client;
 }
 
-const database = (...args) => connect()(...args);
-database.query = (...args) => connect().query(...args);
+export function hasDatabase() {
+  return hosting() || Boolean(process.env.DATABASE_URL);
+}
+
+// Each hosted journal is brought up to date once per server instance, by
+// whichever request reaches it first; the rest wait on the same promise. A
+// failure is forgotten so the next request tries again, and until one
+// succeeds nothing is read from a journal whose schema is behind its code.
+const broughtUp = new Map();
+function upToDate(journal) {
+  let ready = broughtUp.get(journal.host);
+  if (!ready) {
+    ready = import('./migrator.js').then(({ bringUpToDate }) => bringUpToDate({
+      url: journal.way,
+      log: said => console.log(`[migrations ${journal.host}] ${said}`),
+    }));
+    broughtUp.set(journal.host, ready);
+    ready.catch(() => broughtUp.delete(journal.host));
+  }
+  return ready;
+}
+
+async function connect() {
+  if (!hosting()) {
+    if (!process.env.DATABASE_URL) {
+      throw new Error('No database connection string was provided. Set DATABASE_URL.');
+    }
+    return clientFor(process.env.DATABASE_URL);
+  }
+  const journal = await journalHere();
+  await upToDate(journal);
+  return clientFor(journal.way);
+}
+
+const database = (...args) => connect().then(client => client(...args));
+database.query = (...args) => connect().then(client => client.query(...args));
 
 export default database;
 

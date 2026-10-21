@@ -99,12 +99,14 @@ The library — logic, no visuals
     cover_code.js              The same press for an entry's cover: the code for that entry's address, redrawn from the art on each ask, with only the proved dot kept on the row
     cross_references.js        Display-time linking: a mention of an album or artist in the archive becomes a link; [[brackets]] force one; COMMON_WORD_NAMES is the hand-edited blocklist
     database_actions.js        Everything to do with saving and loading entries — the wall's lean list, the public feed's allow-list, one entry, a record's folder, save/update/delete, drafts, briefings
-    database_connection.js     Opens the connection to the database, on first use; and says a database failure in a sentence
+    database_connection.js     Opens the connection to the database, on first use — on a deployment that hosts journals, the database of the journal the request is for, brought up to date the first time it is opened; and says a database failure in a sentence
     definitions.js             The shipped text for the three marks, and the merge of the owner's edits over it
-    doorman.js                 Rate limiting, in memory: the doors, how many tries each allows, who is knocking, and the 429 answer
+    doorman.js                 Rate limiting, in memory: the doors, how many tries each allows, who is knocking, and the 429 answer — every count filed under its journal
     entry_formatter.js         The shapes an entry is written in: the horizon from track ratings, flawless (what Masterpiece means), tracks to and from prose, lookup_key, the edit stamp
     gold_burst.js              The gold sparkle fired when a Masterpiece is marked
     handoff.js                 What the wall leaves for the entry layer: the tapped record's first screen, the wall's order for swiping to neighbours, and how a layer arrived
+    front_door.js              The front door: whether an address is free, the places left, making a journal through Neon's API, and clearing one nobody set up
+    hosting_directory.js       On a deployment that hosts many journals: which journal lives at which address, the way into each one's database sealed, the journal a request is for, and the old address a journal moved off (FORWARDING_ADDRESS)
     install_guide.js           What /get needs: the deploy button's URL and the ten steps with their screenshots
     letterhead.js              LN. Admin letters: the canonical keeper's public key, checking a letter's seal, that it is for this journal and newer than the last, and pinning it as the one letter in messages; and the letter a journal writes itself asking for a copy (ask_for_copy), the one with a door
     keyring.js                 The passkeys: a row per device's key, the public half only; making a key and opening the door with one (@simplewebauthn/server); a key belongs to the exact address it was made at
@@ -115,7 +117,7 @@ The library — logic, no visuals
     outbox.js                  Handing a record, or a song, to somebody in the book from this copy — this server to theirs, never the browser — and a wave, and a reply to a message
     people_actions.js          The address book: the people table, pinning, and asking a journal its keeper's name
     portrait_code.js           The press: the portrait made into the journal's QR code on the server — a dot of ink in every photo module, proved by the strictest reader on both page colours
-    report_actions.js          Problems keepers wrote in from their desks — the reports table
+    report_actions.js          Problems keepers wrote in from their desks — the reports table, and whether this journal receives them
     return_address.js          The back of the envelope — a sender's name and journal kept in their own browser — the one spelling an address is kept in, and addressFrom, what a copy calls itself from the request that reached it
     secrets.js                 The vault: the session secret, the password hash, the spare key's hash, the claim code, the setup window, and two retired key columns. Database first, environment second; seal_claim writes the claim inside a restore's own transaction; the spare key is made, described and spent here
     sent_actions.js            The `sent` table: a send that landed, written down; what is still out, read against came_back; a row removed
@@ -129,7 +131,7 @@ The library — logic, no visuals
     version.js                 Which version this copy is running (from package.json), where its release notes are, and where a report goes — read by the pitch pane, the desk and the report sheet; and SANDBOX, whether this build is a preview nothing may leave (docs/OPERATIONS.md)
     wave_actions.js            The waves that arrived here: one row per waving journal, replaced not stacked, deleted when left
     whole_journal.mjs          Which tables the journal has, asked of the database, and one table's rows as Postgres writes them — shared by the nightly backup and the export, so neither keeps a list; and when a copy was last made (copy_begins)
-    wristband.js               Session auth — issues and checks the JWT cookie, renews it, guards routes and pages
+    wristband.js               Session auth — issues and checks the JWT cookie (__Host-ln_session in production, locked to its address), renews it, guards routes and pages, and reads a band only from the journal's own pages
 
 The update button
   .github/workflows/update.yml   Ships in every copy: Actions → Update this copy → Run workflow, and once an hour on its own
@@ -138,6 +140,7 @@ The update button
 The other scripts — run by hand or by a machine, never by the site
   scripts/backup.mjs             Every table to $BACKUP_DIR/<timestamp>/ with migrations/ beside it; 30 kept; carries secrets; counts as a copy (docs/OPERATIONS.md)
   scripts/letterhead.mjs         The canonical keeper's, on her Mac: makes the LN. Admin key (its private half in the Keychain) and seals and posts a letter to the journals it concerns
+  scripts/hosting_directory.mjs  The hosting directory by hand: its key and way in kept in the Keychain, a journal placed at an address (way in off the clipboard), the addresses listed and checked, a journal moved in at a new address
   scripts/restore.mjs            Puts a backup or an export back — a folder, the zip from Make a copy, or a bare journal.json; a dry run without --yes; empties only the tables the file holds. The restore itself is library/unpacking.mjs
   scripts/prepare_database.mjs   Runs before next build: migrates and prints the claim notice; never fails the build
 
@@ -146,7 +149,7 @@ The lint gate — git runs it, on a machine that has opted in
 
 Before the first request — two files whose names are Next's, not ours
   instrumentation.js             The startup hook: migrates before the first request and prints the claim notice while the copy is unclaimed
-  proxy.js                       Next's middleware under its new name: copies the pathname into a header for the layout and does nothing else
+  proxy.js                       Next's middleware under its new name: copies the pathname into a header for the layout, and sends every page's content security policy (only scripts stamped for this request run)
 
 The front doors — receive requests, hand them off, send back responses
   app/api/
@@ -187,6 +190,7 @@ The front doors — receive requests, hand them off, send back responses
     public/stamps/route.js     The card's counted facts — records, songs, first entry, top genres, the two flag counts
     public/listing/route.js    The code the directory issued this journal, as plain text, or 404 — how the registry proves the address
     public/people/route.js     The people this journal's keeper added who are on the Board themselves — a name and an address each; never anybody kept private, nothing while the keeper is off the Board; checked against the directory with hashes; kept a minute. What makes "a friend away"
+    front-door/route.js        The front door only: GET the places left or whether an address is free; POST makes a journal and says where its setup is (the claim code after #)
     friends/beacons/route.js   Everyone in the address book's beacon, through one door — owner-only; each journal's public beacon in parallel, a round kept a minute, a journal that fails asked less often, thirty on the timer — and each friend's /api/public/people on the same round, which makes `away`, the Board's friends of friends (two rings only)
     listing/route.js           On the Board — owner-only: GET says whether this journal is listed and on the Board, and lists it if it is meant to be and is not yet (on by default, 2026-10-08); POST is the switch in Settings, through library/outbox.js
     board/route.js             Everything the Board reads, through one door on this journal (Miyel: keep the fan-out behind a single route): the first screen, a search, the keeper's own records matched (behind the wristband), and lines of keepers' own writing read from their journals by this server — 2.5 s each, kept ten minutes, back-off, only journals on the Board, counted per asker. The Board component talks to this and nothing else
@@ -236,7 +240,8 @@ The furniture — visual pieces
       SharePrinter.js          The press's toolbox, not the press: the paper sizes (FRAMES), the page's two colours, and the canvas tools a plate draws with. The press itself has been hooks/usePress.js since 2026-09-13
       EntryPlate.js            A record cut as a plate — the entry page's first screen on the record's blurred colour: mark, keeper, cover, album, artist and year, stars, chips, date, horizon; no code, the press copies the address
       WritingAccess.js         The lock at the foot of the card for a visitor, the glyph over Unlock — shut, open while the door it opens in place; on a device that has unlocked with a key before, one press goes straight to Face ID
-      ComingSoon.js            What a held copy shows instead of a site — unclaimed, no database, or database unreachable
+      ComingSoon.js            What a held copy shows instead of a site — unclaimed, no database, database unreachable, or no journal at the address
+      FrontDoor.js             The front door's pages, drawn by the layout in place of a journal: Start a journal and Find my journal at /, Choose your address at /get
       AddToHomeScreen.js       The one step the software cannot do: the last screen of setup, and a Settings section
       Keyring.js               Your keys, in Settings: each device's key, + Add this device (Face ID or its like), a key off in two presses; then the password (changed in place) and the spare key (made, and shown once). Also the browser's half of keys — whether it can hold one, whether it has unlocked with one — KeyOffer, Use Face ID next time?, drawn after the password and at the card's foot, and KeeperFoot, the foot's one question a visit: Face ID, then the spare key
       JournalCopy.js           Back up your journal, in Settings: Make a copy fetches the export and holds it as a zip — journal.json, Read me.txt and a page per entry (library/carbon_copy.js) — then Save (the share sheet on a phone, Downloads on a computer)

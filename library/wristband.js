@@ -8,8 +8,56 @@
 
 import { SignJWT, jwtVerify } from 'jose';
 import { sessionSecret } from './secrets.js';
+import { hosting } from './hosting_directory.js';
 
-const COOKIE_NAME = 'ln_session';
+// ── Locked to this address, 2026-10-20 ────────────────────────────────────
+// In production the band is `__Host-ln_session`. A browser keeps a cookie
+// with that prefix only when it was set by this exact address, over https,
+// for the whole site and for no wider domain — so no other journal under the
+// same domain, and no page anywhere but this one, can plant one or replace
+// it (Miyel's pick, learned from Tumblr, whose blogs could steal visitors'
+// cookies). A plain-http dev server cannot hold one, so there it stays
+// `ln_session`. A copy that serves one journal still reads a band under the
+// old name, so nobody is signed out by the change, and the next check moves
+// it to the new one (app/api/auth/check).
+const LOCKED = '__Host-ln_session';
+const PLAIN = 'ln_session';
+const SECURE = process.env.NODE_ENV === 'production';
+const COOKIE_NAME = SECURE ? LOCKED : PLAIN;
+
+function tokenIn(jar) {
+  const band = jar.get(COOKIE_NAME)?.value;
+  if (band) return band;
+  return COOKIE_NAME !== PLAIN && !hosting() ? jar.get(PLAIN)?.value : undefined;
+}
+
+// Whether the band a request wears is still under the old name — to be moved.
+export function wornUnderOldName(request) {
+  return COOKIE_NAME !== PLAIN && !request.cookies.get(COOKIE_NAME)?.value && Boolean(request.cookies.get(PLAIN)?.value);
+}
+
+// ── Only from its own pages, 2026-10-20 ───────────────────────────────────
+// Every browser marks a request with where it came from (Sec-Fetch-Site).
+// On a deployment that hosts journals, every other journal's page counts as
+// the same site as this one — near enough that a signed-in keeper's browser
+// would carry this journal's wristband on a request another journal's page
+// made. So a band is only read off a request from this journal's own pages
+// or the address bar, and a button pressed anywhere else opens nothing
+// (Miyel's pick, learned from Tumblr). A browser that does not say falls
+// back to Origin; a request with neither is not a browser, and so is not
+// carrying anybody's wristband.
+export function fromItsOwnPages(request) {
+  const site = request.headers.get('sec-fetch-site');
+  if (site) return site === 'same-origin' || site === 'none';
+  const origin = request.headers.get('origin');
+  if (!origin) return true;
+  const host = (request.headers.get('x-forwarded-host') || request.headers.get('host') || '').split(',')[0].trim().toLowerCase();
+  try {
+    return new URL(origin).host.toLowerCase() === host;
+  } catch {
+    return false;
+  }
+}
 
 // One number, two places to spend it. The token's own expiry and the cookie's
 // maxAge have to agree, and they were written separately as '30d' and
@@ -69,7 +117,8 @@ export async function issueWristband() {
 // always has (issueWristband), and nothing else is. Every other token is
 // signed with a key of its own as well (library/keyring.js).
 export async function readWristband(request) {
-  const token = request.cookies.get(COOKIE_NAME)?.value;
+  if (!fromItsOwnPages(request)) return null;
+  const token = tokenIn(request.cookies);
   if (!token) return null;
   try {
     const { payload } = await jwtVerify(token, await getSecret());
@@ -99,7 +148,7 @@ export async function checkWristband(request) {
 export async function wristbandOnHand() {
   const { cookies } = await import('next/headers');
   const jar = await cookies();
-  const token = jar.get(COOKIE_NAME)?.value;
+  const token = tokenIn(jar);
   if (!token) return false;
   try {
     const { payload } = await jwtVerify(token, await getSecret());
@@ -132,9 +181,12 @@ export const WRISTBAND_COOKIE = {
   name: COOKIE_NAME,
   options: {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: SECURE,
     sameSite: 'lax',
     path: '/',
     maxAge: LIFETIME_SECONDS,
   },
 };
+
+// The old name, for clearing once a band has moved (or on signing out).
+export const OLD_WRISTBAND_COOKIE = COOKIE_NAME === PLAIN ? null : { name: PLAIN, options: { path: '/', maxAge: 0 } };

@@ -27,16 +27,21 @@ import { pull_findable } from '@/library/settings_actions';
 import { pull_public_people } from '@/library/people_actions';
 import { boardHash } from '@/library/directory_actions';
 import { ask_directory_among } from '@/library/outbox';
+import { memoryOf } from '@/library/hosting_directory';
 
 const KEPT_MS = 60 * 1000;
 const EDGE = 'public, max-age=0, s-maxage=60, stale-while-revalidate=60';
-let kept = { at: 0, people: null };
+// Per journal, 2026-10-20: on a deployment that hosts many, the book kept
+// for one journal is never handed out as another's (library/hosting_directory.js).
+const keptFor = new Map();
 
 export async function GET() {
   try {
     if (!(await pull_findable())) {
       return new Response('Not on the board.', { status: 404, headers: { 'Cache-Control': EDGE } });
     }
+    const whose = await memoryOf();
+    let kept = keptFor.get(whose) || { at: 0, people: null };
     if (!kept.people || Date.now() - kept.at > KEPT_MS) {
       const book = await pull_public_people();
       const on = book.length ? await ask_directory_among(book.map(p => boardHash(p.address))) : [];
@@ -49,6 +54,7 @@ export async function GET() {
       } else if (!kept.people) {
         kept = { at: 0, people: [] };
       }
+      keptFor.set(whose, kept);
     }
     return Response.json({ people: kept.people }, { headers: { 'Cache-Control': EDGE } });
   } catch {

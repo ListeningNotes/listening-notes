@@ -239,6 +239,129 @@ Vercel locks a preview to the project's owner, so opening one asks you to
 sign in to Vercel once. It also means no other journal can reach a sandbox:
 something that arrives from another journal cannot be tried there.
 
+## The hosting directory
+
+A deployment that hosts many journals finds each one in the hosting
+directory (`library/hosting_directory.js`): its own Neon database, holding
+each journal's address and the way into its database, sealed with a key
+that lives only in the deployment's settings. Nothing a journal wrote is in
+it. A deployment without `HOSTING_DIRECTORY_URL` is a copy serving one
+journal, and none of this applies.
+
+**Its two settings**, in the deployment's environment variables:
+`HOSTING_DIRECTORY_URL` (the directory database's connection string) and
+`HOSTING_DIRECTORY_KEY` (32 random bytes, base64). On the deployment, the
+`SESSION_SECRET`, `SESSION_PASSWORD` and `ANTHROPIC_API_KEY` variables are
+ignored: each hosted journal's live in its own vault.
+
+**By hand**, on the canonical keeper's Mac, until signup places journals:
+
+```bash
+npm run hosting-directory -- key
+```
+
+makes the key once, keeps it in the Keychain and puts it on the clipboard
+for the deployment's settings.
+
+```bash
+npm run hosting-directory -- remember
+```
+
+keeps the directory's own connection string, copied from Neon first.
+
+```bash
+npm run hosting-directory -- place name.listeningnotes.blog
+```
+
+places a journal: copy its database's connection string from Neon first;
+it is read off the clipboard, checked, and sealed, and never printed.
+`list` shows every address and `check <address>` says whose journal opens
+there.
+
+**If the key is lost or might have been seen**, make a new one and place
+every journal again with it: the old key opens nothing once the deployment
+holds the new one.
+
+**The front door** is the deployment's own address, `HOSTED_DOMAIN` and its
+`www.` — or only the bare domain, once a journal has moved off `www.`
+(below), when `www.` sends the front door's two pages to the bare domain
+(`library/front_door.js`). There somebody starts a journal: Neon makes
+it a database of its own, the front door brings it up to date and places it,
+and the browser goes to the new address's setup with the claim code after a
+`#`, which no server is sent. Its settings: `NEON_API_KEY` (made in Neon's
+console, kept only in the deployment's settings), `NEON_ORG_ID` when Neon
+wants the organisation named, `NEON_REGION` (default `aws-us-east-1`, beside
+Vercel's default function region; a deployment whose functions run in
+Portland, `pdx1`, sets `aws-us-west-2`), and
+`HOSTED_JOURNALS_MOST`, the places (default 100). Each place a request comes
+from can start three journals an hour, and a journal the front door made that
+nobody set up or wrote in is taken down after a day. Nothing placed by hand
+is ever taken down.
+
+### Moving a journal in
+
+A journal that already has a database comes onto the deployment at a new
+address with `move`. The canonical journal is the first: it lived at
+`www.listeningnotes.blog`, the address the front door takes, and every copy
+out there knows that address — address books, sends, waves, messages, the
+Board, problem reports, a link to an entry. So it moves to its keeper's own
+name under the domain, and the old address goes on reaching it, all but its
+home, which is the front door's: the domain belongs to the publication and
+the front door, not to one journal. A card's code is the bare address, so an
+old one opens the front door; the card presses a new one.
+
+**Before**, at the journal's old address: a password chosen in Settings →
+Your keys, or a spare key made there. A password kept in the deployment's
+settings (`SESSION_PASSWORD`) is never read by a deployment that hosts
+journals, and Face ID belongs to the address it was added at, so without one
+of the two nobody could sign in at the new address. The move refuses until
+there is one. An AI key kept in the deployment's settings is not read either;
+type it into Settings after the move.
+
+```bash
+npm run hosting-directory -- move name.listeningnotes.blog
+```
+
+with the journal's connection string on the clipboard, says what it found
+and what it would do, and changes nothing. With `--yes` it places the
+journal at the new address, writes the address into the journal, moves its
+listing on the Board with it when the journal keeps the Board itself, and
+clears its card's code, which the card presses again for the new address the
+first time its keeper opens it signed in. Running it again is harmless.
+
+**`FORWARDING_ADDRESS`**, in the deployment's settings, names where the
+journal that lived at `www.` lives now (`library/hosting_directory.js`,
+`forwarding`). With it, `www.` is that journal's for good: its pages are sent
+on to the new address at the edge (`next.config.mjs`), with the rest of the
+link, and `/api` there is answered by the journal itself, as if asked at its
+new address — a problem report sent from a browser is checked with the
+server first, and that check cannot follow a forward. All but the front
+door's home and `/get`, which go to the bare domain, unless the link carries
+`?from=`, `?as=` or `?add=` and so wants the journal. On the bare domain,
+everything the front door does not answer itself is sent on to the journal
+too, and so is its home when the link carries one of the three. Only the
+forwards from `www.` to the journal are the kind a browser remembers; the
+rest lead to and from the bare domain, where the publication will grow.
+Read when the site is built, so changing it is a redeploy.
+
+**The order on the day**, so the journal is never unreachable:
+
+1. Deploy the new code without the hosting settings: it is still a copy
+   serving one journal, exactly as before.
+2. `move … --yes`. The journal now calls itself by its new address, which
+   does not answer yet; it is still read at the old one.
+3. Add the hosting settings (`HOSTING_DIRECTORY_URL`, `HOSTING_DIRECTORY_KEY`,
+   `HOSTED_DOMAIN`, `FORWARDING_ADDRESS`, `NEON_API_KEY`), add
+   `*.listeningnotes.blog` to the project's domains, serve the bare domain
+   itself rather than sending it to `www.`, and redeploy.
+4. Sign in at the new address with the password or the spare key, and add
+   Face ID again in Settings → Your keys.
+
+A copy that knew the old address keeps using it, and everything it asks
+arrives. What it has not learned is that the two addresses are one journal:
+a send or a message from the new address reaches it from an address its
+address book does not hold.
+
 ## LN. Admin letters
 
 A letter is the one way to tell keepers something they cannot learn from

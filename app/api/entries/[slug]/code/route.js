@@ -24,7 +24,7 @@ import { pressCoverCode } from '@/library/cover_code';
 import { mayKnock, tooSoon, whoIsKnocking } from '@/library/doorman';
 
 export async function GET(request, { params }) {
-  const knock = mayKnock('cover', whoIsKnocking(request));
+  const knock = await mayKnock('cover', whoIsKnocking(request));
   if (!knock.allowed) return tooSoon(knock.retryAfter);
 
   const { slug } = await params;

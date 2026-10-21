@@ -9,7 +9,8 @@
     "lint": "eslint",
     "backup": "node scripts/backup.mjs",
     "restore": "node scripts/restore.mjs",
-    "letterhead": "node scripts/letterhead.mjs"
+    "letterhead": "node scripts/letterhead.mjs",
+    "hosting-directory": "node --no-warnings scripts/hosting_directory.mjs"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",

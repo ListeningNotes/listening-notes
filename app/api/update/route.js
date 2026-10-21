@@ -20,6 +20,7 @@
 
 import { requireWristband } from '@/library/wristband';
 import { updaterLink } from '@/library/updater_link';
+import { hosting } from '@/library/hosting_directory';
 import pkg from '../../../package.json';
 
 const LATEST = 'https://api.github.com/repos/ListeningNotes/listening-notes/releases/latest';
@@ -51,6 +52,14 @@ function isNewer(latest, current) {
 export async function GET(request) {
   const blocked = await requireWristband(request);
   if (blocked) return blocked;
+
+  // A hosted journal is updated with each release, with every other journal
+  // on its deployment (hosted journals follow releases, never main), and has
+  // no repository of its own to run an updater on: there is never anything
+  // for its keeper to press, so nothing is said.
+  if (hosting()) {
+    return Response.json({ current: pkg.version, latest: null, newer: false, stalled: false, major: false, hosted: true });
+  }
 
   const owner = process.env.VERCEL_GIT_REPO_OWNER;
   const slug = process.env.VERCEL_GIT_REPO_SLUG;

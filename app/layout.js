@@ -12,11 +12,15 @@ import { Nunito, DM_Mono } from 'next/font/google';
 import { Lightswitch } from '../components/main_components/Lightswitch';
 import { Bookplate } from '../components/main_components/Bookplate';
 import ComingSoon from '../components/main_components/ComingSoon';
-import { PATH_HEADER } from '../proxy';
+import { PATH_HEADER, NONCE_HEADER } from '../proxy';
 import { headers } from 'next/headers';
 import { isSetUp, pull_settings, coverName, titleName } from '../library/settings_actions';
 import { hasDatabase, explainDatabaseError } from '../library/database_connection';
+import { journalHere, NoJournalHere, hostHere } from '../library/hosting_directory';
+import { isFrontDoor, hostedDomain, placesLeft } from '../library/front_door';
+import FrontDoor from '../components/main_components/FrontDoor';
 import { isCurrentCode } from '../library/portrait_code';
+import { takesReports } from '../library/report_actions';
 import { SANDBOX } from '../library/version';
 
 // 300 was added here for an hour, for prompt answers set light. They are set
@@ -55,6 +59,11 @@ const dmMono = DM_Mono({
 // name a copy shows is the name its owner typed, not the name it was built
 // with.
 export async function generateMetadata() {
+  // The front door is the software's own page, not a journal, so it is the
+  // one place called Listening Notes and nothing else.
+  if (isFrontDoor(await hostHere())) {
+    return { title: 'Listening Notes', description: 'A listening journal of your own.' };
+  }
   const settings = await pull_settings();
   // titleName, not coverName. Everything in this function is read by a machine
   // — a browser tab, a home-screen label, a link preview on somebody else's
@@ -204,10 +213,28 @@ const SETUP_PATH = '/setup';
 // and for a fresh copy with a mistyped string is a dead end with nobody to
 // ask. A page that says the database cannot be reached is true in both cases
 // and points the owner at the one thing to check.
+//
+// 'nobody', 2026-10-20: on a deployment that hosts journals, an address the
+// hosting directory does not know. Nobody's journal is drawn there — not a
+// default, not the nearest (library/hosting_directory.js) — and /setup is
+// held too, because there is nothing at the address to set up.
+//
+// 'front-door', 2026-10-20: the address a deployment that hosts journals
+// answers at itself, which has no journal of its own and draws the front
+// door's pages instead (library/front_door.js).
 async function holdTheDoor() {
   const path = (await headers()).get(PATH_HEADER) || '';
   if (path.startsWith('/api/')) return null;
   if (!hasDatabase()) return 'database';
+  if (isFrontDoor(await hostHere())) {
+    return { reason: 'front-door', path, left: await placesLeft().catch(() => 0) };
+  }
+  try {
+    await journalHere();
+  } catch (error) {
+    if (error instanceof NoJournalHere) return 'nobody';
+    return { reason: 'unreachable', said: explainDatabaseError(error) };
+  }
   if (path === SETUP_PATH) return null;
   try {
     return (await isSetUp()) ? null : 'setup';
@@ -219,6 +246,9 @@ async function holdTheDoor() {
 export default async function RootLayout({ children, layer }) {
   const holding = await holdTheDoor();
   const all = await pull_settings();
+  // The number this request's scripts are stamped with (proxy.js), for the
+  // one script the layout writes itself.
+  const nonce = (await headers()).get(NONCE_HEADER) || undefined;
 
   // Named keys only, rather than spreading what is left after removing the
   // essay. Bookplate is a client component, so every prop handed to it is
@@ -237,6 +267,10 @@ export default async function RootLayout({ children, layer }) {
   // because the build number lives in the press, which is server-only, and
   // the card, which acts on the answer, is not.
   settings.portrait_code_stale = Boolean(all.portrait_code_url) && !isCurrentCode(all.portrait_code_url);
+  // Whether problem reports land here, for the inbox. Decided on the server,
+  // because the address a journal moved from is known only to the server
+  // (library/report_actions.js).
+  settings.takes_reports = takesReports(all.site_address);
   // has_note used to ride along here — a boolean saying an essay existed, so
   // the about page could decide whether to draw a link to it without carrying
   // 3.5KB of prose into every page on the site. Nothing links to the essay any
@@ -290,6 +324,7 @@ export default async function RootLayout({ children, layer }) {
         {SANDBOX && <div className="ln-sandbox-glow" aria-hidden="true" />}
         {SANDBOX && <div className="ln-sandbox">Sandbox</div>}
         <script
+          nonce={nonce}
           suppressHydrationWarning
           dangerouslySetInnerHTML={{
             __html: `try{var s=localStorage.getItem('ln-theme');if(s)document.documentElement.setAttribute('data-theme',s);}catch(e){}`,
@@ -297,7 +332,9 @@ export default async function RootLayout({ children, layer }) {
         />
         <Bookplate settings={settings}>
           <Lightswitch>
-            {holding
+            {holding?.reason === 'front-door'
+              ? <FrontDoor path={holding.path} domain={hostedDomain()} left={holding.left} />
+              : holding
               ? <ComingSoon reason={typeof holding === 'string' ? holding : holding.reason} said={holding.said} />
               : <>
               {children}

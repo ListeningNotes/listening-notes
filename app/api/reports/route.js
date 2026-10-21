@@ -18,7 +18,7 @@ const CORS = {
 };
 
 export async function POST(request) {
-  const knock = mayKnock('report', whoIsKnocking(request));
+  const knock = await mayKnock('report', whoIsKnocking(request));
   if (!knock.allowed) return tooSoon(knock.retryAfter);
 
   try {

@@ -586,3 +586,78 @@
 @media (prefers-reduced-motion: reduce) {
   .dir-row { transition: none; }
 }
+
+/* ── The front door, 2026-10-20 ─────────────────────────────────────────────
+   components/main_components/FrontDoor.js: the mark, a line, two doors, the
+   places left; and Choose your address. Centred like the holding page, the
+   doors in the Friends pane's own shape (a glyph over its words). */
+.fd-page {
+  min-height: 100dvh; box-sizing: border-box;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 16px; padding: 32px 20px; text-align: center;
+  background: var(--bg); color: var(--ink);
+}
+.fd-mark { line-height: 0; margin-bottom: 6px; }
+.fd-logo { width: 92px; height: auto; display: block; }
+.fd-logo path, .fd-logo circle { fill: var(--ink); }
+.fd-said { margin: 0; font-family: var(--font-sans); font-size: 15px; line-height: 1.7; color: var(--ink-soft); max-width: 34ch; }
+.fd-h { margin: 0; font-family: var(--font-display); font-weight: var(--font-display-weight, 700); font-size: 22px; color: var(--ink); }
+.fd-doors { max-width: 320px; margin-top: 6px; }
+.fd-places {
+  margin: 0; font-family: var(--font-label); font-size: 10px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--ink-faint);
+}
+.fd-find { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 100%; max-width: 340px; }
+.fd-field {
+  display: flex; align-items: baseline; width: 100%; max-width: 340px; box-sizing: border-box;
+  background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+  padding: 11px 13px; font-family: var(--font-label); font-size: 14px; transition: border-color 0.15s;
+}
+.fd-field:focus-within { border-color: var(--ink-faint); }
+.fd-field input {
+  flex: 1 1 auto; min-width: 0; border: 0; outline: none; background: none; padding: 0;
+  color: var(--ink); font: inherit; text-align: right;
+}
+.fd-field input::placeholder { color: var(--ink-faint); }
+.fd-domain { flex: 0 0 auto; color: var(--ink-faint); }
+.fd-state { margin: 0; min-height: 1.6em; font-family: var(--font-sans); font-size: 13px; color: var(--ink-soft); }
+/* Available and Not available, each with its mark (Miyel, 2026-10-20:
+   green with a check in a circle, and a matching emblem in red). */
+.fd-yes, .fd-no { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; }
+.fd-yes { color: var(--live-deep); }
+.fd-no { color: var(--fav); }
+/* Create my journal: setup's own button (.su-go, forms.css), held to the
+   field's width rather than the page's. */
+.fd-go { max-width: 340px; margin-top: 4px; }
+/* The steps a journal is made in, each ticked as it really finishes
+   (Miyel's pick, 2026-10-20). */
+.fd-steps {
+  list-style: none; margin: 6px 0 0; padding: 0; width: 100%; max-width: 260px;
+  display: flex; flex-direction: column; gap: 12px; text-align: left;
+  font-family: var(--font-sans); font-size: 14px;
+}
+.fd-step { display: flex; align-items: center; gap: 10px; color: var(--ink-faint); transition: color 0.3s; }
+.fd-step--now { color: var(--ink); }
+.fd-step--done { color: var(--ink); }
+.fd-step--done svg { color: var(--live-deep); }
+.fd-spin {
+  width: 14px; height: 14px; margin: 2px; flex: none; border-radius: 999px;
+  border: 2px solid var(--border); border-top-color: var(--ink);
+  animation: fd-turn 0.9s linear infinite;
+}
+@keyframes fd-turn { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .fd-spin { animation: none; border-color: var(--ink); }
+}
+.fd-trouble { margin: 0; font-family: var(--font-sans); font-size: 13px; color: var(--ink-soft); max-width: 34ch; }
+.fd-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+/* The open book with a plus on its corner (Miyel: "the book and a plus
+   sign"): Visit's book, so starting a journal and visiting one wear the same
+   mark. */
+.fd-bookplus { position: relative; display: inline-flex; }
+.fd-plus {
+  position: absolute; right: -6px; bottom: -4px;
+  width: 13px; height: 13px; border-radius: 999px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--ink); color: var(--bg); box-shadow: 0 0 0 2px var(--bg);
+}

@@ -28,11 +28,14 @@ import {
 import { ask_directory } from '@/library/outbox';
 import { tidyJournal } from '@/library/return_address';
 import { DIRECTORY_URL } from '@/library/version';
+import { memoryOf } from '@/library/hosting_directory';
 
 // How long one server waits before asking the registry again on its own,
 // when the last time did not end with the journal listed (or delisted).
 const AGAIN_MS = 10 * 60 * 1000;
-let triedAt = 0;
+// Per journal, 2026-10-20: on a deployment that hosts many, one journal's
+// wait is not another's (library/hosting_directory.js).
+const triedAt = new Map();
 
 // Ask, serve the code, ask again. Returns { listed } or { error }.
 async function listMe(mine) {
@@ -65,16 +68,17 @@ export async function GET(request) {
   const blocked = await requireWristband(request);
   if (blocked) return blocked;
   try {
+    const whose = await memoryOf();
     const [code, findable] = await Promise.all([pull_listing_code(), pull_findable()]);
     const settled = findable ? Boolean(code) : !code;
-    if (settled || !DIRECTORY_URL || Date.now() - triedAt < AGAIN_MS) {
+    if (settled || !DIRECTORY_URL || Date.now() - (triedAt.get(whose) || 0) < AGAIN_MS) {
       return Response.json({ listed: Boolean(code), findable });
     }
     const mine = tidyJournal((await pull_settings()).site_address);
     if (!mine) return Response.json({ listed: false, findable });
-    triedAt = Date.now();
+    triedAt.set(whose, Date.now());
     const done = findable ? await listMe(mine) : await delistMe(mine, code);
-    if (!done.error) triedAt = 0;
+    if (!done.error) triedAt.delete(whose);
     return Response.json({ listed: done.error ? Boolean(code) : done.listed, findable });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });

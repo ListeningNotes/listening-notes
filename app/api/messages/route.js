@@ -72,7 +72,7 @@ export async function POST(request) {
   // the loose door, so a flood of bad seals costs its sender, not this copy.
   // Nothing is said back but whether it was kept.
   if (body.letterhead !== undefined) {
-    const knocked = mayKnock('relay', whoIsKnocking(request));
+    const knocked = await mayKnock('relay', whoIsKnocking(request));
     if (!knocked.allowed) return tooSoon(knocked.retryAfter);
     try {
       const read = await read_letter(body);
@@ -112,9 +112,9 @@ export async function POST(request) {
       // The loose door first: it is what stops a script making this journal
       // fetch a thousand made-up addresses. Then the one that means
       // something, counted against the journal and not the machine.
-      const relayed = mayKnock('relay', from);
+      const relayed = await mayKnock('relay', from);
       if (!relayed.allowed) return tooSoon(relayed.retryAfter);
-      const counted = mayKnock('message', journal);
+      const counted = await mayKnock('message', journal);
       if (!counted.allowed) return tooSoon(counted.retryAfter);
       // Real, and called what it says it is called — or not kept at all.
       const answered = await ask_journal_name(journal);
@@ -128,7 +128,7 @@ export async function POST(request) {
     } else {
       // A person on a page. Open to anyone, which is the point, and
       // therefore open to a script. See library/doorman.js.
-      const counted = mayKnock('message', from);
+      const counted = await mayKnock('message', from);
       if (!counted.allowed) return tooSoon(counted.retryAfter);
       if (!name) return Response.json({ error: 'A name is required.' }, { status: 400 });
     }

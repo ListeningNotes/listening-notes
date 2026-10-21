@@ -35,6 +35,7 @@ The real ones, from `package.json`. There are no others.
 | `npm run backup` | Every table to `$BACKUP_DIR/<timestamp>/` (`scripts/backup.mjs`; see docs/OPERATIONS.md). |
 | `npm run restore -- <path>` | Dry run of a restore; add `--yes` to write (`scripts/restore.mjs`). |
 | `npm run letterhead -- …` | The canonical keeper's, on her Mac: `keys` makes the LN. Admin key, `send <journal> --said "…"` seals and posts a letter (`scripts/letterhead.mjs`; see docs/OPERATIONS.md). |
+| `npm run hosting-directory -- …` | The hosting directory by hand, on a deployment that hosts journals: `key`, `remember`, `place <address>` (the way in read off the clipboard), `list`, `check <address>`, `move <address>` (a dry run; add `--yes` to move) (`scripts/hosting_directory.mjs`; see docs/OPERATIONS.md). |
 
 **Migrations have no command.** The files in `migrations/` apply themselves,
 in filename order, on every server start (`instrumentation.js` →
@@ -221,8 +222,10 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   drafts, and `pull_record_keys`, each record the journal logged, for the
   Board.
 - `database_connection.js` — the one Neon handle, opened on first use rather
-  than on import, and `explainDatabaseError`, which says a database failure in
-  a sentence for the owner.
+  than on import — on a deployment that hosts journals, the database of the
+  journal the request is for, brought up to date the first time a server
+  instance opens it — and `explainDatabaseError`, which says a database
+  failure in a sentence for the owner.
 - `definitions.js` — the shipped text for the three marks (Masterpiece,
   Favorite, Formative) and the merge of the owner's edits over it.
 - `directory_actions.js` — the `directory` table, on the registry's copy:
@@ -237,16 +240,35 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   journals claimed so no two rounds ask one twice.
 - `doorman.js` — rate limiting, in memory: the doors (login, message, send,
   wave, listing, the Board's lines and so on), how many tries each allows,
-  who is knocking, and the 429 answer.
+  who is knocking, and the 429 answer. Every count is filed under the
+  journal it was made at, so `mayKnock` is awaited.
 - `entry_formatter.js` — the shapes an entry is written in: the horizon bar
   from track ratings, `flawless` (what Masterpiece means), tracks to and from
   prose, `lookup_key` (the fold drafts and briefings are keyed on), the edit
   stamp, `entryTypeLabel`.
+- `front_door.js` — the front door, on a deployment that hosts journals
+  (`HOSTED_DOMAIN`): whether an address is free (`nameState`, with
+  `KEPT_NAMES`, the words nobody may start a journal at), the places left of
+  `HOSTED_JOURNALS_MOST`, `make_journal` (a Neon project through the API,
+  brought up to date, its address written, placed in the hosting directory,
+  and its claim code), and `clear_never_set_up`, which takes down a journal it
+  made that nobody set up or wrote in within a day.
 - `gold_burst.js` — the gold sparkle fired when a Masterpiece is marked.
 - `handoff.js` — module variables the wall leaves for the entry layer: the
   tapped record's first-screen fields so the layer opens without a wait, the
   wall's order for swiping to neighbours, and how a layer arrived (by swipe,
   by going back, alone).
+- `hosting_directory.js` — the hosting directory, on a deployment that hosts
+  many journals: which journal lives at which address, the way into each
+  one's database sealed with `HOSTING_DIRECTORY_KEY`, `journalHere` (the
+  journal a request is for, or `NoJournalHere`), `memoryOf` (what a server's
+  memory of one journal is filed under), `deploymentSetting` (the
+  deployment's settings, which speak for no hosted journal), and
+  `forwarding` and `journalAddress`: with `FORWARDING_ADDRESS`, the front
+  door's `www.` is the old address of the journal that moved off it, and is
+  answered as that journal, but for the front door's home and `/get`, which
+  go to the bare domain. Nothing runs without `HOSTING_DIRECTORY_URL`.
+  The forwarding of its pages is in `next.config.mjs`.
 - `install_guide.js` — what `/get` needs: the deploy button's URL and the ten
   install steps with their screenshots and the rings drawn over them.
 - `keyring.js` — the passkeys (`keyring`): a row per device's key, the
@@ -288,7 +310,8 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   code with a dot of ink per module, proved by decoding with jsQR on both page
   colours; `CODE_BUILD` is bumped whenever the drawing changes.
 - `report_actions.js` — the `reports` table: problems keepers wrote in from
-  their desks, received by the canonical copy.
+  their desks, received by the canonical copy; `takesReports`, whether this
+  journal is that copy, counting the address it moved from.
 - `return_address.js` — a sender's name and journal kept in their own browser
   for the send and message forms; `tidyAddress`, `tidyJournal` and
   `journalUrl`, the one spelling an address is kept in; `addressFrom`, what
@@ -344,7 +367,11 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   backup is plain Node.
 - `wristband.js` — the login cookie: signed tokens issued and checked with the
   session secret — a band is one that holds `authed: true` — renewal, the
-  route guard `requireWristband`, and `wristbandOnHand` for pages.
+  route guard `requireWristband`, and `wristbandOnHand` for pages. In
+  production the cookie is `__Host-ln_session`, locked to the exact address
+  (an old `ln_session` is still read on a one-journal copy and moved), and
+  `fromItsOwnPages` reads a band only off a request from the journal's own
+  pages or the address bar.
 
 ## `hooks/` — reusable browser logic
 
@@ -385,13 +412,23 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - `letterhead.mjs` — the canonical keeper's sender of LN. Admin letters: makes
   the key and keeps its private half in her Mac's Keychain (`keys`), and
   seals and posts a letter to the journals it concerns (`send`).
+- `hosting_directory.mjs` — the hosting directory by hand until signup
+  places journals: makes the directory's key (`key`) and keeps the
+  directory's way in (`remember`) in the Keychain, places a journal at an
+  address with the way in read off the clipboard (`place`), lists and
+  checks addresses, and moves a journal in at a new address (`move`: its
+  address, its listing on the Board, its card's code; refused without a way
+  back in). Never prints a way in.
 
 ## Top-level files whose names are Next's, not ours
 
 - `instrumentation.js` — the startup hook: migrates before the first request
-  and prints the claim notice while unclaimed.
+  and prints the claim notice while unclaimed; on a deployment that hosts
+  journals, neither (each journal is migrated on its first visit).
 - `proxy.js` — Next's middleware under its new name: copies the pathname into
-  a header for the layout and does nothing else.
+  a header for the layout, and puts the content security policy on every
+  page, with the number this request's scripts are stamped with. No reads,
+  no decisions.
 
 ## Components named by metaphor
 

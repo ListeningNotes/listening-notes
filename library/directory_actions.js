@@ -16,6 +16,7 @@
 
 import { createHash } from 'node:crypto';
 import database from './database_connection.js';
+import { memoryOf } from './hosting_directory.js';
 import { journalUrl } from './return_address.js';
 
 // Thirty rows and a cursor, never the whole table.
@@ -173,13 +174,19 @@ export function boardHash(address) {
 }
 
 const HASHES_KEPT_MS = 60 * 1000;
-let hashed = { at: 0, map: new Map() };
+// Per journal, 2026-10-20, like everything a deployment that hosts many
+// remembers (library/hosting_directory.js): only the registry's journal has
+// a directory to read, and no other journal is answered from it.
+const hashedFor = new Map();
 
 async function listedByHash() {
-  if (Date.now() - hashed.at < HASHES_KEPT_MS) return hashed.map;
+  const whose = await memoryOf();
+  const hashed = hashedFor.get(whose);
+  if (hashed && Date.now() - hashed.at < HASHES_KEPT_MS) return hashed.map;
   const rows = await database`SELECT address FROM directory`;
-  hashed = { at: Date.now(), map: new Map(rows.map(r => [boardHash(r.address), r.address])) };
-  return hashed.map;
+  const map = new Map(rows.map(r => [boardHash(r.address), r.address]));
+  hashedFor.set(whose, { at: Date.now(), map });
+  return map;
 }
 
 export async function pull_among(hashes) {

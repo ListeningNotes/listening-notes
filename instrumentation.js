@@ -23,6 +23,14 @@
 export async function register() {
   if (process.env.NEXT_RUNTIME !== 'nodejs') return;
 
+  // A deployment that hosts many journals has no one database to bring up
+  // to date and no one claim to announce: each journal is brought up to date
+  // the first time it is opened (library/database_connection.js), 2026-10-20.
+  if (process.env.HOSTING_DIRECTORY_URL) {
+    console.log('[hosting] journals are brought up to date the first time each is opened');
+    return;
+  }
+
   const { bringUpToDate } = await import('./library/migrator.js');
   try {
     const { applied, skipped } = await bringUpToDate({

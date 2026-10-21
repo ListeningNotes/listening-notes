@@ -42,6 +42,12 @@ const EDGE = s => `public, max-age=0, s-maxage=${s}, stale-while-revalidate=${s 
 const PRIVATE = 'private, no-store';
 
 // The first screen, kept half a minute: the directory keeps it as long.
+//
+// Shared by every journal a deployment hosts, 2026-10-20, and on purpose,
+// like the lines and the waits below: all of it is what the directory and
+// other journals say in public, the same whichever journal asks. The one
+// answer that is a journal's own — its records, matched (theAlike) — is
+// read fresh every time and kept nowhere.
 const SCREEN_KEPT_MS = 30 * 1000;
 let screen = { at: 0, body: null };
 
@@ -112,7 +118,7 @@ async function readLine(address, slug) {
 }
 
 async function theLines(request, asked) {
-  const knock = mayKnock('board', whoIsKnocking(request));
+  const knock = await mayKnock('board', whoIsKnocking(request));
   if (!knock.allowed) return tooSoon(knock.retryAfter);
   const pairs = String(asked || '').split(',').slice(0, LINES_MOST).map(p => {
     const bar = p.indexOf('|');

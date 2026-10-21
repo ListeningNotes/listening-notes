@@ -67,7 +67,7 @@ export async function GET(request) {
 
   const giver = tidyJournal(request.nextUrl.searchParams.get('gift') || '');
   const own = Boolean(giver) && giver === tidyJournal(settings.site_address);
-  if (!giver || (!own && !mayKnock('relay', whoIsKnocking(request)).allowed)) {
+  if (!giver || (!own && !(await mayKnock('relay', whoIsKnocking(request))).allowed)) {
     return new Response('Not found', { status: 404 });
   }
 

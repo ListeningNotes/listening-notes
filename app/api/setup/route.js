@@ -30,6 +30,7 @@ import { ask_journal_name } from '@/library/people_actions';
 import { mayKnock, whoIsKnocking } from '@/library/doorman';
 import { hashPassword, passwordSource, save_secrets, setupWindowOpen } from '@/library/secrets';
 import { holds_any, keep_only } from '@/library/keyring';
+import { hosting } from '@/library/hosting_directory';
 
 // Eight is the floor. There is no strength meter — one password, chosen once,
 // saved by a password manager the field is shaped for — but a floor keeps
@@ -57,12 +58,14 @@ export async function GET(request) {
     // Whether the door is open with nothing typed — the half hour after a
     // build. The page knocks first when it is.
     const open = !claimed && !password && (await setupWindowOpen());
-    const answer = { claimed, has_password: Boolean(password), open };
+    // `hosted`, 2026-10-20: a journal on a deployment that hosts many, whose
+    // updates come with each release — setup draws no updater screen for it.
+    const answer = { claimed, has_password: Boolean(password), open, hosted: hosting() };
     if (!(await requireWristband(request))) {
       const gift = tidyJournal(process.env.GIFT_FROM || '');
       if (gift) answer.gift = gift;
       const asked = tidyJournal(new URL(request.url).searchParams.get('giver') || '');
-      if (asked && mayKnock('relay', whoIsKnocking(request)).allowed) {
+      if (asked && (await mayKnock('relay', whoIsKnocking(request))).allowed) {
         answer.giver = { address: asked, name: await ask_journal_name(asked, 4000) };
       }
     }

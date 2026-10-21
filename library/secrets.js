@@ -20,10 +20,17 @@
 // The session secret is the exception: the environment wins there, because
 // changing it signs everybody out and a copy that set one on purpose should
 // not be signed out by a row it did not know existed.
+//
+// On a deployment that hosts many journals the environment speaks for none
+// of them (library/hosting_directory.js, deploymentSetting): one keeper's
+// password, signing key or AI key in the deployment's settings would open,
+// or pay for, every journal on it. Each hosted journal's are in its own
+// vault and nowhere else.
 
 import { randomBytes, randomInt, scrypt as scryptCallback, timingSafeEqual, createHmac } from 'node:crypto';
 import { promisify } from 'node:util';
 import database from './database_connection.js';
+import { deploymentSetting, memoryOf } from './hosting_directory.js';
 
 const scrypt = promisify(scryptCallback);
 
@@ -97,7 +104,7 @@ export async function seal_claim(query, password_hash) {
 // own narrow reader.
 export async function anthropicKey() {
   const { anthropic_key } = await pull_secrets();
-  return anthropic_key || process.env.ANTHROPIC_API_KEY || null;
+  return anthropic_key || deploymentSetting('ANTHROPIC_API_KEY') || null;
 }
 
 // ── The signing key ───────────────────────────────────────────────────────
@@ -108,14 +115,20 @@ export async function anthropicKey() {
 // Two instances starting at once could both find nothing and both mint one.
 // The COALESCE in the upsert makes the first write win and hands the second
 // instance the first one's value, so every instance signs with the same key.
-let cachedSecret = null;
+//
+// Kept per journal, 2026-10-20: on a deployment that hosts many, one journal's
+// key handed to another would let a wristband from the one open the other.
+const cachedSecrets = new Map();
 
 export async function sessionSecret() {
-  if (cachedSecret) return cachedSecret;
-  const fromEnv = process.env.SESSION_SECRET;
+  const whose = await memoryOf();
+  const kept = cachedSecrets.get(whose);
+  if (kept) return kept;
+  const fromEnv = deploymentSetting('SESSION_SECRET');
   if (fromEnv) {
-    cachedSecret = new TextEncoder().encode(fromEnv);
-    return cachedSecret;
+    const secret = new TextEncoder().encode(fromEnv);
+    cachedSecrets.set(whose, secret);
+    return secret;
   }
   const minted = randomBytes(32).toString('base64');
   const [row] = await database`
@@ -123,8 +136,9 @@ export async function sessionSecret() {
     ON CONFLICT (id) DO UPDATE SET
       session_secret = COALESCE(secrets.session_secret, EXCLUDED.session_secret)
     RETURNING session_secret`;
-  cachedSecret = new TextEncoder().encode(row.session_secret);
-  return cachedSecret;
+  const secret = new TextEncoder().encode(row.session_secret);
+  cachedSecrets.set(whose, secret);
+  return secret;
 }
 
 // ── The directory's code for a journal, 2026-10-07 ─────────────────────────
@@ -171,7 +185,7 @@ export async function verifyPassword(password, stored) {
 export async function passwordSource() {
   const { password_hash } = await pull_secrets();
   if (password_hash) return 'journal';
-  if (process.env.SESSION_PASSWORD) return 'environment';
+  if (deploymentSetting('SESSION_PASSWORD')) return 'environment';
   return null;
 }
 
@@ -187,7 +201,7 @@ export async function passwordSource() {
 // 1/I/l, because it is read off a screen and typed back in.
 const CODE_ALPHABET = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
 
-function mintClaimCode() {
+export function mintClaimCode() {
   const bytes = randomBytes(8);
   const chars = Array.from(bytes, b => CODE_ALPHABET[b % CODE_ALPHABET.length]).join('');
   return `${chars.slice(0, 4)}-${chars.slice(4)}`;
@@ -318,9 +332,9 @@ export async function describe_secrets() {
   const tail = v => (v ? `…${String(v).slice(-4)}` : null);
   return {
     password: await passwordSource(),
-    session_secret: process.env.SESSION_SECRET ? 'environment' : row.session_secret ? 'journal' : null,
+    session_secret: deploymentSetting('SESSION_SECRET') ? 'environment' : row.session_secret ? 'journal' : null,
     anthropic_key: row.anthropic_key
       ? { source: 'journal', tail: tail(row.anthropic_key) }
-      : process.env.ANTHROPIC_API_KEY ? { source: 'environment', tail: tail(process.env.ANTHROPIC_API_KEY) } : null,
+      : deploymentSetting('ANTHROPIC_API_KEY') ? { source: 'environment', tail: tail(deploymentSetting('ANTHROPIC_API_KEY')) } : null,
   };
 }

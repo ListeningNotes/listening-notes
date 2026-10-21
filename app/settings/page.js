@@ -170,6 +170,9 @@ export default function SettingsPage({ layered = false }) {
   const [checking, setChecking] = useState(true);
   const [authed, setAuthed] = useState(false);
   const [settings, setSettings] = useState(null);
+  // A journal on a deployment that hosts many (app/api/settings): its address
+  // is the hosting directory's and its updates come with each release.
+  const [hosted, setHosted] = useState(false);
 
   const [address, setAddress] = useState('');
 
@@ -177,6 +180,7 @@ export default function SettingsPage({ layered = false }) {
     const s = await fetch('/api/settings').then(r => r.json());
     const row = s.settings || {};
     setSettings(row);
+    setHosted(s.hosted === true);
     setAddress(row.site_address || '');
   }, []);
 
@@ -256,19 +260,24 @@ export default function SettingsPage({ layered = false }) {
           <p className="st-kicker">The machinery behind your journal.</p>
         </header>
 
-        <Section
-          title="This journal’s address"
-          note="Where your card’s code points. Change it if you move the journal to a domain of your own."
-          onSave={async () => {
-            await send('/api/settings', { site_address: address });
-            // The code on the card encodes the address, so it is pressed
-            // again once the new one is on the row. Quietly: what happened
-            // is in the server's log, not on this form.
-            await fetch('/api/portrait/code', { method: 'POST' }).catch(() => {});
-          }}
-        >
-          <input className="st-field" value={address} onChange={e => setAddress(e.target.value)} placeholder="yourname.example.com" inputMode="url" autoCapitalize="none" autoComplete="off" />
-        </Section>
+        {/* Not on a hosted journal (2026-10-20): its address is the hosting
+            directory's, and moving to a domain of its own is a step of its
+            own (hosted journals, step 7). */}
+        {!hosted && (
+          <Section
+            title="This journal’s address"
+            note="Where your card’s code points. Change it if you move the journal to a domain of your own."
+            onSave={async () => {
+              await send('/api/settings', { site_address: address });
+              // The code on the card encodes the address, so it is pressed
+              // again once the new one is on the row. Quietly: what happened
+              // is in the server's log, not on this form.
+              await fetch('/api/portrait/code', { method: 'POST' }).catch(() => {});
+            }}
+          >
+            <input className="st-field" value={address} onChange={e => setAddress(e.target.value)} placeholder="yourname.example.com" inputMode="url" autoCapitalize="none" autoComplete="off" />
+          </Section>
+        )}
 
         {/* The Board, after the address it lists. The switch was here on
             2026-10-07 as "Be findable", went to the head of the list that
@@ -317,11 +326,15 @@ export default function SettingsPage({ layered = false }) {
 
         {/* Here as well as in setup, for anyone who skipped it there, and
             for a copy whose updater was switched off or never arrived. It
-            says so itself when it is already on. */}
-        <div className="st-section">
-          <h2 className="st-h">Automatic updates</h2>
-          <UpdateSwitch explain />
-        </div>
+            says so itself when it is already on. Not on a hosted journal
+            (2026-10-20), which is updated with every release and has no
+            repository of its own to run an updater on. */}
+        {!hosted && (
+          <div className="st-section">
+            <h2 className="st-h">Automatic updates</h2>
+            <UpdateSwitch explain />
+          </div>
+        )}
 
         <div className="st-section">
           <h2 className="st-h">On your home screen</h2>

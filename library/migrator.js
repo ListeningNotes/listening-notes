@@ -109,7 +109,8 @@ function pendingFiles(done) {
 // DATABASE_URL to the pooled address and DATABASE_URL_UNPOOLED to the direct
 // one; a hand-pasted string is usually direct already. Prefer the unpooled
 // variable, and failing that strip the `-pooler` marker off the host.
-export function directDatabaseUrl() {
+export function directDatabaseUrl(given = '') {
+  if (given) return given.replace(/-pooler(?=\.)/, '');
   const unpooled = process.env.DATABASE_URL_UNPOOLED;
   if (unpooled) return unpooled;
   const pooled = process.env.DATABASE_URL;
@@ -127,9 +128,10 @@ const LEDGER = `
 
 // The whole of it. Returns what it did so a caller can log it; throws only if
 // a migration itself fails, because a database that did not finish migrating
-// is not a database the site should serve from.
-export async function bringUpToDate({ log = () => {} } = {}) {
-  const url = directDatabaseUrl();
+// is not a database the site should serve from. `url` is a hosted journal's
+// way in (library/database_connection.js); without one, this copy's own.
+export async function bringUpToDate({ log = () => {}, url: given = '' } = {}) {
+  const url = directDatabaseUrl(given);
   if (!url) {
     log('no DATABASE_URL — skipping migrations');
     return { applied: [], skipped: true };
