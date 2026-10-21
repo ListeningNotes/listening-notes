@@ -29,6 +29,20 @@
 //   npm run hosting-directory -- check <address>
 //       Opens the journal at an address and says whose it is.
 //
+//   npm run hosting-directory -- move <address> [--yes]
+//       Brings a journal that already has a database onto this deployment,
+//       at a new address — Miyel's first, from www.listeningnotes.blog to
+//       her own name under the domain (her name for the command,
+//       2026-10-20). The way in is read off the clipboard, as for place. Without --yes it says what
+//       it found and what it would do, and changes nothing. With --yes it
+//       places the journal, writes its new address into it, moves its
+//       listing on the Board with it when it keeps the Board itself, and
+//       clears its card's code, which the card presses again for the new
+//       address the first time its keeper opens it. It refuses a journal
+//       that would have no way back in at the new address: a password kept
+//       in the deployment's settings is never read by one that hosts
+//       journals, and Face ID belongs to the old address.
+//
 // Off a Mac — a fork's keeper — the three come from HOSTING_DIRECTORY_URL,
 // HOSTING_DIRECTORY_KEY and, for place, JOURNAL_DATABASE_URL.
 
@@ -96,6 +110,29 @@ async function whoseIs(way) {
   }
 }
 
+// What a journal holds that a move has to know about. Reads, never writes.
+async function lookAt(way) {
+  const sql = neon(way);
+  const maybe = async (query, fallback) => { try { return await query; } catch { return fallback; } };
+  const [settings] = await sql`
+    SELECT keeper_name, site_address, setup_complete, listing_code IS NOT NULL AS listed
+    FROM settings WHERE id = 1`;
+  const [vault] = await maybe(sql`
+    SELECT password_hash IS NOT NULL AS password, spare_key_hash IS NOT NULL AS spare,
+           anthropic_key IS NOT NULL AS ai_key
+    FROM secrets WHERE id = 1`, []);
+  const keys = await maybe(sql`SELECT made_for FROM keyring`, []);
+  const [entries] = await sql`SELECT count(*)::int AS n FROM entries`;
+  const [board] = await sql`SELECT to_regclass('public.directory') IS NOT NULL AS kept`;
+  return { settings: settings || {}, vault: vault || {}, keys, entries: entries.n, keepsTheBoard: board.kept };
+}
+
+// The same database, whichever of its two doors a way in names.
+const sameDatabase = (a, b) => {
+  const door = way => { const u = new URL(way); u.hostname = u.hostname.replace('-pooler.', '.'); u.search = ''; return u.toString(); };
+  try { return door(a) === door(b); } catch { return false; }
+};
+
 const [, , what, address] = process.argv;
 
 if (what === 'key') {
@@ -147,6 +184,78 @@ if (what === 'key') {
   const journal = await journalAt(address);
   if (!journal) fail(`Nobody is at ${address}.`);
   console.log(`${journal.host} opens ${await whoseIs(journal.way)}.`);
+} else if (what === 'move') {
+  if (!address) fail('Where to? npm run hosting-directory -- move name.listeningnotes.blog');
+  const yes = process.argv.includes('--yes');
+  readyTheDirectory();
+  const way = clipboard();
+  if (!looksLikeAWayIn(way)) fail('The clipboard does not hold a connection string. Copy the journal\'s from Neon first.');
+  const { tidyHost, journalAt, place_journal } = await import('../library/hosting_directory.js');
+  const { tidyJournal } = await import('../library/return_address.js');
+  const to = tidyHost(address);
+
+  let found;
+  try {
+    found = await lookAt(way);
+  } catch (error) {
+    fail(`That way in does not open a journal (${error?.message || error}). Nothing changed.`);
+  }
+  const { settings, vault, keys, entries, keepsTheBoard } = found;
+  const from = tidyJournal(settings.site_address);
+  const whose = settings.keeper_name ? `${settings.keeper_name}'s journal` : 'A journal nobody has named';
+  if (settings.setup_complete !== true) fail(`${whose} was never set up, so there is nothing to move. Nothing changed.`);
+  const already = await journalAt(to);
+  if (already && !sameDatabase(already.way, way)) fail(`Another journal is already at ${to}. Nothing changed.`);
+  if (from === to && already) {
+    console.log(`${whose} is already at ${to}. Nothing changed.`);
+    process.exit(0);
+  }
+  if (!vault.password && !vault.spare) {
+    fail([
+      `${whose} keeps no password and no spare key of its own, so nobody could sign in at ${to}:`,
+      'a password in the deployment\'s settings is never read by one that hosts journals.',
+      'Choose a password in Settings → Your keys, or make a spare key there, then move it. Nothing changed.',
+    ].join('\n'));
+  }
+
+  const oldKeys = keys.filter(key => tidyHost(key.made_for) !== to).length;
+  const listed = keepsTheBoard && from
+    ? (await neon(way)`SELECT 1 FROM directory WHERE address = ${from}`).length > 0
+    : false;
+  console.log(`${whose}, ${entries} ${entries === 1 ? 'entry' : 'entries'}, at ${from || 'no address yet'}.`);
+  console.log(`Moving it to ${to}:`);
+  console.log(`  - It opens there with its ${vault.password ? 'password' : 'spare key'}.`);
+  if (oldKeys) console.log(`  - Its ${oldKeys} Face ID ${oldKeys === 1 ? 'key belongs' : 'keys belong'} to the old address; add one again in Settings → Your keys once signed in.`);
+  if (!vault.ai_key) console.log('  - It keeps no AI key of its own. If it used one from the deployment\'s settings, type it into Settings after the move.');
+  if (listed) console.log('  - Its listing on the Board moves with it.');
+  else if (settings.listed) console.log('  - It lists itself on the Board again, at the new address, the next time its keeper opens it.');
+  console.log('  - Its card\'s code is pressed again for the new address the first time its keeper opens it.');
+  if (from && from !== to) console.log(`  - Links to ${from} go on working while something there sends them on, as FORWARDING_ADDRESS does for the front door's www.`);
+  if (!yes) {
+    console.log(`\nNothing has changed. To move it: npm run hosting-directory -- move ${to} --yes`);
+    process.exit(0);
+  }
+
+  // The directory first: until the journal calls itself by its new address,
+  // nothing anybody reads has changed, and a move stopped halfway is begun
+  // again by running it again.
+  try {
+    if (!already) await place_journal(to, way, { fresh: true });
+  } catch (error) {
+    fail(`${error?.message || error} Nothing changed.`);
+  }
+  const sql = neon(way);
+  await sql.transaction([
+    sql`UPDATE settings SET site_address = ${to}, portrait_code = '', portrait_code_url = '' WHERE id = 1`,
+    ...(listed ? [
+      sql`DELETE FROM directory_records WHERE address = ${to}`,
+      sql`DELETE FROM directory WHERE address = ${to}`,
+      sql`UPDATE directory_records SET address = ${to} WHERE address = ${from}`,
+      sql`UPDATE directory SET address = ${to} WHERE address = ${from}`,
+    ] : settings.listed ? [sql`UPDATE settings SET listing_code = NULL WHERE id = 1`] : []),
+  ]);
+  console.log(`\nMoved. ${whose} is at ${to}, and calls itself that.`);
+  console.log(`Sign in at https://${to}/login once this deployment hosts journals.`);
 } else {
-  console.log('key | remember | place <address> | list | check <address>');
+  console.log('key | remember | place <address> | list | check <address> | move <address> [--yes]');
 }

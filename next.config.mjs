@@ -1,7 +1,51 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
+// ── Forwarding, 2026-10-20 ────────────────────────────────────────────────
+// On a deployment that hosts journals, the front door's address used to be
+// one journal's (library/hosting_directory.js, forwarding): Miyel's, at
+// www.listeningnotes.blog until the front door took the domain. Its pages
+// are sent on to where it lives now (FORWARDING_ADDRESS, her name), here at
+// the edge, before anything runs, so a forward costs nothing:
+//
+//   www.      every page, at any path. Not /api, which the journal answers
+//             there itself, because a report sent from a browser cannot
+//             follow a forward.
+//   the bare  everything the front door does not answer itself, which was
+//   domain    the same journal's before the move; and its home, when the
+//             link says the journal is what it wants — a visit from a copy
+//             (?from=, ?as=) or an Add from another journal's beacon (?add=).
+//
+// Permanent, with the query carried along, so a link or a card's code that
+// knew the old address learns the new one. Read when the site is built, so a
+// change to either setting is a redeploy.
+function forwards() {
+  const tidy = value => String(value || '').trim().toLowerCase()
+    .replace(/^https?:\/\//, '').replace(/\/.*$/, '').replace(/\.$/, '');
+  const domain = tidy(process.env.HOSTED_DOMAIN).replace(/:\d+$/, '');
+  const to = tidy(process.env.FORWARDING_ADDRESS);
+  if (!process.env.HOSTING_DIRECTORY_URL || !domain || !to) return [];
+  // Plain http for a test on this machine, where the journals are
+  // name.localhost (docs/OPERATIONS.md, The hosting directory).
+  const there = `${/^([a-z0-9-]+\.)*localhost(:\d+)?$/.test(to) ? 'http' : 'https'}://${to}`;
+  const at = host => ({ type: 'host', value: host.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') });
+  const frontDoorAnswers = [
+    'api/front-door(?:/|$)', 'get$', '_next/',
+    'icon\\.png$', 'apple-icon\\.png$', 'manifest\\.webmanifest$', 'favicon\\.ico$',
+  ];
+  return [
+    { source: '/:path((?!api(?:/|$)).*)', has: [at(`www.${domain}`)], destination: `${there}/:path`, permanent: true },
+    { source: `/:path((?!${frontDoorAnswers.join('|')}).+)`, has: [at(domain)], destination: `${there}/:path`, permanent: true },
+    ...['from', 'as', 'add'].map(key => ({
+      source: '/', has: [at(domain), { type: 'query', key }], destination: `${there}/`, permanent: true,
+    })),
+  ];
+}
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  async redirects() {
+    return forwards();
+  },
   // Who is allowed to ask the dev server for dev-only things. Next blocks
   // every origin but localhost by default, and the block is quiet in the worst
   // way: the page still server-renders, so it looks like it loaded, and then

@@ -106,7 +106,7 @@ The library — logic, no visuals
     gold_burst.js              The gold sparkle fired when a Masterpiece is marked
     handoff.js                 What the wall leaves for the entry layer: the tapped record's first screen, the wall's order for swiping to neighbours, and how a layer arrived
     front_door.js              The front door: whether an address is free, the places left, making a journal through Neon's API, and clearing one nobody set up
-    hosting_directory.js       On a deployment that hosts many journals: which journal lives at which address, the way into each one's database sealed, and the journal a request is for
+    hosting_directory.js       On a deployment that hosts many journals: which journal lives at which address, the way into each one's database sealed, the journal a request is for, and the old address a journal moved off (FORWARDING_ADDRESS)
     install_guide.js           What /get needs: the deploy button's URL and the ten steps with their screenshots
     letterhead.js              LN. Admin letters: the canonical keeper's public key, checking a letter's seal, that it is for this journal and newer than the last, and pinning it as the one letter in messages; and the letter a journal writes itself asking for a copy (ask_for_copy), the one with a door
     keyring.js                 The passkeys: a row per device's key, the public half only; making a key and opening the door with one (@simplewebauthn/server); a key belongs to the exact address it was made at
@@ -117,7 +117,7 @@ The library — logic, no visuals
     outbox.js                  Handing a record, or a song, to somebody in the book from this copy — this server to theirs, never the browser — and a wave, and a reply to a message
     people_actions.js          The address book: the people table, pinning, and asking a journal its keeper's name
     portrait_code.js           The press: the portrait made into the journal's QR code on the server — a dot of ink in every photo module, proved by the strictest reader on both page colours
-    report_actions.js          Problems keepers wrote in from their desks — the reports table
+    report_actions.js          Problems keepers wrote in from their desks — the reports table, and whether this journal receives them
     return_address.js          The back of the envelope — a sender's name and journal kept in their own browser — the one spelling an address is kept in, and addressFrom, what a copy calls itself from the request that reached it
     secrets.js                 The vault: the session secret, the password hash, the spare key's hash, the claim code, the setup window, and two retired key columns. Database first, environment second; seal_claim writes the claim inside a restore's own transaction; the spare key is made, described and spent here
     sent_actions.js            The `sent` table: a send that landed, written down; what is still out, read against came_back; a row removed
@@ -140,7 +140,7 @@ The update button
 The other scripts — run by hand or by a machine, never by the site
   scripts/backup.mjs             Every table to $BACKUP_DIR/<timestamp>/ with migrations/ beside it; 30 kept; carries secrets; counts as a copy (docs/OPERATIONS.md)
   scripts/letterhead.mjs         The canonical keeper's, on her Mac: makes the LN. Admin key (its private half in the Keychain) and seals and posts a letter to the journals it concerns
-  scripts/hosting_directory.mjs  The hosting directory by hand: its key and way in kept in the Keychain, a journal placed at an address (way in off the clipboard), the addresses listed and checked
+  scripts/hosting_directory.mjs  The hosting directory by hand: its key and way in kept in the Keychain, a journal placed at an address (way in off the clipboard), the addresses listed and checked, a journal moved in at a new address
   scripts/restore.mjs            Puts a backup or an export back — a folder, the zip from Make a copy, or a bare journal.json; a dry run without --yes; empties only the tables the file holds. The restore itself is library/unpacking.mjs
   scripts/prepare_database.mjs   Runs before next build: migrates and prints the claim notice; never fails the build
 

@@ -62,6 +62,36 @@ export async function hostHere() {
   return tidyHost(asked.get('x-forwarded-host') || asked.get('host'));
 }
 
+// ── The address a journal moved from ──────────────────────────────────────
+// FORWARDING_ADDRESS (Miyel's name, 2026-10-20): where the journal that used
+// to live at the front door's address lives now — hers, which was
+// www.listeningnotes.blog until the front door took the domain (hosted
+// journals, step 5). Every copy that knew the old address goes on asking
+// there: address books, sends, waves, messages, the Board, problem reports,
+// a card's code on somebody's phone. So it stays that journal's, for good.
+// Its pages are sent on to the new address at the edge (next.config.mjs),
+// and what is asked of /api there is answered here, by the journal itself,
+// as if it had been asked at the new one: a problem report from a browser is
+// checked with the server before it is sent, and that check cannot follow a
+// forward.
+//
+// The front door keeps the bare domain; the old address is its www.
+export function forwarding() {
+  const domain = tidyHost(process.env.HOSTED_DOMAIN || '');
+  const to = tidyHost(process.env.FORWARDING_ADDRESS || '');
+  if (!hosting() || !domain || !to) return null;
+  return { from: `www.${domain}`, to };
+}
+
+// The address of the journal a request made to `host` is for: the same
+// address, except the one a journal moved from, which is that journal's new
+// one.
+export function journalAddress(host) {
+  const at = tidyHost(host);
+  const moved = forwarding();
+  return moved && at === moved.from ? moved.to : at;
+}
+
 export class NoJournalHere extends Error {
   constructor(host) {
     super('There is no journal at this address.');
@@ -159,20 +189,22 @@ export async function journalAt(host) {
 // NoJournalHere for an address the directory does not know.
 export async function journalHere() {
   if (!hosting()) return null;
-  const host = await hostHere();
+  const host = journalAddress(await hostHere());
   const journal = await journalAt(host);
   if (!journal) throw new NoJournalHere(host);
   return journal;
 }
 
 // What a server's memory of one journal is filed under, so nothing it keeps
-// for one journal is handed to another: the address the request was made to
-// on a copy that hosts many, and '' on a copy that hosts one. An address with
-// no journal at it — the front door, or nobody's — files under its own name
-// too; nothing about a journal is ever read there to be kept.
+// for one journal is handed to another: the address of the journal the
+// request is for on a copy that hosts many — an old address files under the
+// new one, so a journal asked at both is still one journal — and '' on a copy
+// that hosts one. An address with no journal at it — the front door, or
+// nobody's — files under its own name too; nothing about a journal is ever
+// read there to be kept.
 export async function memoryOf() {
   if (!hosting()) return '';
-  return await hostHere();
+  return journalAddress(await hostHere());
 }
 
 // Every address in the directory and when each arrived — never a way in.

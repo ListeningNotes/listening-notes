@@ -32,7 +32,7 @@
 // cleared: a journal placed by hand, or set up, or written in, stays.
 
 import { neon } from '@neondatabase/serverless';
-import { hosting, tidyHost, journalAt, place_journal, count_journals, made_at_signup, unplace_journal } from './hosting_directory.js';
+import { hosting, forwarding, tidyHost, journalAt, place_journal, count_journals, made_at_signup, unplace_journal } from './hosting_directory.js';
 import { mintClaimCode } from './secrets.js';
 
 // ── The front door's own address ──────────────────────────────────────────
@@ -43,11 +43,13 @@ export function hostedDomain() {
   return tidyHost(process.env.HOSTED_DOMAIN || '');
 }
 
+// Its www. too, unless a journal used to live there (FORWARDING_ADDRESS,
+// library/hosting_directory.js): then www. is that journal's, for good.
 export function isFrontDoor(host) {
   const domain = hostedDomain();
   if (!hosting() || !domain) return false;
   const at = tidyHost(host);
-  return at === domain || at === `www.${domain}`;
+  return at === domain || (at === `www.${domain}` && !forwarding());
 }
 
 // ── Addresses ─────────────────────────────────────────────────────────────

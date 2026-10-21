@@ -20,6 +20,7 @@ import { journalHere, NoJournalHere, hostHere } from '../library/hosting_directo
 import { isFrontDoor, hostedDomain, placesLeft } from '../library/front_door';
 import FrontDoor from '../components/main_components/FrontDoor';
 import { isCurrentCode } from '../library/portrait_code';
+import { takesReports } from '../library/report_actions';
 import { SANDBOX } from '../library/version';
 
 // 300 was added here for an hour, for prompt answers set light. They are set
@@ -266,6 +267,10 @@ export default async function RootLayout({ children, layer }) {
   // because the build number lives in the press, which is server-only, and
   // the card, which acts on the answer, is not.
   settings.portrait_code_stale = Boolean(all.portrait_code_url) && !isCurrentCode(all.portrait_code_url);
+  // Whether problem reports land here, for the inbox. Decided on the server,
+  // because the address a journal moved from is known only to the server
+  // (library/report_actions.js).
+  settings.takes_reports = takesReports(all.site_address);
   // has_note used to ride along here — a boolean saying an essay existed, so
   // the about page could decide whether to draw a link to it without carrying
   // 3.5KB of prose into every page on the site. Nothing links to the essay any

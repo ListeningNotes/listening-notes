@@ -18,7 +18,6 @@ import { useBookplate } from '../../../components/main_components/Bookplate';
 import { albumKey } from '../../../hooks/useListeningBeacon';
 import { lookup_key, splitNotes } from '../../../library/entry_formatter';
 import { TRACK_NOTE_KEY } from '../../../hooks/useListeningSession';
-import { REPORTS_URL } from '../../../library/version';
 import { COPY_MADE } from '../../../components/main_components/JournalCopy';
 
 // ── What became of a send ──────────────────────────────────────────────────
@@ -178,7 +177,7 @@ export default function Inbox({ layered = false, inPane = false, sent: sentFromB
   const router = useRouter();
   // Who this copy belongs to, carried on every link out to another journal
   // so the form there knows who is sending. See carrySender.
-  const { keeper_name: myName, site_address: myAddress } = useBookplate();
+  const { keeper_name: myName, site_address: myAddress, takes_reports: takesReports } = useBookplate();
   const me = { name: myName, address: myAddress };
 
   const [authed, setAuthed] = useState(false);
@@ -273,10 +272,10 @@ export default function Inbox({ layered = false, inPane = false, sent: sentFromB
   // Problems keepers wrote in from their desks (library/report_actions.js).
   // Only the copy the software comes from ever receives any, so only that
   // copy has the tab — on every other one it was a folder that could never
-  // hold anything (Miyel, 2026-09-22). Known by whether this copy's own
-  // address is where REPORTS_URL points, www or not.
+  // hold anything (Miyel, 2026-09-22). Whether this is that copy is decided
+  // on the server (takes_reports), which also knows the address a journal
+  // moved from.
   const bare = value => (value || '').replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, '').toLowerCase();
-  const takesReports = !!myAddress && bare(myAddress) === bare(REPORTS_URL);
   const [reports, setReports] = useState([]);
   const [repLoading, setRepLoading] = useState(true);
 

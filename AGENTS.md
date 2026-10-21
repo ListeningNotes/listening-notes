@@ -35,7 +35,7 @@ The real ones, from `package.json`. There are no others.
 | `npm run backup` | Every table to `$BACKUP_DIR/<timestamp>/` (`scripts/backup.mjs`; see docs/OPERATIONS.md). |
 | `npm run restore -- <path>` | Dry run of a restore; add `--yes` to write (`scripts/restore.mjs`). |
 | `npm run letterhead -- …` | The canonical keeper's, on her Mac: `keys` makes the LN. Admin key, `send <journal> --said "…"` seals and posts a letter (`scripts/letterhead.mjs`; see docs/OPERATIONS.md). |
-| `npm run hosting-directory -- …` | The hosting directory by hand, on a deployment that hosts journals: `key`, `remember`, `place <address>` (the way in read off the clipboard), `list`, `check <address>` (`scripts/hosting_directory.mjs`; see docs/OPERATIONS.md). |
+| `npm run hosting-directory -- …` | The hosting directory by hand, on a deployment that hosts journals: `key`, `remember`, `place <address>` (the way in read off the clipboard), `list`, `check <address>`, `move <address>` (a dry run; add `--yes` to move) (`scripts/hosting_directory.mjs`; see docs/OPERATIONS.md). |
 
 **Migrations have no command.** The files in `migrations/` apply themselves,
 in filename order, on every server start (`instrumentation.js` →
@@ -262,9 +262,12 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   many journals: which journal lives at which address, the way into each
   one's database sealed with `HOSTING_DIRECTORY_KEY`, `journalHere` (the
   journal a request is for, or `NoJournalHere`), `memoryOf` (what a server's
-  memory of one journal is filed under) and `deploymentSetting` (the
-  deployment's settings, which speak for no hosted journal). Nothing runs
-  without `HOSTING_DIRECTORY_URL`.
+  memory of one journal is filed under), `deploymentSetting` (the
+  deployment's settings, which speak for no hosted journal), and
+  `forwarding` and `journalAddress`: with `FORWARDING_ADDRESS`, the front
+  door's `www.` is the old address of the journal that moved off it, and is
+  answered as that journal. Nothing runs without `HOSTING_DIRECTORY_URL`.
+  The forwarding of its pages is in `next.config.mjs`.
 - `install_guide.js` — what `/get` needs: the deploy button's URL and the ten
   install steps with their screenshots and the rings drawn over them.
 - `keyring.js` — the passkeys (`keyring`): a row per device's key, the
@@ -306,7 +309,8 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   code with a dot of ink per module, proved by decoding with jsQR on both page
   colours; `CODE_BUILD` is bumped whenever the drawing changes.
 - `report_actions.js` — the `reports` table: problems keepers wrote in from
-  their desks, received by the canonical copy.
+  their desks, received by the canonical copy; `takesReports`, whether this
+  journal is that copy, counting the address it moved from.
 - `return_address.js` — a sender's name and journal kept in their own browser
   for the send and message forms; `tidyAddress`, `tidyJournal` and
   `journalUrl`, the one spelling an address is kept in; `addressFrom`, what
@@ -410,8 +414,10 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - `hosting_directory.mjs` — the hosting directory by hand until signup
   places journals: makes the directory's key (`key`) and keeps the
   directory's way in (`remember`) in the Keychain, places a journal at an
-  address with the way in read off the clipboard (`place`), and lists and
-  checks addresses. Never prints a way in.
+  address with the way in read off the clipboard (`place`), lists and
+  checks addresses, and moves a journal in at a new address (`move`: its
+  address, its listing on the Board, its card's code; refused without a way
+  back in). Never prints a way in.
 
 ## Top-level files whose names are Next's, not ours
 

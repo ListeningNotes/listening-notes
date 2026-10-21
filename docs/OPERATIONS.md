@@ -283,7 +283,8 @@ every journal again with it: the old key opens nothing once the deployment
 holds the new one.
 
 **The front door** is the deployment's own address, `HOSTED_DOMAIN` and its
-`www.` (`library/front_door.js`). There somebody starts a journal: Neon makes
+`www.` — or only the bare domain, once a journal has moved off `www.` (below)
+(`library/front_door.js`). There somebody starts a journal: Neon makes
 it a database of its own, the front door brings it up to date and places it,
 and the browser goes to the new address's setup with the claim code after a
 `#`, which no server is sent. Its settings: `NEON_API_KEY` (made in Neon's
@@ -293,6 +294,63 @@ wants the organisation named, `NEON_REGION` (default `aws-us-east-1`), and
 from can start three journals an hour, and a journal the front door made that
 nobody set up or wrote in is taken down after a day. Nothing placed by hand
 is ever taken down.
+
+### Moving a journal in
+
+A journal that already has a database comes onto the deployment at a new
+address with `move`. The canonical journal is the first: it lived at
+`www.listeningnotes.blog`, the address the front door takes, and every copy
+out there knows that address — address books, sends, waves, messages, the
+Board, problem reports, a card's code on somebody's phone. So it moves to its
+keeper's own name under the domain, and the old address goes on reaching it.
+
+**Before**, at the journal's old address: a password chosen in Settings →
+Your keys, or a spare key made there. A password kept in the deployment's
+settings (`SESSION_PASSWORD`) is never read by a deployment that hosts
+journals, and Face ID belongs to the address it was added at, so without one
+of the two nobody could sign in at the new address. The move refuses until
+there is one. An AI key kept in the deployment's settings is not read either;
+type it into Settings after the move.
+
+```bash
+npm run hosting-directory -- move name.listeningnotes.blog
+```
+
+with the journal's connection string on the clipboard, says what it found
+and what it would do, and changes nothing. With `--yes` it places the
+journal at the new address, writes the address into the journal, moves its
+listing on the Board with it when the journal keeps the Board itself, and
+clears its card's code, which the card presses again for the new address the
+first time its keeper opens it signed in. Running it again is harmless.
+
+**`FORWARDING_ADDRESS`**, in the deployment's settings, names where the
+journal that lived at `www.` lives now (`library/hosting_directory.js`,
+`forwarding`). With it, `www.` is that journal's for good: its pages are sent
+on to the new address at the edge (`next.config.mjs`), with the rest of the
+link, and `/api` there is answered by the journal itself, as if asked at its
+new address — a problem report sent from a browser is checked with the
+server first, and that check cannot follow a forward. On the bare domain,
+everything the front door does not answer itself is sent on too, and so is
+its home when the link carries `?from=`, `?as=` or `?add=`. Read when the
+site is built, so changing it is a redeploy.
+
+**The order on the day**, so the journal is never unreachable:
+
+1. Deploy the new code without the hosting settings: it is still a copy
+   serving one journal, exactly as before.
+2. `move … --yes`. The journal now calls itself by its new address, which
+   does not answer yet; it is still read at the old one.
+3. Add the hosting settings (`HOSTING_DIRECTORY_URL`, `HOSTING_DIRECTORY_KEY`,
+   `HOSTED_DOMAIN`, `FORWARDING_ADDRESS`, `NEON_API_KEY`), add
+   `*.listeningnotes.blog` to the project's domains, serve the bare domain
+   itself rather than sending it to `www.`, and redeploy.
+4. Sign in at the new address with the password or the spare key, and add
+   Face ID again in Settings → Your keys.
+
+A copy that knew the old address keeps using it, and everything it asks
+arrives. What it has not learned is that the two addresses are one journal:
+a send or a message from the new address reaches it from an address its
+address book does not hold.
 
 ## LN. Admin letters
 
