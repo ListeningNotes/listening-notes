@@ -1,26 +1,27 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // components/main_components/ListenBar.js
-// The way into a listen: a bar at the foot of home with one word on it.
+// The way into a listen: a bar at the foot of home. It is the session, closed.
 //
 // ── The one thing on the site that looks like a button ────────────────────
 // Because it is the one thing that *starts* something (Miyel's brief, home and
 // the session, 2026-10-21). That is a deliberate exception to "a control is
 // the mark, not a mark in a container" (DECISIONS, 2026-09-17), and it
 // licenses no second one anywhere else. A raised panel on the page colour,
-// the word in the display face, and a grip at the top — drawn now, while
-// nothing lifts, because the bar is the session closed and stage 2 of the
-// brief raises it from here.
+// and a grip at the top, because the session rises out of it and is lowered
+// back into it.
 //
-// ── The ring's job, with the ring's code behind it ────────────────────────
+// ── Two states, one object ────────────────────────────────────────────────
+// At rest it says Listen, and pressing it raises the session as a sheet over
+// home, opening on the picker. With a listen put down — the sheet lowered
+// rather than ended (Discard, Save draft and Post end it) — it carries that
+// listen: the record's cover, the track that was lit, and the live dot while
+// the beacon is saying so. Pressing it raises the listen again, words and
+// all. Both are the same address, /session, so the route is the one way in
+// and the sheet is the way it is shown over home.
+//
 // It replaced the ring on the beacon's rule and the chevron under it (Miyel,
-// 2026-10-21: "everything leaves in exchange for this"). It does exactly what
-// the ring did. With nothing in hand, the beacon's floor becomes the picker
-// where it stands — `onStart` is HomeNav's openPicker, the ring's own press,
-// moved and not changed. With a record in hand it is a link to /session and
-// says Resume, because a door you can come back through has to say so (her
-// pick, the same day). Stage 2 gives that state the record's cover, the track
-// and a live dot.
+// 2026-10-21: "everything leaves in exchange for this").
 //
 // Owner only, and drawn only once the lock has said so: a visitor has no
 // listen to start, and the writing routes check the wristband for themselves
@@ -28,26 +29,52 @@
 'use client';
 
 import Link from 'next/link';
+import { TrackLength } from '../../library/session_timers';
 
-export default function ListenBar({ held, onStart }) {
+export default function ListenBar({ held, live = false }) {
   // A line and nothing else; the bar is what you press, not the grip.
   const grip = <span className="lb-grip" aria-hidden="true" />;
 
-  if (held) {
+  if (!held) {
     return (
-      <Link href="/session" className="lb" title={`Resume ${held.album}`} aria-label="Resume listen">
+      <Link href="/session" className="lb">
         {grip}
-        Resume
+        Listen
       </Link>
     );
   }
 
-  /* A button and not a link, because it does not navigate: floor one becomes
-     the picker where it stands, the way the ring's press always did. */
+  // The track that was lit when the sheet went down, or the record's own
+  // name before any track has been pressed. Under it, which track and how
+  // long — the moment, where the beacon above says the record.
+  const lit = held.lit?.title ? held.lit : null;
+  const length = lit ? TrackLength(lit.duration) : '';
   return (
-    <button type="button" className="lb" onClick={onStart}>
+    <Link
+      href="/session"
+      className="lb lb--held"
+      title={`Back to ${held.album}`}
+      aria-label={`Back to ${held.album}${lit ? `, ${lit.title}` : ''}`}
+    >
       {grip}
-      Listen
-    </button>
+      {held.artUrl
+        ? <img className="lb-art" src={held.artUrl} alt="" aria-hidden="true" />
+        : <span className="lb-art lb-art--none" aria-hidden="true">♪</span>}
+      <span className="lb-says">
+        <span className="lb-title">{lit ? lit.title : held.album}</span>
+        <span className="lb-under">
+          {lit ? `Track ${lit.number}${length ? ` · ${length}` : ''}` : held.artist}
+        </span>
+      </span>
+      {/* Only while the beacon says so. A listen put down and left goes
+          quiet after twenty minutes (library/needle.js), and the bar never
+          claims what the beacon has stopped claiming. */}
+      {live && (
+        <span className="lb-live">
+          <i aria-hidden="true" />
+          Live
+        </span>
+      )}
+    </Link>
   );
 }

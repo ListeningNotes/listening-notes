@@ -3891,6 +3891,76 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   background: var(--ink-faint);
   opacity: 0.45;
 }
+/* ── Carrying a listen, 2026-10-21 ────────────────────────────────────────
+   The sheet lowered rather than ended: the bar is the listen, closed. The
+   record's cover at the left, the lit track and which one it is, and the
+   live dot at the right while the beacon says so — the beacon above says the
+   record and the bar says the moment. Six taller than at rest, for the cover. */
+.lb--held {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  height: 62px;
+  padding: 9px 14px 9px 9px;
+  text-align: left;
+}
+.lb-art {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+.lb-art--none {
+  display: grid;
+  place-items: center;
+  background: var(--border);
+  color: var(--ink-faint);
+  font-size: 16px;
+}
+.lb-says { min-width: 0; display: flex; flex-direction: column; }
+.lb-title {
+  font-size: 13.5px;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lb-under {
+  margin-top: 3px;
+  font-family: var(--font-label);
+  font-weight: 400;
+  font-size: 9px;
+  letter-spacing: 0.05em;
+  color: var(--ink-faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lb-live {
+  margin-left: auto;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-label);
+  font-weight: 400;
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--live-deep, var(--live));
+}
+/* The one thing that should still glow at night (the mockup's note). */
+[data-theme='dark'] .lb-live { color: var(--live); }
+.lb-live i {
+  display: block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--live) 40%, transparent);
+}
+
 /* One row at the foot at a time: while a correction, a send, a gift or a
    wave has its own bar there, this one stands down, the way the band does. */
 .hn[data-editing] .lb,

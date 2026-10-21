@@ -2459,83 +2459,6 @@ export default function HomeNav() {
     </div>
   );
 
-  // ── The way in: the bar at the foot, 2026-10-21 ──────────────────────────
-  // The ring on the beacon's rule did this until the Listen bar took its
-  // job, and the chevron under it went the same day (Miyel: "everything
-  // leaves in exchange for this"). What follows is the ring's own press,
-  // moved and not changed: the bar opens the picker exactly as the ring
-  // did, flight and all. ListenBar.js has why it is the one thing on the
-  // site shaped like a button; the ring's own history is in git.
-  const openPicker = () => {
-    // ── The beacon shrinks into the bar ──────────────
-    // Miyel, 2026-09-18: "bring back the mini beacon as
-    // the header of the draft/search page, with last log
-    // vs LN logo — I liked the beacon shrinking mini
-    // when you enter session."
-    //
-    // It carried the mark instead for twenty minutes, on
-    // the reasoning that you have not chosen anything yet
-    // and last night's record in the bar is a claim
-    // nobody made. True, and beside the point: the record
-    // up there is not claiming to be tonight's, it is the
-    // beacon, which is the thing this pane is, and
-    // watching it shrink into the row is what makes the
-    // picker feel like the same screen rather than a new
-    // one. The mark is what it falls back to when there
-    // is no record to carry at all.
-    // Found on the pane, not walked up to from the press. This was
-    // `event.currentTarget.closest('.beacon-card')` and it worked for
-    // exactly as long as this control lived inside the beacon's own
-    // meta stack — moving it out from under the artist on 2026-09-18
-    // made `closest` return null, which made `box` undefined, which made
-    // the guard below return, which took the whole flight off without a
-    // word. Miyel: "the animation from the beacon shrinking to mini
-    // seemed smoother before — did something outside of that change?"
-    // It had: this.
-    //
-    // Scoped to the pane because the beacon is drawn once there and the
-    // card is what the cover is leaving.
-    const card = document.querySelector('.hn-pane--home .beacon-card');
-    const art = card?.querySelector('img.beacon-art');
-    const box = art?.getBoundingClientRect();
-    const said = card?.querySelector('.beacon-meta')?.getBoundingClientRect();
-    // A copy of what the card is showing this second,
-    // state and all — Miyel, 2026-09-18: "it's gonna
-    // have to either have a live dot saying now logging,
-    // or it's gonna have to be dull and say last logged.
-    // It is a copy of the real beacon." Including the
-    // open song, because that is what the card says: the
-    // record's name only while nothing is playing.
-    setOnTheBar(onAirAlbum ? {
-      art: onAir,
-      title: onAirTrack || onAirAlbum,
-      artist: onAirArtist,
-      live: isLive,
-    } : null);
-    setChoosing(true);
-    // Never armed on the way in. The × keeps its state
-    // in this component and the picker's markup goes
-    // away and comes back around it, so without this a
-    // picker closed while the × was open — press the
-    // mark, change your mind, leave another way —
-    // reopened with END already showing, which is a
-    // confirmation nobody gave. Blur puts it away too,
-    // but blur is not the only way out of here.
-    setEnding(false);
-    if (!box || !onAir) return;
-    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
-    // Where the record's name is standing, so it can
-    // travel rather than blink out — see wordsFrom.
-    if (said && said.width) wordsFrom.current = said;
-    setLanding({
-      art: onAir,
-      live: isLive,
-      from: { left: box.left, top: box.top, width: box.width, height: box.height },
-      to: null, go: false, ms: TO_THE_BAR_MS, wait: MAKE_ROOM_MS,
-      into: '.hn-bar-beacon .ses-cover',
-    });
-  };
-
   // ── And nothing, for anybody else, 2026-09-27 ───────────────────────────
   // A visitor's slot held the keeper's face with Add and Send either side of
   // it from 2026-09-19 (CallingCard.js, gone). Neither word could do what it
@@ -2804,7 +2727,7 @@ export default function HomeNav() {
                 desk (nav.css, .lb). Not drawn while a record is being chosen:
                 the ring was not either, and pressing it then would open what
                 is already open. */}
-            {authed && !choosing && <ListenBar held={inHand} onStart={openPicker} />}
+            {authed && !choosing && <ListenBar held={inHand} live={isLive} />}
           </div>
           {/* Floor two — the wall, scrolling inside a box of its own, so
               the pane only ever has two stops. The entry's second screen,

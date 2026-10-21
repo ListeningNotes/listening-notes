@@ -678,9 +678,14 @@ export default function SessionPage() {
   // Set while a listen is being thrown away, so the sheet's own way out does
   // not write the draft it is in the middle of deleting.
   const discarding = useRef(false);
+  // Set by Save draft, which ends the listen and keeps its words, so the
+  // sheet's way out knows it is an ending this time and not a lowering.
+  const ending = useRef(false);
   const exit = useLayerExit();
   const layered = useBeforeLeaving(async () => {
     if (discarding.current) return true;
+    const ends = ending.current;
+    ending.current = false;
     // A track note keeps its own words as they are typed (TrackNotePage), so
     // putting one down is only putting the song away. There is no listen to
     // write a draft of.
@@ -689,10 +694,41 @@ export default function SessionPage() {
       return true;
     }
     if (!s.saved && !(await s.saveDraft())) return false;
+    // ── Lowering is not ending, 2026-10-21 ──────────────────────────────
+    // The pull, Escape and the desk's caret put the listen down: the record
+    // stays in hand and the Listen bar carries it until it is raised again
+    // (Miyel's brief, home and the session). Save draft, Discard and Post
+    // are the endings, and only they take the record off the desk.
+    if (!ends && !s.saved && pending?.album) {
+      keepInHand();
+      return true;
+    }
     try { localStorage.removeItem(PENDING_KEY); } catch { /* nothing to clear */ }
     saidSoAboutTheDesk();
     return true;
   });
+
+  // The record stays in hand, and says which track was lit when it was put
+  // down, for the bar to carry: the browser's copy of the draft knows too,
+  // but only once something has been written, and the bar has to say the
+  // track the moment a name is pressed. Then the needle is told to stay.
+  function keepInHand() {
+    const t = s.onAir === null ? null : s.tracks?.[s.onAir];
+    const lit = t ? { title: t.title, number: t.number || s.onAir + 1, duration: t.duration ?? null } : null;
+    try { localStorage.setItem(PENDING_KEY, JSON.stringify({ ...pending, lit })); } catch { /* the bar says the record instead */ }
+    s.putDown();
+    saidSoAboutTheDesk();
+  }
+
+  // Opened cold there is no sheet to lower, so lowering is going home with
+  // the record still in hand — the pull from the top and the mouse's caret
+  // both, the same as over the journal. A draft that will not save keeps
+  // you here, as everywhere.
+  async function lower() {
+    if (!s.saved && !(await s.saveDraft())) return false;
+    keepInHand();
+    return true;
+  }
 
 
   // Back to the picker. Nothing is confirmed and nothing is lost: a listen with
@@ -726,7 +762,7 @@ export default function SessionPage() {
   // way the pull does, and the sheet's own hook writes the draft first;
   // opened cold it puts the record down and shows the picker.
   function saveDraftAndLeave() {
-    if (exit) { exit(); return; }
+    if (exit) { ending.current = true; exit(); return; }
     leave();
   }
 
@@ -756,13 +792,15 @@ export default function SessionPage() {
   // ── The way back, for a mouse, on a listen opened on its own ────────────
   // Over the journal the sheet has a caret and the pull; opened cold — a
   // reload mid-listen, the installed app — there was no way out a mouse
-  // could make. This is Save draft's own move, then the journal, since there
-  // is nothing behind a cold page to go back to. Drawn for a mouse and never
-  // on a phone (.ses-back, entry.css).
+  // could make. This lowers the listen and goes to the journal, since there
+  // is nothing behind a cold page to go back to — the record stays in hand
+  // and the Listen bar carries it there (2026-10-21; it was Save draft's own
+  // move, which ended the listen, until the session became a sheet). Drawn
+  // for a mouse and never on a phone (.ses-back, entry.css).
   async function backToTheJournal() {
     if (song) {
       try { sessionStorage.removeItem(TRACK_NOTE_KEY); } catch { /* nothing to clear */ }
-    } else if (pending?.album && !(await leave())) return;
+    } else if (pending?.album && !(await lower())) return;
     router.push('/');
   }
 
@@ -841,9 +879,9 @@ export default function SessionPage() {
     // would put the record down twice. Opened cold there is no layer and no
     // pull, and since the × came off (2026-09-18) there would otherwise be no
     // way out of the page at all — so the same gesture is honoured here, from
-    // the top of the screen, and `leave` writes the draft exactly as the
-    // sheet's own way out does.
-    if (!layered && from.top && dy > 80 && dy > Math.abs(dx) * 1.5) { leave(); return; }
+    // the top of the screen, and lowers the listen the way the sheet's own
+    // pull does: the draft written, the record kept in hand, home.
+    if (!layered && from.top && dy > 80 && dy > Math.abs(dx) * 1.5) { backToTheJournal(); return; }
     if (Math.abs(dx) < 56 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
     if (dx < 0) forward(); else goToStep(step - 1);
   }
