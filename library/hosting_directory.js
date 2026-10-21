@@ -80,15 +80,25 @@ function directory() {
 
 // The one table, made the first time it is needed. Additive only, like a
 // journal's own schema: a column added later is added with IF NOT EXISTS.
-const SHELF = `
-  CREATE TABLE IF NOT EXISTS journals (
+//
+// `neon_project`, 2026-10-20: the Neon project the front door made for a
+// journal at signup (library/front_door.js), so one that was never set up can
+// be cleared after a day. Empty for a journal placed by hand — one that
+// moved in keeps its own database, and nothing here ever deletes it.
+const SHELF = [
+  `CREATE TABLE IF NOT EXISTS journals (
     host       text PRIMARY KEY,
     sealed     text NOT NULL,
     placed_at  timestamptz NOT NULL DEFAULT now()
-  )`;
+  )`,
+  'ALTER TABLE journals ADD COLUMN IF NOT EXISTS neon_project text',
+];
 let shelved = null;
 function shelf() {
-  if (!shelved) shelved = directory().query(SHELF).catch(error => { shelved = null; throw error; });
+  if (!shelved) {
+    shelved = SHELF.reduce((done, statement) => done.then(() => directory().query(statement)), Promise.resolve())
+      .catch(error => { shelved = null; throw error; });
+  }
   return shelved;
 }
 
@@ -156,11 +166,13 @@ export async function journalHere() {
 }
 
 // What a server's memory of one journal is filed under, so nothing it keeps
-// for one journal is handed to another: the journal's address on a copy that
-// hosts many, and '' on a copy that hosts one.
+// for one journal is handed to another: the address the request was made to
+// on a copy that hosts many, and '' on a copy that hosts one. An address with
+// no journal at it — the front door, or nobody's — files under its own name
+// too; nothing about a journal is ever read there to be kept.
 export async function memoryOf() {
   if (!hosting()) return '';
-  return (await journalHere()).host;
+  return await hostHere();
 }
 
 // Every address in the directory and when each arrived — never a way in.
@@ -170,19 +182,55 @@ export async function list_journals() {
   return await directory()`SELECT host, placed_at FROM journals ORDER BY host`;
 }
 
+// How many journals the directory holds: a count on the community, never on
+// anybody (the front door's places left).
+export async function count_journals() {
+  await shelf();
+  const [row] = await directory()`SELECT count(*)::int AS n FROM journals`;
+  return row?.n || 0;
+}
+
+// The journals the front door made that are more than `olderThan` old, with
+// their ways in, for clearing the ones never set up (library/front_door.js).
+export async function made_at_signup(olderThan) {
+  await shelf();
+  const rows = await directory()`
+    SELECT host, sealed, neon_project FROM journals
+    WHERE neon_project IS NOT NULL AND placed_at < now() - ${olderThan}::interval
+    ORDER BY placed_at LIMIT 5`;
+  return rows.map(row => ({ host: row.host, project: row.neon_project, way: unseal(row.host, row.sealed) }));
+}
+
+// Takes an address out of the directory. Only ever for a journal the front
+// door made and nobody set up; a journal leaving is a move, not a removal.
+export async function unplace_journal(host) {
+  await shelf();
+  await directory()`DELETE FROM journals WHERE host = ${tidyHost(host)}`;
+  known.delete(tidyHost(host));
+}
+
 // ── Placing a journal ─────────────────────────────────────────────────────
 // Writes an address and the way into its database, sealed. Signup will call
 // this (step 4); until then it is called by hand.
-export async function place_journal(host, way) {
+// `fresh`: only if nobody is at the address yet — two people choosing the
+// same free name in the same second, one of them gets it (library/front_door.js).
+export async function place_journal(host, way, { project = null, fresh = false } = {}) {
   const at = tidyHost(host);
   if (!/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/.test(at)) {
     throw new Error(`${host} is not an address a journal can live at.`);
   }
   if (!/^postgres(ql)?:\/\//.test(String(way))) throw new Error('That is not a way into a database.');
   await shelf();
-  await directory()`
-    INSERT INTO journals (host, sealed) VALUES (${at}, ${seal(at, way)})
-    ON CONFLICT (host) DO UPDATE SET sealed = EXCLUDED.sealed`;
+  if (fresh) {
+    const placed = await directory()`
+      INSERT INTO journals (host, sealed, neon_project) VALUES (${at}, ${seal(at, way)}, ${project})
+      ON CONFLICT (host) DO NOTHING RETURNING host`;
+    if (!placed.length) throw new Error('That one is taken.');
+  } else {
+    await directory()`
+      INSERT INTO journals (host, sealed, neon_project) VALUES (${at}, ${seal(at, way)}, ${project})
+      ON CONFLICT (host) DO UPDATE SET sealed = EXCLUDED.sealed`;
+  }
   known.delete(at);
   return at;
 }

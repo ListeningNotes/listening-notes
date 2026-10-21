@@ -149,6 +149,8 @@ export default function WelcomeScreen() {
   // Whether a password already exists — from the environment, on a copy
   // locked the old way — which decides what the gate asks for and whether
   // the password screen may be skipped.
+  // A journal started at the front door (app/api/setup): no updater screen.
+  const [hosted, setHosted] = useState(false);
   const [hasPassword, setHasPassword] = useState(false);
   // Which way through: nothing until the first screen is answered, then
   // 'new' (the name, the photo and the rest) or 'bring'. `step` counts within
@@ -220,7 +222,11 @@ export default function WelcomeScreen() {
   useEffect(() => {
     const query = new URLSearchParams(window.location.search);
     const rehearse = query.has('rehearse');
-    const code = (query.get('code') || '').trim();
+    // Or after #, 2026-10-20, the way the front door hands a new journal
+    // over (app/api/front-door): the part of a link no server is sent, so
+    // the code is never in a log.
+    const handed = new URLSearchParams(window.location.hash.slice(1));
+    const code = (query.get('code') || handed.get('code') || '').trim();
     Promise.all([
       fetch('/api/auth/check').then(r => r.json()).catch(() => ({})),
       fetch('/api/setup').then(r => r.json()).catch(() => ({ claimed: true })),
@@ -234,6 +240,7 @@ export default function WelcomeScreen() {
       // address, so the gift screen can be looked at on a claimed copy.
       setGiftFrom(status?.gift || (rehearse ? tidyJournal(query.get('gift') || '') : ''));
       setHasPassword(Boolean(status?.has_password));
+      setHosted(status?.hosted === true);
       let admitted = !!auth.authed;
       const knock = async password => {
         const res = await fetch('/api/auth/login', {
@@ -262,7 +269,9 @@ export default function WelcomeScreen() {
     });
   }, [router]);
 
-  const steps = (path === 'bring' ? BRING_STEPS : STEPS).filter(s => s !== 'spare' || claimedWith === 'key');
+  const steps = (path === 'bring' ? BRING_STEPS : STEPS)
+    .filter(s => s !== 'spare' || claimedWith === 'key')
+    .filter(s => s !== 'updates' || !hosted);
   const current = path ? steps[step] : 'start';
   const last = Boolean(path) && step === steps.length - 1;
   // Which of the three openings the prompts screen is showing. One at a

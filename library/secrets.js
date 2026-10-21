@@ -201,7 +201,7 @@ export async function passwordSource() {
 // 1/I/l, because it is read off a screen and typed back in.
 const CODE_ALPHABET = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
 
-function mintClaimCode() {
+export function mintClaimCode() {
   const bytes = randomBytes(8);
   const chars = Array.from(bytes, b => CODE_ALPHABET[b % CODE_ALPHABET.length]).join('');
   return `${chars.slice(0, 4)}-${chars.slice(4)}`;

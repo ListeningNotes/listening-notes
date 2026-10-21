@@ -138,6 +138,14 @@ export const DOORS = {
   // solely so that one machine cannot make this one fetch faster than that.
   // The counting that means anything is `send` above.
   relay:      { tries: 60, windowMs: 60_000 },
+  // ── The front door, 2026-10-20 ──────────────────────────────────────────
+  // Starting a journal (library/front_door.js): a few an hour from one
+  // place, so nobody can spend the hundred places by themselves. And asking
+  // whether an address is free, as a person types it: loose, because a
+  // person types quickly, and only there so a script cannot use it to ask
+  // the hosting directory every name in the dictionary at speed.
+  start:      { tries: 3,  windowMs: 60 * 60_000 },
+  address:    { tries: 120, windowMs: 60_000 },
   // ── A wave, 2026-09-23 ──────────────────────────────────────────────────
   // The second thing one journal may put in another's inbox, and it arrives
   // the way a send from home does: from a server, from the same few machines

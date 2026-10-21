@@ -282,6 +282,18 @@ there.
 every journal again with it: the old key opens nothing once the deployment
 holds the new one.
 
+**The front door** is the deployment's own address, `HOSTED_DOMAIN` and its
+`www.` (`library/front_door.js`). There somebody starts a journal: Neon makes
+it a database of its own, the front door brings it up to date and places it,
+and the browser goes to the new address's setup with the claim code after a
+`#`, which no server is sent. Its settings: `NEON_API_KEY` (made in Neon's
+console, kept only in the deployment's settings), `NEON_ORG_ID` when Neon
+wants the organisation named, `NEON_REGION` (default `aws-us-east-1`), and
+`HOSTED_JOURNALS_MOST`, the places (default 100). Each place a request comes
+from can start three journals an hour, and a journal the front door made that
+nobody set up or wrote in is taken down after a day. Nothing placed by hand
+is ever taken down.
+
 ## LN. Admin letters
 
 A letter is the one way to tell keepers something they cannot learn from

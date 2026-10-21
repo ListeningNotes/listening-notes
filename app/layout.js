@@ -16,7 +16,9 @@ import { PATH_HEADER, NONCE_HEADER } from '../proxy';
 import { headers } from 'next/headers';
 import { isSetUp, pull_settings, coverName, titleName } from '../library/settings_actions';
 import { hasDatabase, explainDatabaseError } from '../library/database_connection';
-import { journalHere, NoJournalHere } from '../library/hosting_directory';
+import { journalHere, NoJournalHere, hostHere } from '../library/hosting_directory';
+import { isFrontDoor, hostedDomain, placesLeft } from '../library/front_door';
+import FrontDoor from '../components/main_components/FrontDoor';
 import { isCurrentCode } from '../library/portrait_code';
 import { SANDBOX } from '../library/version';
 
@@ -56,6 +58,11 @@ const dmMono = DM_Mono({
 // name a copy shows is the name its owner typed, not the name it was built
 // with.
 export async function generateMetadata() {
+  // The front door is the software's own page, not a journal, so it is the
+  // one place called Listening Notes and nothing else.
+  if (isFrontDoor(await hostHere())) {
+    return { title: 'Listening Notes', description: 'A listening journal of your own.' };
+  }
   const settings = await pull_settings();
   // titleName, not coverName. Everything in this function is read by a machine
   // — a browser tab, a home-screen label, a link preview on somebody else's
@@ -210,10 +217,17 @@ const SETUP_PATH = '/setup';
 // hosting directory does not know. Nobody's journal is drawn there — not a
 // default, not the nearest (library/hosting_directory.js) — and /setup is
 // held too, because there is nothing at the address to set up.
+//
+// 'front-door', 2026-10-20: the address a deployment that hosts journals
+// answers at itself, which has no journal of its own and draws the front
+// door's pages instead (library/front_door.js).
 async function holdTheDoor() {
   const path = (await headers()).get(PATH_HEADER) || '';
   if (path.startsWith('/api/')) return null;
   if (!hasDatabase()) return 'database';
+  if (isFrontDoor(await hostHere())) {
+    return { reason: 'front-door', path, left: await placesLeft().catch(() => 0) };
+  }
   try {
     await journalHere();
   } catch (error) {
@@ -313,7 +327,9 @@ export default async function RootLayout({ children, layer }) {
         />
         <Bookplate settings={settings}>
           <Lightswitch>
-            {holding
+            {holding?.reason === 'front-door'
+              ? <FrontDoor path={holding.path} domain={hostedDomain()} left={holding.left} />
+              : holding
               ? <ComingSoon reason={typeof holding === 'string' ? holding : holding.reason} said={holding.said} />
               : <>
               {children}

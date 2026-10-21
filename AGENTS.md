@@ -246,6 +246,13 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   from track ratings, `flawless` (what Masterpiece means), tracks to and from
   prose, `lookup_key` (the fold drafts and briefings are keyed on), the edit
   stamp, `entryTypeLabel`.
+- `front_door.js` — the front door, on a deployment that hosts journals
+  (`HOSTED_DOMAIN`): whether an address is free (`nameState`, with
+  `KEPT_NAMES`, the words nobody may start a journal at), the places left of
+  `HOSTED_JOURNALS_MOST`, `make_journal` (a Neon project through the API,
+  brought up to date, its address written, placed in the hosting directory,
+  and its claim code), and `clear_never_set_up`, which takes down a journal it
+  made that nobody set up or wrote in within a day.
 - `gold_burst.js` — the gold sparkle fired when a Masterpiece is marked.
 - `handoff.js` — module variables the wall leaves for the entry layer: the
   tapped record's first-screen fields so the layer opens without a wait, the
