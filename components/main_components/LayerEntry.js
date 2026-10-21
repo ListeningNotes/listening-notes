@@ -228,7 +228,7 @@ export function useFolder(folder, slug) {
 // On a phone `over` changes nothing: the stylesheet reads it above 769px only
 // (.lay--over-* in entry.css); this file does the leaving and measures the
 // growth from the sheet's own corner.
-export default function LayerEntry({ children, label = 'Entry', scrolls = false, arrives = 'tile', over = null, rise = 0 }) {
+export default function LayerEntry({ children, label = 'Entry', scrolls = false, arrives = 'tile', over = null, rise = 0, sheet = false }) {
   const sheetRef = useRef(null);
   const [headerSlot] = useState(() => (typeof document === 'undefined' ? null : document.createElement('div')));
   useLayoutEffect(() => {
@@ -766,7 +766,10 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
          the content's animation has already been and gone. */
       className={'lay' + (arrival.still ? ' lay--still' : arrival.swiped ? ' lay--swiped' : rises ? ' lay--rises' : growFrom ? ' lay--grows' : ' lay--fades') + (scrolls ? ' lay--scrolls' : '')
         + (arrival.swiped === 1 ? ' lay--from-right' : arrival.swiped === -1 ? ' lay--from-left' : '')
-        + (over ? ` lay--over-${over}` : '') + (settling ? ' lay--settling' : '') + (pulled ? ' lay--dragging' : '')}
+        + (over ? ` lay--over-${over}` : '') + (settling ? ' lay--settling' : '') + (pulled ? ' lay--dragging' : '')
+        /* The listen's shape since 2026-10-21: a sheet raised from the Listen
+           bar, short of the top so home shows over it, with a grip. */
+        + (sheet ? ' lay--sheet' : '')}
       ref={sheetRef}
       /* --lay-shift is how far the leaf has been dragged sideways, said here
          so that things outside the content can travel with it. The record in
@@ -795,6 +798,10 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
           column, the desk's panel — and moves with it while it grows or is
           pulled. The stylesheet draws it only above 769px, never on a phone,
           where the layer has no close button by decision. */}
+      {/* The grip, on a sheet: what the bar's own grip said, kept on the
+          thing that rose out of it, and the place a thumb pulls it down
+          from. A mark, not a control — the whole sheet takes the pull. */}
+      {sheet && <div className="lay-grip" aria-hidden="true" />}
       <div className="lay-back-slot">
         <button type="button" className="lay-back" onClick={() => leave()} aria-label="Close" title="Close">
           <CaretLeft size={18} weight="bold" aria-hidden="true" />

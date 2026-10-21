@@ -1010,6 +1010,17 @@
   --ses-bleed: 20px;
 }
 .lay--scrolls .ses-picker { padding-top: 18px; }
+/* The picker's question, 2026-10-21: the sheet's first words, in the display
+   face and centred over the field (her mockup). */
+.ses-ask {
+  margin: 14px 0 18px;
+  font-family: var(--font-display); font-weight: var(--font-display-weight);
+  font-size: 23px; line-height: 1.25; letter-spacing: -0.015em;
+  color: var(--ink); text-align: center; text-wrap: balance;
+}
+/* Its two shelves are named, the way Albums and Tracks are when a search
+   gives both. */
+.ses-kind--shelf { margin: 22px 0 10px; }
 /* Inline, the picker is not a page and has no fixed header to clear: the
    pane supplies the screen, the crown has stood down and the small mark is
    in the bar. All that is left for this to do is start where the beacon

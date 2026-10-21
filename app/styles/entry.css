@@ -219,6 +219,48 @@
 }
 @keyframes layRise { from { transform: translateY(100%); } to { transform: none; } }
 
+/* ── The listen is a sheet, 2026-10-21 ─────────────────────────────────────
+   Raised from the Listen bar and lowered back into it without ending
+   (Miyel's brief, home and the session). Raised, it covers home from just
+   under the status bar, so a strip of home shows over its rounded top and it
+   reads as a thing held up over the page, not a page you went to; a grip at
+   the top says it goes back down. The pull, Escape and the caret lower it;
+   Discard, Save draft and Post end it. Her mockup's numbers: the top at 34,
+   corners of 24, the grip 38 by 4. */
+.lay--sheet {
+  --sheet-top: max(34px, calc(env(safe-area-inset-top, 0px) + 10px));
+  top: calc(var(--lay-lift, 0px) + var(--sheet-top));
+  border-radius: var(--radius, 24px) var(--radius, 24px) 0 0;
+  box-shadow: 0 -14px 46px rgba(0, 0, 0, 0.26);
+}
+/* In the sheet's own flow and stuck to its top, so it stays at the edge the
+   thumb pulls from however far down the listen has been scrolled. No height
+   of its own: it hangs over the page's top padding. */
+.lay-grip {
+  position: sticky;
+  top: 0;
+  z-index: 212;
+  height: 0;
+  overflow: visible;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+.lay-grip::before {
+  content: '';
+  display: block;
+  width: 38px;
+  height: 4px;
+  margin-top: 9px;
+  border-radius: 999px;
+  background: var(--ink-faint);
+  opacity: 0.5;
+}
+/* The status bar is outside the sheet now, so the page inside it starts
+   under the grip rather than under the clock. */
+.lay--sheet .ses-body--page { padding-top: 30px; }
+.lay--sheet .ses-picker { padding-top: 22px; }
+
 /* ── The header does not rise with it, 2026-09-20 ────────────────────────
    Miyel, on the album: "instead of opening from where it is, it can just
    slide up from the bottom, all the way from the bottom, covering the

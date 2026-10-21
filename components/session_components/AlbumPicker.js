@@ -32,11 +32,12 @@
 
 'use client';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { CaretRight, ClockCounterClockwise, MagnifyingGlass, Trash, XCircle } from '@phosphor-icons/react';
+import { CaretRight, ClockCounterClockwise, MagnifyingGlass, Trash, User, XCircle } from '@phosphor-icons/react';
 import SiteNav from '../main_components/SiteNav';
 import { searchAlbums, searchSongs } from '../../library/music_data_api';
 import { PENDING_EVENT, SAVED_EVENT, TRACK_NOTE_WRITING } from '../../hooks/useListeningSession';
 import { lookup_key } from '../../library/entry_formatter';
+import { journalUrl, tidyJournal } from '../../library/return_address';
 
 // How long the grid takes to shuffle over, and how long the newcomer waits
 // before growing into the slot the others are clearing.
@@ -130,7 +131,7 @@ function sinceLabel(iso) {
 // recent, albums and tracks, and none of the unfinished listens — a draft is
 // a listen you walked away from, and it has nothing to do with handing a
 // record to somebody. The list is neither asked for nor drawn.
-export default function AlbumPicker({ onPick, onResume, onPickSong = null, inline = false, noDrafts = false }) {
+export default function AlbumPicker({ onPick, onResume, onPickSong = null, inline = false, noDrafts = false, sheet = false }) {
   const [typed, setTyped]       = useState('');
   const [results, setResults]   = useState([]);
   // The songs the same search found. Albums above songs, always, so the
@@ -167,6 +168,14 @@ export default function AlbumPicker({ onPick, onResume, onPickSong = null, inlin
 
   // Listens saved and walked away from, newest first.
   const [drafts, setDrafts]                 = useState([]);
+  // ── Sent to you, 2026-10-21 ───────────────────────────────────────────────
+  // The records somebody set aside for you that you have not finished with —
+  // the inbox's held grid, read the same way (a send waiting or started) —
+  // first, each wearing the face of whoever sent it, because a record from a
+  // person is the one most likely to be what you are putting on (Miyel's
+  // brief, home and the session). Only on the session's own picker: the send
+  // sheet's picker is choosing something to give, not to play.
+  const [sent, setSent] = useState([]);
   const [confirmDiscard, setConfirmDiscard] = useState(null);   // draft id
 
   // ── Press and hold to throw a draft away ────────────────────────────────
@@ -212,6 +221,18 @@ export default function AlbumPicker({ onPick, onResume, onPickSong = null, inlin
   // down (see saidSoAboutTheDesk); the desk has listened to it since
   // 2026-09-16 for the same reason, that the listen and the thing underneath
   // it are one route and nothing else would tell it.
+  useEffect(() => {
+    if (noDrafts) return undefined;
+    let alive = true;
+    fetch('/api/submissions')
+      .then(r => (r.ok ? r.json() : { submissions: [] }))
+      .then(d => {
+        if (alive) setSent((d.submissions || []).filter(x => x.status === 'pending' || x.status === 'reviewed'));
+      })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, [noDrafts]);
+
   useEffect(() => {
     if (noDrafts) return undefined;
     let alive = true;
@@ -398,6 +419,57 @@ export default function AlbumPicker({ onPick, onResume, onPickSong = null, inlin
   //
   // The armed discard goes too. A question asked before a listen and still
   // asked after it is a question about a screen that has been away.
+  // A send pressed: the listen it asks for, carrying the sender the whole way
+  // so the entry is credited and the send settled when it is posted — the
+  // same record the inbox's own Listen writes (app/dashboard/inbox/page.js,
+  // beginListen and beginNote), and a listen already started from it resumes
+  // its draft, which carries the send itself (sendOf, resume). A song send is
+  // a track note (DECISIONS, 2026-10-06). Marked started and seen, as the
+  // inbox would have, so the inbox stops showing it as new.
+  function takeSent(one, e) {
+    const img = e.currentTarget.querySelector('.ses-tile-art img');
+    const from = img ? img.getBoundingClientRect() : null;
+    const key = lookup_key(one.album, one.artist || '', one.song || '');
+    const draft = drafts.find(row => (row.lookup_key || lookup_key(row.album, row.artist || '', row.song || '')) === key) || null;
+    const credit = {
+      entryType: 'Submission',
+      receivedFrom: one.submitter_name || '',
+      receivedFromUrl: one.sender_url || '',
+      receivedDate: one.created_at ? String(one.created_at).slice(0, 10) : '',
+      creditPrivate: one.quiet === true,
+      submissionId: one.id,
+    };
+    if (one.song) {
+      if (!onPickSong) return;
+      onPickSong({
+        song: one.song,
+        album: draft?.album || one.album,
+        artist: draft?.artist || one.artist || '',
+        year: draft?.year || one.year || '',
+        artUrl: draft?.album_art || one.album_art || '',
+        collectionId: draft?.collection_id || one.collection_id || null,
+        genre: draft?.genre || '',
+        written: draft ? { rating: draft.rating, note: draft.notes || '', favorite: draft.favorite === true, formative: draft.formative === true } : null,
+        ...credit,
+      }, from);
+    } else if (draft) {
+      onResume(draft, from);
+    } else {
+      onPick({
+        album: one.album,
+        artist: one.artist || '',
+        year: one.year || '',
+        artUrl: one.album_art || '',
+        collectionId: one.collection_id || null,
+        genre: '',
+        ...credit,
+      }, from);
+    }
+    const patch = body => fetch(`/api/submissions/${one.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).catch(() => {});
+    if (one.status !== 'reviewed') patch({ status: 'reviewed' });
+    if (!one.seen_at) patch({ seen: true });
+  }
+
   function chosen() {
     // The search that found it is worth keeping (RECENT_KEY). A draft is
     // resumed from an empty field, so there is nothing to keep then.
@@ -495,7 +567,7 @@ export default function AlbumPicker({ onPick, onResume, onPickSong = null, inlin
 
           Not inline: the cross has its own bar and its own mark, and a second
           logo under the first is the one thing a pane must not do. */}
-      {!inline && <SiteNav />}
+      {!inline && !sheet && <SiteNav />}
 
       {byHand ? (
         <div className="ses-hand">
@@ -552,6 +624,11 @@ export default function AlbumPicker({ onPick, onResume, onPickSong = null, inlin
         </div>
       ) : (
         <>
+          {/* ── What are you putting on? 2026-10-21 ─────────────────────────
+              The sheet's first words, in her mockup's: the question the
+              picker is asking, over the field that answers it. On the
+              session's picker only; the send sheet's is choosing a gift. */}
+          {!noDrafts && <h2 className="ses-ask">What are you putting on?</h2>}
           {/* A hairline and a magnifier when it is inline — no border but the
               underline (the mockup). The glyph is inside the label so the
               whole line is the tap target, which is what a rule with no box
@@ -575,7 +652,7 @@ export default function AlbumPicker({ onPick, onResume, onPickSong = null, inlin
               onBlur={() => setTimeout(() => setFieldOn(false), 200)}
               value={typed}
               onChange={e => type(e.target.value)}
-              placeholder="Search an artist, album, or track"
+              placeholder={noDrafts ? 'Search an artist, album, or track' : 'An album, or a song'}
               autoComplete="off"
               /* Not inline, and this is the whole of Miyel's "it goes off the
                  screen and everything goes way too high" on a real phone,
@@ -594,7 +671,7 @@ export default function AlbumPicker({ onPick, onResume, onPickSong = null, inlin
 
                  So inline it waits to be tapped. One tap, and the arrangement
                  she just watched assemble is still there underneath it. */
-              autoFocus={!inline}
+              autoFocus={!inline && !sheet}
             />
             {/* A way back to an empty field without holding delete, 2026-09-26
                 (Miyel). It keeps the keyboard up: clearing is the start of
@@ -799,6 +876,48 @@ export default function AlbumPicker({ onPick, onResume, onPickSong = null, inlin
             </>
           )}
 
+          {sent.length > 0 && !typed.trim() && (
+            <>
+              <p className="ses-label ses-kind ses-kind--shelf">Sent to you</p>
+              <div className="ses-grid">
+                {sent.map(one => (
+                  <div key={one.id} className="ses-tile ses-tile--sent">
+                    <button
+                      type="button"
+                      className="ses-tile-open"
+                      onClick={e => takeSent(one, e)}
+                      aria-label={`${one.song || one.album}, from ${one.submitter_name || 'someone'}`}
+                    >
+                      <span className={'ses-tile-art' + (one.song ? ' ln-fold' : '')}>
+                        {one.album_art ? <img src={one.album_art} alt="" loading="lazy" /> : null}
+                        {one.song && one.album_art && (
+                          <span className="ln-fold-flap" aria-hidden="true"><img src={one.album_art} alt="" /></span>
+                        )}
+                        {/* The inbox's own face on the corner (forms.css,
+                            .ib-held-face): their portrait from their
+                            journal, or the person glyph where there is
+                            none. */}
+                        <span className="ib-held-face" aria-hidden="true">
+                          <User size={12} weight="regular" />
+                          {tidyJournal(one.sender_url) && (
+                            <img src={`${journalUrl(tidyJournal(one.sender_url))}/api/portrait`} alt="" loading="lazy" onError={ev => { ev.currentTarget.style.display = 'none'; }} />
+                          )}
+                        </span>
+                      </span>
+                      <span className="ses-tile-name">{one.song || one.album}</span>
+                      <span className="ses-tile-year ses-split">
+                        <span className="ses-split-by">{one.song ? one.album : one.artist}</span>
+                      </span>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {!noDrafts && drafts.length > 0 && !typed.trim() && (
+            <p className="ses-label ses-kind ses-kind--shelf">Drafts</p>
+          )}
           {!noDrafts && drafts.length > 0 && !typed.trim() && (
             /* ── Drafts, as the same squares a search gives ────────────────
                They were rows — a small cover, a name, and the step they were

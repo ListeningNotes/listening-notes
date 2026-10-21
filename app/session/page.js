@@ -977,7 +977,7 @@ export default function SessionPage() {
           }}
         />
       ) : !open ? (
-        <AlbumPicker onPick={pick} onResume={resume} onPickSong={beginTrackNote} />
+        <AlbumPicker onPick={pick} onResume={resume} onPickSong={beginTrackNote} sheet={layered} />
       ) : (
         <>
           {/* ── The foot: Discard · Save draft · Post ────────────────────
