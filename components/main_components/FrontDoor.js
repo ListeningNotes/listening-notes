@@ -7,7 +7,7 @@
 // `/get`, Choose your address. Drawn by the root layout in place of a
 // journal, because the front door has no journal of its own.
 //
-// The places left are said while there are some, and "We're full for now.
+// The journals left are said while there are some, and "We're full for now.
 // Come back soon." once there are none (her pick: "a mix of both").
 
 'use client';
@@ -17,14 +17,15 @@ import { BookOpen, MagnifyingGlass, Plus } from '@phosphor-icons/react';
 import { LnMark } from './SiteNav';
 
 const FULL = 'We’re full for now. Come back soon.';
+// Direct, in Miyel's words (2026-10-20: "lets go more direct").
 const SAYS = {
-  free: 'It’s yours if you want it.',
-  taken: 'That one is taken.',
+  free: 'Available.',
+  taken: 'Taken.',
   unwritable: 'Letters, numbers and dashes.',
 };
 
 function placesLine(left) {
-  return `${left} ${left === 1 ? 'place' : 'places'} left`;
+  return `${left} ${left === 1 ? 'journal' : 'journals'} left`;
 }
 
 // The open book, with a plus on its corner.
@@ -170,7 +171,7 @@ function Start({ domain, left: firstLeft }) {
       />
       <p className="fd-state" role="status">{name && state ? SAYS[state] : ' '}</p>
       <button type="button" className="st-save ln-word ln-word--on" onClick={make} disabled={state !== 'free' || making}>
-        {making ? 'Making your journal…' : 'Make it mine'}
+        {making ? 'Starting your journal…' : 'Start my journal'}
       </button>
       {trouble && <p className="fd-trouble" role="alert">{trouble}</p>}
       <p className="fd-places">{placesLine(left)}</p>

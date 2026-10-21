@@ -55,7 +55,7 @@ export async function POST(request) {
   const state = await nameState(name);
   if (state !== 'free') {
     return NextResponse.json(
-      { error: state === 'taken' ? 'That one is taken.' : 'Letters, numbers and dashes.', state },
+      { error: state === 'taken' ? 'Taken.' : 'Letters, numbers and dashes.', state },
       { status: 409 },
     );
   }
@@ -72,7 +72,7 @@ export async function POST(request) {
     return NextResponse.json({ to: `${proto}://${host}${port ? `:${port}` : ''}/setup#code=${code}` });
   } catch (error) {
     if (/taken/i.test(error?.message || '')) {
-      return NextResponse.json({ error: 'That one is taken.', state: 'taken' }, { status: 409 });
+      return NextResponse.json({ error: 'Taken.', state: 'taken' }, { status: 409 });
     }
     console.error('[front door] a journal could not be made:', error?.message || error);
     return NextResponse.json({ error: 'Your journal could not be made just now. Try again in a minute.' }, { status: 502 });
