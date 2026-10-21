@@ -11,9 +11,19 @@
 // hands it back, the one time it is ever shown (library/secrets.js). DELETE
 // takes a key off the ring, except the last way in: a journal with no
 // password and no spare key keeps its only key, or nobody could open it.
+//
+// Making a spare key, keeping a new key and taking one off are each a change
+// to the ways in, so each asks that the keeper proved it was them in the
+// last few minutes (requireRecentProof, library/wristband.js; 2026-10-20),
+// and GET says how much of that proof is left, so the page can ask for Face
+// ID or the password before a press rather than after it. Asking the device
+// for its options, the first half of adding a key, changes nothing and asks
+// only for the wristband. A journal still being set up is not asked: its
+// keeper proved it with the claim.
 
 import { NextResponse } from 'next/server';
-import { requireWristband } from '@/library/wristband';
+import { requireWristband, requireRecentProof, readWristband, proofLeft } from '@/library/wristband';
+import { isSetUp } from '@/library/settings_actions';
 import { pull_keys, remove_key, begin_adding, finish_adding, spent } from '@/library/keyring';
 import { passwordSource, spareKeyState, makeSpareKey } from '@/library/secrets';
 
@@ -27,6 +37,7 @@ export async function GET(request) {
       keys: await pull_keys(),
       spare: await spareKeyState(),
       password: await passwordSource(),
+      proved_left: proofLeft(await readWristband(request)),
     }, { headers: NO_STORE });
   } catch {
     return NextResponse.json({ error: 'Your keys could not be read just now.' }, { status: 500, headers: NO_STORE });
@@ -38,13 +49,17 @@ export async function POST(request) {
   if (blocked) return blocked;
   try {
     const body = await request.json().catch(() => ({}));
+    if (body?.spare === true || body?.response) {
+      const unproved = await requireRecentProof(request, { exempt: !(await isSetUp()) });
+      if (unproved) return unproved;
+    }
     if (body?.spare === true) {
       const code = await makeSpareKey();
       return NextResponse.json({ code, spare: await spareKeyState() }, { headers: NO_STORE });
     }
     if (!body?.response) {
       const { options, cookie } = await begin_adding(request);
-      const response = NextResponse.json({ options }, { headers: NO_STORE });
+      const response = NextResponse.json({ options, proved_left: proofLeft(await readWristband(request)) }, { headers: NO_STORE });
       response.cookies.set(cookie.name, cookie.value, cookie.options);
       return response;
     }
@@ -60,7 +75,7 @@ export async function POST(request) {
 }
 
 export async function DELETE(request) {
-  const blocked = await requireWristband(request);
+  const blocked = await requireRecentProof(request);
   if (blocked) return blocked;
   try {
     const id = Number(new URL(request.url).searchParams.get('id'));

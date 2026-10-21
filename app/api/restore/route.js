@@ -34,7 +34,7 @@
 import { NextResponse } from 'next/server';
 import { gunzipSync } from 'node:zlib';
 import { Client } from '@neondatabase/serverless';
-import { requireWristband } from '@/library/wristband';
+import { requireWristband, issueWristband, WRISTBAND_COOKIE } from '@/library/wristband';
 import { isSetUp } from '@/library/settings_actions';
 import { directDatabaseUrl } from '@/library/migrator';
 import { hashPassword, seal_claim } from '@/library/secrets';
@@ -124,7 +124,10 @@ export async function POST(request) {
       },
     });
     const count = table => planned.plan.find(([t]) => t === table)?.[1].length ?? 0;
-    return NextResponse.json({ ok: true, entries: count('entries'), people: count('people') });
+    // The claim is a proof, as in app/api/setup.
+    const brought = NextResponse.json({ ok: true, entries: count('entries'), people: count('people') });
+    brought.cookies.set(WRISTBAND_COOKIE.name, await issueWristband({ proved: true }), WRISTBAND_COOKIE.options);
+    return brought;
   } catch (error) {
     return NextResponse.json(
       { error: `Your journal couldn’t be brought in, and nothing was changed. ${error?.message || ''}`.trim() },

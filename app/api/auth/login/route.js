@@ -14,7 +14,7 @@
 // window and the code are both cleared and stop being answers.
 
 import { NextResponse } from 'next/server';
-import { issueWristband, WRISTBAND_COOKIE } from '@/library/wristband';
+import { issueWristband, WRISTBAND_COOKIE, PROOF_SECONDS } from '@/library/wristband';
 import { mayKnock, forgetKnocks, tooSoon, whoIsKnocking } from '@/library/doorman';
 import { isSetUp } from '@/library/settings_actions';
 import { pull_secrets, verifyPassword, claimCodeMatches, setupWindowOpen, spendSpareKey } from '@/library/secrets';
@@ -81,8 +81,10 @@ export async function POST(request) {
     // be counted against on their next device.
     await forgetKnocks('login', caller);
 
-    const token = await issueWristband();
-    const response = NextResponse.json({ ok: true });
+    // A sign-in is a proof, and says how long it lasts, for Confirm it's you
+    // (Keyring.js), which asks through this same door.
+    const token = await issueWristband({ proved: true });
+    const response = NextResponse.json({ ok: true, proved_left: PROOF_SECONDS });
     response.cookies.set(WRISTBAND_COOKIE.name, token, WRISTBAND_COOKIE.options);
     return response;
   } catch (error) {

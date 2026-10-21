@@ -2,12 +2,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 'use client';
 import { Fragment, useEffect, useState } from 'react';
-import { startAuthentication } from '@simplewebauthn/browser';
 import { ArrowRight } from '@phosphor-icons/react';
 import { fonts } from '../../library/sitewide_visuals';
 import { useBookplate } from '../main_components/Bookplate';
 import { useJournalHost } from '../../hooks/useJournalHost';
-import { canHoldKeys, keepFresh, markKeyHere, readyToOffer, KeyOffer } from '../main_components/Keyring';
+import { canHoldKeys, keepFresh, readyToOffer, KeyOffer, askTheLock, unlockWith } from '../main_components/Keyring';
 
 // `bare` returns the form and nothing around it, for WritingAccess to put in
 // its panel. The alternative was a second copy of these fields, and a second
@@ -51,60 +50,11 @@ import { canHoldKeys, keepFresh, markKeyHere, readyToOffer, KeyOffer } from '../
 // The field it uses is no password, so it carries no username for a manager
 // to file it under, and is never offered to be saved over the password.
 
-// The lock's options, fetched before anything is pressed: Safari lets Face
-// ID be asked for only straight from a press, and a press that waited on the
-// network first would be refused. The challenge lasts five minutes, so a
-// caller asks again every four, while the page is on screen (keepFresh, in
-// Keyring.js). Returns { options, any, spare, password },
-// or null: `spare` is whether a spare key is waiting, `password` whether the
-// journal has one at all.
-export async function askTheLock() {
-  try {
-    const r = await fetch('/api/auth/passkey', { cache: 'no-store' });
-    if (!r.ok) return null;
-    const d = await r.json();
-    return d?.options
-      ? { options: d.options, any: Boolean(d.any), spare: Boolean(d.spare), password: d.password !== false }
-      : null;
-  } catch {
-    return null;
-  }
-}
-
-// Open the door with this device's key. Called straight from a press, with
-// what askTheLock fetched. Returns { ok }, or { ok: false } with `error` to
-// say, `cancelled` when the device was told no, and `unknown` when the key
-// is not on the journal's ring any more.
-export async function unlockWith(asked) {
-  let response;
-  try {
-    response = await startAuthentication({ optionsJSON: asked.options });
-  } catch {
-    // Face ID dismissed, or no key for this journal on this device: the
-    // browser does not say which, and neither is worth a sentence.
-    return { ok: false, cancelled: true };
-  }
-  try {
-    const r = await fetch('/api/auth/passkey', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ response }),
-    });
-    const d = await r.json().catch(() => ({}));
-    if (!r.ok) {
-      if (d.unknown) markKeyHere(false);
-      return {
-        ok: false,
-        unknown: Boolean(d.unknown),
-        error: d.error || (r.status === 429 ? 'Too many attempts. Wait a minute.' : 'That key didn’t work.'),
-      };
-    }
-    markKeyHere(true);
-    return { ok: true };
-  } catch {
-    return { ok: false, error: 'Something went wrong. Try again.' };
-  }
-}
+// The lock's two halves — asking it for its options, and opening it with
+// this device's key — live with the rest of the browser's keys since
+// 2026-10-20 (Keyring.js), where Confirm it's you asks through them too;
+// they are still reached from here, as WritingAccess does.
+export { askTheLock, unlockWith };
 
 export default function PasswordGate({ onAuth, bare = false, asking = 'password', initial = '', autoFocus = false }) {
   const claiming = asking === 'claim code';

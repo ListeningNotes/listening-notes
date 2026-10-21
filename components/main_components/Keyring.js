@@ -23,9 +23,9 @@
 
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { startRegistration } from '@simplewebauthn/browser';
-import { Fingerprint, Key, ScanSmiley } from '@phosphor-icons/react';
+import { Fragment, useEffect, useRef, useState } from 'react';
+import { startAuthentication, startRegistration } from '@simplewebauthn/browser';
+import { ArrowRight, Fingerprint, Key, ScanSmiley } from '@phosphor-icons/react';
 import { useJournalHost } from '../../hooks/useJournalHost';
 
 // The browser's note that it has unlocked this journal with a key before,
@@ -122,6 +122,208 @@ export function wayIn() {
   return { word: 'a passkey', Glyph: Fingerprint };
 }
 
+// ── The lock's two halves ─────────────────────────────────────────────────
+// Moved here from PasswordGate.js on 2026-10-20, with the rest of the
+// browser's keys, when Confirm it's you (below) came to ask through them too.
+//
+// The lock's options, fetched before anything is pressed: Safari lets Face
+// ID be asked for only straight from a press, and a press that waited on the
+// network first would be refused. The challenge lasts five minutes, so a
+// caller asks again every four, while the page is on screen (keepFresh, in
+// Keyring.js). Returns { options, any, spare, password },
+// or null: `spare` is whether a spare key is waiting, `password` whether the
+// journal has one at all.
+export async function askTheLock() {
+  try {
+    const r = await fetch('/api/auth/passkey', { cache: 'no-store' });
+    if (!r.ok) return null;
+    const d = await r.json();
+    return d?.options
+      ? { options: d.options, any: Boolean(d.any), spare: Boolean(d.spare), password: d.password !== false }
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+// Open the door with this device's key. Called straight from a press, with
+// what askTheLock fetched. Returns { ok, proved_left }, or { ok: false } with `error` to
+// say, `cancelled` when the device was told no, and `unknown` when the key
+// is not on the journal's ring any more.
+export async function unlockWith(asked) {
+  let response;
+  try {
+    response = await startAuthentication({ optionsJSON: asked.options });
+  } catch {
+    // Face ID dismissed, or no key for this journal on this device: the
+    // browser does not say which, and neither is worth a sentence.
+    return { ok: false, cancelled: true };
+  }
+  try {
+    const r = await fetch('/api/auth/passkey', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ response }),
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) {
+      if (d.unknown) markKeyHere(false);
+      return {
+        ok: false,
+        unknown: Boolean(d.unknown),
+        error: d.error || (r.status === 429 ? 'Too many attempts. Wait a minute.' : 'That key didn’t work.'),
+      };
+    }
+    markKeyHere(true);
+    return { ok: true, proved_left: d.proved_left };
+  } catch {
+    return { ok: false, error: 'Something went wrong. Try again.' };
+  }
+}
+
+// ── Confirm it's you, 2026-10-20 ──────────────────────────────────────────
+// Changing a way in — the password, the spare key, a key made or taken off —
+// asks that the keeper proved it was them in the last five minutes
+// (library/wristband.js), so a phone left signed in, in somebody else's
+// hand, cannot make itself a way in (Miyel: "it's so easy to change the
+// password"). Where it has been longer, the press opens this under it
+// instead: Use Face ID, where the journal has a key and this device can hold
+// one, with *use your password* under it — the lock's own door, in the lock's
+// own pieces — and the password's soft field where there is no key. Never the
+// spare key, which would be spent. Her words and her five minutes.
+//
+// A page knows how much of its proof is left from what the server says with
+// the keys and their options (noteProof), so it asks before a press rather
+// than after one: Face ID given for a new key, and the key then refused,
+// would leave a key on the device that opens nothing. Under a minute left
+// counts as none, for the same reason.
+const PROOF_MARGIN_MS = 60 * 1000;
+let provedUntil = 0;
+
+export function noteProof(seconds) {
+  if (Number.isFinite(seconds)) provedUntil = Date.now() + seconds * 1000;
+}
+
+export function provedNow() {
+  return provedUntil - Date.now() > PROOF_MARGIN_MS;
+}
+
+export function ConfirmItsYou({ onConfirmed }) {
+  const host = useJournalHost();
+  const [keyed, setKeyed] = useState(false);
+  const [way, setWay] = useState(null);
+  const [asked, setAsked] = useState(undefined);
+  const [byPassword, setByPassword] = useState(false);
+  const [pw, setPw] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const confirmed = useRef(onConfirmed);
+  useEffect(() => { confirmed.current = onConfirmed; });
+
+  // The lock's options, asked for before the press and kept fresh, as the
+  // lock's are (askTheLock, keepFresh).
+  useEffect(() => {
+    const can = canHoldKeys();
+    let gone = false;
+    const ask = async () => { const a = await askTheLock(); if (!gone) setAsked(a); };
+    Promise.resolve().then(() => {
+      if (gone) return;
+      setKeyed(can);
+      if (can) setWay(wayIn());
+    });
+    ask();
+    const stop = can ? keepFresh(ask) : null;
+    return () => { gone = true; stop?.(); };
+  }, []);
+
+  const hasPassword = asked !== undefined && asked?.password !== false;
+  // Face ID where this browser is known to hold a key for this journal, or
+  // where there is no password to fall back on; otherwise the field, since a
+  // device without a key would be shown a sheet that opens nothing.
+  const offerKey = keyed && Boolean(way) && Boolean(asked?.any) && !byPassword && (keyHere() || !hasPassword);
+  const showField = hasPassword && (byPassword || !offerKey);
+
+  async function withKey() {
+    if (!asked?.options || busy) return;
+    setBusy(true);
+    setError('');
+    const done = await unlockWith(asked);
+    setBusy(false);
+    if (done.ok) { noteProof(done.proved_left); confirmed.current?.(); return; }
+    if (!done.cancelled) setError(done.error);
+    // The challenge is spent either way: the next press needs a fresh one.
+    setAsked(await askTheLock());
+  }
+
+  async function withPassword(event) {
+    event.preventDefault();
+    if (busy || !pw) return;
+    setBusy(true);
+    setError('');
+    try {
+      const r = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pw }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (r.ok) {
+        noteProof(d.proved_left);
+        setPw('');
+        setBusy(false);
+        confirmed.current?.();
+        return;
+      }
+      setError(r.status === 429 ? d.error || 'Too many attempts. Wait a minute.' : 'Incorrect password');
+      setPw('');
+    } catch {
+      setError('Something went wrong. Try again.');
+    }
+    setBusy(false);
+  }
+
+  const Glyph = way?.Glyph;
+  return (
+    <div className="ko ci">
+      <p className="ko-line">Confirm it’s you</p>
+      {offerKey && (
+        <button type="button" className="ko-use" onClick={withKey} disabled={busy}>
+          <Glyph size={26} aria-hidden="true" />
+          <span>{`Use ${way.word}`}</span>
+        </button>
+      )}
+      {showField && (
+        <form onSubmit={withPassword} className="pg-form ci-form">
+          {/* The journal's address, for a password manager to find the
+              password under, as the lock's own field has (PasswordGate.js). */}
+          <input type="text" name="username" autoComplete="username" className="pg-who" value={host} onChange={() => {}} aria-label="Journal" tabIndex={-1} />
+          <div className={'pg-well' + (error ? ' pg-well--wrong' : '')}>
+            <input
+              type="password"
+              name="password"
+              autoComplete="current-password"
+              placeholder="password"
+              className="pg-pw"
+              value={pw}
+              onChange={e => { setPw(e.target.value); setError(''); }}
+              disabled={busy}
+              autoFocus={byPassword}
+            />
+            <button type="submit" className="pg-arrow" disabled={busy} aria-label={busy ? 'Checking' : 'Enter'}>
+              <ArrowRight size={16} aria-hidden="true" />
+            </button>
+          </div>
+          {error && <div className="pg-said">{error}</div>}
+        </form>
+      )}
+      {offerKey && error && <p className="pg-said">{error}</p>}
+      {offerKey && hasPassword && (
+        <button type="button" className="pg-or" onClick={() => { setByPassword(true); setError(''); }}>use your password</button>
+      )}
+    </div>
+  );
+}
+
 // ── Use Face ID next time? 2026-10-20 ─────────────────────────────────────
 // The offer to make this device a key, made where the keeper is rather than
 // only in Settings (Miyel's picks, 2026-10-20): straight after the password
@@ -146,6 +348,7 @@ async function makingOptions() {
   try {
     const r = await fetch('/api/keyring', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
     const d = await r.json().catch(() => ({}));
+    noteProof(d.proved_left);
     return d.options || null;
   } catch {
     return null;
@@ -173,6 +376,8 @@ export function KeyOffer({ ready = null, onDone = null, onNothing = null, place 
   const [busy, setBusy] = useState(false);
   const [said, setSaid] = useState('');
   const [trouble, setTrouble] = useState('');
+  // Confirm it's you, opened in place of the door where the proof is old.
+  const [asking, setAsking] = useState(false);
   const done = useRef(onDone);
   const nothing = useRef(onNothing);
   useEffect(() => { done.current = onDone; nothing.current = onNothing; });
@@ -197,6 +402,9 @@ export function KeyOffer({ ready = null, onDone = null, onNothing = null, place 
 
   async function use() {
     if (!offer || busy) return;
+    // Asked before Face ID is, not after: a key made and then refused would
+    // stay on the device opening nothing.
+    if (!provedNow()) { setAsking(true); return; }
     setBusy(true);
     setTrouble('');
     let response;
@@ -221,6 +429,7 @@ export function KeyOffer({ ready = null, onDone = null, onNothing = null, place 
         body: JSON.stringify({ response, device: thisDevice() }),
       });
       const d = await r.json().catch(() => ({}));
+      if (r.status === 403 && d.prove) { noteProof(0); setAsking(true); setBusy(false); return; }
       if (!r.ok) throw new Error(d.error || 'The key could not be added.');
       markKeyHere(true);
       setSaid(`Added. Next time, Unlock opens with ${offer.way.word}.`);
@@ -245,10 +454,14 @@ export function KeyOffer({ ready = null, onDone = null, onNothing = null, place 
   return (
     <div className={'ko' + (place === 'foot' ? ' ko--foot' : '')}>
       <p className="ko-line">{`Use ${word} next time?`}</p>
-      <button type="button" className="ko-use" onClick={use} disabled={busy}>
-        <Glyph size={26} aria-hidden="true" />
-        <span>{`Use ${word}`}</span>
-      </button>
+      {asking ? (
+        <ConfirmItsYou onConfirmed={() => setAsking(false)} />
+      ) : (
+        <button type="button" className="ko-use" onClick={use} disabled={busy}>
+          <Glyph size={26} aria-hidden="true" />
+          <span>{`Use ${word}`}</span>
+        </button>
+      )}
       {trouble && <p className="pg-said">{trouble}</p>}
       <button type="button" className="pg-or" onClick={notNow}>not now</button>
     </div>
@@ -291,7 +504,11 @@ async function makeSpare() {
     body: JSON.stringify({ spare: true }),
   });
   const d = await r.json().catch(() => ({}));
-  if (!r.ok || !d.code) throw new Error(d.error || 'A spare key could not be made just now.');
+  if (!r.ok || !d.code) {
+    const failed = new Error(d.error || 'A spare key could not be made just now.');
+    failed.prove = r.status === 403 && Boolean(d.prove);
+    throw failed;
+  }
   return d;
 }
 
@@ -309,6 +526,7 @@ function SpareOffer() {
   const [busy, setBusy] = useState(false);
   const [trouble, setTrouble] = useState('');
   const [finished, setFinished] = useState(false);
+  const [asking, setAsking] = useState(false);
 
   useEffect(() => {
     let gone = false;
@@ -316,6 +534,7 @@ function SpareOffer() {
       try {
         const r = await fetch('/api/keyring', { cache: 'no-store' });
         const d = await r.json();
+        noteProof(d?.proved_left);
         const spare = d?.spare;
         if (gone || !spare || spare.ready) return;
         let saidAt = null;
@@ -331,13 +550,14 @@ function SpareOffer() {
 
   async function make() {
     if (busy) return;
+    if (!provedNow()) { setAsking(true); return; }
     setBusy(true);
     setTrouble('');
     try {
       const d = await makeSpare();
       setShown(d.code);
     } catch (error) {
-      setTrouble(error?.message || 'A spare key could not be made just now.');
+      if (error?.prove) { noteProof(0); setAsking(true); } else setTrouble(error?.message || 'A spare key could not be made just now.');
     }
     setBusy(false);
   }
@@ -360,10 +580,14 @@ function SpareOffer() {
     <div className="ko ko--foot">
       <p className="ko-line">{used ? 'Your spare key is used up.' : 'Make a spare key?'}</p>
       {!used && <p className="ko-note">{withPassword ? 'It opens your journal if you lose every device and your password.' : 'It opens your journal if you lose every device.'}</p>}
-      <button type="button" className="ko-use" onClick={make} disabled={busy}>
-        <Key size={26} aria-hidden="true" />
-        <span>{used ? 'Make a new one' : 'Make one'}</span>
-      </button>
+      {asking ? (
+        <ConfirmItsYou onConfirmed={() => { setAsking(false); make(); }} />
+      ) : (
+        <button type="button" className="ko-use" onClick={make} disabled={busy}>
+          <Key size={26} aria-hidden="true" />
+          <span>{used ? 'Make a new one' : 'Make one'}</span>
+        </button>
+      )}
       {trouble && <p className="pg-said">{trouble}</p>}
       <button type="button" className="pg-or" onClick={notNow}>not now</button>
     </div>
@@ -420,6 +644,9 @@ export default function Keyring() {
   const [said, setSaid] = useState('');
   const [trouble, setTrouble] = useState('');
   const [doubting, setDoubting] = useState(null);
+  // Which change is waiting on Confirm it's you (above): 'password',
+  // 'spare', 'add', or 'remove:' and a key's id.
+  const [asking, setAsking] = useState(null);
   // Whether the options for making a key could be had: a button that cannot
   // work says so, rather than sitting there pressable and silent.
   const [offerLost, setOfferLost] = useState(false);
@@ -436,6 +663,7 @@ export default function Keyring() {
         setKeys(d.keys || []);
         setSpare(d.spare || null);
         setPassword(d.password ?? null);
+        noteProof(d.proved_left);
       })
       .catch(() => { if (!gone) setTrouble('Your keys could not be read just now.'); });
     const can = canHoldKeys();
@@ -447,6 +675,7 @@ export default function Keyring() {
           body: '{}',
         });
         const d = await r.json().catch(() => ({}));
+        noteProof(d.proved_left);
         if (!gone) {
           setAble(can);
           setOffer(d.options || null);
@@ -464,6 +693,7 @@ export default function Keyring() {
 
   async function addThisDevice() {
     if (!offer || busy) return;
+    if (!provedNow()) { setAsking('add'); return; }
     setBusy(true);
     setSaid('');
     setTrouble('');
@@ -485,10 +715,15 @@ export default function Keyring() {
         body: JSON.stringify({ response, device }),
       });
       const d = await r.json().catch(() => ({}));
-      if (!r.ok) throw new Error(d.error || 'The key could not be added.');
-      setKeys(d.keys || []);
-      markKeyHere(true);
-      setSaid(`Added. This ${device} can unlock your journal.`);
+      if (r.status === 403 && d.prove) {
+        noteProof(0);
+        setAsking('add');
+      } else {
+        if (!r.ok) throw new Error(d.error || 'The key could not be added.');
+        setKeys(d.keys || []);
+        markKeyHere(true);
+        setSaid(`Added. This ${device} can unlock your journal.`);
+      }
     } catch (error) {
       setTrouble(error?.message || 'The key could not be added.');
     }
@@ -505,6 +740,7 @@ export default function Keyring() {
 
   async function newSpare() {
     if (making) return;
+    if (!provedNow()) { setAsking('spare'); return; }
     setMaking(true);
     setTrouble('');
     setSaid('');
@@ -514,7 +750,8 @@ export default function Keyring() {
       setSpare(d.spare || null);
       setShown({ code: d.code, replaced: had });
     } catch (error) {
-      setTrouble(error?.message || 'A spare key could not be made just now.');
+      if (error?.prove) { noteProof(0); setAsking('spare'); }
+      else setTrouble(error?.message || 'A spare key could not be made just now.');
     }
     setMaking(false);
   }
@@ -534,6 +771,14 @@ export default function Keyring() {
         body: JSON.stringify({ password: pw }),
       });
       const d = await r.json().catch(() => ({}));
+      if (r.status === 403 && d.prove) {
+        // What was typed stays, for when the form opens again.
+        noteProof(0);
+        setChanging(false);
+        setAsking('password');
+        setPwBusy(false);
+        return;
+      }
       if (!r.ok || d.error) throw new Error(d.error || 'That did not save. Try again.');
       setPassword(d.password ?? 'journal');
       setPw('');
@@ -550,11 +795,17 @@ export default function Keyring() {
   async function remove(id) {
     if (doubting !== id) { setDoubting(id); return; }
     setDoubting(null);
+    if (!provedNow()) { setAsking(`remove:${id}`); return; }
+    await takeOff(id);
+  }
+
+  async function takeOff(id) {
     setTrouble('');
     setSaid('');
     try {
       const r = await fetch(`/api/keyring?id=${id}`, { method: 'DELETE' });
       const d = await r.json().catch(() => ({}));
+      if (r.status === 403 && d.prove) { noteProof(0); setAsking(`remove:${id}`); return; }
       if (!r.ok) throw new Error(d.error || 'The key could not be removed.');
       // Which key is this device's is not known here, so any removal makes
       // the lock ask once before reaching for Face ID again.
@@ -571,18 +822,25 @@ export default function Keyring() {
       {keys?.length > 0 && (
         <ul className="kr-list">
           {keys.map(key => (
-            <li className="kr-row" key={key.id}>
-              <span className="kr-name">{key.device || 'A device'} · added {added(key.added_at)}</span>
-              <button
-                type="button"
-                className={'kr-x' + (doubting === key.id ? ' kr-x--sure' : '')}
-                onClick={() => remove(key.id)}
-                onBlur={() => setDoubting(was => (was === key.id ? null : was))}
-                aria-label={doubting === key.id ? `Remove the key on ${key.device || 'this device'}` : `Remove…`}
-              >
-                {doubting === key.id ? 'Remove' : '×'}
-              </button>
-            </li>
+            <Fragment key={key.id}>
+              <li className="kr-row">
+                <span className="kr-name">{key.device || 'A device'} · added {added(key.added_at)}</span>
+                <button
+                  type="button"
+                  className={'kr-x' + (doubting === key.id ? ' kr-x--sure' : '')}
+                  onClick={() => remove(key.id)}
+                  onBlur={() => setDoubting(was => (was === key.id ? null : was))}
+                  aria-label={doubting === key.id ? `Remove the key on ${key.device || 'this device'}` : `Remove…`}
+                >
+                  {doubting === key.id ? 'Remove' : '×'}
+                </button>
+              </li>
+              {asking === `remove:${key.id}` && (
+                <li className="kr-more">
+                  <ConfirmItsYou onConfirmed={() => { setAsking(null); takeOff(key.id); }} />
+                </li>
+              )}
+            </Fragment>
           ))}
         </ul>
       )}
@@ -600,6 +858,13 @@ export default function Keyring() {
           <span className="st-trouble" role="alert">Keys can’t be added just now. Try again in a moment.</span>
         )}
       </div>
+      {asking === 'add' && (
+        <div className="kr-more">
+          {/* Face ID cannot be asked twice from one press, so once it is
+              you, Add this device is pressed again. */}
+          <ConfirmItsYou onConfirmed={() => { setAsking(null); setSaid('Confirmed'); }} />
+        </div>
+      )}
       {password !== undefined && (
         <ul className="kr-list kr-list--ways">
           <li className="kr-row">
@@ -610,11 +875,22 @@ export default function Keyring() {
             <button
               type="button"
               className="kr-do"
-              onClick={() => { setChanging(was => !was); setPwTrouble(''); setPwSaid(''); }}
+              onClick={() => {
+                setPwTrouble('');
+                setPwSaid('');
+                if (changing || asking === 'password') { setChanging(false); setAsking(null); return; }
+                if (provedNow()) setChanging(true);
+                else setAsking('password');
+              }}
             >
-              {changing ? 'cancel' : password === null ? 'set one' : 'change'}
+              {changing || asking === 'password' ? 'cancel' : password === null ? 'set one' : 'change'}
             </button>
           </li>
+          {asking === 'password' && (
+            <li className="kr-more">
+              <ConfirmItsYou onConfirmed={() => { setAsking(null); setChanging(true); }} />
+            </li>
+          )}
           {changing && (
             <li className="kr-more">
               <form className="kr-change" onSubmit={changePassword}>
@@ -633,10 +909,15 @@ export default function Keyring() {
           )}
           <li className="kr-row">
             <span className="kr-name">Spare key{spareSaid(spare)}</span>
-            <button type="button" className="kr-do" onClick={newSpare} disabled={making}>
-              {spare?.ready || spare?.used_at ? 'make a new one' : 'make one'}
+            <button type="button" className="kr-do" onClick={() => (asking === 'spare' ? setAsking(null) : newSpare())} disabled={making}>
+              {asking === 'spare' ? 'cancel' : spare?.ready || spare?.used_at ? 'make a new one' : 'make one'}
             </button>
           </li>
+          {asking === 'spare' && (
+            <li className="kr-more">
+              <ConfirmItsYou onConfirmed={() => { setAsking(null); newSpare(); }} />
+            </li>
+          )}
           {shown && (
             <li className="kr-more">
               <SpareKeyShown code={shown.code} replaced={shown.replaced} withPassword={password !== null} onSaved={() => setShown(null)} />

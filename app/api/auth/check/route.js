@@ -25,7 +25,7 @@ export async function GET(request) {
   // name, which moves it to the locked one (library/wristband.js).
   const moving = wornUnderOldName(request);
   if (moving || shouldRenewWristband(wristband)) {
-    response.cookies.set(WRISTBAND_COOKIE.name, await issueWristband(), WRISTBAND_COOKIE.options);
+    response.cookies.set(WRISTBAND_COOKIE.name, await issueWristband({ proved: wristband.proved }), WRISTBAND_COOKIE.options);
   }
   if (moving && OLD_WRISTBAND_COOKIE) {
     response.cookies.set(OLD_WRISTBAND_COOKIE.name, '', OLD_WRISTBAND_COOKIE.options);
