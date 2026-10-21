@@ -218,7 +218,7 @@ The furniture — visual pieces
       IdentityCard.js          The ID: the portrait full width and square — the same object an entry's album art is — then the name, four counts — albums, songs, and the two flags in their colours — and the pinned record or song. Send and Add left it on 2026-09-19, and left the beacon too on 2026-09-27; a visitor sees the keeper here and nowhere else. This is the About page
       IdentificationCardEditor.js  Editing the card in place
       ListeningBeacon.js       The beacon — what is playing, or last played
-      ListenBar.js             The way into a listen: a bar at the foot of home, Listen (Resume with a record in hand) — opens the picker in place, or goes back to /session; the one thing shaped like a button
+      ListenBar.js             The way into a listen: a bar at the foot of home, the session closed — Listen at rest; with a listen lowered, its cover, the lit track and the live dot. Both raise /session as a sheet; the one thing shaped like a button
       Journal.js               The wall of covers, with its search, filters and sort
       JournalFilters.js        The filter sheet — a popover on a desk, a pull-down sheet on a phone — and the year range
       AlbumTile.js             One record on that wall — a card for a record with a listen behind it, a page with its corner folded for a record known only by its track notes; the folder shape went on 2026-10-13 (Journal.js gathers entries into records, by title, artist and year)
@@ -357,7 +357,8 @@ The rooms — full pages assembled from furniture
 | The full entry post page | app/entries/[slug]/FullPostPage.js |
 | A picture turning into its code (the portrait, a cover) | components/main_components/CodeSlot.js, styles under .ln-slot in app/styles/base.css |
 | Printing a record (the share printer) | components/main_components/EntryPlate.js draws the plate, hooks/usePress.js makes and saves the picture, Slug_Page/PrintBar.js is the bar, styles under .ln-print in app/styles/entry.css, app/printer/page.js opens it |
-| The Listen bar at the foot of home | components/main_components/ListenBar.js, its press is openPicker in HomeNav.js, styles under .lb in app/styles/nav.css |
+| The Listen bar at the foot of home | components/main_components/ListenBar.js, styles under .lb in app/styles/nav.css |
+| The session as a sheet, and lowering it without ending | LayerEntry.js `sheet` (.lay--sheet in app/styles/entry.css); the before-leaving hook and keepInHand in app/session/page.js; putDown in hooks/useListeningSession.js |
 | The album picker | components/session_components/AlbumPicker.js |
 | The note-taking session | app/session/page.js, styles in app/styles/session.css |
 | The session's one screen and its preview | components/session_components/steps/ |

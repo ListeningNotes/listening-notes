@@ -946,3 +946,26 @@ raises into a sheet. The bar ran the ring's own press. There was no room at
 the foot of one phone screen for the ring, the chevron under it and the bar,
 and asked which should give, she said "everything leaves in exchange for
 this": the ring and the keeper's chevron both went.
+
+---
+
+## The session — two words under the lit track, and leaving ending a listen, 2026-09 to 2026-10-21
+
+Current rules: DECISIONS.md → The session, *A pencil at the end of the lit
+row* and *The session is a sheet raised from the Listen bar*.
+
+**Under a lit track, two words: Add notes and Send track, centred.** A word,
+not the envelope: it was tried beside the heart (it moved the stars), at the
+end of the line, and under the live dot, and none read right. Reversed by her
+brief *home, the frame, and the session*: a word under the row read as a field
+to fill in, and the pencil's slot, kept on every row, is what stops the stars
+moving. Send track went with it, on her call that a song is sent from a real
+post.
+
+**The session opened as a layer over the desk, and leaving it ended it.**
+Leaving put you back on the desk rather than on the beacon, because the cross
+never unmounted, and from 2026-09-16 leaving the screen lifted the needle:
+Miyel shut a listen, watched the beacon go on claiming it, and was right to.
+Reversed the same day the bar arrived: the session is a sheet lowered back
+into the bar without ending, and shutting is Discard, Save draft and Post,
+which still lift it.

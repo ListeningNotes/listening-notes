@@ -163,12 +163,12 @@ commits on a hairline, and no tick or cross beside them. `.ln-word`, shared by
 the four bars that share that band.
 
 **One exception, 2026-10-21: the way into a listen is the Listen bar.** A
-raised panel at the foot of home, one word — Listen, Resume while a record is
-in hand — and the only thing on the site shaped like a button, because it is
-the only thing that starts something; it licenses no second one (Miyel's
-brief, home and the session). It took the ring's job and code, and the ring
-and the keeper's chevron went for it: "everything leaves in exchange for
-this." The ring of 2026-09-20 is in the archive.
+raised panel at the foot of home, the session closed: Listen at rest, and a
+lowered listen's cover, track and live dot — the only thing on the site shaped
+like a button, because it is the only thing that starts something; it
+licenses no second one (Miyel's brief, home and the session). The ring and
+the keeper's chevron went for it: "everything leaves in exchange for this."
+The ring of 2026-09-20 is in the archive.
 
 **No loose icons in headers, 2026-09-15.** The mark is centred and the sides
 are for navigation. A single ··· is not a row of tools, it is a door, and it
@@ -2307,24 +2307,23 @@ and its note is a sheet. The strip, the carets, the swipe between tracks and
 the mini beacon header went with it. The reversed entries and the day of
 trials are in the archive; do not bring the screens back a third time.
 
-**An empty note field is closed.** *Add notes* under the track being
-logged until it is pressed; the album note is a box that is always open; the writing
-once there is any; nothing under any other track. The session offers rather
-than asks.
+**An empty note field is closed.** A pencil at the end of the track being
+logged until it is pressed; the album note is a box that is always open; the
+writing once there is any; nothing under any other track. The session offers
+rather than asks.
 
 **A track's note opens under its row, with the keyboard, and only under the
 track being logged.** The brief drew a sheet and one was built for an hour;
 Miyel: "the notes field should open in the tracklist, not as a popup." What
 sank the list in 2026-09-18 was a field under every row; one field, on the
 lit row, lifted clear of the keyboard, is a different thing. Left empty it
-shuts; written in, the words stand where it was. The envelope is beside the
-heart on the lit row, so a song can be sent without the box being opened.
+shuts; written in, the words stand where it was.
 
 **The track being logged is the one last touched, 2026-09-29.** Its name
 pressed, a star, the heart, its note opened — "any sort of click on a track
 counts as lighting it as live". Its number gives way to the live dot and the
-row takes the faintest green, and *Any notes?* stands under that track alone.
-Nothing about the beacon changes.
+row takes the faintest green, and the pencil stands at the end of that row
+alone. Nothing about the beacon changes.
 
 **The stars tell a scroll from a tap from a drag, 2026-09-29.** Nothing is
 set on the way down: up-and-down is the page's, sideways is the rating,
@@ -2347,14 +2346,15 @@ them; a Masterpiece counts, being five. Amends "anything at all" of
 **A note being written sits on the keyboard, 2026-10-17.** The foot of its
 box just over the keys, nothing between — the session's foot steps down
 while typing — and nothing scrolls back when the keyboard goes. Replaces
-lifting the track's name to the top (2026-09-22). Only Add notes, Edit notes
-and the written note open a track's note; a name, star or heart never does.
+lifting the track's name to the top (2026-09-22). Only the pencil and the
+written note open a track's note; a name, star or heart never does.
 
-**Under a lit track, two words: Add notes and Send track, centred.** A word,
-not the envelope: it was tried beside the heart (it moved the stars), at the
-end of the line, and under the live dot, and none read right. The note opens
-in the album note's own box under the row; the eye beside the album's stars
-reveals the tracks' average with "avg." after it.
+**A pencil at the end of the lit row, 2026-10-21, and no sending from a
+listen.** In a slot every row keeps and leaves empty, so the stars never move
+when it appears — what sank the envelope in September; a word or an open box
+read as a field to fill in, and a track note has to feel optional (Miyel's
+brief, home and the session). Send track went with the two words: a song is
+sent from a real post, not from a listen (Miyel). The archive has the words.
 
 **A brow the height of the status bar stands over every page, 2026-09-29.**
 Solid, the page's colour, no blur and no hairline; what scrolls goes under
@@ -2363,8 +2363,9 @@ that is where the site's fixed rows start (`--safe-top`); at the inset's
 full height it cut their tops off. Nothing where the inset is zero.
 
 **Discard · Save draft · Post at the foot; on a desk, in a row at the
-top.** Discard asks twice. Save draft is the pull down as a word: the draft
-was always saving itself, this is the visible way out. Post opens the entry
+top.** Discard asks twice. Save draft ends the listen and keeps its words —
+the draft was always saving itself — where the pull only lowers it
+(2026-10-21; it was the pull down as a word until then). Post opens the entry
 as it will look, with Go back and a green Post? that posts — Miyel's pick,
 2026-10-17, over posting straight from the session. The word was Preview
 until then; testers did not know what a preview was.
@@ -2372,9 +2373,14 @@ until then; testers did not know what a preview was.
 **The cover lands on the record's own cover at the top of the session.**
 There is no header for it to land in.
 
-**The session opens as a layer over the desk.** Leaving it puts you back on
-the desk rather than on the beacon, because the cross never unmounted. There
-is no dashboard door on the picker or after a save; the way back is the layer's.
+**The session is a sheet raised from the Listen bar, and lowering is not
+ending, 2026-10-21.** Raised, it covers home from just under the status bar
+and opens on the picker: *What are you putting on?*, Sent to you with each
+sender's face, Drafts, then search. The pull, Escape and the caret lower it —
+the record stays in hand, the beacon stays lit, and the bar carries the cover,
+the lit track and the live dot. Discard, Save draft and Post end it and still
+lift the needle. Reverses "leaving the screen ends it" (2026-09-16): what she
+objected to was a listen she had *shut*, and shutting is those three words.
 
 **The mobile version is not a reduced version.** Every screen holds one thing
 and runs full-bleed on both devices; nothing exists on one and not the other.
