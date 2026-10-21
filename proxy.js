@@ -1,7 +1,8 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // proxy.js
-// Tells the layout which page it is rendering, and does nothing else.
+// Tells the layout which page it is rendering, and tells the browser which
+// scripts it may run — and does nothing else.
 //
 // The filename is Next's. `middleware` was renamed to `proxy` in this version,
 // which is the sort of thing AGENTS.md warns about — the docs are in
@@ -25,6 +26,25 @@
 // So it reads nothing, writes nothing, and decides nothing. It copies the
 // pathname into a header. The decision, and the one cached read behind it,
 // belong to the layout.
+//
+// ── Which scripts may run, 2026-10-20 ─────────────────────────────────────
+// Every page goes out with a content security policy (Miyel's pick, for the
+// tricks nobody has thought of yet): a browser runs only the scripts this
+// page was sent with, each stamped with a number made fresh for this one
+// request, and the scripts those load. A script slipped onto a page some
+// other way — through a bug, a pasted link, a word a keeper typed — is not
+// stamped, and the browser refuses it. Next stamps its own scripts when it
+// finds the number here; the layout stamps the one it writes itself. Still
+// no read and no decision: a number from the platform's own random source
+// and a header, which costs this request nothing it was not already spending.
+//
+// The rest of the policy says what a journal really loads, so nothing it
+// needs is refused: its own files, album art and faces from anywhere over
+// https, other journals' public routes over https, Apple's previews, and
+// styles written inline (React writes them; a style cannot run anything).
+// Nothing may frame a journal, so no other page can lay a button over one.
+// The dev server, plain http over a home network, is allowed what it needs
+// to reload itself and nothing more.
 
 import { NextResponse } from 'next/server';
 
@@ -35,11 +55,41 @@ export const PATH_HEADER = 'x-ln-path';
 // made here — the string is copied, the layout reads it.
 export const SEARCH_HEADER = 'x-ln-search';
 
+export const NONCE_HEADER = 'x-nonce';
+
+function policy(nonce) {
+  const dev = process.env.NODE_ENV === 'development';
+  const plain = dev ? ' http:' : '';
+  return [
+    "default-src 'self'",
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${dev ? " 'unsafe-eval'" : ''}`,
+    "style-src 'self' 'unsafe-inline'",
+    `img-src 'self' data: blob: https:${plain}`,
+    `media-src 'self' blob: https:${plain}`,
+    "font-src 'self' data:",
+    `connect-src 'self' https:${dev ? ' http: ws: wss:' : ''}`,
+    "worker-src 'self' blob:",
+    "frame-src 'self'",
+    "frame-ancestors 'none'",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "manifest-src 'self'",
+    ...(dev ? [] : ['upgrade-insecure-requests']),
+  ].join('; ');
+}
+
 export function proxy(request) {
   const headers = new Headers(request.headers);
   headers.set(PATH_HEADER, request.nextUrl.pathname);
   headers.set(SEARCH_HEADER, request.nextUrl.search);
-  return NextResponse.next({ request: { headers } });
+  const nonce = btoa(crypto.randomUUID());
+  const rule = policy(nonce);
+  headers.set(NONCE_HEADER, nonce);
+  headers.set('Content-Security-Policy', rule);
+  const response = NextResponse.next({ request: { headers } });
+  response.headers.set('Content-Security-Policy', rule);
+  return response;
 }
 
 export const config = {

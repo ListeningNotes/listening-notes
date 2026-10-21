@@ -163,6 +163,13 @@ export async function memoryOf() {
   return (await journalHere()).host;
 }
 
+// Every address in the directory and when each arrived — never a way in.
+// For the hand tool (scripts/hosting_directory.mjs).
+export async function list_journals() {
+  await shelf();
+  return await directory()`SELECT host, placed_at FROM journals ORDER BY host`;
+}
+
 // ── Placing a journal ─────────────────────────────────────────────────────
 // Writes an address and the way into its database, sealed. Signup will call
 // this (step 4); until then it is called by hand.

@@ -139,6 +139,7 @@ The update button
 The other scripts — run by hand or by a machine, never by the site
   scripts/backup.mjs             Every table to $BACKUP_DIR/<timestamp>/ with migrations/ beside it; 30 kept; carries secrets; counts as a copy (docs/OPERATIONS.md)
   scripts/letterhead.mjs         The canonical keeper's, on her Mac: makes the LN. Admin key (its private half in the Keychain) and seals and posts a letter to the journals it concerns
+  scripts/hosting_directory.mjs  The hosting directory by hand: its key and way in kept in the Keychain, a journal placed at an address (way in off the clipboard), the addresses listed and checked
   scripts/restore.mjs            Puts a backup or an export back — a folder, the zip from Make a copy, or a bare journal.json; a dry run without --yes; empties only the tables the file holds. The restore itself is library/unpacking.mjs
   scripts/prepare_database.mjs   Runs before next build: migrates and prints the claim notice; never fails the build
 
@@ -147,7 +148,7 @@ The lint gate — git runs it, on a machine that has opted in
 
 Before the first request — two files whose names are Next's, not ours
   instrumentation.js             The startup hook: migrates before the first request and prints the claim notice while the copy is unclaimed
-  proxy.js                       Next's middleware under its new name: copies the pathname into a header for the layout and does nothing else
+  proxy.js                       Next's middleware under its new name: copies the pathname into a header for the layout, and sends every page's content security policy (only scripts stamped for this request run)
 
 The front doors — receive requests, hand them off, send back responses
   app/api/

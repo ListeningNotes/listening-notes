@@ -239,6 +239,49 @@ Vercel locks a preview to the project's owner, so opening one asks you to
 sign in to Vercel once. It also means no other journal can reach a sandbox:
 something that arrives from another journal cannot be tried there.
 
+## The hosting directory
+
+A deployment that hosts many journals finds each one in the hosting
+directory (`library/hosting_directory.js`): its own Neon database, holding
+each journal's address and the way into its database, sealed with a key
+that lives only in the deployment's settings. Nothing a journal wrote is in
+it. A deployment without `HOSTING_DIRECTORY_URL` is a copy serving one
+journal, and none of this applies.
+
+**Its two settings**, in the deployment's environment variables:
+`HOSTING_DIRECTORY_URL` (the directory database's connection string) and
+`HOSTING_DIRECTORY_KEY` (32 random bytes, base64). On the deployment, the
+`SESSION_SECRET`, `SESSION_PASSWORD` and `ANTHROPIC_API_KEY` variables are
+ignored: each hosted journal's live in its own vault.
+
+**By hand**, on the canonical keeper's Mac, until signup places journals:
+
+```bash
+npm run hosting-directory -- key
+```
+
+makes the key once, keeps it in the Keychain and puts it on the clipboard
+for the deployment's settings.
+
+```bash
+npm run hosting-directory -- remember
+```
+
+keeps the directory's own connection string, copied from Neon first.
+
+```bash
+npm run hosting-directory -- place name.listeningnotes.blog
+```
+
+places a journal: copy its database's connection string from Neon first;
+it is read off the clipboard, checked, and sealed, and never printed.
+`list` shows every address and `check <address>` says whose journal opens
+there.
+
+**If the key is lost or might have been seen**, make a new one and place
+every journal again with it: the old key opens nothing once the deployment
+holds the new one.
+
 ## LN. Admin letters
 
 A letter is the one way to tell keepers something they cannot learn from

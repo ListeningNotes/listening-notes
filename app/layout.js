@@ -12,7 +12,7 @@ import { Nunito, DM_Mono } from 'next/font/google';
 import { Lightswitch } from '../components/main_components/Lightswitch';
 import { Bookplate } from '../components/main_components/Bookplate';
 import ComingSoon from '../components/main_components/ComingSoon';
-import { PATH_HEADER } from '../proxy';
+import { PATH_HEADER, NONCE_HEADER } from '../proxy';
 import { headers } from 'next/headers';
 import { isSetUp, pull_settings, coverName, titleName } from '../library/settings_actions';
 import { hasDatabase, explainDatabaseError } from '../library/database_connection';
@@ -231,6 +231,9 @@ async function holdTheDoor() {
 export default async function RootLayout({ children, layer }) {
   const holding = await holdTheDoor();
   const all = await pull_settings();
+  // The number this request's scripts are stamped with (proxy.js), for the
+  // one script the layout writes itself.
+  const nonce = (await headers()).get(NONCE_HEADER) || undefined;
 
   // Named keys only, rather than spreading what is left after removing the
   // essay. Bookplate is a client component, so every prop handed to it is
@@ -302,6 +305,7 @@ export default async function RootLayout({ children, layer }) {
         {SANDBOX && <div className="ln-sandbox-glow" aria-hidden="true" />}
         {SANDBOX && <div className="ln-sandbox">Sandbox</div>}
         <script
+          nonce={nonce}
           suppressHydrationWarning
           dangerouslySetInnerHTML={{
             __html: `try{var s=localStorage.getItem('ln-theme');if(s)document.documentElement.setAttribute('data-theme',s);}catch(e){}`,

@@ -35,6 +35,7 @@ The real ones, from `package.json`. There are no others.
 | `npm run backup` | Every table to `$BACKUP_DIR/<timestamp>/` (`scripts/backup.mjs`; see docs/OPERATIONS.md). |
 | `npm run restore -- <path>` | Dry run of a restore; add `--yes` to write (`scripts/restore.mjs`). |
 | `npm run letterhead -- …` | The canonical keeper's, on her Mac: `keys` makes the LN. Admin key, `send <journal> --said "…"` seals and posts a letter (`scripts/letterhead.mjs`; see docs/OPERATIONS.md). |
+| `npm run hosting-directory -- …` | The hosting directory by hand, on a deployment that hosts journals: `key`, `remember`, `place <address>` (the way in read off the clipboard), `list`, `check <address>` (`scripts/hosting_directory.mjs`; see docs/OPERATIONS.md). |
 
 **Migrations have no command.** The files in `migrations/` apply themselves,
 in filename order, on every server start (`instrumentation.js` →
@@ -399,13 +400,21 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - `letterhead.mjs` — the canonical keeper's sender of LN. Admin letters: makes
   the key and keeps its private half in her Mac's Keychain (`keys`), and
   seals and posts a letter to the journals it concerns (`send`).
+- `hosting_directory.mjs` — the hosting directory by hand until signup
+  places journals: makes the directory's key (`key`) and keeps the
+  directory's way in (`remember`) in the Keychain, places a journal at an
+  address with the way in read off the clipboard (`place`), and lists and
+  checks addresses. Never prints a way in.
 
 ## Top-level files whose names are Next's, not ours
 
 - `instrumentation.js` — the startup hook: migrates before the first request
-  and prints the claim notice while unclaimed.
+  and prints the claim notice while unclaimed; on a deployment that hosts
+  journals, neither (each journal is migrated on its first visit).
 - `proxy.js` — Next's middleware under its new name: copies the pathname into
-  a header for the layout and does nothing else.
+  a header for the layout, and puts the content security policy on every
+  page, with the number this request's scripts are stamped with. No reads,
+  no decisions.
 
 ## Components named by metaphor
 
