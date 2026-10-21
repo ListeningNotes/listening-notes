@@ -87,7 +87,7 @@ export async function POST(request) {
           say({ error: 'Not available.', state: 'taken' });
         } else {
           console.error('[front door] a journal could not be made:', error?.message || error);
-          say({ error: 'Your journal could not be made just now. Try again in a minute.' });
+          say({ error: 'Your journal couldn’t be made just now. Try again in a minute.' });
         }
       }
       try { controller.close(); } catch { /* gone */ }

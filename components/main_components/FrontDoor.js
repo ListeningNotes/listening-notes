@@ -134,7 +134,7 @@ function Welcome({ domain, left }) {
 // (Miyel's pick, 2026-10-20: "steps that tick off, as each really
 // finishes"). The last is the page going to the journal's own address.
 const STEPS = [
-  { key: 'database', said: 'Making your database' },
+  { key: 'database', said: 'Making room for your journal' },
   { key: 'pages', said: 'Setting up your pages' },
   { key: 'address', said: 'Writing your address' },
   { key: 'open', said: 'Opening your journal' },
@@ -208,7 +208,7 @@ function Start({ domain, left: firstLeft }) {
     const failed = said => {
       if (said?.full) setLeft(0);
       if (said?.state) setState(said.state);
-      setTrouble(said?.error || 'Your journal could not be made just now. Try again in a minute.');
+      setTrouble(said?.error || 'Your journal couldn’t be made just now. Try again in a minute.');
       setMaking(false);
     };
     try {
