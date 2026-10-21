@@ -275,7 +275,9 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   door's `www.` is the old address of the journal that moved off it, and is
   answered as that journal, but for the front door's home and `/get`, which
   go to the bare domain. Nothing runs without `HOSTING_DIRECTORY_URL`.
-  The forwarding of its pages is in `next.config.mjs`.
+  The forwarding of its pages is in `next.config.mjs`. And `isHere`, on any
+  copy: whether an address is the journal a request reached, by either name
+  it answers to, so a journal never says it moved to itself.
 - `install_guide.js` — what `/get` needs: the deploy button's URL and the ten
   install steps with their screenshots and the rings drawn over them.
 - `keyring.js` — the passkeys (`keyring`): a row per device's key, the
@@ -312,7 +314,10 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   `ask_directory_read`, any read of the registry's list, server to server.
 - `people_actions.js` — the address book (`people`): list, file, pin (six at
   most), keep private, remove, the part that may be published
-  (`pull_public_people`), and asking a journal its keeper's name.
+  (`pull_public_people`), and asking a journal its keeper's name; and moves —
+  `note_moves`, a friend's journal saying it lives somewhere new, written
+  down by the friends round; `take_move`, the keeper's Update, the only
+  thing that changes the address; `any_moves`, for the dot on Inbox.
 - `portrait_code.js` — the press: the portrait made into the journal's QR
   code with a dot of ink per module, proved by decoding with jsQR on both page
   colours; `CODE_BUILD` is bumped whenever the drawing changes.
@@ -342,7 +347,8 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   `pull_keeper_name`, and the listing code and whether the journal is on the
   Board, each read and written on its own (`pull_listing_code`,
   `save_listing_code`, `pull_findable`, `save_findable`), never with the
-  rest.
+  rest; and `pull_moved_to`, where the journal lives now if it moved, read
+  alone for the beacon.
 - `sitewide_visuals.js` — colours and fonts as JS objects, for canvas and
   chart code that cannot read a CSS custom property. The stylesheets are the
   source; this mirrors them.
