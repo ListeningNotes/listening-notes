@@ -889,7 +889,7 @@
    lit track, so a row's stars stand where they stand whether it is lit or
    not (2026-10-21). The padding is the pencil's touch target and the margin
    gives the room back, the way the heart's does. */
-.ses-row-pen { flex: 0 0 auto; width: 25px; display: flex; justify-content: flex-end; }
+.ses-row-pen { flex: 0 0 auto; width: 21px; margin-left: -4px; display: flex; justify-content: flex-end; }
 .ses-pen {
   display: inline-flex; padding: 4px; margin: -4px -4px -4px 0;
   border: 0; background: none; cursor: pointer;

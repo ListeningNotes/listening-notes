@@ -233,12 +233,12 @@
   border-radius: var(--radius, 24px) var(--radius, 24px) 0 0;
   box-shadow: 0 -14px 46px rgba(0, 0, 0, 0.26);
 }
-/* In the sheet's own flow and stuck to its top, so it stays at the edge the
-   thumb pulls from however far down the listen has been scrolled. No height
-   of its own: it hangs over the page's top padding. */
+/* At the top of the sheet's own flow, and it scrolls away with the page: the
+   pull only lowers the sheet from the top, which is the one place the grip
+   has anything to say, and stuck there it floated over the writing below.
+   No height of its own: it hangs over the page's top padding. */
 .lay-grip {
-  position: sticky;
-  top: 0;
+  position: relative;
   z-index: 212;
   height: 0;
   overflow: visible;

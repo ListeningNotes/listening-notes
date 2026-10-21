@@ -60,6 +60,7 @@ import SessionPreview from '../../components/session_components/steps/SessionPre
 import Trouble from '../../components/session_components/Trouble';
 import TrackNotePage from '../entries/[slug]/TrackNotePage';
 import { useBeforeLeaving, useLayerExit } from '../../components/main_components/LayerEntry';
+import { announce } from '../../hooks/useListeningBeacon';
 
 // How long the picked cover takes to reach the header. The step body slides in
 // on the same curve at nearly the same length, so the two read as one move.
@@ -596,6 +597,12 @@ export default function SessionPage() {
   // From the picker: a record, and the box its cover was tapped in.
   function pick(record, from) {
     try { localStorage.setItem(PENDING_KEY, JSON.stringify(record)); } catch { /* the listen still opens */ }
+    // The beacon says so at the press, as it did when the beacon's own picker
+    // chose the record (HomeNav's beginListen, until the picker moved into
+    // the sheet, 2026-10-21): home is under the sheet and the Listen bar is
+    // read from it the moment the sheet is lowered, so neither should wait
+    // out a poll to hear what is playing. The needle's own write follows.
+    announce({ album: record.album, artist: record.artist, art: record.artUrl });
     // A record pressed is a listen, whatever song was on the desk before it.
     try { sessionStorage.removeItem(TRACK_NOTE_KEY); } catch { /* nothing to clear */ }
     setSong(null);
