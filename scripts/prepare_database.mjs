@@ -34,6 +34,15 @@ const { explainDatabaseError } = await import('../library/database_connection.js
 
 const say = message => console.log(`[prepare] ${message}`);
 
+// A deployment that hosts journals has no one database to prepare: each
+// journal is brought up to date the first time it is opened after a deploy
+// (library/database_connection.js), and a new one's claim code is handed
+// over by the front door, never printed (library/front_door.js).
+if (process.env.HOSTING_DIRECTORY_URL) {
+  say('hosting journals: each is brought up to date the first time it is opened');
+  process.exit(0);
+}
+
 if (!process.env.DATABASE_URL) {
   say('no DATABASE_URL — the site will build and hold on a page asking for one');
   process.exit(0);
