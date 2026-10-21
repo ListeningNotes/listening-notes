@@ -51,6 +51,7 @@ import {
   SAID_MOST, sameJournal, pull_messages, save_message, see_message, remove_message,
 } from '@/library/message_actions';
 import { read_letter, keep_letter } from '@/library/letterhead';
+import { answerNoJournal } from '@/library/hosting_directory';
 
 // Whether this looks like one copy's server talking to another rather than
 // a person's browser: no Origin and no Referer, with a journal named. A hint
@@ -79,7 +80,9 @@ export async function POST(request) {
       if (!read.ok) return Response.json({ error: read.why }, { status: read.status });
       await keep_letter(read.letter);
       return Response.json({ ok: true });
-    } catch {
+    } catch (error) {
+      const nowhere = answerNoJournal(error);
+      if (nowhere) return nowhere;
       return Response.json({ error: 'The letter could not be kept just now.' }, { status: 500 });
     }
   }
@@ -143,6 +146,8 @@ export async function POST(request) {
     });
     return Response.json({ ok: true });
   } catch (error) {
+    const nowhere = answerNoJournal(error);
+    if (nowhere) return nowhere;
     return Response.json({ error: error.message }, { status: 500 });
   }
 }

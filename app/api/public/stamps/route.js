@@ -27,6 +27,7 @@
 // render "39". A number, a date and three words is the whole payload here.
 
 import database from '@/library/database_connection';
+import { answerNoJournal } from '@/library/hosting_directory';
 
 export async function GET() {
   try {
@@ -78,6 +79,9 @@ export async function GET() {
       genres: genres.map(g => g.name),
     });
   } catch (error) {
+    // No journal at this address is not a card with no numbers.
+    const nowhere = answerNoJournal(error);
+    if (nowhere) return nowhere;
     // A card with no numbers on it is a card. A card that fails to load is a
     // broken page, so the counts come back as zeros and the component leaves
     // those rows off rather than printing "0 records".

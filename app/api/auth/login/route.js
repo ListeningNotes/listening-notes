@@ -20,6 +20,7 @@ import { isSetUp } from '@/library/settings_actions';
 import { pull_secrets, verifyPassword, claimCodeMatches, setupWindowOpen, spendSpareKey } from '@/library/secrets';
 import { timingSafeEqual } from 'node:crypto';
 import { deploymentSetting } from '@/library/hosting_directory';
+import { answerNoJournal } from '@/library/hosting_directory';
 
 // Compares in constant time, so the answer takes as long for a password that
 // is wrong in the first character as for one wrong in the last. A plain !==
@@ -88,6 +89,8 @@ export async function POST(request) {
     response.cookies.set(WRISTBAND_COOKIE.name, token, WRISTBAND_COOKIE.options);
     return response;
   } catch (error) {
+    const nowhere = answerNoJournal(error);
+    if (nowhere) return nowhere;
     return NextResponse.json({ error: 'Login failed' }, { status: 500 });
   }
 }

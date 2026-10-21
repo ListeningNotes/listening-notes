@@ -14,6 +14,7 @@
 // touches a notes column.
 import database from './database_connection.js';
 import { sizedAlbumArt } from './music_data_api.js';
+import { NoJournalHere } from './hosting_directory.js';
 
 // How long a listen can sit untouched before the needle lifts itself.
 //
@@ -74,7 +75,10 @@ export async function pull_needle() {
       // is here for the keeper's own screens, should one want it.
       at: row.updated_at ? new Date(row.updated_at).toISOString() : null,
     };
-  } catch {
+  } catch (error) {
+    // A bad minute reads as nothing playing; an address with no journal is
+    // not a journal with nothing playing, and goes on to say so (2026-10-21).
+    if (error instanceof NoJournalHere) throw error;
     return null;
   }
 }
@@ -251,7 +255,8 @@ export async function pull_recent_listens() {
       });
     }
     return listens;
-  } catch {
+  } catch (error) {
+    if (error instanceof NoJournalHere) throw error;
     return [];
   }
 }

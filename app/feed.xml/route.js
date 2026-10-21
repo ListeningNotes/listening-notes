@@ -26,6 +26,7 @@
 import { pull_public_entries } from '@/library/database_actions';
 import { entryTypeLabel } from '@/library/entry_formatter';
 import { pull_settings, titleName } from '@/library/settings_actions';
+import { answerNoJournal } from '@/library/hosting_directory';
 
 // The channel title is read per request, not written here. It was a constant,
 // which put the first journal's name at the top of every copy's feed — and a
@@ -46,10 +47,17 @@ function xml(value) {
 
 export async function GET(request) {
   const origin = new URL(request.url).origin;
-  const [entries, settings] = await Promise.all([
-    pull_public_entries(),
-    pull_settings(),
-  ]);
+  let entries;
+  let settings;
+  try {
+    [entries, settings] = await Promise.all([pull_public_entries(), pull_settings()]);
+  } catch (error) {
+    // A reader handed an address with no journal is told so, not that the
+    // feed is failing; any other failure is the framework's 500, as before.
+    const nowhere = answerNoJournal(error, { 'Access-Control-Allow-Origin': '*' });
+    if (nowhere) return nowhere;
+    throw error;
+  }
   // A feed reader files the subscription under this and shows it in a list
   // for years. Plain name.
   const title = titleName(settings);

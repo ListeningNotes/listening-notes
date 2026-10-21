@@ -59,6 +59,14 @@ const WAIT_MS = 12000;
 // every case — fix the address, try later, or nothing.
 const NO_ADDRESS = 'There is no address for them in your book.';
 const NO_JOURNAL = 'Your own journal has no address set, so there is nothing to sign the send with. Settings has it.';
+// What a journal at an address with no journal says (answerNoJournal,
+// library/hosting_directory.js; 2026-10-21): a 404 that is JSON. Told from a
+// copy too old to have the route, whose not-found is a page, not JSON.
+const NOBODY_THERE = 'There’s no journal at that address. Nothing was sent.';
+const NOBODY_THERE_FOR_WORDS = 'There’s no journal at that address. Nothing was sent, and your words are still here.';
+function nobodyThere(answer, json) {
+  return answer.status === 404 && json;
+}
 const NO_ANSWER  = 'Their copy did not answer. It may be offline — nothing was sent, and your note is still here.';
 
 // Hand a record over.
@@ -116,6 +124,9 @@ export async function send_record({
   }
 
   if (!answer.ok) {
+    if (nobodyThere(answer, (answer.headers.get('content-type') || '').includes('application/json'))) {
+      return { ok: false, error: NOBODY_THERE };
+    }
     // Their copy answered and said no. Their words where they gave any, since
     // they know why better than this does — a rate limit, a missing field, a
     // journal that is not set up. Never their status code: a number is not an
@@ -184,6 +195,7 @@ export async function send_wave({ to }) {
   }
 
   const json = (answer.headers.get('content-type') || '').includes('application/json');
+  if (nobodyThere(answer, json)) return { ok: false, error: NOBODY_THERE };
   if (answer.status === 404 || !json) return { ok: false, old: true, error: TOO_OLD };
   let body = null;
   try { body = await answer.json(); } catch { /* said it was JSON and was not */ }
@@ -260,6 +272,7 @@ export async function send_message({ to, said, about = null, answering = '' }) {
   }
 
   const json = (answer.headers.get('content-type') || '').includes('application/json');
+  if (nobodyThere(answer, json)) return { ok: false, error: NOBODY_THERE_FOR_WORDS };
   if (answer.status === 404 || !json) return { ok: false, old: true, error: TOO_OLD_FOR_WORDS };
   let body = null;
   try { body = await answer.json(); } catch { /* said it was JSON and was not */ }

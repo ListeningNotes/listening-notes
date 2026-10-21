@@ -18,6 +18,7 @@
 
 import { pull_public_entries } from '@/library/database_actions';
 import { pull_keeper_name } from '@/library/settings_actions';
+import { answerNoJournal } from '@/library/hosting_directory';
 
 // Read by browsers on other people's journals, so it has to say so out loud.
 // Without this header the request is blocked before it reaches the page, and
@@ -32,6 +33,8 @@ export async function GET() {
     const [entries, keeper_name] = await Promise.all([pull_public_entries(), pull_keeper_name()]);
     return Response.json({ keeper_name, entries }, { headers: CORS });
   } catch (error) {
+    const nowhere = answerNoJournal(error, CORS);
+    if (nowhere) return nowhere;
     return Response.json({ error: error.message }, { status: 500, headers: CORS });
   }
 }

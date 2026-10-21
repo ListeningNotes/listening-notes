@@ -18,6 +18,7 @@ import { begin_unlocking, finish_unlocking, spent } from '@/library/keyring';
 import { issueWristband, WRISTBAND_COOKIE, PROOF_SECONDS } from '@/library/wristband';
 import { mayKnock, forgetKnocks, tooSoon, whoIsKnocking } from '@/library/doorman';
 import { spareKeyState, passwordSource } from '@/library/secrets';
+import { answerNoJournal } from '@/library/hosting_directory';
 
 export async function GET(request) {
   try {
@@ -27,7 +28,9 @@ export async function GET(request) {
     const response = NextResponse.json({ options, any, spare, password }, { headers: { 'Cache-Control': 'no-store' } });
     response.cookies.set(cookie.name, cookie.value, cookie.options);
     return response;
-  } catch {
+  } catch (error) {
+    const nowhere = answerNoJournal(error);
+    if (nowhere) return nowhere;
     return NextResponse.json({ error: 'The lock could not be asked just now. Try again.' }, { status: 500 });
   }
 }
@@ -49,7 +52,9 @@ export async function POST(request) {
     const used = spent('unlock');
     response.cookies.set(used.name, used.value, used.options);
     return response;
-  } catch {
+  } catch (error) {
+    const nowhere = answerNoJournal(error);
+    if (nowhere) return nowhere;
     return NextResponse.json({ error: 'The lock could not be opened just now. Try again.' }, { status: 500 });
   }
 }

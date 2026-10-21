@@ -55,6 +55,7 @@
 // untouched: the needle goes in through /api/needle, which is nobody's cache.
 
 import { pull_needle, pull_recent_listens, sameRecord } from '@/library/needle';
+import { answerNoJournal } from '@/library/hosting_directory';
 
 const BEFORE_THAT = 3;     // covers drawn under the beacon
 const EDGE_TTL = 10;       // seconds Vercel may answer this without asking us
@@ -130,7 +131,10 @@ export async function GET() {
       at: last.at,
       before: recent.slice(1, 1 + BEFORE_THAT).map(plain),
     }, { headers: CACHED });
-  } catch {
+  } catch (error) {
+    // No journal at this address is not a journal with nothing playing.
+    const nowhere = answerNoJournal(error);
+    if (nowhere) return nowhere;
     // Cached like every other answer, deliberately. A database having a bad
     // minute is the minute you least want every open tab asking it again, and
     // the worst this costs is one more poll's wait before the beacon comes
