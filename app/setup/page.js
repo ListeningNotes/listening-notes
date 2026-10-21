@@ -80,7 +80,7 @@ import UpdateSwitch from '../../components/main_components/UpdateSwitch';
 import { useJournalHost } from '../../hooks/useJournalHost';
 import { tidyJournal, journalUrl } from '../../library/return_address';
 import { journal_in } from '../../library/carbon_copy';
-import { canHoldKeys, markKeyHere, thisDevice, wayIn, SpareKeyShown } from '../../components/main_components/Keyring';
+import { canHoldKeys, keepFresh, markKeyHere, thisDevice, wayIn, SpareKeyShown } from '../../components/main_components/Keyring';
 
 // The password claims the journal; the home screen comes after, because it is
 // the one step the software cannot perform and the moment right after the
@@ -300,11 +300,12 @@ export default function WelcomeScreen() {
   // ── Face ID, on the password screen ──────────────────────────────────────
   // Offered where this device can make a key and has Face ID or its like.
   // The options come with the setup's own wristband, and again every four
-  // minutes, because the challenge in them lasts five.
+  // minutes while the page is on screen, because the challenge in them lasts
+  // five.
   useEffect(() => {
     if (current !== 'password') return undefined;
     let gone = false;
-    let again = null;
+    let stop = null;
     const known = () => { if (!gone) setWayKnown(true); };
     // A device slow to answer gets the password after three seconds.
     const late = setTimeout(known, 3000);
@@ -325,9 +326,9 @@ export default function WelcomeScreen() {
       if (gone) return;
       setFaceWay(wayIn());
       known();
-      again = setInterval(ask, 4 * 60 * 1000);
+      stop = keepFresh(ask);
     })();
-    return () => { gone = true; clearTimeout(late); if (again) clearInterval(again); };
+    return () => { gone = true; clearTimeout(late); stop?.(); };
   }, [current]);
 
   // Claimed with Face ID: the key made here, then the claim naming it. A

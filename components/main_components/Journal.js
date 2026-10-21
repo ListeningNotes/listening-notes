@@ -595,11 +595,15 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
     setSortDir(SORTS.find(s => s.value === value)?.defaultDir ?? 'desc');
   }
 
+  // Turning a page leaves the scroll where it is. It went to the top, from
+  // when the wall was the whole page; under the beacon the top is the
+  // beacon, and every press threw you a floor past the covers (2026-10-20).
+  // A page is fifty tiles, so the next one lays out exactly where this one
+  // was. A shorter last page is clamped by the browser, and the wall's floor
+  // is a screen tall at least, so the clamp lands on covers and never on the
+  // beacon above them.
   function toPage(next) {
     setPage(next);
-    const port = scroller?.current;
-    if (port) port.scrollTo({ top: 0, behavior: 'auto' });
-    else window.scrollTo({ top: 0, behavior: 'auto' });
   }
 
   function clearFilters() {
