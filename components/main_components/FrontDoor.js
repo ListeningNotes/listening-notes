@@ -44,7 +44,18 @@ function BookWithPlus() {
   );
 }
 
-// An address, a name in front of the domain it lives under.
+// An address, a name in front of the domain it lives under, read as one
+// line in the middle of its box (Miyel, 2026-10-20: "I need it to be
+// centered"). The name's own slot is as wide as what is in it — the
+// address font is monospaced, so a character is a `ch` — so the two halves
+// stay together as it is typed, and a long name scrolls inside its slot
+// rather than pushing the domain out of the box.
+//
+// The faint word in the slot is "sitename" (Miyel's pick, 2026-10-20):
+// "name" read as a first name, and what is chosen here is the journal's web
+// address.
+const NAME_SAYS = 'sitename';
+
 function AddressField({ value, onChange, domain, label, onEnter, disabled = false }) {
   return (
     <label className="fd-field">
@@ -53,7 +64,8 @@ function AddressField({ value, onChange, domain, label, onEnter, disabled = fals
         value={value}
         onChange={e => onChange(e.target.value.toLowerCase().replace(/\s+/g, ''))}
         onKeyDown={e => { if (e.key === 'Enter') onEnter?.(); }}
-        placeholder="name"
+        placeholder={NAME_SAYS}
+        style={{ width: `calc(${Math.max((value || NAME_SAYS).length, 1)}ch + 2px)` }}
         inputMode="url"
         autoCapitalize="none"
         autoCorrect="off"
