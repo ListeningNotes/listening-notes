@@ -171,7 +171,7 @@ function Start({ domain, left: firstLeft }) {
       />
       <p className="fd-state" role="status">{name && state ? SAYS[state] : ' '}</p>
       <button type="button" className="st-save ln-word ln-word--on" onClick={make} disabled={state !== 'free' || making}>
-        {making ? 'Starting your journal…' : 'Start my journal'}
+        {making ? 'Creating your journal…' : 'Create my journal'}
       </button>
       {trouble && <p className="fd-trouble" role="alert">{trouble}</p>}
       <p className="fd-places">{placesLine(left)}</p>
