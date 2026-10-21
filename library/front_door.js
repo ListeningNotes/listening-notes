@@ -110,6 +110,14 @@ export async function placesLeft() {
 // key lives only in the deployment's settings (NEON_API_KEY), with the
 // organisation it belongs to (NEON_ORG_ID) when Neon wants one named.
 // NEON_API_URL points the asking somewhere else, for a test.
+//
+// Where it is made (NEON_REGION) belongs beside where the deployment's
+// functions run, because a page asks its database many times and its reader
+// once: the default sits beside Vercel's default, Washington (iad1), and a
+// deployment whose functions run in Portland (pdx1) sets aws-us-west-2, as
+// Miyel's does from 2026-10-20 ("most friends … chose oregon"). And on
+// Postgres 17, the version every journal so far has run its migrations on;
+// a newer one is a choice made on purpose, not Neon's default moving.
 const NEON_API = () => process.env.NEON_API_URL || 'https://console.neon.tech/api/v2';
 
 async function askNeon(method, path, body = null) {
@@ -172,6 +180,7 @@ export async function make_journal(value, { onStep = () => {} } = {}) {
     project: {
       name: `journal-${name}`,
       region_id: process.env.NEON_REGION || 'aws-us-east-1',
+      pg_version: 17,
       ...(process.env.NEON_ORG_ID ? { org_id: process.env.NEON_ORG_ID } : {}),
     },
   });

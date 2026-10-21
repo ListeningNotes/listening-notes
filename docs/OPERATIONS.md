@@ -290,7 +290,9 @@ it a database of its own, the front door brings it up to date and places it,
 and the browser goes to the new address's setup with the claim code after a
 `#`, which no server is sent. Its settings: `NEON_API_KEY` (made in Neon's
 console, kept only in the deployment's settings), `NEON_ORG_ID` when Neon
-wants the organisation named, `NEON_REGION` (default `aws-us-east-1`), and
+wants the organisation named, `NEON_REGION` (default `aws-us-east-1`, beside
+Vercel's default function region; a deployment whose functions run in
+Portland, `pdx1`, sets `aws-us-west-2`), and
 `HOSTED_JOURNALS_MOST`, the places (default 100). Each place a request comes
 from can start three journals an hour, and a journal the front door made that
 nobody set up or wrote in is taken down after a day. Nothing placed by hand
