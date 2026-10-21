@@ -76,6 +76,13 @@ export const KEPT_NAMES = new Set([
   'get', 'start', 'find', 'new', 'board', 'directory', 'people', 'keepers',
   'journal', 'journals', 'listening', 'notes', 'listeningnotes', 'ln',
   'team', 'staff', 'moderator', 'mod',
+  // Miyel's, 2026-10-21: the names she wants held, and the ones a fake
+  // journal could use to pass as her or as the publication — its issues,
+  // the commons' candidate names, the donations and events she has planned.
+  'founder', 'owner', 'creator', 'editor',
+  'publication', 'issue', 'issues', 'question', 'monthly', 'annual',
+  'commons', 'counter', 'listeningroom',
+  'donate', 'donations', 'events', 'tickets',
 ]);
 
 export function tidyName(value) {
