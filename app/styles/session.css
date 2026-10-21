@@ -885,18 +885,19 @@
    the room. */
 .ses-row-box { margin: 0 0 4px; }
 
-/* The offer under a track: the caption face at caption weight, and nothing
-   about it that reads as a field. The padding is its touch target; the
-   margin gives the room back. */
-.ses-row-offer {
-  display: inline-block; padding: 10px 8px; margin: -6px -8px -10px;
+/* The pencil's slot, on every row: as wide as the pencil, empty but on the
+   lit track, so a row's stars stand where they stand whether it is lit or
+   not (2026-10-21). The padding is the pencil's touch target and the margin
+   gives the room back, the way the heart's does. */
+.ses-row-pen { flex: 0 0 auto; width: 25px; display: flex; justify-content: flex-end; }
+.ses-pen {
+  display: inline-flex; padding: 4px; margin: -4px -4px -4px 0;
   border: 0; background: none; cursor: pointer;
-  font-family: var(--font-label); font-size: 12px; letter-spacing: 0.06em;
-  color: var(--ink-faint); text-align: left;
-  -webkit-tap-highlight-color: transparent; transition: color 0.15s;
+  color: var(--ink-faint); transition: color 0.15s;
+  -webkit-tap-highlight-color: transparent;
 }
-.ses-row-offer:hover { color: var(--ink-soft); }
-.ses-row-offer:focus-visible,
+.ses-pen:hover { color: var(--ink-soft); }
+.ses-pen:focus-visible,
 .ses-row-note:focus-visible,
 .ses-row-name:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: -4px; border-radius: 8px; }
 
@@ -926,10 +927,6 @@
    offer, the note, the box. Its own line, always. */
 .ses-row-under { flex: 1 1 100%; min-width: 0; margin: -6px 0 0 34px; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
 .ses-row-under > .ses-row-note { width: 100%; }
-/* The two words under a lit track, a thumb's width apart and centred on the
-   row — out from under the name's indent, so they read as the row's own
-   pair of doors. */
-.ses-row-doors { display: flex; align-items: center; justify-content: center; gap: 32px; width: calc(100% + 34px); margin-left: -34px; padding: 4px 0 2px; }
 .ses-row-under--box { margin-top: 6px; }
 /* The name is the press that puts the song on air. A button in nothing but
    name: the title's own face, no box. */

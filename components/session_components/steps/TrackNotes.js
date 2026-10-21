@@ -37,7 +37,6 @@ export default function TrackNotes({
   onOpenNote,
   setTrackNotes,
   onShutNote,
-  onSend = null,
   onLookAgain,
   onHandTracks,
 }) {
@@ -161,7 +160,6 @@ export default function TrackNotes({
               onNote={openNote}
               onNoteChange={writeNote}
               onNoteShut={shutNote}
-              onSend={onSend}
             />
           </TrackRowWithDisc>
         ))}

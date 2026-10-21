@@ -56,7 +56,7 @@
 // keyboard up over nothing.
 'use client';
 import { memo, useLayoutEffect, useRef } from 'react';
-import { Heart } from '@phosphor-icons/react';
+import { Heart, PencilSimple } from '@phosphor-icons/react';
 import StarRating from './StarRating';
 import { colors } from '../../library/sitewide_visuals';
 
@@ -67,12 +67,11 @@ function TrackRow({
   rating = 0, favorite = false, note = '',
   onAir = false,
   noting = false,
-  onPress, onRate, onFavorite, onNote, onNoteChange, onNoteShut, onSend = null,
+  onPress, onRate, onFavorite, onNote, onNoteChange, onNoteShut,
 }) {
   const number = track.number || index + 1;
   const title = track.title;
   const written = !!note.trim();
-  const offered = onAir && !written && !noting;
 
   // The cursor goes in as the field arrives, because pressing the offer was
   // asking to write — in the layout pass, while the press is still on the
@@ -141,34 +140,41 @@ function TrackRow({
         >
           <Heart size={20} weight={favorite ? 'fill' : 'regular'} />
         </button>
+        {/* ── The pencil, 2026-10-21 ──────────────────────────────────────
+            At the end of the lit row, in a slot every row keeps and leaves
+            empty, so the stars never move when it appears — the thing that
+            sank the envelope in September (Miyel's brief, home and the
+            session). A mark small enough to ignore on a night with nothing
+            to say, and there when there is: writing a track note has to
+            feel optional, and a word or an open box under the row read as
+            a field to fill in. It opens the note, the way the written note
+            itself does. */}
+        <span className="ses-row-pen">
+          {onAir && !noting && (
+            <button
+              type="button"
+              className="ses-pen"
+              onClick={() => onNote(index)}
+              title={written ? 'Edit the note on this track' : 'Write about this track'}
+              aria-label={written ? `Edit the note on ${title}` : `Write about ${title}`}
+            >
+              <PencilSimple size={17} weight="regular" />
+            </button>
+          )}
+        </span>
       </div>
 
       {/* ── The line under the name ──────────────────────────────────────
           A written note, on any row: pressing it lights the track and opens
-          the box it was written in. On the lit track, two words under it —
-          *Add notes* (or *Edit notes*) and *Send track* — both in the
-          caption face, centred. The envelope was tried beside the heart (it
-          moved the stars), at the end of this line, and under the live dot,
-          and none read right; a word cannot be mistaken for anything. */}
-      {!noting && (written || onAir) && (
+          the box it was written in, the cursor on the letter pressed. The two
+          words that stood under the lit track — Add notes and Send track —
+          went for the pencil on 2026-10-21, and sending went with them: a
+          song is sent from a real post, not from a listen (Miyel). */}
+      {!noting && written && (
         <div className="ses-row-under">
-          {written && (
-            <button type="button" className="ses-row-note" onClick={e => { caret.current = letterUnder(e); onNote(index); }} aria-label={`Notes on ${title}: ${note}. Press to edit`}>
-              {note}
-            </button>
-          )}
-          {onAir && (
-            <div className="ses-row-doors">
-              <button type="button" className="ses-row-offer" onClick={() => onNote(index)}>
-                {offered ? 'Add notes' : 'Edit notes'}
-              </button>
-              {onSend && (
-                <button type="button" className="ses-row-offer" onClick={() => onSend(track)} aria-label={`Send ${title} to somebody`}>
-                  Send track
-                </button>
-              )}
-            </div>
-          )}
+          <button type="button" className="ses-row-note" onClick={e => { caret.current = letterUnder(e); onNote(index); }} aria-label={`Notes on ${title}: ${note}. Press to edit`}>
+            {note}
+          </button>
         </div>
       )}
 
