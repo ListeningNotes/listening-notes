@@ -202,7 +202,7 @@ The hooks — reusable logic shared across pages
   hooks/
     useEntryEditor.js          The draft of an entry while its keeper corrects it in place; fetches the credit fields separately, since public reads strip them
     useHoldStill.js            Locks every scrolling ancestor behind an open overlay so nothing under it moves
-    useJournalHost.js          The journal's host, as the hidden username a password manager files the password under
+    useJournalHost.js          The journal's host; usePasswordName, the keeper's name as the hidden username a password manager files the password under
     useFriendsBeacons.js       Asks /api/friends/beacons once a minute while the Friends room is on screen — one poll shared by every caller — and keeps a journal's last word through a failure
     useListeningBeacon.js      Asks this journal's own beacon every 15 seconds — one poll shared by every component that draws it — logging or last logged
     useListeningSession.js     All session state — the record, tracks, notes, score, preview, saving; SESSION_STEPS

@@ -26,7 +26,8 @@
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { startAuthentication, startRegistration } from '@simplewebauthn/browser';
 import { ArrowRight, Fingerprint, Key, ScanSmiley } from '@phosphor-icons/react';
-import { useJournalHost } from '../../hooks/useJournalHost';
+import { usePasswordName } from '../../hooks/useJournalHost';
+import { useBookplate } from './Bookplate';
 
 // The browser's note that it has unlocked this journal with a key before,
 // so the lock can go straight to Face ID next time — one tap (Miyel's pick).
@@ -209,7 +210,8 @@ export function provedNow() {
 }
 
 export function ConfirmItsYou({ onConfirmed }) {
-  const host = useJournalHost();
+  const { keeper_name } = useBookplate();
+  const filedUnder = usePasswordName(keeper_name);
   const [keyed, setKeyed] = useState(false);
   const [way, setWay] = useState(null);
   const [asked, setAsked] = useState(undefined);
@@ -294,9 +296,9 @@ export function ConfirmItsYou({ onConfirmed }) {
       )}
       {showField && (
         <form onSubmit={withPassword} className="pg-form ci-form">
-          {/* The journal's address, for a password manager to find the
+          {/* The keeper's name, for a password manager to find the
               password under, as the lock's own field has (PasswordGate.js). */}
-          <input type="text" name="username" autoComplete="username" className="pg-who" value={host} onChange={() => {}} aria-label="Journal" tabIndex={-1} />
+          <input type="text" name="username" autoComplete="username" className="pg-who" value={filedUnder} onChange={() => {}} aria-label="Name" tabIndex={-1} />
           <div className={'pg-well' + (error ? ' pg-well--wrong' : '')}>
             <input
               type="password"
@@ -623,7 +625,8 @@ function added(at) {
 }
 
 export default function Keyring() {
-  const host = useJournalHost();
+  const { keeper_name } = useBookplate();
+  const filedUnder = usePasswordName(keeper_name);
   const [keys, setKeys] = useState(null);
   // The other ways in, folded into Your keys (2026-10-20): where the password
   // comes from ('journal', 'environment', or null for none), the spare key's
@@ -894,10 +897,11 @@ export default function Keyring() {
           {changing && (
             <li className="kr-more">
               <form className="kr-change" onSubmit={changePassword}>
-                {/* The address the password is filed under — a real, visible,
+                {/* The name the password is filed under — the keeper's, as
+                    on the lock (hooks/useJournalHost.js) — a real, visible,
                     writable input, because that is what a password manager
                     pairs the password with. Typing into it changes nothing. */}
-                <input className="st-field st-who" type="text" name="username" autoComplete="username" value={host} onChange={() => {}} aria-label="Journal" tabIndex={-1} />
+                <input className="st-field st-who" type="text" name="username" autoComplete="username" value={filedUnder} onChange={() => {}} aria-label="Name" tabIndex={-1} />
                 <input className="st-field" type="password" autoComplete="new-password" value={pw} onChange={e => setPw(e.target.value)} placeholder="New password" aria-label="New password" />
                 <input className="st-field" type="password" autoComplete="new-password" value={pwAgain} onChange={e => setPwAgain(e.target.value)} placeholder="Re-type password" aria-label="Re-type password" />
                 <div className="st-foot">

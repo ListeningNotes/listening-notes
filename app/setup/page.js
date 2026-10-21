@@ -77,7 +77,7 @@ import PasswordGate from '../../components/session_components/PasswordGate';
 import { shrink } from '../../components/main_components/IdentificationCardEditor';
 import AddToHomeScreen from '../../components/main_components/AddToHomeScreen';
 import UpdateSwitch from '../../components/main_components/UpdateSwitch';
-import { useJournalHost } from '../../hooks/useJournalHost';
+import { usePasswordName } from '../../hooks/useJournalHost';
 import { tidyJournal, journalUrl } from '../../library/return_address';
 import { journal_in } from '../../library/carbon_copy';
 import { canHoldKeys, keepFresh, markKeyHere, thisDevice, wayIn, SpareKeyShown } from '../../components/main_components/Keyring';
@@ -142,7 +142,6 @@ async function patchSettings(fields) {
 
 export default function WelcomeScreen() {
   const router = useRouter();
-  const host = useJournalHost();
   const [checking, setChecking] = useState(true);
   const [authed, setAuthed] = useState(false);
   // Whether a password already exists — from the environment, on a copy
@@ -163,6 +162,9 @@ export default function WelcomeScreen() {
   const [copy, setCopy] = useState(null);
 
   const [name, setName] = useState('');
+  // What the password is filed under: the name being set, or the one a
+  // brought journal carries (hooks/useJournalHost.js).
+  const filedUnder = usePasswordName(path === 'bring' ? copy?.keeper : name);
   const [portrait, setPortrait] = useState('');
   const [bio, setBio] = useState(() => Array.from({ length: BIO_LIMIT }, () => ({ key: '', answer: '' })));
   // Which slot has its list of openings open, if any. One at a time — the
@@ -484,6 +486,7 @@ export default function WelcomeScreen() {
         : '';
       setCopy({
         name: file.name,
+        keeper,
         journal,
         said: [
           keeper ? `${keeper}’s journal` : 'A journal',
@@ -866,14 +869,15 @@ export default function WelcomeScreen() {
                 }}
               >
 
-                {/* The address the password is filed under — the same value
+                {/* The name the password is filed under — the keeper's,
+                    being set here or brought with the journal, the same value
                     the sign-in form and Settings use, so the entry saved here
                     is the one offered later. Visible and writable, because a
                     password manager ignores a field it considers hidden and
                     Safari skips a read-only one. Typing into it does nothing.
                     See hooks/useJournalHost.js. */}
                 <div>
-                  <input className="su-field su-who" type="text" name="username" autoComplete="username" value={host} onChange={() => {}} aria-label="Journal" tabIndex={-1} />
+                  <input className="su-field su-who" type="text" name="username" autoComplete="username" value={filedUnder} onChange={() => {}} aria-label="Name" tabIndex={-1} />
                 </div>
                 {/* The eye, 2026-09-13: a password typed once on a phone
                     keyboard, for six months of use, with no way to look at

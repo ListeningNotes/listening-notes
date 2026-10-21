@@ -1924,8 +1924,8 @@ device nobody tested.
 **One password field, in one file.** A second copy is how the first drifted
 out of the shape a password manager can read. Safari needs a real form, a real
 submit, `autocomplete="current-password"` and a username to file the entry
-under — the journal's address, visible, on all three screens that touch the
-password (see Setting a copy up).
+under — the keeper's name, visible, on every screen that touches the password
+(see Setting a copy up).
 
 **Six months on the wristband.** A lock on one person's own room, opened on
 the same two or three devices. Monthly logins are how a password gets weaker.
@@ -2151,10 +2151,14 @@ the Neon step, so tests run in Safari. Ten steps, one or two sentences each.
 **One set, from a phone, 2026-09-22:** the phone/laptop switch is gone —
 the people handed `/get` are holding a phone, and only the pictures differed.
 
-**The password is filed under the journal's address, in a visible field.**
-Managers pair a password with a username and stay silent without one, and
-Safari skips hidden and one-pixel fields. The host, on all three screens that
-touch the password, so the entry saved at setup is the one offered at sign-in.
+**The password is filed under the keeper's name, in a visible field,
+2026-10-21.** Managers pair a password with a username and stay silent without
+one, and Safari skips hidden and one-pixel fields. The keeper's name — the
+address only where none is set — on every screen that touches the password, so
+the entry saved at setup is the one offered at sign-in (usePasswordName). Not
+the address: the entry already carries it as its website, and as the username
+too it read as a mistake (Miyel). The address's reasons are in
+docs/DECISIONS-ARCHIVE.md.
 
 **Links are retired from view.** Not asked at setup, not on the About pane,
 not in Settings. The column stays and `LINKS_SHOWN` in About.js is the whole
