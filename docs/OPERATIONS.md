@@ -239,6 +239,34 @@ Vercel locks a preview to the project's owner, so opening one asks you to
 sign in to Vercel once. It also means no other journal can reach a sandbox:
 something that arrives from another journal cannot be tried there.
 
+## Releases and the live site
+
+The canonical deployment — the front door and every journal it hosts,
+its keeper's included — serves the `release` branch, never main (Miyel's
+call, 2026-10-17: "I would like to release and update at the same time for
+hosted and self hosted journals"; switched on 2026-10-20). In Vercel,
+Settings → Environments → Production → Branch Tracking says `release`. A push to main builds a
+preview, which is a sandbox (above), and changes nobody's journal.
+
+Cutting a release is the one act that ships, for everybody at once: hosted
+journals within minutes, self-hosted copies within the hour, through the
+updater they already run.
+
+```bash
+gh release create vX.Y.Z --target main --title X.Y.Z --notes "…"
+git fetch --tags origin
+git push origin 'vX.Y.Z^{commit}:refs/heads/release'
+```
+
+The first tells every copy there is something new; the last moves the live
+site to the same code. Nothing else pushes to `release`.
+
+**A release that went wrong** is undone in two moves, on the keeper's word:
+Vercel → Deployments → the one before → Instant Rollback puts the last good
+site back at once; then `release` goes back to the tag before
+(`git push --force-with-lease origin 'vPREVIOUS^{commit}:refs/heads/release'`),
+so the next release starts from what is live.
+
 ## The hosting directory
 
 A deployment that hosts many journals finds each one in the hosting

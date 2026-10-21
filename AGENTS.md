@@ -43,6 +43,12 @@ in filename order, on every server start (`instrumentation.js` →
 a new numbered `.sql` file and nothing else; the ledger is the
 `schema_migrations` table.
 
+**The live site serves `release`, not main.** The canonical deployment's
+production branch is `release`, moved only as the last step of cutting a
+release (docs/OPERATIONS.md, Releases and the live site), so a push to main
+changes nobody's journal, hosted or self-hosted, until a release is cut. Never
+push to `release` any other way.
+
 **Run the build before reporting anything as done**, and lint. Stop the dev
 server first: `npm run build` while `next dev` is up leaves stylesheets and
 route headers stale, silently (NOTES.local.md, Gotchas).
