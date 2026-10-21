@@ -50,7 +50,11 @@ function BookWithPlus() {
 // address font is monospaced, so a character is a `ch` — so the two halves
 // stay together as it is typed, and a long name scrolls inside its slot
 // rather than pushing the domain out of the box.
-const NAME_SAYS = 'name';
+//
+// The faint word in the slot is "sitename" (Miyel's pick, 2026-10-20):
+// "name" read as a first name, and what is chosen here is the journal's web
+// address.
+const NAME_SAYS = 'sitename';
 
 function AddressField({ value, onChange, domain, label, onEnter, disabled = false }) {
   return (
