@@ -27,3 +27,19 @@ const onServer = () => '';
 export function useJournalHost() {
   return useSyncExternalStore(noop, read, onServer);
 }
+
+// ── The keeper's name, 2026-10-21 ─────────────────────────────────────────
+// What a password is filed under since 2026-10-21: the keeper's name, and the
+// address only where no name is set. A manager's entry already carries the
+// address as its website, so the address as its username too read as a
+// mistake to the first keeper who saved one (Miyel: "it tried to save it as
+// username"). The address was chosen (above) because setup once asked for the
+// password before the name, and a name can change; setup now asks for the
+// name first and Bring your journal brings it, and an address can change as
+// well — a move, a custom domain — so either way the manager is asked once to
+// save the entry again. The name is given, not read here: setup files the
+// password under the name being set, before the journal holds it.
+export function usePasswordName(name = '') {
+  const host = useJournalHost();
+  return String(name || '').trim() || host;
+}

@@ -900,3 +900,26 @@ however many entries it holds; only a record that is nothing but track notes
 keeps the bent flap, however many. The tabs at the foot of an entry
 (FolderFooter) still say what else a record holds, and the code still calls
 the set a folder.
+
+---
+
+## Setting a copy up — the password filed under the address, 2026-09 to 2026-10-21
+
+Current rule: DECISIONS.md → Setting a copy up, *The password is filed under
+the keeper's name*.
+
+**The journal's address was the username, on all three screens that touch
+the password.** Chosen over the keeper's name for two reasons: setup asked for
+the password before the name was set, so the name could not be the same value
+at setup and at sign-in; and a name can change, while the address was the
+same on the day the password was chosen and the day it was typed again.
+
+**Reversed 2026-10-21, on Miyel's call.** Setup now asks for the name first,
+and Bring your journal brings it, so the first reason is gone. The second
+turned out to cut both ways: the night her journal moved to its own name under
+the domain, the address changed and the saved entry no longer matched — a
+move or a custom domain changes an address as surely as a keeper changes a
+name, and either asks the manager once to save the entry again. What decided
+it was what a keeper sees: a saved entry whose website and username are the
+same address reads as a mistake, and she said so on the first save.
+

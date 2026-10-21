@@ -5,7 +5,7 @@ import { Fragment, useEffect, useState } from 'react';
 import { ArrowRight } from '@phosphor-icons/react';
 import { fonts } from '../../library/sitewide_visuals';
 import { useBookplate } from '../main_components/Bookplate';
-import { useJournalHost } from '../../hooks/useJournalHost';
+import { usePasswordName } from '../../hooks/useJournalHost';
 import { canHoldKeys, keepFresh, readyToOffer, KeyOffer, askTheLock, unlockWith } from '../main_components/Keyring';
 
 // `bare` returns the form and nothing around it, for WritingAccess to put in
@@ -63,7 +63,7 @@ export default function PasswordGate({ onAuth, bare = false, asking = 'password'
   // ever sees this screen, and seeing a stranger's name on the way into your
   // own writing is the exact wrong first impression for a copy to make.
   const { cover_name, keeper_name } = useBookplate();
-  const host = useJournalHost();
+  const filedUnder = usePasswordName(keeper_name);
   const [pw, setPw] = useState(initial);
   // A string now rather than a flag, because there are two things that can go
   // wrong here and "incorrect password" is the wrong thing to say about the
@@ -169,10 +169,10 @@ export default function PasswordGate({ onAuth, bare = false, asking = 'password'
   // The username is the one that looks wrong and is not. Managers store a
   // pair; with no username there is nothing to name the entry, so Safari has
   // nowhere to put it and stays quiet. There is only ever one owner here, so
-  // the field is hidden and filled with the journal's host — the same value
-  // the setup screen filed the password under, which is what makes the saved
-  // entry the one offered here. It was the keeper's name for a while, which
-  // is not set yet when the password is first chosen.
+  // the field is hidden and filled with the keeper's name — the same value the
+  // setup screen filed the password under, which is what makes the saved entry
+  // the one offered here. The journal's address from 2026-09 until 2026-10-21
+  // (usePasswordName, hooks/useJournalHost.js), and still where no name is set.
   const fields = (
         <form onSubmit={handleAuth} className="pg-form">
           {!spareWay && (
@@ -181,9 +181,9 @@ export default function PasswordGate({ onAuth, bare = false, asking = 'password'
               name="username"
               autoComplete="username"
               className="pg-who"
-              value={host}
+              value={filedUnder}
               onChange={() => {}}
-              aria-label="Journal"
+              aria-label="Name"
               tabIndex={-1}
             />
           )}

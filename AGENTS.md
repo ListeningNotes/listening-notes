@@ -385,8 +385,9 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   place; fetches the credit fields separately because public reads strip them.
 - `useHoldStill.js` — locks every scrolling ancestor behind an open overlay so
   nothing under it moves.
-- `useJournalHost.js` — the journal's host, used as the hidden username so a
-  password manager files the password.
+- `useJournalHost.js` — the journal's host, and `usePasswordName`: the hidden
+  username a password manager files the password under — the keeper's name,
+  the host only where no name is set (since 2026-10-21).
 - `useFriendsBeacons.js` — one shared poll, once a minute while the Friends
   room or the Board is on screen, of `/api/friends/beacons`: what everyone in
   the address book is logging, kept through a journal's failure, and `away`,
