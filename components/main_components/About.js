@@ -741,32 +741,37 @@ export default function About({ stamps, authed = false, pinned = null, entries =
                     <CaretDown size={11} weight="bold" aria-hidden="true" />
                   </button>
 
-                  {open && (
-                    <div className="ab-prompt-menu" role="group" aria-label="Openings">
-                      {BIO_PROMPTS.map(prompt => {
-                        const on = prompt.key === row.key;
-                        // Openings already used in another slot stay on the
-                        // list. Picking one swaps the two rather than refusing,
-                        // so nothing has to be cleared to make a move somebody
-                        // has already decided on — but it is marked, because a
-                        // swap you did not expect reads as a bug.
-                        const elsewhere = !on && edit.bio.some((r, i) => i !== index && r.key === prompt.key);
-                        return (
-                          <button
-                            key={prompt.key}
-                            type="button"
-                            className={'ab-prompt-opt' + (on ? ' ab-prompt-opt--on' : '') + (elsewhere ? ' ab-prompt-opt--taken' : '')}
-                            onClick={() => { edit.setBioKey(index, prompt.key); setPicking(null); }}
-                            aria-pressed={on}
-                          >
-                            <span>{noDash(prompt.text)}</span>
-                            {on && <Check size={12} weight="bold" aria-hidden="true" />}
-                            {elsewhere && <span className="ab-prompt-taken" aria-hidden="true">in use</span>}
-                          </button>
-                        );
-                      })}
+                  {/* Folded open and shut rather than appearing (Miyel, 2026-10-20:
+                      "more like a smooth animation than just appearing"), as in
+                      setup: drawn always, eased open, out of reach while shut. */}
+                  <div className={'ab-prompt-fold' + (open ? ' ab-prompt-fold--open' : '')} inert={!open}>
+                    <div className="ab-prompt-fold-in">
+                      <div className="ab-prompt-menu" role="group" aria-label="Openings">
+                        {BIO_PROMPTS.map(prompt => {
+                          const on = prompt.key === row.key;
+                          // Openings already used in another slot stay on the
+                          // list. Picking one swaps the two rather than refusing,
+                          // so nothing has to be cleared to make a move somebody
+                          // has already decided on — but it is marked, because a
+                          // swap you did not expect reads as a bug.
+                          const elsewhere = !on && edit.bio.some((r, i) => i !== index && r.key === prompt.key);
+                          return (
+                            <button
+                              key={prompt.key}
+                              type="button"
+                              className={'ab-prompt-opt' + (on ? ' ab-prompt-opt--on' : '') + (elsewhere ? ' ab-prompt-opt--taken' : '')}
+                              onClick={() => { edit.setBioKey(index, prompt.key); setPicking(null); }}
+                              aria-pressed={on}
+                            >
+                              <span>{noDash(prompt.text)}</span>
+                              {on && <Check size={12} weight="bold" aria-hidden="true" />}
+                              {elsewhere && <span className="ab-prompt-taken" aria-hidden="true">in use</span>}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
-                  )}
+                  </div>
 
                   {/* A textarea, not an input, and only because of how it
                       grows: the answer prints as a wrapped line and it should

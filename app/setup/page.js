@@ -741,34 +741,39 @@ export default function WelcomeScreen() {
                           </span>
                           <CaretDown size={11} weight="bold" aria-hidden="true" />
                         </button>
-                        {open && (
-                          <div className="ab-prompt-menu" role="group" aria-label="Openings">
-                            {BIO_PROMPTS.map(prompt => {
-                              const on = prompt.key === row.key;
-                              const elsewhere = !on && bio.some((r, j) => j !== i && r.key === prompt.key);
-                              return (
-                                <button
-                                  key={prompt.key}
-                                  type="button"
-                                  className={'ab-prompt-opt' + (on ? ' ab-prompt-opt--on' : '') + (elsewhere ? ' ab-prompt-opt--taken' : '')}
-                                  onClick={() => {
-                                    setBio(rows => rows.map((r, j) => {
-                                      if (j === i) return { ...r, key: prompt.key };
-                                      if (r.key === prompt.key) return { ...r, key: rows[i].key };
-                                      return r;
-                                    }));
-                                    setPicking(null);
-                                  }}
-                                  aria-pressed={on}
-                                >
-                                  <span>{prompt.text}</span>
-                                  {on && <Check size={12} weight="bold" aria-hidden="true" />}
-                                  {elsewhere && <span className="ab-prompt-taken" aria-hidden="true">in use</span>}
-                                </button>
-                              );
-                            })}
+                        {/* Folded open and shut rather than appearing (Miyel, 2026-10-20:
+                            "more like a smooth animation than just appearing"): drawn
+                            always, its height eased from nothing, and out of reach while shut. */}
+                        <div className={'ab-prompt-fold' + (open ? ' ab-prompt-fold--open' : '')} inert={!open}>
+                          <div className="ab-prompt-fold-in">
+                            <div className="ab-prompt-menu" role="group" aria-label="Openings">
+                              {BIO_PROMPTS.map(prompt => {
+                                const on = prompt.key === row.key;
+                                const elsewhere = !on && bio.some((r, j) => j !== i && r.key === prompt.key);
+                                return (
+                                  <button
+                                    key={prompt.key}
+                                    type="button"
+                                    className={'ab-prompt-opt' + (on ? ' ab-prompt-opt--on' : '') + (elsewhere ? ' ab-prompt-opt--taken' : '')}
+                                    onClick={() => {
+                                      setBio(rows => rows.map((r, j) => {
+                                        if (j === i) return { ...r, key: prompt.key };
+                                        if (r.key === prompt.key) return { ...r, key: rows[i].key };
+                                        return r;
+                                      }));
+                                      setPicking(null);
+                                    }}
+                                    aria-pressed={on}
+                                  >
+                                    <span>{prompt.text}</span>
+                                    {on && <Check size={12} weight="bold" aria-hidden="true" />}
+                                    {elsewhere && <span className="ab-prompt-taken" aria-hidden="true">in use</span>}
+                                  </button>
+                                );
+                              })}
+                            </div>
                           </div>
-                        )}
+                        </div>
                         <textarea
                           className="ab-prompt-input"
                           rows={1}
@@ -820,6 +825,16 @@ export default function WelcomeScreen() {
                 <button type="button" className="su-add" onClick={() => setGear(rows => [...rows, { name: '', role: '' }])}>+ Another</button>
                 <button type="submit" className="su-go" disabled={busy || !gear.some(g => g.name.trim())}>Next</button>
               </form>
+            )}
+
+            {/* While the device is asked whether it has Face ID: the turning
+                circle the front door's steps wear, and what is happening
+                (Miyel, 2026-10-20: "a loading circle ... that says checking
+                device"). */}
+            {current === 'password' && !wayKnown && (
+              <div className="su-fields">
+                <p className="su-checking" role="status"><span className="fd-spin" aria-hidden="true" />Checking device…</p>
+              </div>
             )}
 
             {current === 'password' && wayKnown && faceWay && !typingPassword && (

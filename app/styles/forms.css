@@ -254,6 +254,12 @@ textarea.sb-field {
 .su-field:focus { border-color: var(--ink-faint); }
 /* The name, centred like the question over it (Miyel, 2026-10-20). */
 .su-name { text-align: center; }
+/* Checking device…, on the way-in screen while the device answers: the
+   front door's turning circle (.fd-spin, get.css) beside the words. */
+.su-checking {
+  margin: 10px 0 0; display: flex; align-items: center; justify-content: center; gap: 10px;
+  font-family: var(--font-sans); font-size: 14px; color: var(--ink-soft);
+}
 .su-field::placeholder { color: var(--ink-faint); }
 /* The journal's address, which is a fact rather than a field: no box, no
    border, centred under the sentence. It stays a real, visible, writable

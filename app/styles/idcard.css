@@ -847,7 +847,7 @@
   transition: color 0.15s ease;
 }
 .ab-prompt-pick > span { flex: 1; min-width: 0; }
-.ab-prompt-pick svg { flex-shrink: 0; opacity: 0.5; transition: transform 0.2s ease; }
+.ab-prompt-pick svg { flex-shrink: 0; opacity: 0.5; transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease; }
 .ab-prompt-pick:hover, .ab-prompt-pick--on { color: var(--ink-soft); }
 .ab-prompt-pick--on svg { transform: rotate(180deg); opacity: 0.9; }
 .ab-prompt-pick:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 4px; }
@@ -863,6 +863,19 @@
    corner and no rule round them, which is what the answers themselves print
    on eight lines further up this same column. Same stock as those, so the
    list of openings and the openings once answered are the same object. */
+/* Folded, 2026-10-20 (Miyel: "a smooth animation than just appearing"):
+   the list's height eases from nothing to its own and back — a grid row
+   going from 0fr to 1fr, so no height is ever guessed — fading in as it
+   opens. Shut, it is `inert`, out of reach of a press or a tab. */
+.ab-prompt-fold {
+  display: grid; grid-template-rows: 0fr; opacity: 0;
+  transition: grid-template-rows 0.32s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.24s ease;
+}
+.ab-prompt-fold--open { grid-template-rows: 1fr; opacity: 1; }
+.ab-prompt-fold-in { overflow: hidden; min-height: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .ab-prompt-fold, .ab-prompt-pick svg { transition: none; }
+}
 .ab-prompt-menu {
   display: flex;
   flex-direction: column;
