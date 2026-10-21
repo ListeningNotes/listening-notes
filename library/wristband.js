@@ -96,13 +96,35 @@ async function getSecret() {
   return await sessionSecret();
 }
 
-// Stamps a fresh wristband. Returns the signed token string.
-export async function issueWristband() {
-  return await new SignJWT({ authed: true })
+// ── Proved just now, 2026-10-20 ───────────────────────────────────────────
+// A band says when its wearer last proved they were the keeper — with the
+// password, Face ID, the spare key or the claim — as `proved`, a second. The
+// changes that make or take away a way in ask for that to be recent
+// (requireRecentProof): a phone left signed in, in somebody else's hand, can
+// read and write as ever, but cannot make itself a way in that outlasts the
+// keeper taking the phone back (Miyel, 2026-10-20: "it's so easy to change
+// the password"). Renewing a band proves nothing, so a renewed band carries
+// the old `proved` along (app/api/auth/check). Five minutes, Miyel's pick.
+export const PROOF_SECONDS = 5 * 60;
+
+// Stamps a fresh wristband. Returns the signed token string. `proved` is
+// true where the request that asked for it was itself a proof, or the second
+// an older band's proof was made, to carry along.
+export async function issueWristband({ proved = null } = {}) {
+  const claims = { authed: true };
+  if (proved === true) claims.proved = Math.floor(Date.now() / 1000);
+  else if (Number.isFinite(proved)) claims.proved = proved;
+  return await new SignJWT(claims)
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime(EXPIRES_IN)
     .sign(await getSecret());
+}
+
+// How many seconds of a band's proof are left, 0 when none.
+export function proofLeft(band) {
+  if (!Number.isFinite(band?.proved)) return 0;
+  return Math.max(0, band.proved + PROOF_SECONDS - Math.floor(Date.now() / 1000));
 }
 
 // Returns the wristband's contents if the wax seal holds, or null. Callers that
@@ -174,6 +196,19 @@ export function shouldRenewWristband(payload) {
 export async function requireWristband(request) {
   if (await checkWristband(request)) return null;
   return Response.json({ error: 'Unauthorized' }, { status: 401 });
+}
+
+// The same guard for a change to the ways in, which also wants the band's
+// proof to be recent: a 403 with `prove` tells the page to ask for Face ID or
+// the password first (Keyring.js). `exempt` is for a journal still being set
+// up, whose keeper proved it with the claim and may take longer than the
+// window over the name, the photo and the prompts before reaching the keys.
+// The words are Miyel's (2026-10-20).
+export async function requireRecentProof(request, { exempt = false } = {}) {
+  const band = await readWristband(request);
+  if (!band) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+  if (exempt || proofLeft(band) > 0) return null;
+  return Response.json({ error: 'Confirm it’s you first.', prove: true }, { status: 403 });
 }
 
 // Cookie config used by /api/auth/login and /api/auth/logout.

@@ -11,9 +11,14 @@
 // PATCH takes new values. A blank clears the stored one, after which the
 // environment variable, if any, is what the copy falls back to. The password
 // is hashed here and the hash is all that is kept.
+//
+// A new password is a new way in, so it also asks that the keeper proved it
+// was them in the last few minutes (requireRecentProof, library/wristband.js;
+// 2026-10-20). The AI key opens nothing and asks only for the wristband.
 
 import { NextResponse } from 'next/server';
-import { requireWristband } from '@/library/wristband';
+import { requireWristband, requireRecentProof } from '@/library/wristband';
+import { isSetUp } from '@/library/settings_actions';
 import { describe_secrets, hashPassword, save_secrets } from '@/library/secrets';
 
 const PASSWORD_FLOOR = 8;
@@ -30,6 +35,10 @@ export async function PATCH(request) {
 
   try {
     const body = await request.json();
+    if ('password' in body) {
+      const unproved = await requireRecentProof(request, { exempt: !(await isSetUp()) });
+      if (unproved) return unproved;
+    }
     const patch = {};
     if ('anthropic_key' in body) patch.anthropic_key = String(body.anthropic_key || '').trim();
     if ('password' in body) {

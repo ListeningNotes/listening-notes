@@ -15,7 +15,7 @@
 
 import { NextResponse } from 'next/server';
 import { begin_unlocking, finish_unlocking, spent } from '@/library/keyring';
-import { issueWristband, WRISTBAND_COOKIE } from '@/library/wristband';
+import { issueWristband, WRISTBAND_COOKIE, PROOF_SECONDS } from '@/library/wristband';
 import { mayKnock, forgetKnocks, tooSoon, whoIsKnocking } from '@/library/doorman';
 import { spareKeyState, passwordSource } from '@/library/secrets';
 
@@ -44,8 +44,8 @@ export async function POST(request) {
       return NextResponse.json({ error: done.error, unknown: Boolean(done.unknown) }, { status: 401 });
     }
     await forgetKnocks('login', caller);
-    const response = NextResponse.json({ ok: true });
-    response.cookies.set(WRISTBAND_COOKIE.name, await issueWristband(), WRISTBAND_COOKIE.options);
+    const response = NextResponse.json({ ok: true, proved_left: PROOF_SECONDS });
+    response.cookies.set(WRISTBAND_COOKIE.name, await issueWristband({ proved: true }), WRISTBAND_COOKIE.options);
     const used = spent('unlock');
     response.cookies.set(used.name, used.value, used.options);
     return response;

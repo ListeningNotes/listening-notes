@@ -22,7 +22,7 @@
 // could not be moved afterwards.
 
 import { NextResponse } from 'next/server';
-import { requireWristband } from '@/library/wristband';
+import { requireWristband, issueWristband, WRISTBAND_COOKIE } from '@/library/wristband';
 import { isSetUp, save_settings } from '@/library/settings_actions';
 import { claim_journal } from '@/library/database_actions';
 import { addressFrom, tidyJournal } from '@/library/return_address';
@@ -142,7 +142,11 @@ export async function POST(request) {
       setup_open_until: null,
     });
 
-    return NextResponse.json({ ok: true });
+    // The claim is a proof: the band is stamped afresh (library/wristband.js),
+    // so the spare key a step later is not asked for Face ID again.
+    const sealed = NextResponse.json({ ok: true });
+    sealed.cookies.set(WRISTBAND_COOKIE.name, await issueWristband({ proved: true }), WRISTBAND_COOKIE.options);
+    return sealed;
   } catch (error) {
     return NextResponse.json({ error: error?.message || 'Setup failed' }, { status: 500 });
   }
