@@ -6,7 +6,9 @@
 //
 //   GET                 how many places are left, and of how many
 //   GET ?name=<name>    whether that address is free, as somebody types it
-//   POST { name }       makes the journal, and says where its setup is
+//   POST { name }       makes the journal, and says where its setup is —
+//                       a line at a time, one for each step as it finishes,
+//                       so the page can tick them off, then where to go
 //
 // The POST is taken only from the front door's own pages, like every press
 // that changes something (library/wristband.js), and only a few times an
@@ -55,26 +57,41 @@ export async function POST(request) {
   const state = await nameState(name);
   if (state !== 'free') {
     return NextResponse.json(
-      { error: state === 'taken' ? 'Taken.' : 'Letters, numbers and dashes.', state },
+      { error: state === 'taken' ? 'Not available.' : 'Letters, numbers and dashes.', state },
       { status: 409 },
     );
   }
 
-  try {
-    const { host, code } = await make_journal(name);
-    // The new journal's own address, the way this request reached the front
-    // door: https behind Vercel, and the dev server's port on a dev server.
-    const proto = (request.headers.get('x-forwarded-proto') || '').split(',')[0].trim()
-      || (process.env.NODE_ENV === 'production' ? 'https' : 'http');
-    const port = (request.headers.get('host') || '').match(/:(\d+)$/)?.[1];
-    // The claim code after #, which no server is ever sent: not in a log,
-    // not in a referrer. The journal's setup reads it and opens with it.
-    return NextResponse.json({ to: `${proto}://${host}${port ? `:${port}` : ''}/setup#code=${code}` });
-  } catch (error) {
-    if (/taken/i.test(error?.message || '')) {
-      return NextResponse.json({ error: 'Taken.', state: 'taken' }, { status: 409 });
-    }
-    console.error('[front door] a journal could not be made:', error?.message || error);
-    return NextResponse.json({ error: 'Your journal could not be made just now. Try again in a minute.' }, { status: 502 });
-  }
+  // The new journal's own address, the way this request reached the front
+  // door: https behind Vercel, and the dev server's port on a dev server.
+  const proto = (request.headers.get('x-forwarded-proto') || '').split(',')[0].trim()
+    || (process.env.NODE_ENV === 'production' ? 'https' : 'http');
+  const port = (request.headers.get('host') || '').match(/:(\d+)$/)?.[1];
+
+  // One line of JSON for each step as it finishes, then where to go — or
+  // what went wrong. A person who closes the page meanwhile is not told, and
+  // the journal they never reached is cleared after a day like any other.
+  const encoder = new TextEncoder();
+  const lines = new ReadableStream({
+    async start(controller) {
+      const say = line => {
+        try { controller.enqueue(encoder.encode(`${JSON.stringify(line)}\n`)); } catch { /* gone */ }
+      };
+      try {
+        const { host, code } = await make_journal(name, { onStep: step => say({ step }) });
+        // The claim code after #, which no server is ever sent: not in a
+        // log, not in a referrer. The journal's setup reads it and opens.
+        say({ to: `${proto}://${host}${port ? `:${port}` : ''}/setup#code=${code}` });
+      } catch (error) {
+        if (/taken/i.test(error?.message || '')) {
+          say({ error: 'Not available.', state: 'taken' });
+        } else {
+          console.error('[front door] a journal could not be made:', error?.message || error);
+          say({ error: 'Your journal could not be made just now. Try again in a minute.' });
+        }
+      }
+      try { controller.close(); } catch { /* gone */ }
+    },
+  });
+  return new Response(lines, { headers: { 'Content-Type': 'application/x-ndjson; charset=utf-8', ...FRESH } });
 }

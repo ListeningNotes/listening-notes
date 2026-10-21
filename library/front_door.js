@@ -157,7 +157,11 @@ async function untilItAnswers(way) {
 // Returns the journal's address and the claim code that opens its setup.
 // A journal whose making fails part way is taken down again, so a failure
 // never holds a place or a name.
-export async function make_journal(value) {
+//
+// `onStep` is told each step as it really finishes — 'database', 'pages',
+// 'address' — so the page can tick it off (Miyel's pick, 2026-10-20: "steps
+// that tick off, as each really finishes").
+export async function make_journal(value, { onStep = () => {} } = {}) {
   const name = tidyName(value);
   const host = journalHostFor(name);
   const made = await askNeon('POST', '/projects', {
@@ -172,8 +176,10 @@ export async function make_journal(value) {
   try {
     const way = pooledWay(made);
     await untilItAnswers(way);
+    onStep('database');
     const { bringUpToDate } = await import('./migrator.js');
     await bringUpToDate({ url: way, log: said => console.log(`[migrations ${host}] ${said}`) });
+    onStep('pages');
     const sql = neon(way);
     await sql`
       INSERT INTO settings (id, site_address, setup_complete) VALUES (1, ${host}, false)
@@ -183,6 +189,7 @@ export async function make_journal(value) {
       INSERT INTO secrets (id, claim_code) VALUES (1, ${code})
       ON CONFLICT (id) DO UPDATE SET claim_code = EXCLUDED.claim_code`;
     await place_journal(host, way, { project, fresh: true });
+    onStep('address');
     return { host, code };
   } catch (error) {
     await askNeon('DELETE', `/projects/${encodeURIComponent(project)}`).catch(() => {});

@@ -119,7 +119,8 @@ import { canHoldKeys, markKeyHere, thisDevice, wayIn, SpareKeyShown } from '../.
 const STEPS = ['name', 'photo', 'prompts', 'rig', 'password', 'spare', 'updates', 'gift', 'homescreen'];
 // ── Bring your journal, 2026-10-08 ────────────────────────────────────────
 // The other way through, chosen on the first screen: Start a new journal, or
-// Bring your journal (Miyel's words). Bringing one is the copy from Settings
+// Bring your journal (Miyel's words) — Start from scratch, or Import an
+// existing journal, since 2026-10-20 (hers too). Bringing one is the copy from Settings
 // → Back up your journal — chosen, read here, and said back as whose journal
 // and how much is in it before anything is written, so a wrong file is
 // caught while it costs nothing — then the password, which claims the copy
@@ -625,11 +626,11 @@ export default function WelcomeScreen() {
             {current === 'start' && (
               <div className="su-ways">
                 <button type="button" className="su-way" onClick={() => { setError(''); setPath('new'); setStep(0); }}>
-                  <span className="su-way-h">Start a new journal</span>
+                  <span className="su-way-h">Start from scratch</span>
                   <span className="su-way-note">Begin with an empty one.</span>
                 </button>
                 <button type="button" className="su-way" onClick={() => { setError(''); setPath('bring'); setStep(0); }}>
-                  <span className="su-way-h">Bring your journal</span>
+                  <span className="su-way-h">Import an existing journal</span>
                   <span className="su-way-note">From a copy you made in Settings.</span>
                 </button>
               </div>
