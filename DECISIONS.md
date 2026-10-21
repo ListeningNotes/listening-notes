@@ -135,6 +135,8 @@ title and what came before — so something has to say there is more; the
 turning pane scrolls and its writing running off the edge is the cue. No mark
 over it: a side caret's mark named a destination worth knowing, and down has
 only one.
+A keeper's beacon has none since 2026-10-21: the Listen bar stands at that
+foot, and one screen had no room for both (the way down is the scroll).
 
 **The light switch is the beacon's, top right, and nowhere else,
 2026-09-15.** One home for it: the first screen of the journal, where it is
@@ -160,13 +162,13 @@ you are already in it. They are plain uppercase words now, the one that
 commits on a hairline, and no tick or cross beside them. `.ln-word`, shared by
 the four bars that share that band.
 
-**One exception, 2026-09-20: the way into a listen is a circle on the
-beacon's rule.** It is the one thing on that screen you can press and it was
-reading as a third caption under a line. The ring is a hairline of the same
-weight as the rule it stands in the break of, which is the rule making room
-for a control rather than a box drawn round a word. Miyel asked for it by
-name: "make start a listen feel intentional — maybe it can be a circle
-between the hairlines that looks like a button.
+**One exception, 2026-10-21: the way into a listen is the Listen bar.** A
+raised panel at the foot of home, one word — Listen, Resume while a record is
+in hand — and the only thing on the site shaped like a button, because it is
+the only thing that starts something; it licenses no second one (Miyel's
+brief, home and the session). It took the ring's job and code, and the ring
+and the keeper's chevron went for it: "everything leaves in exchange for
+this." The ring of 2026-09-20 is in the archive.
 
 **No loose icons in headers, 2026-09-15.** The mark is centred and the sides
 are for navigation. A single ··· is not a row of tools, it is a door, and it

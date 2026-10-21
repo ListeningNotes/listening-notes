@@ -3766,8 +3766,9 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
 .hn { --hn-crown: clamp(104px, calc(var(--hn-h) * 0.23), 200px); }
 
 /* Two columns and a row under them: the record and its past side by side, the
-   way in spanning both. A grid rather than a flex row because .ln-onward is a
-   third child of this screen and would otherwise become a third column.
+   name spanning both. A grid rather than a flex row because the name is a
+   third child of this screen and would otherwise become a third column. (The
+   way in had the row under the name until the Listen bar, 2026-10-21.)
 
    align-content: start because a grid's default is `stretch` and this screen
    is taller than its contents — the rows were being grown to fill it, 362px of
@@ -3837,114 +3838,82 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   align-self: center;
 }
 .hn-pane--home .beacon-meta { grid-column: 1 / -1; grid-row: 2; }
-/* The way in sits well below the record rather than tucked under its artist
-   line (Miyel, 2026-09-18: "make start listen be lower, further from the
-   beacon"). The row gap above it is the screen's 22; this is the rest, and it
-   is on the control rather than in the gap because the gap is also what holds
-   the name off the cover, which wants to stay where it is. */
-/* The child combinator is from when a visitor's row hung two `.ln-onward`
-   words inside it (gone 2026-09-27); it is harmless and keeps this about the
-   way in, which is the grid's own child. */
-.hn-pane--home .hn-screen > .ln-onward {
-  grid-column: 1 / -1;
-  grid-row: 3;
-  /* ── The hairline ──────────────────────────────────────────────────────
-     Miyel, 2026-09-19: "we should do the hairline above start a listen as
-     well." It matched the rule over a visitor's row in this same slot, and
-     the spacing was copied from that row so the line landed on the same
-     pixel whoever was looking. The row is gone (2026-09-27; a visitor's
-     slot is empty now) and the keeper's rule stays where it was: the 38
-     this used to take was the way in hanging further from the record, and
-     the line does that job — the words sit below a rule instead of below
-     air.
+/* ── The Listen bar, 2026-10-21 ───────────────────────────────────────────
+   The ring that stood on a rule in this grid's third row is gone, and the
+   chevron under the screen with it (Miyel: "everything leaves in exchange for
+   this"). The way into a listen is the bar at the foot of the floor now
+   (ListenBar.js), and it is the one thing on the site shaped like a button:
+   the exception to "a control is the mark" that the ring was, moved, and
+   licensing no second one. Drawn to her mockup — a raised panel inset 14 from
+   the sides and 15 from the foot, 56 tall, rounded 18, the word in the
+   display face at 17, a grip at the top.
 
-     Full width: the line runs the record's left edge to the right edge of
-     the past column, and a rule only as wide as two words would be an
-     underline for them. The words stay centred, because .ln-onward already
-     centres its own contents. */
-  display: flex;
-  justify-content: center;
-  width: 100%;
-  max-width: min(100%, calc(100vw - 48px));
-  /* Room over the rule for the top half of the circle that straddles it, on
-     top of the gap the rule wanted anyway. */
-  margin: clamp(46px, calc(var(--hn-h) * 0.075), 62px) auto 0;
-  border-top: 1px solid var(--border);
-  /* And the bottom half under it. The circle is taken out of the flow, so
-     this padding is the whole of what the row occupies below the rule —
-     half the circle, which is 36 of 72. */
+   In the floor's flow on a phone: the floor ends at the band's top edge, so
+   the bar's 15 is measured from the band and not from the glass. */
+.lb {
   position: relative;
-  padding-top: 36px;
-  min-height: 0;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  height: 56px;
+  margin: 0 14px 15px;
+  padding: 0;
+  box-sizing: border-box;
+  border: 0;
+  border-radius: 18px;
+  background: var(--panel-solid);
+  color: var(--ink);
+  box-shadow: 0 8px 26px rgba(26, 26, 26, 0.16);
+  font-family: var(--font-display);
+  font-weight: var(--font-display-weight);
+  font-size: 17px;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.15s cubic-bezier(0.22, 0.61, 0.36, 1), opacity 0.3s ease;
 }
-
-/* ── The circle on the line, 2026-09-20 ───────────────────────────────────
-   Miyel: "a circle between the hairlines that looks like a button." It sits
-   in the break in the rule the note used to sit in, half above the line and
-   half below, carrying the page's own colour so the rule stops at its edge
-   and starts again the other side — the same trick the note used, at the size
-   of a control rather than a mark.
-
-   A ring is a container and this site's rule is that a control is the mark
-   (DECISIONS, 2026-09-17). The exception is deliberate and it is hers: this
-   is the one thing on the beacon you can press and it was reading as a third
-   caption under a rule. A ring that is a hairline of the same weight as the
-   rule it stands on is the rule making room for it, not a box drawn round a
-   word. */
-.hn-go {
-  /* Out of the flow and hung on the rule: half of it above the line and half
-     below, whatever the row around it is doing. A negative margin was tried
-     first and a flex item's margin is taken into the line it sits on rather
-     than out of it, which left the circle under the rule instead of on it. */
+/* Night: a raised dark panel on the darker page, and a shadow that can
+   still be seen against it. */
+[data-theme='dark'] .lb { box-shadow: 0 8px 26px rgba(0, 0, 0, 0.55); }
+/* A press gives a little, the way a key does. */
+.lb:active { transform: scale(0.985); }
+.lb:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+.lb-grip {
   position: absolute;
-  top: 0;
+  top: 7px;
   left: 50%;
-  transform: translate(-50%, -50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-  /* 72, down from 84 (Miyel, 2026-09-20: "a bit smaller"). It is the one
-     control on this screen and wants to be reachable rather than large — and
-     the two words inside it are 47px at their widest, so the ring can come in
-     twelve pixels and still be a ring round words rather than a ring on
-     them. The row below it takes half of whatever this is. */
-  width: 72px;
-  height: 72px;
-  border: 1px solid var(--border);
+  width: 30px;
+  height: 3px;
+  transform: translateX(-50%);
   border-radius: 999px;
-  background: var(--bg);
-  /* The rule stops short of it rather than running into it (Miyel,
-     2026-09-20: "don't make hairlines touch circle"). A ring of the page's
-     own colour twelve pixels out from the edge, which follows the radius
-     because a box-shadow does — so the line ends twelve pixels away on both
-     sides and the circle sits in a gap rather than in a hole it has cut. */
-  box-shadow: 0 0 0 12px var(--bg);
-  transition: border-color 0.15s, transform 0.15s;
+  background: var(--ink-faint);
+  opacity: 0.45;
 }
-.ln-onward:hover .hn-go,
-.ln-onward:active .hn-go { border-color: var(--ink-faint); }
-
-/* .hn-go-note is gone with the ♪ it dressed — see HomeNav.js. */
-/* Smaller than the line it replaces, because two of them are stacked and the
-   circle is 84 across: 12px at 0.22em ran to 96 for `Start a`. */
-.hn-go-say {
-  font-size: 9px;
-  letter-spacing: 0.14em;
-  line-height: 1.25;
-  /* Soft grey, not full ink (Miyel, 2026-09-20). .ln-onward is full ink
-     because it used to be a bare line of type that had to out-shout two
-     captions beside it; inside a ring nothing is competing with it, and at
-     nine pixels full ink on this ground reads as loud rather than clear. */
-  color: var(--ink-soft);
-  transition: color 0.15s;
+/* One row at the foot at a time: while a correction, a send, a gift or a
+   wave has its own bar there, this one stands down, the way the band does. */
+.hn[data-editing] .lb,
+.hn[data-sending] .lb,
+.hn[data-giving] .lb,
+.hn[data-waving] .lb { opacity: 0; pointer-events: none; }
+/* On a desk the beacon and the wall are one column that scrolls, so the foot
+   of the floor is in the middle of the page. The bar is pinned to the foot of
+   the right page instead — inset from the spine, whatever width it has been
+   dragged to — and no wider than it is on a phone: one shape, not two. The
+   wall's last row scrolls clear of it (.hn--keeper, below). */
+@media (min-width: 769px) {
+  .lb {
+    position: fixed;
+    left: calc(var(--spine-w, var(--spine-rest)) + 14px);
+    right: 14px;
+    bottom: 15px;
+    z-index: 98;
+    max-width: 420px;
+    margin: 0 auto;
+  }
+  .hn--keeper .hn-pane--home .hn-under { padding-bottom: 86px; }
 }
-/* It still answers a press. Without this the ring's own words keep their grey
-   while everything else about the control lifts, which is a button going
-   half-bright. */
-.ln-onward:hover .hn-go-say,
-.ln-onward:active .hn-go-say { color: var(--ink); }
 /* The empty beacon has neither a cover nor a name — it has one quiet line, and
    it spans. */
 .hn-pane--home .beacon-quiet { grid-column: 1 / -1; grid-row: 1; }

@@ -923,3 +923,26 @@ name, and either asks the manager once to save the entry again. What decided
 it was what a keeper sees: a saved entry whose website and username are the
 same address reads as a mistake, and she said so on the first save.
 
+
+---
+
+## Structure — the ring on the beacon's rule, 2026-09-20 to 2026-10-21
+
+Current rule: DECISIONS.md → Structure, *One exception, 2026-10-21: the way
+into a listen is the Listen bar*.
+
+**The way into a listen was a circle on the beacon's rule.** It was the one
+thing on that screen you could press and it was reading as a third caption
+under a line. The ring was a hairline of the same weight as the rule it stood
+in the break of, which was the rule making room for a control rather than a
+box drawn round a word. Miyel asked for it by name: "make start a listen feel
+intentional — maybe it can be a circle between the hairlines that looks like
+a button." Its words were *Log a / listen*, and *Resume / listen* with a
+record in hand.
+
+**Reversed 2026-10-21, by her brief *home, the frame, and the session*.** The
+way in became a bar at the foot of home, the session closed, which stage 2
+raises into a sheet. The bar ran the ring's own press. There was no room at
+the foot of one phone screen for the ring, the chevron under it and the bar,
+and asked which should give, she said "everything leaves in exchange for
+this": the ring and the keeper's chevron both went.

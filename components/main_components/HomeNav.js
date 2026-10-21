@@ -77,6 +77,7 @@ import { useSpineWidth } from '../../hooks/useSpineWidth';
 import { useTheme } from './Lightswitch';
 import { useBookplate } from './Bookplate';
 import ListeningBeacon from './ListeningBeacon';
+import ListenBar from './ListenBar';
 import Journal from './Journal';
 import Footer from './Footer';
 import About from './About';
@@ -2458,164 +2459,82 @@ export default function HomeNav() {
     </div>
   );
 
-  // ── The way in ───────────────────────────────────────────────────────────
-  // Under the recents, not under the artist, and in the captions' own voice.
-  //
-  // Miyel's brief, 2026-09-18: "every other control on this screen is either
-  // an icon or a mono caption. A bold sans button with an arrow is the only
-  // thing in a different voice, and it sits where the artwork needs to travel
-  // upward." Both halves are right — it was Nunito bold with an arrow in a
-  // screen of DM Mono labels, and it was standing in the beacon's own column,
-  // where the cover has to be able to grow.
-  //
-  // Full ink where LAST LOGGED and BEFORE THAT are muted, which is the whole
-  // of what makes it read as the one thing here you can press rather than a
-  // third caption. The arrow went that day and the glyph did that job in its
-  // place; the glyph went too on 2026-09-19 ("no glyph for now"), once there
-  // was a hairline over the line. A rule above it is a stronger statement
-  // that this is a thing and not more writing than a mark beside it was, and
-  // the two say the same thing twice.
-  //
-  // Both states live here, because they are one control: a record in hand and
-  // it is the way back to it, nothing in hand and it opens the picker. Leaving
-  // one under the artist in bold and moving the other would be two controls
-  // wearing different clothes for the same job.
-  const theWayIn = authed && (inHand ? (
-    // Resume listen, 2026-09-22. It said Back to the listen, and Miyel: "Back
-    // to the listen text is rough. Resume listen is better." Two short words
-    // in the ring, the shape Log a listen already has.
-    <Link href="/session" className="ln-onward" title={`Resume ${inHand.album}`} aria-label="Resume listen">
-      <span className="hn-go" aria-hidden="true">
-        <span className="hn-go-say">Resume</span>
-        <span className="hn-go-say">listen</span>
-      </span>
-    </Link>
-  ) : (
-    /* A button and not a link, because it does not navigate: floor one
-       becomes the picker where it stands. */
-    <button
-      type="button"
-      className="ln-onward"
-      onClick={event => {
-          // ── The beacon shrinks into the bar ──────────────
-          // Miyel, 2026-09-18: "bring back the mini beacon as
-          // the header of the draft/search page, with last log
-          // vs LN logo — I liked the beacon shrinking mini
-          // when you enter session."
-          //
-          // It carried the mark instead for twenty minutes, on
-          // the reasoning that you have not chosen anything yet
-          // and last night's record in the bar is a claim
-          // nobody made. True, and beside the point: the record
-          // up there is not claiming to be tonight's, it is the
-          // beacon, which is the thing this pane is, and
-          // watching it shrink into the row is what makes the
-          // picker feel like the same screen rather than a new
-          // one. The mark is what it falls back to when there
-          // is no record to carry at all.
-          // Found on the pane, not walked up to from the press. This was
-          // `event.currentTarget.closest('.beacon-card')` and it worked for
-          // exactly as long as this control lived inside the beacon's own
-          // meta stack — moving it out from under the artist on 2026-09-18
-          // made `closest` return null, which made `box` undefined, which made
-          // the guard below return, which took the whole flight off without a
-          // word. Miyel: "the animation from the beacon shrinking to mini
-          // seemed smoother before — did something outside of that change?"
-          // It had: this.
-          //
-          // Scoped to the pane because the beacon is drawn once there and the
-          // card is what the cover is leaving.
-          const card = document.querySelector('.hn-pane--home .beacon-card');
-          const art = card?.querySelector('img.beacon-art');
-          const box = art?.getBoundingClientRect();
-          const said = card?.querySelector('.beacon-meta')?.getBoundingClientRect();
-          // A copy of what the card is showing this second,
-          // state and all — Miyel, 2026-09-18: "it's gonna
-          // have to either have a live dot saying now logging,
-          // or it's gonna have to be dull and say last logged.
-          // It is a copy of the real beacon." Including the
-          // open song, because that is what the card says: the
-          // record's name only while nothing is playing.
-          setOnTheBar(onAirAlbum ? {
-            art: onAir,
-            title: onAirTrack || onAirAlbum,
-            artist: onAirArtist,
-            live: isLive,
-          } : null);
-          setChoosing(true);
-          // Never armed on the way in. The × keeps its state
-          // in this component and the picker's markup goes
-          // away and comes back around it, so without this a
-          // picker closed while the × was open — press the
-          // mark, change your mind, leave another way —
-          // reopened with END already showing, which is a
-          // confirmation nobody gave. Blur puts it away too,
-          // but blur is not the only way out of here.
-          setEnding(false);
-          if (!box || !onAir) return;
-          if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
-          // Where the record's name is standing, so it can
-          // travel rather than blink out — see wordsFrom.
-          if (said && said.width) wordsFrom.current = said;
-          setLanding({
-            art: onAir,
-            live: isLive,
-            from: { left: box.left, top: box.top, width: box.width, height: box.height },
-            to: null, go: false, ms: TO_THE_BAR_MS, wait: MAKE_ROOM_MS,
-            into: '.hn-bar-beacon .ses-cover',
-          });
-        }}
-      aria-label="Log a listen"
-    >
-      {/* ── The way in is a dial on the line, 2026-09-20 ────────────────────
-          Miyel: "make start a listen feel intentional — maybe it can be a
-          circle between the hairlines that looks like a button, that music
-          note then start a listen in the circle under the note, smaller font,
-          'start a' and 'listen' can be two separate lines. Maybe that will
-          feel better to me and also give more space."
-
-          It was a line of small caps under a rule with the note sitting in a
-          gap in that rule — three things on one axis, none of them shaped
-          like a control. The circle is one thing: the note keeps its place on
-          the line and the words move inside it, which is where the space
-          comes from as well.
-
-          The note is in the markup rather than on ::before now, because it
-          has to stack with the words. A visitor's calling card keeps the
-          ::before version — there is no control in that slot, so the mark
-          stays a mark on a rule. */}
-      <span className="hn-go" aria-hidden="true">
-        {/* ── No mark in it, 2026-09-20 ────────────────────────────────────
-            A ♪ sat over the words for an hour, because a ♪ had sat on the
-            rule before the circle existed and moving it inside was the
-            obvious thing to do. Miyel: "is there a better icon than that
-            music note — is it even needed?" It is not. It said *music* on a
-            site that is entirely about music, over two words that already say
-            what pressing does, in a circle 84 across with three things
-            stacked in it. The ring is the object on the rule now; the mark
-            was what the rule had instead of one.
-
-            The calling card keeps its ♪, and should: there is no control in
-            that slot, so what is on the rule there is a mark and nothing
-            else. */}
-        {/* The verb, then the article back: "get rid of a", "Log Listen",
-            "Log a / listen" (Miyel, 2026-09-20, in that order over ten
-            minutes). Log rather than Start because it is the word this
-            journal already uses for the act everywhere else — LAST LOGGED
-            over the cover, `I've already logged this` in the inbox, logged in
-            the feed. Start named the beginning of a flow, which is a thing
-            about the software; Log names the thing you came to do.
-
-            And the article earns its place after all: two words on two lines
-            read as two labels, where a phrase broken mid-sentence reads as
-            one thing said across a break. It is also what the line is for —
-            there has to be something in the first line to hold the second
-            one under it. */}
-        <span className="hn-go-say">Log a</span>
-        <span className="hn-go-say">listen</span>
-      </span>
-    </button>
-  ));
+  // ── The way in: the bar at the foot, 2026-10-21 ──────────────────────────
+  // The ring on the beacon's rule did this until the Listen bar took its
+  // job, and the chevron under it went the same day (Miyel: "everything
+  // leaves in exchange for this"). What follows is the ring's own press,
+  // moved and not changed: the bar opens the picker exactly as the ring
+  // did, flight and all. ListenBar.js has why it is the one thing on the
+  // site shaped like a button; the ring's own history is in git.
+  const openPicker = () => {
+    // ── The beacon shrinks into the bar ──────────────
+    // Miyel, 2026-09-18: "bring back the mini beacon as
+    // the header of the draft/search page, with last log
+    // vs LN logo — I liked the beacon shrinking mini
+    // when you enter session."
+    //
+    // It carried the mark instead for twenty minutes, on
+    // the reasoning that you have not chosen anything yet
+    // and last night's record in the bar is a claim
+    // nobody made. True, and beside the point: the record
+    // up there is not claiming to be tonight's, it is the
+    // beacon, which is the thing this pane is, and
+    // watching it shrink into the row is what makes the
+    // picker feel like the same screen rather than a new
+    // one. The mark is what it falls back to when there
+    // is no record to carry at all.
+    // Found on the pane, not walked up to from the press. This was
+    // `event.currentTarget.closest('.beacon-card')` and it worked for
+    // exactly as long as this control lived inside the beacon's own
+    // meta stack — moving it out from under the artist on 2026-09-18
+    // made `closest` return null, which made `box` undefined, which made
+    // the guard below return, which took the whole flight off without a
+    // word. Miyel: "the animation from the beacon shrinking to mini
+    // seemed smoother before — did something outside of that change?"
+    // It had: this.
+    //
+    // Scoped to the pane because the beacon is drawn once there and the
+    // card is what the cover is leaving.
+    const card = document.querySelector('.hn-pane--home .beacon-card');
+    const art = card?.querySelector('img.beacon-art');
+    const box = art?.getBoundingClientRect();
+    const said = card?.querySelector('.beacon-meta')?.getBoundingClientRect();
+    // A copy of what the card is showing this second,
+    // state and all — Miyel, 2026-09-18: "it's gonna
+    // have to either have a live dot saying now logging,
+    // or it's gonna have to be dull and say last logged.
+    // It is a copy of the real beacon." Including the
+    // open song, because that is what the card says: the
+    // record's name only while nothing is playing.
+    setOnTheBar(onAirAlbum ? {
+      art: onAir,
+      title: onAirTrack || onAirAlbum,
+      artist: onAirArtist,
+      live: isLive,
+    } : null);
+    setChoosing(true);
+    // Never armed on the way in. The × keeps its state
+    // in this component and the picker's markup goes
+    // away and comes back around it, so without this a
+    // picker closed while the × was open — press the
+    // mark, change your mind, leave another way —
+    // reopened with END already showing, which is a
+    // confirmation nobody gave. Blur puts it away too,
+    // but blur is not the only way out of here.
+    setEnding(false);
+    if (!box || !onAir) return;
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+    // Where the record's name is standing, so it can
+    // travel rather than blink out — see wordsFrom.
+    if (said && said.width) wordsFrom.current = said;
+    setLanding({
+      art: onAir,
+      live: isLive,
+      from: { left: box.left, top: box.top, width: box.width, height: box.height },
+      to: null, go: false, ms: TO_THE_BAR_MS, wait: MAKE_ROOM_MS,
+      into: '.hn-bar-beacon .ses-cover',
+    });
+  };
 
   // ── And nothing, for anybody else, 2026-09-27 ───────────────────────────
   // A visitor's slot held the keeper's face with Add and Send either side of
@@ -2834,25 +2753,6 @@ export default function HomeNav() {
             <div className="hn-screen hn-band">
               <div className="hp-dashboard">
                 <div className="hp-dash-cell hp-dash-beacon">
-                  {/* ── The owner's way in ──────────────────────────────
-                      Under the artist, inside the record's own block, so it
-                      reads as the last line of what is on the beacon rather
-                      than as a control parked underneath it (Miyel's beacon
-                      brief, 2026-09-17). Text and an arrow: no pill and no
-                      tile, the voice the session already uses to move you on.
-
-                      It says Resume listen for as long as there is a
-                      record in hand, because that is what pressing it does —
-                      a door you can return through has to say so. The desk
-                      says "Listening now" in the same state and should: it is
-                      beside the session on a desktop and has to describe the
-                      page next to it. Here the beacon is one line up and has
-                      already said what is playing.
-
-                      Owner only, and it is a Link until item 2 of the brief
-                      turns it into the way floor one becomes the picker. A
-                      visitor has no listen to start, and the writing routes
-                      check the wristband for themselves whatever is drawn. */}
                   <ListeningBeacon choosing={choosing} emptied={false} />
                 </div>
               </div>
@@ -2861,10 +2761,7 @@ export default function HomeNav() {
                   while a record is being chosen; the picker takes its room. */}
               {choosing
                 ? <AlbumPicker inline onPick={beginListen} onResume={resumeDraft} onPickSong={beginTrackNote} />
-                : <>
-                    {recentRow}
-                    {theWayIn}
-                  </>}
+                : recentRow}
             </div>
             {/* ── The way down, in the flow ────────────────────────────
                 The same thing the book has, and Miyel asked for it here:
@@ -2889,11 +2786,25 @@ export default function HomeNav() {
 
                 The name stays on the label, for anybody the movement does not
                 reach. */}
-            {deep[HOME] && (
+            {/* A visitor's, now. The keeper's went with the ring for the
+                Listen bar, 2026-10-21 (Miyel: "everything leaves in exchange
+                for this"); there was not room at the foot of one screen for
+                all three, and the way down is still the scroll it always
+                was. */}
+            {checked && !authed && deep[HOME] && (
               <button type="button" className="hn-down" onClick={() => goDown(HOME)} aria-label="The journal">
                 <CaretDown size={18} weight="bold" aria-hidden="true" />
               </button>
             )}
+            {/* ── The Listen bar, at the foot of the floor ──────────────
+                In the floor's own flow on a phone, so it travels with this
+                pane on a swipe and goes up with the record when you go down
+                to the wall, which has its search bar at the foot — one row at
+                the foot at a time. Pinned to the foot of the right page on a
+                desk (nav.css, .lb). Not drawn while a record is being chosen:
+                the ring was not either, and pressing it then would open what
+                is already open. */}
+            {authed && !choosing && <ListenBar held={inHand} onStart={openPicker} />}
           </div>
           {/* Floor two — the wall, scrolling inside a box of its own, so
               the pane only ever has two stops. The entry's second screen,
