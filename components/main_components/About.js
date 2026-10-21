@@ -733,7 +733,7 @@ export default function About({ stamps, authed = false, pinned = null, entries =
                     className={'ab-prompt-pick' + (open ? ' ab-prompt-pick--on' : '')}
                     onClick={() => setPicking(open ? null : index)}
                     aria-expanded={open}
-                    aria-label={`Opening ${index + 1}`}
+                    aria-label={`Prompt ${index + 1}`}
                   >
                     <span className={chosen ? 'ab-prompt-ask' : 'ab-prompt-none'}>
                       {chosen ? noDash(chosen.text) : 'Choose a prompt'}
@@ -746,7 +746,7 @@ export default function About({ stamps, authed = false, pinned = null, entries =
                       setup: drawn always, eased open, out of reach while shut. */}
                   <div className={'ab-prompt-fold' + (open ? ' ab-prompt-fold--open' : '')} inert={!open}>
                     <div className="ab-prompt-fold-in">
-                      <div className="ab-prompt-menu" role="group" aria-label="Openings">
+                      <div className="ab-prompt-menu" role="group" aria-label="Prompts">
                         {BIO_PROMPTS.map(prompt => {
                           const on = prompt.key === row.key;
                           // Openings already used in another slot stay on the

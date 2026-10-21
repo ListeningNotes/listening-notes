@@ -734,10 +734,10 @@ export default function WelcomeScreen() {
                           className={'ab-prompt-pick' + (open ? ' ab-prompt-pick--on' : '')}
                           onClick={() => setPicking(open ? null : i)}
                           aria-expanded={open}
-                          aria-label={`Opening ${i + 1}`}
+                          aria-label={`Prompt ${i + 1}`}
                         >
                           <span className={chosen ? 'ab-prompt-ask' : 'ab-prompt-none'}>
-                            {chosen ? chosen.text : 'Choose an opening'}
+                            {chosen ? chosen.text : 'Choose a prompt'}
                           </span>
                           <CaretDown size={11} weight="bold" aria-hidden="true" />
                         </button>
@@ -746,7 +746,7 @@ export default function WelcomeScreen() {
                             always, its height eased from nothing, and out of reach while shut. */}
                         <div className={'ab-prompt-fold' + (open ? ' ab-prompt-fold--open' : '')} inert={!open}>
                           <div className="ab-prompt-fold-in">
-                            <div className="ab-prompt-menu" role="group" aria-label="Openings">
+                            <div className="ab-prompt-menu" role="group" aria-label="Prompts">
                               {BIO_PROMPTS.map(prompt => {
                                 const on = prompt.key === row.key;
                                 const elsewhere = !on && bio.some((r, j) => j !== i && r.key === prompt.key);
