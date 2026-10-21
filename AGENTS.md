@@ -266,7 +266,8 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   deployment's settings, which speak for no hosted journal), and
   `forwarding` and `journalAddress`: with `FORWARDING_ADDRESS`, the front
   door's `www.` is the old address of the journal that moved off it, and is
-  answered as that journal. Nothing runs without `HOSTING_DIRECTORY_URL`.
+  answered as that journal, but for the front door's home and `/get`, which
+  go to the bare domain. Nothing runs without `HOSTING_DIRECTORY_URL`.
   The forwarding of its pages is in `next.config.mjs`.
 - `install_guide.js` — what `/get` needs: the deploy button's URL and the ten
   install steps with their screenshots and the rings drawn over them.

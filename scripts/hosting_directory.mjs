@@ -230,7 +230,7 @@ if (what === 'key') {
   if (listed) console.log('  - Its listing on the Board moves with it.');
   else if (settings.listed) console.log('  - It lists itself on the Board again, at the new address, the next time its keeper opens it.');
   console.log('  - Its card\'s code is pressed again for the new address the first time its keeper opens it.');
-  if (from && from !== to) console.log(`  - Links to ${from} go on working while something there sends them on, as FORWARDING_ADDRESS does for the front door's www.`);
+  if (from && from !== to) console.log(`  - Links to ${from} go on working while something there sends them on. FORWARDING_ADDRESS does, for the front door's www.: every page but its home and /get, which are the front door's.`);
   if (!yes) {
     console.log(`\nNothing has changed. To move it: npm run hosting-directory -- move ${to} --yes`);
     process.exit(0);

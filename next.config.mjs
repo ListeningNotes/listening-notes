@@ -7,17 +7,25 @@
 // are sent on to where it lives now (FORWARDING_ADDRESS, her name), here at
 // the edge, before anything runs, so a forward costs nothing:
 //
-//   www.      every page, at any path. Not /api, which the journal answers
-//             there itself, because a report sent from a browser cannot
-//             follow a forward.
+//   www.      every page, at any path, for good, with the rest of the link,
+//             so a link or a feed reader that knew the old address learns
+//             the new one. Not /api, which the journal answers there itself,
+//             because a report sent from a browser cannot follow a forward.
+//             And not the front door's two pages, its home and /get, which go
+//             to the bare domain: the domain is the publication's and the
+//             front door's, not one journal's (Miyel, 2026-10-20 — the blog
+//             and the signup live at listeningnotes.blog). Unless the link
+//             says the journal is what it wants — a visit from a copy
+//             (?from=, ?as=) or an Add from another journal's beacon (?add=).
 //   the bare  everything the front door does not answer itself, which was
 //   domain    the same journal's before the move; and its home, when the
-//             link says the journal is what it wants — a visit from a copy
-//             (?from=, ?as=) or an Add from another journal's beacon (?add=).
+//             link says the journal is what it wants.
 //
-// Permanent, with the query carried along, so a link or a card's code that
-// knew the old address learns the new one. Read when the site is built, so a
-// change to either setting is a redeploy.
+// Only the forwards for good are the kind a browser remembers. The rest
+// lead to and from the bare domain, which is where the publication will
+// grow, and a forward a browser kept would go on sending its pages away
+// once they are the publication's. Read when the site is built, so a change
+// to either setting is a redeploy.
 function forwards() {
   const tidy = value => String(value || '').trim().toLowerCase()
     .replace(/^https?:\/\//, '').replace(/\/.*$/, '').replace(/\.$/, '');
@@ -25,18 +33,24 @@ function forwards() {
   const to = tidy(process.env.FORWARDING_ADDRESS);
   if (!process.env.HOSTING_DIRECTORY_URL || !domain || !to) return [];
   // Plain http for a test on this machine, where the journals are
-  // name.localhost (docs/OPERATIONS.md, The hosting directory).
-  const there = `${/^([a-z0-9-]+\.)*localhost(:\d+)?$/.test(to) ? 'http' : 'https'}://${to}`;
+  // name.localhost and the front door is the same server, on the same port
+  // (docs/OPERATIONS.md, The hosting directory).
+  const local = host => /^([a-z0-9-]+\.)*localhost(:\d+)?$/.test(host);
+  const there = `${local(to) ? 'http' : 'https'}://${to}`;
+  const frontDoor = local(domain) ? `http://${domain}${/:\d+$/.exec(to)?.[0] || ''}` : `https://${domain}`;
   const at = host => ({ type: 'host', value: host.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') });
+  const wantsTheJournal = ['from', 'as', 'add'].map(key => ({ type: 'query', key }));
   const frontDoorAnswers = [
     'api/front-door(?:/|$)', 'get$', '_next/',
     'icon\\.png$', 'apple-icon\\.png$', 'manifest\\.webmanifest$', 'favicon\\.ico$',
   ];
   return [
+    { source: '/', has: [at(`www.${domain}`)], missing: wantsTheJournal, destination: `${frontDoor}/`, permanent: false },
+    { source: '/get', has: [at(`www.${domain}`)], destination: `${frontDoor}/get`, permanent: false },
     { source: '/:path((?!api(?:/|$)).*)', has: [at(`www.${domain}`)], destination: `${there}/:path`, permanent: true },
-    { source: `/:path((?!${frontDoorAnswers.join('|')}).+)`, has: [at(domain)], destination: `${there}/:path`, permanent: true },
-    ...['from', 'as', 'add'].map(key => ({
-      source: '/', has: [at(domain), { type: 'query', key }], destination: `${there}/`, permanent: true,
+    { source: `/:path((?!${frontDoorAnswers.join('|')}).+)`, has: [at(domain)], destination: `${there}/:path`, permanent: false },
+    ...wantsTheJournal.map(asks => ({
+      source: '/', has: [at(domain), asks], destination: `${there}/`, permanent: false,
     })),
   ];
 }

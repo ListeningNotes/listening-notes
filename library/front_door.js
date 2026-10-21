@@ -44,7 +44,9 @@ export function hostedDomain() {
 }
 
 // Its www. too, unless a journal used to live there (FORWARDING_ADDRESS,
-// library/hosting_directory.js): then www. is that journal's, for good.
+// library/hosting_directory.js): then www. is that journal's, and the edge
+// sends the front door's two pages there on to the bare domain
+// (next.config.mjs).
 export function isFrontDoor(host) {
   const domain = hostedDomain();
   if (!hosting() || !domain) return false;

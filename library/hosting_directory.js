@@ -68,12 +68,14 @@ export async function hostHere() {
 // www.listeningnotes.blog until the front door took the domain (hosted
 // journals, step 5). Every copy that knew the old address goes on asking
 // there: address books, sends, waves, messages, the Board, problem reports,
-// a card's code on somebody's phone. So it stays that journal's, for good.
-// Its pages are sent on to the new address at the edge (next.config.mjs),
-// and what is asked of /api there is answered here, by the journal itself,
-// as if it had been asked at the new one: a problem report from a browser is
-// checked with the server before it is sent, and that check cannot follow a
-// forward.
+// a link to an entry. So it stays that journal's, for good — all but the
+// front door's home and /get, which go to the bare domain, because the
+// domain is the publication's and the front door's rather than one
+// journal's (Miyel, 2026-10-20). Its pages are sent on to the new address at
+// the edge (next.config.mjs), and what is asked of /api there is answered
+// here, by the journal itself, as if it had been asked at the new one: a
+// problem report from a browser is checked with the server before it is
+// sent, and that check cannot follow a forward.
 //
 // The front door keeps the bare domain; the old address is its www.
 export function forwarding() {

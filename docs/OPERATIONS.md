@@ -283,7 +283,8 @@ every journal again with it: the old key opens nothing once the deployment
 holds the new one.
 
 **The front door** is the deployment's own address, `HOSTED_DOMAIN` and its
-`www.` — or only the bare domain, once a journal has moved off `www.` (below)
+`www.` — or only the bare domain, once a journal has moved off `www.`
+(below), when `www.` sends the front door's two pages to the bare domain
 (`library/front_door.js`). There somebody starts a journal: Neon makes
 it a database of its own, the front door brings it up to date and places it,
 and the browser goes to the new address's setup with the claim code after a
@@ -301,8 +302,11 @@ A journal that already has a database comes onto the deployment at a new
 address with `move`. The canonical journal is the first: it lived at
 `www.listeningnotes.blog`, the address the front door takes, and every copy
 out there knows that address — address books, sends, waves, messages, the
-Board, problem reports, a card's code on somebody's phone. So it moves to its
-keeper's own name under the domain, and the old address goes on reaching it.
+Board, problem reports, a link to an entry. So it moves to its keeper's own
+name under the domain, and the old address goes on reaching it, all but its
+home, which is the front door's: the domain belongs to the publication and
+the front door, not to one journal. A card's code is the bare address, so an
+old one opens the front door; the card presses a new one.
 
 **Before**, at the journal's old address: a password chosen in Settings →
 Your keys, or a spare key made there. A password kept in the deployment's
@@ -329,10 +333,14 @@ journal that lived at `www.` lives now (`library/hosting_directory.js`,
 on to the new address at the edge (`next.config.mjs`), with the rest of the
 link, and `/api` there is answered by the journal itself, as if asked at its
 new address — a problem report sent from a browser is checked with the
-server first, and that check cannot follow a forward. On the bare domain,
-everything the front door does not answer itself is sent on too, and so is
-its home when the link carries `?from=`, `?as=` or `?add=`. Read when the
-site is built, so changing it is a redeploy.
+server first, and that check cannot follow a forward. All but the front
+door's home and `/get`, which go to the bare domain, unless the link carries
+`?from=`, `?as=` or `?add=` and so wants the journal. On the bare domain,
+everything the front door does not answer itself is sent on to the journal
+too, and so is its home when the link carries one of the three. Only the
+forwards from `www.` to the journal are the kind a browser remembers; the
+rest lead to and from the bare domain, where the publication will grow.
+Read when the site is built, so changing it is a redeploy.
 
 **The order on the day**, so the journal is never unreachable:
 
