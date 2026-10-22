@@ -17,7 +17,7 @@ import { headers } from 'next/headers';
 import { isSetUp, pull_settings, coverName, titleName } from '../library/settings_actions';
 import { hasDatabase, explainDatabaseError } from '../library/database_connection';
 import { journalHere, NoJournalHere, hostHere } from '../library/hosting_directory';
-import { isFrontDoor, hostedDomain, placesLeft } from '../library/front_door';
+import { isFrontDoor, hostedDomain, placesLeft, inviterAtTheDoor, frontDoorMetadata } from '../library/front_door';
 import FrontDoor from '../components/main_components/FrontDoor';
 import { isCurrentCode } from '../library/portrait_code';
 import { takesReports } from '../library/report_actions';
@@ -60,10 +60,9 @@ const dmMono = DM_Mono({
 // with.
 export async function generateMetadata() {
   // The front door is the software's own page, not a journal, so it is the
-  // one place called Listening Notes and nothing else.
-  if (isFrontDoor(await hostHere())) {
-    return { title: 'Listening Notes', description: 'A listening journal of your own.' };
-  }
+  // one place called Listening Notes and nothing else — and an invite link's
+  // preview says who invited them (library/front_door.js).
+  if (isFrontDoor(await hostHere())) return await frontDoorMetadata();
   // An address with no journal is the software's page too, saying so, and
   // no page to keep: every name under the domain answers, so a search engine
   // is told not to file it (2026-10-21).
@@ -235,7 +234,11 @@ async function holdTheDoor() {
   if (path.startsWith('/api/')) return null;
   if (!hasDatabase()) return 'database';
   if (isFrontDoor(await hostHere())) {
-    return { reason: 'front-door', path, left: await placesLeft().catch(() => 0) };
+    return {
+      reason: 'front-door', path, left: await placesLeft().catch(() => 0),
+      // Who invited them, when an invite link brought them (Invite, 2026-10-21).
+      invite: await inviterAtTheDoor().catch(() => null),
+    };
   }
   try {
     await journalHere();
@@ -341,7 +344,7 @@ export default async function RootLayout({ children, layer }) {
         <Bookplate settings={settings}>
           <Lightswitch>
             {holding?.reason === 'front-door'
-              ? <FrontDoor path={holding.path} domain={hostedDomain()} left={holding.left} />
+              ? <FrontDoor path={holding.path} domain={hostedDomain()} left={holding.left} invite={holding.invite} />
               : holding
               ? <ComingSoon reason={typeof holding === 'string' ? holding : holding.reason} said={holding.said} />
               : <>

@@ -30,7 +30,7 @@ import { ask_journal_name } from '@/library/people_actions';
 import { mayKnock, whoIsKnocking } from '@/library/doorman';
 import { hashPassword, passwordSource, save_secrets, setupWindowOpen } from '@/library/secrets';
 import { holds_any, keep_only } from '@/library/keyring';
-import { hosting } from '@/library/hosting_directory';
+import { hosting, deploymentSetting } from '@/library/hosting_directory';
 
 // Eight is the floor. There is no strength meter — one password, chosen once,
 // saved by a password manager the field is shaped for — but a floor keeps
@@ -44,13 +44,16 @@ const PASSWORD_FLOOR = 8;
 //
 // ── Who gave it, 2026-09-23 ─────────────────────────────────────────────────
 // A copy deployed from a gift carries the giver's address in GIFT_FROM, set
-// by the deploy button (/get, when the link came from Give). Only somebody
-// holding this journal's wristband is told it — during setup that is the
-// person claiming it — because who gave whom a journal is not a public fact.
-// `?giver=<address>` asks that journal its keeper's name, for the card on
-// the setup screen: the address came from GIFT_FROM or from a scan of the
-// giver's code. The question goes through the relay door, like every
-// outbound request a page can make this copy send.
+// by the deploy button (/get, when the link came from Give — Invite since
+// 2026-10-21). Only somebody holding this journal's wristband is told it —
+// during setup that is the person claiming it — because who gave whom a
+// journal is not a public fact. A deployment that hosts journals speaks for
+// none of them, so it has none to tell: there, the front door names the
+// inviter in the setup link itself. `?giver=<address>` asks that journal its
+// keeper's name, for the card on the setup screen: the address came from
+// GIFT_FROM, from the setup link or from a scan of the inviter's code. The
+// question goes through the relay door, like every outbound request a page
+// can make this copy send.
 export async function GET(request) {
   try {
     const claimed = await isSetUp();
@@ -62,7 +65,7 @@ export async function GET(request) {
     // updates come with each release — setup draws no updater screen for it.
     const answer = { claimed, has_password: Boolean(password), open, hosted: hosting() };
     if (!(await requireWristband(request))) {
-      const gift = tidyJournal(process.env.GIFT_FROM || '');
+      const gift = tidyJournal(deploymentSetting('GIFT_FROM') || '');
       if (gift) answer.gift = gift;
       const asked = tidyJournal(new URL(request.url).searchParams.get('giver') || '');
       if (asked && (await mayKnock('relay', whoIsKnocking(request))).allowed) {

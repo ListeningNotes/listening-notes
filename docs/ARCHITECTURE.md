@@ -61,7 +61,7 @@ publicly):
   Ran on down the desk's own scroll until 2026-09-15
 - `/dashboard/people` — the address book as a grid of faces (Friends), with
   the ways one gets in — a paste, a scanned code, a send that carried one —
-  and Give and Add in its header. The Friends stop on the phone's band
+  and Invite and Add in its header. The Friends stop on the phone's band
 - `/dashboard/people/[id]` — your page about one person: what you both have,
   where you agree and disagree hardest, what they sent you and how it landed
 - `/settings` — the machinery: address, the password, Back up your journal,
@@ -190,7 +190,7 @@ The front doors — receive requests, hand them off, send back responses
     public/stamps/route.js     The card's counted facts — records, songs, first entry, top genres, the two flag counts
     public/listing/route.js    The code the directory issued this journal, as plain text, or 404 — how the registry proves the address
     public/people/route.js     The people this journal's keeper added who are on the Board themselves — a name and an address each; never anybody kept private, nothing while the keeper is off the Board; checked against the directory with hashes; kept a minute. What makes "a friend away"
-    front-door/route.js        The front door only: GET the places left or whether an address is free; POST makes a journal and says where its setup is (the claim code after #)
+    front-door/route.js        The front door only: GET the places left or whether an address is free; POST makes a journal and says where its setup is (the claim code after #, and whoever invited them as ?invite=)
     friends/beacons/route.js   Everyone in the address book's beacon, through one door — owner-only; each journal's public beacon in parallel, a round kept a minute, a journal that fails asked less often, thirty on the timer — and each friend's /api/public/people on the same round, which makes `away`, the Board's friends of friends (two rings only)
     listing/route.js           On the Board — owner-only: GET says whether this journal is listed and on the Board, and lists it if it is meant to be and is not yet (on by default, 2026-10-08); POST is the switch in Settings, through library/outbox.js
     board/route.js             Everything the Board reads, through one door on this journal (Miyel: keep the fan-out behind a single route): the first screen, a search, the keeper's own records matched (behind the wristband), and lines of keepers' own writing read from their journals by this server — 2.5 s each, kept ten minutes, back-off, only journals on the Board, counted per asker. The Board component talks to this and nothing else
@@ -225,7 +225,7 @@ The furniture — visual pieces
       CodeSlot.js              A square that holds a picture and turns into that picture's code — the card's portrait and an entry's cover: the two faces, the copy and its pill, the corner mark, the wait
       AddressCode.js           A plain code for an address, drawn in the browser — what CodeSlot shows when no pressed picture can be had
       CodeScanner.js           The camera pointed at a code — the address book's way in for a card's or a cover's code
-      GiveSheet.js             Give: a code to listeningnotes.blog/get?gift=<this journal>, for a friend who has no copy — the gift at the left of the address book's header, opposite Add
+      InviteSheet.js           Invite (Give until 2026-10-21): a code to the front door, listeningnotes.blog/get?invite=<this journal>, for a friend who has no journal — the ticket at the left of the address book's header, opposite Add
       WaveSheet.js             Just added somebody: "[name] is in your address book", Wave to [name] or Not now — the one moment a wave is offered
       Dashboard.js             The desk, for the owner — Start a listen as a band, then Inbox, Feed, Address book and Settings as rows; the header holds the mark alone. On a desk only since 2026-09-19, as the spine's second page
       Friends.js               The address book as a grid of faces, pinned first; a face opens its three doors in place under its own row. Friends, under People, and /dashboard/people
@@ -310,7 +310,7 @@ The rooms — full pages assembled from furniture
     submit/page.js             Send the keeper an album
     shuffle/page.js            Redirect to a random entry
     get/page.js                Get your copy: ten steps, then the deploy button. 404s while the long note is unwritten
-    get/gift-preview/route.js  The picture a gift link (/get?gift=) unfurls into — /get's "A gift from" card — when the giver's journal answers
+    get/gift-preview/route.js  The picture an invite link (?invite=, or an old ?gift=) unfurls into — "Invited by" over their face, and the ticket — when their journal answers; drawn at the front door as well as on a journal's own /get
     get/story/page.js          The keeper's long note. 404s when unwritten. Linked from nowhere for now
     about/page.js              Redirect to / — the identity card is the about page
     session/page.js            The listen — picker, then four screens under one header

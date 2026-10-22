@@ -40,8 +40,10 @@ function forwards() {
   const frontDoor = local(domain) ? `http://${domain}${/:\d+$/.exec(to)?.[0] || ''}` : `https://${domain}`;
   const at = host => ({ type: 'host', value: host.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') });
   const wantsTheJournal = ['from', 'as', 'add'].map(key => ({ type: 'query', key }));
+  // The picture an invite link's preview shows is the front door's own too
+  // (Invite, 2026-10-21: library/front_door.js), drawn with its words.
   const frontDoorAnswers = [
-    'api/front-door(?:/|$)', 'get$', '_next/',
+    'api/front-door(?:/|$)', 'get$', 'get/gift-preview$', '_next/',
     'icon\\.png$', 'apple-icon\\.png$', 'manifest\\.webmanifest$', 'favicon\\.ico$',
   ];
   return [

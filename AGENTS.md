@@ -258,7 +258,9 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   `HOSTED_JOURNALS_MOST`, `make_journal` (a Neon project through the API,
   brought up to date, its address written, placed in the hosting directory,
   and its claim code), and `clear_never_set_up`, which takes down a journal it
-  made that nobody set up or wrote in within a day.
+  made that nobody set up or wrote in within a day; `inviterAtTheDoor`, who
+  an invite link says invited the visitor, asked their name once a request;
+  and `frontDoorMetadata`, the front door's title and an invite's preview.
 - `gold_burst.js` — the gold sparkle fired when a Masterpiece is marked.
 - `handoff.js` — module variables the wall leaves for the entry layer: the
   tapped record's first-screen fields so the layer opens without a wait, the
@@ -322,8 +324,10 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - `return_address.js` — a sender's name and journal kept in their own browser
   for the send and message forms; `tidyAddress`, `tidyJournal` and
   `journalUrl`, the one spelling an address is kept in; `addressFrom`, what
-  a copy calls itself from the request that reached it; and the `?from=` /
-  `?as=` handling when a keeper arrives from their own copy.
+  a copy calls itself from the request that reached it; the `?from=` /
+  `?as=` handling when a keeper arrives from their own copy; and
+  `inviterIn`, the inviter an invite link names (`?invite=`, or an old
+  link's `?gift=`).
 - `secrets.js` — the vault: the `secrets` table's only reader. The session
   secret, password hashing, the claim code, the setup window, what Settings
   may be told (set or not, last four characters), `directoryCode`, the

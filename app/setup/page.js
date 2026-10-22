@@ -69,7 +69,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { CaretDown, Check, Eye, EyeSlash, Gift, User } from '@phosphor-icons/react';
+import { CaretDown, Check, Eye, EyeSlash, Ticket, User } from '@phosphor-icons/react';
 import { startRegistration } from '@simplewebauthn/browser';
 import { fonts } from '../../library/sitewide_visuals';
 import { BIO_PROMPTS, BIO_LIMIT } from '../../library/bioprompt';
@@ -78,7 +78,7 @@ import { shrink } from '../../components/main_components/IdentificationCardEdito
 import AddToHomeScreen from '../../components/main_components/AddToHomeScreen';
 import UpdateSwitch from '../../components/main_components/UpdateSwitch';
 import { usePasswordName } from '../../hooks/useJournalHost';
-import { tidyJournal, journalUrl } from '../../library/return_address';
+import { tidyJournal, journalUrl, inviterIn } from '../../library/return_address';
 import { journal_in } from '../../library/carbon_copy';
 import { canHoldKeys, keepFresh, markKeyHere, thisDevice, wayIn, SpareKeyShown } from '../../components/main_components/Keyring';
 
@@ -240,9 +240,12 @@ export default function WelcomeScreen() {
       // Unless the owner asked to see it again.
       if (status?.claimed && !(rehearse && auth.authed)) { router.replace('/'); return; }
       setRehearsing(Boolean(status?.claimed && rehearse));
-      // The giver the deploy carried — or, rehearsing, one named in the
-      // address, so the gift screen can be looked at on a claimed copy.
-      setGiftFrom(status?.gift || (rehearse ? tidyJournal(query.get('gift') || '') : ''));
+      // Who invited them: the giver a self-hosted deploy carried, or the
+      // inviter the front door named in the link that brought them here
+      // (Invite, 2026-10-21) — which is also how a rehearsal shows the
+      // screen on a claimed copy.
+      const invited = inviterIn(query);
+      setGiftFrom(status?.gift || invited);
       setHasPassword(Boolean(status?.has_password));
       setHosted(status?.hosted === true);
       let admitted = !!auth.authed;
@@ -265,8 +268,9 @@ export default function WelcomeScreen() {
         admitted = await knock(code);
         if (!admitted) setCodeFromLink(code);
         // The code comes off the address either way. It is a one-time secret
-        // and should not sit in the history or get pasted on somewhere.
-        window.history.replaceState(null, '', '/setup');
+        // and should not sit in the history or get pasted on somewhere. Who
+        // invited them stays, for a reload.
+        window.history.replaceState(null, '', invited ? `/setup?invite=${encodeURIComponent(invited)}` : '/setup');
       }
       // Who gave it is told only to a journal's own wristband, so asked again
       // once the door has opened: the gift screen is a step only for a
@@ -416,7 +420,7 @@ export default function WelcomeScreen() {
         setGiver(answer.giver);
         return;
       }
-      setHelloTrouble('Whoever gave you this journal couldn’t be reached just now. You can add them later from your book.');
+      setHelloTrouble('Whoever invited you couldn’t be reached just now. You can add them later from your book.');
       advance();
     })();
     return () => { gone = true; };
@@ -646,7 +650,7 @@ export default function WelcomeScreen() {
                   updates: 'Keep your journal up to date automatically.',
                   password: !wayKnown || (faceWay && !typingPassword) ? 'How you’ll get back in.' : 'What you’ll type to get back in.',
                   spare: 'Your spare key.',
-                  gift: giver ? `${giver.name} gifted you this journal.` : '\u00a0',
+                  gift: giver ? `${giver.name} invited you.` : '\u00a0',
                   homescreen: 'It’s yours. Put it on your home screen.',
               }[current]}
             </p>}
@@ -940,16 +944,18 @@ export default function WelcomeScreen() {
               <div className="su-fields">
                 {giver ? (
                   <>
-                    {/* A GIFT FROM, their face over the plain mark, the name
-                        under it (Miyel, 2026-09-23: the picture sandwiched
-                        between the two), then the question and the one
-                        choice — ticked, visible, one tap to undo. The
-                        heading over all of it says who gifted it, and the
-                        question is "Say hello?" (Miyel, 2026-09-28: the
-                        brief's Say hello, kept with the selection rather
-                        than made a button of its own). */}
+                    {/* INVITED BY (A GIFT FROM until 2026-10-21, and the
+                        ticket the present: Miyel's words), their face over
+                        the plain mark, the name under it (Miyel,
+                        2026-09-23: the picture sandwiched between the two),
+                        then the question and the one choice — ticked,
+                        visible, one tap to undo. The heading over all of it
+                        says who invited them, and the question is "Say
+                        hello?" (Miyel, 2026-09-28: the brief's Say hello,
+                        kept with the selection rather than made a button of
+                        its own). */}
                     <div className="su-gift">
-                      <span className="su-gift-from"><Gift size={12} aria-hidden="true" /> A gift from</span>
+                      <span className="su-gift-from"><Ticket size={12} aria-hidden="true" /> Invited by</span>
                       <span className="su-gift-face" aria-hidden="true">
                         <User size={34} weight="regular" />
                         <img src={`${journalUrl(giver.address)}/api/portrait`} alt="" onError={e => { e.currentTarget.style.display = 'none'; }} />
