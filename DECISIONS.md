@@ -150,8 +150,8 @@ title and what came before — so something has to say there is more; the
 turning pane scrolls and its writing running off the edge is the cue. No mark
 over it: a side caret's mark named a destination worth knowing, and down has
 only one.
-A keeper's beacon has none since 2026-10-21: the Listen bar stands at that
-foot, and one screen had no room for both (the way down is the scroll).
+The beacon has none since 2026-10-22 — a keeper's went for the Listen bar
+the day before, and a visitor's when home became one page; the book keeps its.
 
 **The light switch is the beacon's, top right, and nowhere else,
 2026-09-15.** One home for it: the first screen of the journal, where it is
@@ -237,8 +237,14 @@ with a cover, meaning the one pane where something is cut off at a fold rather
 than simply running on. Everything else scrolls, and content running off the
 edge is its own cue.
 
+**Home is one page, 2026-10-22:** the record, then the wall, in one scroll,
+with no chevron, no floors and nothing settling between them — the top row
+and the Listen bar frame it and nothing is cut off at a fold (Miyel: "it
+doesn't really need it anymore"). On a phone the wall's bar sits at the top of
+the wall, stuck under the row, as on a desk: the foot is the Listen bar's.
+
 **A two-floor screen is two stops, and that is not a snap, 2026-09-20.**
-The entry, the beacon and the book all have it. The record
+The entry and the book have it (the beacon did, until home became one page). The record
 is one thing to look at and what is under it is the next; move at all and
 let go and it finishes the journey, the way you were already going. It acts
 only between those two, never past the second floor, and only with a hand
@@ -259,26 +265,6 @@ The press lands exactly; `scroll-margin-top` on the second floor is what tells
 it where to stop and is load-bearing with no snap in sight. What the snap was
 for survives without it: a first floor one screen tall, a row at the foot of
 it saying what is below, and — on the book, not the beacon — a peek of it.
-**The beacon has the row and no peek, 2026-09-20.** Its screen is full at the
-sizes the mark and the record are drawn at, so a sliver cost a smaller mark
-and tighter air above the cover, and what it bought was forty pixels under the
-wall's own search bar. A feed is rows and forty pixels of a row reads as a
-row; forty pixels of cover under a bar does not. Miyel, on the seam
-being gone: "i don't even mind that it scrolls seamless from top to bottom,
-that was something i wanted to address anyway."
-**A visitor's beacon has the peek and the keeper's does not, 2026-09-27.**
-The room the visitor row left goes to the wall's top: signed out, the first
-covers show under the chevron the way the feed shows under the faces. It is
-real now because the wall's bar stands at the foot of the phone screen; on
-the 20th the sliver was bar and band. The keeper's floor stays full and
-unmoved — Miyel's pick over a tease that would have put the mark 30px higher.
-
-What follows is the 2026-09-07 reasoning, which is why there was ever an
-exception: proximity on the long pane argued with the thumb and came off
-2026-08-28; mandatory over three screens and a bit would drag a reader back to
-a screen edge halfway down the wall. The two-floor shape was different while
-it lasted.
-
 **The large mark is the beacon's alone, 2026-09-15.** It was on every pane at
 one height, so the square under it landed on the same line whichever pane you
 were on — and that reason went with the centred card: there is no third square
@@ -452,10 +438,6 @@ fixed strip on every page pointing at places already reachable is 56px spent.
 the target. Only while the pane is scrolled: at the top there is nothing to go
 back to, and a dead tap zone across the cover is worse than none.
 
-**The wall's bar sits on the floor, edge to edge.** Rounded corners and side
-margins made it a pill floating over the covers; square and full width it is
-the edge of the wall.
-
 **Sideways is a decision made at the top of a pane.** The side controls go
 away once a pane is scrolled: down in the wall or the reading, the only thing
 worth offering is more of what you are in. The swipe itself is untouched —
@@ -468,10 +450,6 @@ you their four on one page.
 **Nothing sits at the foot of the wall.** The foot of the archive is where
 somebody has finished looking, and three links to elsewhere is the site
 asking them to leave.
-
-**The wall's controls sit at the bottom on a phone.** Where the thumb is, and
-where they do not take the first hundred pixels of covers. Sticky, never
-fixed — the wall lives inside a pane of the cross.
 
 **The beacon captions itself, 2026-09-07, on Miyel's call.** One line under
 the art, above the title, naming which of the three states below this is.

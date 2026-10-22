@@ -1032,3 +1032,43 @@ The labels carry the meaning and the glyphs are decoration that has to earn
 17px. If one ever needs explaining, all three go and the words stay. An open
 book for the desk is wrong whatever else is: the book is the journal, and the
 journal is *down* from the beacon, not sideways.
+
+---
+
+## Structure — the beacon's floor, and the wall's bar at the foot, 2026-09 to 2026-10-22
+
+Current rule: DECISIONS.md → Structure, *Home is one page*.
+
+Reversed when the frame arrived (the top row, the Listen bar at the foot of
+every page): home stopped being a beacon floor a screen tall with the wall
+under it, and the wall's bar came up from the foot, which is the Listen
+bar's. As they were written:
+
+**The beacon has the row and no peek, 2026-09-20.** Its screen is full at the
+sizes the mark and the record are drawn at, so a sliver cost a smaller mark
+and tighter air above the cover, and what it bought was forty pixels under the
+wall's own search bar. A feed is rows and forty pixels of a row reads as a
+row; forty pixels of cover under a bar does not. Miyel, on the seam
+being gone: "i don't even mind that it scrolls seamless from top to bottom,
+that was something i wanted to address anyway."
+
+**A visitor's beacon has the peek and the keeper's does not, 2026-09-27.**
+The room the visitor row left goes to the wall's top: signed out, the first
+covers show under the chevron the way the feed shows under the faces. It is
+real now because the wall's bar stands at the foot of the phone screen; on
+the 20th the sliver was bar and band. The keeper's floor stays full and
+unmoved — Miyel's pick over a tease that would have put the mark 30px higher.
+
+What follows is the 2026-09-07 reasoning, which is why there was ever an
+exception: proximity on the long pane argued with the thumb and came off
+2026-08-28; mandatory over three screens and a bit would drag a reader back to
+a screen edge halfway down the wall. The two-floor shape was different while
+it lasted.
+
+**The wall's controls sit at the bottom on a phone.** Where the thumb is, and
+where they do not take the first hundred pixels of covers. Sticky, never
+fixed — the wall lives inside a pane of the cross.
+
+**The wall's bar sits on the floor, edge to edge.** Rounded corners and side
+margins made it a pill floating over the covers; square and full width it is
+the edge of the wall.

@@ -1615,9 +1615,10 @@ export default function HomeNav() {
         clearTimeout(lift);
       };
     };
-    // The two panes that have a second floor. The card and the inbox are one
-    // screen each and have nothing to be carried to.
-    const offs = [paneRefs[HOME]?.current, paneRefs[BOOK]?.current].map(wire);
+    // The book, the one pane with a second floor left. Home was the other
+    // until 2026-10-22, when it became one page under the top row; the card
+    // and the inbox are one screen each and have nothing to be carried to.
+    const offs = [paneRefs[BOOK]?.current].map(wire);
     return () => offs.forEach(off => off());
   }, [paneRefs, authed]);
 
@@ -2202,23 +2203,11 @@ export default function HomeNav() {
 
                 The name stays on the label, for anybody the movement does not
                 reach. */}
-            {/* A visitor's, now. The keeper's went with the ring for the
-                Listen bar, 2026-10-21 (Miyel: "everything leaves in exchange
-                for this"); there was not room at the foot of one screen for
-                all three, and the way down is still the scroll it always
-                was. */}
-            {checked && !authed && deep[HOME] && (
-              <button type="button" className="hn-down" onClick={() => goDown(HOME)} aria-label="The journal">
-                <CaretDown size={18} weight="bold" aria-hidden="true" />
-              </button>
-            )}
-            {/* ── The Listen bar, at the foot of the floor ──────────────
-                In the floor's own flow on a phone, so it travels with this
-                pane on a swipe and goes up with the record when you go down
-                to the wall, which has its search bar at the foot — one row at
-                the foot at a time. Pinned to the foot of the right page on a
-                desk (nav.css, .lb). */}
-            {authed && <ListenBar held={inHand} live={isLive} />}
+            {/* No way down and no bar here any more, 2026-10-22: home is one
+                page — the record, then the wall, in one scroll — and the
+                Listen bar is the frame's, at the foot of every page (below).
+                The chevron went with the ring for the keeper on 2026-10-21
+                and for a visitor now; the floors went with both. */}
           </div>
           {/* Floor two — the wall, scrolling inside a box of its own, so
               the pane only ever has two stops. The entry's second screen,
@@ -2371,7 +2360,11 @@ export default function HomeNav() {
 
       {/* The band at the foot — Card · Beacon · People · Inbox — went on
           2026-10-22 for the top row (Header.js, in the bar above): the foot
-          is the Listen bar's now (DECISIONS, the frame). */}
+          is the Listen bar's now (DECISIONS, the frame). It is the frame's,
+          not a pane's: it stays at the foot of the screen on every pane and
+          over an entry opened on the journal, and steps down when anything
+          else owns the foot (ListenBar.js). The keeper's alone. */}
+      {authed && <ListenBar held={inHand} live={isLive} />}
     </div>
   );
 }

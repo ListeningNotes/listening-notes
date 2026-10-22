@@ -3641,3 +3641,59 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
 @media (max-width: 768px) and (prefers-reduced-motion: reduce) {
   .hn-face--card, .hn--card .hn-face--card { transition: none; }
 }
+
+/* ── The Listen bar is the frame's, 2026-10-22 ─────────────────────────────
+   Fixed to the foot of the screen on a phone, on every pane and over an
+   entry laid on the journal — above a layer (200), under a sheet (260) and
+   the print bar (400) — and stepping down whenever something else owns the
+   foot (ListenBar.js, .lb--down). Every scroller in the cross already ends
+   --hn-foot-h above the bottom, so for the keeper that is the bar's room. */
+@media (max-width: 768px) {
+  .lb {
+    position: fixed;
+    left: 14px; right: 14px;
+    bottom: calc(15px + env(safe-area-inset-bottom, 0px));
+    z-index: 230;
+    margin: 0;
+  }
+  .hn--keeper { --hn-foot-h: calc(86px + env(safe-area-inset-bottom, 0px)); }
+  /* An entry, or anything else laid over the journal that is not the
+     session, keeps its last lines clear of the bar while it is up. */
+  html[data-listen] .lay:not(.lay--sheet) .lay-content { padding-bottom: calc(86px + env(safe-area-inset-bottom, 0px)); }
+}
+.lb--down {
+  opacity: 0;
+  transform: translateY(14px);
+  pointer-events: none;
+}
+
+/* ── Home is one page, 2026-10-22 ──────────────────────────────────────────
+   The record, then the wall, in one scroll, the way her mockup draws it. The
+   two floors were there because the beacon filled a screen under the big
+   mark and something had to say there was more; with the top row and the
+   Listen bar framing the page and the mark gone, nothing is cut off at a
+   fold (Miyel: "it doesn't really need it anymore"). No floor is a screen
+   tall, nothing settles between them, and the chevron has gone.
+
+   The wall's bar comes up from the foot, which is the Listen bar's, to the
+   top of the wall, stuck under the top row as you read down — where a desk
+   already has it. Its own controls are unchanged; how they read is the wall
+   views' own step. */
+@media (max-width: 768px) {
+  .hn-pane--home .hn-floor,
+  .hn--visitor .hn-pane--home .hn-floor--beacon {
+    height: auto;
+    min-height: 0;
+    scroll-snap-align: none;
+  }
+  .hn .hn-pane--home .arc-bar-wrap {
+    order: -1;
+    top: var(--hn-bar-h);
+    bottom: auto;
+    opacity: 1;
+    pointer-events: auto;
+    padding-top: 8px;
+    background: var(--bg);
+  }
+  .hn--typing .hn-pane--home .arc-bar-wrap { bottom: auto; }
+}
