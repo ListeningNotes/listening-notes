@@ -137,19 +137,51 @@ export async function note_moves(people, heard) {
 // journal gave, and the notice goes. Where the book already holds that
 // address — the friend was added again at the new one — the old row is the
 // one that goes, and the one already there is handed back.
+//
+// And the rest of this journal follows the book, 2026-10-21 (Miyel: "do the
+// fix"): everything here that names the friend's old address names the new
+// one — what was sent them and is still out (`sent`), what of theirs came
+// back (`came_back`), their wave, their messages and what they are about,
+// and what they sent here (`submissions`) — so the Outbox clears when a
+// record comes back from the new address, the feed does not bring back as
+// new what already came back, and a reply goes where they live now. Where a
+// row for the new address is already here, the old one is the one that
+// goes. Never an entry: a credit on this journal's own pages is its
+// keeper's writing, and goes on naming the address it was sent from. All of
+// it at once with the book's row, or none of it.
 export async function take_move(id) {
-  const [person] = await database`SELECT id, moved_to FROM people WHERE id = ${id} LIMIT 1`;
-  if (!person?.moved_to) return null;
-  const [there] = await database`SELECT id FROM people WHERE address = ${person.moved_to} LIMIT 1`;
-  if (there) {
-    await remove_person(person.id);
-    return await pull_person(there.id);
-  }
-  const [moved] = await database`
-    UPDATE people SET address = moved_to, moved_to = NULL WHERE id = ${person.id}
-    RETURNING id, address, name, added_at, pinned_at, private, moved_to
-  `;
-  return moved || null;
+  const [person] = await database`SELECT id, address, moved_to FROM people WHERE id = ${id} LIMIT 1`;
+  const from = person?.address;
+  const to = tidyJournal(person?.moved_to || '');
+  if (!from || !to) return null;
+  const [there] = await database`SELECT id FROM people WHERE address = ${to} AND id <> ${id} LIMIT 1`;
+  await database.transaction(sql => [
+    ...carryAlong(sql, from, to),
+    there
+      ? sql`DELETE FROM people WHERE id = ${id}`
+      : sql`UPDATE people SET address = ${to}, moved_to = NULL WHERE id = ${id}`,
+  ]);
+  return await pull_person(there ? there.id : id);
+}
+
+// An address written loosely — a scheme, a path, capitals, as a visitor's
+// send may have typed it — read the way tidyJournal reads it, in Postgres.
+// For the columns that came from outside; the book's own are already tidy.
+function carryAlong(sql, from, to) {
+  return [
+    sql`UPDATE sent SET journal = ${to} WHERE journal = ${from}`,
+    sql`DELETE FROM came_back old WHERE old.journal = ${from}
+          AND EXISTS (SELECT 1 FROM came_back here WHERE here.journal = ${to} AND here.slug = old.slug)`,
+    sql`UPDATE came_back SET journal = ${to} WHERE journal = ${from}`,
+    sql`DELETE FROM waves WHERE address = ${from} AND EXISTS (SELECT 1 FROM waves WHERE address = ${to})`,
+    sql`UPDATE waves SET address = ${to} WHERE address = ${from}`,
+    sql`UPDATE messages SET from_journal = ${to}
+          WHERE lower(split_part(regexp_replace(btrim(from_journal), '^https?://', '', 'i'), '/', 1)) = ${from}`,
+    sql`UPDATE messages SET about_journal = ${to}
+          WHERE lower(split_part(regexp_replace(btrim(about_journal), '^https?://', '', 'i'), '/', 1)) = ${from}`,
+    sql`UPDATE submissions SET sender_url = ${to}
+          WHERE lower(split_part(regexp_replace(btrim(sender_url), '^https?://', '', 'i'), '/', 1)) = ${from}`,
+  ];
 }
 
 // Whether a move is waiting in the book, for the Inbox's dot (/api/waiting).

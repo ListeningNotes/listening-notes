@@ -78,6 +78,10 @@ async function connect() {
 
 const database = (...args) => connect().then(client => client(...args));
 database.query = (...args) => connect().then(client => client.query(...args));
+// Several statements as one, all or none (2026-10-21, a friend's move taken
+// whole): `build` is handed this journal's own handle, writes its statements
+// with it, and they go over together.
+database.transaction = build => connect().then(client => client.transaction(build(client)));
 
 export default database;
 

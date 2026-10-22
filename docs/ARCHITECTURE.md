@@ -163,17 +163,17 @@ The front doors — receive requests, hand them off, send back responses
     submissions/route.js       POST: a send arrives — from the visitor form or from another copy's server; GET for the owner
     submissions/[id]/route.js  One send: settling it, saying it was already logged, naming who it came from; owner-only
     settings/route.js          The settings row — public to read, owner-only to write; `moved_to` is kept tidy and is never this journal's own address
-    people/route.js            The address book — owner-only: the list, and filing an address
+    people/route.js            The address book — owner-only: the list, with every address this journal answers to (where it lives and where it lived), and filing an address
     outbox/route.js            Where a send leaves from — owner-only: the person resolved out of the address book, the record (or the song) handed to library/outbox.js, which posts to their copy's /api/submissions, and a send that landed written to `sent`; a wave goes the same road, and so does a reply, whose recipient is read off the message it answers
     came-back/route.js         What came back — owner-only: the inbox's list, what the feed noticed, a row opened, and a row dismissed
     sent/route.js              What this journal sent that has not come back — owner-only: the inbox's Sent list, and a row removed; written only by outbox/route.js
     waves/route.js             Waves — POST is public, from another copy's server: a journal and a name, nothing else, checked and counted; GET, PATCH and DELETE are the keeper's
-    people/[id]/route.js       One person: reading them, crossing them out, and Update — `{ moved: true }` takes the move their journal said it made
+    people/[id]/route.js       One person: reading them, crossing them out, and Update — `{ moved: true }` takes the move their journal said it made, everywhere this journal names them but its entries, at once
     reports/route.js           A problem written in — POST from any copy (rate-limited, cross-origin), GET for the owner
     reports/[id]/route.js      Marking one read or dismissed
     secrets/route.js           The vault — owner-only both ways; says what is set, never the value
     setup/route.js             GET: is this copy claimed. POST: the one write that claims it — with a password, or with the key just made and none; the ring keeps only the keys the claim names
-    restore/route.js           Bring your journal — POST, behind setup's wristband and only on a copy nobody has claimed: the journal from Make a copy and a password or the key just made; restored with library/unpacking.mjs, never the vault or the keyring, and claimed in the same transaction (the password if any, the keys the claim names and no others, this copy's address, the Board's old code gone)
+    restore/route.js           Bring your journal — POST, behind setup's wristband and only on a copy nobody has claimed: the journal from Make a copy and a password or the key just made; restored with library/unpacking.mjs, never the vault or the keyring, and claimed in the same transaction (the password if any, the keys the claim names and no others, this copy's address, the address it came from kept among those it lived at, the Board's old code gone); on a deployment that hosts journals, into the database the hosting directory gives this address
     auth/login/route.js        The password, the deploy-time variable, the spare key (once, and spent by it), or — unclaimed — the claim code
     auth/check/route.js        Am I still wearing a valid wristband; renews an ageing one on the way
     auth/logout/route.js       Cuts the wristband off
@@ -393,7 +393,7 @@ than what anyone remembers building.
 | Table | What it holds |
 |---|---|
 | `entries` | The journal. One row per listen — an album listened to twice is two entries, never an overwrite. `posted_at` is when, with its zone; `created_at` is the older naive stamp, kept and unread. `cover_code` is the dot that carried the cover into its code, stamped on the first tap — never the picture. `song` makes a row a track note, about that one song off the record in `album`; it is empty on every album listen, and nothing that numbers, counts or compares albums counts a row that has one; the card's Songs counts exactly those rows. |
-| `settings` | Everything that makes a copy someone's own: the keeper, the portrait, the links, the rig, the starting theme; and `moved_to`, where the journal lives now when it has moved, public because the beacon says it. Exactly one row, forced by a check on `id`. |
+| `settings` | Everything that makes a copy someone's own: the keeper, the portrait, the links, the rig, the starting theme; `moved_to`, where the journal lives now when it has moved, public because the beacon says it; and `moved_from`, the addresses it lived at before, private, read only to know its own sends when they come back. Exactly one row, forced by a check on `id`. |
 | `secrets` | What must never reach a visitor: the session secret, the password hash, the claim code, the setup window, and two API key columns nothing reads any more (Last.fm, retired 2026-09-16; Anthropic, retired 2026-09-18). One row; read only by `library/secrets.js`. |
 | `users` | The owner. One row, written at setup. |
 | `comments` | What was said under entries until 2026-09-29, when comments became messages. Nothing reads it; the rows stay, less any whose message was dismissed or whose entry was deleted. |

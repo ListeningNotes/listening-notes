@@ -35,11 +35,12 @@ import { NextResponse } from 'next/server';
 import { gunzipSync } from 'node:zlib';
 import { Client } from '@neondatabase/serverless';
 import { requireWristband, issueWristband, WRISTBAND_COOKIE } from '@/library/wristband';
-import { isSetUp } from '@/library/settings_actions';
+import { isSetUp, livedAt } from '@/library/settings_actions';
 import { directDatabaseUrl } from '@/library/migrator';
+import { hosting, journalHere } from '@/library/hosting_directory';
 import { hashPassword, seal_claim } from '@/library/secrets';
 import { holds_any, keep_only_within } from '@/library/keyring';
-import { addressFrom } from '@/library/return_address';
+import { addressFrom, tidyJournal } from '@/library/return_address';
 import { from_document, plan_unpacking, unpack } from '@/library/unpacking.mjs';
 
 // Setup's floor, for setup's reason (app/api/setup).
@@ -91,7 +92,11 @@ export async function POST(request) {
   // A session from BEGIN to COMMIT, on the direct endpoint for the
   // migrator's reason: the pooler can hand one transaction's statements to
   // different backends (library/migrator.js).
-  const client = new Client(directDatabaseUrl());
+  // This journal's own database: on a deployment that hosts journals, the
+  // way in the hosting directory gives this address, since the deployment
+  // has no DATABASE_URL of its own — without it, Bring your journal could
+  // not open a hosted journal at all (found 2026-10-21).
+  const client = new Client(directDatabaseUrl(hosting() ? (await journalHere()).way : ''));
   try {
     await client.connect();
     // The vault and the keyring stay as they are: a journal never brings
@@ -115,9 +120,18 @@ export async function POST(request) {
         // never be. Cleared, the journal lists itself here the first time
         // it is opened — if its keeper had it on the Board, which is theirs
         // to keep (findable is untouched).
+        //
+        // Where it lived, 2026-10-21: the address the journal came from is
+        // kept among those it lived at (settings.moved_from), so the sends
+        // it made from there are known when they come back; and a note its
+        // old copy carried, saying it moved here, is put down — here is
+        // where it is now.
+        const [was] = await query('SELECT site_address, moved_from, moved_to FROM settings WHERE id = 1');
+        const movedHere = tidyJournal(was?.moved_to || '') === tidyJournal(address);
         await query(
-          'UPDATE settings SET site_address = $1, setup_complete = true, listing_code = NULL WHERE id = 1',
-          [address],
+          `UPDATE settings SET site_address = $1, setup_complete = true, listing_code = NULL,
+             moved_from = $2::text[], moved_to = $3 WHERE id = 1`,
+          [address, livedAt(was?.moved_from, was?.site_address, address), movedHere ? null : (was?.moved_to ?? null)],
         );
         await keep_only_within(query, keys);
         await seal_claim(query, password_hash);

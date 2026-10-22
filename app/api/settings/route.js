@@ -16,7 +16,7 @@
 // release, so Settings draws no updater.
 
 import { requireWristband } from '@/library/wristband';
-import { pull_settings, save_settings } from '@/library/settings_actions';
+import { pull_settings, save_settings, note_old_address } from '@/library/settings_actions';
 import { hosting, isHere } from '@/library/hosting_directory';
 import { tidyJournal } from '@/library/return_address';
 
@@ -32,16 +32,21 @@ export async function PATCH(request) {
   try {
     const body = await request.json();
     if (hosting()) delete body.site_address;
+    const had = 'moved_to' in body || 'site_address' in body ? await pull_settings() : null;
     // This journal moved, 2026-10-21: kept in the one spelling an address is
     // kept in (tidyJournal), and never this journal's own — the address it
     // was asked at, or the one a copy keeps in its own field — which would
     // send its visitors round in a circle. Empty clears it.
     if ('moved_to' in body) {
       const to = tidyJournal(body.moved_to);
-      const own = tidyJournal((await pull_settings())?.site_address);
+      const own = tidyJournal(had?.site_address);
       body.moved_to = to && to !== own && !(await isHere(to)) ? to : '';
     }
     const settings = await save_settings(body);
+    // A copy given a new address here keeps the one it had among those it
+    // lived at (2026-10-21), so its sends from there are known when they
+    // come back. Never in the way of the save.
+    if ('site_address' in body) await note_old_address(had?.site_address, settings?.site_address).catch(() => {});
     return Response.json({ settings });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });

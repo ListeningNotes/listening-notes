@@ -230,8 +230,9 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - `database_connection.js` — the one Neon handle, opened on first use rather
   than on import — on a deployment that hosts journals, the database of the
   journal the request is for, brought up to date the first time a server
-  instance opens it — and `explainDatabaseError`, which says a database
-  failure in a sentence for the owner.
+  instance opens it — `database.transaction`, several statements as one,
+  all or none, and `explainDatabaseError`, which says a database failure in
+  a sentence for the owner.
 - `definitions.js` — the shipped text for the three marks (Masterpiece,
   Favorite, Formative) and the merge of the owner's edits over it.
 - `directory_actions.js` — the `directory` table, on the registry's copy:
@@ -319,7 +320,9 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   (`pull_public_people`), and asking a journal its keeper's name; and moves —
   `note_moves`, a friend's journal saying it lives somewhere new, written
   down by the friends round; `take_move`, the keeper's Update, the only
-  thing that changes the address; `any_moves`, for the dot on Inbox.
+  thing that changes the address, which it changes everywhere the journal
+  names it but its entries, in one transaction; `any_moves`, for the dot on
+  Inbox.
 - `portrait_code.js` — the press: the portrait made into the journal's QR
   code with a dot of ink per module, proved by decoding with jsQR on both page
   colours; `CODE_BUILD` is bumped whenever the drawing changes.
@@ -351,8 +354,10 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   `pull_keeper_name`, and the listing code and whether the journal is on the
   Board, each read and written on its own (`pull_listing_code`,
   `save_listing_code`, `pull_findable`, `save_findable`), never with the
-  rest; and `pull_moved_to`, where the journal lives now if it moved, read
-  alone for the beacon.
+  rest; `pull_moved_to`, where the journal lives now if it moved, read
+  alone for the beacon; and where it lived (`moved_from`, private):
+  `pull_own_addresses`, every address the journal answers to, for the
+  keeper's feed, `livedAt`, and `note_old_address`.
 - `sitewide_visuals.js` — colours and fonts as JS objects, for canvas and
   chart code that cannot read a CSS custom property. The stylesheets are the
   source; this mirrors them.
