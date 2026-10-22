@@ -447,7 +447,6 @@ do not say what they hold.
   portrait), read once on the server and handed down.
 - `KeeperTools.js` — the owner's ··· menu on an entry or the card.
 - `Friends.js` — the address book as a grid of faces.
-- `Footer.js` — the band at the foot of the phone's cross naming the panes.
 - `EditingBar.js` — the Save and Cancel band at the foot of anything being
   corrected.
 - `MarqueeTitle.js` — a title too long for the small beacon, scrolling one lap.

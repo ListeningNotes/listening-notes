@@ -1217,7 +1217,7 @@
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
 }
 
-.hn-foot, .hn-controls { transition: opacity 0.7s cubic-bezier(0.22, 0.61, 0.36, 1); }
+.hn-controls { transition: opacity 0.7s cubic-bezier(0.22, 0.61, 0.36, 1); }
 /* ── Left from the beacon's own picker, 2026-09-17 to 2026-10-21 ────────────
    From here to the stage's own measurement, the transitions on the crown, the
    bar's mark, the screen, the cover, the card, the stage and the name were
@@ -1410,13 +1410,12 @@
 
 @media (prefers-reduced-motion: reduce) {
   .hn .beacon-stage,
-  .beacon-art-wrap,
-  .beacon-card,
-  .hn-crown,
-  .hn-bar-mark,
-  .hn-foot,
-  .hn-controls,
-  .beacon-meta { transition: none; }
+.beacon-art-wrap,
+.beacon-card,
+.hn-crown,
+.hn-bar-mark,
+.hn-controls,
+.beacon-meta { transition: none; }
 }
 
 /* ── The stage measures itself on the cross ────────────────────────────────
@@ -2336,7 +2335,6 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   background: var(--bg);
 }
 
-.hn-foot { display: none; }
 /* And neither is the way down. It belongs to a floor that is one screen tall
    with another under it, and above 769px there are no floors — the beacon and
    the wall are one column that scrolls, the way a page does. Its styling
@@ -2347,99 +2345,7 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   /* Stated on the cross so the panes can read it: every scroller inside has
      to end above the band rather than under it. */
   .hn { --hn-foot-h: calc(54px + env(safe-area-inset-bottom)); }
-  /* Absolute inside .hn rather than fixed to the window. The frame is the
-     screen — see the standalone block below — and a box that belongs to the
-     document is painted everywhere the document is, which a fixed one is not.
-     .hn is position: relative and overflow: hidden, so this lands on its
-     bottom edge and is clipped to it. */
-  .hn-foot {
-    position: absolute;
-    left: 0; right: 0; bottom: 0;
-    z-index: 96;
-    /* ── It steps down while the card is being corrected, 2026-09-20 ────
-       One row at the foot of the screen at a time. The editing bar used to
-       be drawn over the band, which is two rows stacked in the same place
-       and one of them four doors out of a correction you have not decided
-       what to do with — and on an entry, which is the shape that bar was
-       borrowed from, there is no band at all. Miyel: "we can have the nav
-       bar leave out the screen down and the edit toolbar come up. When
-       finishing editing that one exits down and the nav bar comes back up."
 
-       .hn is overflow: hidden, so a hundred percent down is off the screen
-       rather than over the band's own ground. The delay is on the way *back*
-       only — see below — so the band waits a beat and follows the bar up
-       instead of crossing it. */
-    transition: transform 0.3s cubic-bezier(0.22, 0.61, 0.36, 1) 0.12s;
-    display: flex;
-    align-items: stretch;
-    justify-content: center;
-    gap: 4px;
-    height: var(--hn-foot-h);
-    padding: 0 12px env(safe-area-inset-bottom);
-    box-sizing: border-box;
-    background: var(--bg);
-  }
-  /* ── No dissolve above it, 2026-09-27 ─────────────────────────────────
-     A 26px gradient from the page colour to clear stood on the band's top
-     edge from the day it was built, so a wall of covers or a record
-     mid-scroll read as continuing under it. It came off the book on
-     2026-09-20 (rows with hairlines between them, and 26px of the last row
-     going grey for no reason), off the beacon on 2026-09-27 (it was a third
-     of the covers under a visitor's chevron), and off the card and the inbox
-     the same afternoon — Miyel: "no fade on footer bar, just a split cut off
-     like feed and ID", then "take the fade off the card and inbox too." The
-     band is a hard edge everywhere on the cross now: what runs under it is
-     cut, not dissolved. */
-  /* Down it goes, with no delay: the bar is on its way up on the same frame
-     and nothing should be in the way of it.
-
-     And again for the send sheet, 2026-09-21 — same rule, different thing
-     standing in the foot of the screen. The cross sizes itself to the part of
-     the window you can see, so a keyboard walks these four doors up until they
-     are sitting in the gap between the sheet and the keys. Miyel: "we need to
-     make the [band] not shown between keyboard and send flow." SendSheet.js
-     puts the class on. */
-  .hn[data-editing] .hn-foot,
-  .hn[data-sending] .hn-foot,
-  .hn[data-giving] .hn-foot,
-  .hn[data-waving] .hn-foot,
-  .hn--typing .hn-foot { transform: translateY(100%); transition-delay: 0s; }
-
-  .hn-foot-stop {
-    flex: 1 1 0;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    padding: 0;
-    border: 0;
-    background: none;
-    cursor: pointer;
-    color: var(--ink-faint);
-    opacity: 0.55;
-    transition: color 0.2s, opacity 0.2s;
-  }
-  /* Ink and full weight for the pane you are on; the other two stay pale.
-     Both halves change together — a word that darkens while its mark does not
-     reads as two controls in one box. */
-  .hn-foot-stop--here { color: var(--ink); opacity: 1; }
-  .hn-foot-mark { display: block; }
-  /* Something new in the inbox, 2026-10-20: one dot on the Inbox mark — the
-     inbox's own new dot, carried onto its door — and the stop lit enough for
-     the dot to read. Never a number (DECISIONS). */
-  .hn-foot-glyph { position: relative; display: inline-flex; }
-  .hn-foot-dot { position: absolute; top: -2px; right: -5px; width: 6px; height: 6px; border-radius: 999px; background: var(--ink); }
-  .hn-foot-stop--fresh { opacity: 1; }
-  .hn-foot-word {
-    font-family: var(--font-label);
-    font-size: 9px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    line-height: 1;
-  }
-  .hn-foot-stop:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: -3px; border-radius: 10px; }
 }
 
 /* ── The installed app's missing 62 pixels ──────────────────────────────────
@@ -3622,4 +3528,83 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
 @media (prefers-reduced-motion: reduce) {
   .ln-pull, .hn-pane--friends > .hn-floor--book, .hn-pane--friends > .hn-everyone { transition: none; }
   .ln-pull--asking .ln-pull-mark { animation: none; }
+}
+
+/* ── The top row, 2026-10-22 ───────────────────────────────────────────────
+   Header.js: the keeper's face, the light switch beside it, and Home · People
+   · Inbox at the right, only the one you are on wearing its word — a visitor
+   has the mark where the words would be. It replaced the band at the foot,
+   which is the Listen bar's now (DECISIONS, the frame). On the bar's own line,
+   in the bar's own geometry: 22 under the notch allowance and 58 tall. Phone
+   only; a desk keeps its two pages until she has seen this. */
+.hdr { display: none; }
+@media (max-width: 768px) {
+  /* No band to clear, only the phone's own home bar; and the second line the
+     card, People and Inbox keep under the row for their own words until the
+     People page is redesigned (her word: "solved later"). */
+  .hn { --hn-foot-h: env(safe-area-inset-bottom, 0px); --hn-line2: 44px; }
+  .hdr {
+    position: absolute;
+    left: 18px; right: 18px;
+    top: calc(22px + var(--safe-top));
+    height: 58px;
+    z-index: 4;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .hdr-face {
+    position: relative; flex: 0 0 auto;
+    width: 34px; height: 34px; padding: 0; border: 0; border-radius: 50%;
+    overflow: hidden; display: grid; place-items: center;
+    background: var(--panel-strong); color: var(--ink-faint);
+    box-shadow: 0 0 0 1px var(--border);
+    cursor: pointer; -webkit-tap-highlight-color: transparent;
+  }
+  .hdr-face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .hdr-face:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 2px; }
+  .hdr-stops { margin-left: auto; display: flex; align-items: flex-start; gap: 20px; }
+  .hdr-stop {
+    display: inline-flex; flex-direction: column; align-items: center; gap: 4px;
+    min-width: 28px; padding: 6px 4px; margin: -6px -4px;
+    border: 0; background: none; color: var(--ink-faint);
+    cursor: pointer; -webkit-tap-highlight-color: transparent;
+    transition: color 0.15s;
+  }
+  .hdr-stop--here { color: var(--ink); }
+  .hdr-stop:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: -2px; border-radius: 8px; }
+  .hdr-glyph { position: relative; display: inline-flex; }
+  /* The inbox's dot, the band's own: never a number. */
+  .hdr-dot { position: absolute; top: -2px; right: -5px; width: 6px; height: 6px; border-radius: 999px; background: var(--ink); }
+  /* The lit word: the label face, underlined — .ln-word's on-state. */
+  .hdr-word {
+    font-family: var(--font-label); font-size: 9px; line-height: 1;
+    letter-spacing: 0.09em; text-transform: uppercase;
+    text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1.5px;
+  }
+  .hdr-mark { margin-left: auto; display: inline-flex; color: var(--ink); }
+  .hdr-mark-svg { display: block; height: 22px; width: auto; fill: currentColor; }
+
+  /* The bar's own moon, the big mark and the small one stand down: the row
+     is the head of every pane now, and the big mark leaves home (her call,
+     2026-10-22: "remove if it looks best"). */
+  .hn-bar > .hn-lights,
+  .hn-bar-crown,
+  .hn-bar-mark,
+  .hn-crown { display: none; }
+  /* So home's record starts under the row rather than under the mark. */
+  .hn-pane--home .hn-floor--beacon { padding-top: var(--hn-bar-h); }
+
+  /* ── The second line, on the card, People and Inbox ── */
+  .hn[data-pane="0"] .hn-bar,
+  .hn[data-pane="2"] .hn-bar,
+  .hn[data-pane="3"] .hn-bar { height: calc(var(--hn-bar-h) + var(--hn-line2)); }
+  .hn-bar-words { top: calc(22px + var(--safe-top) + 58px + var(--hn-line2) / 2); }
+  .hn-bar-add { top: calc(22px + var(--safe-top) + 58px); height: var(--hn-line2); }
+  .hn-bar-tools {
+    position: absolute; right: 18px;
+    top: calc(22px + var(--safe-top) + 58px); height: var(--hn-line2);
+  }
+  .hn-face { padding-top: calc(var(--hn-bar-h) + var(--hn-line2)); }
+  .hn-pane--inbox { padding-top: calc(var(--hn-bar-h) + var(--hn-line2)); }
+  .hn-floor--book,
+  .hn-everyone { padding-top: calc(var(--hn-bar-h) + var(--hn-line2) + 8px); }
 }

@@ -78,7 +78,7 @@ import { useBookplate } from './Bookplate';
 import ListeningBeacon from './ListeningBeacon';
 import ListenBar from './ListenBar';
 import Journal from './Journal';
-import Footer from './Footer';
+import Header from './Header';
 import About from './About';
 import Dashboard, { heldNow, subscribeHeld } from './Dashboard';
 // The two rooms that used to be behind the desk and are stops of their own
@@ -885,7 +885,10 @@ export default function HomeNav() {
       // kept true to the base we are holding. Skipping the measurement must
       // not also skip what the measurement was writing — see the gotcha.
       if (crown && getComputedStyle(crown).transform !== 'none') { draw(); return; }
-      if (!window.matchMedia('(max-width: 768px)').matches) {
+      // And not where there is no crown to leave, 2026-10-22: the phone's
+      // top row is the head of the page now and the big mark is not drawn
+      // over it (nav.css), so there is nothing to travel — the desk's answer.
+      if (!window.matchMedia('(max-width: 768px)').matches || !place.offsetWidth) {
         mark.style.transform = '';
         base = null;
         ground?.style.removeProperty('--ground');
@@ -1674,8 +1677,47 @@ export default function HomeNav() {
     if (el) el.scrollTop = 0;
   }
 
+  // The sun and the moon. Drawn as a switch on a wall for an hour, on the
+  // grounds that the component is called Lightswitch; the file name was the
+  // whole argument and it was not enough (Miyel, 2026-09-15). Drawn once and
+  // placed twice: the bar's right end on a desk, beside the face in the
+  // phone's top row (Header.js, 2026-10-22 — her mockup's place for it, to
+  // settle in place).
+  const lights = (
+    <button className="hp-icon-btn hn-lights" onClick={toggleTheme} aria-label="Toggle theme">
+      {theme === 'dark' ? (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      ) : (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z"/></svg>
+      )}
+    </button>
+  );
+
+  // ── The top row's stops, 2026-10-22 ─────────────────────────────────────
+  // The keeper's three rooms, at the panes they are on the rail; a visitor
+  // has none — the row carries the mark instead (Header.js).
+  const stops = authed ? [
+    { key: 'home', word: 'Home', at: HOME },
+    { key: 'people', word: 'People', at: BOOK },
+    { key: 'inbox', word: 'Inbox', at: INBOX },
+  ] : [];
+
   const header = (
     <div className={'hn-bar' + (down[pane] ? ' hn-bar--scrolled' : '')}>
+      {/* The phone's top row, over everything else the bar holds: the face,
+          the light switch, and the three rooms (Header.js). The face goes to
+          the card's pane for now; the card opens over the page from it next
+          (the frame, stage 3). */}
+      <Header
+        pane={pane}
+        stops={stops}
+        goTo={goTo}
+        onHere={goBack}
+        onFace={() => goTo(0)}
+        fresh={Boolean(waiting?.fresh)}
+        lights={lights}
+        mark={mark('hdr-mark-svg')}
+      />
       {/* ── The ground the header stands on, 2026-09-20 ──────────────────
           The bar is 80px of opaque page colour and the crown hangs below it,
           which made the crown a logo *floating over* the beacon: the record
@@ -1805,16 +1847,7 @@ export default function HomeNav() {
         {mark('hn-bar-svg')}
       </button>
       {onTheFeed && <DensityToggle density={density} onFlip={flipDensity} />}
-      <button className="hp-icon-btn hn-lights" onClick={toggleTheme} aria-label="Toggle theme">
-        {/* The sun and the moon. Drawn as a switch on a wall for an hour, on
-            the grounds that the component is called Lightswitch; the file name
-            was the whole argument and it was not enough (Miyel, 2026-09-15). */}
-        {theme === 'dark' ? (
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-        ) : (
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z"/></svg>
-        )}
-      </button>
+      {lights}
     </div>
   );
 
@@ -2308,35 +2341,9 @@ export default function HomeNav() {
       {grip}
       {turnLine}
 
-      {/* ── The band at the foot ─────────────────────────────────────
-          Card · Beacon · Desk, named, with the one you are on in ink. It is
-          the whole of what is down there now: the dots are gone, the side
-          carets are gone, and what they were both trying to say — there are
-          three of these and that way is another one — a band of words says
-          outright (Miyel's brief, 2026-09-15).
-
-          Fixed over the rail rather than repeated inside each pane, for the
-          same reason the bar at the top is: it belongs to none of them, and
-          three copies would slide past each other during a swipe.
-
-          It does not fade while something is scrolling, where the old row did.
-          That row was three marks parked on top of somebody's album art and
-          getting out of the way was the kindest thing it could do; this is a
-          band along the edge with a ground of its own, and a navigation that
-          disappears when you move is one you cannot trust to be there.
-
-          What is left pointing anywhere is down, and only on the beacon — the
-          one pane with a whole screen and nothing cut off at its fold, so
-          nothing else needs telling there is more. It sits above the band,
-          fades while anything moves, and goes for good once you are down. */}
-      {/* The floating caret is gone, 2026-09-19. It lived above the band and
-          said "there is more that way" on whichever pane had a second floor.
-          Both of those panes say it themselves now, at the foot of their own
-          first floor, with a word and the top of what is down there showing
-          under it — which is the same sentence with a subject in it. */}
-
-
-      <Footer pane={pane} goTo={goTo} onHere={goBack} authed={authed} fresh={Boolean(waiting?.fresh)} />
+      {/* The band at the foot — Card · Beacon · People · Inbox — went on
+          2026-10-22 for the top row (Header.js, in the bar above): the foot
+          is the Listen bar's now (DECISIONS, the frame). */}
     </div>
   );
 }
