@@ -225,26 +225,40 @@
    under the status bar, so a strip of home shows over its rounded top and it
    reads as a thing held up over the page, not a page you went to; a grip at
    the top says it goes back down. The pull, Escape and the caret lower it;
-   Discard, Save draft and Post end it. Her mockup's numbers: the top at 34,
-   corners of 24, the grip 38 by 4. */
+   Discard, Save draft and Post end it. Corners of 24 and a grip 38 by 4, her
+   mockup's.
+
+   Not all the way to the top, 2026-10-22 (Miyel: "it should be as if its a
+   tab you can always pull down"): it stops a good strip short of the status
+   bar, 44 under it or 64 where there is none, so home stays in sight over it
+   and the sheet never reads as the page. It was 34, or ten under the bar.
+   The gap holds while the keyboard is up too — moving the sheet as a field
+   takes the focus would fight the note sitting on the keyboard. */
 .lay--sheet {
-  --sheet-top: max(34px, calc(env(safe-area-inset-top, 0px) + 10px));
+  --sheet-top: max(64px, calc(env(safe-area-inset-top, 0px) + 44px));
   top: calc(var(--lay-lift, 0px) + var(--sheet-top));
   border-radius: var(--radius, 24px) var(--radius, 24px) 0 0;
   box-shadow: 0 -14px 46px rgba(0, 0, 0, 0.26);
 }
-/* At the top of the sheet's own flow, and it scrolls away with the page: the
-   pull only lowers the sheet from the top, which is the one place the grip
-   has anything to say, and stuck there it floated over the writing below.
-   No height of its own: it hangs over the page's top padding. */
+/* ── The tab, always there, 2026-10-22 ─────────────────────────────────────
+   A band across the sheet's top edge with the grip in it, stuck there however
+   far down the listen has been scrolled, and a pull that starts on it lowers
+   the sheet from anywhere (LayerEntry) — the tab you can always pull down. A
+   band of the page's own colour rather than a line on nothing: a grip with no
+   ground floated over the writing as it scrolled under it (2026-10-21), and
+   the writing goes under this instead. touch-action none, so a drag on it is
+   the sheet's and never a scroll. */
 .lay-grip {
-  position: relative;
+  position: sticky;
+  top: 0;
   z-index: 212;
-  height: 0;
-  overflow: visible;
+  height: 22px;
+  margin-bottom: -22px;
   display: flex;
   justify-content: center;
-  pointer-events: none;
+  background: var(--bg);
+  touch-action: none;
+  cursor: grab;
 }
 .lay-grip::before {
   content: '';
@@ -257,9 +271,9 @@
   opacity: 0.5;
 }
 /* The status bar is outside the sheet now, so the page inside it starts
-   under the grip rather than under the clock. */
-.lay--sheet .ses-body--page { padding-top: 30px; }
-.lay--sheet .ses-picker { padding-top: 22px; }
+   under the tab rather than under the clock. */
+.lay--sheet .ses-body--page { padding-top: 34px; }
+.lay--sheet .ses-picker { padding-top: 26px; }
 
 /* ── The header does not rise with it, 2026-09-20 ────────────────────────
    Miyel, on the album: "instead of opening from where it is, it can just

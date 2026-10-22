@@ -681,16 +681,22 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
       // claim made by something that cannot call itself a slider — the track
       // strip, which is slid along to move through a record.
       if (event.target?.closest?.('[role="slider"], [data-slide]')) { pull = null; return; }
+      // ── A sheet's tab, 2026-10-22 ─────────────────────────────────────
+      // A drag that starts on the grip is a pull wherever the page has been
+      // scrolled to and whatever has the focus: the band is there to be
+      // pulled, and nothing on it is anything else (Miyel: "a tab you can
+      // always pull down"). Everywhere else the rules below stand.
+      const onTab = !!event.target?.closest?.('.lay-grip');
       const writing = document.activeElement;
       const intoText = writing && (
         writing.tagName === 'TEXTAREA'
         || writing.tagName === 'INPUT'
         || writing.isContentEditable
       );
-      if (event.touches.length !== 1 || intoText
+      if (event.touches.length !== 1 || (intoText && !onTab)
         || sheet.querySelector('.ln-printing, .ln-editing, .ln-busy')) { pull = null; return; }
       const touch = event.touches[0];
-      pull = { x: touch.clientX, y: touch.clientY, at: event.timeStamp, lastX: touch.clientX, lastY: touch.clientY, lastAt: event.timeStamp, axis: null, top: atTop() };
+      pull = { x: touch.clientX, y: touch.clientY, at: event.timeStamp, lastX: touch.clientX, lastY: touch.clientY, lastAt: event.timeStamp, axis: null, top: onTab || atTop() };
     };
 
     const move = event => {
@@ -799,8 +805,9 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
           pulled. The stylesheet draws it only above 769px, never on a phone,
           where the layer has no close button by decision. */}
       {/* The grip, on a sheet: what the bar's own grip said, kept on the
-          thing that rose out of it, and the place a thumb pulls it down
-          from. A mark, not a control — the whole sheet takes the pull. */}
+          thing that rose out of it, in a band at the sheet's top that a
+          thumb can pull down from however far the page has been scrolled
+          (the pull, above). */}
       {sheet && <div className="lay-grip" aria-hidden="true" />}
       <div className="lay-back-slot">
         <button type="button" className="lay-back" onClick={() => leave()} aria-label="Close" title="Close">
