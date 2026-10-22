@@ -788,6 +788,13 @@ address (`noteArrival`), so a friend who scanned a `?from=` gift would be
 signed as the giver on their next send — and a giver's own gifts pass on
 their own copy, which is how it would have shipped.
 
+**Give became Invite, 2026-10-21, Miyel's call.** Anyone can start a journal
+at the front door, so a journal is no longer a gift: the code is an
+invitation (a ticket) to the front door's Choose your address, `?invite=`,
+and every `?gift=` link reads the same. The front door names the inviter and
+hands them to setup in the setup link, keeping nothing. Full is full for an
+invite too.
+
 **A journal is handed to you by a person, 2026-09-28.** `/get` draws its
 steps only when the link carries `?gift=`; without one it is two lines and
 the Instagram, with no form, no waiting list and no coming soon. A self-serve

@@ -6,9 +6,10 @@
 //
 //   GET                 how many places are left, and of how many
 //   GET ?name=<name>    whether that address is free, as somebody types it
-//   POST { name }       makes the journal, and says where its setup is —
+//   POST { name, invite }  makes the journal, and says where its setup is —
 //                       a line at a time, one for each step as it finishes,
-//                       so the page can tick them off, then where to go
+//                       so the page can tick them off, then where to go;
+//                       with whoever invited them, when somebody did
 //
 // The POST is taken only from the front door's own pages, like every press
 // that changes something (library/wristband.js), and only a few times an
@@ -22,6 +23,7 @@ import {
 import { hostHere } from '@/library/hosting_directory';
 import { mayKnock, tooSoon, whoIsKnocking } from '@/library/doorman';
 import { fromItsOwnPages } from '@/library/wristband';
+import { tidyJournal } from '@/library/return_address';
 
 const NOWHERE = () => NextResponse.json({ error: 'There is no front door here.' }, { status: 404 });
 const FRESH = { 'Cache-Control': 'no-store' };
@@ -49,7 +51,7 @@ export async function POST(request) {
   const knock = await mayKnock('start', whoIsKnocking(request));
   if (!knock.allowed) return tooSoon(knock.retryAfter);
 
-  const { name } = await request.json().catch(() => ({}));
+  const { name, invite } = await request.json().catch(() => ({}));
   await clear_never_set_up();
   if ((await placesLeft()) <= 0) {
     return NextResponse.json({ error: 'We’re full for now. Come back soon.', full: true }, { status: 409 });
@@ -67,6 +69,11 @@ export async function POST(request) {
   const proto = (request.headers.get('x-forwarded-proto') || '').split(',')[0].trim()
     || (process.env.NODE_ENV === 'production' ? 'https' : 'http');
   const port = (request.headers.get('host') || '').match(/:(\d+)$/)?.[1];
+  // Who invited them (Invite, 2026-10-21) goes on to setup in the link
+  // itself, before the #: an address is no secret, and setup offers to add
+  // them and wave. Nothing is kept here.
+  const invited = tidyJournal(typeof invite === 'string' ? invite : '');
+  const asking = invited ? `?invite=${encodeURIComponent(invited)}` : '';
 
   // One line of JSON for each step as it finishes, then where to go — or
   // what went wrong. A person who closes the page meanwhile is not told, and
@@ -81,7 +88,7 @@ export async function POST(request) {
         const { host, code } = await make_journal(name, { onStep: step => say({ step }) });
         // The claim code after #, which no server is ever sent: not in a
         // log, not in a referrer. The journal's setup reads it and opens.
-        say({ to: `${proto}://${host}${port ? `:${port}` : ''}/setup#code=${code}` });
+        say({ to: `${proto}://${host}${port ? `:${port}` : ''}/setup${asking}#code=${code}` });
       } catch (error) {
         if (/taken/i.test(error?.message || '')) {
           say({ error: 'Not available.', state: 'taken' });

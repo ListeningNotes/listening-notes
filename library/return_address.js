@@ -96,6 +96,18 @@ export function journalUrl(address) {
   return (local ? 'http://' : 'https://') + host;
 }
 
+// ── Who invited somebody, 2026-10-21 ──────────────────────────────────────
+// An invite link names the inviter's journal: `?invite=` since Gift became
+// Invite (Miyel, 2026-10-21), and `?gift=` on every link made before, which
+// still works. Reads a query (URLSearchParams) or a page's searchParams.
+export function inviterIn(query) {
+  const read = key => {
+    const value = typeof query?.get === 'function' ? query.get(key) : query?.[key];
+    return typeof value === 'string' ? value : '';
+  };
+  return tidyJournal(read('invite') || read('gift'));
+}
+
 // Where this copy is reached, from the request that reached it — what a
 // copy calls itself the moment it becomes somebody's, whether it was set up
 // (app/api/setup) or a journal was brought into it (app/api/restore). Vercel

@@ -1,31 +1,35 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 'use client';
-// components/main_components/GiveSheet.js
-// Giving somebody their own: a code to /get, for a friend standing right
-// there (Miyel's brief, About, /get and Give, §3).
+// components/main_components/InviteSheet.js
+// Inviting somebody to make a journal of their own: a code to the front
+// door, for a friend standing right there. Give until 2026-10-21, when
+// anyone could start a journal at the front door and a gift became an
+// invitation (Miyel: "it doesn't feel like a gift anymore"; her words,
+// Invite and the ticket).
 //
 // ── Two audiences, two routes ─────────────────────────────────────────────
-// A stranger gets the pitch from a journal's About pane. A keeper already has
-// the pitch — their own journal, in their hand — and what they need is a fast
-// way to hand /get to somebody who is looking at it. So this is a sheet, not
-// a tab and not a pane, and the band stays four for keepers. It opens from
-// the gift at the left of the book's header, opposite Add, and only there:
-// the brief put a second door on the card, and Miyel kept the one
-// (2026-09-22) — Add and Give are the same errand, putting somebody in
-// touch, and they face each other across the book's name.
+// A stranger finds the front door by themselves. A keeper already has the
+// pitch — their own journal, in their hand — and what they need is a fast
+// way to hand the front door to somebody who is looking at it. So this is a
+// sheet, not a tab and not a pane, and the band stays four for keepers. It
+// opens from the ticket at the left of the book's header, opposite Add, and
+// only there (Miyel, 2026-09-22): Add and Invite are the same errand,
+// putting somebody in touch, and they face each other across the book's
+// name.
 //
 // ── What the code carries ─────────────────────────────────────────────────
-// listeningnotes.blog/get, because there is exactly one place the software
-// comes from, and `?gift=` with this journal's address — never `?from=`,
-// which every page already reads as the *reader's* own journal and would
-// file on the friend's phone as theirs (DECISIONS, 2026-09-22). Nothing reads
-// the gift yet: the first friend is the brief's next step, and until it is
-// built the line below promises nothing about it.
+// The front door's Choose your address, because there is exactly one place
+// the software comes from, and `?invite=` with this journal's address —
+// never `?from=`, which every page already reads as the *reader's* own
+// journal and would file on the friend's phone as theirs (DECISIONS,
+// 2026-09-22). The front door says who invited them and hands the inviter
+// on to the new journal's setup, which offers to add them and wave. Links
+// made before say `?gift=`, and are read the same (inviterIn).
 //
 // ── What it never shows ───────────────────────────────────────────────────
-// A count of how many people you have given it to, or who used it. The gift
-// is a gift, not a referral scheme.
+// A count of how many people you have invited, or who came. An invitation
+// is an invitation, not a referral scheme.
 //
 // The sheet is the send sheet's — its scrim, its rise from the foot, its pull
 // strip and its numbers (SendSheet.js) — so it opens and puts itself away
@@ -33,23 +37,25 @@
 // sheet's keyboard machinery.
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Check, Copy, Export, Gift } from '@phosphor-icons/react';
+import { Check, Copy, Export, Ticket } from '@phosphor-icons/react';
 import { useBookplate } from './Bookplate';
 import AddressCode from './AddressCode';
 import { tidyJournal } from '../../library/return_address';
 
-// Fixed, like the pitch pane's Get one: a copy that could point this
-// somewhere else could quietly stand in for the original.
-const GET = 'https://www.listeningnotes.blog/get';
+// Fixed, like the pitch pane's Get one was: a copy that could point this
+// somewhere else could quietly stand in for the original. The front door
+// itself, at the bare domain — www.'s /get is sent there, and a code that
+// goes straight is one hop shorter on a phone's camera.
+const GET = 'https://listeningnotes.blog/get';
 
 // The layer's numbers, by name and by value — see SendSheet.js.
 const FAR_ENOUGH = 0.2;
 const FAST_ENOUGH = 0.3;
 
-export default function GiveSheet({ open, onClose }) {
+export default function InviteSheet({ open, onClose }) {
   const { site_address } = useBookplate();
   const journal = tidyJournal(site_address);
-  const link = journal ? `${GET}?gift=${encodeURIComponent(journal)}` : GET;
+  const link = journal ? `${GET}?invite=${encodeURIComponent(journal)}` : GET;
 
   // A tick and "Link copied" in place of the glyph and the words for a
   // moment (Miyel, 2026-09-22) — a silent clipboard write reads as a button
@@ -154,7 +160,7 @@ export default function GiveSheet({ open, onClose }) {
         className="sn-sheet gv-sheet"
         role="dialog"
         aria-modal="true"
-        aria-label="Gift someone a journal"
+        aria-label="Invite someone"
         style={dragY ? { transform: `translateY(${dragY}px)`, transition: held ? 'none' : undefined } : undefined}
       >
         <div
@@ -165,16 +171,15 @@ export default function GiveSheet({ open, onClose }) {
           onPointerCancel={release}
           aria-hidden="true"
         />
-        <Gift size={30} weight="regular" className="gv-glyph" aria-hidden="true" />
-        {/* Miyel, 2026-09-22: "have the header simply say 'Gift someone a
-            journal'" — over the brief's "Give someone their own". */}
-        <h2 className="gv-head">Gift someone a journal</h2>
-        {/* The brief's line, now that a new copy keeps it: the code carries
-            the gift to /get, /get's button carries it to the deploy, and
-            setup offers to add the giver, ticked. "Address book" and not the
-            brief's "book" (Miyel, 2026-09-23). It was a plain line — "It
-            opens the steps to their own copy" — until the first friend was
-            built, because nothing read the gift. */}
+        {/* The classes are the sheet's from when it was Give's (gv-). */}
+        <Ticket size={30} weight="regular" className="gv-glyph" aria-hidden="true" />
+        {/* Miyel, 2026-10-21: "Invite someone", over "Gift someone a
+            journal" (2026-09-22), over the brief's "Give someone their own". */}
+        <h2 className="gv-head">Invite someone</h2>
+        {/* The code carries the inviter to the front door, the front door
+            hands them on to the new journal's setup, and setup offers to add
+            them, ticked. "Address book" and not the brief's "book" (Miyel,
+            2026-09-23). */}
         <p className="gv-line">Point their camera here. When they set it up, you&rsquo;ll be the first person in their address book.</p>
 
         {/* Large and on white, whatever the theme: a camera looks for dark on

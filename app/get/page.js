@@ -75,10 +75,10 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 // The server's own set: the plain import reaches for React context, which a
 // server component does not have.
-import { Gift, User } from '@phosphor-icons/react/ssr';
+import { Ticket, User } from '@phosphor-icons/react/ssr';
 import { pull_settings, titleName } from '../../library/settings_actions';
 import { ask_journal_name } from '../../library/people_actions';
-import { tidyJournal, journalUrl } from '../../library/return_address';
+import { tidyJournal, journalUrl, inviterIn } from '../../library/return_address';
 import { mayKnock, whoIsKnocking } from '../../library/doorman';
 import { DEPLOY_URL, STEPS } from '../../library/install_guide';
 import { INSTAGRAM_URL } from '../../library/version';
@@ -87,15 +87,15 @@ import InstallSteps from '../../components/main_components/InstallSteps';
 export async function generateMetadata({ searchParams }) {
   const settings = await pull_settings();
   if (!settings.why_essay?.trim()) return {};
-  const { gift } = await searchParams;
-  const giver = tidyJournal(typeof gift === 'string' ? gift : '');
-  // Without a gift the page is the two lines, not the steps, and its title
-  // says nothing about getting one (the gate, above).
+  const giver = inviterIn(await searchParams);
+  // Without an invite the page is the two lines, not the steps, and its
+  // title says nothing about getting one (the gate, above).
   if (!giver) return { title: titleName(settings) };
   const title = `Get your copy · ${titleName(settings)}`;
 
-  // A gift link's preview, 2026-09-23: "A gift from" the giver, over the
-  // card /get shows, drawn by ./gift-preview. Asked the same way the page
+  // An invite link's preview, 2026-09-23: "Invited by" them ("A gift from"
+  // until 2026-10-21), over the card /get shows, drawn by ./gift-preview.
+  // Asked the same way the page
   // asks below, and only when the giver's journal answers — otherwise the
   // plain preview, as every other address on the site has. Set whole,
   // because a page's openGraph replaces the layout's rather than adding to
@@ -112,15 +112,15 @@ export async function generateMetadata({ searchParams }) {
   return {
     title,
     openGraph: {
-      title: `A gift from ${giverName}`,
+      title: `Invited by ${giverName}`,
       siteName: titleName(settings),
       description: 'A listening journal of your own.',
       type: 'website',
       images: [{
-        url: `${home}/get/gift-preview?gift=${encodeURIComponent(giver)}`,
+        url: `${home}/get/gift-preview?invite=${encodeURIComponent(giver)}`,
         width: 1200,
         height: 630,
-        alt: `A gift from ${giverName}`,
+        alt: `Invited by ${giverName}`,
       }],
     },
   };
@@ -130,9 +130,9 @@ export default async function GetPage({ searchParams }) {
   const settings = await pull_settings();
   if (!settings.why_essay?.trim()) notFound();
 
-  // Whose gift this is, when the link came from Give. See the notes above.
-  const { gift } = await searchParams;
-  const giver = tidyJournal(typeof gift === 'string' ? gift : '');
+  // Who invited them, when the link came from Invite (Give, before
+  // 2026-10-21). See the notes above.
+  const giver = inviterIn(await searchParams);
 
   // ── The gate ─────────────────────────────────────────────────────────────
   // No gift in the link, no steps. The mark, then two lines, in the middle
@@ -167,7 +167,7 @@ export default async function GetPage({ searchParams }) {
         </Link>
         <p className="get-handed-said">Listening Notes is handed out by people who have one.</p>
         <p className="get-handed-ask">
-          Know someone with a journal? Ask them to gift you one
+          Know someone with a journal? Ask them to invite you
           {handle ? (
             <>
               , or visit us on Instagram{' '}
@@ -197,7 +197,7 @@ export default async function GetPage({ searchParams }) {
   const deployUrl = giverName
     ? `${DEPLOY_URL}&env=GIFT_FROM`
       + `&envDefaults=${encodeURIComponent(JSON.stringify({ GIFT_FROM: giver }))}`
-      + `&envDescription=${encodeURIComponent('Who gave you this journal. Leave it as it is, and your journal will offer to add them when you set it up.')}`
+      + `&envDescription=${encodeURIComponent('Who invited you. Leave it as it is, and your journal will offer to add them when you set it up.')}`
     : DEPLOY_URL;
 
   return (
@@ -217,17 +217,17 @@ export default async function GetPage({ searchParams }) {
             className="ln-tile get-gift"
             target="_blank"
             rel="noopener"
-            aria-label={`A gift from ${giverName} — open their journal`}
+            aria-label={`Invited by ${giverName} — open their journal`}
           >
             <span className="get-gift-face" aria-hidden="true">
               <User size={20} />
               <img src={`${journalUrl(giver)}/api/portrait`} alt="" />
             </span>
             <span className="get-gift-words">
-              <span className="get-gift-from">A gift from</span>
+              <span className="get-gift-from">Invited by</span>
               <span className="get-gift-name">{giverName}</span>
             </span>
-            <Gift size={20} className="get-gift-glyph" aria-hidden="true" />
+            <Ticket size={20} className="get-gift-glyph" aria-hidden="true" />
           </a>
         )}
         <p className="get-kicker">Get your copy</p>
