@@ -42,26 +42,16 @@ import { CAPTION, useListeningBeacon } from '../../hooks/useListeningBeacon';
 // now and belongs entirely to HomeNav — this component draws a record and
 // nothing else.
 //
-// `choosing` stands the whole record down: while one is being picked the
-// beacon is not reporting anything, it is a target waiting for a cover to
-// land in it (Miyel's beacon brief, 2026-09-17). The art stays on screen,
-// shrunk and dimmed by the pane — the page never goes blank, and the small
-// cover is the thing the picked record flies into.
-//
-// It said CHOOSING A RECORD under the cover for an hour and Miyel took it
-// off: the picker underneath, the shrunken cover and the × in the corner are
-// already three things saying it, and a fourth in small caps was a label on a
-// state nobody could be in by accident.
-//
-// It is passed in rather than worked out here because what the pane is doing
-// is the pane's business.
+// `choosing` stood the whole record down while one was picked on the beacon
+// itself (2026-09-17); it went with that picker on 2026-10-21, when the
+// session became a sheet raised from the Listen bar.
 // `emptied` takes the picture out of the slot and leaves the slot. It is the
 // middle of the drop: the cover has left the beacon and is on its way down
 // into the journal, and for those few hundred milliseconds the beacon is
 // holding a space rather than showing a record (Miyel's beacon brief, item
 // 4). Everything else stays where it is, so nothing on the screen moves while
 // one thing falls across it.
-export default function ListeningBeacon({ choosing = false, emptied = false }) {
+export default function ListeningBeacon({ emptied = false }) {
   const { state, album, artist, art, track, isLive } = useListeningBeacon();
   // A song wherever there is one — including after a listen has been shut,
   // which keeps the track that was open up rather than dropping back to the
@@ -88,7 +78,7 @@ export default function ListeningBeacon({ choosing = false, emptied = false }) {
   if (!title) {
     return (
       <div className="beacon-stage beacon-stage--quiet">
-        {!choosing && <p className="beacon-quiet">Nothing logged yet.</p>}
+        <p className="beacon-quiet">Nothing logged yet.</p>
       </div>
     );
   }
@@ -104,18 +94,9 @@ export default function ListeningBeacon({ choosing = false, emptied = false }) {
             somewhere else anyway. See the note above LANDING_MS in
             HomeNav.js. */}
         <div className={'beacon-art-wrap' + (isLive ? ' beacon-art-wrap--live' : '')}>
-          {/* Empty while a record is being chosen, 2026-09-18. The slot went on
-              showing the last record the whole time the picker was open, so a
-              new cover flew out of the list and landed on top of a different
-              one — which is most of what Miyel meant by "the pass from
-              selecting an album to the session screen is still strange,
-              disjointed… start a fresh listen should maybe show a blank tile
-              when selecting. Not the beacon but the selection."
-              It is the beacon's own empty state, the same one the drop leaves
-              behind: a slot with nothing in it is a place for something to
-              arrive, and a slot with last week's record in it is a picture
-              being covered up. */}
-          {emptied || choosing
+          {/* The beacon's own empty state while the drop is under way: a slot
+              with nothing in it is a place for something to arrive. */}
+          {emptied
             ? <div className="beacon-art-empty" aria-hidden="true" />
             : artUrl
               ? <img src={artUrl} alt={title} className={'beacon-art' + (!isLive ? ' beacon-art--idle' : '')} onError={() => setFailed(artUrl)} />
@@ -125,7 +106,7 @@ export default function ListeningBeacon({ choosing = false, emptied = false }) {
               this would be writing on an empty square, and over lit art it
               would be a scrim across the one cover on this site that is
               meant to be in full colour. */}
-          {!choosing && !emptied && !isLive && artUrl && (
+          {!emptied && !isLive && artUrl && (
             <div className="beacon-idle-overlay"><span>{CAPTION[state]}</span></div>
           )}
         </div>

@@ -30,7 +30,6 @@
 .ses-prose { font-size: 15px; line-height: 1.85; color: var(--ink); white-space: pre-wrap; margin: 0; }
 .ses-prose a { color: inherit; }
 
-
 .ses-rule { border: none; border-top: 1px solid var(--border); margin: 0; }
 
 /* ── Layout ────────────────────────────────────────────────────────────── */
@@ -337,7 +336,6 @@
 .ses-recent-row svg { flex-shrink: 0; color: var(--ink-faint); }
 .ses-recent-row span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-
 /* Three covers to a row, the mockup's count, and said outright rather than
    left to auto-fill. The session's own picker fills to a 96px minimum, which
    on the pane's 34px gutters works out at two — 3 × 96 plus two gaps is 316
@@ -403,262 +401,6 @@
 .ses-skel { height: 46px; border-radius: 8px; background: var(--panel); animation: sesPulse 1.6s ease-in-out infinite; }
 @keyframes sesPulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.9; } }
 
-/* ── Header ────────────────────────────────────────────────────────────── */
-.ses-head {
-  position: sticky; top: 0; z-index: 20;
-  /* The frosted panel, and it stays. It was flattened to --bg for half an
-     hour on 2026-09-18 on the theory that a near-white header was what made
-     the session read as a different place, and Miyel's look at both: "go back
-     to the session that does have the brighter header — it needs it, looked
-     better." It does: this is the one band on the site that has a whole
-     screen of writing scrolling under it, and a header the same colour as the
-     page cannot say where it ends without leaning on a hairline. The hand-over
-     between two beacons was the real complaint and it is a structural one
-     (DECISIONS, Structure: the header belongs to the page). */
-  background: var(--panel-strong);
-  backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
-  border-bottom: 1px solid var(--border);
-  padding-top: env(safe-area-inset-top, 0px);
-}
-.ses-head-in { max-width: 680px; margin: 0 auto; padding: 10px 14px 0; box-sizing: border-box; }
-@media (min-width: 769px) { .ses-head-in { padding: 12px 32px 0; } }
-/* Three slots, not a flex row: an empty spacer, the beacon, the controls.
-   The beacon was left-aligned with the ? and the switch pushed to the far end
-   until 2026-09-18, which centres nothing — it puts the cover at the page's
-   edge and leaves a gap in the middle. The same shape SiteNav and the ID
-   card's header use, and for the same reason they use it.
-
-   minmax(0, auto) on the middle so it can shrink below its content: a long
-   song title ellipsises rather than pushing the switch off the screen, which
-   is what `auto` alone would do on a narrow phone. */
-.ses-head-row {
-  display: grid;
-  grid-template-columns: 1fr minmax(0, auto) 1fr;
-  align-items: center;
-  gap: 12px;
-  min-height: 48px;
-}
-/* ── The beacon's shape ───────────────────────────────────────────────────
-   The cover, and beside it a centred column: the status, the record, the
-   artist. Which is the large beacon's own arrangement with the cover moved
-   from above the words to the left of them — the same object, laid along the
-   row a header gives it instead of down the screen a pane gives it.
-
-   The status spent twenty minutes centred over the cover AND the words, as a
-   row of its own above both (Miyel, 2026-09-18: "it's a status above the
-   beacon"). Her next look took it back: "centred above the text only, not the
-   art — it'll take up less space, this all seems like it can fit beside the
-   album art." It can, and it did: two rows made the beacon 64px tall in a
-   48px header and the bar had to grow 16px to hold it. */
-.ses-head-beacon { display: flex; align-items: center; gap: 12px; min-width: 0; }
-/* No min-width: 0 on the sides, deliberately. It was on both for an hour and
-   a long song title ate them: a grid track is allowed to shrink below its
-   contents once you say that, so the middle grew to its full width and the ?
-   and the switch were squeezed to nothing off the right edge. The sides keep
-   their automatic minimum — their own contents — and it is the middle that
-   gives, which is what the ellipsis on the title is for. */
-.ses-head-side { display: flex; align-items: center; gap: 6px; }
-.ses-head-side--right { justify-content: flex-end; }
-/* ── The beacon, carried into the listen ───────────────────────────────────
-   The cover stands where the back caret stood and does its job (2026-09-18).
-   44px, the brief's number: big enough to be the record and not so big that
-   the row stops being a strip. The same 14px corner the beacon's own art has,
-   so it reads as that object made small rather than a different one.
-
-   .ses-back is gone with the caret. The cover is the way to a different
-   record now — two controls in that corner is a toolbar in the one place this
-   layout cannot spare the room. */
-.ses-cover {
-  flex-shrink: 0;
-  /* The containing block for the idle overlay it carries — without this the
-     overlay's `inset: 0` reaches past it to the nav bar and draws 107px of
-     scrim across the row. */
-  position: relative;
-  width: 44px; height: 44px;
-  /* The beacon's own proportion — see .beacon-art-wrap in nav.css. */
-  padding: 0; border: 0; border-radius: 10%;
-  overflow: hidden; cursor: pointer;
-  background: var(--panel);
-  display: flex; align-items: center; justify-content: center;
-  color: var(--ink-faint);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.14);
-  transition: box-shadow 0.15s, transform 0.15s;
-}
-.ses-cover:hover { box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2); transform: translateY(-1px); }
-/* Greyed, the way the card's cover is greyed when nothing is open — the same
-   filter, off .beacon-art--idle in nav.css. Only the bar ever wears this: a
-   session is a listen, so the cover in a session header is always lit. It is
-   the record you logged last night sitting in the row while you choose
-   tonight's, and it should not be claiming to be tonight's. */
-.ses-cover--idle img { filter: grayscale(80%) brightness(0.7); }
-
-.ses-cover-none { font-size: 18px; line-height: 1; }
-
-/* ── The × that ends the listen ────────────────────────────────────────────
-   In the corner the row keeps empty the rest of the time, and it is the mark
-   and nothing else. No pill: a control is the mark, not a mark in a container
-   (DECISIONS, 2026-09-17), and it earns its 34px from padding with a matching
-   negative margin so the thumb gets the box and the eye gets the ×.
-
-   Pressed, the mark turns and the word comes out of it (Miyel, 2026-09-18) —
-   one control changing its mind rather than two swapping places. The turn is
-   90°, which on an × lands exactly where it started: what you see is the
-   motion, and what it settles as is still a close.
-
-   The word opens on a grid track rather than a max-width. A width cannot be
-   animated to a word, and a max-width big enough for the longest one means
-   the shortest reaches its own size a third of the way through and then sits
-   there while the animation runs on — "Leave" was open in 90ms of a 340ms
-   turn. A track going 0fr → 1fr resolves to exactly the text's width, so
-   both words take the whole turn and neither is told a number. */
-/* ── One control that changes its mind ────────────────────────────────────
-   The mark turns, goes, and leaves the word standing where it stood. Miyel,
-   2026-09-18: "have the × turn into the End button — I still like the
-   animation, I just think it can move out and leave the End as the only
-   button."
-
-   It was a pair for a day: the × stayed put and the word budded out of its
-   right-hand side into the gap before the beacon. That put two things in the
-   row saying two different things, and it is what kept the word small — it
-   had 68px of gap to live in and no more. One at a time, in one place, the
-   word gets the whole corner and can be read at the size the × is drawn at.
-
-   Going back is a press anywhere else, which is the same answer the draft's
-   delete gives (AlbumPicker) and the reason the × does not need to stay on
-   screen to be pressed again. */
-.ses-shut {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  margin: -8px;
-  color: var(--ink-soft);
-  font-family: var(--font-label); letter-spacing: 0.1em;
-  text-transform: uppercase; white-space: nowrap;
-  transition: color 0.15s;
-}
-/* The mark's own box, which is also the box the word lands in — 34px, the
-   thumb's, from 8px of padding around an 18–20px glyph. */
-.ses-shut-door {
-  display: inline-flex; align-items: center; justify-content: center;
-  padding: 8px; border: 0; background: none; cursor: pointer;
-  color: inherit;
-  transition: transform 0.34s cubic-bezier(0.22, 0.61, 0.36, 1),
-              opacity 0.2s ease;
-}
-.ses-shut-door:hover { color: var(--ink); }
-.ses-shut-mark { flex: 0 0 auto; }
-/* Turned and gone. Ninety degrees on an × lands exactly where it started, so
-   what you see is the turning and not the angle — and then it leaves, rather
-   than sitting behind the word it turned into. */
-.ses-shut--sure .ses-shut-door {
-  transform: rotate(90deg) scale(0.35);
-  opacity: 0;
-  pointer-events: none;
-}
-/* The word, in the mark's place. Absolute so the row does not change width as
-   it arrives — the beacon beside it is centred on the whole bar and would have
-   nothing to do with this, but the lights at the far end would shuffle. */
-.ses-shut-slot {
-  position: absolute; left: 0; top: 50%;
-  transform: translateY(-50%);
-  display: block;
-  /* Not a target, ever. It is a positioned box sitting exactly on top of the
-     mark, so without this it swallowed every press meant for the × and the
-     control did nothing at all — Miyel, 2026-09-18: "nothing happens." The
-     word inside says `pointer-events: auto` for itself once it is showing,
-     and a descendant that claims it is a target still is, whatever its
-     ancestor says. */
-  pointer-events: none;
-}
-.ses-shut-word {
-  display: block;
-  padding: 8px;
-  border: 0; background: none; cursor: pointer;
-  font: inherit;
-  /* The size the × is drawn at. A 20px glyph and 10px type were never the
-     same control; this is, so they are. */
-  /* The first edition's own face, at the size the × is drawn at: DM Mono,
-     uppercase, 0.1em — the site's label face, which is what this was when it
-     was 10px in the gap beside the mark. Only the size changed.
-
-     It went sentence case for ten minutes because browsers reset
-     text-transform on form controls in their own stylesheet, so the row's
-     `uppercase` was reaching this or not depending on whose browser it was.
-     Said here outright so it is the same everywhere. */
-  font-size: 15px; line-height: 20px; letter-spacing: 0.1em;
-  text-transform: uppercase;
-  /* The mark's own colour, not ink. It was full ink for an hour and at 17px
-     that is a heavy word in the corner of a screen you are choosing a record
-     on — Miyel, 2026-09-18: "it can match the colour of the ×, off grey, not
-     so stark." It is the same control at the same weight; only its shape
-     changed. Ink is what it goes on hover, the way the mark does. */
-  color: var(--ink-soft);
-  opacity: 0;
-  transform: scale(0.72);
-  transform-origin: 8px 50%;
-  pointer-events: none;
-  transition: opacity 0.22s ease 0.06s,
-              transform 0.34s cubic-bezier(0.22, 0.61, 0.36, 1) 0.06s;
-}
-.ses-shut--sure .ses-shut-word {
-  opacity: 1;
-  transform: none;
-  pointer-events: auto;
-}
-.ses-shut-word:hover { color: var(--ink); }
-@media (prefers-reduced-motion: reduce) {
-  .ses-shut-door, .ses-shut-word { transition: none; }
-}
-
-/* The ? that opened a reference lived here (.ses-ask-door) and is gone with
-   it, 2026-09-18. So is the sheet it opened, further down: .ses-ask and
-   everything under it. */
-.ses-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
-/* Its own width again. It was pinned to clamp(120px, 42vw, 220px) for half an
-   hour on 2026-09-18 so that this cover and the cross's bar cover would land
-   in the same place through a cross-fade — and the cost was that a short
-   album title left a hundred pixels of empty column beside it, so the beacon
-   read as sitting left of centre. Miyel saw it at once. There is no cross-fade
-   to line up any more: the session rises and the bar's mini blinks, and
-   neither needs the other to be anywhere in particular. */
-/* ── How wide the small beacon gets ──────────────────────────────────────
-   190px, which is the cap the compact beacon in the old nav row used before
-   2026-08-28 and is back for the same reason it was chosen then: the column is
-   free to be as wide as the record's name up to this, and past it the art gets
-   pushed too far off centre, so a longer title scrolls inside the cap instead
-   of widening the row. Some of Visions is well past it. */
-.ses-head-text {
-  min-width: 0;
-  max-width: 190px;
-  display: flex; flex-direction: column; align-items: center;
-  text-align: center;
-  gap: 3px;
-}
-/* ── The live row ─────────────────────────────────────────────────────────
-   A green dot and one word, centred over the record. Drawn only where a listen
-   is actually open: always in the session's header, and in the nav bar once a
-   record has been chosen. An idle beacon shows nothing here — the greyed cover
-   is what says the listen is over, and it says it before you have read
-   anything.
-
-   The large beacon has no row like this. It has the mark beside it and the
-   mark's dot lights, so a second dot would be the same fact twice; the small
-   one is on its own and carries its own.
-
-   This was a green hairline under the header for an hour — the header itself
-   going live rather than the beacon in it — and Miyel's read was the whole
-   argument against it: "I don't like the line, it's not instantly
-   recognisable." A line at the edge of a band is a border until you are told
-   otherwise. A green dot on this site is one thing only.
-
-   Green means live everywhere here, and it breathes, so the two lit things on
-   the site share a pulse. */
-.ses-head-live {
-  display: flex; align-items: center; gap: 7px;
-  font-family: var(--font-label); font-size: 9.5px; letter-spacing: 0.16em;
-  text-transform: uppercase; color: var(--ink-soft);
-}
-.ses-head-dot,
 .ses-row-dot {
   width: 8px; height: 8px; border-radius: 50%;
   background: var(--live);
@@ -669,13 +411,8 @@
   0%, 100% { opacity: 1; }
   50%      { opacity: 0.5; }
 }
-@media (prefers-reduced-motion: reduce) { .ses-head-dot, .ses-row-dot { animation: none; } }
-/* No overflow of its own any more: the clip around it does that, and a title
-   that is allowed to be its full width is the thing the marquee measures. */
-.ses-head-album {
-  font-family: var(--font-display); font-weight: 700; font-size: 15px; line-height: 1.2;
-  color: var(--ink); white-space: nowrap; flex-shrink: 0;
-}
+@media (prefers-reduced-motion: reduce) { .ses-row-dot { animation: none; } }
+
 /* ── The marquee ─────────────────────────────────────────────────────────
    The clip is as wide as the title up to the column's cap, and centres it
    while it fits. Once it does not, the title has to start at its first
@@ -697,34 +434,7 @@
 .marquee-clip > .marquee-track > :last-child { display: none; }
 .marquee-clip.is-marqueeing .marquee-track-gap,
 .marquee-clip.is-marqueeing > .marquee-track > :last-child { display: block; }
-/* ── The beacon's own type, at five eighths ───────────────────────────────
-   The record and the artist are the card's, reduced by 0.625: 24px becomes 15,
-   13.6 becomes 8.5. Two reasons, and they are the same reason.
 
-   Miyel, 2026-09-18: "keep the font consistent from the large beacon." The
-   artist was DM Mono here and Nunito on the card, so the record changed voice
-   between the two sizes of one object — which is the whole of what she meant
-   by "the beacons cannot look different."
-
-   And the flight. This beacon is drawn in the nav bar as well, and the words
-   travel between the bar and the card rather than blinking out. Words can only
-   *shrink* into place if the two ends are the same shape at two sizes; at any
-   other ratio the movement has to end on a jump.
-
-   The caption above them does not scale and should not: it is a label, and a
-   label on this site is DM Mono at 9–10px wherever it appears. Five eighths of
-   9.9px is 6, which is not small type, it is unreadable type. */
-.ses-head-artist {
-  font-family: var(--font-nunito), sans-serif; font-weight: 400;
-  font-size: 8.5px; letter-spacing: 0.08em;
-  color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  /* The ellipsis only works on a box narrower than its words, and a centred
-     item in a column is as wide as its words — so a long name ran out both
-     sides of the column, over the cover and under the lights (Miyel's
-     screenshot, 2026-09-24: "Katamari Damacy Series SOUND TEAM & Bandai
-     Namco Game Music"). Held to the column, it stops at the dots. */
-  max-width: 100%;
-}
 .ses-theme { width: 32px; height: 32px; flex-shrink: 0; color: var(--ink-soft); }
 .ses-theme:hover { color: var(--ink); }
 

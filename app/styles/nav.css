@@ -468,8 +468,9 @@
   border-radius: 10%;
   overflow: hidden;
   box-shadow: 0 18px 44px rgba(0,0,0,0.16);
-  /* Overridden further down — see the rule near .hn--choosing, which has
-     carried the size and opacity transitions since the picker was built.
+  /* Overridden further down — see the .beacon-art-wrap rule under One clock,
+     which has carried the size and opacity transitions since the picker was
+     built.
      Size was added here too for an hour on 2026-09-18 on the belief that the
      slot popped between 180px and 132px, and it never did; this declaration
      was dead the moment it was written, because a later one replaces the
@@ -1192,52 +1193,15 @@
   opacity: 0.5;
 }
 
-/* ── The cover in the air ──────────────────────────────────────────────────
-   Fixed to the window and over everything: it is travelling between a tile in
-   the picker and the beacon's slot, and neither of those boxes can hold it.
-   The same shape and the same shadow the session's own landing uses, because
-   it is the same journey — a cover leaving a tile you tapped — arriving in a
-   different room. Written here rather than borrowed from session.css: the
-   cross has no business reaching into the session's stylesheet, which is the
-   rule the brief set for the quiet line and holds for this too.
-
-   transform-origin at the top left because the flight is computed as a
-   translate from one box's corner to another's plus a scale; any other origin
-   and the scale would fight the translate. */
-.hn-flight {
-  position: fixed;
-  /* Over the layer, which is 200. It was 120 — under it — and that was fine
-     while the flight finished before the session was pushed. It does not any
-     more: from 2026-09-18 the sheet rises at the moment of the press and the
-     cover crosses the screen over the top of it, into the header the sheet is
-     bringing with it. At 120 the record would have slid behind the rising
-     session and been seen no more. 300 is the number the entry's own closing
-     flyer uses for the same reason, and the two never share a screen. */
-  z-index: 300;
-  pointer-events: none;
-  object-fit: cover;
-  border-radius: 14px;
-  transform-origin: top left;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
-}
-/* The same grey the card's cover and the mini's wear — .beacon-art--idle above
-   and .ses-cover--idle in session.css. A record that is dull at both ends of
-   the journey must be dull for the journey: it was full colour in the air, so
-   pressing Start a listen made last night's record flare and then go out
-   again, which is the one thing a *last logged* cover must never do. */
-.hn-flight--idle { filter: grayscale(80%) brightness(0.7); }
-
 /* ── passing ───────────────────────────────────────────────────────────────
    The copies that fly when a record is put down: the one leaving the big slot
    for the top of the column, and the one falling off the end of it. Both are
    made, thrown and removed by HomeNav's `passing` — the module comment there
    is the description; this is only what they look like.
 
-   Under `.hn-flight`'s 300 rather than beside it. A pass happens on the floor
-   you are standing on and a flight crosses a rising session, and if the two
-   ever share a second the one going somewhere should be on top.
+   Under the layer's 200: a pass happens on the floor you are standing on.
 
-   transform-origin at the corner, like the flight's, so a copy that is also
+   transform-origin at the corner, so a copy that is also
    shrinking lands its top-left on the top-left it was aimed at instead of
    half a width to one side. */
 .hn-passing {
@@ -1253,30 +1217,16 @@
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
 }
 
-/* ── Choosing a record, on the pane ────────────────────────────────────────
-   Floor one becomes the picker and the rest of the cross stands down: the
-   band at the foot, the crown, the row of earlier covers and the snap between
-   floors (Miyel's beacon brief, 2026-09-17). What stays is the cover, shrunk
-   and dimmed, because the page must never go blank and that small square is
-   where the record you pick is about to land.
-
-   None of it unmounts. The wall below is still there and still holds where it
-   was scrolled to; it is simply not something you can reach while the floor
-   above it is a search. */
-/* ── Standing down, not disappearing ──────────────────────────────────────
-   These were `display: none` while a record was being chosen, which is a cut
-   in the middle of a shot: the slot above them spends 0.7s changing shape and
-   the furniture around it blinks out in one frame. Miyel, 2026-09-18: "it's
-   not fluid, especially going from picker back to beacon, but it's also very
-   noticeable going into the picker."
-   Opacity and pointer-events instead, on the slot's own clock, so the whole
-   pane settles as one thing. `display` cannot be transitioned; these can. */
-.hn--choosing .hn-foot,
-.hn--choosing .hn-controls {
-  opacity: 0;
-  pointer-events: none;
-}
 .hn-foot, .hn-controls { transition: opacity 0.7s cubic-bezier(0.22, 0.61, 0.36, 1); }
+/* ── Left from the beacon's own picker, 2026-09-17 to 2026-10-21 ────────────
+   From here to the stage's own measurement, the transitions on the crown, the
+   bar's mark, the screen, the cover, the card, the stage and the name were
+   written for the picker that opened on floor one, which folded them all on
+   one 0.7s clock. It went when the session became a sheet raised from the
+   Listen bar, and the rules that changed those sizes went with it, so these
+   sit idle. They stay because taking them out is a question about how the
+   beacon floor moves, and that is the top row's to answer (stage 3 of the
+   brief). The notes under this one describe the picker as it was. */
 /* ── The crown standing down ───────────────────────────────────────────────
    Not display: none, which is what it was for an hour and is what Miyel meant
    by "it just is really disjointed" (2026-09-17, on a phone): the big mark
@@ -1300,33 +1250,11 @@
               transform 0.7s cubic-bezier(0.22, 0.61, 0.36, 1);
   transform-origin: top center;
 }
-.hn--choosing .hn-crown {
-  min-height: 0;
-  /* Its padding is the last 22px of the box and has to go with the rest of
-     it, or the cover stops 22px short of where the crown used to end and the
-     whole screen sits a little low for no reason anybody could name. */
-  padding-top: 0;
-  padding-bottom: 0;
-  /* min-height alone leaves the box as tall as the mark inside it — twenty
-     pixels of nothing, held by an element that is hidden. */
-  height: 0;
-  opacity: 0;
-  transform: scale(0.24);
-  overflow: hidden;
-  pointer-events: none;
-  visibility: hidden;
-  transition: min-height 0.7s cubic-bezier(0.22, 0.61, 0.36, 1),
-              height 0.7s cubic-bezier(0.22, 0.61, 0.36, 1),
-              padding 0.7s cubic-bezier(0.22, 0.61, 0.36, 1),
-              opacity 0.3s ease,
-              transform 0.7s cubic-bezier(0.22, 0.61, 0.36, 1),
-              visibility 0s linear 0.7s;
-}
+
 /* And the small one arrives rather than appearing. It is hidden until the row
    has a reason to carry it (the rule further down), so this only has to say
    how it comes. */
 .hn-bar-mark { transition: opacity 0.3s ease 0.16s; }
-.hn--choosing .hn-bar-mark { opacity: 1; }
 
 /* ── And so does the one the bar draws, 2026-09-21 ────────────────────────
    .hn-crown above is the *pane's* crown. On a phone the big mark is drawn by
@@ -1368,118 +1296,13 @@
      stopping in it. */
   transition: transform 0.7s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
-.hn--choosing .hn-bar-crown .hn-crown-svg {
-  /* ── Going away, on the leaving curve, first ──────────────────────
-     The sinking curve the editing bar uses: it holds its place for a beat and
-     then sweeps up and out, which is the shape of movement there is any point
-     making slower. The arriving curve is wrong here for the same reason it is
-     right coming back — it spends its first fifth of a second covering most of
-     the distance, so the mark was past the top edge before it looked like it
-     had set off.
 
-     This only works because the record now waits for it. The two movements
-     this press starts travel through the same strip of screen, and on their
-     own clocks they collided: the cover slid through the logo from 220ms to
-     520ms (Miyel, 2026-09-21: "i dont want them overlapping"). The cure is not
-     a faster mark — it is not a race the mark can win by hurrying. It is the
-     cover holding at the card until the mark is clear. MAKE_ROOM_MS in
-     HomeNav.js is that beat, and it is set to where this curve puts the mark's
-     foot past the top of the band the record lands in. Change one and the
-     other has to move. */
-  transition-timing-function: cubic-bezier(0.55, 0, 0.68, 0.53);
-  transform: translateY(calc(-1 * (var(--hn-crown, 200px) + 120px)));
-}
-
-/* ── And the pane waits with the record, 2026-09-22 ───────────────────────
-   The handover above made the record wait at the card for MAKE_ROOM_MS, and
-   nothing else waited with it: the crown's room, the card and the picker all
-   set off at once, so for that third of a second the search and the covers
-   rose up underneath a cover standing still where the card had been. The
-   flier is fixed to the window and does not move with the card it came from.
-   Miyel: "a tiny overlap when starting to log a listen where the beacon art
-   overlaps the album chooser. It should never do that."
-
-   So the only thing that moves in the beat is the big mark leaving by the
-   top. Then the record flies and the pane settles under it on the same 0.7s,
-   and the record, starting higher and on a shorter clock, stays ahead of
-   the picker the whole way up. The fades are not delayed: the flier and the
-   bar's travelling name stand over the card's cover and name from the first
-   frame, so those can go at once and nothing is drawn twice.
-
-   Going in only. On the way back there is no flight to wait for. 0.3s is
-   MAKE_ROOM_MS in HomeNav.js; change one and change the other. */
-@media (prefers-reduced-motion: no-preference) {
-  .hn--choosing .hn-crown {
-    transition: min-height 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) 0.3s,
-                height 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) 0.3s,
-                padding 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) 0.3s,
-                opacity 0.3s ease,
-                transform 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) 0.3s,
-                visibility 0s linear 1s;
-  }
-  .hn--choosing .hn-screen {
-    transition: min-height 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) 0.3s,
-                padding 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) 0.3s,
-                gap 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) 0.3s;
-  }
-  .hn--choosing .beacon-art-wrap {
-    transition: width 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) 0.3s,
-                height 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) 0.3s,
-                opacity 0.5s ease,
-                box-shadow 0.5s ease;
-  }
-  .hn--choosing .beacon-card { transition-delay: 0.3s; }
-  .hn--choosing .beacon-stage {
-    transition: max-height 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) 0.3s,
-                opacity 0.4s ease;
-  }
-  .hn--choosing .beacon-meta {
-    transition: max-height 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) 0.3s,
-                opacity 0.34s ease,
-                gap 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) 0.3s;
-  }
-  /* Doubled, because `.hn .ses-picker` further down sets the whole
-     animation shorthand at the same weight and would put the delay back. */
-  .hn.hn--choosing .ses-picker { animation-delay: 0.3s; }
-}
-
-.hn--choosing .hn-pane--home { scroll-snap-type: none; }
-.hn--choosing .hn-pane--home > .hn-floor:nth-of-type(2) { display: none; }
-@media (max-width: 768px) {
-  /* ── The picker is as long as what it found, 2026-09-24 ──────────────────
-     Floor one is one screen tall, and while a record is being chosen the
-     picker is all of it — so whatever the search found past the foot of
-     that screen was cut off there, with nothing to scroll to. With the
-     keyboard up the floor is half a screen, and Miyel saw the tops of the
-     first row of covers and nothing else: "I can't see the third row of
-     text in a session when I'm searching for albums." Measured at 375x812
-     with the drafts showing: 742px of grid in a 610px box.
-
-     So the floor grows with the picker and the pane scrolls it, the way any
-     long page does. Floor two is display: none for as long as this lasts,
-     so there is nothing under it to scroll into. */
-  .hn--choosing .hn-pane--home .hn-floor--beacon { height: auto; }
-
-  /* ── And it holds still sideways ─────────────────────────────────────────
-     Miyel, the same list: "don't let the album search scroll left and
-     right." A sideways drag on the picker was the rail's, and backed out of
-     the picker onto the next pane — on purpose, as the other way out besides
-     the ×. The × is the way out now, and nothing moves sideways under a
-     search you are scrolling through.
-
-     Not the rail lock ruled out in DECISIONS: that one changed the rail's
-     overflow in the middle of a vertical scroll, every time a pane crossed a
-     line, and stopped the scroll dead. This one changes when a button is
-     pressed — Log a listen puts it on and End takes it off — and never while
-     anything is moving. */
-  .hn--choosing .hn-rail { overflow-x: hidden; }
-}
 /* ── A saved listen drops onto the journal, 2026-09-24 ────────────────────
    It was a cutaway until today: the wall opened under the picker, the pane
    scrolled down to it, the record filed in and the pane scrolled back up to
    the drafts. Miyel: "if it's not going to be seamless, I would rather not
-   have it for now." Now the picker folds behind the sheet, the pane is put on
-   the wall, and the sheet drops — see the drop in HomeNav.js. The floor
+   have it for now." Now the pane is put on the wall behind the sheet, and the
+   sheet drops — see the drop in HomeNav.js. The floor
    needs no opening of its own any more: with the picker folded it is simply
    there, so the rule that held it open under the picker has gone, and so has
    the one that took the pane's fingers and its snap for a scroll run from
@@ -1488,10 +1311,9 @@
    The wall still arrives with nothing on it but records. The filter bar is a
    thing you use when you are looking for something, and nobody filing a record
    is looking for one — Miyel, 2026-09-18: "don't show the filter bar when
-   adding, it should all be clear since there's no footer either." The footer
-   and the carets already stand down while a record is being chosen, a few
-   rules up, and on the same clock and in the same way: opacity, because
-   `display` cannot be transitioned and the wall must not jump as it opens. */
+   adding, it should all be clear since there's no footer either." Opacity,
+   because `display` cannot be transitioned and the wall must not jump as it
+   opens. */
 .hn--filing .arc-bar-wrap {
   opacity: 0;
   pointer-events: none;
@@ -1515,21 +1337,7 @@
               gap 0.7s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 @media (prefers-reduced-motion: reduce) { .hn-screen { transition: none; } }
-/* The screen stops being one screen tall and stops holding anything in the
-   middle of it: it is as tall as the search is. */
-.hn--choosing .hn-screen {
-  min-height: 0;
-  /* Clear of the bar — and the bar is shorter while choosing, because it has
-     taken the session header's shape (above). Reading --hn-bar-h here left
-     22px of nothing between the row and the search, which is 22px the drafts
-     could have had. */
-  padding-top: calc(env(safe-area-inset-top, 0px) + 80px);
-  padding-bottom: 40px;
-  /* And no gap between the folded beacon and the search, 2026-09-26: the
-     field sits 12px under the bar's edge, the room the bar keeps under its
-     own row. */
-  gap: 0;
-}
+
 /* ── The cover goes straight up, and gets smaller on the way ───────────────
    Nothing changes position and no box is told a number. The cover's own
    width and height animate, the stage above measures whatever is in it, and
@@ -1544,8 +1352,6 @@
    arriving and this is a screen rearranging itself around you, which wants
    to be followed rather than kept up with (Miyel: "a little bit slower, I
    want it to feel fluid"). */
-/* 132px, the brief's number, and dimmed rather than gone: the page keeps its
-   one object and the record about to be picked has somewhere to land. */
 /* ── One clock ─────────────────────────────────────────────────────────────
    Everything that moves when the picker opens moves for 0.7s on this curve:
    this slot's size, the crown's collapse above it, the card's gap, the foot
@@ -1577,226 +1383,13 @@
    sat between have folded away, and 10px of gap between two empty rows was
    part of the space over the search Miyel called too much. */
 .beacon-card { transition: gap 0.7s cubic-bezier(0.22, 0.61, 0.36, 1); }
-.hn--choosing .beacon-card { gap: 0; }
-.hn--choosing .hp-dashboard { flex: 0 0 auto; }
-/* ── The picker opens rather than appearing ────────────────────────────────
-   It mounted at its full height in one frame, under a cover that is centred
-   with it — so before a single transition had started, the card was shoved
-   74px DOWN, and the crown's collapse then had to drag it back up past where
-   it began. Measured 2026-09-18:
 
-     t=0    card y=243   meta 112   w=180
-     t=24   card y=317   meta 112   w=180     nothing has moved but this
-
-   That dip is what reads as the thing lurching. So it grows into the room
-   over the same 0.7s everything else is using, and the cover's whole journey
-   becomes one climb. Only in the cross: the session's own picker is the whole
-   screen and has nothing to push. */
-/* `backwards`, not `both`, 2026-09-24. Held at the end, the 200vh stayed on
-   the picker for as long as it was open, and a search is not always shorter
-   than that: two screens of covers is eight rows, and an artist with a long
-   catalogue has more. Let go at the end, it is as tall as what it holds. */
-.hn .ses-picker {
-  overflow: hidden;
-  animation: hnPickerOpen 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) backwards;
-}
-@keyframes hnPickerOpen {
-  from { max-height: 0; opacity: 0; }
-  /* Far past anything it will be while it grows. */
-  to   { max-height: 200vh; opacity: 1; }
-}
-@media (prefers-reduced-motion: reduce) { .hn .ses-picker { animation: none; } }
-/* No line across the top while a record is being chosen. The bar wears
-   .hn-bar--scrolled the whole time the picker is open, and its hairline sat
-   between the LN mark and the cover directly under it — two boxes with a rule
-   between them rather than one surface changing shape. Miyel, 2026-09-18:
-   "remove the line between the album art in the selector and the LN header,
-   that will make it feel more like it morphs to this screen." */
-.hn--choosing .hn-bar--scrolled { border-bottom-color: transparent; }
-/* ── The bar becomes the session's header ─────────────────────────────────
-   Choosing a record, this row is the row the session is about to have, so it
-   takes the session's geometry rather than its own: the notch, then 10px,
-   then a 48px line — .ses-head / .ses-head-in / .ses-head-row in session.css,
-   number for number. Its own shape puts the line 51px below the notch
-   allowance and the session's puts it 34 below the notch itself, which is a
-   difference of about 17px on a flat screen and 21 on a notched one — small
-   enough to look like nothing and exactly big enough for the cover to hop at
-   the handoff, which is the one thing this must not do. */
-.hn--choosing .hn-bar {
-  height: calc(env(safe-area-inset-top, 0px) + 68px);
-  padding-top: env(safe-area-inset-top, 0px);
-}
-/* `.hn-pane--home .ln-onward` stood here with its own margin and a comment
-   about sitting 26px under the BEFORE THAT row. Both went on 2026-09-19: the
-   row it measured from has been a column beside the record since the 18th,
-   and every declaration it made is now made again, correctly, at the end of
-   this file beside the calling card it has to line up with. */
-
-/* ── A short phone ────────────────────────────────────────────────────────
-   There was a block here that tightened the gaps and shrank the crown below
-   700px, because the old centred column did not fit an SE once the way in had
-   44px of thumb under it. Every one of its four declarations was being
-   overridden by the side-by-side layout further down this file, which sets the
-   same four properties at the same specificity and later — so it was a rule
-   that looked like it was doing something and was not.
-
-   The new shape does not need it: the record and its past stand side by side
-   instead of one under the other, which is shorter, and the crown is 0.19 of
-   the screen at every height rather than 0.28. Measured at 375x667 with the
-   way in pushed down: it ends at 570 against carets at 590 and a footer at
-   613. */
-
-
-/* ── The mini beacon, in the bar ──────────────────────────────────────────
-   The record, its album and its artist — .ses-head-beacon's own shape, so
-   that when the session resolves over this its header is the same three
-   things in the same three places. Centred as a group rather than the cover
-   being centred alone: the session's cover sits left of centre with the words
-   to its right, and a cover centred by itself lands 52px off that.
-
-   Picking a record does not fly it here from the list (Miyel, 2026-09-18:
-   "it's too much for the album to float from picker to beacon — maybe it just
-   updates"). announce() has already put it on the beacon, so this simply *is*
-   the new record on the next frame. */
-/* .ses-head's own inset, and .ses-head-in's own padding — 10px on a phone and
-   12px on a desk, which is the one number in the two files that has to be said
-   twice. Measured 2026-09-18 with it hard-coded to 12: the bar's cover sat at
-   y=16.4 and the session's at 14.4, so the record hopped two pixels at the
-   moment the sheet took over. Everything else about the two boxes agreed to
-   the tenth of a pixel, which is exactly why two pixels were visible. */
-.hn-bar-beacon {
-  position: absolute;
-  left: 50%;
-  top: calc(env(safe-area-inset-top, 0px) + 10px);
-  transform: translateX(-50%);
-  /* In front, for the length of the crossfade the big mark leaves on. This is
-     written after that mark and is absolute like it, which would normally be
-     enough — but it carries an explicit z-index: 1, and an explicit 1 beats a
-     later sibling's auto. So this needs its own. It cannot simply join the
-     .hn-lights list that lifts the static children of this row: that rule also
-     sets position: relative, which on an absolutely placed box is not a lift
-     but a different layout — the note on that list records what it did to the
-     big mark when it caught it. */
-  z-index: 1;
-  /* One width, and it is the widest corner's. This has to clear the left
-     corner at its widest — which is not the mark but END, the word the mark
-     turns into — and it is centred on the screen, so it pays for that on both
-     sides. 190 is the word's 76 plus a 19px gap, doubled.
-
-     It was 210 while the word was END?. Miyel dropped the question mark on
-     2026-09-18 for exactly this: "drop the ? so it scrolls less." Four
-     characters to three is ten pixels off the corner, twenty off the doubling,
-     and twenty onto the title's slot — which at 375px is the difference
-     between 109px of room and 129.
-
-     It was 150, then 170 with a second rule narrowing it to 230 only while the
-     word was up. That second rule is gone: it made the beacon *condense on
-     itself* when the × was pressed, which is the one thing this row must not
-     do (Miyel, 2026-09-18). Nothing on this bar moves because something else
-     on it changed — the room for the word is simply always there, whether the
-     word is or not.
-
-     What it costs is honest and worth writing down: the slot is narrower at
-     rest than it needs to be, so a long title marquees all the time rather
-     than only while the question is up. A still row is worth more than a still
-     title. */
-  max-width: calc(100% - 190px);
-  /* 150 is the two corners: the mark's 64 on the left and the lights' on the
-     right, doubled because this is centred on the screen and has to clear the
-     wider of them on both sides. Centred on the *screen* and not in the space
-     between them, because the session's header centres its beacon the same way
-     and the two have to land on each other. */
-}
-
-@media (min-width: 769px) {
-  .hn-bar-beacon { top: calc(env(safe-area-inset-top, 0px) + 12px); }
-}
-/* ── One beacon, two sizes ───────────────────────────────────────────────
-   There is no small beacon of its own any more. The bar draws .ses-head-beacon
-   — the session's, from session.css, class for class — so this file has only
-   to say where it stands, and the two can no longer disagree about what a
-   record looks like.
-
-   There was a matching .hn-bar-cover / -said / -album / -artist set here for a
-   day, five eighths of the card below and kept in step by hand, and the cost
-   was not the duplication: it was that the two drawings had already begun
-   saying different things. This one had a record and an artist and no caption;
-   the session's had the open song and a caption that said NOW LOGGING whether
-   or not it was true, and no artist at all. Miyel, 2026-09-18: "the beacons
-   cannot look different, it has to be the same beacon."
-
-   The handoff is what pays for it. The session resolving over this row puts
-   the same beacon in the same place at the same size, so the seam has nothing
-   to show — no cross-fade to line up, no cover to hop 22px, which is what
-   every attempt at this transition since the 17th had been trying to hide. */
-.hn-bar-beacon .ses-cover { cursor: default; }
-.hn-bar-beacon .ses-cover:hover { box-shadow: 0 2px 8px rgba(0, 0, 0, 0.14); transform: none; }
-/* Drawn but not shown while the record is on its way up from the card — the
-   flight measures the box it is aiming at, and it cannot be showing the same
-   record at the same time. */
-.hn-bar-beacon--flying { opacity: 0; }
-/* Nothing leaves by the floor any more. The bar and the picker dropped off
-   the bottom together for half an hour on 2026-09-18 and Miyel's answer was
-   that it is simply too much: "it looks like too much motion. It's too
-   dramatic."
-   What is left is the least that can be done and still be a change: the
-   record in the bar becomes the one you pressed, and the session comes up
-   over the picker you pressed it in. One thing swaps, one thing arrives. */
-/* And the card's own cover steps aside at once rather than fading with the
-   rest of the card. The stage takes 0.4s to go and the flight takes 620ms, so
-   without this there would be four hundred milliseconds of the record in two
-   places — the real one shrinking away and the copy climbing past it. */
-.hn--flying .beacon-art-wrap,
-.hn--flying .beacon-meta { visibility: hidden; }
-/* The mark is the fallback, not the rule. The bar carries the beacon while you
-   choose — the record shrinks into it from the card below (Miyel, 2026-09-18:
-   "I liked the beacon shrinking mini when you enter session") — and the mark
-   is what is left when there is no record to carry at all, which is a copy on
-   its first afternoon.
-
-   A sibling selector and not :has(), which this build silently drops. It
-   works because the beacon is written before the mark in the bar,
-   so "the mark that follows a beacon" is exactly the case to hide. */
-.hn--choosing .hn-bar-beacon ~ .hn-bar-mark { display: none; }
-/* ── The card stands down entirely ────────────────────────────────────────
-   It shrank to 132px and held the middle of the screen while you searched,
-   which is the shape this had before the record moved into the bar. With the
-   record up there the card is a second copy of the same thing, and the room
-   it was keeping is room a list of drafts wants (Miyel, 2026-09-18: "then it
-   gives more room to have a list of drafts").
-   Collapsed on the same clock as everything else, so the picker opens into
-   the space as the card gives it up. */
-.hn--choosing .beacon-stage {
-  max-height: 0;
-  opacity: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
 .beacon-stage {
   transition: max-height 0.7s cubic-bezier(0.22, 0.61, 0.36, 1),
               opacity 0.4s ease;
   max-height: 900px;
 }
-.hn--choosing .beacon-art-wrap {
-  width: 132px;
-  height: 132px;
-  /* Full strength, and no shadow. The 0.45 was muting a cover that is not
-     there any more — the slot empties while you choose (ListeningBeacon) —
-     and at 0.45 over a tile already drawn at half opacity the place a record
-     is about to land was a smudge with a drop shadow under it. */
-  opacity: 1;
-  box-shadow: none;
-}
-/* Only while choosing. The drop leaves the same empty tile behind for half a
-   second on its way to refilling, and that moment is not this one: there the
-   tile is a record that has just left, here it is a space waiting for one.
-   No border. It had one for half an hour on 2026-09-18 and Miyel could see it
-   from across the room — "remove the shadow around the empty card, it's
-   showing a hard line between the header and the page." A hairline drawn
-   around a placeholder directly under a bar that has just given up its own
-   hairline puts the line back one row down. The fill alone says where the
-   record goes. */
-.hn--choosing .beacon-art-empty { opacity: 1; }
+
 /* Collapsed rather than gone — see the note in ListeningBeacon.js. max-height
    because the real height is a wrapped title and cannot be written down; 220
    clears the tallest this ever is (a status line, two lines of title and an
@@ -1814,50 +1407,12 @@
               opacity 0.34s ease,
               gap 0.7s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
-.hn--choosing .beacon-meta {
-  gap: 0;
-  max-height: 0;
-  opacity: 0;
-  /* Collapsed to nothing and still in the tree, so the way in must not be
-     pressable through it. */
-  pointer-events: none;
-}
-/* The way out, in the corner the up-caret holds the rest of the time. Not
-   flex: 1 like the caret's own invisible strip — this one is a mark, and it
-   has to be where the mark is rather than centred in half a row. */
-.hn-shut {
-  flex: 0 0 auto;
-  /* The bar is justify-content: flex-end and the mark is absolutely centred,
-     so left is something this has to claim for itself. */
-  margin-right: auto;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  min-height: 40px;
-  color: var(--ink-soft);
-  transition: color 0.15s;
-}
-.hn-shut:hover { color: var(--ink); }
-/* Wearing .ses-shut as well as this, so the mark turns and the word opens the
-   way it does in a listen. session.css loads after this file, so its own
-   `margin: -8px` would win and the row would lose the auto that holds this
-   against the left edge; and its inline-flex box is sized by the mark, where
-   this one claims a 40px square for the thumb. Both said again here, together,
-   because the pair only makes sense together. */
-.hn-shut.ses-shut {
-  margin: -8px auto -8px 0;
-  width: auto;
-  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.1em;
-  text-transform: uppercase; white-space: nowrap;
-}
+
 @media (prefers-reduced-motion: reduce) {
   .hn .beacon-stage,
   .beacon-art-wrap,
-  .hn--choosing .beacon-art-wrap,
   .beacon-card,
   .hn-crown,
-  .hn--choosing .hn-crown,
   .hn-bar-mark,
   .hn-foot,
   .hn-controls,
@@ -2340,7 +1895,6 @@ span.hn-bar-word { cursor: default; }
    place that draws it says which it means, and the day one of them wants
    something else this is the hook that is already there. */
 .fd-compare--mark { padding: 2px; }
-
 
 .fd-list { display: flex; flex-direction: column; gap: 52px; }
 /* Rows carry their own rule and sit against each other, so the gap between
@@ -3026,12 +2580,10 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
      None at all on a phone *while the crown is doing the travelling*, and
      the crown says so on the cross — without that, a screen where the morph
      cannot run has a header with nothing in it, which is what "it disappears
-     into nothing" was. Also not while the picker is open. The crown is
-     what arrives in this row now — it travels there as the pane scrolls and
-     stays — so a second copy fading in behind it is the two logos Miyel
-     caught on a slow drag. The picker is the exception because floor one
-     *is* the picker while it is open, so there is no crown to arrive. */
-  .hn--morph:not(.hn--choosing) .hn-bar-mark { display: none; }
+     into nothing" was. The crown is what arrives in this row now — it
+     travels there as the pane scrolls and stays — so a second copy fading
+     in behind it is the two logos Miyel caught on a slow drag. */
+  .hn--morph .hn-bar-mark { display: none; }
   /* ── And only over the beacon, 2026-09-20 ────────────────────────────
      Miyel: "remove LN logo from address book. this only lives on beacon
      and journal." The book's header is its own — ADDRESS BOOK and the count,
@@ -3313,12 +2865,7 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
      jump, and not tappable while it is gone. */
   .hn-down { transition: opacity 0.18s linear; }
   .hn--moved .hn-down { opacity: 0; pointer-events: none; }
-  /* And while a record is being chosen, 2026-09-24. The journal is not under
-     the picker — floor two is display: none — so there is nothing down there
-     to point at. It never showed before only because the floor could not
-     outgrow the screen; now that it grows with the picker, the pane is deep
-     and the chevron was measured in at the foot of the covers. */
-  .hn--choosing .hn-down { opacity: 0; pointer-events: none; }
+
   .hn-down:hover { color: var(--ink-soft); }
   .hn-down:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; border-radius: 6px; }
   /* ── The chevron, larger, and breathing, 2026-09-20 ──────────────────
@@ -3485,7 +3032,6 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
      to display: none would take the switch off the desk with the carets. */
   .hn-crown { display: none; }
   .hn-controls { display: contents; }
-
 
   /* The bar belongs to the right page: the mark centred over the band, the
      lights at the page's right edge, and once the wall has scrolled the
@@ -4038,105 +3584,6 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .hn-pane--home .hp-recent-tile img { transition: none; }
 }
 .hn-pane--home .hp-recent-set { align-items: flex-start; gap: 8px; }
-
-/* ── The note in the middle of the rule ────────────────────────────────────
-   Miyel, 2026-09-19: "maybe there can be a music note in the middle of the
-   hairline that breaks it into two centred — that way there's a glyph but
-   not next to the text." Which is the whole argument for it and against
-   where the last one was: a mark beside a word is a second voice saying the
-   same thing, and a mark *in* the rule is the rule having a middle.
-
-   ♪ and not a drawn icon. It is already this site's stand-in for a record
-   with no cover — the empty beacon and an unanswering tile both wear it —
-   so the floor is not being taught a new character.
-
-   No gap is cut in the border; the note simply sits on it, on a patch of the
-   page's own colour, which is the oldest trick there is and the only one
-   that keeps the line a border. It works because everything from the cross
-   down to this row is transparent: the colour behind the note is `--bg`
-   itself, in either theme, and never a panel that would show as a patch.
-
-   The keeper's way in wears it. A visitor's row wore it too, until the row
-   went on 2026-09-27; nothing stands in a visitor's slot now. */
-/* The ♪ that sat in the break in the rule is gone: the keeper's slot is a
-   ring with two words in it, and a mark over a mark is a mark explaining
-   one. */
-
-
-/* ── The picker gets the whole screen back ─────────────────────────────────
-   Everything above this comment describes a floor with a record and its past
-   side by side. While a record is being chosen there is no past on screen —
-   the picker stands where it was — and the two-column grid had nowhere to put
-   the picker but the 76px column the three small covers had been using. That
-   is what it did: a search box 76px wide, ranged right, beside a 235px empty
-   slot. Broken from the morning the second column arrived until 2026-09-19.
-
-   The rules it broke were all still there and all still correct; they are in
-   .hn--choosing above, written when this screen was one column, and every one
-   of them lost on source order to a `.hn-pane--home` rule of equal weight
-   further down this file. So this is the same handful of declarations again
-   with the pane in front of them, rather than a second answer: one column,
-   the choosing paddings, the small cover.
-
-   If the picker's screen is ever changed, change it in .hn--choosing and let
-   this block inherit — it exists only to outrank the grid. */
-.hn--choosing .hn-pane--home .hn-screen {
-  grid-template-columns: minmax(0, 1fr);
-  justify-content: stretch;
-  column-gap: 0;
-  row-gap: 14px;
-  padding: calc(env(safe-area-inset-top, 0px) + 80px) 24px 40px;
-}
-/* ── And the card stands down, as it was always told to ───────────────────
-   `.hn--choosing .beacon-stage` above has collapsed the card to nothing since
-   the picker was built, and it was silently doing nothing from the morning
-   the second column arrived: `display: contents` makes an element generate no
-   box, and a box is exactly what a max-height collapse needs. The stage was
-   flattened so the cover and the name could become grid items of the screen,
-   and flattening it took away the height it was animating to zero. What was
-   left on screen was the slot it should have been closing — full size, empty,
-   between the bar and the search. Miyel, 2026-09-19: "this phantom box
-   doesn't belong and wasn't a part of the last session." It was not; it was a
-   rule that had stopped applying.
-
-   Turning the stage back into a box while choosing removed the slot and lost
-   the movement with it — `display` cannot be transitioned, so the box arrived
-   already collapsed and the screen simply jumped. Miyel, the same hour: "it
-   happens so quickly I don't even get to appreciate it; it should be
-   intentional like all other site animations."
-
-   So the collapse is asked of the grid items instead, which is where the
-   height now lives. The cover closes from its full width to nothing on the
-   screen's own clock — .beacon-art-wrap's 0.7s on the site's curve, the same
-   0.7s the crown, the card's gap and the name below it are all moving on —
-   and the search rises into the room as it goes. `.beacon-meta` needs nothing
-   here: its own collapse is a max-height and a max-height on a grid item
-   still works.
-
-   To nothing rather than to the brief's 132px: that number was from before
-   the record moved up into the bar, when the shrunken cover was the thing a
-   picked record flew into. With the bar carrying it, a 132px square below is
-   the second copy the collapse exists to remove.
-
-   Width only. The height here is `auto` derived from `aspect-ratio: 1`, and
-   `auto` is not a value anything can be interpolated from — setting it to 0
-   took the whole 235px out in one frame while the width was still easing
-   beside it, which is the jump Miyel was watching for and not seeing.
-   Left alone, the height follows the width down and the two arrive
-   together. */
-.hn--choosing .hn-pane--home .beacon-art-wrap {
-  width: 0;
-  opacity: 0;
-}
-/* The picker takes the row under the record and the full width of it. Left to
-   auto-placement it lands in the same cell; saying so is what stops the next
-   thing added to this screen from taking the row from underneath it. */
-.hn--choosing .hn-pane--home .ses-picker {
-  grid-column: 1;
-  grid-row: 3;
-  width: 100%;
-  min-width: 0;
-}
 
 /* ── Pull down to refresh, 2026-10-06 ───────────────────────────────────────
    As the brief's mock-up draws it: dragging down at the top opens a gap

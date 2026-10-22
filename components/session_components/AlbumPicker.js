@@ -108,9 +108,10 @@ function sinceLabel(iso) {
   return days === 1 ? 'yesterday' : `${days}d ago`;
 }
 
-// `inline` is the picker inside something that is already a screen — the
-// beacon pane, where choosing a record happens on the page you are already on
-// rather than on a page of its own (Miyel's beacon brief, 2026-09-17). It
+// `inline` is the picker inside something that is already a screen — the send
+// sheet's shelf now; it was the beacon pane's, where a record was chosen on
+// the page you were already on (2026-09-17 to 2026-10-21), until the session
+// became a sheet raised from the Listen bar. It
 // changes three things and nothing else: no nav row, because the cross
 // already has one; the wrapper loses the padding it needed to clear a fixed
 // header; and the field is a hairline with a magnifier rather than a box.
