@@ -26,18 +26,72 @@
 // Owner only, and drawn only once the lock has said so: a visitor has no
 // listen to start, and the writing routes check the wristband for themselves
 // whatever is drawn.
+//
+// ── The foot of every page, 2026-10-22 ────────────────────────────────────
+// Part of the frame rather than of home (Miyel: "follow each page"): it
+// stays at the foot of the screen on every pane and over an entry opened on
+// the journal. And it steps down — one row at the foot at a time, her rule
+// of 2026-09-20 — whenever something else owns the foot: a correction's
+// Save and Cancel, a folder's tabs, the print bar, a sheet, the session it
+// raises, or a keyboard.
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { TrackLength } from '../../library/session_timers';
 
+// What owns the foot when it is on screen. A folder's tabs that have stepped
+// aside for a keyboard (ff--away) do not.
+const FOOT_ROWS = '.ln-editing-bar, .ff:not(.ff--away), .ln-print-bar, .sn-room, .sn-sheet, .lay--sheet, .lay.ses-preview';
+
+// Whether the foot is taken. Asked of the page whenever anything is added,
+// taken away or re-classed, a beat late so a burst of changes is asked once;
+// and of the focus, a tick after it moves, which is when activeElement is
+// true (HomeNav's typing effect has the same trap).
+function useFootTaken() {
+  const [taken, setTaken] = useState(false);
+  useEffect(() => {
+    let soon = 0;
+    const look = () => {
+      clearTimeout(soon);
+      soon = setTimeout(() => {
+        const at = document.activeElement;
+        const typing = !!at && (at.tagName === 'TEXTAREA' || at.isContentEditable
+          || (at.tagName === 'INPUT' && !['button', 'checkbox', 'radio', 'range'].includes(at.type)));
+        setTaken(typing || !!document.querySelector(FOOT_ROWS));
+      }, 40);
+    };
+    const watch = new MutationObserver(look);
+    watch.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+    document.addEventListener('focusin', look);
+    document.addEventListener('focusout', look);
+    look();
+    return () => {
+      clearTimeout(soon);
+      watch.disconnect();
+      document.removeEventListener('focusin', look);
+      document.removeEventListener('focusout', look);
+    };
+  }, []);
+  return taken;
+}
+
 export default function ListenBar({ held, live = false }) {
+  const taken = useFootTaken();
+  // Said on the document while the bar is up, so a page laid over the
+  // journal can keep its last lines clear of it (nav.css, html[data-listen]).
+  useEffect(() => {
+    if (taken) return undefined;
+    document.documentElement.setAttribute('data-listen', '');
+    return () => document.documentElement.removeAttribute('data-listen');
+  }, [taken]);
   // A line and nothing else; the bar is what you press, not the grip.
   const grip = <span className="lb-grip" aria-hidden="true" />;
+  const down = taken ? ' lb--down' : '';
 
   if (!held) {
     return (
-      <Link href="/session" className="lb">
+      <Link href="/session" className={'lb' + down} aria-hidden={taken || undefined} tabIndex={taken ? -1 : undefined}>
         {grip}
         Listen
       </Link>
@@ -52,7 +106,9 @@ export default function ListenBar({ held, live = false }) {
   return (
     <Link
       href="/session"
-      className="lb lb--held"
+      className={'lb lb--held' + down}
+      aria-hidden={taken || undefined}
+      tabIndex={taken ? -1 : undefined}
       title={`Back to ${held.album}`}
       aria-label={`Back to ${held.album}${lit ? `, ${lit.title}` : ''}`}
     >
