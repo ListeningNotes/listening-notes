@@ -703,6 +703,32 @@
   justify-content: flex-end;
 }
 .ses { position: relative; }
+/* ── In a sheet, the three words are a row under the grip, 2026-10-22 ──────
+   Miyel: "make discard, draft, and post more visible at the top", picked over
+   keeping them at the foot. On a phone and a desk alike — one shape — stuck
+   just under the grip's band however far the listen is scrolled, the writing
+   going under it as it goes under the band. The cost, said when she chose:
+   a longer reach for a thumb than the foot was (2026-10-17). At the top it is
+   out of the keyboard's way, so it no longer steps down while a note is
+   written. A listen opened cold keeps the foot, and a desk's corner row. */
+.lay.lay--sheet .ses-bar,
+.lay.lay--sheet .ses--wide .ses-bar {
+  position: sticky;
+  top: 22px;
+  left: auto; right: auto; bottom: auto;
+  z-index: 30;
+  margin-top: 22px;
+  justify-content: center;
+  padding: 6px 16px 12px;
+  background: var(--bg);
+  border-top: 0;
+  border-bottom: 1px solid var(--border);
+}
+.lay.lay--sheet .ses--typing .ses-bar { transform: none; pointer-events: auto; }
+/* And the page under it starts under it, with no foot to clear. */
+.lay.lay--sheet .ses-body--page { padding-top: 22px; padding-bottom: calc(40px + env(safe-area-inset-bottom, 0px)); }
+.lay.lay--sheet .ses--wide .ses-body--desk { padding-top: 28px; }
+.lay.lay--sheet .ses--wide .ses-record { top: 96px; }
 
 /* ── The picker ────────────────────────────────────────────────────────── */
 /* Room for the nav row. On the page it is fixed and floats over the top,

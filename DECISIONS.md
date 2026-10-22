@@ -2362,10 +2362,12 @@ it rather than behind the clock. It is sixteen short of the inset, because
 that is where the site's fixed rows start (`--safe-top`); at the inset's
 full height it cut their tops off. Nothing where the inset is zero.
 
-**Discard · Save draft · Post at the foot; on a desk, in a row at the
-top.** Discard asks twice. Save draft ends the listen and keeps its words —
-the draft was always saving itself — where the pull only lowers it
-(2026-10-21; it was the pull down as a word until then). Post opens the entry
+**Discard · Save draft · Post in a row under the sheet's grip, phone and
+desk alike, 2026-10-22, Miyel's pick** over the foot, at the cost of a
+longer reach (the foot was for the thumb). Discard asks twice. Discard and
+Save draft end the listen and go back to the picker in the sheet — "discard
+and draft technically are back" — and so does a track note's Cancel; the
+grip, pressed or pulled, puts the sheet away. Opened cold: the foot. Post opens the entry
 as it will look, with Go back and a green Post? that posts — Miyel's pick,
 2026-10-17, over posting straight from the session. The word was Preview
 until then; testers did not know what a preview was.
@@ -2374,13 +2376,12 @@ until then; testers did not know what a preview was.
 There is no header for it to land in.
 
 **The session is a sheet raised from the Listen bar, and lowering is not
-ending, 2026-10-21.** Raised, it covers home from just under the status bar
-and opens on the picker: *What are you putting on?*, Sent to you with each
-sender's face, Drafts, then search. The pull, Escape and the caret lower it —
-the record stays in hand, the beacon stays lit, and the bar carries the cover,
-the lit track and the live dot. Discard, Save draft and Post end it and still
-lift the needle. Reverses "leaving the screen ends it" (2026-09-16): what she
-objected to was a listen she had *shut*, and shutting is those three words.
+ending, 2026-10-21.** It stops 44 under the status bar and opens on the
+picker — *What are you putting on?*, Sent to you with faces, Drafts, search —
+and its grip is a tab, pulled from anywhere or pressed. Lowered, the record
+stays in hand, the beacon lit, the bar carrying cover, track and live dot.
+Reverses "leaving the screen ends it" (2026-09-16): she objected to a listen
+she had *shut*, and shutting is Discard, Save draft and Post.
 
 **The mobile version is not a reduced version.** Every screen holds one thing
 and runs full-bleed on both devices; nothing exists on one and not the other.

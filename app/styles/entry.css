@@ -247,19 +247,30 @@
    band of the page's own colour rather than a line on nothing: a grip with no
    ground floated over the writing as it scrolled under it (2026-10-21), and
    the writing goes under this instead. touch-action none, so a drag on it is
-   the sheet's and never a scroll. */
+   the sheet's and never a scroll. A button since 2026-10-22: pressed, it puts
+   the sheet down, which is how a mouse does it (LayerEntry). */
 .lay-grip {
   position: sticky;
   top: 0;
   z-index: 212;
-  height: 22px;
-  margin-bottom: -22px;
   display: flex;
   justify-content: center;
+  width: 100%;
+  height: 22px;
+  margin: 0 0 -22px;
+  padding: 0;
+  border: 0;
   background: var(--bg);
   touch-action: none;
-  cursor: grab;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
+.lay-grip:hover::before { opacity: 0.9; }
+.lay-grip:focus-visible { outline: none; }
+.lay-grip:focus-visible::before { opacity: 1; outline: 2px solid var(--ink-faint); outline-offset: 3px; }
+/* The corner's caret stands down on a sheet: the grip puts it down, and the
+   sheet's top is the three words' row (.ses-bar, session.css). */
+.lay--sheet .lay-back-slot { display: none; }
 .lay-grip::before {
   content: '';
   display: block;

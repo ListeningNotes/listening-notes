@@ -59,7 +59,7 @@ import AlbumNotes from '../../components/session_components/steps/AlbumNotes';
 import SessionPreview from '../../components/session_components/steps/SessionPreview';
 import Trouble from '../../components/session_components/Trouble';
 import TrackNotePage from '../entries/[slug]/TrackNotePage';
-import { useBeforeLeaving, useLayerExit } from '../../components/main_components/LayerEntry';
+import { useBeforeLeaving } from '../../components/main_components/LayerEntry';
 import { announce } from '../../hooks/useListeningBeacon';
 
 // How long the picked cover takes to reach the header. The step body slides in
@@ -695,14 +695,8 @@ export default function SessionPage() {
   // Set while a listen is being thrown away, so the sheet's own way out does
   // not write the draft it is in the middle of deleting.
   const discarding = useRef(false);
-  // Set by Save draft, which ends the listen and keeps its words, so the
-  // sheet's way out knows it is an ending this time and not a lowering.
-  const ending = useRef(false);
-  const exit = useLayerExit();
   const layered = useBeforeLeaving(async () => {
     if (discarding.current) return true;
-    const ends = ending.current;
-    ending.current = false;
     // A track note keeps its own words as they are typed (TrackNotePage), so
     // putting one down is only putting the song away. There is no listen to
     // write a draft of.
@@ -712,11 +706,12 @@ export default function SessionPage() {
     }
     if (!s.saved && !(await s.saveDraft())) return false;
     // ── Lowering is not ending, 2026-10-21 ──────────────────────────────
-    // The pull, Escape and the desk's caret put the listen down: the record
-    // stays in hand and the Listen bar carries it until it is raised again
+    // The pull, Escape and the grip put the listen down: the record stays
+    // in hand and the Listen bar carries it until it is raised again
     // (Miyel's brief, home and the session). Save draft, Discard and Post
-    // are the endings, and only they take the record off the desk.
-    if (!ends && !s.saved && pending?.album) {
+    // are the endings, and only they take the record off the desk — the
+    // first two without leaving the sheet, since 2026-10-22 (below).
+    if (!s.saved && pending?.album) {
       keepInHand();
       return true;
     }
@@ -749,7 +744,7 @@ export default function SessionPage() {
 
 
   // Back to the picker. Nothing is confirmed and nothing is lost: a listen with
-  // writing on it is kept as a draft first, so it is waiting under Unfinished
+  // writing on it is kept as a draft first, so it is waiting under Drafts
   // when the picker comes back.
   async function leave() {
     // Kept, always — not only when something has been written. A record you
@@ -772,15 +767,28 @@ export default function SessionPage() {
     return true;
   }
 
-  // ── The three words at the foot, 2026-09-29 ──────────────────────────────
-  // Save draft keeps the listen and leaves. The draft was already saving
-  // itself as you went and again on the way out, so this is a visible way
-  // out rather than a new ability: over the journal it closes the sheet the
-  // way the pull does, and the sheet's own hook writes the draft first;
-  // opened cold it puts the record down and shows the picker.
-  function saveDraftAndLeave() {
-    if (exit) { ending.current = true; exit(); return; }
-    leave();
+  // ── The three words, 2026-09-29 ─────────────────────────────────────────
+  // Save draft keeps the listen and leaves it. The draft was already saving
+  // itself as you went, so this is a visible way out rather than a new
+  // ability: the record comes off the desk and the picker comes back.
+  //
+  // ── Back to the picker, and the sheet stays up, 2026-10-22 ─────────────
+  // Over the journal it used to close the sheet the way the pull does.
+  // Miyel, with the sheet on her phone: "discard and draft technically are
+  // back (or should work that way)". In a sheet that opens on the picker,
+  // ending a listen lands on choosing the next one, and the grip is what puts
+  // the whole thing away. It replaced a back caret that lived in the corner
+  // for an hour. Opened cold it always did this.
+  async function saveDraftAndLeave() {
+    if (!(await leave())) return;
+    toTheTop();
+  }
+  // The picker comes back at the top of the sheet, not wherever the tracks
+  // had been scrolled to.
+  function toTheTop() {
+    const sheet = root.current?.closest('.lay');
+    if (sheet) sheet.scrollTo({ top: 0 });
+    else window.scrollTo({ top: 0 });
   }
 
   // Discard throws the listen away, draft included, and asks first: the
@@ -800,10 +808,10 @@ export default function SessionPage() {
     await s.discardDraft();
     try { localStorage.removeItem(PENDING_KEY); } catch { /* nothing to clear */ }
     saidSoAboutTheDesk();
-    if (exit) { exit(); return; }
     setLanding(null);
     show(null);
     discarding.current = false;
+    toTheTop();
   }
 
   // ── The way back, for a mouse, on a listen opened on its own ────────────
@@ -989,20 +997,25 @@ export default function SessionPage() {
           }}
           onLeave={() => {
             try { sessionStorage.removeItem(TRACK_NOTE_KEY); } catch { /* nothing to clear */ }
-            if (layered) router.back();
-            else setSong(null);
+            // Back to the picker, in the sheet as well, 2026-10-22: ending
+            // anything in the sheet lands on choosing the next thing, the
+            // way Discard and Save draft do; the grip puts it all away.
+            setSong(null);
+            toTheTop();
           }}
         />
       ) : !open ? (
         <AlbumPicker onPick={pick} onResume={resume} onPickSong={beginTrackNote} sheet={layered} />
       ) : (
         <>
-          {/* ── The foot: Discard · Save draft · Post ────────────────────
+          {/* ── The three words: Discard · Save draft · Post ─────────────
               The band the entry's correction bar is (.ln-editing-bar), with
               three words: the one that ends the listen faint, the one that
-              keeps it in ink, the one that goes forward underlined. On a desk
-              the same three sit in a row at the top (.ses-bar). Only on the
-              session: the preview has its own foot, with its own words.
+              keeps it in ink, the one that goes forward underlined. In a
+              sheet they are a row under the grip, phone and desk alike
+              (2026-10-22, her pick); opened cold, the foot on a phone and a
+              row at the top on a desk (.ses-bar). Only on the session: the
+              preview has its own foot, with its own words.
 
               Post, not Preview, 2026-10-17. Miyel: "some people found it
               confusing that it says preview because they don't really
