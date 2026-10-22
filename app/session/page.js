@@ -133,6 +133,26 @@ export default function SessionPage() {
 
   const s = useListeningSession({ step });
 
+  // ── The bar's track, lit again when the sheet is raised, 2026-10-21 ──────
+  // Lowered, the record in hand carries the track that was lit (keepInHand,
+  // below), and the bar says it. Raised, the browser's copy of the draft puts
+  // it back on air only if something had been written, so a listen lowered
+  // after pressing a name came back with nothing lit while the bar had just
+  // said which track it was. Whenever the tracklist is in and nothing is lit,
+  // for as long as this is the record — opening it can run twice (React's
+  // development mode does, and the second clears what the first lit), so it
+  // is held until another record is opened rather than spent on the first go.
+  const relight = useRef(pending?.lit ? { ...pending.lit, album: pending.album } : null);
+  useEffect(() => {
+    const lit = relight.current;
+    if (!lit || !s.tracks?.length || s.onAir !== null) return;
+    if (s.albumInput && s.albumInput !== lit.album) { relight.current = null; return; }
+    const at = s.tracks.findIndex((t, i) => (t.number || i + 1) === lit.number && t.title === lit.title);
+    if (at >= 0) s.putOnAir(at);
+  // putOnAir is a state setter and never changes.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [s.tracks, s.onAir, s.albumInput]);
+
   // ── How wide the listen is, which is not how wide the screen is ─────────
   // On a desk the listen opens over the journal, beside the spine, and the
   // spine is dragged to whatever width its keeper likes (useSpineWidth). So
