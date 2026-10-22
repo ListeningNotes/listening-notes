@@ -53,6 +53,7 @@ const EMPTY = {
   // Which way the site opens for somebody who has never touched the switch:
   // 'light', 'dark', or null for the default. See Lightswitch.
   theme: null,
+  moved_to: null,
   // False until the welcome screen has run. Not null: "we have not asked yet"
   // and "they answered no" are the same answer here, and false is the one a
   // fresh copy needs before its database has a row in it at all.
@@ -70,6 +71,10 @@ const WRITABLE = [
   'bioanswers',
   'definitions',
   'theme',
+  // This journal moved, 2026-10-21: where it lives now, when it lives
+  // somewhere else (migrations/040_moved.sql). Tidied, and never the
+  // journal's own address, by the route that takes it (app/api/settings).
+  'moved_to',
   // The uploaded portrait. Written by /api/portrait rather than by a form, but
   // it goes through the same door as everything else in this table.
   'portrait_data', 'portrait_mime',
@@ -192,6 +197,10 @@ const SETTINGS_FIELDS = [
   'portrait_mime', 'portrait_position', 'rig_icon', 'rig',
   'portrait_code_url', 'display_name', 'serial', 'setup_complete',
   'bioanswers', 'theme',
+  // Where the journal lives now, if it moved (2026-10-21): public on
+  // purpose, since its beacon says it to every friend's journal and visitors
+  // are sent there.
+  'moved_to',
 ];
 // One boolean about the vault, answered inside the same read rather than by a
 // second one: the layout wants to know whether research is on, it does not need
@@ -323,6 +332,20 @@ export async function pull_keeper_name() {
     const [row] = await database`SELECT keeper_name FROM settings WHERE id = 1`;
     return String(row?.keeper_name || '').trim() || null;
   } catch {
+    return null;
+  }
+}
+
+// Where this journal lives now, if it moved — on its own and narrow, because
+// the beacon asks it on every read (app/api/public/beacon), and a query on a
+// timer is never widened. Null for a journal that has not moved; a failure
+// reads as not moved, since a beacon must not fail over a move.
+export async function pull_moved_to() {
+  try {
+    const [row] = await database`SELECT moved_to FROM settings WHERE id = 1`;
+    return String(row?.moved_to || '').trim() || null;
+  } catch (error) {
+    if (error?.name === 'NoJournalHere') throw error;
     return null;
   }
 }

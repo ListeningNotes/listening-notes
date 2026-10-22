@@ -89,7 +89,10 @@ export function tidyJournal(value) {
 export function journalUrl(address) {
   const host = tidyJournal(address);
   if (!host) return '';
-  const local = /^(localhost|127\.0\.0\.1)(:\d+)?$/.test(host);
+  // Plain http for this machine, by name or number — and for any name under
+  // localhost, which is always this machine (a test's journals, one.localhost
+  // and two.localhost, reading each other; 2026-10-21).
+  const local = /^((?:[a-z0-9-]+\.)*localhost|127\.0\.0\.1)(:\d+)?$/.test(host);
   return (local ? 'http://' : 'https://') + host;
 }
 

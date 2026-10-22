@@ -94,6 +94,17 @@ export function journalAddress(host) {
   return moved && at === moved.from ? moved.to : at;
 }
 
+// Whether `address` is the journal this request reached, by either name it
+// answers to: the address asked at, or the new address of the one asked at
+// its old. A journal never says it moved to itself (This journal moved,
+// 2026-10-21) — a visitor sent there would be sent on again, round in a
+// circle — and a copy made after its keeper filled that in brings the value
+// along to the new address, where it names the journal it is in.
+export async function isHere(address) {
+  const at = tidyHost(address);
+  return !!at && journalAddress(at) === journalAddress(await hostHere());
+}
+
 export class NoJournalHere extends Error {
   constructor(host) {
     super('There is no journal at this address.');

@@ -1416,6 +1416,13 @@ cannot see, and it never learns whether the visitor keeps one; a send that
 carried a journal has a button in the inbox; a card's or a cover's code can
 be scanned. The paste field is the fallback for an address read aloud.
 
+**A journal that moved says so, and a book changes only on its keeper's
+press, 2026-10-21.** Its keeper puts where it lives now in Settings; its
+beacon says it, visitors are sent on, and a friend's Inbox shows "[name]
+moved" with Update (Miyel's pick). Never written into a book by itself: a
+journal taken over could otherwise move its friends' sends and messages
+anywhere. Never the journal's own address, which is a circle.
+
 **Compare is not a destination; it is your page about someone,
 2026-09-12; built 2026-09-13.** A face or a name in the feed, or a row in
 the book, opens `/dashboard/people/[id]`: records you both have, rated

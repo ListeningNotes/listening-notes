@@ -17,7 +17,8 @@
 
 import { requireWristband } from '@/library/wristband';
 import { pull_settings, save_settings } from '@/library/settings_actions';
-import { hosting } from '@/library/hosting_directory';
+import { hosting, isHere } from '@/library/hosting_directory';
+import { tidyJournal } from '@/library/return_address';
 
 export async function GET() {
   const settings = await pull_settings();
@@ -31,6 +32,15 @@ export async function PATCH(request) {
   try {
     const body = await request.json();
     if (hosting()) delete body.site_address;
+    // This journal moved, 2026-10-21: kept in the one spelling an address is
+    // kept in (tidyJournal), and never this journal's own — the address it
+    // was asked at, or the one a copy keeps in its own field — which would
+    // send its visitors round in a circle. Empty clears it.
+    if ('moved_to' in body) {
+      const to = tidyJournal(body.moved_to);
+      const own = tidyJournal((await pull_settings())?.site_address);
+      body.moved_to = to && to !== own && !(await isHere(to)) ? to : '';
+    }
     const settings = await save_settings(body);
     return Response.json({ settings });
   } catch (error) {

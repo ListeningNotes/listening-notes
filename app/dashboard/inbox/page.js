@@ -4,7 +4,7 @@
 
 import { Fragment, useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Archive, ArrowCounterClockwise, ArrowUUpLeft, Article, BookOpen, Broadcast, Check, Envelope, Files, HandWaving, LinkSimple, MusicNoteSimple, PencilSimple, PencilSimpleLine, Plus, Shuffle, User, VinylRecord, X } from '@phosphor-icons/react';
+import { Archive, ArrowCounterClockwise, ArrowsClockwise, ArrowUUpLeft, Article, BookOpen, Broadcast, Check, Envelope, Files, HandWaving, LinkSimple, MusicNoteSimple, PencilSimple, PencilSimpleLine, Plus, Shuffle, Signpost, User, VinylRecord, X } from '@phosphor-icons/react';
 import Link from 'next/link';
 import SiteNav, { LnMark } from '../../../components/main_components/SiteNav';
 import MiniAddressBook from '../../../components/main_components/MiniAddressBook';
@@ -74,6 +74,8 @@ const KIND = {
   song: MusicNoteSimple,
   wave: HandWaving,
   back: ArrowUUpLeft,
+  // A friend whose journal moved, 2026-10-21: a signpost, for a new address.
+  moved: Signpost,
 };
 
 // Small and soft, from 2026-10-17: Miyel chose the marks in the page's
@@ -207,6 +209,9 @@ export default function Inbox({ layered = false, inPane = false, sent: sentFromB
   // somebody just added from here, and the offer to wave at them.
   const [waves, setWaves] = useState([]);
   const [openWave, setOpenWave] = useState(null);
+  // A friend's move, open, and the one being taken (2026-10-21).
+  const [openMove, setOpenMove] = useState(null);
+  const [takingMove, setTakingMove] = useState(null);
   const [wavingTo, setWavingTo] = useState(null);
   // ── Messages, 2026-09-28 ───────────────────────────────────────────────
   // Somebody's words, addressed to this journal's keeper: written from an
@@ -619,6 +624,7 @@ export default function Inbox({ layered = false, inPane = false, sent: sentFromB
     if (kind !== 'send') setOpenRow(null);
     if (kind !== 'message') { setOpenMessage(null); setReplying(null); }
     if (kind !== 'wave') setOpenWave(null);
+    if (kind !== 'moved') setOpenMove(null);
     if (kind !== 'back') setOpenBack(null);
     setSureOf(null);
     setComparing(null);
@@ -936,6 +942,8 @@ export default function Inbox({ layered = false, inPane = false, sent: sentFromB
   // An LN. Admin letter is pinned above all of it, never in among it, and
   // there is only ever one (library/letterhead.js).
   const letter = messages.find(m => m.admin) || null;
+  // Friends whose journals said they moved, waiting on Update (movedRow).
+  const moves = people.filter(p => p.moved_to);
   const letterId = letter && !letter.seen_at ? letter.id : null;
   useEffect(() => {
     if (!letterId) return;
@@ -1148,6 +1156,74 @@ export default function Inbox({ layered = false, inPane = false, sent: sentFromB
               </button>
               <button className="ib-act" onClick={() => setHolding(null)}>
                 Never mind
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // ── A friend who moved, 2026-10-21 ─────────────────────────────────────
+  // Their journal said, in its beacon, that it lives somewhere new, and the
+  // friends round wrote it on their row in the book (people.moved_to). The
+  // row says "[name] moved" with their face as their new journal shows it;
+  // Update takes the new address, on the row while it is shut and among the
+  // doors once it is open, beside Visit (Miyel's pick: "let them know and
+  // then update ... on a button click"). Above the list, under the letter,
+  // since it waits on the keeper rather than having happened at a time.
+  async function takeMove(person) {
+    if (takingMove) return;
+    setTakingMove(person.id);
+    const r = await fetch(`/api/people/${person.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ moved: true }),
+    }).catch(() => null);
+    if (r?.ok) {
+      const d = await fetch('/api/people').then(x => x.json()).catch(() => null);
+      if (d?.people) setPeople(d.people);
+      setOpenMove(null);
+    }
+    setTakingMove(null);
+  }
+
+  function movedRow(person) {
+    const isOpen = openMove === person.id;
+    const who = person.name || tidyJournal(person.address);
+    const there = journalUrl(person.moved_to);
+    return (
+      <div key={`moved-${person.id}`} className={'ib-r ib-r--moved' + (isOpen ? ' ib-r--open' : '')}>
+        <div className="ib-rline">
+          <button
+            className="ib-rhead"
+            aria-expanded={isOpen}
+            onClick={() => { shutOthers('moved'); setOpenMove(isOpen ? null : person.id); }}
+          >
+            <span className="ib-newdot" aria-hidden="true" />
+            <Kind of="moved" />
+            <span className="ib-rsaid">
+              <span className="ib-rttl">{who} moved</span>
+            </span>
+            <span className="ib-rface" aria-hidden="true">
+              <User size={15} weight="regular" />
+              <img src={`${there}/api/portrait`} alt="" loading="lazy" onError={e => { e.currentTarget.style.display = 'none'; }} />
+            </span>
+          </button>
+          {!isOpen && (
+            <button className="ib-radd" onClick={() => takeMove(person)} disabled={takingMove === person.id}>Update</button>
+          )}
+        </div>
+        {isOpen && (
+          <div className="ib-open ib-open--doors">
+            <div className="ib-doors fr-doors-row">
+              <a className="fr-door" href={carrySender(there, me, { known: true })} target="_blank" rel="noopener noreferrer">
+                <BookOpen size={22} weight="regular" aria-hidden="true" />
+                Visit
+              </a>
+              <button type="button" className="fr-door" onClick={() => takeMove(person)} disabled={takingMove === person.id}>
+                <ArrowsClockwise size={22} weight="regular" aria-hidden="true" />
+                Update
               </button>
             </div>
           </div>
@@ -1796,13 +1872,14 @@ export default function Inbox({ layered = false, inPane = false, sent: sentFromB
                   <div className="ib-list" style={{ gap: 10 }}>
                     {[...Array(4)].map((_, i) => <div key={i} className="own-skeleton" style={{ height: 46 }} />)}
                   </div>
-                ) : submissions.length === 0 && cameBack.length === 0 && waves.length === 0 && messages.length === 0 ? (
+                ) : submissions.length === 0 && cameBack.length === 0 && waves.length === 0 && messages.length === 0 && moves.length === 0 ? (
                   <div className="own-empty">Nothing has been sent to you yet.</div>
                 ) : (
                   <>
                     {/* An LN. Admin letter first of everything: the top of the
                         inbox is where the brief pins it. */}
                     {letter && letterCard(letter)}
+                    {moves.length > 0 && <div className="ib-list ib-moves">{moves.map(movedRow)}</div>}
                     {heldBlock()}
                     {/* Everything else, newest first: a soft mark, who did
                         what, and one thing at the row's end. No dates and no

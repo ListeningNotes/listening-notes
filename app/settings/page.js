@@ -175,6 +175,8 @@ export default function SettingsPage({ layered = false }) {
   const [hosted, setHosted] = useState(false);
 
   const [address, setAddress] = useState('');
+  // Where the journal lives now, if it moved (2026-10-21).
+  const [movedTo, setMovedTo] = useState('');
 
   const load = useCallback(async () => {
     const s = await fetch('/api/settings').then(r => r.json());
@@ -182,6 +184,7 @@ export default function SettingsPage({ layered = false }) {
     setSettings(row);
     setHosted(s.hosted === true);
     setAddress(row.site_address || '');
+    setMovedTo(row.moved_to || '');
   }, []);
 
   useEffect(() => {
@@ -340,6 +343,23 @@ export default function SettingsPage({ layered = false }) {
           <h2 className="st-h">On your home screen</h2>
           <AddToHomeScreen explain />
         </div>
+
+        {/* This journal moved, 2026-10-21 (Miyel's words for the title): for a
+            journal that now lives at another address — a copy moved onto
+            the hosted site, or a hosted journal moved out. Its beacon says
+            where it went, so friends' journals offer their keepers the new
+            address, and visitors are sent on (app/layout.js); its keeper,
+            signed in, still sees it, and an empty field undoes it. */}
+        <Section
+          title="This journal moved"
+          note="If your journal lives at a new address now, put it here. Visitors are sent there, and your friends’ journals offer to update their address books. Leave it empty if it hasn’t moved."
+          onSave={async () => {
+            const d = await send('/api/settings', { moved_to: movedTo });
+            setMovedTo(d?.settings?.moved_to || '');
+          }}
+        >
+          <input className="st-field" value={movedTo} onChange={e => setMovedTo(e.target.value)} placeholder="new address" inputMode="url" autoCapitalize="none" autoComplete="off" />
+        </Section>
 
         {/* The only way out. The route has existed since the wristband did
             and nothing ever called it, so signing out meant clearing cookies.

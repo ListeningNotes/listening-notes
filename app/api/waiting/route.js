@@ -30,6 +30,7 @@ import { count_pending_reports } from '@/library/report_actions';
 import { any_unseen_messages } from '@/library/message_actions';
 import { any_unseen_waves } from '@/library/wave_actions';
 import { any_unseen_came_back } from '@/library/came_back_actions';
+import { any_moves } from '@/library/people_actions';
 
 export async function GET(request) {
   const blocked = await requireWristband(request);
@@ -44,6 +45,8 @@ export async function GET(request) {
       any_unseen_messages(),
       any_unseen_waves(),
       any_unseen_came_back(),
+      // A friend who moved, waiting on Update (2026-10-21).
+      any_moves().catch(() => false),
     ]);
     // `fresh`, 2026-10-20: whether anything in the inbox is new — the one dot
     // on its door (Miyel's pick: letters, messages, sends, waves). Never a
