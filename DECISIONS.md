@@ -1430,6 +1430,13 @@ moved" with Update (Miyel's pick). Never written into a book by itself: a
 journal taken over could otherwise move its friends' sends and messages
 anywhere. Never the journal's own address, which is a circle.
 
+**Update carries a move through the journal, never into an entry,
+2026-10-21.** The press changes the friend's address in the Outbox,
+came-back rows, waves, messages and sends with the book, all at once; a
+credit on an entry keeps the address it was sent from. A journal keeps the
+addresses it lived at (`moved_from`, private), so its sends from there are
+still its own when they come back.
+
 **Compare is not a destination; it is your page about someone,
 2026-09-12; built 2026-09-13.** A face or a name in the feed, or a row in
 the book, opens `/dashboard/people/[id]`: records you both have, rated

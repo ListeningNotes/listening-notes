@@ -11,7 +11,7 @@
 import { requireWristband } from '@/library/wristband';
 import { pull_people, save_person, ask_journal_name } from '@/library/people_actions';
 import { tidyJournal } from '@/library/return_address';
-import { pull_settings } from '@/library/settings_actions';
+import { pull_own_addresses } from '@/library/settings_actions';
 
 export async function GET(request) {
   const blocked = await requireWristband(request);
@@ -19,7 +19,11 @@ export async function GET(request) {
 
   try {
     const people = await pull_people();
-    return Response.json({ people });
+    // And every address this journal answers to, where it lives and where
+    // it lived (2026-10-21), for the feed to know this journal's own sends
+    // when they come back — the keeper's to know, so here and not on a page.
+    const own = await pull_own_addresses().catch(() => []);
+    return Response.json({ people, own });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
@@ -36,9 +40,10 @@ export async function POST(request) {
       return Response.json({ error: "That doesn't look like a web address." }, { status: 400 });
     }
     // A journal compared with itself is nothing, and a keeper in their own
-    // address book is a row that can only confuse the feed.
-    const own = tidyJournal((await pull_settings()).site_address);
-    if (own && address === own) {
+    // address book is a row that can only confuse the feed — at the address
+    // it lived at before, too (2026-10-21).
+    const own = await pull_own_addresses().catch(() => []);
+    if (own.includes(address)) {
       return Response.json({ error: 'That is this journal.' }, { status: 400 });
     }
     // Whether this is somebody new to the book, so the page knows to offer a

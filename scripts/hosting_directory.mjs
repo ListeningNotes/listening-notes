@@ -245,8 +245,20 @@ if (what === 'key') {
     fail(`${error?.message || error} Nothing changed.`);
   }
   const sql = neon(way);
+  // Where it lived (settings.moved_from, 2026-10-21): the old address is kept
+  // among those it lived at, so its sends from there are known when they
+  // come back — once the journal's database has the column, which it gains
+  // the first time it is opened after the release that brings it.
+  const remembers = from && from !== to && (await sql`
+    SELECT 1 FROM information_schema.columns WHERE table_name = 'settings' AND column_name = 'moved_from'
+  `).length > 0;
   await sql.transaction([
     sql`UPDATE settings SET site_address = ${to}, portrait_code = '', portrait_code_url = '' WHERE id = 1`,
+    ...(remembers ? [sql`
+      UPDATE settings SET moved_from = ARRAY(
+        SELECT DISTINCT a FROM unnest(coalesce(moved_from, '{}'::text[]) || ${from}::text) AS a WHERE a <> ${to}
+      ) WHERE id = 1
+    `] : []),
     ...(listed ? [
       sql`DELETE FROM directory_records WHERE address = ${to}`,
       sql`DELETE FROM directory WHERE address = ${to}`,
