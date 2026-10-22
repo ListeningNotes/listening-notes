@@ -969,3 +969,66 @@ Miyel shut a listen, watched the beacon go on claiming it, and was right to.
 Reversed the same day the bar arrived: the session is a sheet lowered back
 into the bar without ending, and shutting is Discard, Save draft and Post,
 which still lift it.
+
+---
+
+## Structure — the cross's panes and the band at the foot, 2026-09-15 to 2026-10-22
+
+Current rules: DECISIONS.md → Structure, *The frame: a top row, and the Listen
+bar at the foot*, and the two entries under it.
+
+Reversed by Miyel's answers to the frame questions (2026-10-21/22): the band
+of words at the foot went for a top row, the card stopped being a pane and
+opens from the keeper's face over the page, and the swipe kept Home ↔ People
+↔ Inbox. What stood until then, as it was written:
+
+**Cross navigation.** Beacon is home. Down → journal (only from the beacon).
+Left → the pane that turns: your card, or your desk (the colophon, signed out).
+**Four panes for the keeper, three for everybody else, 2026-09-19.** Card,
+beacon, inbox, friends — and card, beacon, colophon signed out. **A stop on
+the band is a room you stand in, never a corridor you pass through.** The desk
+was a page of doors, which is a corridor: the two rooms worth being in were
+behind it and Settings is a thing you do twice a year. So the rooms took their
+own stops, Settings went to the foot of the card, and the desk left the phone.
+It is still the spine's second page above 769px, where there is no band. What
+follows is the 2026-09-15 version and still holds, apart from the count.
+
+**The cross is three panes on a phone: ID, beacon, desk, 2026-09-15.** You
+land on the beacon. Three was tried before and failed, and neither reason was
+the count — the panes were the same shape as each other and nothing said where
+you were. Both are fixed: every pane is a different kind of thing now (a
+portrait over writing, a record over the journal, a hero over rows), and a band
+at the foot names all three all the time.
+
+It replaced two panes and a button. Two existed because sideways meant two
+things — about you on the left, your tools on the right — and the button that
+resolved it never stopped feeling misplaced wherever it was put, through six
+placements. The gesture that would have replaced the button cannot exist: the
+left edge belongs to the rail (see the four ruled-out approaches above). Three
+is also the more balanced arrangement — the beacon centred, the person on one
+side, their tools on the other. With two, one page always carries more.
+
+The book was an interpretation, not a rule. What it gave this project was an
+object and then the writing underneath, and that survives at any pane count.
+
+**The band at the foot: Card · Beacon · Friends · Inbox, 2026-09-15, widened
+2026-09-19.** **The order is by depth, not by subject:** two of the four panes
+have a second floor and two do not, so they go flat, deep, deep, flat rather
+than letting a single-floor pane sit between the two that go down. Down should
+mean the same thing on neighbouring stops.
+
+A glyph over a word, the pane you are on in ink and the rest
+pale. It is the whole of what is down there — it replaced the dots, the edge
+carets and the mini beacon. Every mark on it is one this site already uses for
+that exact thing, so none has to be learned twice.
+
+Pressing a name moves the rail exactly as a swipe does, because it is the
+visible version of the gesture and not an alternative to it: somebody presses
+Friends once, watches it move, and swipes from then on. That was always what the
+carets were for, and a word does it better than a chevron — a chevron says
+there is something that way and a word says what.
+
+The labels carry the meaning and the glyphs are decoration that has to earn
+17px. If one ever needs explaining, all three go and the words stay. An open
+book for the desk is wrong whatever else is: the book is the journal, and the
+journal is *down* from the beacon, not sideways.

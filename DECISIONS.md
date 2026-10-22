@@ -96,8 +96,23 @@ were rewritten the same day, while nobody else had a clone.
 
 ## Structure
 
-**Cross navigation.** Beacon is home. Down → journal (only from the beacon).
-Left → the pane that turns: your card, or your desk (the colophon, signed out).
+**The frame: a top row, and the Listen bar at the foot, 2026-10-22, Miyel's
+answers.** The band of words at the foot is gone. The keeper's face sits top
+left and opens the card over the page; Home · People · Inbox sit top right as
+House, Users and Envelope, and only the lit one wears its word, underlined —
+`.ln-word`'s logic. Tap a word or swipe: the swipe is Home ↔ People ↔ Inbox,
+and the card is no longer a stop. The archive has the band and the card pane.
+
+**A visitor's top row is their face and the LN. mark, no words, 2026-10-22.**
+People moved to the commons, so there is nothing there for a visitor to press,
+and a visitor has no Listen bar. The Source line and the version still stand
+at the foot of the card.
+
+**The Listen bar is the foot of every page of the keeper's, 2026-10-22** —
+part of the frame, not of home ("follow each page"). Where a page has its own
+bar at the foot — a correction, the print bar, an open sheet — it steps down:
+one row at the foot at a time. Phone first; the desk keeps its two pages until
+she has seen the phone (her call).
 
 **The cross is one route, not two.** A swipe that navigated would unmount the
 pane being left and lose its scroll. The gesture has to be continuous and
@@ -210,55 +225,6 @@ there. The sitewide row is 28px of padding either side of a centred mark, and
 three tools and a door reach into it on a 375px phone — so the row becomes the
 menu while the menu is open and the mark comes back when it shuts. The card
 has two tools and 29px to spare and keeps its mark.
-
-**Four panes for the keeper, three for everybody else, 2026-09-19.** Card,
-beacon, inbox, friends — and card, beacon, colophon signed out. **A stop on
-the band is a room you stand in, never a corridor you pass through.** The desk
-was a page of doors, which is a corridor: the two rooms worth being in were
-behind it and Settings is a thing you do twice a year. So the rooms took their
-own stops, Settings went to the foot of the card, and the desk left the phone.
-It is still the spine's second page above 769px, where there is no band. What
-follows is the 2026-09-15 version and still holds, apart from the count.
-
-**The cross is three panes on a phone: ID, beacon, desk, 2026-09-15.** You
-land on the beacon. Three was tried before and failed, and neither reason was
-the count — the panes were the same shape as each other and nothing said where
-you were. Both are fixed: every pane is a different kind of thing now (a
-portrait over writing, a record over the journal, a hero over rows), and a band
-at the foot names all three all the time.
-
-It replaced two panes and a button. Two existed because sideways meant two
-things — about you on the left, your tools on the right — and the button that
-resolved it never stopped feeling misplaced wherever it was put, through six
-placements. The gesture that would have replaced the button cannot exist: the
-left edge belongs to the rail (see the four ruled-out approaches above). Three
-is also the more balanced arrangement — the beacon centred, the person on one
-side, their tools on the other. With two, one page always carries more.
-
-The book was an interpretation, not a rule. What it gave this project was an
-object and then the writing underneath, and that survives at any pane count.
-
-**The band at the foot: Card · Beacon · Friends · Inbox, 2026-09-15, widened
-2026-09-19.** **The order is by depth, not by subject:** two of the four panes
-have a second floor and two do not, so they go flat, deep, deep, flat rather
-than letting a single-floor pane sit between the two that go down. Down should
-mean the same thing on neighbouring stops.
-
-A glyph over a word, the pane you are on in ink and the rest
-pale. It is the whole of what is down there — it replaced the dots, the edge
-carets and the mini beacon. Every mark on it is one this site already uses for
-that exact thing, so none has to be learned twice.
-
-Pressing a name moves the rail exactly as a swipe does, because it is the
-visible version of the gesture and not an alternative to it: somebody presses
-Friends once, watches it move, and swipes from then on. That was always what the
-carets were for, and a word does it better than a chevron — a chevron says
-there is something that way and a word says what.
-
-The labels carry the meaning and the glyphs are decoration that has to earn
-17px. If one ever needs explaining, all three go and the words stay. An open
-book for the desk is wrong whatever else is: the book is the journal, and the
-journal is *down* from the beacon, not sideways.
 
 **A flip and then a slide were built for a two-pane cross and are both gone,
 2026-09-15.** What is worth keeping here is that 0.4s on `cubic-bezier(0.22, 0.61, 0.36, 1)` — the entry layer's arrival — is
