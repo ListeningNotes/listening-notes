@@ -218,7 +218,7 @@ The furniture — visual pieces
       IdentityCard.js          The ID: the portrait full width and square — the same object an entry's album art is — then the name, four counts — albums, songs, and the two flags in their colours — and the pinned record or song. Send and Add left it on 2026-09-19, and left the beacon too on 2026-09-27; a visitor sees the keeper here and nowhere else. This is the About page
       IdentificationCardEditor.js  Editing the card in place
       ListeningBeacon.js       The beacon — what is playing, or last played
-      ListenBar.js             The way into a listen: a bar at the foot of home, the session closed — Listen at rest; with a listen lowered, its cover, the lit track and the live dot. Both raise /session as a sheet; the one thing shaped like a button
+      ListenBar.js             The way into a listen: a bar at the foot of home, the session closed — Start a listen at rest; with a listen lowered, its cover, the lit track and the live dot. Both raise /session as a sheet; the one thing shaped like a button
       Journal.js               The wall of covers, with its search, filters and sort
       JournalFilters.js        The filter sheet — a popover on a desk, a pull-down sheet on a phone — and the year range
       AlbumTile.js             One record on that wall — a card for a record with a listen behind it, a page with its corner folded for a record known only by its track notes; the folder shape went on 2026-10-13 (Journal.js gathers entries into records, by title, artist and year)

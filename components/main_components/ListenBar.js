@@ -12,8 +12,11 @@
 // back into it.
 //
 // ── Two states, one object ────────────────────────────────────────────────
-// At rest it says Listen, and pressing it raises the session as a sheet over
-// home, opening on the picker. With a listen put down — the sheet lowered
+// At rest it says Start a listen, and pressing it raises the session as a
+// sheet over home, opening on the picker. It said Listen, the brief's word,
+// until Miyel tried it on her phone, 2026-10-22: "Listen feels so odd" — her
+// pick of four, over the beacon's glyph beside it and over the ring's Log a
+// listen; the same words the desk's way in already says. With a listen put down — the sheet lowered
 // rather than ended (Discard, Save draft and Post end it) — it carries that
 // listen: the record's cover, the track that was lit, and the live dot while
 // the beacon is saying so. Pressing it raises the listen again, words and
@@ -93,7 +96,7 @@ export default function ListenBar({ held, live = false }) {
     return (
       <Link href="/session" className={'lb' + down} aria-hidden={taken || undefined} tabIndex={taken ? -1 : undefined}>
         {grip}
-        Listen
+        Start a listen
       </Link>
     );
   }

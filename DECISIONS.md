@@ -178,8 +178,9 @@ commits on a hairline, and no tick or cross beside them. `.ln-word`, shared by
 the four bars that share that band.
 
 **One exception, 2026-10-21: the way into a listen is the Listen bar.** A
-raised panel at the foot of home, the session closed: Listen at rest, and a
-lowered listen's cover, track and live dot — the only thing on the site shaped
+raised panel at the foot of home, the session closed: *Start a listen* at rest
+(the brief's *Listen* "feels so odd", her pick, 2026-10-22), and a lowered
+listen's cover, track and live dot — the only thing on the site shaped
 like a button, because it is the only thing that starts something; it
 licenses no second one (Miyel's brief, home and the session). The ring and
 the keeper's chevron went for it: "everything leaves in exchange for this."
