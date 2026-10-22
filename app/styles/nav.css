@@ -2617,7 +2617,7 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
      pane that stays mounted while you swipe away from it, and a door to
      somebody's card sitting over the beacon is a door to the wrong page.
      Pane 0 is the turning pane; see the constants in HomeNav.js. */
-  .hn:not([data-pane="0"]) .hn-bar-tools { display: none; }
+  .hn:not(.hn--card) .hn-bar-tools { display: none; }
 
   /* ── Three panes on the rail ──────────────────────────────────────────
      ID, beacon, desk, and the beacon is where you land. Three was tried once
@@ -3594,7 +3594,7 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .hn-pane--home .hn-floor--beacon { padding-top: var(--hn-bar-h); }
 
   /* ── The second line, on the card, People and Inbox ── */
-  .hn[data-pane="0"] .hn-bar,
+  .hn--card .hn-bar,
   .hn[data-pane="2"] .hn-bar,
   .hn[data-pane="3"] .hn-bar { height: calc(var(--hn-bar-h) + var(--hn-line2)); }
   .hn-bar-words { top: calc(22px + var(--safe-top) + 58px + var(--hn-line2) / 2); }
@@ -3607,4 +3607,37 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .hn-pane--inbox { padding-top: calc(var(--hn-bar-h) + var(--hn-line2)); }
   .hn-floor--book,
   .hn-everyone { padding-top: calc(var(--hn-bar-h) + var(--hn-line2) + 8px); }
+}
+
+/* ── The card, over the page, 2026-10-22 ───────────────────────────────────
+   Out of the rail on a phone: it slides in from the left, where it used to
+   be a pane, when the face in the top row is pressed, and back out when the
+   face is pressed again or a room is (HomeNav, cardOpen). Under the top row,
+   which stays — the face says the card is what you are looking at, and its
+   ··· sits on the row's second line, where the pane's own words step aside.
+   (Miyel: "the profile should only open if you click it and not be a swipe
+   left".) */
+@media (max-width: 768px) {
+  .hn-face--card {
+    position: fixed;
+    inset: 0;
+    z-index: 94;
+    height: auto;
+    scroll-snap-align: none;
+    background: var(--bg);
+    transform: translateX(-100%);
+    visibility: hidden;
+    transition: transform 0.4s cubic-bezier(0.22, 0.61, 0.36, 1), visibility 0s linear 0.4s;
+  }
+  .hn--card .hn-face--card {
+    transform: none;
+    visibility: visible;
+    transition: transform 0.4s cubic-bezier(0.22, 0.61, 0.36, 1), visibility 0s;
+  }
+  .hn--card .hn-bar-words,
+  .hn--card .hn-bar-add { display: none; }
+  .hdr-face--open { box-shadow: 0 0 0 2px var(--ink); }
+}
+@media (max-width: 768px) and (prefers-reduced-motion: reduce) {
+  .hn-face--card, .hn--card .hn-face--card { transition: none; }
 }

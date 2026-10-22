@@ -121,6 +121,15 @@ const HOME = 1;
 // strangers and visitors can see this page"). The inbox stays the keeper's.
 const BOOK = 2;
 const INBOX = 3;
+// ── The rail starts at home on a phone, 2026-10-22 ────────────────────────
+// The card left the rail: it opens over the page from the keeper's face in
+// the top row (Header.js; DECISIONS, the frame — Miyel: "the profile should
+// only open if you click it and not be a swipe left"). The panes keep their
+// numbers — home is still 1, the book 2, the inbox 3, and the card's pane is
+// still the first of paneRefs — but the first one you can swipe to is home,
+// so a place on the rail is a pane less one. A desk's rail is a grid and is
+// never scrolled sideways.
+const RAIL_FROM = HOME;
 
 // Which face the spine was left on, per browser. Not a setting and not on the
 // settings row: it is where somebody put their own left-hand page down, the
@@ -543,9 +552,11 @@ export default function HomeNav() {
   // lock answers. Every effect that lists it re-runs then and re-attaches to
   // the panes that now exist, which is exactly right and is why they list it.
   const paneRefs = useMemo(
-    () => (authed ? [cardRef, homeRef, friendsRef, inboxRef]
-      : DIRECTORY_URL ? [cardRef, homeRef, friendsRef]
-      : [cardRef, homeRef]),
+    // A visitor's is the card and home since 2026-10-22: People moved to the
+    // commons, so a visitor's row has no words and the rail no People pane
+    // (DECISIONS, the frame). It held Everyone, wherever there was a
+    // directory, from 2026-10-07.
+    () => (authed ? [cardRef, homeRef, friendsRef, inboxRef] : [cardRef, homeRef]),
     [authed]
   );
   // Kept in step on every render, and read by the getter above. It has to be
@@ -648,7 +659,7 @@ export default function HomeNav() {
     const wall = floorRef.current;
     const rail = railRef.current;
     const onTheRail = window.matchMedia('(max-width: 768px)').matches && rail;
-    const underTheSheet = !onTheRail || Math.round(rail.scrollLeft / (rail.clientWidth || 1)) === HOME;
+    const underTheSheet = !onTheRail || Math.round(rail.scrollLeft / (rail.clientWidth || 1)) + RAIL_FROM === HOME;
     if (underTheSheet) {
       if (wall && getComputedStyle(wall).overflowY === 'auto') wall.scrollTop = 0;
       if (pane) pane.scrollTop = floorTwo(pane);
@@ -717,6 +728,16 @@ export default function HomeNav() {
 
 
   const [pane, setPane] = useState(HOME);
+  // Whether the card is open over the page, on a phone (the frame,
+  // 2026-10-22). The face opens it and closes it again, and any of the three
+  // rooms puts it away on the way there; so does Escape.
+  const [cardOpen, setCardOpen] = useState(false);
+  useEffect(() => {
+    if (!cardOpen) return undefined;
+    const shut = event => { if (event.key === 'Escape') setCardOpen(false); };
+    window.addEventListener('keydown', shut);
+    return () => window.removeEventListener('keydown', shut);
+  }, [cardOpen]);
   // Coming away from the inbox asks again what is new — leaving its pane on a
   // phone, or its sheet closing over the desk — so the dot on Inbox goes once
   // what it was for has been opened (2026-10-20).
@@ -1235,8 +1256,10 @@ export default function HomeNav() {
     const el = railRef.current;
     if (!el) return;
     const params = new URLSearchParams(window.location.search);
-    const toCard = params.get('edit') === 'card';
-    el.scrollLeft = el.clientWidth * (toCard ? 0 : HOME);
+    // At home: the rail's first place since the card left it (RAIL_FROM).
+    // /?edit=card opens the card over it instead of scrolling to a pane.
+    el.scrollLeft = 0;
+    if (params.get('edit') === 'card') setCardOpen(true);
     if (params.get('q')) {
       const home = paneRefs[HOME].current;
       if (home) home.scrollTop = secondFloorTop(home);
@@ -1253,7 +1276,7 @@ export default function HomeNav() {
     if (!el) return;
     const onScroll = () => {
       const width = el.clientWidth || 1;
-      const here = Math.round(el.scrollLeft / width);
+      const here = Math.round(el.scrollLeft / width) + RAIL_FROM;
       setPane(here);
       stir();
     };
@@ -1442,7 +1465,9 @@ export default function HomeNav() {
   function goTo(index) {
     const el = railRef.current;
     if (!el) return;
-    el.scrollTo({ left: index * el.clientWidth, behavior: ease() });
+    // A room pressed puts the card away on the way there.
+    setCardOpen(false);
+    el.scrollTo({ left: (index - RAIL_FROM) * el.clientWidth, behavior: ease() });
   }
 
   // Back to the top of whichever pane you are in. The band across the top of a
@@ -1703,17 +1728,18 @@ export default function HomeNav() {
   ] : [];
 
   const header = (
-    <div className={'hn-bar' + (down[pane] ? ' hn-bar--scrolled' : '')}>
+    <div className={'hn-bar' + (down[cardOpen ? 0 : pane] ? ' hn-bar--scrolled' : '')}>
       {/* The phone's top row, over everything else the bar holds: the face,
-          the light switch, and the three rooms (Header.js). The face goes to
-          the card's pane for now; the card opens over the page from it next
-          (the frame, stage 3). */}
+          the light switch, and the three rooms (Header.js). The face opens
+          the card over the page and closes it again; while it is open none of
+          the three is lit, because none of them is what you are looking at. */}
       <Header
-        pane={pane}
+        pane={cardOpen ? -1 : pane}
+        cardOpen={cardOpen}
         stops={stops}
         goTo={goTo}
         onHere={goBack}
-        onFace={() => goTo(0)}
+        onFace={() => setCardOpen(open => !open)}
         fresh={Boolean(waiting?.fresh)}
         lights={lights}
         mark={mark('hdr-mark-svg')}
@@ -2029,6 +2055,8 @@ export default function HomeNav() {
         + (checked && !authed ? ' hn--visitor' : '')
         + (turning ? ' hn--turning' : '')
         + (spine.dragging ? ' hn--dragging' : '')
+        /* The card open over the page, on a phone (nav.css, .hn--card). */
+        + (cardOpen ? ' hn--card' : '')
         + (filing ? ' hn--filing' : '')
         /* Which floor of the friends pane you are on, so the corner of the
            bar can be handed from the book's + to the feed's toggle without
@@ -2253,7 +2281,7 @@ export default function HomeNav() {
             a promise the page cannot keep. The cross learns the size of the
             book from the book — see onCount — and until it has, there is one
             floor. */}
-        {(authed || DIRECTORY_URL) && (
+        {authed && (
           <section
             className="hn-pane hn-pane--friends"
             ref={friendsRef}

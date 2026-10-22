@@ -38,13 +38,22 @@ import { Envelope, House, User, Users } from '@phosphor-icons/react';
 import { useBookplate } from './Bookplate';
 
 export default function Header({
-  pane, stops, goTo, onHere = null, onFace, fresh = false, lights = null, mark = null,
+  pane, stops, goTo, onHere = null, onFace, cardOpen = false, fresh = false, lights = null, mark = null,
 }) {
   const { portrait_url: portrait, keeper_name, cover_name } = useBookplate();
   const whose = keeper_name || cover_name;
   return (
     <div className="hdr">
-      <button type="button" className="hdr-face" onClick={onFace} aria-label={`About ${whose}`} title={whose}>
+      {/* The way in to the person: it opens the card over the page, and
+          closes it again (HomeNav). */}
+      <button
+        type="button"
+        className={'hdr-face' + (cardOpen ? ' hdr-face--open' : '')}
+        onClick={onFace}
+        aria-expanded={cardOpen}
+        aria-label={`About ${whose}`}
+        title={whose}
+      >
         <User size={16} weight="regular" aria-hidden="true" />
         {portrait && <img src={portrait} alt="" />}
       </button>
