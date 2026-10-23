@@ -1,0 +1,17 @@
+-- Copyright (C) 2026 Miyel Brown
+-- SPDX-License-Identifier: AGPL-3.0-or-later
+-- Where this journal lived, 2026-10-21 (moved_from, beside moved_to).
+--
+-- A send carries the address it was made from, and the entry it becomes on
+-- a friend's journal keeps it as the credit. When a journal moves, the sends
+-- it made from its old address come back naming that address, and the feed
+-- knows this journal's own sends only by the addresses it is known by
+-- (components/main_components/Feed.js, What came back). So a journal keeps
+-- the addresses it lived at before the one it lives at now: written when a
+-- journal is brought in at a new address (Bring your journal), when a copy's
+-- address is changed in Settings, and by the hosting directory's move.
+--
+-- Private: who a journal used to be is its keeper's to know. Read only by
+-- library/settings_actions.js (pull_own_addresses), never with the rest of
+-- the settings row, never on a page. Empty for a journal that never moved.
+ALTER TABLE settings ADD COLUMN IF NOT EXISTS moved_from text[];

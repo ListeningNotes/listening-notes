@@ -739,6 +739,13 @@ address (`noteArrival`), so a friend who scanned a `?from=` gift would be
 signed as the giver on their next send — and a giver's own gifts pass on
 their own copy, which is how it would have shipped.
 
+**Give became Invite, 2026-10-21, Miyel's call.** Anyone can start a journal
+at the front door, so a journal is no longer a gift: the code is an
+invitation (a ticket) to the front door's Choose your address, `?invite=`,
+and every `?gift=` link reads the same. The front door names the inviter and
+hands them to setup in the setup link, keeping nothing. Full is full for an
+invite too.
+
 **A journal is handed to you by a person, 2026-09-28.** `/get` draws its
 steps only when the link carries `?gift=`; without one it is two lines and
 the Instagram, with no form, no waiting list and no coming soon. A self-serve
@@ -1390,6 +1397,20 @@ cannot see, and it never learns whether the visitor keeps one; a send that
 carried a journal has a button in the inbox; a card's or a cover's code can
 be scanned. The paste field is the fallback for an address read aloud.
 
+**A journal that moved says so, and a book changes only on its keeper's
+press, 2026-10-21.** Its keeper puts where it lives now in Settings; its
+beacon says it, visitors are sent on, and a friend's Inbox shows "[name]
+moved" with Update (Miyel's pick). Never written into a book by itself: a
+journal taken over could otherwise move its friends' sends and messages
+anywhere. Never the journal's own address, which is a circle.
+
+**Update carries a move through the journal, never into an entry,
+2026-10-21.** The press changes the friend's address in the Outbox,
+came-back rows, waves, messages and sends with the book, all at once; a
+credit on an entry keeps the address it was sent from. A journal keeps the
+addresses it lived at (`moved_from`, private), so its sends from there are
+still its own when they come back.
+
 **Compare is not a destination; it is your page about someone,
 2026-09-12; built 2026-09-13.** A face or a name in the feed, or a row in
 the book, opens `/dashboard/people/[id]`: records you both have, rated
@@ -1778,6 +1799,13 @@ write leaving a copy lives in library/outbox.js for this; one outside it must
 ask SANDBOX, or a test reaches a real person.
 
 ---
+
+**The month's prompt is a record from the keeper's own wall, sent on a
+press, 2026-10-22.** An entry already written — its record and writing as
+they stand, read-only, never a blank box or a catalogue — goes to
+listeningnotes.blog, kept by the studio at an address nobody is shown (the
+magazine has no sign-in). The prompt arrives sealed like an LN. Admin
+letter. Say prompt and record, never question and answer (Miyel).
 
 ## Things open in the page, not over it
 

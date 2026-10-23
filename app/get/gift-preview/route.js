@@ -1,13 +1,17 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // app/get/gift-preview/route.js
-// What a gift link looks like when it is pasted into a message.
+// What an invite link looks like when it is pasted into a message. Named
+// when invites were gifts: Give became Invite on 2026-10-21 (Miyel's words,
+// INVITED BY and the ticket, over A GIFT FROM and the present).
 //
-// Give's code and link carry `?gift=<the giver's journal>` to /get, and /get
-// shows "A gift from" them on a card under the mark. This draws that card for
-// the preview a message makes of the link — the face, A GIFT FROM, the name,
-// the present — so the link says whose gift it is before anybody opens it
-// (Miyel, 2026-09-23: make the texting card look like the header). The card
+// Invite's code and link carry `?invite=<their journal>` to the front door
+// (and a gift link's `?gift=` to /get, read the same), which says who
+// invited them. This draws the card for the preview a message makes of the
+// link — the face, INVITED BY, the name, the ticket — so the link says who
+// it is from before anybody opens it (Miyel, 2026-09-23: make the texting
+// card look like the header). At the front door it is drawn with no journal
+// of its own, which is why the essay rule below stops short of it. The card
 // is the whole picture, edge to edge, so the preview reads as the card
 // itself: the first cut floated it small, under the mark and over GET YOUR
 // COPY, and in Messages it was a card inside a card (Miyel: much larger, the
@@ -23,24 +27,27 @@
 //
 // The name and the face are asked of the giver's journal through the
 // doorman's relay door, as /get asks: this is a public address that makes
-// this server fetch another. A gift from this journal itself is answered from
-// its own settings. Anything that does not answer is a 404, never a card with
-// a hole in it — a message then shows the plain title, which is honest.
+// this server fetch another. An invite from this journal itself is answered
+// from its own settings. Anything that does not answer is a 404, never a
+// card with a hole in it — a message then shows the plain title, which is
+// honest.
 //
 // Fonts as the entry's preview fetches them (app/entries/[slug]/
 // opengraph-image.js): once per process, from Google Fonts, and the picture
 // still draws in the renderer's own face if that fails. The mark is the
 // fourth copy of its path data (ComingSoon.js says where the others are).
 //
-// The present and the plain face are Phosphor's own shapes, copied in as
+// The ticket and the plain face are Phosphor's own shapes, copied in as
 // paths (regular weight, a 256 box): the renderer draws elements, and the
 // icon components are wrapped in a way it cannot read.
 
 import { ImageResponse } from 'next/og';
 import { pull_settings } from '../../../library/settings_actions';
 import { ask_journal_name } from '../../../library/people_actions';
-import { tidyJournal, journalUrl } from '../../../library/return_address';
+import { tidyJournal, journalUrl, inviterIn } from '../../../library/return_address';
 import { mayKnock, whoIsKnocking } from '../../../library/doorman';
+import { isFrontDoor } from '../../../library/front_door';
+import { hostHere } from '../../../library/hosting_directory';
 
 // Asked per request: a journal can change its name or its face, and a preview
 // is drawn rarely — once per paste, by the app the link is pasted into.
@@ -57,15 +64,18 @@ const FAINT = '#a8a8a8';
 const FONTS = new Map();
 const WANTED = [['Nunito', 700], ['DM Mono', 400]];
 
-const GIFT = 'M216,72H180.92c.39-.33.79-.65,1.17-1A29.53,29.53,0,0,0,192,49.57,32.62,32.62,0,0,0,158.44,16,29.53,29.53,0,0,0,137,25.91a54.94,54.94,0,0,0-9,14.48,54.94,54.94,0,0,0-9-14.48A29.53,29.53,0,0,0,97.56,16,32.62,32.62,0,0,0,64,49.57,29.53,29.53,0,0,0,73.91,71c.38.33.78.65,1.17,1H40A16,16,0,0,0,24,88v32a16,16,0,0,0,16,16v64a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V136a16,16,0,0,0,16-16V88A16,16,0,0,0,216,72ZM149,36.51a13.69,13.69,0,0,1,10-4.5h.49A16.62,16.62,0,0,1,176,49.08a13.69,13.69,0,0,1-4.5,10c-9.49,8.4-25.24,11.36-35,12.4C137.7,60.89,141,45.5,149,36.51Zm-64.09.36A16.63,16.63,0,0,1,96.59,32h.49a13.69,13.69,0,0,1,10,4.5c8.39,9.48,11.35,25.2,12.39,34.92-9.72-1-25.44-4-34.92-12.39a13.69,13.69,0,0,1-4.5-10A16.6,16.6,0,0,1,84.87,36.87ZM40,88h80v32H40Zm16,48h64v64H56Zm144,64H136V136h64Zm16-80H136V88h80v32Z';
+const TICKET = 'M232,104a8,8,0,0,0,8-8V64a16,16,0,0,0-16-16H32A16,16,0,0,0,16,64V96a8,8,0,0,0,8,8,24,24,0,0,1,0,48,8,8,0,0,0-8,8v32a16,16,0,0,0,16,16H224a16,16,0,0,0,16-16V160a8,8,0,0,0-8-8,24,24,0,0,1,0-48ZM32,167.2a40,40,0,0,0,0-78.4V64H88V192H32Zm192,0V192H104V64H224V88.8a40,40,0,0,0,0,78.4Z';
 const USER = 'M230.92,212c-15.23-26.33-38.7-45.21-66.09-54.16a72,72,0,1,0-73.66,0C63.78,166.78,40.31,185.66,25.08,212a8,8,0,1,0,13.85,8c18.84-32.56,52.14-52,89.07-52s70.23,19.44,89.07,52a8,8,0,1,0,13.85-8ZM72,96a56,56,0,1,1,56,56A56.06,56.06,0,0,1,72,96Z';
 
 export async function GET(request) {
   const settings = await pull_settings();
-  // /get's own drawer rule: a copy with no essay has no /get, and so no gift.
-  if (!settings.why_essay?.trim()) return new Response('Not found', { status: 404 });
+  // /get's own drawer rule: a copy with no essay has no /get, and so no
+  // invite. The front door is not a copy, and its /get is Choose your address.
+  if (!settings.why_essay?.trim() && !isFrontDoor(await hostHere())) {
+    return new Response('Not found', { status: 404 });
+  }
 
-  const giver = tidyJournal(request.nextUrl.searchParams.get('gift') || '');
+  const giver = inviterIn(request.nextUrl.searchParams);
   const own = Boolean(giver) && giver === tidyJournal(settings.site_address);
   if (!giver || (!own && !(await mayKnock('relay', whoIsKnocking(request))).allowed)) {
     return new Response('Not found', { status: 404 });
@@ -125,11 +135,11 @@ export async function GET(request) {
             : <svg width="160" height="160" viewBox="0 0 256 256"><path fill={FAINT} d={USER} /></svg>}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, marginLeft: 64 }}>
-          <div style={{ display: 'flex', fontFamily: 'DM Mono', fontSize: 40, letterSpacing: '0.2em', color: FAINT }}>A GIFT FROM</div>
+          <div style={{ display: 'flex', fontFamily: 'DM Mono', fontSize: 40, letterSpacing: '0.2em', color: FAINT }}>INVITED BY</div>
           <div style={{ display: 'flex', fontFamily: 'Nunito', fontWeight: 700, fontSize: nameSize, lineHeight: 1.05, color: INK, marginTop: 14 }}>{name}</div>
         </div>
         <svg width="120" height="120" viewBox="0 0 256 256" style={{ flexShrink: 0, marginLeft: 40 }}>
-          <path fill={INK} d={GIFT} />
+          <path fill={INK} d={TICKET} />
         </svg>
       </div>
     ),

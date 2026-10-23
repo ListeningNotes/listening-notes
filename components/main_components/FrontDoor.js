@@ -9,12 +9,19 @@
 //
 // The journals left are said while there are some, and "We're full for now.
 // Come back soon." once there are none (her pick: "a mix of both").
+//
+// Somebody an invite link brought (InviteSheet.js) is told who invited them,
+// over Choose your address — "[Name] invited you", by their face (Miyel's
+// words, 2026-10-21) — and the inviter goes with the new journal to its
+// setup, which offers to add them and wave. An invite takes no place past
+// the last: full is full for everybody.
 
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { BookOpen, CheckCircle, Circle, MagnifyingGlass, Plus, XCircle } from '@phosphor-icons/react';
+import { BookOpen, CheckCircle, Circle, MagnifyingGlass, Plus, User, XCircle } from '@phosphor-icons/react';
 import { LnMark } from './SiteNav';
+import { journalUrl } from '../../library/return_address';
 
 const FULL = 'We’re full for now. Come back soon.';
 // Direct, in Miyel's words (2026-10-20: "lets go more direct"), with a mark
@@ -80,12 +87,27 @@ function AddressField({ value, onChange, domain, label, onEnter, disabled = fals
 }
 
 // Where a name's journal is, from wherever this page was reached.
-function journalUrl(name, domain) {
+function addressUrl(name, domain) {
   const port = window.location.port ? `:${window.location.port}` : '';
   return `${window.location.protocol}//${name}.${domain}${port}`;
 }
 
-function Welcome({ domain, left }) {
+// Who invited them: their face, in a circle as every face on the site is,
+// over the plain one, which shows when theirs does not load.
+function InvitedBy({ invite }) {
+  if (!invite) return null;
+  return (
+    <p className="fd-invite">
+      <span className="fd-invite-face" aria-hidden="true">
+        <User size={18} weight="regular" />
+        <img src={`${journalUrl(invite.address)}/api/portrait`} alt="" onError={e => { e.currentTarget.style.display = 'none'; }} />
+      </span>
+      {invite.name} invited you
+    </p>
+  );
+}
+
+function Welcome({ domain, left, invite }) {
   const [finding, setFinding] = useState(false);
   const [name, setName] = useState('');
   const [trouble, setTrouble] = useState('');
@@ -96,8 +118,10 @@ function Welcome({ domain, left }) {
     setBusy(true);
     setTrouble('');
     const said = await fetch(`/api/front-door?name=${encodeURIComponent(name)}`).then(r => r.json()).catch(() => null);
-    if (said?.state === 'taken') {
-      window.location.href = journalUrl(said.name, domain);
+    // A kept word is never a door, even with a journal behind it: the
+    // studio is kept at one (2026-10-22).
+    if (said?.state === 'taken' && !said?.kept) {
+      window.location.href = addressUrl(said.name, domain);
       return;
     }
     setTrouble('There’s no journal at that address.');
@@ -109,7 +133,9 @@ function Welcome({ domain, left }) {
       <p className="fd-said">A listening journal of your own.</p>
       <div className="fr-doors-row fd-doors">
         {left > 0 ? (
-          <a className="fr-door" href="/get"><BookWithPlus />Start a journal</a>
+          <a className="fr-door" href={invite ? `/get?invite=${encodeURIComponent(invite.address)}` : '/get'}>
+            <BookWithPlus />Start a journal
+          </a>
         ) : null}
         <button type="button" className="fr-door" onClick={() => setFinding(f => !f)} aria-expanded={finding}>
           <MagnifyingGlass size={22} weight="regular" aria-hidden="true" />
@@ -134,7 +160,7 @@ function Welcome({ domain, left }) {
 // (Miyel's pick, 2026-10-20: "steps that tick off, as each really
 // finishes"). The last is the page going to the journal's own address.
 const STEPS = [
-  { key: 'database', said: 'Making your database' },
+  { key: 'database', said: 'Making room for your journal' },
   { key: 'pages', said: 'Setting up your pages' },
   { key: 'address', said: 'Writing your address' },
   { key: 'open', said: 'Opening your journal' },
@@ -177,7 +203,7 @@ async function eachLine(res, heard) {
   }
 }
 
-function Start({ domain, left: firstLeft }) {
+function Start({ domain, left: firstLeft, invite }) {
   const [name, setName] = useState('');
   const [state, setState] = useState(null);
   const [left, setLeft] = useState(firstLeft);
@@ -208,14 +234,14 @@ function Start({ domain, left: firstLeft }) {
     const failed = said => {
       if (said?.full) setLeft(0);
       if (said?.state) setState(said.state);
-      setTrouble(said?.error || 'Your journal could not be made just now. Try again in a minute.');
+      setTrouble(said?.error || 'Your journal couldn’t be made just now. Try again in a minute.');
       setMaking(false);
     };
     try {
       const res = await fetch('/api/front-door', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name }),
+        body: JSON.stringify({ name, invite: invite?.address || '' }),
       });
       // Refused before anything was made: one answer, said at once.
       if (!res.ok) return failed(await res.json().catch(() => ({})));
@@ -234,10 +260,11 @@ function Start({ domain, left: firstLeft }) {
     }
   }
 
-  if (left <= 0) return <p className="fd-said">{FULL}</p>;
+  if (left <= 0) return <><InvitedBy invite={invite} /><p className="fd-said">{FULL}</p></>;
 
   return (
     <>
+      <InvitedBy invite={invite} />
       <h1 className="fd-h">Choose your address</h1>
       <AddressField
         value={name}
@@ -265,7 +292,11 @@ function Start({ domain, left: firstLeft }) {
   );
 }
 
-export default function FrontDoor({ path = '/', domain = '', left = 0 }) {
+export default function FrontDoor({ path = '/', domain = '', left = 0, invite = null }) {
+  // Only an inviter whose journal answered with a name: the old gift went to
+  // the deploy only then, and setup is spared asking after an address that
+  // was never a journal.
+  const known = invite?.name ? invite : null;
   return (
     <main className="fd-page">
       {/* Plain anchors, here and on Start, for the holding page's reason
@@ -274,7 +305,9 @@ export default function FrontDoor({ path = '/', domain = '', left = 0 }) {
           only a full load moves between the front door's two pages. */}
       {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
       <a href="/" className="fd-mark" aria-label="Listening Notes"><LnMark className="fd-logo" /></a>
-      {path === '/get' ? <Start domain={domain} left={left} /> : <Welcome domain={domain} left={left} />}
+      {path === '/get'
+        ? <Start domain={domain} left={left} invite={known} />
+        : <Welcome domain={domain} left={left} invite={known} />}
     </main>
   );
 }

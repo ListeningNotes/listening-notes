@@ -39,10 +39,10 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
-import { ArrowRight, BookOpen, Camera, Gift, MagnifyingGlass, PaperPlaneTilt, Plus, PushPin, Shuffle, User } from '@phosphor-icons/react';
+import { ArrowRight, BookOpen, Camera, MagnifyingGlass, PaperPlaneTilt, Plus, PushPin, Shuffle, Ticket, User } from '@phosphor-icons/react';
 import CodeScanner from './CodeScanner';
 import SendSheet from './SendSheet';
-import GiveSheet from './GiveSheet';
+import InviteSheet from './InviteSheet';
 import WaveSheet from './WaveSheet';
 import { carrySender, journalUrl, tidyJournal } from '../../library/return_address';
 import { useBookplate } from './Bookplate';
@@ -320,8 +320,8 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null, 
   const [filing, setFiling] = useState(false);
   const [said, setSaid] = useState('');
   const [sendingTo, setSendingTo] = useState(null);
-  // Give's sheet, opened from beside the +. See GiveSheet.js.
-  const [giving, setGiving] = useState(false);
+  // Invite's sheet, opened from beside the +. See InviteSheet.js.
+  const [inviting, setInviting] = useState(false);
   // Somebody just added, and the offer to wave at them (WaveSheet.js).
   const [wavingTo, setWavingTo] = useState(null);
   // An address that arrived in a link, held rather than filed — see the note
@@ -733,24 +733,25 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null, 
     </button>
   );
 
-  // ── Give, opposite Add, 2026-09-22 ──────────────────────────────────────
-  // Add is for people who have a journal; Give is for the ones who do not
-  // (Miyel's brief, About, /get and Give). The left-hand control where Add is
-  // the right: one each side, as every header on this site has — a pair of
-  // them side by side in one corner was a toolbar, and "we don't do that on
-  // any other page" (Miyel). A bare mark, like the + it faces. It steps aside
-  // while the address field is open, when the left is the camera's, and
-  // comes back as the field goes rather than blinking.
-  const give = (
+  // ── Invite, opposite Add, 2026-09-22 ────────────────────────────────────
+  // Add is for people who have a journal; Invite is for the ones who do not
+  // (Miyel's brief, About, /get and Give; Give became Invite, and its gift a
+  // ticket, 2026-10-21). The left-hand control where Add is the right: one
+  // each side, as every header on this site has — a pair of them side by
+  // side in one corner was a toolbar, and "we don't do that on any other
+  // page" (Miyel). A bare mark, like the + it faces. It steps aside while
+  // the address field is open, when the left is the camera's, and comes
+  // back as the field goes rather than blinking. Its classes are Give's.
+  const invite = (
     <button
       type="button"
       className={'fr-give' + (adding ? ' fr-give--away' : '')}
-      onClick={() => setGiving(true)}
+      onClick={() => setInviting(true)}
       inert={adding ? true : undefined}
-      aria-label="Gift someone a journal"
-      title="Gift someone a journal"
+      aria-label="Invite someone"
+      title="Invite someone"
     >
-      <Gift size={18} weight="regular" aria-hidden="true" />
+      <Ticket size={18} weight="regular" aria-hidden="true" />
     </button>
   );
 
@@ -772,8 +773,8 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null, 
           camera, and the camera is the thing the sentence is there for.
 
           Only while the field is open: a camera on a page of faces is a
-          camera pointed at nothing. The rest of the time the left is Give's. */}
-      {give}
+          camera pointed at nothing. The rest of the time the left is Invite's. */}
+      {invite}
       {adding && (
         <button
           type="button"
@@ -1350,7 +1351,7 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null, 
           so that closing it does not depend on the face surviving a refresh
           of the book. */}
       <SendSheet open={Boolean(sendingTo)} person={sendingTo} onClose={() => setSendingTo(null)} />
-      <GiveSheet open={giving} onClose={() => setGiving(false)} />
+      <InviteSheet open={inviting} onClose={() => setInviting(false)} />
       <WaveSheet person={wavingTo} onClose={() => setWavingTo(null)} />
     </>
   );

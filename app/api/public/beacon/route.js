@@ -55,7 +55,8 @@
 // untouched: the needle goes in through /api/needle, which is nobody's cache.
 
 import { pull_needle, pull_recent_listens, sameRecord } from '@/library/needle';
-import { answerNoJournal } from '@/library/hosting_directory';
+import { answerNoJournal, forwarding, hostHere, isHere } from '@/library/hosting_directory';
+import { pull_moved_to } from '@/library/settings_actions';
 
 const BEFORE_THAT = 3;     // covers drawn under the beacon
 const EDGE_TTL = 10;       // seconds Vercel may answer this without asking us
@@ -78,6 +79,23 @@ const NOTHING = { state: 'none', album: '', artist: '', art: '', track: '', at: 
 // private until somebody decides otherwise (2026-10-07).
 const plain = ({ album, artist, art, slug, track }) => ({ album, artist, art, slug, track });
 
+// ── This journal moved, 2026-10-21 ────────────────────────────────────────
+// Where this journal lives now, when it lives somewhere else — for the
+// friends' journals that read this beacon and offer their keepers the new
+// address (app/api/friends/beacons): asked at the address it moved off (on a
+// deployment that hosts journals, FORWARDING_ADDRESS), or set by its keeper
+// in Settings, This journal moved. What its keeper set comes first, so a
+// journal that moves again is one step away from its old address, not two.
+// A new field an older copy ignores, and absent for a journal that has not
+// moved.
+async function movedTo() {
+  const to = await pull_moved_to();
+  if (to && !(await isHere(to))) return { moved_to: to };
+  const moved = forwarding();
+  if (moved && (await hostHere()) === moved.from) return { moved_to: moved.to };
+  return {};
+}
+
 const beforeThat = (recent, album) => {
   const here = sameRecord(album);
   return recent.filter(row => !here || sameRecord(row.album) !== here).slice(0, BEFORE_THAT);
@@ -88,7 +106,7 @@ export async function GET() {
     // Both at once. The covers under the beacon are wanted whichever state
     // wins, and in the quiet state the first of them IS the beacon, so one
     // read answers both questions.
-    const [needle, recent] = await Promise.all([pull_needle(), pull_recent_listens()]);
+    const [needle, recent, where] = await Promise.all([pull_needle(), pull_recent_listens(), movedTo()]);
 
     // ── A listen is open ──────────────────────────────────────────────────
     // Whether one IS open is decided where the listen lives
@@ -107,6 +125,7 @@ export async function GET() {
         // no time, and the listen's own time arrives once it is logged.
         at: null,
         before: beforeThat(recent, needle.album).map(plain),
+        ...where,
       }, { headers: CACHED });
     }
 
@@ -120,7 +139,7 @@ export async function GET() {
     // The track comes with it when there is one, so shutting a record leaves
     // the song you were on up rather than falling back to the album title.
     const last = recent[0];
-    if (!last) return Response.json(NOTHING, { headers: CACHED });
+    if (!last) return Response.json({ ...NOTHING, ...where }, { headers: CACHED });
     return Response.json({
       state: 'logged',
       album: last.album, artist: last.artist, art: last.art, track: last.track || '',
@@ -130,6 +149,7 @@ export async function GET() {
       // copy can ignore, nothing renamed.
       at: last.at,
       before: recent.slice(1, 1 + BEFORE_THAT).map(plain),
+      ...where,
     }, { headers: CACHED });
   } catch (error) {
     // No journal at this address is not a journal with nothing playing.

@@ -16,7 +16,7 @@ import { tidyJournal, journalUrl } from './return_address.js';
 // the top without a second query or a sort in the page.
 export async function pull_people() {
   return await database`
-    SELECT id, address, name, added_at, pinned_at, private
+    SELECT id, address, name, added_at, pinned_at, private, moved_to
     FROM people
     ORDER BY (pinned_at IS NULL), pinned_at, lower(coalesce(name, address)), added_at
   `;
@@ -97,7 +97,7 @@ export async function pull_public_people() {
 
 export async function pull_person(id) {
   const [row] = await database`
-    SELECT id, address, name, added_at, pinned_at, private FROM people WHERE id = ${id} LIMIT 1
+    SELECT id, address, name, added_at, pinned_at, private, moved_to FROM people WHERE id = ${id} LIMIT 1
   `;
   return row || null;
 }
@@ -107,6 +107,87 @@ export async function remove_person(id) {
     DELETE FROM people WHERE id = ${id} RETURNING id
   `;
   return row || null;
+}
+
+// ── A friend who moved, 2026-10-21 ────────────────────────────────────────
+// A friend's journal that says, in its beacon, that it lives somewhere new
+// (app/api/public/beacon, `moved_to`) is written down here by the friends
+// round (app/api/friends/beacons), for the Inbox to show "[Name] moved" with
+// Update; one it no longer says is taken off. Only the keeper's press moves
+// the address itself (take_move): nothing in a journal changes unless its
+// keeper changes it, and a journal that was taken over could otherwise send
+// its friends' messages anywhere. Written only where something changed, so a
+// round costs nothing for a book in which nobody moved. `heard` is the
+// round's rows, by person id; a journal never heard from says nothing.
+export async function note_moves(people, heard) {
+  const said = new Map(heard.map(row => [row.id, row]));
+  for (const person of people) {
+    const row = said.get(person.id);
+    if (!row || row.state === 'unknown') continue;
+    const where = tidyJournal(row.moved_to || '');
+    const to = where && where !== person.address ? where : null;
+    if ((person.moved_to || null) === to) continue;
+    await database`
+      UPDATE people SET moved_to = ${to} WHERE id = ${person.id} AND address = ${person.address}
+    `;
+  }
+}
+
+// The Inbox's Update: the address in the book becomes the one the friend's
+// journal gave, and the notice goes. Where the book already holds that
+// address — the friend was added again at the new one — the old row is the
+// one that goes, and the one already there is handed back.
+//
+// And the rest of this journal follows the book, 2026-10-21 (Miyel: "do the
+// fix"): everything here that names the friend's old address names the new
+// one — what was sent them and is still out (`sent`), what of theirs came
+// back (`came_back`), their wave, their messages and what they are about,
+// and what they sent here (`submissions`) — so the Outbox clears when a
+// record comes back from the new address, the feed does not bring back as
+// new what already came back, and a reply goes where they live now. Where a
+// row for the new address is already here, the old one is the one that
+// goes. Never an entry: a credit on this journal's own pages is its
+// keeper's writing, and goes on naming the address it was sent from. All of
+// it at once with the book's row, or none of it.
+export async function take_move(id) {
+  const [person] = await database`SELECT id, address, moved_to FROM people WHERE id = ${id} LIMIT 1`;
+  const from = person?.address;
+  const to = tidyJournal(person?.moved_to || '');
+  if (!from || !to) return null;
+  const [there] = await database`SELECT id FROM people WHERE address = ${to} AND id <> ${id} LIMIT 1`;
+  await database.transaction(sql => [
+    ...carryAlong(sql, from, to),
+    there
+      ? sql`DELETE FROM people WHERE id = ${id}`
+      : sql`UPDATE people SET address = ${to}, moved_to = NULL WHERE id = ${id}`,
+  ]);
+  return await pull_person(there ? there.id : id);
+}
+
+// An address written loosely — a scheme, a path, capitals, as a visitor's
+// send may have typed it — read the way tidyJournal reads it, in Postgres.
+// For the columns that came from outside; the book's own are already tidy.
+function carryAlong(sql, from, to) {
+  return [
+    sql`UPDATE sent SET journal = ${to} WHERE journal = ${from}`,
+    sql`DELETE FROM came_back old WHERE old.journal = ${from}
+          AND EXISTS (SELECT 1 FROM came_back here WHERE here.journal = ${to} AND here.slug = old.slug)`,
+    sql`UPDATE came_back SET journal = ${to} WHERE journal = ${from}`,
+    sql`DELETE FROM waves WHERE address = ${from} AND EXISTS (SELECT 1 FROM waves WHERE address = ${to})`,
+    sql`UPDATE waves SET address = ${to} WHERE address = ${from}`,
+    sql`UPDATE messages SET from_journal = ${to}
+          WHERE lower(split_part(regexp_replace(btrim(from_journal), '^https?://', '', 'i'), '/', 1)) = ${from}`,
+    sql`UPDATE messages SET about_journal = ${to}
+          WHERE lower(split_part(regexp_replace(btrim(about_journal), '^https?://', '', 'i'), '/', 1)) = ${from}`,
+    sql`UPDATE submissions SET sender_url = ${to}
+          WHERE lower(split_part(regexp_replace(btrim(sender_url), '^https?://', '', 'i'), '/', 1)) = ${from}`,
+  ];
+}
+
+// Whether a move is waiting in the book, for the Inbox's dot (/api/waiting).
+export async function any_moves() {
+  const [row] = await database`SELECT EXISTS (SELECT 1 FROM people WHERE moved_to IS NOT NULL) AS any`;
+  return row?.any === true;
 }
 
 // Asks a journal what its keeper is called, the way any visitor's browser

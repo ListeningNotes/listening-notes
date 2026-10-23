@@ -31,9 +31,66 @@
 // its row — so abandoned starts never hold a place. Nothing else is ever
 // cleared: a journal placed by hand, or set up, or written in, stays.
 
+import { cache } from 'react';
 import { neon } from '@neondatabase/serverless';
 import { hosting, forwarding, tidyHost, journalAt, place_journal, count_journals, made_at_signup, unplace_journal } from './hosting_directory.js';
 import { mintClaimCode } from './secrets.js';
+import { inviterIn } from './return_address.js';
+import { ask_journal_name } from './people_actions.js';
+import { mayKnock, whoIsKnocking } from './doorman.js';
+import { SEARCH_HEADER } from '../proxy.js';
+
+// ── Who invited them, 2026-10-21 ──────────────────────────────────────────
+// An invite link (InviteSheet.js) names the inviter's journal. The front
+// door says who it is, over Choose your address, and hands the address on
+// to the new journal's setup (app/api/front-door), which offers to add them
+// and wave. The name is asked of their journal through the doorman's relay
+// door, as /get asked it of a giver: this page makes this server fetch
+// another. Once a request, shared by the page and its link preview. No
+// name, no line — the address still goes on, and setup asks again.
+export const inviterAtTheDoor = cache(async () => {
+  const { headers } = await import('next/headers');
+  const asked = await headers();
+  const address = inviterIn(new URLSearchParams(asked.get(SEARCH_HEADER) || ''));
+  if (!address) return null;
+  const knock = await mayKnock('relay', whoIsKnocking({ headers: asked }));
+  const name = knock.allowed ? await ask_journal_name(address, 2500) : null;
+  return { address, name };
+});
+
+// What the front door's pages say about themselves (app/layout.js): the one
+// place called Listening Notes and nothing else, since it is the software's
+// own page, not a journal. An invite link's preview — what a message shows
+// when the link is pasted — says who invited them, over their face, drawn by
+// app/get/gift-preview here at the front door; only when their journal
+// answered, so the picture and the page agree.
+export async function frontDoorMetadata() {
+  const plain = { title: 'Listening Notes', description: 'A listening journal of your own.' };
+  const invite = await inviterAtTheDoor().catch(() => null);
+  if (!invite?.name) return plain;
+  const { headers } = await import('next/headers');
+  const asked = await headers();
+  const host = (asked.get('x-forwarded-host') || asked.get('host') || '').split(',')[0].trim();
+  const proto = (asked.get('x-forwarded-proto') || '').split(',')[0].trim()
+    || (/^(localhost|127\.0\.0\.1)(:\d+)?$/.test(host) ? 'http' : 'https');
+  // Miyel's words, 2026-10-21, over "A gift from".
+  const said = `Invited by ${invite.name}`;
+  return {
+    ...plain,
+    openGraph: {
+      title: said,
+      siteName: 'Listening Notes',
+      description: plain.description,
+      type: 'website',
+      images: [{
+        url: `${proto}://${host}/get/gift-preview?invite=${encodeURIComponent(invite.address)}`,
+        width: 1200,
+        height: 630,
+        alt: said,
+      }],
+    },
+  };
+}
 
 // ── The front door's own address ──────────────────────────────────────────
 // HOSTED_DOMAIN (her name): the domain the journals live under, whose bare
@@ -76,6 +133,16 @@ export const KEPT_NAMES = new Set([
   'get', 'start', 'find', 'new', 'board', 'directory', 'people', 'keepers',
   'journal', 'journals', 'listening', 'notes', 'listeningnotes', 'ln',
   'team', 'staff', 'moderator', 'mod',
+  // Miyel's, 2026-10-21: the names she wants held, and the ones a fake
+  // journal could use to pass as her or as the publication — its issues,
+  // the commons' candidate names, the donations and events she has planned.
+  'founder', 'owner', 'creator', 'editor',
+  'publication', 'issue', 'issues', 'question', 'monthly', 'annual',
+  'commons', 'counter', 'listeningroom',
+  'donate', 'donations', 'events', 'tickets',
+  // Hers, 2026-10-22: where Listening Notes is made — the publication's own
+  // journal (STUDIO_ADDRESS), shown to nobody.
+  'studio',
 ]);
 
 export function tidyName(value) {

@@ -346,6 +346,9 @@ export default function Feed({ entries = [], density = DEFAULT_DENSITY }) {
   // null until the book has answered, so an empty book and a book not yet
   // read draw differently.
   const [people, setPeople] = useState(null);
+  // Every address this journal answers to, from /api/people: where it lives
+  // and where it lived (2026-10-21). See What came back, below.
+  const [own, setOwn] = useState([]);
   // address → { entries, name, failed }. Filled as each journal answers, so
   // the first rows are on screen before the slowest journal has spoken.
   const [journals, setJournals] = useState({});
@@ -380,6 +383,7 @@ export default function Feed({ entries = [], density = DEFAULT_DENSITY }) {
       .then(d => {
         if (gone) return;
         const had = d.people || [];
+        setOwn(Array.isArray(d.own) ? d.own : []);
         setPeople(had);
         for (const p of had) {
           fetch(`${journalUrl(p.address)}/api/public/entries`, { signal: AbortSignal.timeout(EACH_MS) })
@@ -442,6 +446,9 @@ export default function Feed({ entries = [], density = DEFAULT_DENSITY }) {
   }, [open]);
 
   const me = tidyJournal(site_address);
+  // A send made from an address this journal lived at comes back naming that
+  // one, so all of them are this journal's (settings.moved_from).
+  const mine = useMemo(() => new Set([me, ...own.map(tidyJournal)].filter(Boolean)), [me, own]);
   const myName = String(keeper_name || '').trim().toLowerCase();
   // Your listen of each record, to compare against: the most recent one
   // (DECISIONS: never average across listens). It was a Map built straight
@@ -485,10 +492,10 @@ export default function Feed({ entries = [], density = DEFAULT_DENSITY }) {
     // (DECISIONS, 2026-10-06). The row the inbox keeps names the song over
     // its record (came_back.song, migration 030).
     const url = tidyJournal(entry.received_from_url);
-    if (url) return url === me;
+    if (url) return mine.has(url);
     const name = String(entry.received_from || '').trim().toLowerCase();
     return Boolean(name) && name === myName;
-  }).slice(0, SUBMISSIONS_MOST), [rows, me, myName]);
+  }).slice(0, SUBMISSIONS_MOST), [rows, mine, myName]);
 
   const recent = useMemo(() => rows.slice(0, RECENT_MOST), [rows]);
   const shown = recent;

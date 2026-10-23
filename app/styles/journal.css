@@ -648,3 +648,28 @@
   .arc-views .gd-btn { width: 34px; height: 32px; }
   .arc-views .gd-btn--on::after { left: 10px; right: 10px; bottom: 2px; }
 }
+
+/* ── The month's prompt over the wall, 2026-10-22 ─────────────────────────────
+   components/main_components/MonthPrompt.js, the keeper's only: what
+   Listening Notes asks this month, how long is left, and which record was
+   sent, between two hairlines over the covers (the blog brief's third
+   frame). On a desk the wall's bar moves above the grid (order: -1), and the
+   prompt goes with it, first in the source, so it stays on top. */
+.mp-note {
+  margin: 6px 16px 14px; padding: 14px 0 16px;
+  border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+@media (min-width: 769px) { .mp-note { order: -1; margin-top: 12px; } }
+.mp-when, .mp-label, .mp-how {
+  margin: 0; font-family: var(--font-label); font-size: 10px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--ink-faint);
+}
+.mp-how { color: var(--ink-soft); }
+.mp-said {
+  margin: 8px 0 12px;
+  font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
+  font-size: 20px; line-height: 1.25; color: var(--ink);
+  text-wrap: balance;
+}
+.mp-sent { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }

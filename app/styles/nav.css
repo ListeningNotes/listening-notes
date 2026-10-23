@@ -3717,4 +3717,8 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
      line was the roof of a bar standing on the floor, and at the top of the
      wall, under the record, it only cut the page in two. */
   .hn .hn-pane--home .arc-bar { border-top: 0; }
+  /* The month's prompt stays over the wall's line, as a desk has it
+     (journal.css, .mp-note): both lead the wall now, and the prompt is first
+     in the source. */
+  .hn .hn-pane--home .mp-note { order: -1; }
 }

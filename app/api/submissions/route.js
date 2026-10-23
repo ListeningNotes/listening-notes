@@ -6,6 +6,7 @@ import { requireWristband } from '@/library/wristband';
 import { tidyAddress, tidyJournal } from '@/library/return_address';
 import { ask_journal_name } from '@/library/people_actions';
 import { answerNoJournal } from '@/library/hosting_directory';
+import { takesPrompts, mark_prompt_record } from '@/library/month_prompt';
 
 // The email check that used to live here is gone with the field. Anything a
 // caller still sends under that key is dropped on the floor rather than
@@ -88,7 +89,22 @@ export async function POST(request) {
       album_art, collection_id, sender_url, quiet, sender_entry, song,
     } = body;
 
-    if (!album?.trim() || !artist?.trim() || !note?.trim()) {
+    // ── A record for the month's prompt, 2026-10-22 ──────────────────────
+    // Taken only by the publication's own journal, and only from another
+    // journal's server (library/month_prompt.js). Its words are the entry's
+    // own as they stood when Send was pressed, and an entry with none is
+    // still an answer — the record alone (the blog's brief) — so here, and
+    // only here, a send may come without a note.
+    const publication = await takesPrompts();
+    const forPrompt = publication && server && body.prompt && typeof body.prompt === 'object'
+      && !Array.isArray(body.prompt);
+    // And the publication's journal takes nothing else: it is nobody's
+    // friend, and its door is the magazine's address.
+    if (publication && !forPrompt) {
+      return Response.json({ error: 'Listening Notes takes records for the month’s prompt only.' }, { status: 403 });
+    }
+
+    if (!album?.trim() || !artist?.trim() || (!forPrompt && !note?.trim())) {
       return Response.json({ error: 'Album, artist, and note are required.' }, { status: 400 });
     }
 
@@ -106,7 +122,7 @@ export async function POST(request) {
     // an optional field, and rejecting a whole send over it would lose the
     // message, which is the part that mattered.
     const submission = await save_submission({
-      album, artist, year, note, submitter_name,
+      album, artist, year, note: typeof note === 'string' ? note : '', submitter_name,
       album_art, collection_id,
       sender_url: tidyAddress(sender_url),
       // Whether the sender asked not to be credited. Coerced rather than
@@ -131,6 +147,7 @@ export async function POST(request) {
         ? song.trim()
         : null,
     });
+    if (forPrompt) await mark_prompt_record(submission.id, body.prompt);
     return Response.json({ submission });
   } catch (error) {
     const nowhere = answerNoJournal(error);

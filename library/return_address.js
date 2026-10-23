@@ -89,8 +89,23 @@ export function tidyJournal(value) {
 export function journalUrl(address) {
   const host = tidyJournal(address);
   if (!host) return '';
-  const local = /^(localhost|127\.0\.0\.1)(:\d+)?$/.test(host);
+  // Plain http for this machine, by name or number — and for any name under
+  // localhost, which is always this machine (a test's journals, one.localhost
+  // and two.localhost, reading each other; 2026-10-21).
+  const local = /^((?:[a-z0-9-]+\.)*localhost|127\.0\.0\.1)(:\d+)?$/.test(host);
   return (local ? 'http://' : 'https://') + host;
+}
+
+// ── Who invited somebody, 2026-10-21 ──────────────────────────────────────
+// An invite link names the inviter's journal: `?invite=` since Gift became
+// Invite (Miyel, 2026-10-21), and `?gift=` on every link made before, which
+// still works. Reads a query (URLSearchParams) or a page's searchParams.
+export function inviterIn(query) {
+  const read = key => {
+    const value = typeof query?.get === 'function' ? query.get(key) : query?.[key];
+    return typeof value === 'string' ? value : '';
+  };
+  return tidyJournal(read('invite') || read('gift'));
 }
 
 // Where this copy is reached, from the request that reached it — what a

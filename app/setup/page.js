@@ -69,7 +69,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { CaretDown, Check, Eye, EyeSlash, Gift, User } from '@phosphor-icons/react';
+import { CaretDown, Check, Eye, EyeSlash, Ticket, User } from '@phosphor-icons/react';
 import { startRegistration } from '@simplewebauthn/browser';
 import { fonts } from '../../library/sitewide_visuals';
 import { BIO_PROMPTS, BIO_LIMIT } from '../../library/bioprompt';
@@ -78,8 +78,13 @@ import { shrink } from '../../components/main_components/IdentificationCardEdito
 import AddToHomeScreen from '../../components/main_components/AddToHomeScreen';
 import UpdateSwitch from '../../components/main_components/UpdateSwitch';
 import { usePasswordName } from '../../hooks/useJournalHost';
-import { tidyJournal, journalUrl } from '../../library/return_address';
+import { tidyJournal, journalUrl, inviterIn } from '../../library/return_address';
 import { journal_in } from '../../library/carbon_copy';
+import { DIRECTORY_URL } from '../../library/version';
+
+// Being listed where other keepers can find a journal, said at setup (AGENTS,
+// No phone-home) in Miyel's words, 2026-10-22: on by default, off in Settings.
+const LISTED_SAID = 'Other keepers can find your journal. You can turn this off in Settings.';
 import { canHoldKeys, keepFresh, markKeyHere, thisDevice, wayIn, SpareKeyShown } from '../../components/main_components/Keyring';
 
 // The password claims the journal; the home screen comes after, because it is
@@ -240,9 +245,12 @@ export default function WelcomeScreen() {
       // Unless the owner asked to see it again.
       if (status?.claimed && !(rehearse && auth.authed)) { router.replace('/'); return; }
       setRehearsing(Boolean(status?.claimed && rehearse));
-      // The giver the deploy carried — or, rehearsing, one named in the
-      // address, so the gift screen can be looked at on a claimed copy.
-      setGiftFrom(status?.gift || (rehearse ? tidyJournal(query.get('gift') || '') : ''));
+      // Who invited them: the giver a self-hosted deploy carried, or the
+      // inviter the front door named in the link that brought them here
+      // (Invite, 2026-10-21) — which is also how a rehearsal shows the
+      // screen on a claimed copy.
+      const invited = inviterIn(query);
+      setGiftFrom(status?.gift || invited);
       setHasPassword(Boolean(status?.has_password));
       setHosted(status?.hosted === true);
       let admitted = !!auth.authed;
@@ -265,8 +273,9 @@ export default function WelcomeScreen() {
         admitted = await knock(code);
         if (!admitted) setCodeFromLink(code);
         // The code comes off the address either way. It is a one-time secret
-        // and should not sit in the history or get pasted on somewhere.
-        window.history.replaceState(null, '', '/setup');
+        // and should not sit in the history or get pasted on somewhere. Who
+        // invited them stays, for a reload.
+        window.history.replaceState(null, '', invited ? `/setup?invite=${encodeURIComponent(invited)}` : '/setup');
       }
       // Who gave it is told only to a journal's own wristband, so asked again
       // once the door has opened: the gift screen is a step only for a
@@ -416,7 +425,7 @@ export default function WelcomeScreen() {
         setGiver(answer.giver);
         return;
       }
-      setHelloTrouble('Whoever gave you this journal couldn’t be reached just now. You can add them later from your book.');
+      setHelloTrouble('Whoever invited you couldn’t be reached just now. You can add them later from your book.');
       advance();
     })();
     return () => { gone = true; };
@@ -646,7 +655,7 @@ export default function WelcomeScreen() {
                   updates: 'Keep your journal up to date automatically.',
                   password: !wayKnown || (faceWay && !typingPassword) ? 'How you’ll get back in.' : 'What you’ll type to get back in.',
                   spare: 'Your spare key.',
-                  gift: giver ? `${giver.name} gifted you this journal.` : '\u00a0',
+                  gift: giver ? `${giver.name} invited you.` : '\u00a0',
                   homescreen: 'It’s yours. Put it on your home screen.',
               }[current]}
             </p>}
@@ -679,6 +688,12 @@ export default function WelcomeScreen() {
                     <span className="su-copy-pick">{busy ? 'Reading…' : 'Choose the file'}</span>
                   )}
                 </label>
+                {/* A journal brought in keeps its keeper's own choice; one
+                    from a copy older than the choice is listed, as every
+                    journal is unless switched off, and is told so here. */}
+                {DIRECTORY_URL && copy && copy.journal?.tables?.settings?.[0]?.findable !== false && (
+                  <p className="su-why">{LISTED_SAID}</p>
+                )}
                 <button type="button" className="su-go" disabled={busy || !copy} onClick={() => advance()}>Next</button>
               </div>
             )}
@@ -693,12 +708,12 @@ export default function WelcomeScreen() {
                     it off (Miyel's Board brief: "say so plainly during
                     setup"). Here, because the name is the first thing the
                     Board shows; a copy with no directory has no Board. */}
-                {/* The Board's line was here until 2026-10-20, a paragraph and
-                    then one line, and is off for now (Miyel: "we don't even
-                    know if it's called the board, it's being re-worked. just
-                    leave it off for now"). Being on the Board is still meant
-                    to be said at setup (AGENTS); its line comes back with
-                    the rework. */}
+                {/* Off from 2026-10-20 while the Board was reworked (Miyel:
+                    "we don't even know if it's called the board"), and back
+                    on 2026-10-22 in words that do not name it, her pick:
+                    anyone can start a journal at the front door now, and
+                    being listed is said at setup (AGENTS). */}
+                {DIRECTORY_URL && <p className="su-why">{LISTED_SAID}</p>}
                 <button type="submit" className="su-go" disabled={busy || !name.trim()}>Next</button>
               </form>
             )}
@@ -940,16 +955,18 @@ export default function WelcomeScreen() {
               <div className="su-fields">
                 {giver ? (
                   <>
-                    {/* A GIFT FROM, their face over the plain mark, the name
-                        under it (Miyel, 2026-09-23: the picture sandwiched
-                        between the two), then the question and the one
-                        choice — ticked, visible, one tap to undo. The
-                        heading over all of it says who gifted it, and the
-                        question is "Say hello?" (Miyel, 2026-09-28: the
-                        brief's Say hello, kept with the selection rather
-                        than made a button of its own). */}
+                    {/* INVITED BY (A GIFT FROM until 2026-10-21, and the
+                        ticket the present: Miyel's words), their face over
+                        the plain mark, the name under it (Miyel,
+                        2026-09-23: the picture sandwiched between the two),
+                        then the question and the one choice — ticked,
+                        visible, one tap to undo. The heading over all of it
+                        says who invited them, and the question is "Say
+                        hello?" (Miyel, 2026-09-28: the brief's Say hello,
+                        kept with the selection rather than made a button of
+                        its own). */}
                     <div className="su-gift">
-                      <span className="su-gift-from"><Gift size={12} aria-hidden="true" /> A gift from</span>
+                      <span className="su-gift-from"><Ticket size={12} aria-hidden="true" /> Invited by</span>
                       <span className="su-gift-face" aria-hidden="true">
                         <User size={34} weight="regular" />
                         <img src={`${journalUrl(giver.address)}/api/portrait`} alt="" onError={e => { e.currentTarget.style.display = 'none'; }} />

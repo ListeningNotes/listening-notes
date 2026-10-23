@@ -53,15 +53,15 @@ publicly):
   it opens as a layer, the way an entry does, and a swipe puts you back — on a
   desk that layer is the right page, so the spine stays beside it
 - `/dashboard/inbox` — everything that has arrived, in one list: records sent
-  to you, messages, waves, records that came back, and problems keepers
-  wrote in
+  to you, messages, waves, records that came back, a friend's journal that
+  moved (Update), and problems keepers wrote in
 - `/dashboard/report` — report a problem: one box, sent to the copy the
   software comes from
 - `/dashboard/feed` — what the journals in the address book have logged.
   Ran on down the desk's own scroll until 2026-09-15
 - `/dashboard/people` — the address book as a grid of faces (Friends), with
   the ways one gets in — a paste, a scanned code, a send that carried one —
-  and Give and Add in its header. The Friends stop on the phone's band
+  and Invite and Add in its header. The Friends stop on the phone's band
 - `/dashboard/people/[id]` — your page about one person: what you both have,
   where you agree and disagree hardest, what they sent you and how it landed
 - `/settings` — the machinery: address, the password, Back up your journal,
@@ -161,20 +161,21 @@ The front doors — receive requests, hand them off, send back responses
     drafts/[id]/route.js       DELETE one draft
     format/route.js            Assemble your notes into a post (local, no model)
     messages/route.js          Messages — POST is public: from a person on an entry here, from another copy's server replying, or an LN. Admin letter, kept only with a good seal (library/letterhead.js); GET, PATCH and DELETE are the keeper's
-    submissions/route.js       POST: a send arrives — from the visitor form or from another copy's server; GET for the owner
+    submissions/route.js       POST: a send arrives — from the visitor form or from another copy's server; GET for the owner; on the publication's own journal, a record sent for the month's prompt, its words or none, marked with the prompt
+    prompt/route.js            The month's prompt — GET the keeper's (open, and what was sent for it); POST sealed by the canonical keeper (pinned, as an LN. Admin letter is), or the keeper's press: an entry's record and its writing as they stand, to Listening Notes, once a prompt
     submissions/[id]/route.js  One send: settling it, saying it was already logged, naming who it came from; owner-only
-    settings/route.js          The settings row — public to read, owner-only to write
-    people/route.js            The address book — owner-only: the list, and filing an address
+    settings/route.js          The settings row — public to read, owner-only to write; `moved_to` is kept tidy and is never this journal's own address
+    people/route.js            The address book — owner-only: the list, with every address this journal answers to (where it lives and where it lived), and filing an address
     outbox/route.js            Where a send leaves from — owner-only: the person resolved out of the address book, the record (or the song) handed to library/outbox.js, which posts to their copy's /api/submissions, and a send that landed written to `sent`; a wave goes the same road, and so does a reply, whose recipient is read off the message it answers
     came-back/route.js         What came back — owner-only: the inbox's list, what the feed noticed, a row opened, and a row dismissed
     sent/route.js              What this journal sent that has not come back — owner-only: the inbox's Sent list, and a row removed; written only by outbox/route.js
     waves/route.js             Waves — POST is public, from another copy's server: a journal and a name, nothing else, checked and counted; GET, PATCH and DELETE are the keeper's
-    people/[id]/route.js       One person: reading them, crossing them out
+    people/[id]/route.js       One person: reading them, crossing them out, and Update — `{ moved: true }` takes the move their journal said it made, everywhere this journal names them but its entries, at once
     reports/route.js           A problem written in — POST from any copy (rate-limited, cross-origin), GET for the owner
     reports/[id]/route.js      Marking one read or dismissed
     secrets/route.js           The vault — owner-only both ways; says what is set, never the value
     setup/route.js             GET: is this copy claimed. POST: the one write that claims it — with a password, or with the key just made and none; the ring keeps only the keys the claim names
-    restore/route.js           Bring your journal — POST, behind setup's wristband and only on a copy nobody has claimed: the journal from Make a copy and a password or the key just made; restored with library/unpacking.mjs, never the vault or the keyring, and claimed in the same transaction (the password if any, the keys the claim names and no others, this copy's address, the Board's old code gone)
+    restore/route.js           Bring your journal — POST, behind setup's wristband and only on a copy nobody has claimed: the journal from Make a copy and a password or the key just made; restored with library/unpacking.mjs, never the vault or the keyring, and claimed in the same transaction (the password if any, the keys the claim names and no others, this copy's address, the address it came from kept among those it lived at, the Board's old code gone); on a deployment that hosts journals, into the database the hosting directory gives this address
     auth/login/route.js        The password, the deploy-time variable, the spare key (once, and spent by it), or — unclaimed — the claim code
     auth/check/route.js        Am I still wearing a valid wristband; renews an ageing one on the way
     auth/logout/route.js       Cuts the wristband off
@@ -186,13 +187,13 @@ The front doors — receive requests, hand them off, send back responses
     portrait/code/route.js     POST: press the journal's code out of the stored portrait — owner-only, no body
     export/route.js            The whole journal as one JSON file — owner-only; leaves secrets out. Settings zips it beside a readable page per entry. Written down as a copy, which takes the letter asking for one away
     update/route.js            Is there a newer Listening Notes — the latest public release against package.json, at most once an hour, owner-only
-    public/beacon/route.js     What the keeper is listening to — anyone may ask; cached at the edge
+    public/beacon/route.js     What the keeper is listening to — anyone may ask; cached at the edge; with `moved_to` when the journal lives somewhere else now (Settings, or asked at the address it moved off)
     public/entries/route.js    The public feed another copy reads — PUBLIC_FIELDS only, with keeper_name beside them
     public/stamps/route.js     The card's counted facts — records, songs, first entry, top genres, the two flag counts
     public/listing/route.js    The code the directory issued this journal, as plain text, or 404 — how the registry proves the address
     public/people/route.js     The people this journal's keeper added who are on the Board themselves — a name and an address each; never anybody kept private, nothing while the keeper is off the Board; checked against the directory with hashes; kept a minute. What makes "a friend away"
-    front-door/route.js        The front door only: GET the places left or whether an address is free; POST makes a journal and says where its setup is (the claim code after #)
-    friends/beacons/route.js   Everyone in the address book's beacon, through one door — owner-only; each journal's public beacon in parallel, a round kept a minute, a journal that fails asked less often, thirty on the timer — and each friend's /api/public/people on the same round, which makes `away`, the Board's friends of friends (two rings only)
+    front-door/route.js        The front door only: GET the places left or whether an address is free (and whether it is a kept word, which Find my journal never opens); POST makes a journal and says where its setup is (the claim code after #, and whoever invited them as ?invite=)
+    friends/beacons/route.js   Everyone in the address book's beacon, through one door — owner-only; each journal's public beacon in parallel, a round kept a minute, a journal that fails asked less often, thirty on the timer — and each friend's /api/public/people on the same round, which makes `away`, the Board's friends of friends (two rings only); a friend whose beacon says it moved is written down (`people.moved_to`) for the Inbox to offer
     listing/route.js           On the Board — owner-only: GET says whether this journal is listed and on the Board, and lists it if it is meant to be and is not yet (on by default, 2026-10-08); POST is the switch in Settings, through library/outbox.js
     board/route.js             Everything the Board reads, through one door on this journal (Miyel: keep the fan-out behind a single route): the first screen, a search, the keeper's own records matched (behind the wristband), and lines of keepers' own writing read from their journals by this server — 2.5 s each, kept ten minutes, back-off, only journals on the Board, counted per asker. The Board component talks to this and nothing else
     directory/route.js         The registry's list — public, read across origins: `?board` is the Board's first screen (everybody logging right now, a shuffled dozen of everybody else, the last day's records, and the community's two counts); `?q=` looks up a name or a record; `?among=` which of some hashed addresses are on the Board; `?alike=` who else logged some hashed records; plain, thirty journals and a cursor. Read from the tables, never from the journals; after answering, one round of the refresh (`gather`, only the journals due) — how the Board stays current since 2026-10-17
@@ -227,7 +228,8 @@ The furniture — visual pieces
       CodeSlot.js              A square that holds a picture and turns into that picture's code — the card's portrait and an entry's cover: the two faces, the copy and its pill, the corner mark, the wait
       AddressCode.js           A plain code for an address, drawn in the browser — what CodeSlot shows when no pressed picture can be had
       CodeScanner.js           The camera pointed at a code — the address book's way in for a card's or a cover's code
-      GiveSheet.js             Give: a code to listeningnotes.blog/get?gift=<this journal>, for a friend who has no copy — the gift at the left of the address book's header, opposite Add
+      InviteSheet.js           Invite (Give until 2026-10-21): a code to the front door, listeningnotes.blog/get?invite=<this journal>, for a friend who has no journal — the ticket at the left of the address book's header, opposite Add
+      MonthPrompt.js           The month's prompt: pinned over the keeper's wall while open (what it asks, days left, the record sent); PromptSheet, the read-only sheet an entry's ··· Submit opens — what will be published and Send to Listening Notes; useMonthPrompt, one copy for the page
       WaveSheet.js             Just added somebody: "[name] is in your address book", Wave to [name] or Not now — the one moment a wave is offered
       Dashboard.js             The desk, for the owner — Start a listen as a band, then Inbox, Feed, Address book and Settings as rows; the header holds the mark alone. On a desk only since 2026-09-19, as the spine's second page
       Friends.js               The address book as a grid of faces, pinned first; a face opens its three doors in place under its own row. Friends, under People, and /dashboard/people
@@ -289,7 +291,7 @@ The furniture — visual pieces
 The rooms — full pages assembled from furniture
   app/
     page.js                    Homepage
-    layout.js                  Wraps every page (fonts, theme)
+    layout.js                  Wraps every page (fonts, theme); a journal that moved sends a visitor on to the same page at its new address
     styles/                    The stylesheets, one per surface — see below
       base.css                 Palette, both themes, the two typefaces, resets, the pill
       nav.css                  The cross: panes, crown, carets, beacon, pitch, desk, and the nav row on other pages
@@ -312,7 +314,7 @@ The rooms — full pages assembled from furniture
     submit/page.js             Send the keeper an album
     shuffle/page.js            Redirect to a random entry
     get/page.js                Get your copy: ten steps, then the deploy button. 404s while the long note is unwritten
-    get/gift-preview/route.js  The picture a gift link (/get?gift=) unfurls into — /get's "A gift from" card — when the giver's journal answers
+    get/gift-preview/route.js  The picture an invite link (?invite=, or an old ?gift=) unfurls into — "Invited by" over their face, and the ticket — when their journal answers; drawn at the front door as well as on a journal's own /get
     get/story/page.js          The keeper's long note. 404s when unwritten. Linked from nowhere for now
     about/page.js              Redirect to / — the identity card is the about page
     session/page.js            The listen — picker, then four screens under one header
@@ -397,16 +399,16 @@ than what anyone remembers building.
 | Table | What it holds |
 |---|---|
 | `entries` | The journal. One row per listen — an album listened to twice is two entries, never an overwrite. `posted_at` is when, with its zone; `created_at` is the older naive stamp, kept and unread. `cover_code` is the dot that carried the cover into its code, stamped on the first tap — never the picture. `song` makes a row a track note, about that one song off the record in `album`; it is empty on every album listen, and nothing that numbers, counts or compares albums counts a row that has one; the card's Songs counts exactly those rows. |
-| `settings` | Everything that makes a copy someone's own: the keeper, the portrait, the links, the rig, the starting theme. Exactly one row, forced by a check on `id`. |
+| `settings` | Everything that makes a copy someone's own: the keeper, the portrait, the links, the rig, the starting theme; `moved_to`, where the journal lives now when it has moved, public because the beacon says it; and `moved_from`, the addresses it lived at before, private, read only to know its own sends when they come back; and `month_prompt`, the month's prompt as it arrived, sealed, with the record sent for it — the keeper's only. Exactly one row, forced by a check on `id`. |
 | `secrets` | What must never reach a visitor: the session secret, the password hash, the claim code, the setup window, and two API key columns nothing reads any more (Last.fm, retired 2026-09-16; Anthropic, retired 2026-09-18). One row; read only by `library/secrets.js`. |
 | `users` | The owner. One row, written at setup. |
 | `comments` | What was said under entries until 2026-09-29, when comments became messages. Nothing reads it; the rows stay, less any whose message was dismissed or whose entry was deleted. |
 | `messages` | Somebody's words to the keeper, drawn in the inbox and nowhere else. Who it is from, what was said, the entry it is about as a journal and a slug with the record as it was, the line it answers when it is a reply, `seen_at` for the dot, `replied_at`, and `comment_id` with `was_comment` for one that used to be a comment. Dismissing deletes the row. |
-| `submissions` | Albums other people have sent you. `status` is pending, reviewed (a listen was started from the row), logged, or dismissed; `entry_id` is the record a send points at, set by hand on the row (*I've already logged this*) and never by matching; that press writes nothing on the record. `song` makes a send a track rather than a record, with the record it is off still in `album` and `artist`; empty is an album send, which every send before migration 026 is. |
+| `submissions` | Albums other people have sent you. `status` is pending, reviewed (a listen was started from the row), logged, or dismissed; `entry_id` is the record a send points at, set by hand on the row (*I've already logged this*) and never by matching; that press writes nothing on the record. `song` makes a send a track rather than a record, with the record it is off still in `album` and `artist`; empty is an album send, which every send before migration 026 is. `prompt` is filled only on the publication's own journal: the month's prompt a record was sent for. |
 | `waves` | Somebody added this journal and said so: one row per waving address, the name their journal gave when asked, when it arrived, and `seen_at`. No message column, now or later; Leave it deletes the row. |
 | `came_back` | Records this journal put somebody onto, logged on their journal: one row per entry, keyed by their journal and slug, with what their feed said about it, `seen_at` for the inbox's dot and `dismissed_at` for one put away — kept, so the feed does not bring it back. Written by the keeper's own browser, from the feed's match. |
 | `sent` | Records this journal sent from its own copy, written once the other journal took them (from 2026-10-15; nothing before was kept): their address, the name the book gave them, the record or song, the cover and the note. Waiting until a `came_back` row from the same journal names the same record, matched when the list is read, or until the keeper removes it, which deletes the row. |
-| `people` | The address book: one row per journal address, the name that journal gave when it was filed, and `pinned_at` for the pinned row. The face is never stored. |
+| `people` | The address book: one row per journal address, the name that journal gave when it was filed, and `pinned_at` for the pinned row; `moved_to`, a move their journal said it made that the keeper has not taken — only Update in the Inbox changes the address, and a move taken back is forgotten. The face is never stored. |
 | `reports` | Problems keepers wrote in from their desks. Every copy has the table; only the one in `REPORTS_URL` is written to. |
 | `needle` | What is on the desk right now, for the beacon. One row; it lifts itself when nothing has touched it for twenty minutes. |
 | `sat_with` | A listen whose post was deleted: the record and when it was on, and nothing written. |

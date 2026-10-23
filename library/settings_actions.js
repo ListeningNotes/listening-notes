@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import database from './database_connection.js';
 import { DEFAULT_DEFINITIONS, mergeDefinitions } from './definitions.js';
-import { memoryOf } from './hosting_directory.js';
+import { memoryOf, forwarding, tidyHost } from './hosting_directory.js';
+import { tidyJournal } from './return_address.js';
 
 // The journal's own details — what it is called, who keeps it, the portrait on
 // the cover, the links in the nav. One row, always id 1.
@@ -53,6 +54,7 @@ const EMPTY = {
   // Which way the site opens for somebody who has never touched the switch:
   // 'light', 'dark', or null for the default. See Lightswitch.
   theme: null,
+  moved_to: null,
   // False until the welcome screen has run. Not null: "we have not asked yet"
   // and "they answered no" are the same answer here, and false is the one a
   // fresh copy needs before its database has a row in it at all.
@@ -70,6 +72,10 @@ const WRITABLE = [
   'bioanswers',
   'definitions',
   'theme',
+  // This journal moved, 2026-10-21: where it lives now, when it lives
+  // somewhere else (migrations/040_moved.sql). Tidied, and never the
+  // journal's own address, by the route that takes it (app/api/settings).
+  'moved_to',
   // The uploaded portrait. Written by /api/portrait rather than by a form, but
   // it goes through the same door as everything else in this table.
   'portrait_data', 'portrait_mime',
@@ -192,6 +198,10 @@ const SETTINGS_FIELDS = [
   'portrait_mime', 'portrait_position', 'rig_icon', 'rig',
   'portrait_code_url', 'display_name', 'serial', 'setup_complete',
   'bioanswers', 'theme',
+  // Where the journal lives now, if it moved (2026-10-21): public on
+  // purpose, since its beacon says it to every friend's journal and visitors
+  // are sent there.
+  'moved_to',
 ];
 // One boolean about the vault, answered inside the same read rather than by a
 // second one: the layout wants to know whether research is on, it does not need
@@ -325,6 +335,57 @@ export async function pull_keeper_name() {
   } catch {
     return null;
   }
+}
+
+// Where this journal lives now, if it moved — on its own and narrow, because
+// the beacon asks it on every read (app/api/public/beacon), and a query on a
+// timer is never widened. Null for a journal that has not moved; a failure
+// reads as not moved, since a beacon must not fail over a move.
+export async function pull_moved_to() {
+  try {
+    const [row] = await database`SELECT moved_to FROM settings WHERE id = 1`;
+    return String(row?.moved_to || '').trim() || null;
+  } catch (error) {
+    if (error?.name === 'NoJournalHere') throw error;
+    return null;
+  }
+}
+
+// ── Where this journal lived, 2026-10-21 ──────────────────────────────────
+// `moved_from` (migrations/041_moved_from.sql): the addresses a journal
+// lived at before the one it lives at now. A send made from one comes back
+// naming it, on the entry it became. Private, read and written only here and
+// in the claim that brings a journal in (app/api/restore), and never with
+// the rest of the row.
+
+// Every address this journal answers to, for knowing its own sends when
+// they come back (components/main_components/Feed.js): where it lives, where
+// it lived, and — on a deployment that hosts journals — the address the
+// front door forwards here (FORWARDING_ADDRESS), which this journal lived at
+// before the front door took the domain. For the keeper's eyes only.
+export async function pull_own_addresses() {
+  const [row] = await database`SELECT site_address, moved_from FROM settings WHERE id = 1`;
+  const here = tidyJournal(row?.site_address);
+  const moved = forwarding();
+  const forwarded = moved && here && tidyHost(here) === moved.to ? [moved.from] : [];
+  return [...new Set([here, ...(row?.moved_from || []).map(tidyJournal), ...forwarded].filter(Boolean))];
+}
+
+// The addresses lived at, once a journal that lived at `was` lives at
+// `here`: those it had, and `was`, and never `here` — a journal come back
+// to an old address has not left it.
+export function livedAt(before, was, here) {
+  const now = tidyJournal(here);
+  return [...new Set([...(before || []), was].map(tidyJournal).filter(a => a && a !== now))];
+}
+
+// A copy's address changed in Settings: the one it had is kept among those
+// it lived at.
+export async function note_old_address(was, here) {
+  const old = tidyJournal(was);
+  if (!old || old === tidyJournal(here)) return;
+  const [row] = await database`SELECT moved_from FROM settings WHERE id = 1`;
+  await database`UPDATE settings SET moved_from = ${livedAt(row?.moved_from, old, here)}::text[] WHERE id = 1`;
 }
 
 export async function save_settings(fields) {

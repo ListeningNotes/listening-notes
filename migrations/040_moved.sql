@@ -1,0 +1,22 @@
+-- Copyright (C) 2026 Miyel Brown
+-- SPDX-License-Identifier: AGPL-3.0-or-later
+-- This journal moved, 2026-10-21 (Miyel's name for both columns: moved_to).
+--
+-- A journal is known everywhere else by its address — in address books, on
+-- the Board, on the credits of other journals' entries — so a journal that
+-- moves needs its friends to learn where it went, not only a forward.
+--
+-- `settings.moved_to` is where this journal lives now, when it lives
+-- somewhere else: set by its keeper in Settings, This journal moved. With it
+-- the journal's beacon says where it went, and visitors are sent on there
+-- (app/layout.js). Empty for a journal that has not moved, which is nearly
+-- every one.
+--
+-- `people.moved_to` is a move noticed and not yet taken: a friend's journal
+-- said, in its beacon, that it lives somewhere new. The Inbox shows
+-- "[Name] moved" with Update, and only that press changes the address in the
+-- book (Miyel: "let them know and then update ... on a button click") —
+-- nothing in a journal changes unless its keeper changes it, and a journal
+-- that was taken over could otherwise send its friends' messages anywhere.
+ALTER TABLE settings ADD COLUMN IF NOT EXISTS moved_to text;
+ALTER TABLE people ADD COLUMN IF NOT EXISTS moved_to text;

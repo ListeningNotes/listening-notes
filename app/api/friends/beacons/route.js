@@ -52,7 +52,10 @@
 // flight (everyone, or everyone now) waits for it and then runs.
 //
 // Nothing here is stored. A round is read when a page asks and gone when the
-// process is; there is no table, no column, and nothing to delete or leak.
+// process is; there is no table, no column, and nothing to delete or leak —
+// with one exception, 2026-10-21: a friend's journal that says it moved
+// (its beacon's `moved_to`) is written on their row in the book
+// (people_actions.js, note_moves), for the Inbox to offer the Update.
 //
 // ── And their friends: a friend away, 2026-10-08 ─────────────────────────
 // The Board's second ring (Miyel's Board brief): the people the friends
@@ -67,7 +70,7 @@
 // comes from the directory, asked once a round with hashes, never from them.
 
 import { requireWristband } from '@/library/wristband';
-import { pull_people } from '@/library/people_actions';
+import { pull_people, note_moves } from '@/library/people_actions';
 import { pull_settings } from '@/library/settings_actions';
 import { boardHash } from '@/library/directory_actions';
 import { ask_directory_among } from '@/library/outbox';
@@ -195,6 +198,9 @@ async function ask(person, now, { settled = false, fresh = false } = {}) {
         // When it was sat with, from a copy new enough to say (the beacon's
         // `at`, 2026-10-06). An older copy never sends it; the row says null.
         at: typeof said?.at === 'string' && said.at ? said.at : null,
+        // Where it lives now, from a journal that moved (2026-10-21); empty
+        // from every other journal, and from one too old to say.
+        moved_to: tidyJournal(said?.moved_to || ''),
       };
     }
   } catch {
@@ -271,6 +277,9 @@ async function askEveryone({ all, fresh }, here) {
     if (!past && recent) return Promise.resolve(lastHeard(person, now));
     return ask(person, now, { settled: past, fresh });
   }));
+  // A move a friend's journal says is written down for the Inbox, and one it
+  // stopped saying is taken off; a round that could not write still answers.
+  await note_moves(people, friends).catch(() => {});
   const away = await friendsAway(people, here);
   // A round that left the first thirty as they were keeps their clock, so
   // the timer asks them again when it would have anyway.

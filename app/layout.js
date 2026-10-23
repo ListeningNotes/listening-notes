@@ -16,12 +16,15 @@ import { PATH_HEADER, NONCE_HEADER } from '../proxy';
 import { headers } from 'next/headers';
 import { isSetUp, pull_settings, coverName, titleName } from '../library/settings_actions';
 import { hasDatabase, explainDatabaseError } from '../library/database_connection';
-import { journalHere, NoJournalHere, hostHere } from '../library/hosting_directory';
-import { isFrontDoor, hostedDomain, placesLeft } from '../library/front_door';
+import { journalHere, NoJournalHere, hostHere, isHere } from '../library/hosting_directory';
+import { isFrontDoor, hostedDomain, placesLeft, inviterAtTheDoor, frontDoorMetadata } from '../library/front_door';
 import FrontDoor from '../components/main_components/FrontDoor';
 import { isCurrentCode } from '../library/portrait_code';
 import { takesReports } from '../library/report_actions';
 import { SANDBOX } from '../library/version';
+import { wristbandOnHand } from '../library/wristband';
+import { journalUrl } from '../library/return_address';
+import { redirect } from 'next/navigation';
 
 // 300 was added here for an hour, for prompt answers set light. They are set
 // the way an album title is now — display weight — so nothing reads 300 and it
@@ -60,10 +63,9 @@ const dmMono = DM_Mono({
 // with.
 export async function generateMetadata() {
   // The front door is the software's own page, not a journal, so it is the
-  // one place called Listening Notes and nothing else.
-  if (isFrontDoor(await hostHere())) {
-    return { title: 'Listening Notes', description: 'A listening journal of your own.' };
-  }
+  // one place called Listening Notes and nothing else — and an invite link's
+  // preview says who invited them (library/front_door.js).
+  if (isFrontDoor(await hostHere())) return await frontDoorMetadata();
   // An address with no journal is the software's page too, saying so, and
   // no page to keep: every name under the domain answers, so a search engine
   // is told not to file it (2026-10-21).
@@ -235,7 +237,11 @@ async function holdTheDoor() {
   if (path.startsWith('/api/')) return null;
   if (!hasDatabase()) return 'database';
   if (isFrontDoor(await hostHere())) {
-    return { reason: 'front-door', path, left: await placesLeft().catch(() => 0) };
+    return {
+      reason: 'front-door', path, left: await placesLeft().catch(() => 0),
+      // Who invited them, when an invite link brought them (Invite, 2026-10-21).
+      invite: await inviterAtTheDoor().catch(() => null),
+    };
   }
   try {
     await journalHere();
@@ -253,7 +259,23 @@ async function holdTheDoor() {
 
 export default async function RootLayout({ children, layer }) {
   const holding = await holdTheDoor();
-  const all = await pull_settings();
+  // The front door draws no journal, so it reads none — not the studio's,
+  // which answers one door at the same address (library/hosting_directory.js,
+  // studio).
+  const all = holding?.reason === 'front-door' ? {} : await pull_settings();
+
+  // ── This journal moved, 2026-10-21 ───────────────────────────────────────
+  // A visitor is sent on to where it lives now, at the same page (Settings,
+  // This journal moved). Its keeper, signed in, still sees it here — to undo
+  // the move, or to make a copy before closing it — and nobody is sent off the
+  // doors back in: the lock, Settings and setup. Never to the address it was
+  // asked at (isHere): that is a circle.
+  if (!holding && all?.moved_to && !(await isHere(all.moved_to))) {
+    const path = (await headers()).get(PATH_HEADER) || '/';
+    const stays = ['/login', '/settings', '/setup'].some(door => path === door || path.startsWith(`${door}/`));
+    const there = journalUrl(all.moved_to);
+    if (!stays && there && !(await wristbandOnHand())) redirect(`${there}${path}`);
+  }
   // The number this request's scripts are stamped with (proxy.js), for the
   // one script the layout writes itself.
   const nonce = (await headers()).get(NONCE_HEADER) || undefined;
@@ -341,7 +363,7 @@ export default async function RootLayout({ children, layer }) {
         <Bookplate settings={settings}>
           <Lightswitch>
             {holding?.reason === 'front-door'
-              ? <FrontDoor path={holding.path} domain={hostedDomain()} left={holding.left} />
+              ? <FrontDoor path={holding.path} domain={hostedDomain()} left={holding.left} invite={holding.invite} />
               : holding
               ? <ComingSoon reason={typeof holding === 'string' ? holding : holding.reason} said={holding.said} />
               : <>

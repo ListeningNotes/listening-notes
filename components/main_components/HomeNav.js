@@ -79,6 +79,7 @@ import ListeningBeacon from './ListeningBeacon';
 import ListenBar from './ListenBar';
 import Journal from './Journal';
 import Header from './Header';
+import MonthPrompt from './MonthPrompt';
 import About from './About';
 import Dashboard, { heldNow, subscribeHeld } from './Dashboard';
 // The two rooms that used to be behind the desk and are stops of their own
@@ -2215,6 +2216,9 @@ export default function HomeNav() {
           <div className="hn-floor hn-floor--wall">
             <div className="hn-floor-scroll" ref={floorRef}>
               <div className="hn-under">
+                {/* The month's prompt, pinned over the keeper's wall while it
+                    is open (MonthPrompt.js); nothing for a visitor. */}
+                {authed && <MonthPrompt authed={authed} />}
                 <Journal
                   entries={entries}
                   loading={loading}
