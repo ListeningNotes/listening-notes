@@ -1,11 +1,12 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // components/main_components/FrontDoor.js
-// The front door's pages (library/front_door.js): at `/`, the mark and two
-// doors, Start a journal and Find my journal (Miyel's words, 2026-10-20 —
-// Start wears the open book Visit wears, with a plus on its corner); at
-// `/get`, Choose your address. Drawn by the root layout in place of a
-// journal, because the front door has no journal of its own.
+// The front door's page (library/front_door.js): the mark and two doors,
+// Start a journal and Find my journal (Miyel's words, 2026-10-20 — Start
+// wears the open book Visit wears, with a plus on its corner), each opening
+// where it is, over a wall of records. `/get` is the same page with Start
+// open. Drawn by the root layout in place of a journal, because the front
+// door has no journal of its own.
 //
 // The journals left are said while there are some, and "We're full for now.
 // Come back soon." once there are none (her pick: "a mix of both").
@@ -19,7 +20,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { BookOpen, CheckCircle, Circle, MagnifyingGlass, Plus, User, XCircle } from '@phosphor-icons/react';
+import { BookOpen, CheckCircle, Circle, MagnifyingGlass, Plus, User, X, XCircle } from '@phosphor-icons/react';
 import { LnMark } from './SiteNav';
 import { journalUrl } from '../../library/return_address';
 
@@ -107,8 +108,91 @@ function InvitedBy({ invite }) {
   );
 }
 
-function Welcome({ domain, left, invite }) {
-  const [finding, setFinding] = useState(false);
+// ── The doors open where they are, 2026-10-22 ─────────────────────────────
+// Miyel: Start a journal should not "go to a whole nother page" but open on
+// this one, "in one animation, not just appearing", pushing Find my journal
+// out, and Find my journal "the reverse". A door pressed pushes the other out
+// of the row and comes to the middle, its glyph turning to a cross that
+// closes it; what it opens unfolds under it the way the site's other folds do
+// (a grid row from 0fr to 1fr on the site's curve, About.js), coming in from
+// the door's own side, and the record wall gives way below. Shut, a fold is
+// inert. The address bar follows the door, so a reload opens the same one:
+// `/get`, where every invite link points (InviteSheet.js), is Start open.
+function Door({ which, open, onPress, glyph, children }) {
+  const mine = open === which;
+  const gone = Boolean(open) && !mine;
+  return (
+    <button
+      type="button"
+      className={`fr-door fd-door fd-door--${which}` + (mine ? ' fd-door--open' : '') + (gone ? ' fd-door--gone' : '')}
+      onClick={onPress}
+      aria-expanded={mine}
+      tabIndex={gone ? -1 : undefined}
+      aria-hidden={gone || undefined}
+    >
+      <span className="fd-door-glyph" aria-hidden="true">
+        <span className="fd-door-is">{glyph}</span>
+        <span className="fd-door-shut"><X size={20} weight="regular" /></span>
+      </span>
+      {children}
+    </button>
+  );
+}
+
+function Fold({ open, from, children }) {
+  return (
+    <div className={`fd-fold fd-fold--${from}` + (open ? ' fd-fold--open' : '')} inert={!open}>
+      <div className="fd-fold-in">{children}</div>
+    </div>
+  );
+}
+
+function Doors({ domain, left: firstLeft, invite, opening }) {
+  // No Start door at all once the journals are gone; a place taken while
+  // somebody is choosing an address is said inside Start instead.
+  const closed = firstLeft <= 0;
+  const [open, setOpen] = useState(closed && opening === 'start' ? null : opening);
+  const [left, setLeft] = useState(firstLeft);
+  const [making, setMaking] = useState(false);
+
+  function press(which) {
+    if (making) return;
+    const next = open === which ? null : which;
+    setOpen(next);
+    const url = new URL(window.location.href);
+    url.pathname = next === 'start' ? '/get' : '/';
+    window.history.replaceState(null, '', url);
+  }
+
+  return (
+    <div className="fd-doors-all">
+      {closed && <InvitedBy invite={invite} />}
+      <div className={'fr-doors-row fd-doors' + (open ? ' fd-doors--one' : '')}>
+        {!closed && (
+          <Door which="start" open={open} onPress={() => press('start')} glyph={<BookWithPlus />}>
+            Start a journal
+          </Door>
+        )}
+        <Door which="find" open={open} onPress={() => press('find')}
+          glyph={<MagnifyingGlass size={22} weight="regular" />}>
+          Find my journal
+        </Door>
+      </div>
+      {!closed && (
+        <Fold open={open === 'start'} from="start">
+          <StartFold domain={domain} invite={invite} left={left} setLeft={setLeft}
+            making={making} setMaking={setMaking} />
+        </Fold>
+      )}
+      <Fold open={open === 'find'} from="find">
+        <FindFold domain={domain} />
+      </Fold>
+      {!making && <p className="fd-places">{left > 0 ? placesLine(left) : FULL}</p>}
+    </div>
+  );
+}
+
+function FindFold({ domain }) {
   const [name, setName] = useState('');
   const [trouble, setTrouble] = useState('');
   const [busy, setBusy] = useState(false);
@@ -129,29 +213,13 @@ function Welcome({ domain, left, invite }) {
   }
 
   return (
-    <>
-      <div className="fr-doors-row fd-doors">
-        {left > 0 ? (
-          <a className="fr-door" href={invite ? `/get?invite=${encodeURIComponent(invite.address)}` : '/get'}>
-            <BookWithPlus />Start a journal
-          </a>
-        ) : null}
-        <button type="button" className="fr-door" onClick={() => setFinding(f => !f)} aria-expanded={finding}>
-          <MagnifyingGlass size={22} weight="regular" aria-hidden="true" />
-          Find my journal
-        </button>
-      </div>
-      {left > 0 ? <p className="fd-places">{placesLine(left)}</p> : <p className="fd-places">{FULL}</p>}
-      {finding && (
-        <div className="fd-find">
-          <AddressField value={name} onChange={setName} domain={domain} label="Your journal’s address" onEnter={open} />
-          <button type="button" className="st-save ln-word ln-word--on" onClick={open} disabled={!name || busy}>
-            {busy ? 'Looking…' : 'Open it'}
-          </button>
-          {trouble && <p className="fd-trouble" role="alert">{trouble}</p>}
-        </div>
-      )}
-    </>
+    <div className="fd-fold-body">
+      <AddressField value={name} onChange={setName} domain={domain} label="Your journal’s address" onEnter={open} />
+      <button type="button" className="st-save ln-word ln-word--on" onClick={open} disabled={!name || busy}>
+        {busy ? 'Looking…' : 'Open it'}
+      </button>
+      {trouble && <p className="fd-trouble" role="alert">{trouble}</p>}
+    </div>
   );
 }
 
@@ -202,11 +270,9 @@ async function eachLine(res, heard) {
   }
 }
 
-function Start({ domain, left: firstLeft, invite }) {
+function StartFold({ domain, invite, left, setLeft, making, setMaking }) {
   const [name, setName] = useState('');
   const [state, setState] = useState(null);
-  const [left, setLeft] = useState(firstLeft);
-  const [making, setMaking] = useState(false);
   const [done, setDone] = useState([]);
   const [trouble, setTrouble] = useState('');
   const asked = useRef(0);
@@ -223,7 +289,7 @@ function Start({ domain, left: firstLeft, invite }) {
       if (Number.isFinite(said.left)) setLeft(said.left);
     }, 300);
     return () => clearTimeout(soon);
-  }, [name]);
+  }, [name, setLeft]);
 
   async function make() {
     if (state !== 'free' || making) return;
@@ -259,10 +325,12 @@ function Start({ domain, left: firstLeft, invite }) {
     }
   }
 
-  if (left <= 0) return <><InvitedBy invite={invite} /><p className="fd-said">{FULL}</p></>;
+  // Full while they were choosing: who invited them stays, and the line
+  // under the doors says the rest.
+  if (left <= 0) return <div className="fd-fold-body"><InvitedBy invite={invite} />{trouble && <p className="fd-trouble" role="alert">{trouble}</p>}</div>;
 
   return (
-    <>
+    <div className="fd-fold-body">
       <InvitedBy invite={invite} />
       <h1 className="fd-h">Choose your address</h1>
       <AddressField
@@ -286,40 +354,37 @@ function Start({ domain, left: firstLeft, invite }) {
         </>
       )}
       {trouble && <p className="fd-trouble" role="alert">{trouble}</p>}
-      {!making && <p className="fd-places">{placesLine(left)}</p>}
-    </>
+    </div>
   );
 }
 
-// ── Records above, words below, 2026-10-22 ────────────────────────────────
-// Miyel's pick (A), from the share printer's journal plate: rows of the
-// covers keepers on the Board have logged lately slide across the top, and
-// the front door's words sit under them on the same page — never on a
-// moving cover (the printer brief), and never on a sheet of their own, which
-// read as a pop-up (her word, the same day). Covers only, never who
-// (library/front_door.js, frontDoorCovers). A few covers are repeated until a
-// row is full; with none the words stand alone, centred, as before. Choose
-// your address has two rows rather than three, so its button stays on a
-// small phone's screen.
-const PER_ROW = 18;
-const ROW_LEAST = 14;
-function CoverRows({ covers, count }) {
-  // Each row its own covers while there are enough to go round, and a row
-  // never so long that it races: eighteen at most, fourteen at least.
-  const length = Math.max(ROW_LEAST, Math.min(PER_ROW, covers.length));
-  const rows = Array.from({ length: count }, (_, r) =>
-    Array.from({ length }, (_, i) => covers[(r * PER_ROW + r * 5 + i) % covers.length]));
+// ── The record wall, 2026-10-22 ───────────────────────────────────────────
+// Miyel's pick of three looks: the mark and the doors at the top like a
+// masthead, and under them a wall of the covers keepers on the Board logged
+// lately — covers only, never who (library/front_door.js, frontDoorCovers) —
+// running edge to edge and off the bottom of the screen, fading in under the
+// doors. Each column drifts up at its own pace and every other one sits half
+// a cover higher, so it reads as a slow wall rather than a grid (her pick of
+// the refinements). The stylesheet shows three columns on a phone and more
+// on a wider screen; each column's covers are drawn three times over and it
+// moves by one of the three, so it never jumps. Still for anyone who asks
+// for less motion; with no covers the mark and the doors stand alone in the
+// middle, as before.
+const WALL_COLUMNS = 10;
+const WALL_EACH = 8;
+function Wall({ covers }) {
   return (
-    <div className="fd-band" aria-hidden="true">
-      {rows.map((row, r) => (
-        // Three times over, and moved by one of the three, so the row comes
-        // round without a seam on the widest screen.
-        <div key={r} className={`fd-lane fd-lane--${r}`}>
-          {[...row, ...row, ...row].map((src, i) => (
-            <img key={i} className="fd-cover" src={src} alt="" loading="lazy" decoding="async" />
-          ))}
-        </div>
-      ))}
+    <div className="fd-wall" aria-hidden="true">
+      {Array.from({ length: WALL_COLUMNS }, (_, c) => {
+        const column = Array.from({ length: WALL_EACH }, (_, i) => covers[(c * WALL_EACH + i) % covers.length]);
+        return (
+          <div key={c} className="fd-wall-col">
+            {[...column, ...column, ...column].map((src, i) => (
+              <img key={i} className="fd-wall-cover" src={src} alt="" loading="lazy" decoding="async" />
+            ))}
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -329,24 +394,19 @@ export default function FrontDoor({ path = '/', domain = '', left = 0, invite = 
   // the deploy only then, and setup is spared asking after an address that
   // was never a journal.
   const known = invite?.name ? invite : null;
-  const records = covers.length > 0;
-  const words = (
-    <>
-      {/* Plain anchors, here and on Start, for the holding page's reason
-          (ComingSoon.js): the root layout draws this page in place of a
-          journal and does not draw again on a client-side navigation, so
-          only a full load moves between the front door's two pages. */}
-      {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-      <a href="/" className="fd-mark" aria-label="Listening Notes"><LnMark className="fd-logo" /></a>
-      {path === '/get'
-        ? <Start domain={domain} left={left} invite={known} />
-        : <Welcome domain={domain} left={left} invite={known} />}
-    </>
-  );
+  const wall = covers.length > 0;
   return (
-    <main className={'fd-page' + (records ? ' fd-page--records' : '')}>
-      {records && <CoverRows covers={covers} count={path === '/get' ? 2 : 3} />}
-      {records ? <div className="fd-words">{words}</div> : words}
+    <main className={'fd-page fd-mast' + (wall ? '' : ' fd-mast--bare')}>
+      <div className="fd-mast-head">
+        {/* A plain anchor, for the holding page's reason (ComingSoon.js):
+            the root layout draws this page in place of a journal and does
+            not draw again on a client-side navigation, so only a full load
+            goes home. */}
+        {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+        <a href="/" className="fd-mark" aria-label="Listening Notes"><LnMark className="fd-logo" /></a>
+        <Doors domain={domain} left={left} invite={known} opening={path === '/get' ? 'start' : null} />
+      </div>
+      {wall && <Wall covers={covers} />}
     </main>
   );
 }

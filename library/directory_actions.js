@@ -467,10 +467,9 @@ export async function pull_today() {
 
 // ── The front door's covers, 2026-10-22 ───────────────────────────────────
 // The records keepers on the Board have logged lately, as covers and nothing
-// else — no title, no keeper, no address — for the rows that slide over the
-// front door (components/main_components/FrontDoor.js; Miyel's pick, records
-// above and words below). The newest first, never the most logged; one of
-// each cover; only journals still on the Board.
+// else — no title, no keeper, no address — for the record wall on the front
+// door (components/main_components/FrontDoor.js). The newest first, never the
+// most logged; one of each cover; only journals still on the Board.
 const COVERS_MOST = 60;
 export async function pull_covers() {
   const rows = await database.query(

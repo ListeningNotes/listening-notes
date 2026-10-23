@@ -241,7 +241,7 @@ async function holdTheDoor() {
       reason: 'front-door', path, left: await placesLeft().catch(() => 0),
       // Who invited them, when an invite link brought them (Invite, 2026-10-21).
       invite: await inviterAtTheDoor().catch(() => null),
-      // The covers that slide across the top (2026-10-22).
+      // The covers on its record wall (2026-10-22).
       covers: await frontDoorCovers().catch(() => []),
     };
   }

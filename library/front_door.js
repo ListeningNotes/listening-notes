@@ -62,18 +62,18 @@ export const inviterAtTheDoor = cache(async () => {
 
 // ── The covers over the front door, 2026-10-22 ────────────────────────────
 // What keepers on the Board have logged lately, asked of the Board's own list
-// (DIRECTORY_URL, ?covers) — covers only, never who — for the rows that slide
-// across the top of the front door (Miyel's pick, from the share printer's
-// journal plate: records above, words below). Kept ten minutes, so a busy
-// front door asks once; when the list cannot be read, the last covers stay,
-// and with none the words stand alone. Sized small: they are tiles.
+// (DIRECTORY_URL, ?covers) — covers only, never who — for the record wall
+// under the front door's masthead. Kept ten minutes, so a busy front door
+// asks once; when the list cannot be read, the last covers stay, and with
+// none the mark and the doors stand alone. Sized for the wall's widest
+// cover, a hundred and fifty points, rather than for a phone's.
 const COVERS_KEPT_MS = 10 * 60 * 1000;
 let coversHeld = { at: 0, covers: [] };
 export async function frontDoorCovers() {
   if (Date.now() - coversHeld.at < COVERS_KEPT_MS) return coversHeld.covers;
   const said = await ask_directory_read('covers');
   const covers = Array.isArray(said?.covers)
-    ? said.covers.filter(art => typeof art === 'string' && /^https:\/\//.test(art)).map(art => sizedAlbumArt(art, 200))
+    ? said.covers.filter(art => typeof art === 'string' && /^https:\/\//.test(art)).map(art => sizedAlbumArt(art, 300))
     : null;
   // A failed ask is tried again in a minute rather than ten.
   coversHeld = covers

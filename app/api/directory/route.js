@@ -29,7 +29,7 @@
 // of a journal's hashed addresses are on the Board, and what each is playing
 // (pull_among). `?alike=` answers who else logged a journal's records, asked
 // by each record's hash (pull_alike). `?covers`, the records keepers on the
-// Board have logged lately as covers alone — for the front door's rows,
+// Board have logged lately as covers alone — for the front door's wall,
 // 2026-10-22 (pull_covers). The plain list stays as it was for
 // anything that still asks for it.
 

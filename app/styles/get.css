@@ -600,7 +600,6 @@
 .fd-mark { line-height: 0; margin-bottom: 6px; }
 .fd-logo { width: 92px; height: auto; display: block; }
 .fd-logo path, .fd-logo circle { fill: var(--ink); }
-.fd-said { margin: 0; font-family: var(--font-sans); font-size: 15px; line-height: 1.7; color: var(--ink-soft); max-width: 34ch; }
 .fd-h { margin: 0; font-family: var(--font-display); font-weight: var(--font-display-weight, 700); font-size: 22px; color: var(--ink); }
 /* Who invited them, over Choose your address (Invite, 2026-10-21): a face
    in a circle and "[Name] invited you". The plain face sits under the
@@ -620,7 +619,6 @@
   margin: 0; font-family: var(--font-label); font-size: 10px; letter-spacing: 0.12em;
   text-transform: uppercase; color: var(--ink-faint);
 }
-.fd-find { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 100%; max-width: 340px; }
 /* The address sits in the middle of its box as one line: the name's slot
    is sized to what is in it (FrontDoor.js), and may shrink, scrolling
    inside, when a long name meets a narrow phone. */
@@ -679,39 +677,114 @@
   background: var(--ink); color: var(--bg); box-shadow: 0 0 0 2px var(--bg);
 }
 
-/* ── Records above, words below, 2026-10-22 ───────────────────────────────────
-   Miyel's pick (A), from the share printer's journal plate: rows of covers
-   slide across the top of the front door, the slow one against the others,
-   and the words sit under them on the same page (FrontDoor.js, CoverRows):
-   one surface, no sheet and no shadow, which read as a pop-up; the two held
-   together in the middle of the screen. The rows fade out at the sides
-   rather than being cut off. Each cover carries its own space after it, so
-   a third of a row is exactly one round and the loop never jumps. Still for
-   anyone who asks for less motion. A row of covers is a lane here: the
-   feed's rows already own .fd-row (nav.css), and borrowed its gap. */
-/* A little more room under than over: the eye's middle sits above the
-   page's. */
-.fd-page--records { gap: 44px; padding: 24px 0 56px; }
-.fd-band {
-  width: 100%; overflow: hidden;
-  display: flex; flex-direction: column; gap: 10px;
-  -webkit-mask-image: linear-gradient(to right, transparent, #000 9%, #000 91%, transparent);
-  mask-image: linear-gradient(to right, transparent, #000 9%, #000 91%, transparent);
-}
-.fd-lane { display: flex; width: max-content; animation: fd-slide 80s linear infinite; }
-.fd-lane--1 { animation-duration: 110s; animation-direction: reverse; }
-.fd-lane--2 { animation-duration: 95s; }
-.fd-cover {
-  flex: none; width: 92px; height: 92px; margin-right: 10px; border-radius: 10px;
-  object-fit: cover; background: var(--panel); display: block;
-}
-@keyframes fd-slide { to { transform: translateX(calc(-100% / 3)); } }
-@media (prefers-reduced-motion: reduce) { .fd-lane { animation: none; } }
-.fd-words {
-  width: 100%; box-sizing: border-box; padding: 0 20px;
+/* ── The masthead and the record wall, 2026-10-22 ─────────────────────────────
+   Miyel's pick of three looks (FrontDoor.js): the mark and the doors at the
+   top, and the record wall under them, edge to edge and off the bottom of
+   the screen, fading in a little below the journals left (her ask: "a little
+   more space" there). Each column drifts up at its own pace and every other
+   one sits half a cover higher. The page is exactly the screen's height, so
+   the wall gives way as a door unfolds. With no covers the mark and the
+   doors stand alone in the middle. */
+.fd-mast { height: 100dvh; min-height: 0; overflow: hidden; justify-content: flex-start; gap: 0; padding: 0; }
+.fd-mast--bare { justify-content: center; }
+.fd-mast-head {
+  flex: none; width: 100%; box-sizing: border-box;
   display: flex; flex-direction: column; align-items: center; gap: 16px;
+  padding: 60px 20px 30px;
 }
+.fd-mast--bare .fd-mast-head { padding: 32px 20px; }
+.fd-mast .fd-logo { width: 124px; }
+.fd-wall {
+  flex: 1 1 auto; min-height: 0; width: 100%; box-sizing: border-box; overflow: hidden;
+  /* flex-start, or each column is only as tall as the wall and moves by a
+     third of that rather than by one round of its covers. */
+  display: flex; align-items: flex-start; gap: 8px; padding: 0 8px;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 22%);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 22%);
+}
+.fd-wall-col {
+  flex: 1 1 0; min-width: 0; display: flex; flex-direction: column;
+  animation: fd-rise 150s linear infinite;
+}
+/* Half a cover higher: a cover is a third of the wall's width after its two
+   gaps. Higher rather than lower, so the top of the column is never seen. */
+.fd-wall-col:nth-child(even) { margin-top: calc((16px - 100%) / 6); }
+.fd-wall-col:nth-child(2) { animation-duration: 196s; }
+.fd-wall-col:nth-child(3) { animation-duration: 168s; }
+.fd-wall-col:nth-child(4) { animation-duration: 210s; }
+.fd-wall-col:nth-child(5) { animation-duration: 158s; }
+.fd-wall-col:nth-child(6) { animation-duration: 188s; }
+.fd-wall-col:nth-child(7) { animation-duration: 176s; }
+.fd-wall-col:nth-child(8) { animation-duration: 202s; }
+.fd-wall-col:nth-child(9) { animation-duration: 162s; }
+.fd-wall-col:nth-child(10) { animation-duration: 192s; }
+.fd-wall-col:nth-child(n+4) { display: none; }
+/* Each cover carries its own space under it, so a third of a column is
+   exactly one round. */
+.fd-wall-cover {
+  width: 100%; aspect-ratio: 1; object-fit: cover; display: block;
+  margin-bottom: 8px; border-radius: 10px; background: var(--panel);
+}
+@keyframes fd-rise { to { transform: translateY(calc(-100% / 3)); } }
 @media (min-width: 769px) {
-  .fd-cover { width: 120px; height: 120px; margin-right: 12px; border-radius: 12px; }
-  .fd-band { gap: 12px; }
+  .fd-wall { gap: 12px; padding: 0 12px; }
+  .fd-wall-col:nth-child(n+4) { display: flex; }
+  .fd-wall-col:nth-child(n+9) { display: none; }
+  .fd-wall-col:nth-child(even) { margin-top: calc((84px - 100%) / 16); }
+  .fd-wall-cover { margin-bottom: 12px; border-radius: 12px; }
+}
+@media (min-width: 1600px) {
+  .fd-wall-col:nth-child(n+9) { display: flex; }
+  .fd-wall-col:nth-child(even) { margin-top: calc((108px - 100%) / 20); }
+}
+
+/* The doors open where they are (FrontDoor.js, Doors): the one pressed
+   comes to the middle as the other is pushed out its own side, its glyph
+   turning to a cross; what it opens unfolds under it from that side, the
+   site's fold (a grid row from 0fr to 1fr, About.js's prompt list), on the
+   site's curve. */
+.fd-doors-all { display: flex; flex-direction: column; align-items: center; width: 100%; }
+.fd-doors {
+  justify-content: center; gap: 56px;
+  transition: gap 0.34s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.fd-doors--one { gap: 0; }
+.fd-door {
+  max-width: 170px; overflow: hidden;
+  transition: max-width 0.34s cubic-bezier(0.22, 0.61, 0.36, 1),
+              opacity 0.2s ease,
+              transform 0.34s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.fd-door--gone { max-width: 0; padding-left: 0; padding-right: 0; opacity: 0; pointer-events: none; }
+.fd-door--start.fd-door--gone { transform: translateX(-28px); }
+.fd-door--find.fd-door--gone { transform: translateX(28px); }
+.fd-door-glyph { display: inline-grid; place-items: center; height: 24px; }
+.fd-door-is, .fd-door-shut {
+  grid-area: 1 / 1; display: inline-flex;
+  transition: opacity 0.2s ease, transform 0.34s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.fd-door-shut { opacity: 0; transform: rotate(-90deg) scale(0.6); }
+.fd-door--open .fd-door-is { opacity: 0; transform: rotate(90deg) scale(0.6); }
+.fd-door--open .fd-door-shut { opacity: 1; transform: none; }
+.fd-fold {
+  display: grid; grid-template-rows: 0fr; width: 100%; max-width: 340px;
+  transition: grid-template-rows 0.34s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.fd-fold--open { grid-template-rows: 1fr; }
+.fd-fold-in {
+  min-height: 0; overflow: hidden; opacity: 0;
+  transition: opacity 0.22s ease, transform 0.34s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.fd-fold--start .fd-fold-in { transform: translateX(-18px); }
+.fd-fold--find .fd-fold-in { transform: translateX(18px); }
+.fd-fold--open .fd-fold-in { opacity: 1; transform: none; transition-delay: 0.06s, 0s; }
+.fd-fold-body {
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  padding: 18px 2px 4px;
+}
+.fd-fold-body .fd-h { font-size: 18px; }
+.fd-doors-all .fd-places { margin-top: 16px; }
+@media (prefers-reduced-motion: reduce) {
+  .fd-wall-col { animation: none; }
+  .fd-doors, .fd-door, .fd-door-is, .fd-door-shut, .fd-fold, .fd-fold-in { transition: none; }
 }

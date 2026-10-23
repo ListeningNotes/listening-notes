@@ -1826,12 +1826,12 @@ ask SANDBOX, or a test reaches a real person.
 
 ---
 
-**The front door is records above, words below, 2026-10-22, Miyel's pick.**
-Rows of covers keepers on the Board logged lately slide across the top —
-covers only, never who — and the mark and doors sit under them on the same
-page: never on a moving cover, never on a sheet of their own, which read as
-a pop-up. A card over the old screensavers, tried the same day, was less
-clear (her word).
+**The front door is a masthead over a record wall, 2026-10-22, Miyel's
+pick of three.** The mark and the two doors at the top; under them the covers
+keepers on the Board logged lately (covers only, never who), edge to edge, in
+staggered columns drifting up. A door opens where it is, pushing the other
+out — never a page of its own; `/get`, where invite links point, is Start
+open. Words never sit on a moving cover, nor on a sheet (it read as a pop-up).
 
 **The month's prompt is a record from the keeper's own wall, sent on a
 press, 2026-10-22.** An entry already written — its record and writing as
