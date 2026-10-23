@@ -614,15 +614,17 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
     setYearPicked(null);
   }
 
-  // Only what's tucked away behind the Filters button counts toward the
-  // badge — the search box is in plain sight, so counting it would put a
-  // number on the button with nothing behind it to explain the number.
-  const tuckedAwayCount =
-    (genre ? 1 : 0) +
-    (favoritesOnly ? 1 : 0) + (masterpiecesOnly ? 1 : 0) + (formativeOnly ? 1 : 0) +
-    (yearActive ? 1 : 0) +
-    (sortBy !== 'posted' || sortDir !== 'desc' ? 1 : 0);
-  const hasActiveFilters = Boolean(search) || tuckedAwayCount > 0;
+  // Whether the Filters button is underlined: something behind it is doing
+  // the narrowing. Only what is tucked away counts — the search box is in
+  // plain sight — and the sort only where it is behind the button, on a
+  // phone; a desk's sort is in the bar beside it. It was a number in a
+  // filled badge until 2026-10-22 (the wall's filters brief): the underline
+  // already says something is on, and the badge was the shape that change
+  // took out.
+  const sortMoved = sortBy !== 'posted' || sortDir !== 'desc';
+  const narrowed = Boolean(genre) || favoritesOnly || masterpiecesOnly || formativeOnly || yearActive;
+  const tuckedAway = narrowed || (isPhone && sortMoved);
+  const hasActiveFilters = Boolean(search) || narrowed || sortMoved;
 
   return (
     <>
@@ -704,11 +706,12 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
                 placeholder that looks broken rather than one that lists what
                 it covers.
 
-                Measured rather than guessed, at 375px: the field has 211px
-                once the filter and the three view buttons have their share of
-                the row, and this needs 203. The font cannot be made smaller to
-                buy room — 16px is what stops iOS zooming the page when the
-                field takes focus.
+                Measured rather than guessed, at 375px: the field had 211px
+                once the filter and the three view buttons had their share of
+                the row, and this needs 203. The view buttons went into the
+                sheet on a phone since (2026-10-22), so it has room now, but
+                the font still cannot be made smaller to buy any — 16px is
+                what stops iOS zooming the page when the field takes focus.
 
                 It still searches the writing as well; the placeholder just
                 stops claiming it, and the full answer stays on the aria-label,
@@ -756,7 +759,7 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
           <button
             type="button"
             ref={filterBtnRef}
-            className={'arc-ctl' + (tuckedAwayCount ? ' arc-ctl--on' : '')}
+            className={'arc-ctl' + (tuckedAway ? ' arc-ctl--on' : '')}
             onClick={() => setFiltersOpen(v => !v)}
             aria-label="Filters"
             aria-expanded={filtersOpen}
@@ -766,10 +769,10 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
               <circle cx="9" cy="7" r="2.2" fill="var(--panel-solid)" /><circle cx="16" cy="12" r="2.2" fill="var(--panel-solid)" /><circle cx="7" cy="17" r="2.2" fill="var(--panel-solid)" />
             </svg>
             <span className="arc-ctl-text">Filters</span>
-            {tuckedAwayCount > 0 && <span className="arc-badge">{tuckedAwayCount}</span>}
           </button>
 
-          <GridDensity value={density} onChange={changeDensity} />
+          {/* On a phone it is in the sheet, with sort (JournalFilters). */}
+          {!isPhone && <GridDensity value={density} onChange={changeDensity} />}
 
           {/* Keyed off whether anything is actually hidden, not off whether a
               control is non-default — re-sorting changes no totals, and
@@ -797,6 +800,7 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
           formativeOnly={formativeOnly} setFormativeOnly={setFormativeOnly}
           hasActiveFilters={hasActiveFilters} clearFilters={clearFilters}
           shownCount={filtered.length}
+          density={density} changeDensity={changeDensity}
         />
       )}
     </>

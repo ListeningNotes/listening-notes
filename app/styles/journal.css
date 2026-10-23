@@ -152,31 +152,32 @@
   align-items: center;
   gap: 2px;
   flex-shrink: 0;
-  padding: 2px;
-  /* Translucent to match the bar's other controls — no backdrop-filter of
-     its own, since the bar has already blurred what's behind. */
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 9px;
 }
+/* Three glyphs and no box, since the wall's filters brief, 2026-10-22: the
+   one you are on in ink with the words' underline under it, the others
+   faint. It was a boxed group with the chosen one filled black. */
 .gd-btn {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   width: 28px;
-  height: 26px;
+  height: 28px;
   padding: 0;
   border: none;
-  border-radius: 7px;
   background: transparent;
   color: var(--ink-faint);
   cursor: pointer;
-  transition: color 0.15s, background 0.15s;
+  transition: color 0.15s;
 }
 .gd-btn svg { fill: currentColor; }
 .gd-btn:hover { color: var(--ink-soft); }
-.gd-btn--on { color: var(--bg); background: var(--ink); }
-.gd-btn--on:hover { color: var(--bg); }
+.gd-btn--on, .gd-btn--on:hover { color: var(--ink); }
+.gd-btn--on::after {
+  content: ''; position: absolute; left: 7px; right: 7px; bottom: 1px;
+  height: 1px; background: currentColor;
+}
+.gd-btn:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 1px; }
 
 /* ── from components/main_components/Journal.js ─────────────────────────────────────────── */
 /* The fixed nav ends at 80px on every breakpoint — it was 136 while a
@@ -294,25 +295,32 @@
 .arc-bar--searching .arc-search { flex-basis: 100%; }
 
 .arc-ctl {
+  /* The mark, not a mark in a container (DECISIONS, 2026-09-17): these were
+     bordered boxes on a panel until the wall's filters brief, 2026-10-22,
+     and say what .ln-word says now — faint until something is on, inked and
+     underlined while it is. The underline is the whole of "on"; the number
+     in a filled badge that sat beside it is gone. */
+  position: relative;
   display: flex; align-items: center; gap: 6px; flex-shrink: 0;
-  background: var(--panel); color: var(--ink-soft);
-  border: 1px solid var(--border); border-radius: 9px;
-  padding: 7px 11px; cursor: pointer; outline: none;
-  font-family: var(--font-label); font-size: 11px; letter-spacing: 0.06em;
-  transition: color 0.15s, border-color 0.15s;
+  background: transparent; color: var(--ink-faint);
+  border: 0; border-radius: 0;
+  padding: 7px 6px; cursor: pointer; outline: none;
+  font-family: var(--font-label); font-size: 9px; letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transition: color 0.15s;
 }
 .arc-ctl:hover { color: var(--ink); }
-.arc-ctl--on { color: var(--ink); border-color: var(--ink-faint); }
-/* Square, so the arrow reads as a companion to the sort select
-   rather than a second, unrelated button. */
-.arc-dir { padding: 7px 9px; color: var(--ink); }
-.arc-arrow { flex-shrink: 0; }
-.arc-badge {
-  min-width: 15px; height: 15px; padding: 0 4px; border-radius: 999px;
-  display: inline-flex; align-items: center; justify-content: center;
-  background: var(--ink); color: var(--bg);
-  font-family: var(--font-label); font-size: 9px; line-height: 1;
+.arc-ctl:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 2px; }
+.arc-ctl--on { color: var(--ink); }
+.arc-ctl--on .arc-ctl-text {
+  text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 5px;
 }
+/* The desk's sort: the field it is sorting by, in ink, since there is always
+   one. A native select with its own bezel taken off, so it reads as the word
+   it is; the arrow beside it is the same arrow the sheet's word carries. */
+select.arc-ctl { -webkit-appearance: none; appearance: none; color: var(--ink); padding-right: 2px; }
+.arc-dir { padding: 7px 4px; color: var(--ink); }
+.arc-arrow { flex-shrink: 0; }
 
 .arc-count {
   margin-left: auto; flex-shrink: 0; white-space: nowrap;
@@ -355,21 +363,20 @@
 /* The live readout of the year handles, sat on the group's own label
    rather than floating over the track where a handle would cover it. */
 .arc-sheet-value { color: var(--ink); letter-spacing: 0.08em; }
-/* Spells out what the arrow means — "Newest first" reads faster than
-   working it out from which way the arrowhead points. */
-.arc-sheet-hint {
-  font-family: var(--font-label); font-size: 10px;
-  color: var(--ink-faint); letter-spacing: 0.04em;
-}
-.arc-sheet-opts { display: flex; flex-wrap: wrap; gap: 6px; }
-.arc-opt {
+/* The words: .ln-word (base.css), set closer than on a bar so a group says
+   its few choices in a line, with the first word's padding paid back so it
+   lines up under its label. They were pills until 2026-10-22, filled black
+   when on. */
+.arc-sheet-opts { display: flex; flex-wrap: wrap; gap: 0; margin: 0 -6px; }
+.arc-word {
   display: inline-flex; align-items: center; gap: 5px;
-  font-family: var(--font-label); font-size: 11px; letter-spacing: 0.04em;
-  padding: 6px 11px; border-radius: 999px; cursor: pointer;
-  background: transparent; color: var(--ink-soft);
-  border: 1px solid var(--border); transition: background 0.15s, color 0.15s, border-color 0.15s;
+  padding: 4px 6px;
 }
-.arc-opt--on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+/* The session's marks (session.css, .ses-mark), in a row under their label.
+   Its first glyph's air paid back the same way, so the row starts where the
+   words above it start. */
+.arc-marks { display: flex; gap: 4px; margin: -4px 0 -6px -10px; }
+.arc-marks .ses-mark { width: auto; min-width: 64px; padding: 6px 10px; }
 
 /* ── Year range ──────────────────────────────────────────────────
    Two native range inputs on one track. Both are stretched across
@@ -408,12 +415,13 @@
   display: flex; justify-content: space-between;
   font-family: var(--font-label); font-size: 9px; color: var(--ink-faint);
 }
-/* Centred and sized to their own text rather than stretched to the
-   panel's full width — two buttons splitting the width edge to edge
-   read as a segmented control, which is not what they are. */
-.arc-sheet-foot { display: flex; gap: 8px; justify-content: center; }
-.arc-sheet-foot button { min-width: 108px; justify-content: center; }
-.arc-sheet-done { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+/* The way out at the right, where the session keeps its Post, and on a phone
+   the album size at the left. Show is the same word as the choices, heavier:
+   it is how you leave the sheet, not a button that submits it. */
+.arc-sheet-foot { display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
+.arc-sheet-foot .gd { margin-right: auto; margin-left: -6px; }
+.arc-sheet-ways { display: flex; align-items: center; margin-right: -6px; }
+.arc-sheet-done { font-weight: 500; }
 .arc-sheet-grip { display: none; }
 
 /* ── The grid. Density is set on the container, so every tile's size
@@ -499,15 +507,15 @@
   /* Typing gets the whole bar: the controls are still one tap away
      once the field gives focus back. */
   .arc-bar--searching .arc-ctl,
-  .arc-bar--searching .gd,
   .arc-bar--searching .arc-count { display: none; }
   .arc-ctl { padding: 7px 9px; }
   .arc-ctl-text { display: none; }
-  /* Two pixels off each view button, which is twelve across the group and the
-     difference between the search field having room and being cut off. They
-     are still 24px of touch inside a 40px-tall bar, which is the row's job to
-     provide and not each button's. */
-  .gd-btn { width: 26px; height: 24px; }
+  /* The glyph alone on a phone, so the underline that says something is on
+     is drawn under the glyph rather than under a word that is not there. */
+  .arc-ctl--on::after {
+    content: ''; position: absolute; left: 9px; right: 9px; bottom: 3px;
+    height: 1px; background: currentColor;
+  }
   .arc-count { display: none; }
 
   .arc-grid[data-density="large"]  { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
@@ -549,5 +557,8 @@
     content: ''; display: block; width: 36px; height: 4px;
     border-radius: 999px; background: var(--border); margin: 8px auto 0;
   }
-  .arc-opt { padding: 8px 13px; font-size: 12px; }
+  /* A thumb's worth of height on each word without the rows growing apart. */
+  .arc-word { padding: 6px 6px; }
+  .arc-sheet .gd-btn { width: 34px; height: 32px; }
+  .arc-sheet .gd-btn--on::after { left: 10px; right: 10px; bottom: 2px; }
 }

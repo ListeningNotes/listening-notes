@@ -3,7 +3,14 @@
 // components/main_components/JournalFilters.js
 // The wall's filters: a sheet from the foot of the screen on a phone, a
 // popover under its button on a desk. Sort, genre, release year, the three
-// highlights, and the way out.
+// highlights, and the way out — and on a phone the album size too.
+//
+// ── In the site's own language, 2026-10-22 ────────────────────────────────
+// Miyel's brief, the wall's filters: this was the last screen still built of
+// pills and boxes. Every choice is a word now, faint off and inked and
+// underlined on (`.ln-word`); the highlights are the session's own marks, a
+// glyph over a word in its colour; and the way out is the same word,
+// heavier. Same filters, same results — only how they are said changed.
 //
 // Journal owns every filter value — it is the one doing the filtering — and
 // this owns only how the sheet behaves: where the popover hangs, the pull
@@ -15,7 +22,9 @@
 // the sheet read them, and the sheet is what explains them.
 'use client';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { Fingerprint, Heart, SketchLogo } from '@phosphor-icons/react';
 import { useHoldStill } from '../../hooks/useHoldStill';
+import GridDensity from './GridDensity';
 
 export const SORTS = [
   { value: 'posted', label: 'Date posted',  defaultDir: 'desc', asc: 'Oldest first', desc: 'Newest first' },
@@ -31,7 +40,7 @@ export default function JournalFilters({
   genre, setGenre, genres, genresShown, genresRest, genresOpen, setGenresOpen,
   yearBounds, yearRange, setYearPicked,
   favoritesOnly, setFavoritesOnly, masterpiecesOnly, setMasterpiecesOnly, formativeOnly, setFormativeOnly,
-  hasActiveFilters, clearFilters, shownCount,
+  hasActiveFilters, clearFilters, shownCount, density, changeDensity,
 }) {
   // Drag-to-dismiss on the phone sheet. `drag` is how far down the finger
   // has pulled it; `settling` marks the moment after release, when the
@@ -167,16 +176,22 @@ export default function JournalFilters({
 
             {isPhone && (
               <div className="arc-sheet-group">
-                <div className="arc-sheet-label">Sort</div>
+                {/* What the arrow means rides on the label's own line, the
+                    way the year's readout does: a line of its own under the
+                    words was a row of the sheet spent on two words. */}
+                <div className="arc-sheet-label">
+                  Sort
+                  <span className="arc-sheet-value">{activeSort[sortDir]}</span>
+                </div>
                 <div className="arc-sheet-opts">
-                  {/* The chip you're on carries the arrow, and tapping it
+                  {/* The word you're on carries the arrow, and tapping it
                       again turns it over — so the control shows both which
                       field is sorting and which way, in one place. */}
                   {SORTS.map(s => {
                     const on = sortBy === s.value;
                     return (
                       <button key={s.value} type="button"
-                        className={'arc-opt' + (on ? ' arc-opt--on' : '')}
+                        className={word(on)}
                         aria-pressed={on}
                         title={on ? s[sortDir] : undefined}
                         onClick={() => chooseSort(s.value)}>
@@ -186,7 +201,6 @@ export default function JournalFilters({
                     );
                   })}
                 </div>
-                <div className="arc-sheet-hint">{activeSort[sortDir]}</div>
               </div>
             )}
 
@@ -197,10 +211,10 @@ export default function JournalFilters({
               <div className="arc-sheet-group">
                 <div className="arc-sheet-label">Genre</div>
                 <div className="arc-sheet-opts">
-                  <button type="button" className={'arc-opt' + (!genre ? ' arc-opt--on' : '')} onClick={() => setGenre('')}>All</button>
+                  <button type="button" className={word(!genre)} aria-pressed={!genre} onClick={() => setGenre('')}>All</button>
                   {genresShown.map(g => (
                     <button key={g.name} type="button"
-                      className={'arc-opt' + (genre === g.name ? ' arc-opt--on' : '')}
+                      className={word(genre === g.name)} aria-pressed={genre === g.name}
                       onClick={() => setGenre(genre === g.name ? '' : g.name)}>{g.name}</button>
                   ))}
                   {/* A hidden genre that's currently doing the filtering still
@@ -209,12 +223,12 @@ export default function JournalFilters({
                   {genresRest.map(g => (
                     (genresOpen || genre === g.name) && (
                       <button key={g.name} type="button"
-                        className={'arc-opt' + (genre === g.name ? ' arc-opt--on' : '')}
+                        className={word(genre === g.name)} aria-pressed={genre === g.name}
                         onClick={() => setGenre(genre === g.name ? '' : g.name)}>{g.name}</button>
                     )
                   ))}
                   {genresRest.length > 0 && (
-                    <button type="button" className="arc-opt" onClick={() => setGenresOpen(v => !v)}>
+                    <button type="button" className={word(false)} onClick={() => setGenresOpen(v => !v)}>
                       {genresOpen ? 'Less' : `+${genresRest.length} more`}
                     </button>
                   )}
@@ -234,20 +248,48 @@ export default function JournalFilters({
               </div>
             )}
 
+            {/* The session's marks, drawn the way its album screen draws
+                them (session.css, .ses-mark) and named the same — a mark here
+                is the mark you gave the record there, and turning one on
+                keeps the wall to the records that wear it. In the session's
+                order too. Formative is the session's glyph, whatever that is
+                at the time. */}
             <div className="arc-sheet-group">
               <div className="arc-sheet-label">Highlights</div>
-              <div className="arc-sheet-opts">
-                <button type="button" className={'arc-opt' + (favoritesOnly ? ' arc-opt--on' : '')} onClick={() => setFavoritesOnly(v => !v)}>Favorites</button>
-                <button type="button" className={'arc-opt' + (masterpiecesOnly ? ' arc-opt--on' : '')} onClick={() => setMasterpiecesOnly(v => !v)}>Masterpieces</button>
-                <button type="button" className={'arc-opt' + (formativeOnly ? ' arc-opt--on' : '')} onClick={() => setFormativeOnly(v => !v)}>Formative</button>
+              <div className="arc-marks">
+                <button type="button" className={mark(masterpiecesOnly, 'mp')}
+                  aria-pressed={masterpiecesOnly} onClick={() => setMasterpiecesOnly(v => !v)}>
+                  <SketchLogo size={24} weight={masterpiecesOnly ? 'fill' : 'regular'} aria-hidden="true" />
+                  <span className="ses-mark-word">Masterpiece</span>
+                </button>
+                <button type="button" className={mark(favoritesOnly, 'fav')}
+                  aria-pressed={favoritesOnly} onClick={() => setFavoritesOnly(v => !v)}>
+                  <Heart size={24} weight={favoritesOnly ? 'fill' : 'regular'} aria-hidden="true" />
+                  <span className="ses-mark-word">Favorite</span>
+                </button>
+                <button type="button" className={mark(formativeOnly, 'formative')}
+                  aria-pressed={formativeOnly} onClick={() => setFormativeOnly(v => !v)}>
+                  {/* Bold, not fill, as the session has it: Phosphor's filled
+                      fingerprint is a solid pad with the ridges knocked out. */}
+                  <Fingerprint size={24} weight={formativeOnly ? 'bold' : 'regular'} aria-hidden="true" />
+                  <span className="ses-mark-word">Formative</span>
+                </button>
               </div>
             </div>
 
+            {/* On a phone the album size lives here, off the bar, the way
+                sort does — the bar is the search field's, and a size is
+                picked once and remembered. Unlabelled, as it was in the bar:
+                each glyph is the grid it makes. The way out is the same word
+                as the choices, heavier — not a submit button. */}
             <div className="arc-sheet-foot">
-              {hasActiveFilters && <button type="button" className="arc-opt" onClick={clearFilters}>Clear all</button>}
-              <button type="button" className="arc-opt arc-sheet-done" onClick={onClose}>
-                Show {shownCount}
-              </button>
+              {isPhone && <GridDensity value={density} onChange={changeDensity} />}
+              <span className="arc-sheet-ways">
+                {hasActiveFilters && <button type="button" className={word(false)} onClick={clearFilters}>Clear all</button>}
+                <button type="button" className="ln-word ln-word--on arc-sheet-done" onClick={onClose}>
+                  Show {shownCount}
+                </button>
+              </span>
             </div>
           </div>
     </>
@@ -256,9 +298,13 @@ export default function JournalFilters({
 
 // ── Sub-components ─────────────────────────────────────────────────────
 
+// A choice in the sheet, and a mark: the classes, on or off.
+const word = on => 'ln-word arc-word' + (on ? ' ln-word--on' : '');
+const mark = (on, kind) => `ses-mark ses-mark--${kind}${on ? ' ses-mark--on' : ''}`;
+
 // Which way the active sort runs. Deliberately not a caret glyph from the
 // font — at 9px those render at wildly different weights across platforms,
-// and this sits inside a chip next to text that has to stay readable.
+// and this sits inside a word that has to stay readable.
 export function SortArrow({ dir }) {
   return (
     <svg className="arc-arrow" width="9" height="11" viewBox="0 0 9 11" aria-hidden="true" focusable="false">
