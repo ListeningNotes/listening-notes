@@ -85,13 +85,32 @@ export function forwarding() {
   return { from: `www.${domain}`, to };
 }
 
+// ── The studio, 2026-10-22 ────────────────────────────────────────────────
+// STUDIO_ADDRESS: where Listening Notes is made — a journal of its own, kept
+// by the canonical keeper and her team, at an address nobody is shown
+// (Miyel's word, "studio": "my instagram tools could potentially move here
+// too and updates, where i send ln admin notes, everything"; the magazine
+// has no sign-in on it). To begin with it keeps what keepers send for the
+// month's prompt. The magazine is the bare domain, and those records are
+// posted there (PUBLICATION_URL), so that one door at the bare domain is
+// answered as the studio; every other thing at the bare domain stays the
+// front door's, or is forwarded as before (next.config.mjs).
+export function studio() {
+  const domain = tidyHost(process.env.HOSTED_DOMAIN || '');
+  const to = tidyHost(process.env.STUDIO_ADDRESS || '');
+  if (!hosting() || !domain || !to) return null;
+  return { from: domain, to };
+}
+
 // The address of the journal a request made to `host` is for: the same
 // address, except the one a journal moved from, which is that journal's new
-// one.
+// one, and the bare domain, whose journal is the studio.
 export function journalAddress(host) {
   const at = tidyHost(host);
   const moved = forwarding();
-  return moved && at === moved.from ? moved.to : at;
+  if (moved && at === moved.from) return moved.to;
+  const made = studio();
+  return made && at === made.from ? made.to : at;
 }
 
 // Whether `address` is the journal this request reached, by either name it

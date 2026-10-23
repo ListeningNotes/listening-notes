@@ -1,0 +1,21 @@
+-- Copyright (C) 2026 Miyel Brown
+-- SPDX-License-Identifier: AGPL-3.0-or-later
+-- The month's prompt, 2026-10-22: the blog's first piece (Miyel's brief,
+-- the question of the month). Listening Notes — the publication — asks one
+-- thing a month, and keepers send it a record they have already written
+-- about, from their own walls.
+--
+-- `settings.month_prompt` is the prompt as it reached this journal, sealed
+-- with the canonical keeper's key the way an LN. Admin letter is
+-- (library/letterhead.js, read_prompt): what it asks, the month, when it
+-- closes, when it was sent and its id — and, once this journal sent a record
+-- for it, which one (`sent`), so the prompt over the wall can say so.
+-- Private: it is drawn for the keeper and nobody else. Nothing about it
+-- touches an entry.
+--
+-- `submissions.prompt` is filled only on the publication's own journal: the
+-- prompt a record was sent for (its id, month and words), beside the record,
+-- the writing as it stood when Send was pressed, and the journal and entry
+-- it came from. Empty on every ordinary send.
+ALTER TABLE settings ADD COLUMN IF NOT EXISTS month_prompt jsonb;
+ALTER TABLE submissions ADD COLUMN IF NOT EXISTS prompt jsonb;

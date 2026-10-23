@@ -65,7 +65,7 @@
 
 import { cloneElement, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { DotsThree, EnvelopeSimple, Export, FilePlus, GearSix, Pencil, Trash, UserCircle, X } from '@phosphor-icons/react';
+import { DotsThree, EnvelopeSimple, Export, FilePlus, GearSix, NewspaperClipping, Pencil, Trash, UserCircle, X } from '@phosphor-icons/react';
 
 // How long the tools take to file back in. It has to outlast the longest
 // kt-file-in in nav.css or the last one is unmounted mid-stride and vanishes,
@@ -97,6 +97,9 @@ const WORDS = {
     print:    ['Share',     'Make a picture of this entry to share'],
     sender:   ['Credit',    'Say who put you on to this record'],
     send:     ['Send',      'Send this record to somebody in your address book'],
+    // The month's prompt, 2026-10-22: shown only while one is open and
+    // nothing has been sent for it (Miyel: "submit to this month's prompt").
+    submit:   ['Submit',    'Send this record to Listening Notes for this month’s prompt'],
     relisten: ['Relisten',  'Log another listen of this album'],
     remove:   ['Delete',    'Delete this entry'],
   },
@@ -113,6 +116,7 @@ const WORDS = {
     settings: ['Settings', 'The key, password, beacon, address'],
     sender:   null,
     send:     null,
+    submit:   null,
     relisten: null,
     remove:   null,
   },
@@ -130,6 +134,7 @@ export default function KeeperTools({
   onPrint = null,
   onSender = null,
   onSend = null,
+  onSubmit = null,
   onRelisten = null,
   onDelete = null,
 }) {
@@ -149,6 +154,7 @@ export default function KeeperTools({
     + (words.settings ? 1 : 0)
     + (onSender && words.sender ? 1 : 0)
     + (onSend && words.send ? 1 : 0)
+    + (onSubmit && words.submit ? 1 : 0)
     + (onRelisten && words.relisten ? 1 : 0)
     + (onDelete && words.remove ? 1 : 0);
 
@@ -316,6 +322,17 @@ export default function KeeperTools({
   if (onSend && words.send) {
     tools.push(
       <button key="send" type="button" onClick={() => { shut(); onSend(); }} {...box(...words.send, <EnvelopeSimple size={22} weight="regular" aria-hidden="true" />)} />
+    );
+  }
+
+  // This record, for the month's prompt, 2026-10-22: Listening Notes asks one
+  // thing a month and a keeper sends a record they have already written
+  // about (library/month_prompt.js). Beside Send, the other door that sends
+  // something away; a newspaper's clipping because it goes to the
+  // publication. Here only while a prompt is open and unanswered.
+  if (onSubmit && words.submit) {
+    tools.push(
+      <button key="submit" type="button" onClick={() => { shut(); onSubmit(); }} {...box(...words.submit, <NewspaperClipping size={22} weight="regular" aria-hidden="true" />)} />
     );
   }
 

@@ -140,6 +140,9 @@ export const KEPT_NAMES = new Set([
   'publication', 'issue', 'issues', 'question', 'monthly', 'annual',
   'commons', 'counter', 'listeningroom',
   'donate', 'donations', 'events', 'tickets',
+  // Hers, 2026-10-22: where Listening Notes is made — the publication's own
+  // journal (STUDIO_ADDRESS), shown to nobody.
+  'studio',
 ]);
 
 export function tidyName(value) {

@@ -2986,3 +2986,46 @@ a.pn-item-album:hover { text-decoration: underline; text-underline-offset: 3px; 
 @media (prefers-reduced-motion: reduce) {
   .su-slide { animation: none; }
 }
+
+/* ── The month's prompt sheet, 2026-10-22 ─────────────────────────────────────
+   The send sheet's sheet (.sn-*) on the page's own colour, read top to
+   bottom: the prompt, what will be published — the record, the entry's own
+   writing, the keeper's name — and one press, Send to Listening Notes, in
+   the caption face with an arrow (no pill; the blog brief's fifth frame).
+   Nothing on it can be typed into. The prompt's words share .mp-when and
+   .mp-said with the note over the wall (journal.css). */
+.mp-sheet { text-align: left; padding-top: 30px; background: var(--bg); }
+.mp-sheet .mp-label { margin-top: 18px; }
+.mp-record { display: flex; align-items: center; gap: 14px; margin-top: 10px; flex-shrink: 0; }
+.mp-cover {
+  flex-shrink: 0; width: 64px; height: 64px; border-radius: 8px; object-fit: cover;
+  background: var(--panel); border: 1px solid var(--border);
+}
+.mp-record-words { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.mp-album {
+  font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
+  font-size: 17px; line-height: 1.25; color: var(--ink);
+}
+.mp-by {
+  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--ink-faint);
+}
+.mp-writing {
+  margin: 14px 0 0; font-size: 15px; line-height: 1.6; color: var(--ink-soft);
+  white-space: pre-wrap; overflow-wrap: anywhere;
+}
+.mp-keeper {
+  margin: 10px 0 0; font-family: var(--font-label); font-size: 10px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--ink-faint);
+}
+.mp-send, .mp-done {
+  align-self: flex-start; display: inline-flex; align-items: center; gap: 8px;
+  margin: 20px 0 0; padding: 4px 0;
+  background: none; border: 0; border-bottom: 1px solid currentColor; cursor: pointer;
+  font-family: var(--font-label); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--live-deep);
+}
+.mp-send:disabled { color: var(--ink-faint); cursor: default; }
+.mp-done { border-bottom: 0; cursor: default; }
+.mp-trouble { margin: 10px 0 0; font-size: 13px; line-height: 1.5; color: var(--ink-soft); }
+.mp-sheet .mp-foot { margin-top: 14px; }

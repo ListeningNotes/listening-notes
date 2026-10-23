@@ -32,6 +32,7 @@ import Chip from '../../../components/main_components/Slug_Page/Chip';
 import SentBy, { creditOn, useTrail } from '../../../components/main_components/Slug_Page/SentBy';
 import SenderTool from '../../../components/main_components/Slug_Page/SenderTool';
 import SendSheet from '../../../components/main_components/SendSheet';
+import { PromptSheet, useMonthPrompt } from '../../../components/main_components/MonthPrompt';
 import PrintBar from '../../../components/main_components/Slug_Page/PrintBar';
 import HorizonChart from '../../../components/main_components/HorizonChart';
 import MiniCard from '../../../components/main_components/Slug_Page/MiniCard';
@@ -415,6 +416,9 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   // and nothing sensible happens if both are true at once anyway.
   const [sendering, setSendering] = useState(false);
   const [sending, setSending] = useState(false);
+  // The month's prompt, while one is open (MonthPrompt.js).
+  const [prompt, tellPrompt] = useMonthPrompt(authed);
+  const [submitting, setSubmitting] = useState(false);
   // Where a panel of this entry's own hangs its footer bar. It has to be
   // *inside the layer*: z-index is per stacking context, the layer is fixed at
   // 200 and the bar is 140, so a bar rendered into the body competes with the
@@ -477,6 +481,9 @@ export default function FullPostPage({ entry, references = [], authed = false, l
          this record already in it — the two ways in differ only in which
          half is answered before the sheet arrives. */
       onSend={() => setSending(true)}
+      /* And this record for the month's prompt, while one is open and
+         nothing has been sent for it. */
+      onSubmit={prompt && !prompt.sent ? () => setSubmitting(true) : null}
       /* And another listen of the same record, which is a new entry and never
          an edit of this one. */
       onRelisten={revisit}
@@ -1920,6 +1927,17 @@ export default function FullPostPage({ entry, references = [], authed = false, l
           collection_id: entry.collection_id || '',
           slug: entry.slug,
         }}
+      />
+      {/* The month's prompt (MonthPrompt.js): this entry's record and its
+          writing as they stand, sent to Listening Notes on one press. Mounted
+          here for the reason the send sheet is. */}
+      <PromptSheet
+        open={submitting}
+        onClose={() => setSubmitting(false)}
+        entry={entry}
+        keeper={(keeper_name || '').trim()}
+        prompt={prompt}
+        onSent={tellPrompt}
       />
     </div>
   );
