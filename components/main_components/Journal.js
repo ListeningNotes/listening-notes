@@ -30,7 +30,7 @@
 import { Fragment, memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { CaretDown } from '@phosphor-icons/react';
 import { parseRating } from '../../library/entry_formatter';
-import { sizedAlbumArt } from '../../library/music_data_api';
+import { COLOR_SIDE, colorOfArt, sizedAlbumArt } from '../../library/music_data_api';
 import AlbumTile from './AlbumTile';
 import StarRating from './StarRating';
 import { handOffOrder } from '../../library/handoff';
@@ -205,9 +205,10 @@ const BANDS = {
 // and a pass over every record. It needs neither: Apple's covers let a page
 // read their pixels, so each one is read here, in the browser, from a 60px
 // copy, the first time By color is asked for in a visit — nothing stored,
-// nothing written, nothing on the server. A cover kept somewhere else
-// (Bandcamp, Discogs) refuses to be read, and goes with a record that has
-// none, at the very end.
+// nothing written. A cover kept somewhere else (Bandcamp, Discogs) refuses
+// to be read by a page, and is read by this journal's server instead (below,
+// askServerForColor); one that cannot be read at all goes with a record that
+// has none, at the very end.
 //
 // A cover's color is the hue it has most of, each pixel counted by how vivid
 // it is. Counting by the square of that, so a little bright color would win
@@ -221,47 +222,17 @@ const fromRed = hue => (hue + 15) % 360;
 const coverColors = new Map();
 const UNREAD = { hue: 0, light: 2, plain: true };
 
-function colorOfPixels(px) {
-  const bins = new Array(36).fill(0);
-  let vivid = 0;
-  let light = 0;
-  const count = px.length / 4;
-  for (let i = 0; i < px.length; i += 4) {
-    const r = px[i] / 255, g = px[i + 1] / 255, b = px[i + 2] / 255;
-    const max = Math.max(r, g, b), min = Math.min(r, g, b), chroma = max - min;
-    light += (max + min) / 2;
-    if (chroma < 0.1) continue;
-    let hue = max === r ? ((g - b) / chroma) % 6 : max === g ? (b - r) / chroma + 2 : (r - g) / chroma + 4;
-    hue = (hue * 60 + 360) % 360;
-    bins[Math.floor(hue / 10)] += chroma;
-    vivid += chroma;
-  }
-  light /= count;
-  if (vivid / count < COLOR_FLOOR) return { hue: 0, light, plain: true };
-  let peak = 0;
-  bins.forEach((v, i) => { if (v > bins[peak]) peak = i; });
-  // The middle of the strongest ten degrees, leant toward whichever side of
-  // it is stronger, so two covers in one band still line up by shade.
-  const left = bins[(peak + 35) % 36], right = bins[(peak + 1) % 36];
-  const hue = (peak * 10 + 5 + 5 * ((right - left) / (bins[peak] + left + right)) + 360) % 360;
-  return { hue, light, plain: false };
-}
-// How much color a cover has to have, on average across its pixels, to be a
-// color at all. Set against the test copy's covers.
-const COLOR_FLOOR = 0.08;
-
 function readCoverColor(address) {
   return new Promise(resolve => {
     const art = new Image();
     art.crossOrigin = 'anonymous';
     art.onload = () => {
       try {
-        const side = 24;
         const canvas = document.createElement('canvas');
-        canvas.width = side; canvas.height = side;
+        canvas.width = COLOR_SIDE; canvas.height = COLOR_SIDE;
         const pen = canvas.getContext('2d', { willReadFrequently: true });
-        pen.drawImage(art, 0, 0, side, side);
-        resolve(colorOfPixels(pen.getImageData(0, 0, side, side).data));
+        pen.drawImage(art, 0, 0, COLOR_SIDE, COLOR_SIDE);
+        resolve(colorOfArt(pen.getImageData(0, 0, COLOR_SIDE, COLOR_SIDE).data));
       } catch {
         resolve(null);
       }
@@ -269,6 +240,22 @@ function readCoverColor(address) {
     art.onerror = () => resolve(null);
     art.src = sizedAlbumArt(address, 60);
   });
+}
+
+// A cover kept somewhere that will not let a page read it (Bandcamp, Discogs)
+// is read by this journal's own server instead, which fetches the cover the
+// entry has saved and reads it the same way (app/api/entries/[slug]/color).
+// Asked only for those, and only once a visit. The address rides along so a
+// corrected cover is a new question rather than yesterday's cached answer.
+async function askServerForColor(slug, address) {
+  try {
+    const res = await fetch(`/api/entries/${encodeURIComponent(slug)}/color?v=${encodeURIComponent(address.slice(-24))}`);
+    if (!res.ok) return null;
+    const c = await res.json();
+    return typeof c?.hue === 'number' ? c : null;
+  } catch {
+    return null;
+  }
 }
 
 const colorKnown = album => !album.face.album_art || coverColors.has(album.face.album_art);
@@ -831,10 +818,12 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
   const [colorsRead, setColorsRead] = useState(0);
   useEffect(() => {
     if (view !== 'color') return undefined;
-    const unread = [...new Set(filtered.filter(a => !colorKnown(a)).map(a => a.face.album_art))];
-    if (!unread.length) return undefined;
+    const unread = new Map();
+    for (const a of filtered) if (!colorKnown(a) && !unread.has(a.face.album_art)) unread.set(a.face.album_art, a.face.slug);
+    if (!unread.size) return undefined;
     let here = true;
-    Promise.all(unread.map(address => readCoverColor(address)
+    Promise.all([...unread].map(([address, slug]) => readCoverColor(address)
+      .then(c => c || askServerForColor(slug, address))
       .then(c => coverColors.set(address, c || UNREAD))))
       .then(() => {
         if (!here) return;

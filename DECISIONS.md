@@ -977,13 +977,12 @@ the shelf line — "sort stays in the sheet on a phone" (2026-10-18) holds only
 until then. The home brief's views gain an A–Z, so a record can still be found
 by its name.
 
-**By color is a view, read off the covers in the browser, 2026-10-22, Miyel's
-ask.** The brief parked it for needing a hue stored per cover; Apple's covers
-let a page read their pixels, so nothing is stored or written. One gradient of
-hue, then the plain covers dark to light — no named bands, which guessed wrong
-("I only consider two of these orange"). It and Shuffle sit under a rule in the
-menu, the fun ones. Search is a magnifier that grows into a small field and
-turns into its × (her call).
+**By color is a view, read off the covers, never stored, 2026-10-22, Miyel's
+ask.** The page reads Apple's covers; one kept elsewhere is read by the server
+(`/api/entries/[slug]/color`, the saved cover only). One gradient of hue, then
+the plain covers dark to light — named bands guessed wrong ("I only consider
+two of these orange"). It and Shuffle sit under the menu's rule, the fun ones.
+Search is a magnifier that grows into a small field and turns into its ×.
 
 **Definitions ship as editable defaults, and custom listen types are ruled
 out.** Universal second-person text installs and the owner can edit any of

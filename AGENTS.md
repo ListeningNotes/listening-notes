@@ -299,8 +299,9 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   and at build, under a session-level advisory lock, on the direct (unpooled)
   endpoint.
 - `music_data_api.js` — Apple's catalogue: album art resizing
-  (`sizedAlbumArt`), tracklists and album facts, the record search
-  (`searchAlbums`), the song search (`searchSongs`), genre folding.
+  (`sizedAlbumArt`), a cover's color (`colorOfArt`, for By color, in the
+  browser and on the server alike), tracklists and album facts, the record
+  search (`searchAlbums`), the song search (`searchSongs`), genre folding.
 - `needle.js` — the beacon's reading half: the one `needle` row saying what
   is being logged now, lifting it, `sat_with` for listens whose post was
   deleted, and the recent listens drawn under the beacon.

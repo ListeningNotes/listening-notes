@@ -156,6 +156,7 @@ The front doors — receive requests, hand them off, send back responses
     entries/route.js           Load all entries / save a new one
     entries/[slug]/route.js    Load, edit, or delete one specific entry
     entries/[slug]/code/route.js  GET: the entry's code, pressed out of its cover — public, rate-limited, cached a day
+    entries/[slug]/color/route.js GET: the entry's cover color for By color, read on the server only for a cover a page may not read (Bandcamp, Discogs) — the saved cover only, public, rate-limited, cached a day
     drafts/route.js            Unfinished listens — owner-only both ways, the read included
     drafts/[id]/route.js       DELETE one draft
     format/route.js            Assemble your notes into a post (local, no model)
