@@ -448,9 +448,12 @@ away once a pane is scrolled: down in the wall or the reading, the only thing
 worth offering is more of what you are in. The swipe itself is untouched —
 hiding a control is a hint; disabling a gesture halfway down reads as broken.
 
-**Fifty covers to a page.** Past that you are scrolling rather than looking.
-Counted on the filtered set, so one artist inside three hundred records gives
-you their four on one page.
+**Fifty covers at a time, and fifty more before you reach the foot,
+2026-10-23** (Miyel: pages became "an infinite scroll", a reload back to the
+first fifty). The pages never saved a download: the wall is handed every
+record's summary and a cover loads near the screen. Past fifty you are
+scrolling rather than looking — still true; the sticking band heading is the
+answer, not a page. A new view draws from fifty again, at the wall's start.
 
 **Nothing sits at the foot of the wall.** The foot of the archive is where
 somebody has finished looking, and three links to elsewhere is the site
@@ -983,7 +986,11 @@ views are built, Sort leaves the filter sheet and becomes the view: arrows on
 the line, its name beside them for any order but the wall's own (her call,
 same day) — "sort stays in the sheet on a phone" (2026-10-18) holds only
 until then. The home brief's views gain an A–Z, so a record can still be found
-by its name.
+by its name. **A grouped view's headings stick under the line, 2026-10-23,**
+each sliding over the last; pressed, one lists every band to jump to — the
+brief's "the thing that tells you where you are is the thing that moves you".
+The last band or two land only as high as the wall's foot lets them, and the
+heading then names the band before: no room is added at the foot (Miyel).
 
 **By color is a view, read off the covers, never stored, 2026-10-22, Miyel's
 ask.** The page reads Apple's covers; one kept elsewhere is read by the server

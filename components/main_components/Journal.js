@@ -28,7 +28,7 @@
 'use client';
 
 import { Fragment, memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import { ArrowsDownUp, Moon, MoonStars, Sun, SunHorizon } from '@phosphor-icons/react';
+import { ArrowsDownUp, CaretDown, Moon, MoonStars, Sun, SunHorizon } from '@phosphor-icons/react';
 import { parseHorizon, parseRating } from '../../library/entry_formatter';
 import { COLOR_SIDE, colorOfArt, sizedAlbumArt } from '../../library/music_data_api';
 import AlbumTile from './AlbumTile';
@@ -449,14 +449,20 @@ function gatherAlbums(entries) {
 // number as the sitewide mobile breakpoint in styles/base.css.
 const FLIP_BELOW = 768;
 
-// How many covers before the wall is broken into pages. Fifty is a wall you can
-// still scan and roughly two screens of the widest tiles; past that you are
-// scrolling rather than looking, and the sort you chose stops meaning anything
-// because you never reach the other end of it.
+// How many covers the wall draws at a time. It was a page, with arrows under
+// it, until 2026-10-23 (Miyel: "when you hit the bottom, it can load more so
+// that it turns into an infinite scroll, and then when you reset the page,
+// essentially it's back to the default"). The pages never saved a download —
+// the wall is handed every record's summary when it opens, and a cover's
+// picture loads only as it nears the screen — so all the arrows rationed was
+// drawing. Now the next fifty are drawn before you reach the foot, and a
+// reload is fifty again.
 //
-// It is a count of the *filtered* set, not of the archive — searching for one
-// artist inside three hundred records should give you their four, on one page.
-const PER_PAGE = 50;
+// Fifty was chosen because past it you are scrolling rather than looking, and
+// the order stops meaning anything because you never reach its other end.
+// That still holds; what answers it now is the band heading that sticks and
+// moves you between bands, not a page.
+const COVERS_AT_A_TIME = 50;
 
 // entries and loading are optional. The cross already asks /api/entries for its
 // recent row and its counts, so on the homepage the wall is handed what has
@@ -559,10 +565,10 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
   // popover closes on scroll (see the effect below).
   const filterBtnRef = useRef(null);
 
-  // Which page of the wall. Reset by anything that changes what the wall holds
-  // — landing on page four of a search that only has one page is a blank grid
-  // and no explanation.
-  const [page, setPage] = useState(0);
+  // How far down the wall is drawn. It only grows, as you near the foot
+  // (below), and goes back to fifty with a new view. A narrower set under a
+  // long reach is simply a shorter wall, so nothing that filters touches it.
+  const [drawn, setDrawn] = useState(COVERS_AT_A_TIME);
   // The view: remembered in this browser, read the way the density is below,
   // and the reader's pick wins for the rest of the visit. The shuffle's seed
   // is made when Shuffle is pressed, so a remembered Shuffle opens shuffled.
@@ -921,14 +927,23 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
   }, [view, filtered]);
   // eslint-disable-next-line react-hooks/exhaustive-deps -- colorsRead says the covers' colors (a module map) have changed
   const arranged = useMemo(() => arrange(filtered, view, seed), [filtered, view, seed, colorsRead]);
-  // How many records each band holds, all of it and not just this page's
-  // share, for the number at the end of its heading (Miyel, 2026-10-22: "I
+  // How many records each band holds, all of it and not just what is drawn
+  // so far, for the number at the end of its heading (Miyel, 2026-10-22: "I
   // want to know how many late night"). A count on a group of records, the
   // way the card counts them — never one beside a person.
-  const bandSizes = useMemo(() => {
+  //
+  // And the bands in the wall's order, with where each one starts, for the
+  // list a heading opens and the jump it makes.
+  const { bandSizes, bandStarts, bandList } = useMemo(() => {
     const sizes = new Map();
-    for (const { band } of arranged) if (band) sizes.set(band.key, (sizes.get(band.key) || 0) + 1);
-    return sizes;
+    const starts = new Map();
+    const list = [];
+    arranged.forEach(({ band }, at) => {
+      if (!band) return;
+      if (!starts.has(band.key)) { starts.set(band.key, at); list.push(band); }
+      sizes.set(band.key, (sizes.get(band.key) || 0) + 1);
+    });
+    return { bandSizes: sizes, bandStarts: starts, bandList: list };
   }, [arranged]);
   const bandCount = band => {
     const n = bandSizes.get(band.key) || 0;
@@ -945,25 +960,119 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
   // through its folder and carries on to the record beside it.
   useEffect(() => { handOffOrder(arranged.flatMap(({ album }) => [...album.all].reverse())); }, [arranged]);
 
-  const pages = Math.max(1, Math.ceil(arranged.length / PER_PAGE));
-  // Clamped rather than reset in an effect: if the filters shrink the results
-  // under your feet, the page you are on may no longer exist, and the honest
-  // answer is the last one that does.
-  const current = Math.min(page, pages - 1);
-  const shown = pages > 1 ? arranged.slice(current * PER_PAGE, (current + 1) * PER_PAGE) : arranged;
+  const shown = arranged.slice(0, drawn);
+  const more = arranged.length > drawn;
+
+  // The next fifty, drawn while the foot is still most of a screen away, so
+  // scrolling never meets the end before it has moved. Watched afresh after
+  // every fifty: a watcher only speaks when the foot crosses its edge, and on
+  // a tall screen the foot can still be inside it once the fifty are down.
+  // The foot is held in state, not a ref, so the watcher starts when the foot
+  // is drawn: on home the records and the end of loading can land a render
+  // apart, and a watcher set up on the first found no foot and never looked
+  // again (on a phone, 2026-10-23).
+  const [wallEnd, setWallEnd] = useState(null);
+  useEffect(() => {
+    if (!wallEnd || typeof IntersectionObserver === 'undefined') return;
+    const watch = new IntersectionObserver(seen => {
+      if (seen.some(s => s.isIntersecting)) setDrawn(d => d + COVERS_AT_A_TIME);
+    }, { root: scroller?.current || null, rootMargin: '0px 0px 900px 0px' });
+    watch.observe(wallEnd);
+    return () => watch.disconnect();
+  }, [wallEnd, drawn, scroller]);
 
   const activeView = VIEWS.find(v => v.value === view) ?? VIEWS[0];
 
-  // A new view starts at its beginning: page four of one order is nothing in
-  // particular of another. Shuffle pressed again is a new shuffle.
+  // A new view starts at its beginning: two hundred covers into one order is
+  // nothing in particular of another. So it is drawn from fifty again, and if
+  // you were part way down, the wall comes back up to stand under its line —
+  // without the glide, which from that far would be covers flying in from
+  // two hundred places at once. Shuffle pressed again is a new shuffle.
   function chooseView(value) {
-    glideFrom.current = positions();
+    const wall = grid.current;
+    const wrap = lineWrap.current;
+    const under = wall && wrap ? wrap.getBoundingClientRect().bottom - wall.getBoundingClientRect().top : 0;
+    glideFrom.current = under > 1 ? null : positions();
     if (value === 'shuffle') setSeed(freshSeed());
     setView(value);
     storeView(value);
-    setPage(0);
+    setDrawn(COVERS_AT_A_TIME);
+    if (under > 1) (scroller?.current || document.scrollingElement)?.scrollBy({ top: -under });
     closeViews();
   }
+
+  // ── The band you are in, 2026-10-23 ───────────────────────────────────
+  // The home brief: "the heading at the top sticks as you scroll and lists
+  // the other bands when pressed — the thing that tells you where you are is
+  // the thing that moves you." Every heading sticks under the line, each
+  // sliding over the one before, so the one showing is the band at the top
+  // of the screen. Pressed, a heading comes up to stand there if it was not
+  // already, and drops the list of every band in this view, with how many
+  // each holds; a band pressed in the list is brought up under the line —
+  // drawn first, if the endless wall had not reached it yet.
+  //
+  // It is the answer to the reason the wall was fifty to a page: past fifty
+  // you are scrolling rather than looking. Now a long wall is a set of
+  // bands to move between, and a reload is still fifty.
+  const [bandsOpen, setBandsOpen] = useState(null);
+  const [bandsLeaving, setBandsLeaving] = useState(false);
+  const landing = useRef(null);
+
+  function closeBands() {
+    setBandsLeaving(true);
+    clocks.current.push(setTimeout(() => { setBandsOpen(null); setBandsLeaving(false); }, VIEWS_OUT_MS));
+  }
+
+  // Where a band's heading stands when it is stuck, under the line. Measured
+  // from its first record rather than from the heading, which, stuck, says
+  // where it is stuck rather than where it belongs.
+  function bringUp(key, { focus = false } = {}) {
+    const box = grid.current;
+    const port = scroller?.current || document.scrollingElement;
+    const head = box?.querySelector(`.arc-band[data-band="${CSS.escape(String(key))}"]`);
+    const first = head?.nextElementSibling;
+    if (!head || !first || !port) return;
+    const gap = parseFloat(getComputedStyle(box).rowGap) || 0;
+    const look = getComputedStyle(head);
+    const belongs = first.getBoundingClientRect().top - gap - (parseFloat(look.marginBottom) || 0) - head.offsetHeight;
+    const portTop = port === document.scrollingElement ? 0 : port.getBoundingClientRect().top;
+    const by = belongs - portTop - (parseFloat(look.top) || 0);
+    const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    if (Math.abs(by) > 1) port.scrollBy({ top: by, behavior: still ? 'auto' : 'smooth' });
+    if (focus) head.querySelector('button')?.focus({ preventScroll: true });
+  }
+
+  function pressBand(key) {
+    if (bandsOpen === key) { closeBands(); return; }
+    bringUp(key);
+    setBandsLeaving(false);
+    setBandsOpen(key);
+  }
+
+  function toBand(key) {
+    closeBands();
+    const at = bandStarts.get(key) ?? 0;
+    if (at < drawn) { bringUp(key, { focus: true }); return; }
+    landing.current = key;
+    setDrawn(at + COVERS_AT_A_TIME);
+  }
+  // A band past the end of what was drawn is brought up once it has been.
+  useLayoutEffect(() => {
+    const key = landing.current;
+    if (key == null) return;
+    landing.current = null;
+    bringUp(key, { focus: true });
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- only a jump that had to draw first lands here
+  }, [drawn]);
+
+  useEffect(() => {
+    if (bandsOpen == null) return undefined;
+    const onKey = e => { if (e.key === 'Escape') closeBands(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [bandsOpen]);
+  // A new view is a new set of bands: a list left open belonged to the old.
+  if (bandsOpen != null && !bandSizes.has(bandsOpen)) setBandsOpen(null);
 
   // ── Room under the line, 2026-10-22 ────────────────────────────────────
   // With the page at its top the line sits low on the screen, and a panel
@@ -992,6 +1101,34 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
     if (sheet) makeRoom(sheet.scrollHeight + sheet.offsetHeight - sheet.clientHeight);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filtersOpen]);
+  // Where a stuck band heading stands: right under the line, wherever the
+  // line is stuck and however tall it is today (the search open, the bar
+  // wrapped to two rows on a narrow page). Where the line's surround is
+  // clear, as on a desk, the heading's ground also reaches up behind it to
+  // the bar (--arc-band-lift), so covers do not show in the strip between
+  // them — and the heading stands below that strip, not in it, because the
+  // line takes the presses there. Kept on the wall as properties, so moving
+  // them re-renders nothing.
+  const wallMain = useRef(null);
+  useLayoutEffect(() => {
+    const wrap = lineWrap.current;
+    const main = wallMain.current;
+    if (!wrap || !main) return undefined;
+    const measure = () => {
+      const bar = wrap.querySelector('.arc-bar');
+      const look = getComputedStyle(wrap);
+      const clear = look.backgroundColor === 'transparent' || look.backgroundColor === 'rgba(0, 0, 0, 0)';
+      const lift = clear && bar ? Math.max(0, wrap.offsetHeight - bar.offsetTop - bar.offsetHeight) : 0;
+      main.style.setProperty('--arc-band-top', `${(parseFloat(look.top) || 0) + wrap.offsetHeight}px`);
+      main.style.setProperty('--arc-band-lift', `${lift}px`);
+    };
+    measure();
+    if (typeof ResizeObserver === 'undefined') return undefined;
+    const watch = new ResizeObserver(measure);
+    watch.observe(wrap);
+    return () => watch.disconnect();
+  }, []);
+
   function makeRoom(tall) {
     const wrap = lineWrap.current;
     const port = scroller?.current || document.scrollingElement;
@@ -1048,19 +1185,7 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
     clocks.current.push(setTimeout(show, 120));
   }, [arranged, closeTheGap]);
 
-  // Turning a page leaves the scroll where it is. It went to the top, from
-  // when the wall was the whole page; under the beacon the top is the
-  // beacon, and every press threw you a floor past the covers (2026-10-20).
-  // A page is fifty tiles, so the next one lays out exactly where this one
-  // was. A shorter last page is clamped by the browser, and the wall's floor
-  // is a screen tall at least, so the clamp lands on covers and never on the
-  // beacon above them.
-  function toPage(next) {
-    setPage(next);
-  }
-
   function clearFilters() {
-    setPage(0);
     setSearch(''); setKind(''); setGenre(''); setGenresOpen(false);
     setFavoritesOnly(false); setMasterpiecesOnly(false); setFormativeOnly(false); setSentOnly(false);
     setYearPicked(null);
@@ -1082,7 +1207,7 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
           old bottom margin and happens to be about right for a bar plus a row
           of carets, so on a phone it is left alone and the top comes off
           instead — the wall starts where the pane starts. */}
-      <main className="arc-main" style={{ maxWidth: 1100, margin: '0 auto' }}>
+      <main className="arc-main" ref={wallMain} style={{ maxWidth: 1100, margin: '0 auto' }}>
         {loading ? (
           <div className="arc-grid" data-density={density}>
             {[...Array(18)].map((_, i) => <div key={i} className="arc-skel" style={{ animationDelay: (i * 0.04) + 's' }} />)}
@@ -1101,30 +1226,46 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
           <div className="arc-grid" data-density={density} ref={grid}>
             {shown.map(({ album, band }, i) => (
               <Fragment key={album.key}>
-                {/* A band's heading over its first record, and again at the
-                    top of a page that opens part way through one. Inside the
-                    grid, across every column, so the tiles keep one grid to
-                    file across when a record comes or goes. */}
+                {/* A band's heading over its first record. Inside the grid,
+                    across every column, so the tiles keep one grid to file
+                    across when a record comes or goes; sticky, so the band
+                    you are in stays named under the line; and a button, so
+                    the name is also the way to the others. */}
                 {band && (i === 0 || shown[i - 1].band.key !== band.key) && (
-                  band.stars ? (
-                    <h3 className="arc-band">
-                      <StarRating rating={band.stars} size={11} />
-                      <span className="arc-band-said">{band.label}</span>
-                      {bandCount(band)}
+                  <div className={'arc-band' + (bandsOpen === band.key ? ' arc-band--open' : '')} data-band={band.key}>
+                    <h3 className="arc-band-head">
+                      <button
+                        type="button"
+                        className="arc-band-press"
+                        onClick={() => pressBand(band.key)}
+                        aria-expanded={bandsOpen === band.key && !bandsLeaving}
+                        aria-haspopup="menu"
+                      >
+                        <BandName band={band} />
+                        {bandCount(band)}
+                        <CaretDown className="arc-band-caret" size={9} weight="bold" aria-hidden="true" />
+                      </button>
                     </h3>
-                  ) : band.glyph ? (
-                    <h3 className="arc-band">
-                      <band.glyph size={13} weight="regular" aria-hidden="true" />
-                      {band.label}
-                      {bandCount(band)}
-                    </h3>
-                  ) : band.bars ? (
-                    <h3 className="arc-band">
-                      <ShapeBars bars={band.bars} />
-                      {band.label}
-                      {bandCount(band)}
-                    </h3>
-                  ) : <h3 className="arc-band">{band.label}{bandCount(band)}</h3>
+                    {bandsOpen === band.key && (
+                      <>
+                        <div className="arc-views-scrim" onClick={closeBands} />
+                        <span className={'arc-views arc-bands' + (bandsLeaving ? ' arc-views--leaving' : '')} role="menu" aria-label={activeView.label}>
+                          {bandList.map(b => (
+                            <button
+                              key={b.key}
+                              type="button"
+                              role="menuitem"
+                              className={'ln-word arc-views-word arc-bands-word' + (b.key === band.key ? ' ln-word--on' : '')}
+                              onClick={() => toBand(b.key)}
+                            >
+                              <span className="arc-bands-name"><BandName band={b} /></span>
+                              <span className="arc-bands-count">{bandSizes.get(b.key)}</span>
+                            </button>
+                          ))}
+                        </span>
+                      </>
+                    )}
+                  </div>
                 )}
                 <AlbumTile
                   album={album}
@@ -1139,34 +1280,11 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
           </div>
         )}
 
-        {foot}
-        {/* Only when there is more than one. A pager under a single page is a
-            control that says the collection is bigger than it is. */}
-        {pages > 1 && (
-          <nav className="arc-pages" aria-label="Pages">
-            <button
-              type="button"
-              className="arc-page-step"
-              onClick={() => toPage(current - 1)}
-              disabled={current === 0}
-              aria-label="Previous page"
-            >
-              ←
-            </button>
-            <span className="arc-page-count">
-              {current + 1} / {pages}
-            </span>
-            <button
-              type="button"
-              className="arc-page-step"
-              onClick={() => toPage(current + 1)}
-              disabled={current >= pages - 1}
-              aria-label="Next page"
-            >
-              →
-            </button>
-          </nav>
-        )}
+        {/* What the watcher above waits for. Nothing to see: the next fifty
+            arrive before it is reached. Whatever is under the wall comes
+            after the last of them, never in the middle. */}
+        {more && !loading && <div ref={setWallEnd} className="arc-more" aria-hidden="true" />}
+        {!more && foot}
       </main>
       <div className="arc-bar-wrap" ref={lineWrap}>
         {/* Catches the press that closes the views, and nothing else: it is
@@ -1316,6 +1434,16 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
       )}
     </>
   );
+}
+
+// A band's name, as its heading draws it and as the list of bands does: By
+// rating's stars (the words kept for a screen reader), By time of day's
+// glyph, By horizon's bars, or the word alone.
+function BandName({ band }) {
+  if (band.stars) return <><StarRating rating={band.stars} size={11} /><span className="arc-band-said">{band.label}</span></>;
+  if (band.glyph) return <><band.glyph size={13} weight="regular" aria-hidden="true" />{band.label}</>;
+  if (band.bars) return <><ShapeBars bars={band.bars} />{band.label}</>;
+  return band.label;
 }
 
 // A shape's heading: five bars, the horizon's own idea, standing on one line.
