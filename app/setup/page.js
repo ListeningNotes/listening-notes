@@ -80,6 +80,11 @@ import UpdateSwitch from '../../components/main_components/UpdateSwitch';
 import { usePasswordName } from '../../hooks/useJournalHost';
 import { tidyJournal, journalUrl, inviterIn } from '../../library/return_address';
 import { journal_in } from '../../library/carbon_copy';
+import { DIRECTORY_URL } from '../../library/version';
+
+// Being listed where other keepers can find a journal, said at setup (AGENTS,
+// No phone-home) in Miyel's words, 2026-10-22: on by default, off in Settings.
+const LISTED_SAID = 'Other keepers can find your journal. You can turn this off in Settings.';
 import { canHoldKeys, keepFresh, markKeyHere, thisDevice, wayIn, SpareKeyShown } from '../../components/main_components/Keyring';
 
 // The password claims the journal; the home screen comes after, because it is
@@ -683,6 +688,12 @@ export default function WelcomeScreen() {
                     <span className="su-copy-pick">{busy ? 'Reading…' : 'Choose the file'}</span>
                   )}
                 </label>
+                {/* A journal brought in keeps its keeper's own choice; one
+                    from a copy older than the choice is listed, as every
+                    journal is unless switched off, and is told so here. */}
+                {DIRECTORY_URL && copy && copy.journal?.tables?.settings?.[0]?.findable !== false && (
+                  <p className="su-why">{LISTED_SAID}</p>
+                )}
                 <button type="button" className="su-go" disabled={busy || !copy} onClick={() => advance()}>Next</button>
               </div>
             )}
@@ -697,12 +708,12 @@ export default function WelcomeScreen() {
                     it off (Miyel's Board brief: "say so plainly during
                     setup"). Here, because the name is the first thing the
                     Board shows; a copy with no directory has no Board. */}
-                {/* The Board's line was here until 2026-10-20, a paragraph and
-                    then one line, and is off for now (Miyel: "we don't even
-                    know if it's called the board, it's being re-worked. just
-                    leave it off for now"). Being on the Board is still meant
-                    to be said at setup (AGENTS); its line comes back with
-                    the rework. */}
+                {/* Off from 2026-10-20 while the Board was reworked (Miyel:
+                    "we don't even know if it's called the board"), and back
+                    on 2026-10-22 in words that do not name it, her pick:
+                    anyone can start a journal at the front door now, and
+                    being listed is said at setup (AGENTS). */}
+                {DIRECTORY_URL && <p className="su-why">{LISTED_SAID}</p>}
                 <button type="submit" className="su-go" disabled={busy || !name.trim()}>Next</button>
               </form>
             )}
