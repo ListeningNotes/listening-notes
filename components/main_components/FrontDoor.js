@@ -2,11 +2,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // components/main_components/FrontDoor.js
 // The front door's page (library/front_door.js): the mark and two doors,
-// Start a journal and Find my journal (Miyel's words, 2026-10-20 — Start
-// wears the open book Visit wears, with a plus on its corner), each opening
-// where it is, over a wall of records. `/get` is the same page with Start
-// open. Drawn by the root layout in place of a journal, because the front
-// door has no journal of its own.
+// Start a journal and Find a journal (Miyel's words, 2026-10-20 — Start
+// wears the open book Visit wears, with a plus on its corner; Find a journal
+// rather than Find my journal since 2026-10-22, "this can be used to find
+// others too"), each opening where it is, over a wall of records. Their
+// buttons say one word each, Create and Open (her words, the same day).
+// `/get` is the same page with Start open. Drawn by the root layout in place
+// of a journal, because the front door has no journal of its own.
 //
 // The journals left are said while there are some, and "We're full for now.
 // Come back soon." once there are none (her pick: "a mix of both").
@@ -168,7 +170,7 @@ function Doors({ domain, left: firstLeft, invite, opening }) {
         )}
         <Door which="find" open={open} onPress={() => press('find')}
           glyph={<MagnifyingGlass size={22} weight="regular" aria-hidden="true" />}>
-          Find my journal
+          Find a journal
         </Door>
       </div>
       {!closed && (
@@ -210,17 +212,17 @@ function FindFold({ domain }) {
   // for what was found, and setup's black button.
   return (
     <div className="fd-fold-body">
-      <p className="fd-caption">Your journal’s address</p>
+      <p className="fd-caption">A journal’s address</p>
       <AddressField
         value={name}
         onChange={value => { setName(value); setTrouble(''); }}
         domain={domain}
-        label="Your journal’s address"
+        label="A journal’s address"
         onEnter={open}
       />
       <p className="fd-state" role="status">{trouble || '\u00a0'}</p>
       <button type="button" className="su-go fd-go" onClick={open} disabled={!name || busy}>
-        {busy ? 'Looking…' : 'Open it'}
+        {busy ? 'Looking…' : 'Open'}
       </button>
     </div>
   );
@@ -352,7 +354,7 @@ function StartFold({ domain, invite, left, setLeft, making, setMaking }) {
           {/* Setup's own black button, full width (Miyel's pick): the next
               screen they meet is setup, and its button looks like this. */}
           <button type="button" className="su-go fd-go" onClick={make} disabled={state !== 'free'}>
-            Create my journal
+            Create
           </button>
         </>
       )}

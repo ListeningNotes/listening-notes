@@ -378,7 +378,7 @@ where Listening Notes is made and where the records keepers send for the
 month's prompt are kept, at an address nobody is shown
 (`library/hosting_directory.js`, `studio`; the magazine at the bare domain
 has no sign-in). `studio` is in `KEPT_NAMES`, so nobody can start a journal
-at it and Find my journal never opens it. With it, one door
+at it and Find a journal never opens it. With it, one door
 at the bare domain — `/api/submissions`, where every copy posts a record for
 the prompt (`PUBLICATION_URL`) — is answered as that journal; the bare
 domain's pages and every other forward stay as they were. That journal takes

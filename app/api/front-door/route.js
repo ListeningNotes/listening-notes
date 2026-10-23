@@ -40,7 +40,7 @@ export async function GET(request) {
       {
         name: tidyName(asked), host: journalHostFor(asked), state: await nameState(asked), left,
         // A word nobody may start a journal at (KEPT_NAMES): "taken" to
-        // signup, and never a door for Find my journal — the studio, kept at
+        // signup, and never a door for Find a journal — the studio, kept at
         // one, is nobody's to be shown (2026-10-22).
         kept: KEPT_NAMES.has(tidyName(asked)),
       },
