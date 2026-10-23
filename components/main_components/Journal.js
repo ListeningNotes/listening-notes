@@ -31,6 +31,7 @@ import { Fragment, memo, useCallback, useEffect, useLayoutEffect, useMemo, useRe
 import { CaretDown } from '@phosphor-icons/react';
 import { parseRating } from '../../library/entry_formatter';
 import AlbumTile from './AlbumTile';
+import StarRating from './StarRating';
 import { handOffOrder } from '../../library/handoff';
 import GridDensity, { DEFAULT_DENSITY, readStoredDensity, storeDensity } from './GridDensity';
 import JournalFilters from './JournalFilters';
@@ -132,6 +133,9 @@ function storeView(value) {
   }
 }
 
+// By rating's headings are the stars themselves (Miyel, 2026-10-22: "don't do
+// words but show stars"), the row an entry draws; these words are what a
+// screen reader says for them.
 const STARS = {
   5: 'Five stars', 4.5: 'Four and a half', 4: 'Four stars', 3.5: 'Three and a half',
   3: 'Three stars', 2.5: 'Two and a half', 2: 'Two stars', 1.5: 'One and a half',
@@ -173,7 +177,7 @@ const BANDS = {
   rating: album => {
     const score = scoreOf(album);
     return STARS[score]
-      ? { key: String(score), label: STARS[score], rank: -score }
+      ? { key: String(score), label: STARS[score], stars: score, rank: -score }
       : { key: 'none', label: 'Not rated', rank: Infinity };
   },
 };
@@ -792,7 +796,13 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
                     grid, across every column, so the tiles keep one grid to
                     file across when a record comes or goes. */}
                 {band && (i === 0 || shown[i - 1].band.key !== band.key) && (
-                  <h3 className="arc-band">{band.label}</h3>
+                  band.stars
+                    ? (
+                      <h3 className="arc-band" aria-label={band.label}>
+                        <StarRating rating={band.stars} size={11} />
+                      </h3>
+                    )
+                    : <h3 className="arc-band">{band.label}</h3>
                 )}
                 <AlbumTile
                   album={album}
