@@ -126,6 +126,62 @@ export async function read_letter(body) {
   return { ok: true, letter };
 }
 
+// ── The month's prompt, 2026-10-22 ────────────────────────────────────────
+// Listening Notes, the publication, asks one thing a month (the blog's
+// brief), and the prompt reaches a journal the way a letter does: sealed
+// with the canonical keeper's key and posted by her to the journals it
+// concerns, with nothing reported back (Miyel: "LN admin") — so a journal
+// that never sends a record never contacts the publication. Sealed under its
+// own first line, so no letter's seal passes for a prompt's and no prompt's
+// for a letter's; kept apart from letters (library/month_prompt.js), so
+// neither ever puts the other away. scripts/letterhead.mjs, `prompt`, builds
+// the same bytes.
+export function sealed_prompt(prompt) {
+  return Buffer.from(
+    `ln-prompt-1\n${JSON.stringify([prompt.to, prompt.said, prompt.month, prompt.ends_at, prompt.sent_at, prompt.id])}`,
+    'utf8',
+  );
+}
+
+// How long a prompt may be: a question, not a letter.
+const PROMPT_MOST = 300;
+
+// Reads a prompt off a request's body — { prompt: { to, said, month,
+// ends_at, sent_at, id }, seal } — and says whether it may be kept, as
+// read_letter does. `kept` is the prompt this journal has, if any: one no
+// newer is refused, so a prompt can never be posted in again.
+export async function read_prompt(body, kept = null) {
+  const key = publicKey();
+  if (!key) return refused('This journal takes no prompts.', 403);
+
+  const sent = body?.prompt;
+  const prompt = sent && typeof sent === 'object' && !Array.isArray(sent)
+    ? { to: sent.to, said: sent.said, month: sent.month, ends_at: sent.ends_at, sent_at: sent.sent_at, id: sent.id }
+    : null;
+  if (!prompt || !Object.values(prompt).every(v => typeof v === 'string')) {
+    return refused('That is not a prompt.', 400);
+  }
+  if (!prompt.said.trim() || prompt.said.length > PROMPT_MOST) return refused('A prompt has to ask something, and briefly.', 400);
+  if (!prompt.month.trim() || prompt.month.length > 40) return refused('A prompt has to name its month.', 400);
+  const when = Date.parse(prompt.sent_at);
+  const ends = Date.parse(prompt.ends_at);
+  if (!Number.isFinite(when) || when > Date.now() + FUTURE_MOST) return refused('That prompt is not dated.', 400);
+  if (!Number.isFinite(ends) || ends <= when) return refused('That prompt never closes.', 400);
+
+  let seal;
+  try { seal = Buffer.from(String(body.seal || ''), 'base64url'); } catch { seal = null; }
+  let good = false;
+  try { good = Boolean(seal?.length) && verify(null, sealed_prompt(prompt), key, seal); } catch { good = false; }
+  if (!good) return refused('That seal is not good.', 401);
+
+  const own = (await pull_settings())?.site_address;
+  if (!sameJournal(prompt.to, own)) return refused('That prompt is for another journal.', 404);
+  if (kept?.sent_at && when <= Date.parse(kept.sent_at)) {
+    return refused('This journal has that prompt, or a newer one, already.', 409);
+  }
+  return { ok: true, prompt };
+}
+
 // Keeps a letter: the one before it goes, this one is pinned, and when it
 // was sent is remembered, so it can never be posted in again. When the one
 // that went was the journal asking for a copy, it may ask again once this

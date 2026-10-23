@@ -78,6 +78,7 @@ import { MessageWayIn } from '../../../components/main_components/Slug_Page/Mess
 import SentBy, { creditOn, useTrail } from '../../../components/main_components/Slug_Page/SentBy';
 import SenderTool from '../../../components/main_components/Slug_Page/SenderTool';
 import SendSheet from '../../../components/main_components/SendSheet';
+import { PromptSheet, useMonthPrompt } from '../../../components/main_components/MonthPrompt';
 import StarRating from '../../../components/main_components/StarRating';
 import StarPicker from '../../../components/session_components/StarRating';
 import Chip from '../../../components/main_components/Slug_Page/Chip';
@@ -251,6 +252,9 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
   const [trailOpen, setTrailOpen] = useState(false);
   const [crediting, setCrediting] = useState(false);
   const [sending, setSending] = useState(false);
+  // The month's prompt, while one is open (MonthPrompt.js).
+  const [prompt, tellPrompt] = useMonthPrompt(authed);
+  const [submitting, setSubmitting] = useState(false);
   const [barSlot, setBarSlot] = useState(null);
 
   // ── The cover as the code ───────────────────────────────────────────────
@@ -293,6 +297,7 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
       slug={entry.slug}
       onSender={() => setCrediting(true)}
       onSend={() => setSending(true)}
+      onSubmit={prompt && !prompt.sent ? () => setSubmitting(true) : null}
       onDelete={edit.remove}
     />
   );
@@ -592,6 +597,19 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
             // which track (migrations/026_track_sends.sql).
             song: entry.song || '',
           }}
+        />
+      )}
+      {/* The month's prompt (MonthPrompt.js): this entry's record and its
+          writing as they stand, sent to Listening Notes on one press. Mounted
+          here for the reason the send sheet is. */}
+      {!writing && (
+        <PromptSheet
+          open={submitting}
+          onClose={() => setSubmitting(false)}
+          entry={entry}
+          keeper={(keeper_name || '').trim()}
+          prompt={prompt}
+          onSent={tellPrompt}
         />
       )}
     </div>

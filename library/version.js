@@ -55,6 +55,17 @@ export const INSTAGRAM_URL =
 export const DIRECTORY_URL =
   process.env.NEXT_PUBLIC_DIRECTORY_URL ?? 'https://www.listeningnotes.blog/api/directory';
 
+// Where Listening Notes, the publication, keeps what keepers send for the
+// month's prompt (2026-10-22, Miyel: "Listening Notes can be the name of the
+// magazine/publication"): its own journal, kept by the canonical keeper,
+// whose Inbox the records arrive in (library/month_prompt.js). Its magazine
+// is to live at the bare domain; this door is the journal's own address, so
+// the front door and every old link to the bare domain stay as they are. A
+// constant like the others, for the same reason; a fork sets
+// NEXT_PUBLIC_PUBLICATION_URL, or leaves it empty and nothing is sent.
+export const PUBLICATION_URL =
+  process.env.NEXT_PUBLIC_PUBLICATION_URL ?? 'https://publication.listeningnotes.blog';
+
 // ── A sandbox, 2026-10-17 ─────────────────────────────────────────────────
 // A preview of this copy built with NEXT_PUBLIC_SANDBOX set to 1 — on
 // Vercel's Preview environment and nowhere else, beside a database of its

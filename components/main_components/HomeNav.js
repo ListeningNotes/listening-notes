@@ -78,6 +78,7 @@ import { useTheme } from './Lightswitch';
 import { useBookplate } from './Bookplate';
 import ListeningBeacon from './ListeningBeacon';
 import Journal from './Journal';
+import MonthPrompt from './MonthPrompt';
 import Footer from './Footer';
 import About from './About';
 import Dashboard, { heldNow, subscribeHeld } from './Dashboard';
@@ -2901,6 +2902,9 @@ export default function HomeNav() {
           <div className="hn-floor hn-floor--wall">
             <div className="hn-floor-scroll" ref={floorRef}>
               <div className="hn-under">
+                {/* The month's prompt, pinned over the keeper's wall while it
+                    is open (MonthPrompt.js); nothing for a visitor. */}
+                {authed && <MonthPrompt authed={authed} />}
                 <Journal
                   entries={entries}
                   loading={loading}

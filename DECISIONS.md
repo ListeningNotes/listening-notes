@@ -1826,6 +1826,14 @@ ask SANDBOX, or a test reaches a real person.
 
 ---
 
+**The month's prompt is a record from the keeper's own wall, sent on a
+press, 2026-10-22.** Listening Notes asks one thing a month; a keeper sends
+an entry already written — its record and its writing as they stand, shown
+read-only, never a blank box, never a catalogue — to the publication's own
+journal. The prompt arrives sealed like an LN. Admin letter, so a journal
+that never sends never contacts it. Say prompt and record, never question
+and answer (Miyel: "the answer is a record").
+
 ## Things open in the page, not over it
 
 **An artist's name in a review lands you on the wall, filtered, 2026-09-06.**
