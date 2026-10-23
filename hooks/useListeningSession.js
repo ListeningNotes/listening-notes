@@ -330,7 +330,18 @@ export function useListeningSession({ step }) {
   // this can be as blunt as it is. Switching tabs and locking a phone do not
   // unmount anything, so those keep the beacon lit and the expiry above is
   // still what catches a listen nobody ever comes back to.
-  useEffect(() => () => { if (litRef.current) liftNeedle(); }, []);
+  //
+  // ── Unless it was put down, 2026-10-21 ────────────────────────────────────
+  // The session is a sheet over home now, raised from the Listen bar and
+  // lowered back into it (Miyel's brief, home and the session: "lowering is
+  // not ending"). Lowered, the record is still in hand and the bar carries it
+  // with the live dot, so the beacon goes on saying so — what she objected to
+  // on the 16th was a listen she had *shut* still being claimed, and shutting
+  // is Discard, Save draft and Post, which all still lift it. The page says
+  // which this is (putDown) before the sheet goes; the twenty-minute expiry
+  // still catches a listen put down and never picked up again.
+  const downRef = useRef(false);
+  useEffect(() => () => { if (litRef.current && !downRef.current) liftNeedle(); }, []);
 
   // Assemble the preview on arrival. Nothing here reaches a model — format_post
   // is a local join of what was written — so it is redone every time the
@@ -711,6 +722,9 @@ export function useListeningSession({ step }) {
     // Discard, 2026-09-29: the listen is thrown away, both copies of the
     // draft with it, and the needle lifts. The caller clears the desk.
     discardDraft: async () => { liftNeedle(); await draft.finish(); },
+    // Lowering: the sheet is going but the listen is not, so leaving the
+    // screen this time leaves the needle where it is.
+    putDown: () => { downRef.current = true; },
     doFormat,
     doSave,
   };

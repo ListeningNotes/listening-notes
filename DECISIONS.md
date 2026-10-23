@@ -96,8 +96,27 @@ were rewritten the same day, while nobody else had a clone.
 
 ## Structure
 
-**Cross navigation.** Beacon is home. Down → journal (only from the beacon).
-Left → the pane that turns: your card, or your desk (the colophon, signed out).
+**The frame: a top row, and the Listen bar at the foot, 2026-10-22, Miyel's
+answers.** The band of words at the foot is gone. The keeper's face sits top
+left and opens the card over the page; Home · People · Inbox sit top right as
+House, Users and Envelope, and only the lit one wears its word, underlined —
+`.ln-word`'s logic. Tap a word or swipe: the swipe is Home ↔ People ↔ Inbox,
+and the card is no longer a stop. The archive has the band and the card pane.
+
+**The face is in the top row on every page, People included, 2026-10-22,
+Miyel's call** — over the People brief's "no face on People": the row keeps
+one shape as you swipe, and the card is always one tap away.
+
+**A visitor's top row is their face and the LN. mark, no words, 2026-10-22.**
+People moved to the commons, so there is nothing there for a visitor to press,
+and a visitor has no Listen bar. The Source line and the version still stand
+at the foot of the card.
+
+**The Listen bar is the foot of every page of the keeper's, 2026-10-22** —
+part of the frame, not of home ("follow each page"). Where a page has its own
+bar at the foot — a correction, the print bar, an open sheet — it steps down:
+one row at the foot at a time. Phone first; the desk keeps its two pages until
+she has seen the phone (her call).
 
 **The cross is one route, not two.** A swipe that navigated would unmount the
 pane being left and lose its scroll. The gesture has to be continuous and
@@ -135,6 +154,8 @@ title and what came before — so something has to say there is more; the
 turning pane scrolls and its writing running off the edge is the cue. No mark
 over it: a side caret's mark named a destination worth knowing, and down has
 only one.
+The beacon has none since 2026-10-22 — a keeper's went for the Listen bar
+the day before, and a visitor's when home became one page; the book keeps its.
 
 **The light switch is the beacon's, top right, and nowhere else,
 2026-09-15.** One home for it: the first screen of the journal, where it is
@@ -160,13 +181,14 @@ you are already in it. They are plain uppercase words now, the one that
 commits on a hairline, and no tick or cross beside them. `.ln-word`, shared by
 the four bars that share that band.
 
-**One exception, 2026-09-20: the way into a listen is a circle on the
-beacon's rule.** It is the one thing on that screen you can press and it was
-reading as a third caption under a line. The ring is a hairline of the same
-weight as the rule it stands in the break of, which is the rule making room
-for a control rather than a box drawn round a word. Miyel asked for it by
-name: "make start a listen feel intentional — maybe it can be a circle
-between the hairlines that looks like a button.
+**One exception, 2026-10-21: the way into a listen is the Listen bar.** A
+raised panel at the foot of home, the session closed: *Start a listen* at rest
+(the brief's *Listen* "feels so odd", her pick, 2026-10-22), and a lowered
+listen's cover, track and live dot — the only thing on the site shaped
+like a button, because it is the only thing that starts something; it
+licenses no second one (Miyel's brief, home and the session). The ring and
+the keeper's chevron went for it: "everything leaves in exchange for this."
+The ring of 2026-09-20 is in the archive.
 
 **No loose icons in headers, 2026-09-15.** The mark is centred and the sides
 are for navigation. A single ··· is not a row of tools, it is a door, and it
@@ -209,55 +231,6 @@ three tools and a door reach into it on a 375px phone — so the row becomes the
 menu while the menu is open and the mark comes back when it shuts. The card
 has two tools and 29px to spare and keeps its mark.
 
-**Four panes for the keeper, three for everybody else, 2026-09-19.** Card,
-beacon, inbox, friends — and card, beacon, colophon signed out. **A stop on
-the band is a room you stand in, never a corridor you pass through.** The desk
-was a page of doors, which is a corridor: the two rooms worth being in were
-behind it and Settings is a thing you do twice a year. So the rooms took their
-own stops, Settings went to the foot of the card, and the desk left the phone.
-It is still the spine's second page above 769px, where there is no band. What
-follows is the 2026-09-15 version and still holds, apart from the count.
-
-**The cross is three panes on a phone: ID, beacon, desk, 2026-09-15.** You
-land on the beacon. Three was tried before and failed, and neither reason was
-the count — the panes were the same shape as each other and nothing said where
-you were. Both are fixed: every pane is a different kind of thing now (a
-portrait over writing, a record over the journal, a hero over rows), and a band
-at the foot names all three all the time.
-
-It replaced two panes and a button. Two existed because sideways meant two
-things — about you on the left, your tools on the right — and the button that
-resolved it never stopped feeling misplaced wherever it was put, through six
-placements. The gesture that would have replaced the button cannot exist: the
-left edge belongs to the rail (see the four ruled-out approaches above). Three
-is also the more balanced arrangement — the beacon centred, the person on one
-side, their tools on the other. With two, one page always carries more.
-
-The book was an interpretation, not a rule. What it gave this project was an
-object and then the writing underneath, and that survives at any pane count.
-
-**The band at the foot: Card · Beacon · Friends · Inbox, 2026-09-15, widened
-2026-09-19.** **The order is by depth, not by subject:** two of the four panes
-have a second floor and two do not, so they go flat, deep, deep, flat rather
-than letting a single-floor pane sit between the two that go down. Down should
-mean the same thing on neighbouring stops.
-
-A glyph over a word, the pane you are on in ink and the rest
-pale. It is the whole of what is down there — it replaced the dots, the edge
-carets and the mini beacon. Every mark on it is one this site already uses for
-that exact thing, so none has to be learned twice.
-
-Pressing a name moves the rail exactly as a swipe does, because it is the
-visible version of the gesture and not an alternative to it: somebody presses
-Friends once, watches it move, and swipes from then on. That was always what the
-carets were for, and a word does it better than a chevron — a chevron says
-there is something that way and a word says what.
-
-The labels carry the meaning and the glyphs are decoration that has to earn
-17px. If one ever needs explaining, all three go and the words stay. An open
-book for the desk is wrong whatever else is: the book is the journal, and the
-journal is *down* from the beacon, not sideways.
-
 **A flip and then a slide were built for a two-pane cross and are both gone,
 2026-09-15.** What is worth keeping here is that 0.4s on `cubic-bezier(0.22, 0.61, 0.36, 1)` — the entry layer's arrival — is
 the curve everything on this site moves on, and it is what drives the rail now.
@@ -269,8 +242,14 @@ with a cover, meaning the one pane where something is cut off at a fold rather
 than simply running on. Everything else scrolls, and content running off the
 edge is its own cue.
 
+**Home is one page, 2026-10-22:** the record, then the wall, in one scroll,
+with no chevron, no floors and nothing settling between them — the top row
+and the Listen bar frame it and nothing is cut off at a fold (Miyel: "it
+doesn't really need it anymore"). On a phone the wall's bar sits at the top of
+the wall, stuck under the row, as on a desk: the foot is the Listen bar's.
+
 **A two-floor screen is two stops, and that is not a snap, 2026-09-20.**
-The entry, the beacon and the book all have it. The record
+The entry and the book have it (the beacon did, until home became one page). The record
 is one thing to look at and what is under it is the next; move at all and
 let go and it finishes the journey, the way you were already going. It acts
 only between those two, never past the second floor, and only with a hand
@@ -291,26 +270,6 @@ The press lands exactly; `scroll-margin-top` on the second floor is what tells
 it where to stop and is load-bearing with no snap in sight. What the snap was
 for survives without it: a first floor one screen tall, a row at the foot of
 it saying what is below, and — on the book, not the beacon — a peek of it.
-**The beacon has the row and no peek, 2026-09-20.** Its screen is full at the
-sizes the mark and the record are drawn at, so a sliver cost a smaller mark
-and tighter air above the cover, and what it bought was forty pixels under the
-wall's own search bar. A feed is rows and forty pixels of a row reads as a
-row; forty pixels of cover under a bar does not. Miyel, on the seam
-being gone: "i don't even mind that it scrolls seamless from top to bottom,
-that was something i wanted to address anyway."
-**A visitor's beacon has the peek and the keeper's does not, 2026-09-27.**
-The room the visitor row left goes to the wall's top: signed out, the first
-covers show under the chevron the way the feed shows under the faces. It is
-real now because the wall's bar stands at the foot of the phone screen; on
-the 20th the sliver was bar and band. The keeper's floor stays full and
-unmoved — Miyel's pick over a tease that would have put the mark 30px higher.
-
-What follows is the 2026-09-07 reasoning, which is why there was ever an
-exception: proximity on the long pane argued with the thumb and came off
-2026-08-28; mandatory over three screens and a bit would drag a reader back to
-a screen edge halfway down the wall. The two-floor shape was different while
-it lasted.
-
 **The large mark is the beacon's alone, 2026-09-15.** It was on every pane at
 one height, so the square under it landed on the same line whichever pane you
 were on — and that reason went with the centred card: there is no third square
@@ -484,10 +443,6 @@ fixed strip on every page pointing at places already reachable is 56px spent.
 the target. Only while the pane is scrolled: at the top there is nothing to go
 back to, and a dead tap zone across the cover is worse than none.
 
-**The wall's bar sits on the floor, edge to edge.** Rounded corners and side
-margins made it a pill floating over the covers; square and full width it is
-the edge of the wall.
-
 **Sideways is a decision made at the top of a pane.** The side controls go
 away once a pane is scrolled: down in the wall or the reading, the only thing
 worth offering is more of what you are in. The swipe itself is untouched —
@@ -500,10 +455,6 @@ you their four on one page.
 **Nothing sits at the foot of the wall.** The foot of the archive is where
 somebody has finished looking, and three links to elsewhere is the site
 asking them to leave.
-
-**The wall's controls sit at the bottom on a phone.** Where the thumb is, and
-where they do not take the first hundred pixels of covers. Sticky, never
-fixed — the wall lives inside a pane of the cross.
 
 **The beacon captions itself, 2026-09-07, on Miyel's call.** One line under
 the art, above the title, naming which of the three states below this is.
@@ -1025,6 +976,29 @@ where it is: the wall is a shelf, not a feed, and its worth is finding your
 first listen where you left it. Recency lives on the beacon, the recents and
 the feed. A sort by latest would be a toggle beside the density control, not
 a new default — parked until it is missed. The reversal is in the archive.
+
+**The wall's views replace Sort, 2026-10-22, Miyel's call.** A filter takes
+records away (genre, year, the marks); a view rearranges all of them. When the
+views are built, Sort leaves the filter sheet and becomes the view: arrows on
+the line, its name beside them for any order but the wall's own (her call,
+same day) — "sort stays in the sheet on a phone" (2026-10-18) holds only
+until then. The home brief's views gain an A–Z, so a record can still be found
+by its name.
+
+**By color is a view, read off the covers, never stored, 2026-10-22, Miyel's
+ask.** The page reads Apple's covers; one kept elsewhere is read by the server
+(`/api/entries/[slug]/color`, the saved cover only). White, then one gradient
+of hue, then gray to black — named bands guessed wrong ("I only consider two of
+these orange"). The fun ones sit under the menu's rule: time of day, horizon
+(the shape of the track stars), color, Shuffle. Search grows out of its magnifier.
+
+**The filters drop from the line, on a phone too, 2026-10-22, Miyel's call**
+("make filters match sort"): both at the views menu's compact size ("i
+prefered the size of the sort view"), a list each; the sheet from the foot is
+gone. The views are words, the filters a glyph beside each word: Album, Track,
+the marks and Submission's envelope, then genre folded to one line and the
+year. Nothing was taken out ("I just want it to look better"). The album size
+is the views' (how the wall is shown), under the menu's last hairline.
 
 **Definitions ship as editable defaults, and custom listen types are ruled
 out.** Universal second-person text installs and the owner can edit any of
@@ -2353,24 +2327,23 @@ and its note is a sheet. The strip, the carets, the swipe between tracks and
 the mini beacon header went with it. The reversed entries and the day of
 trials are in the archive; do not bring the screens back a third time.
 
-**An empty note field is closed.** *Add notes* under the track being
-logged until it is pressed; the album note is a box that is always open; the writing
-once there is any; nothing under any other track. The session offers rather
-than asks.
+**An empty note field is closed.** A pencil at the end of the track being
+logged until it is pressed; the album note is a box that is always open; the
+writing once there is any; nothing under any other track. The session offers
+rather than asks.
 
 **A track's note opens under its row, with the keyboard, and only under the
 track being logged.** The brief drew a sheet and one was built for an hour;
 Miyel: "the notes field should open in the tracklist, not as a popup." What
 sank the list in 2026-09-18 was a field under every row; one field, on the
 lit row, lifted clear of the keyboard, is a different thing. Left empty it
-shuts; written in, the words stand where it was. The envelope is beside the
-heart on the lit row, so a song can be sent without the box being opened.
+shuts; written in, the words stand where it was.
 
 **The track being logged is the one last touched, 2026-09-29.** Its name
 pressed, a star, the heart, its note opened — "any sort of click on a track
 counts as lighting it as live". Its number gives way to the live dot and the
-row takes the faintest green, and *Any notes?* stands under that track alone.
-Nothing about the beacon changes.
+row takes the faintest green, and the pencil stands at the end of that row
+alone. Nothing about the beacon changes.
 
 **The stars tell a scroll from a tap from a drag, 2026-09-29.** Nothing is
 set on the way down: up-and-down is the page's, sideways is the rating,
@@ -2393,14 +2366,15 @@ them; a Masterpiece counts, being five. Amends "anything at all" of
 **A note being written sits on the keyboard, 2026-10-17.** The foot of its
 box just over the keys, nothing between — the session's foot steps down
 while typing — and nothing scrolls back when the keyboard goes. Replaces
-lifting the track's name to the top (2026-09-22). Only Add notes, Edit notes
-and the written note open a track's note; a name, star or heart never does.
+lifting the track's name to the top (2026-09-22). Only the pencil and the
+written note open a track's note; a name, star or heart never does.
 
-**Under a lit track, two words: Add notes and Send track, centred.** A word,
-not the envelope: it was tried beside the heart (it moved the stars), at the
-end of the line, and under the live dot, and none read right. The note opens
-in the album note's own box under the row; the eye beside the album's stars
-reveals the tracks' average with "avg." after it.
+**A pencil at the end of the lit row, 2026-10-21, and no sending from a
+listen.** In a slot every row keeps and leaves empty, so the stars never move
+when it appears — what sank the envelope in September; a word or an open box
+read as a field to fill in, and a track note has to feel optional (Miyel's
+brief, home and the session). Send track went with the two words: a song is
+sent from a real post, not from a listen (Miyel). The archive has the words.
 
 **A brow the height of the status bar stands over every page, 2026-09-29.**
 Solid, the page's colour, no blur and no hairline; what scrolls goes under
@@ -2408,9 +2382,12 @@ it rather than behind the clock. It is sixteen short of the inset, because
 that is where the site's fixed rows start (`--safe-top`); at the inset's
 full height it cut their tops off. Nothing where the inset is zero.
 
-**Discard · Save draft · Post at the foot; on a desk, in a row at the
-top.** Discard asks twice. Save draft is the pull down as a word: the draft
-was always saving itself, this is the visible way out. Post opens the entry
+**Discard · Save draft · Post in a row under the sheet's grip, phone and
+desk alike, 2026-10-22, Miyel's pick** over the foot, at the cost of a
+longer reach (the foot was for the thumb). Discard asks twice. Discard and
+Save draft end the listen and go back to the picker in the sheet — "discard
+and draft technically are back" — and so does a track note's Cancel; the
+grip, pressed or pulled, puts the sheet away. Opened cold: the foot. Post opens the entry
 as it will look, with Go back and a green Post? that posts — Miyel's pick,
 2026-10-17, over posting straight from the session. The word was Preview
 until then; testers did not know what a preview was.
@@ -2418,9 +2395,13 @@ until then; testers did not know what a preview was.
 **The cover lands on the record's own cover at the top of the session.**
 There is no header for it to land in.
 
-**The session opens as a layer over the desk.** Leaving it puts you back on
-the desk rather than on the beacon, because the cross never unmounted. There
-is no dashboard door on the picker or after a save; the way back is the layer's.
+**The session is a sheet raised from the Listen bar, and lowering is not
+ending, 2026-10-21.** It stops 44 under the status bar and opens on the
+picker — *What are you putting on?*, Sent to you with faces, Drafts, search —
+and its grip is a tab, pulled from anywhere or pressed. Lowered, the record
+stays in hand, the beacon lit, the bar carrying cover, track and live dot.
+Reverses "leaving the screen ends it" (2026-09-16): she objected to a listen
+she had *shut*, and shutting is Discard, Save draft and Post.
 
 **The mobile version is not a reduced version.** Every screen holds one thing
 and runs full-bleed on both devices; nothing exists on one and not the other.

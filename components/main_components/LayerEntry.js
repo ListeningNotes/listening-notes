@@ -111,15 +111,9 @@ export function useLayerHeaderSlot() {
 // false — and the sheet does not go. Anything else and it does. Nothing that
 // does not call this is affected: the pull closes as directly as it ever did.
 export const LayerLeaving = createContext(null);
-// ── And asking the sheet to go ────────────────────────────────────────────
-// A listen has two words at its foot that end it — Save draft and Discard
-// (2026-09-29) — and each has to close the sheet the way the pull does,
-// through leave(): the page's own before-leaving hook runs first and the
-// sheet sinks. Null on a page opened cold, where the page finds its own way.
-export const LayerExit = createContext(null);
-export function useLayerExit() {
-  return useContext(LayerExit);
-}
+// (`LayerExit` and `useLayerExit` let a page ask its sheet to go, for a
+// listen's Save draft and Discard, 2026-09-29 to 2026-10-22. They go back to
+// the picker in the sheet now, and nothing else asked.)
 export function useBeforeLeaving(fn) {
   const holdRef = useContext(LayerLeaving);
   const latestRef = useRef(fn);
@@ -228,7 +222,7 @@ export function useFolder(folder, slug) {
 // On a phone `over` changes nothing: the stylesheet reads it above 769px only
 // (.lay--over-* in entry.css); this file does the leaving and measures the
 // growth from the sheet's own corner.
-export default function LayerEntry({ children, label = 'Entry', scrolls = false, arrives = 'tile', over = null, rise = 0 }) {
+export default function LayerEntry({ children, label = 'Entry', scrolls = false, arrives = 'tile', over = null, rise = 0, sheet = false }) {
   const sheetRef = useRef(null);
   const [headerSlot] = useState(() => (typeof document === 'undefined' ? null : document.createElement('div')));
   useLayoutEffect(() => {
@@ -681,16 +675,22 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
       // claim made by something that cannot call itself a slider — the track
       // strip, which is slid along to move through a record.
       if (event.target?.closest?.('[role="slider"], [data-slide]')) { pull = null; return; }
+      // ── A sheet's tab, 2026-10-22 ─────────────────────────────────────
+      // A drag that starts on the grip is a pull wherever the page has been
+      // scrolled to and whatever has the focus: the band is there to be
+      // pulled, and nothing on it is anything else (Miyel: "a tab you can
+      // always pull down"). Everywhere else the rules below stand.
+      const onTab = !!event.target?.closest?.('.lay-grip');
       const writing = document.activeElement;
       const intoText = writing && (
         writing.tagName === 'TEXTAREA'
         || writing.tagName === 'INPUT'
         || writing.isContentEditable
       );
-      if (event.touches.length !== 1 || intoText
+      if (event.touches.length !== 1 || (intoText && !onTab)
         || sheet.querySelector('.ln-printing, .ln-editing, .ln-busy')) { pull = null; return; }
       const touch = event.touches[0];
-      pull = { x: touch.clientX, y: touch.clientY, at: event.timeStamp, lastX: touch.clientX, lastY: touch.clientY, lastAt: event.timeStamp, axis: null, top: atTop() };
+      pull = { x: touch.clientX, y: touch.clientY, at: event.timeStamp, lastX: touch.clientX, lastY: touch.clientY, lastAt: event.timeStamp, axis: null, top: onTab || atTop() };
     };
 
     const move = event => {
@@ -766,7 +766,10 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
          the content's animation has already been and gone. */
       className={'lay' + (arrival.still ? ' lay--still' : arrival.swiped ? ' lay--swiped' : rises ? ' lay--rises' : growFrom ? ' lay--grows' : ' lay--fades') + (scrolls ? ' lay--scrolls' : '')
         + (arrival.swiped === 1 ? ' lay--from-right' : arrival.swiped === -1 ? ' lay--from-left' : '')
-        + (over ? ` lay--over-${over}` : '') + (settling ? ' lay--settling' : '') + (pulled ? ' lay--dragging' : '')}
+        + (over ? ` lay--over-${over}` : '') + (settling ? ' lay--settling' : '') + (pulled ? ' lay--dragging' : '')
+        /* The listen's shape since 2026-10-21: a sheet raised from the Listen
+           bar, short of the top so home shows over it, with a grip. */
+        + (sheet ? ' lay--sheet' : '')}
       ref={sheetRef}
       /* --lay-shift is how far the leaf has been dragged sideways, said here
          so that things outside the content can travel with it. The record in
@@ -795,6 +798,15 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
           column, the desk's panel — and moves with it while it grows or is
           pulled. The stylesheet draws it only above 769px, never on a phone,
           where the layer has no close button by decision. */}
+      {/* The grip, on a sheet: what the bar's own grip said, kept on the
+          thing that rose out of it, in a band at the sheet's top that a
+          thumb can pull down from however far the page has been scrolled
+          (the pull, above). And pressed, it puts the sheet down, 2026-10-22:
+          the way a mouse lowers a sheet, now that the sheet's top is a row
+          of the listen's own words (session.css), so the corner's caret
+          stands down on a sheet (entry.css). A press that was a pull never
+          arrives as a click. */}
+      {sheet && <button type="button" className="lay-grip" onClick={() => leave()} aria-label="Put this down" />}
       <div className="lay-back-slot">
         <button type="button" className="lay-back" onClick={() => leave()} aria-label="Close" title="Close">
           <CaretLeft size={18} weight="bold" aria-hidden="true" />
@@ -805,7 +817,6 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
           early, or leaves off the edge; a neighbour is a new layer and
           enters from the side it was on. */}
       <LayerLeaving.Provider value={held}>
-      <LayerExit.Provider value={leave}>
       <LayerHeaderSlot.Provider value={headerSlot}>
       <LayerFolder.Provider value={folderLayer}>
       {/* ── A link that means back, 2026-09-22 ──────────────────────────
@@ -830,7 +841,6 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
       </div>
       </LayerFolder.Provider>
       </LayerHeaderSlot.Provider>
-      </LayerExit.Provider>
       </LayerLeaving.Provider>
 
       {/* For a pointer, where there is no swipe: a caret at each edge, and

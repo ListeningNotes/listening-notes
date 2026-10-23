@@ -923,3 +923,152 @@ name, and either asks the manager once to save the entry again. What decided
 it was what a keeper sees: a saved entry whose website and username are the
 same address reads as a mistake, and she said so on the first save.
 
+
+---
+
+## Structure — the ring on the beacon's rule, 2026-09-20 to 2026-10-21
+
+Current rule: DECISIONS.md → Structure, *One exception, 2026-10-21: the way
+into a listen is the Listen bar*.
+
+**The way into a listen was a circle on the beacon's rule.** It was the one
+thing on that screen you could press and it was reading as a third caption
+under a line. The ring was a hairline of the same weight as the rule it stood
+in the break of, which was the rule making room for a control rather than a
+box drawn round a word. Miyel asked for it by name: "make start a listen feel
+intentional — maybe it can be a circle between the hairlines that looks like
+a button." Its words were *Log a / listen*, and *Resume / listen* with a
+record in hand.
+
+**Reversed 2026-10-21, by her brief *home, the frame, and the session*.** The
+way in became a bar at the foot of home, the session closed, which stage 2
+raises into a sheet. The bar ran the ring's own press. There was no room at
+the foot of one phone screen for the ring, the chevron under it and the bar,
+and asked which should give, she said "everything leaves in exchange for
+this": the ring and the keeper's chevron both went.
+
+---
+
+## The session — two words under the lit track, and leaving ending a listen, 2026-09 to 2026-10-21
+
+Current rules: DECISIONS.md → The session, *A pencil at the end of the lit
+row* and *The session is a sheet raised from the Listen bar*.
+
+**Under a lit track, two words: Add notes and Send track, centred.** A word,
+not the envelope: it was tried beside the heart (it moved the stars), at the
+end of the line, and under the live dot, and none read right. Reversed by her
+brief *home, the frame, and the session*: a word under the row read as a field
+to fill in, and the pencil's slot, kept on every row, is what stops the stars
+moving. Send track went with it, on her call that a song is sent from a real
+post.
+
+**The session opened as a layer over the desk, and leaving it ended it.**
+Leaving put you back on the desk rather than on the beacon, because the cross
+never unmounted, and from 2026-09-16 leaving the screen lifted the needle:
+Miyel shut a listen, watched the beacon go on claiming it, and was right to.
+Reversed the same day the bar arrived: the session is a sheet lowered back
+into the bar without ending, and shutting is Discard, Save draft and Post,
+which still lift it.
+
+---
+
+## Structure — the cross's panes and the band at the foot, 2026-09-15 to 2026-10-22
+
+Current rules: DECISIONS.md → Structure, *The frame: a top row, and the Listen
+bar at the foot*, and the two entries under it.
+
+Reversed by Miyel's answers to the frame questions (2026-10-21/22): the band
+of words at the foot went for a top row, the card stopped being a pane and
+opens from the keeper's face over the page, and the swipe kept Home ↔ People
+↔ Inbox. What stood until then, as it was written:
+
+**Cross navigation.** Beacon is home. Down → journal (only from the beacon).
+Left → the pane that turns: your card, or your desk (the colophon, signed out).
+**Four panes for the keeper, three for everybody else, 2026-09-19.** Card,
+beacon, inbox, friends — and card, beacon, colophon signed out. **A stop on
+the band is a room you stand in, never a corridor you pass through.** The desk
+was a page of doors, which is a corridor: the two rooms worth being in were
+behind it and Settings is a thing you do twice a year. So the rooms took their
+own stops, Settings went to the foot of the card, and the desk left the phone.
+It is still the spine's second page above 769px, where there is no band. What
+follows is the 2026-09-15 version and still holds, apart from the count.
+
+**The cross is three panes on a phone: ID, beacon, desk, 2026-09-15.** You
+land on the beacon. Three was tried before and failed, and neither reason was
+the count — the panes were the same shape as each other and nothing said where
+you were. Both are fixed: every pane is a different kind of thing now (a
+portrait over writing, a record over the journal, a hero over rows), and a band
+at the foot names all three all the time.
+
+It replaced two panes and a button. Two existed because sideways meant two
+things — about you on the left, your tools on the right — and the button that
+resolved it never stopped feeling misplaced wherever it was put, through six
+placements. The gesture that would have replaced the button cannot exist: the
+left edge belongs to the rail (see the four ruled-out approaches above). Three
+is also the more balanced arrangement — the beacon centred, the person on one
+side, their tools on the other. With two, one page always carries more.
+
+The book was an interpretation, not a rule. What it gave this project was an
+object and then the writing underneath, and that survives at any pane count.
+
+**The band at the foot: Card · Beacon · Friends · Inbox, 2026-09-15, widened
+2026-09-19.** **The order is by depth, not by subject:** two of the four panes
+have a second floor and two do not, so they go flat, deep, deep, flat rather
+than letting a single-floor pane sit between the two that go down. Down should
+mean the same thing on neighbouring stops.
+
+A glyph over a word, the pane you are on in ink and the rest
+pale. It is the whole of what is down there — it replaced the dots, the edge
+carets and the mini beacon. Every mark on it is one this site already uses for
+that exact thing, so none has to be learned twice.
+
+Pressing a name moves the rail exactly as a swipe does, because it is the
+visible version of the gesture and not an alternative to it: somebody presses
+Friends once, watches it move, and swipes from then on. That was always what the
+carets were for, and a word does it better than a chevron — a chevron says
+there is something that way and a word says what.
+
+The labels carry the meaning and the glyphs are decoration that has to earn
+17px. If one ever needs explaining, all three go and the words stay. An open
+book for the desk is wrong whatever else is: the book is the journal, and the
+journal is *down* from the beacon, not sideways.
+
+---
+
+## Structure — the beacon's floor, and the wall's bar at the foot, 2026-09 to 2026-10-22
+
+Current rule: DECISIONS.md → Structure, *Home is one page*.
+
+Reversed when the frame arrived (the top row, the Listen bar at the foot of
+every page): home stopped being a beacon floor a screen tall with the wall
+under it, and the wall's bar came up from the foot, which is the Listen
+bar's. As they were written:
+
+**The beacon has the row and no peek, 2026-09-20.** Its screen is full at the
+sizes the mark and the record are drawn at, so a sliver cost a smaller mark
+and tighter air above the cover, and what it bought was forty pixels under the
+wall's own search bar. A feed is rows and forty pixels of a row reads as a
+row; forty pixels of cover under a bar does not. Miyel, on the seam
+being gone: "i don't even mind that it scrolls seamless from top to bottom,
+that was something i wanted to address anyway."
+
+**A visitor's beacon has the peek and the keeper's does not, 2026-09-27.**
+The room the visitor row left goes to the wall's top: signed out, the first
+covers show under the chevron the way the feed shows under the faces. It is
+real now because the wall's bar stands at the foot of the phone screen; on
+the 20th the sliver was bar and band. The keeper's floor stays full and
+unmoved — Miyel's pick over a tease that would have put the mark 30px higher.
+
+What follows is the 2026-09-07 reasoning, which is why there was ever an
+exception: proximity on the long pane argued with the thumb and came off
+2026-08-28; mandatory over three screens and a bit would drag a reader back to
+a screen edge halfway down the wall. The two-floor shape was different while
+it lasted.
+
+**The wall's controls sit at the bottom on a phone.** Where the thumb is, and
+where they do not take the first hundred pixels of covers. Sticky, never
+fixed — the wall lives inside a pane of the cross.
+
+**The wall's bar sits on the floor, edge to edge.** Rounded corners and side
+margins made it a pill floating over the covers; square and full width it is
+the edge of the wall.

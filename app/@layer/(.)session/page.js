@@ -24,6 +24,11 @@
 // cold — a bookmark, a home-screen icon — and there is no interception; the
 // browser lands on app/session/page.js and gets the standalone page.
 //
+// sheet, since 2026-10-21: the listen is raised from the Listen bar and
+// lowered back into it without ending (Miyel's brief, home and the session),
+// so it is drawn as a sheet — short of the top, so home shows above it, with
+// a grip — rather than as a page laid over the page.
+//
 // scrolls, because the session is one ordinary column under a sticky header
 // and wants the sheet to scroll it. The nav row on the picker goes into the
 // sheet's flow for the reason .lay--scrolls .sitenav-row gives in styles/nav.css.
@@ -33,7 +38,7 @@ import SessionPage from '../../session/page';
 
 export default function ListenOverThePage() {
   return (
-    <LayerEntry label="Listen" scrolls arrives="bottom" over="journal">
+    <LayerEntry label="Listen" scrolls arrives="bottom" over="journal" sheet>
       <SessionPage />
     </LayerEntry>
   );
