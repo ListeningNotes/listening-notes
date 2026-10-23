@@ -28,7 +28,7 @@
 'use client';
 
 import { Fragment, memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import { CaretDown, Moon, MoonStars, Sun, SunHorizon } from '@phosphor-icons/react';
+import { ArrowsDownUp, Moon, MoonStars, Sun, SunHorizon } from '@phosphor-icons/react';
 import { parseHorizon, parseRating } from '../../library/entry_formatter';
 import { COLOR_SIDE, colorOfArt, sizedAlbumArt } from '../../library/music_data_api';
 import AlbumTile from './AlbumTile';
@@ -965,6 +965,46 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
     closeViews();
   }
 
+  // ── Room under the line, 2026-10-22 ────────────────────────────────────
+  // With the page at its top the line sits low on the screen, and a panel
+  // dropped from it ran off the foot (Miyel: "the screen should scroll down to
+  // see the contents of opened fields"). So as a panel opens the page slides
+  // up by what it is short of — never past the point where the line sticks,
+  // which is as high as the line goes — and the panel rides up with the line:
+  // the views hang from it, and the filters follow it on every step
+  // (JournalFilters).
+  //
+  // Measured once each is drawn, before it is painted: the views menu's own
+  // height, and the filters' whole content (scrollHeight), since they are
+  // already held to what is left of the screen and would measure short.
+  const lineWrap = useRef(null);
+  useLayoutEffect(() => {
+    if (!viewsOpen) return;
+    const menu = lineWrap.current?.querySelector('.arc-views');
+    if (menu) makeRoom(menu.offsetHeight);
+  // Once per opening: the menu leaving is not an opening.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewsOpen]);
+  useLayoutEffect(() => {
+    if (!filtersOpen) return;
+    const sheet = document.querySelector('.arc-sheet');
+    // Its content and its own border, which scrollHeight leaves out.
+    if (sheet) makeRoom(sheet.scrollHeight + sheet.offsetHeight - sheet.clientHeight);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filtersOpen]);
+  function makeRoom(tall) {
+    const wrap = lineWrap.current;
+    const port = scroller?.current || document.scrollingElement;
+    if (!wrap || !port) return;
+    const box = wrap.getBoundingClientRect();
+    const stuckAt = parseFloat(getComputedStyle(wrap).top) || 0;
+    const floor = window.innerHeight - (isPhone ? 80 : 16);
+    const short = Math.min(box.bottom + 6 + tall - floor, box.top - stuckAt);
+    if (short <= 1) return;
+    const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    port.scrollBy({ top: short, behavior: still ? 'auto' : 'smooth' });
+  }
+
   function closeViews() {
     setViewsLeaving(true);
     clocks.current.push(setTimeout(() => { setViewsOpen(false); setViewsLeaving(false); }, VIEWS_OUT_MS));
@@ -1128,7 +1168,7 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
           </nav>
         )}
       </main>
-      <div className="arc-bar-wrap">
+      <div className="arc-bar-wrap" ref={lineWrap}>
         {/* Catches the press that closes the views, and nothing else: it is
             clear, and before the bar so the bar stays above it. */}
         {viewsOpen && <div className="arc-views-scrim" onClick={closeViews} />}
@@ -1136,18 +1176,26 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
           {/* The order the wall is in, which is also how to change it — the
               thing that tells you where you are is the thing that moves you.
               It drops from the line, on a phone too: the floor is the Listen
-              bar's. */}
+              bar's.
+
+              Arrows, and the view's name beside them once the wall is in any
+              order but its own (Miyel, 2026-10-22): In order needs no saying,
+              so the line is three quiet glyphs most of the time, and a wall a
+              visitor finds By color or shuffled still says so. */}
           <span className="arc-view">
             <button
               type="button"
               className="arc-ctl arc-view-now"
-              onClick={() => (viewsOpen ? closeViews() : setViewsOpen(true))}
+              onClick={() => {
+                if (viewsOpen) { closeViews(); return; }
+                setViewsOpen(true);
+              }}
               aria-expanded={viewsOpen && !viewsLeaving}
               aria-haspopup="menu"
               aria-label={`The wall is ${activeView.label.toLowerCase()}. Change the view`}
             >
-              {activeView.label}
-              <CaretDown size={10} weight="bold" aria-hidden="true" />
+              <ArrowsDownUp size={16} weight="regular" aria-hidden="true" />
+              {view !== DEFAULT_VIEW && <span>{activeView.label}</span>}
             </button>
             {viewsOpen && (
               <span className={'arc-views' + (viewsLeaving ? ' arc-views--leaving' : '')} role="menu" aria-label="Views">
@@ -1221,7 +1269,10 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
             type="button"
             ref={filterBtnRef}
             className={'arc-ctl' + (narrowed ? ' arc-ctl--on' : '')}
-            onClick={() => (filtersOpen ? closeFilters() : setFiltersOpen(true))}
+            onClick={() => {
+              if (filtersOpen) { closeFilters(); return; }
+              setFiltersOpen(true);
+            }}
             aria-label="Filters"
             aria-expanded={filtersOpen && !filtersLeaving}
           >

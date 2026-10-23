@@ -972,8 +972,9 @@ a new default — parked until it is missed. The reversal is in the archive.
 
 **The wall's views replace Sort, 2026-10-22, Miyel's call.** A filter takes
 records away (genre, year, the marks); a view rearranges all of them. When the
-views are built, Sort leaves the filter sheet and becomes the view, named on
-the shelf line — "sort stays in the sheet on a phone" (2026-10-18) holds only
+views are built, Sort leaves the filter sheet and becomes the view: arrows on
+the line, its name beside them for any order but the wall's own (her call,
+same day) — "sort stays in the sheet on a phone" (2026-10-18) holds only
 until then. The home brief's views gain an A–Z, so a record can still be found
 by its name.
 

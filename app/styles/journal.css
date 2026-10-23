@@ -364,7 +364,7 @@
    its right, both dropping to the same line. */
 .arc-bar { position: relative; --panel-w: 200px; }
 .arc-view { display: flex; flex-shrink: 0; }
-.arc-ctl.arc-view-now { gap: 4px; padding-left: 2px; color: var(--ink); }
+.arc-ctl.arc-view-now { gap: 6px; padding-left: 2px; color: var(--ink); }
 .arc-views-scrim { position: fixed; inset: 0; z-index: 0; }
 .arc-views {
   position: absolute; top: calc(100% + 6px); left: 10px; z-index: 5;

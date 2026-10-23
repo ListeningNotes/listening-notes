@@ -63,46 +63,38 @@ export default function JournalFilters({
   // On a phone it hangs under the whole line rather than under the button,
   // and is never taller than what is left above the Listen bar: past that it
   // scrolls inside itself.
+  //
+  // And again on every step of a scroll, so it rides with the line: the page
+  // slides up to make room for it as it opens (Journal.js, makeRoom), and on
+  // a desk somebody may scroll with it open. A desk's used to close on a
+  // scroll, when it hung over the grid and would have been left behind.
   useLayoutEffect(() => {
     // Its right edge on the button's, since the button sits at the right end
     // of the line and a panel hung from its left ran off the screen; its top
     // where the views menu's is, under the line. Never taller than what is
     // left above the Listen bar on a phone: past that it scrolls inside.
-    const sheet = sheetRef.current;
-    const r = anchorRef.current?.getBoundingClientRect();
-    const line = anchorRef.current?.closest('.arc-bar')?.getBoundingClientRect();
-    if (!sheet || !r || !line) return;
-    const top = line.bottom + 6;
-    sheet.style.left = `${Math.max(12, r.right - sheet.offsetWidth)}px`;
-    sheet.style.top = `${top}px`;
-    sheet.style.right = 'auto';
-    sheet.style.maxHeight = `${Math.max(200, window.innerHeight - top - (isPhone ? 80 : 16))}px`;
-  }, [isPhone, anchorRef]);
+    const place = () => {
+      const sheet = sheetRef.current;
+      const r = anchorRef.current?.getBoundingClientRect();
+      const line = anchorRef.current?.closest('.arc-bar')?.getBoundingClientRect();
+      if (!sheet || !r || !line) return;
+      const top = line.bottom + 6;
+      sheet.style.left = `${Math.max(12, r.right - sheet.offsetWidth)}px`;
+      sheet.style.top = `${top}px`;
+      sheet.style.right = 'auto';
+      sheet.style.maxHeight = `${Math.max(200, window.innerHeight - top - (isPhone ? 80 : 16))}px`;
+    };
+    place();
+    const port = scroller?.current || window;
+    port.addEventListener('scroll', place, { passive: true });
+    return () => port.removeEventListener('scroll', place);
+  }, [isPhone, anchorRef, scroller]);
 
   useEffect(() => {
     const onKey = e => { if (e.key === 'Escape') onClose(); };
     window.addEventListener('keydown', onKey);
-
-    // The phone sheet holds the page still (useHoldStill, above). The desktop
-    // popover is small and pinned to its button, so locking the page would
-    // pull the scrollbar out and shift the bar sideways underneath the panel
-    // it is anchored to — it closes on scroll instead.
-    let cleanupScroll = () => {};
-    if (!isPhone) {
-      // Whatever is moving, which on the cross is a pane and not the window.
-      // Listening on window there would be listening to something that never
-      // scrolls, and the popover would hang over the grid as it went past.
-      const port = scroller?.current || window;
-      const onScroll = () => onClose();
-      port.addEventListener('scroll', onScroll, { passive: true });
-      cleanupScroll = () => port.removeEventListener('scroll', onScroll);
-    }
-
-    return () => {
-      window.removeEventListener('keydown', onKey);
-      cleanupScroll();
-    };
-  }, [isPhone, scroller, onClose]);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
 
   return (
     <>
