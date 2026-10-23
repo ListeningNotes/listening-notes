@@ -264,8 +264,10 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   `HOSTED_JOURNALS_MOST`, `make_journal` (a Neon project through the API,
   brought up to date, its address written, placed in the hosting directory,
   and its claim code), and `clear_never_set_up`, which takes down a journal it
-  made that nobody set up or wrote in within an hour; `inviterAtTheDoor`, who
-  an invite link says invited the visitor, asked their name once a request;
+  made that nobody set up or wrote in within an hour, giving back its ticket;
+  `openDoor` (`OPEN_DOOR`: anybody may start; unset, only a good ticket) and
+  `ticketAtTheDoor`, the ticket an invite link carries and who it says
+  invited the visitor, asked their name once a request;
   `frontDoorMetadata`, the front door's title and an invite's preview; and
   `frontDoorCovers`, the covers on its record wall, asked of the
   Board's list and kept ten minutes.
@@ -290,7 +292,10 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   studio, the publication's own journal (the month's prompt). And
   `isHere`, on any copy: whether an address is the journal a request
   reached, by any name it answers to, so a journal never says it moved to
-  itself.
+  itself. And `tickets`, the invitations to start a journal: `make_ticket`
+  (twenty a day, ten waiting), `ticket_state`, `take_ticket` (one journal,
+  once, in one statement), `ticket_made`, `give_back_ticket` and
+  `give_back_tickets_of`; only a code's hash is kept.
 - `install_guide.js` — what `/get` needs: the deploy button's URL and the ten
   install steps with their screenshots and the rings drawn over them.
 - `keyring.js` — the passkeys (`keyring`): a row per device's key, the

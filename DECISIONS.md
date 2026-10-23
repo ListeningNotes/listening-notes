@@ -1840,6 +1840,12 @@ will not use it; setup takes minutes. The address is free again at once, and
 its page (or setup, left open) says the setup timed out, with Start again. A
 journal that is set up is never let go, however long it goes without a post.
 
+**The front door is by invitation while it is friends, 2026-10-22, Miyel.**
+Start a journal makes one only on a ticket from a keeper's Invite: one
+journal, once, within two weeks; the ticket says who invited, so an address
+written into a link names nobody. Without one, her words: handed out by
+people who have one. `OPEN_DOOR` opens it to anybody, the day she says.
+
 **The month's prompt is a record from the keeper's own wall, sent on a
 press, 2026-10-22.** An entry already written — its record and writing as
 they stand, read-only, never a blank box or a catalogue — goes to

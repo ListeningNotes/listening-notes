@@ -327,6 +327,13 @@ nobody set up or wrote in is taken down after an hour, and its address is
 free again. Nothing placed by hand is ever taken down, and nothing set up,
 however long it goes without a post.
 
+While it is friends the front door is by invitation: Start a journal makes
+one only for somebody holding a ticket from a keeper's Invite (one journal,
+once, within two weeks; a journal makes twenty a day at most and keeps ten
+waiting). `OPEN_DOOR=1` in the deployment's settings lets anybody start,
+ticket or not; take it away and the door is by invitation again. The
+tickets live beside the journals in the hosting directory, kept as hashes.
+
 ### Moving a journal in
 
 A journal that already has a database comes onto the deployment at a new

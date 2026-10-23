@@ -795,6 +795,10 @@
 .fd-fold-body .fd-steps { margin-top: 12px; }
 .fd-fold-body .fd-trouble { margin-top: 10px; }
 .fd-doors-all .fd-places { margin-top: 16px; }
+/* Start a journal with no good ticket (FrontDoor.js, HandedOut): the old
+   /get's two lines, a size down to sit under the doors. */
+.fd-fold-body .fd-handed-said { font-size: 18px; }
+.fd-fold-body .get-handed-ask { margin-top: 8px; font-size: 14px; }
 @media (prefers-reduced-motion: reduce) {
   .fd-wall-col { animation: none; }
   .fd-door, .fd-fold, .fd-fold-in { transition: none; }

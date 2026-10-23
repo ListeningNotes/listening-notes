@@ -17,7 +17,7 @@ import { headers } from 'next/headers';
 import { isSetUp, pull_settings, coverName, titleName } from '../library/settings_actions';
 import { hasDatabase, explainDatabaseError } from '../library/database_connection';
 import { journalHere, NoJournalHere, hostHere, isHere } from '../library/hosting_directory';
-import { isFrontDoor, hostedDomain, placesLeft, inviterAtTheDoor, frontDoorMetadata, frontDoorCovers } from '../library/front_door';
+import { isFrontDoor, hostedDomain, placesLeft, ticketAtTheDoor, openDoor, frontDoorMetadata, frontDoorCovers } from '../library/front_door';
 import FrontDoor from '../components/main_components/FrontDoor';
 import { isCurrentCode } from '../library/portrait_code';
 import { takesReports } from '../library/report_actions';
@@ -253,8 +253,10 @@ async function holdTheDoor() {
   if (isFrontDoor(await hostHere())) {
     return {
       reason: 'front-door', path, left: await placesLeft().catch(() => 0),
-      // Who invited them, when an invite link brought them (Invite, 2026-10-21).
-      invite: await inviterAtTheDoor().catch(() => null),
+      // The ticket an invite link brought, and whether the door is open to
+      // anybody without one (2026-10-22, library/front_door.js).
+      ticket: await ticketAtTheDoor().catch(() => null),
+      open: openDoor(),
       // The covers on its record wall (2026-10-22).
       covers: await frontDoorCovers().catch(() => []),
     };
@@ -379,7 +381,7 @@ export default async function RootLayout({ children, layer }) {
         <Bookplate settings={settings}>
           <Lightswitch>
             {holding?.reason === 'front-door'
-              ? <FrontDoor path={holding.path} domain={hostedDomain()} left={holding.left} invite={holding.invite} covers={holding.covers} />
+              ? <FrontDoor path={holding.path} domain={hostedDomain()} left={holding.left} ticket={holding.ticket} open={holding.open} covers={holding.covers} />
               : holding
               ? <ComingSoon reason={typeof holding === 'string' ? holding : holding.reason} said={holding.said} home={holding.home} />
               : <>

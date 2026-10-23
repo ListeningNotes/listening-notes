@@ -13,11 +13,16 @@
 // The journals left are said while there are some, and "We're full for now.
 // Come back soon." once there are none (her pick: "a mix of both").
 //
-// Somebody an invite link brought (InviteSheet.js) is told who invited them,
-// over Choose your address — "[Name] invited you", by their face (Miyel's
-// words, 2026-10-21) — and the inviter goes with the new journal to its
-// setup, which offers to add them and wave. An invite takes no place past
-// the last: full is full for everybody.
+// By invitation while it is her and her friends (2026-10-22): Start a
+// journal makes one only for somebody holding a good ticket from a friend's
+// Invite (library/front_door.js); anybody else is told, in her words of
+// 2026-09-28, that Listening Notes is handed out by people who have one, and
+// a ticket already used or run out says so. OPEN_DOOR opens it to anybody.
+// Somebody a ticket brought is told who invited them, over Choose your
+// address — "[Name] invited you", by their face (Miyel's words, 2026-10-21)
+// — and the inviter goes with the new journal to its setup, which offers to
+// add them and wave. An invite takes no place past the last: full is full
+// for everybody.
 
 'use client';
 
@@ -25,6 +30,7 @@ import { useEffect, useRef, useState } from 'react';
 import { BookOpen, CheckCircle, Circle, MagnifyingGlass, Plus, User, XCircle } from '@phosphor-icons/react';
 import { LnMark } from './SiteNav';
 import { journalUrl } from '../../library/return_address';
+import { INSTAGRAM_URL } from '../../library/version';
 
 const FULL = 'We’re full for now. Come back soon.';
 // Direct, in Miyel's words (2026-10-20: "lets go more direct"), with a mark
@@ -142,10 +148,16 @@ function Fold({ open, from, children }) {
   );
 }
 
-function Doors({ domain, left: firstLeft, invite, opening }) {
+function Doors({ domain, left: firstLeft, ticket, openToAll, opening }) {
   // No Start door at all once the journals are gone; a place taken while
   // somebody is choosing an address is said inside Start instead.
   const closed = firstLeft <= 0;
+  // Who may start: anybody once the door is open, and until then whoever
+  // holds a good ticket. Who invited them only when their journal answered
+  // with a name: setup is spared asking after one that never did.
+  const good = ticket?.state === 'good';
+  const mayStart = openToAll || good;
+  const invite = good && ticket.inviter?.name ? ticket.inviter : null;
   const [open, setOpen] = useState(closed && opening === 'start' ? null : opening);
   const [left, setLeft] = useState(firstLeft);
   const [making, setMaking] = useState(false);
@@ -175,8 +187,10 @@ function Doors({ domain, left: firstLeft, invite, opening }) {
       </div>
       {!closed && (
         <Fold open={open === 'start'} from="start">
-          <StartFold domain={domain} invite={invite} left={left} setLeft={setLeft}
-            making={making} setMaking={setMaking} />
+          {mayStart
+            ? <StartFold domain={domain} invite={invite} ticket={good ? ticket.code : ''} left={left}
+                setLeft={setLeft} making={making} setMaking={setMaking} />
+            : <HandedOut ticket={ticket} />}
         </Fold>
       )}
       <Fold open={open === 'find'} from="find">
@@ -275,7 +289,39 @@ async function eachLine(res, heard) {
   }
 }
 
-function StartFold({ domain, invite, left, setLeft, making, setMaking }) {
+// What Start a journal says to somebody with no good ticket while the door
+// is by invitation: her words of 2026-09-28 from the old /get (app/get), or,
+// for a ticket that was, that it was used or ran out, and whom to ask.
+function HandedOut({ ticket }) {
+  const name = ticket?.inviter?.name;
+  if (ticket?.state === 'used' || ticket?.state === 'run out') {
+    return (
+      <div className="fd-fold-body">
+        <p className="get-handed-said fd-handed-said">
+          {ticket.state === 'used' ? 'This invite has already been used.' : 'This invite has run out.'}
+        </p>
+        <p className="get-handed-ask">{name ? `Ask ${name} for a new one.` : 'Ask whoever sent it for a new one.'}</p>
+      </div>
+    );
+  }
+  const handle = INSTAGRAM_URL ? '@' + INSTAGRAM_URL.replace(/\/+$/, '').split('/').pop() : '';
+  return (
+    <div className="fd-fold-body">
+      <p className="get-handed-said fd-handed-said">Listening Notes is handed out by people who have one.</p>
+      <p className="get-handed-ask">
+        Know someone with a journal? Ask them to invite you
+        {handle ? (
+          <>
+            , or visit us on Instagram{' '}
+            <a className="get-handed-ig" href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer">{handle}</a>.
+          </>
+        ) : '.'}
+      </p>
+    </div>
+  );
+}
+
+function StartFold({ domain, invite, ticket, left, setLeft, making, setMaking }) {
   const [name, setName] = useState('');
   const [state, setState] = useState(null);
   const [done, setDone] = useState([]);
@@ -311,7 +357,7 @@ function StartFold({ domain, invite, left, setLeft, making, setMaking }) {
       const res = await fetch('/api/front-door', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, invite: invite?.address || '' }),
+        body: JSON.stringify({ name, ticket }),
       });
       // Refused before anything was made: one answer, said at once.
       if (!res.ok) return failed(await res.json().catch(() => ({})));
@@ -394,11 +440,7 @@ function Wall({ covers }) {
   );
 }
 
-export default function FrontDoor({ path = '/', domain = '', left = 0, invite = null, covers = [] }) {
-  // Only an inviter whose journal answered with a name: the old gift went to
-  // the deploy only then, and setup is spared asking after an address that
-  // was never a journal.
-  const known = invite?.name ? invite : null;
+export default function FrontDoor({ path = '/', domain = '', left = 0, ticket = null, open = false, covers = [] }) {
   const wall = covers.length > 0;
   return (
     <main className={'fd-page fd-mast' + (wall ? '' : ' fd-mast--bare')}>
@@ -409,7 +451,8 @@ export default function FrontDoor({ path = '/', domain = '', left = 0, invite = 
             goes home. */}
         {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
         <a href="/" className="fd-mark" aria-label="Listening Notes"><LnMark className="fd-logo" /></a>
-        <Doors domain={domain} left={left} invite={known} opening={path === '/get' ? 'start' : null} />
+        <Doors domain={domain} left={left} ticket={ticket} openToAll={open}
+          opening={path === '/get' ? 'start' : null} />
       </div>
       {wall && <Wall covers={covers} />}
     </main>

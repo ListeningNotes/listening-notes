@@ -36,31 +36,44 @@
 
 import { cache } from 'react';
 import { neon } from '@neondatabase/serverless';
-import { hosting, forwarding, tidyHost, journalAt, place_journal, count_journals, made_at_signup, unplace_journal } from './hosting_directory.js';
+import {
+  hosting, forwarding, tidyHost, journalAt, place_journal, count_journals, made_at_signup, unplace_journal,
+  ticket_state, give_back_tickets_of,
+} from './hosting_directory.js';
 import { mintClaimCode } from './secrets.js';
-import { inviterIn } from './return_address.js';
 import { ask_journal_name } from './people_actions.js';
 import { mayKnock, whoIsKnocking } from './doorman.js';
 import { SEARCH_HEADER } from '../proxy.js';
 import { ask_directory_read } from './outbox.js';
 import { sizedAlbumArt } from './music_data_api.js';
 
-// ── Who invited them, 2026-10-21 ──────────────────────────────────────────
-// An invite link (InviteSheet.js) names the inviter's journal. The front
-// door says who it is, over Choose your address, and hands the address on
-// to the new journal's setup (app/api/front-door), which offers to add them
-// and wave. The name is asked of their journal through the doorman's relay
-// door, as /get asked it of a giver: this page makes this server fetch
-// another. Once a request, shared by the page and its link preview. No
-// name, no line — the address still goes on, and setup asks again.
-export const inviterAtTheDoor = cache(async () => {
+// ── Who invited them, and whether they may start, 2026-10-22 ─────────────
+// While it is her and her friends, the front door is by invitation: Start a
+// journal makes one only for somebody holding a good ticket from a friend's
+// Invite (library/hosting_directory.js, tickets), and says to anybody else,
+// in her words of 2026-09-28, that Listening Notes is handed out by people
+// who have one. OPEN_DOOR (her name) lets anybody start, the day she opens
+// it; a ticket still says who invited them then.
+//
+// Who invited them is read off the ticket and nothing else — never an
+// address in the link, which anybody could write in (her ask, "guard it as
+// well against address overwriting"). Their name is asked of their journal
+// through the doorman's relay door, as before: this page makes this server
+// fetch another. Once a request, shared by the page and its link preview.
+export function openDoor() {
+  return /^(1|true|yes|on)$/i.test(String(process.env.OPEN_DOOR || '').trim());
+}
+
+export const ticketAtTheDoor = cache(async () => {
   const { headers } = await import('next/headers');
   const asked = await headers();
-  const address = inviterIn(new URLSearchParams(asked.get(SEARCH_HEADER) || ''));
-  if (!address) return null;
+  const code = new URLSearchParams(asked.get(SEARCH_HEADER) || '').get('ticket') || '';
+  if (!code) return null;
+  const said = await ticket_state(code);
+  if (!said) return { code, state: 'run out', inviter: null };
   const knock = await mayKnock('relay', whoIsKnocking({ headers: asked }));
-  const name = knock.allowed ? await ask_journal_name(address, 2500) : null;
-  return { address, name };
+  const name = knock.allowed ? await ask_journal_name(said.inviter, 2500) : null;
+  return { code, state: said.state, inviter: { address: said.inviter, name } };
 });
 
 // ── The covers over the front door, 2026-10-22 ────────────────────────────
@@ -93,7 +106,7 @@ export async function frontDoorCovers() {
 // answered, so the picture and the page agree.
 export async function frontDoorMetadata() {
   const plain = { title: 'Listening Notes', description: 'A listening journal of your own.' };
-  const invite = await inviterAtTheDoor().catch(() => null);
+  const invite = (await ticketAtTheDoor().catch(() => null))?.inviter;
   if (!invite?.name) return plain;
   const { headers } = await import('next/headers');
   const asked = await headers();
@@ -325,6 +338,7 @@ export async function clear_never_set_up() {
       if (setting?.setup_complete === true || written?.any === true) continue;
       await askNeon('DELETE', `/projects/${encodeURIComponent(journal.project)}`);
       await unplace_journal(journal.host);
+      await give_back_tickets_of(journal.host);
       console.log(`[front door] cleared ${journal.host}, made over an hour ago and never set up`);
     } catch (error) {
       console.error(`[front door] could not clear ${journal.host}:`, error?.message || error);

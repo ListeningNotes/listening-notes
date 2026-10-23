@@ -290,8 +290,14 @@ export default function WelcomeScreen() {
         if (!admitted) setCodeFromLink(code);
         // The code comes off the address either way. It is a one-time secret
         // and should not sit in the history or get pasted on somewhere. Who
-        // invited them stays, for a reload.
-        window.history.replaceState(null, '', invited ? `/setup?invite=${encodeURIComponent(invited)}` : '/setup');
+        // invited them stays, for a reload, and the ticket that made the
+        // journal, for Start again if the setup times out (2026-10-22).
+        const stays = new URLSearchParams();
+        if (invited) stays.set('invite', invited);
+        const ticket = new URLSearchParams(window.location.search).get('ticket');
+        if (ticket) stays.set('ticket', ticket);
+        const kept = stays.toString();
+        window.history.replaceState(null, '', `/setup${kept ? `?${kept}` : ''}`);
       }
       // Who gave it is told only to a journal's own wristband, so asked again
       // once the door has opened: the gift screen is a step only for a
@@ -618,8 +624,16 @@ export default function WelcomeScreen() {
               A journal that isn’t set up within an hour is let go, so the
               address is free again.
             </p>
-            {/* The front door, one label up from a journal it made. */}
-            <a className="su-go" href={`${window.location.protocol}//${window.location.host.split('.').slice(1).join('.')}/get`}>
+            {/* The front door, one label up from a journal it made, with the
+                ticket that made it, which the journal gave back as it went
+                (library/front_door.js), so the same invite starts again. */}
+            <a
+              className="su-go"
+              href={`${window.location.protocol}//${window.location.host.split('.').slice(1).join('.')}/get${
+                new URLSearchParams(window.location.search).get('ticket')
+                  ? `?ticket=${encodeURIComponent(new URLSearchParams(window.location.search).get('ticket'))}`
+                  : ''}`}
+            >
               Start again
             </a>
           </>
