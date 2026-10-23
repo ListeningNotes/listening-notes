@@ -219,8 +219,8 @@ The furniture — visual pieces
       IdentificationCardEditor.js  Editing the card in place
       ListeningBeacon.js       The beacon — what is playing, or last played
       ListenBar.js             The way into a listen: a bar at the foot of home, the session closed — Start a listen at rest; with a listen lowered, its cover, the lit track and the live dot. Both raise /session as a sheet; the one thing shaped like a button
-      Journal.js               The wall of covers, with its search, filters and sort
-      JournalFilters.js        The filter sheet — a popover on a desk, a pull-down sheet on a phone — and the year range
+      Journal.js               The wall of covers, with its search, filters and views (In order, A–Z, by month, era, genre, rating, Shuffle; grouped views draw band headings)
+      JournalFilters.js        The filter sheet — a popover on a desk, a pull-down sheet on a phone — with genre, the year range and the marks; it takes records away, the views rearrange them
       AlbumTile.js             One record on that wall — a card for a record with a listen behind it, a page with its corner folded for a record known only by its track notes; the folder shape went on 2026-10-13 (Journal.js gathers entries into records, by title, artist and year)
       FolderFooter.js          A folder's tabs at the foot of the screen — Listen 1, Listen 2 or the song, the one you are on in ink — the one piece of chrome a folder adds; useFolder in LayerEntry.js does the flipping
       CodeSlot.js              A square that holds a picture and turns into that picture's code — the card's portrait and an entry's cover: the two faces, the copy and its pill, the corner mark, the wait
@@ -306,7 +306,7 @@ The rooms — full pages assembled from furniture
       FullPostPage.js          The full public entry page — and, in preview mode, the session's preview
       TrackNotePage.js         A track note — an entry about one song: its card, read, corrected, and written for the first time on the listen's sheet
       opengraph-image.js       The picture an entry's link unfurls into — cover, title, score, marks — drawn on the server per request
-    archive/page.js            Every entry — search, sort, filters
+    archive/page.js            Every entry — search, views, filters
     key/page.js                What the stars and the three marks mean
     submit/page.js             Send the keeper an album
     shuffle/page.js            Redirect to a random entry

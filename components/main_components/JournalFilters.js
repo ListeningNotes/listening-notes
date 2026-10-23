@@ -2,8 +2,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // components/main_components/JournalFilters.js
 // The wall's filters: a sheet from the foot of the screen on a phone, a
-// popover under its button on a desk. Sort, genre, release year, the three
-// marks, and the way out — and on a phone the album size too.
+// popover under its button on a desk. Genre, release year, the three marks,
+// and the way out — and on a phone the album size too. Sort was here until
+// the wall's views replaced it (Journal.js, Views, not sorting): this sheet
+// only takes records away now, and the view on the line rearranges them.
 //
 // ── In the site's own language, 2026-10-22 ────────────────────────────────
 // Miyel's brief, the wall's filters: this was the last screen still built of
@@ -17,26 +19,14 @@
 // down that dismisses it on a phone, the scroll lock underneath, Escape.
 // It is mounted only while open, so opening it fresh is a fresh sheet: there
 // is no drag offset to reset because there is nothing left over.
-//
-// The sort options live here rather than in Journal because both the bar and
-// the sheet read them, and the sheet is what explains them.
 'use client';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Fingerprint, Heart, SketchLogo } from '@phosphor-icons/react';
 import { useHoldStill } from '../../hooks/useHoldStill';
 import GridDensity from './GridDensity';
 
-export const SORTS = [
-  { value: 'posted', label: 'Date posted',  defaultDir: 'desc', asc: 'Oldest first', desc: 'Newest first' },
-  { value: 'album',  label: 'Album',        defaultDir: 'asc',  asc: 'A–Z',          desc: 'Z–A' },
-  { value: 'artist', label: 'Artist',       defaultDir: 'asc',  asc: 'A–Z',          desc: 'Z–A' },
-  { value: 'rating', label: 'Rating',       defaultDir: 'desc', asc: 'Lowest first', desc: 'Highest first' },
-  { value: 'year',   label: 'Release year', defaultDir: 'desc', asc: 'Oldest first', desc: 'Newest first' },
-];
-
 export default function JournalFilters({
   onClose, isPhone, scroller, anchorRef,
-  sortBy, sortDir, chooseSort, activeSort,
   genre, setGenre, genres, genresShown, genresRest, genresOpen, setGenresOpen,
   yearBounds, yearRange, setYearPicked,
   favoritesOnly, setFavoritesOnly, masterpiecesOnly, setMasterpiecesOnly, formativeOnly, setFormativeOnly,
@@ -174,36 +164,6 @@ export default function JournalFilters({
               />
             )}
 
-            {isPhone && (
-              <div className="arc-sheet-group">
-                {/* What the arrow means rides on the label's own line, the
-                    way the year's readout does: a line of its own under the
-                    words was a row of the sheet spent on two words. */}
-                <div className="arc-sheet-label">
-                  Sort
-                  <span className="arc-sheet-value">{activeSort[sortDir]}</span>
-                </div>
-                <div className="arc-sheet-opts">
-                  {/* The word you're on carries the arrow, and tapping it
-                      again turns it over — so the control shows both which
-                      field is sorting and which way, in one place. */}
-                  {SORTS.map(s => {
-                    const on = sortBy === s.value;
-                    return (
-                      <button key={s.value} type="button"
-                        className={word(on)}
-                        aria-pressed={on}
-                        title={on ? s[sortDir] : undefined}
-                        onClick={() => chooseSort(s.value)}>
-                        {s.label}
-                        {on && <SortArrow dir={sortDir} />}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
             {/* Only worth a group once there's more than one genre to choose
                 between — on a young archive it would be a row with a single
                 option and nothing to compare it against. */}
@@ -279,8 +239,8 @@ export default function JournalFilters({
               </div>
             </div>
 
-            {/* On a phone the album size lives here, off the bar, the way
-                sort does — the bar is the search field's, and a size is
+            {/* On a phone the album size lives here, off the line — the
+                line is the view's and the search field's, and a size is
                 picked once and remembered. Unlabelled, as it was in the bar:
                 each glyph is the grid it makes. The way out is the same word
                 as the choices, heavier — not a submit button. */}
@@ -303,20 +263,6 @@ export default function JournalFilters({
 // A choice in the sheet, and a mark: the classes, on or off.
 const word = on => 'ln-word arc-word' + (on ? ' ln-word--on' : '');
 const mark = (on, kind) => `ses-mark ses-mark--${kind}${on ? ' ses-mark--on' : ''}`;
-
-// Which way the active sort runs. Deliberately not a caret glyph from the
-// font — at 9px those render at wildly different weights across platforms,
-// and this sits inside a word that has to stay readable.
-export function SortArrow({ dir }) {
-  return (
-    <svg className="arc-arrow" width="9" height="11" viewBox="0 0 9 11" aria-hidden="true" focusable="false">
-      <path
-        d={dir === 'asc' ? 'M4.5 10.5V1M1 4.5L4.5 1L8 4.5' : 'M4.5 0.5V10M1 6.5L4.5 10L8 6.5'}
-        fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
 
 // Two-handle year range, built from two native range inputs stacked on one
 // track. Native because it inherits keyboard support, the correct touch

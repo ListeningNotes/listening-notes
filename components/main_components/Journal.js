@@ -27,12 +27,13 @@
 
 'use client';
 
-import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { Fragment, memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { CaretDown } from '@phosphor-icons/react';
 import { parseRating } from '../../library/entry_formatter';
 import AlbumTile from './AlbumTile';
 import { handOffOrder } from '../../library/handoff';
 import GridDensity, { DEFAULT_DENSITY, readStoredDensity, storeDensity } from './GridDensity';
-import JournalFilters, { SORTS, SortArrow } from './JournalFilters';
+import JournalFilters from './JournalFilters';
 import { DELETE_ENTRY } from '../../hooks/useEntryEditor';
 import { SAVED_EVENT } from '../../hooks/useListeningSession';
 
@@ -77,12 +78,6 @@ const foldForSearch = value => String(value || '')
   .toLowerCase()
   .trim();
 
-// Sorting is a field plus a direction rather than one flat list: picking a
-// field applies the direction that field is normally wanted in, and picking
-// it again turns it around. `desc` is what the arrow points at, so each
-// field declares which way its own "descending" reads — newest first for a
-// date, highest first for a rating, but Z→A for a title.
-
 // Type used to be a filter here — Library or Submission. The archive is the
 // library, so that split was a filter between "everything" and "everything",
 // and the only half worth naming is already written on the entries that are
@@ -92,6 +87,147 @@ const releaseYear = entry => {
   const m = String(entry.year || '').match(/\d{4}/);
   return m ? parseInt(m[0], 10) : null;
 };
+
+// ── Views, not sorting, 2026-10-22 ─────────────────────────────────────────
+// Miyel's call, from the home brief: a filter takes records away and a view
+// rearranges all of them, so the wall says what order it is in and that label
+// is how you change it. The views replaced Sort, which was a field and a
+// direction in the filter sheet; nothing leaves the wall when the view
+// changes, so a view is never something to clear. A–Z is hers, added to the
+// brief's list so a record can still be found by its name.
+//
+// A grouped view draws a heading over each band. Inside a band the records
+// keep the wall's own order, newest arrival first — but for A–Z, which is
+// alphabetical all the way down.
+//
+// Remembered per browser, the way the album size is: a visitor opens in the
+// default and may rearrange for themselves, and nothing is written to anybody's
+// journal.
+export const VIEWS = [
+  { value: 'order',   label: 'In order' },
+  { value: 'az',      label: 'A–Z' },
+  { value: 'month',   label: 'By month' },
+  { value: 'era',     label: 'By era' },
+  { value: 'genre',   label: 'By genre' },
+  { value: 'rating',  label: 'By rating' },
+  { value: 'shuffle', label: 'Shuffle' },
+];
+const VIEW_KEY = 'ln-wall-view';
+const DEFAULT_VIEW = 'order';
+
+function readStoredView() {
+  try {
+    const saved = window.localStorage.getItem(VIEW_KEY);
+    return VIEWS.some(v => v.value === saved) ? saved : DEFAULT_VIEW;
+  } catch {
+    return DEFAULT_VIEW;
+  }
+}
+
+function storeView(value) {
+  try {
+    window.localStorage.setItem(VIEW_KEY, value);
+  } catch {
+    /* storage refused — the view still changes, it just is not remembered */
+  }
+}
+
+const STARS = {
+  5: 'Five stars', 4.5: 'Four and a half', 4: 'Four stars', 3.5: 'Three and a half',
+  3: 'Three stars', 2.5: 'Two and a half', 2: 'Two stars', 1.5: 'One and a half',
+  1: 'One star', 0.5: 'Half a star',
+};
+
+const arrived = album => new Date(album.first.posted_at).getTime();
+const newestArrival = (a, b) => arrived(b) - arrived(a);
+// The record's own score, its newest listen's, to the half star the stars are
+// given in. An old row may say Masterpiece where a number goes; a record known
+// only by its songs has no score of its own.
+const scoreOf = album => {
+  if (!album.listens.length) return 0;
+  const said = album.face.rating === 'Masterpiece' ? 5 : parseRating(album.face.rating);
+  return Math.round(said * 2) / 2;
+};
+
+// Which band a record falls in under each grouped view: its key, the heading
+// it is drawn under, and the band's place on the wall (lowest first). A record
+// with nothing to place it by goes in a last band of its own.
+const BANDS = {
+  az: album => {
+    const letter = foldForSearch(album.face.album).charAt(0).toUpperCase();
+    return /[A-Z]/.test(letter)
+      ? { key: letter, label: letter, rank: letter.charCodeAt(0) }
+      : { key: '#', label: '#', rank: Infinity };
+  },
+  month: album => {
+    const when = new Date(album.first.posted_at);
+    const n = when.getFullYear() * 12 + when.getMonth();
+    return { key: String(n), label: when.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }), rank: -n };
+  },
+  era: album => {
+    const year = releaseYear(album.face);
+    if (year === null) return { key: 'none', label: 'No year', rank: Infinity };
+    const decade = Math.floor(year / 10) * 10;
+    return { key: String(decade), label: `${decade}s`, rank: -decade };
+  },
+  rating: album => {
+    const score = scoreOf(album);
+    return STARS[score]
+      ? { key: String(score), label: STARS[score], rank: -score }
+      : { key: 'none', label: 'Not rated', rank: Infinity };
+  },
+};
+
+// The same shuffle for as long as the reader stays on it, and a new one each
+// time Shuffle is pressed: a wall that reshuffled on every render would move
+// under a thumb.
+const freshSeed = () => Math.floor(Math.random() * 2 ** 31);
+function shuffled(albums, seed) {
+  let a = seed >>> 0;
+  const random = () => {
+    a = (a + 0x6D2B79F5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+  const out = [...albums].sort((x, y) => (x.key < y.key ? -1 : 1));
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
+
+// The wall in the view's order, each record with the band it is drawn under
+// (null in a view without bands).
+function arrange(albums, view, seed) {
+  if (view === 'shuffle') return shuffled(albums, seed).map(album => ({ album, band: null }));
+  // Genres in the order the filter sheet lists them: the most records first.
+  let bandOf = BANDS[view];
+  if (view === 'genre') {
+    const counts = new Map();
+    for (const album of albums) {
+      const g = album.face.genre || '';
+      counts.set(g, (counts.get(g) || 0) + 1);
+    }
+    const order = [...counts.keys()].filter(Boolean)
+      .sort((x, y) => counts.get(y) - counts.get(x) || x.localeCompare(y));
+    bandOf = album => {
+      const g = album.face.genre || '';
+      return g ? { key: g, label: g, rank: order.indexOf(g) } : { key: '', label: 'No genre', rank: Infinity };
+    };
+  }
+  if (!bandOf) return [...albums].sort(newestArrival).map(album => ({ album, band: null }));
+  const within = view === 'az'
+    ? (x, y) => foldForSearch(x.album.face.album).localeCompare(foldForSearch(y.album.face.album))
+    : (x, y) => newestArrival(x.album, y.album);
+  return albums
+    .map(album => ({ album, band: bandOf(album) }))
+    // The last band's rank is Infinity, and Infinity less itself is not a
+    // number, which reads as a tie and falls through to the order within.
+    .sort((x, y) => (x.band.rank - y.band.rank) || within(x, y));
+}
 
 // ── One tile per record, 2026-09-24 ────────────────────────────────────────
 // The wall never shows a separate tile for a track note, and the tile says
@@ -199,8 +335,6 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
   //
   // The counts on the ID card are what send people here (2026-09-15): 4
   // masterpieces is a number you want to be able to press.
-  const [sortBy, setSortBy] = useState('posted');
-  const [sortDir, setSortDir] = useState('desc');
   const [genre, setGenre] = useState('');
   const [genresOpen, setGenresOpen] = useState(false);
   const linkedMark = useSyncExternalStore(
@@ -233,6 +367,14 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
   // — landing on page four of a search that only has one page is a blank grid
   // and no explanation.
   const [page, setPage] = useState(0);
+  // The view: remembered in this browser, read the way the density is below,
+  // and the reader's pick wins for the rest of the visit. The shuffle's seed
+  // is made when Shuffle is pressed, so a remembered Shuffle opens shuffled.
+  const storedView = useSyncExternalStore(() => () => {}, readStoredView, () => DEFAULT_VIEW);
+  const [pickedView, setView] = useState(null);
+  const view = pickedView ?? storedView;
+  const [seed, setSeed] = useState(freshSeed);
+  const [viewsOpen, setViewsOpen] = useState(false);
   // The remembered density comes out of localStorage, which the server does
   // not have; the default is what it renders and the browser corrects it on
   // hydration. Once the reader picks one, theirs wins for the rest of the
@@ -507,7 +649,6 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
 
   const filtered = useMemo(() => {
     const q = foldForSearch(search);
-    const dir = sortDir === 'asc' ? 1 : -1;
     // The heart is anybody's, a song's included — Favorite applies to tracks
     // as well, so a record is a Favorite when any entry of it says so. The
     // two album flags are a listen's: a record is a Masterpiece or Formative
@@ -550,21 +691,13 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
           if (y === null || y < yearRange[0] || y > yearRange[1]) return false;
         }
         return true;
-      })
-      .sort((a, b) => {
-        if (sortBy === 'album')  return dir * (a.face.album  || '').localeCompare(b.face.album  || '');
-        if (sortBy === 'artist') return dir * (a.face.artist || '').localeCompare(b.face.artist || '');
-        // The record's own score, which is its newest listen's. A record known
-        // only by its songs has no score of its own and sorts as none.
-        if (sortBy === 'rating') return dir * ((a.listens.length ? parseRating(a.face.rating) || 0 : 0) - (b.listens.length ? parseRating(b.face.rating) || 0 : 0));
-        // Undated albums sort as year 0, which parks them at the far end
-        // rather than scattering them through the middle.
-        if (sortBy === 'year')   return dir * ((releaseYear(a.face) || 0) - (releaseYear(b.face) || 0));
-        // By the day the record came into the journal, which never changes:
-        // the wall never reorders under anybody.
-        return dir * (new Date(a.first.posted_at) - new Date(b.first.posted_at));
       });
-  }, [albums, search, sortBy, sortDir, genre, favoritesOnly, masterpiecesOnly, formativeOnly, yearActive, yearRange]);
+  }, [albums, search, genre, favoritesOnly, masterpiecesOnly, formativeOnly, yearActive, yearRange]);
+
+  // In the view's order, and with each record's band. In order is by the day
+  // a record came into the journal, which never changes: the wall never
+  // reorders under anybody who has not asked it to.
+  const arranged = useMemo(() => arrange(filtered, view, seed), [filtered, view, seed]);
 
   // What is on the wall right now, in this order, left where the layer can
   // read it — so a swipe on an entry goes to the record beside it here, not
@@ -573,27 +706,33 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
   // entries in a row, oldest first — a folder flips through itself — and
   // then the next record's. So a swipe on an entry opened from here moves
   // through its folder and carries on to the record beside it.
-  useEffect(() => { handOffOrder(filtered.flatMap(album => [...album.all].reverse())); }, [filtered]);
+  useEffect(() => { handOffOrder(arranged.flatMap(({ album }) => [...album.all].reverse())); }, [arranged]);
 
-  const pages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
+  const pages = Math.max(1, Math.ceil(arranged.length / PER_PAGE));
   // Clamped rather than reset in an effect: if the filters shrink the results
   // under your feet, the page you are on may no longer exist, and the honest
   // answer is the last one that does.
   const current = Math.min(page, pages - 1);
-  const shown = pages > 1 ? filtered.slice(current * PER_PAGE, (current + 1) * PER_PAGE) : filtered;
+  const shown = pages > 1 ? arranged.slice(current * PER_PAGE, (current + 1) * PER_PAGE) : arranged;
 
-  const activeSort = SORTS.find(s => s.value === sortBy) ?? SORTS[0];
+  const activeView = VIEWS.find(v => v.value === view) ?? VIEWS[0];
 
-  // Picking the field you're already on turns it around; picking a new one
-  // starts it in whichever direction that field is normally read.
-  function chooseSort(value) {
-    if (value === sortBy) {
-      setSortDir(d => (d === 'asc' ? 'desc' : 'asc'));
-      return;
-    }
-    setSortBy(value);
-    setSortDir(SORTS.find(s => s.value === value)?.defaultDir ?? 'desc');
+  // A new view starts at its beginning: page four of one order is nothing in
+  // particular of another. Shuffle pressed again is a new shuffle.
+  function chooseView(value) {
+    if (value === 'shuffle') setSeed(freshSeed());
+    setView(value);
+    storeView(value);
+    setPage(0);
+    setViewsOpen(false);
   }
+
+  useEffect(() => {
+    if (!viewsOpen) return undefined;
+    const onKey = e => { if (e.key === 'Escape') setViewsOpen(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [viewsOpen]);
 
   // Turning a page leaves the scroll where it is. It went to the top, from
   // when the wall was the whole page; under the beacon the top is the
@@ -610,21 +749,17 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
     setPage(0);
     setSearch(''); setGenre(''); setGenresOpen(false);
     setFavoritesOnly(false); setMasterpiecesOnly(false); setFormativeOnly(false);
-    setSortBy('posted'); setSortDir('desc');
     setYearPicked(null);
   }
 
   // Whether the Filters button is underlined: something behind it is doing
   // the narrowing. Only what is tucked away counts — the search box is in
-  // plain sight — and the sort only where it is behind the button, on a
-  // phone; a desk's sort is in the bar beside it. It was a number in a
-  // filled badge until 2026-10-22 (the wall's filters brief): the underline
-  // already says something is on, and the badge was the shape that change
-  // took out.
-  const sortMoved = sortBy !== 'posted' || sortDir !== 'desc';
+  // plain sight — and never the view, which takes nothing away. It was a
+  // number in a filled badge until 2026-10-22 (the wall's filters brief): the
+  // underline already says something is on, and the badge was the shape that
+  // change took out.
   const narrowed = Boolean(genre) || favoritesOnly || masterpiecesOnly || formativeOnly || yearActive;
-  const tuckedAway = narrowed || (isPhone && sortMoved);
-  const hasActiveFilters = Boolean(search) || narrowed || sortMoved;
+  const hasActiveFilters = Boolean(search) || narrowed;
 
   return (
     <>
@@ -650,16 +785,24 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
           <div className="arc-empty">No entries match these filters.</div>
         ) : (
           <div className="arc-grid" data-density={density} ref={grid}>
-            {shown.map(album => (
-              <AlbumTile
-                key={album.key}
-                album={album}
-                density={density}
-                /* Only a record with nothing else behind it leaves the wall;
-                   deleting one listen of three changes the tile, not the
-                   wall. */
-                going={album.all.length === 1 && going === album.face.slug}
-              />
+            {shown.map(({ album, band }, i) => (
+              <Fragment key={album.key}>
+                {/* A band's heading over its first record, and again at the
+                    top of a page that opens part way through one. Inside the
+                    grid, across every column, so the tiles keep one grid to
+                    file across when a record comes or goes. */}
+                {band && (i === 0 || shown[i - 1].band.key !== band.key) && (
+                  <h3 className="arc-band">{band.label}</h3>
+                )}
+                <AlbumTile
+                  album={album}
+                  density={density}
+                  /* Only a record with nothing else behind it leaves the wall;
+                     deleting one listen of three changes the tile, not the
+                     wall. */
+                  going={album.all.length === 1 && going === album.face.slug}
+                />
+              </Fragment>
             ))}
           </div>
         )}
@@ -694,7 +837,45 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
         )}
       </main>
       <div className="arc-bar-wrap">
+        {/* Catches the press that closes the views, and nothing else: it is
+            clear, and before the bar so the bar stays above it. */}
+        {viewsOpen && <div className="arc-views-scrim" onClick={() => setViewsOpen(false)} />}
         <div className={'arc-bar' + (searchOpen ? ' arc-bar--searching' : '')}>
+          {/* The order the wall is in, which is also how to change it — the
+              thing that tells you where you are is the thing that moves you.
+              It drops from the line, on a phone too: the floor is the Listen
+              bar's. */}
+          <span className="arc-view">
+            <button
+              type="button"
+              className="arc-ctl arc-view-now"
+              onClick={() => setViewsOpen(v => !v)}
+              aria-expanded={viewsOpen}
+              aria-haspopup="menu"
+              aria-label={`The wall is ${activeView.label.toLowerCase()}. Change the view`}
+            >
+              {activeView.label}
+              <CaretDown size={10} weight="bold" aria-hidden="true" />
+            </button>
+            {viewsOpen && (
+              <span className="arc-views" role="menu" aria-label="Views">
+                {VIEWS.map(v => (
+                  <Fragment key={v.value}>
+                    {v.value === 'shuffle' && <span className="arc-views-rule" aria-hidden="true" />}
+                    <button
+                      type="button"
+                      role="menuitemradio"
+                      aria-checked={v.value === view}
+                      className={'ln-word arc-views-word' + (v.value === view ? ' ln-word--on' : '')}
+                      onClick={() => chooseView(v.value)}
+                    >
+                      {v.label}
+                    </button>
+                  </Fragment>
+                ))}
+              </span>
+            )}
+          </span>
           <label className="arc-search">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
               <circle cx="11" cy="11" r="7" /><line x1="16.5" y1="16.5" x2="21" y2="21" />
@@ -728,38 +909,10 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
             />
           </label>
 
-          {/* Sort earns its place in the bar on desktop — it's the control
-              that gets reached for most, and there's room. On a phone it
-              goes in the sheet with everything else. */}
-          {!isPhone && (
-            <>
-              <select
-                className="arc-ctl"
-                value={sortBy}
-                onChange={e => chooseSort(e.target.value)}
-                aria-label="Sort by"
-              >
-                {SORTS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-              </select>
-              {/* The direction is its own control here rather than a second
-                  click on the select, which has no "click the option you're
-                  already on" gesture to hang it off. */}
-              <button
-                type="button"
-                className="arc-ctl arc-dir"
-                onClick={() => setSortDir(d => (d === 'asc' ? 'desc' : 'asc'))}
-                aria-label={`Sort direction: ${activeSort[sortDir]}`}
-                title={activeSort[sortDir]}
-              >
-                <SortArrow dir={sortDir} />
-              </button>
-            </>
-          )}
-
           <button
             type="button"
             ref={filterBtnRef}
-            className={'arc-ctl' + (tuckedAway ? ' arc-ctl--on' : '')}
+            className={'arc-ctl' + (narrowed ? ' arc-ctl--on' : '')}
             onClick={() => setFiltersOpen(v => !v)}
             aria-label="Filters"
             aria-expanded={filtersOpen}
@@ -791,7 +944,6 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
           isPhone={isPhone}
           scroller={scroller}
           anchorRef={filterBtnRef}
-          sortBy={sortBy} sortDir={sortDir} chooseSort={chooseSort} activeSort={activeSort}
           genre={genre} setGenre={setGenre} genres={genres} genresShown={genresShown} genresRest={genresRest}
           genresOpen={genresOpen} setGenresOpen={setGenresOpen}
           yearBounds={yearBounds} yearRange={yearRange} setYearPicked={setYearPicked}
