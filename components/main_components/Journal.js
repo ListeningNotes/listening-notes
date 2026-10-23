@@ -202,7 +202,7 @@ const BANDS = {
     return { key: part.label, label: part.label, glyph: part.glyph, rank: part.rank, at: (minute - 5 * 60 + 1440) % 1440 };
   },
   shape: album => {
-    const kind = SHAPES[shapeOf(album.face.horizon)];
+    const kind = SHAPES[album.listens.length ? shapeOf(album.face.horizon) : 'song'];
     return { key: kind.key, label: kind.label, bars: kind.bars, rank: kind.rank };
   },
 };
@@ -225,14 +225,17 @@ const DAY_PARTS = [
 // of bars an entry draws. Its first third, middle and last third compared:
 // even when no two tracks are more than a star apart; otherwise best where
 // it is highest by half a star or more; up and down when no third stands out.
-// A record with fewer than three tracks starred has no shape to read.
-// Each heading draws its shape as five bars, the horizon's own idea.
+// A record with fewer than three tracks starred has no shape to read. A record
+// known only by its songs is a song, not a record without a shape, and has
+// its band of its own, under one bar (Miyel, 2026-10-22: "songs are filed
+// under no shape"). Each heading draws its shape as bars, the horizon's idea.
 const SHAPES = {
   even:   { key: 'even',   label: 'Even all the way',   bars: [4, 4, 4, 4, 4], rank: 0 },
   first:  { key: 'first',  label: 'Best first',         bars: [5, 4, 3, 2, 1], rank: 1 },
   middle: { key: 'middle', label: 'Best in the middle', bars: [2, 3, 5, 3, 2], rank: 2 },
   last:   { key: 'last',   label: 'Best last',          bars: [1, 2, 3, 4, 5], rank: 3 },
   wild:   { key: 'wild',   label: 'Up and down',        bars: [3, 5, 1, 5, 2], rank: 4 },
+  song:   { key: 'song',   label: 'Tracks',             bars: [4],             rank: 5 },
   none:   { key: 'none',   label: 'No shape',           bars: null,            rank: Infinity },
 };
 const mean = list => list.reduce((sum, v) => sum + v, 0) / list.length;
@@ -514,6 +517,8 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
   // The counts on the ID card are what send people here (2026-09-15): 4
   // masterpieces is a number you want to be able to press.
   const [genre, setGenre] = useState('');
+  // Albums, tracks, or both: '' | 'albums' | 'tracks' (JournalFilters).
+  const [kind, setKind] = useState('');
   const [genresOpen, setGenresOpen] = useState(false);
   const linkedMark = useSyncExternalStore(
     () => () => {},
@@ -534,7 +539,13 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
   const [filtersOpen, setFiltersOpen] = useState(false);
   // Stable, because the sheet subscribes to scroll with it and would otherwise
   // re-subscribe on every render of the wall.
-  const closeFilters = useCallback(() => setFiltersOpen(false), []);
+  // Folds away rather than vanishing, the way the views menu does: marked
+  // leaving, then taken off once it has (VIEWS_OUT_MS, the same length).
+  const [filtersLeaving, setFiltersLeaving] = useState(false);
+  const closeFilters = useCallback(() => {
+    setFiltersLeaving(true);
+    clocks.current.push(setTimeout(() => { setFiltersOpen(false); setFiltersLeaving(false); }, VIEWS_OUT_MS));
+  }, []);
   // Where the desktop popover hangs. Measured off the button rather than
   // guessed in CSS — its x depends on how wide the search field and the sort
   // select happen to be. Frozen at open time, which holds because the
@@ -858,6 +869,8 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
           foldForSearch(e.artist).includes(q) ||
           album.notes.some(n => foldForSearch(n.song).includes(q))
         )) return false;
+        if (kind === 'albums' && !album.listens.length) return false;
+        if (kind === 'tracks' && !album.notes.length) return false;
         if (genre && (e.genre || '') !== genre) return false;
         if (favoritesOnly && !marked(album.all, x => x.favorite === true || x.favorite === 'true')) return false;
         if (masterpiecesOnly && !marked(album.listens, x => x.rating === 'Masterpiece' || x.masterpiece === true)) return false;
@@ -873,7 +886,7 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
         }
         return true;
       });
-  }, [albums, search, genre, favoritesOnly, masterpiecesOnly, formativeOnly, yearActive, yearRange]);
+  }, [albums, search, kind, genre, favoritesOnly, masterpiecesOnly, formativeOnly, yearActive, yearRange]);
 
   // In the view's order, and with each record's band. In order is by the day
   // a record came into the journal, which never changes: the wall never
@@ -911,7 +924,8 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
   }, [arranged]);
   const bandCount = band => {
     const n = bandSizes.get(band.key) || 0;
-    return <span className="arc-band-count">{n === 1 ? '1 album' : `${n} albums`}</span>;
+    const noun = band.key === 'song' ? 'track' : 'album';
+    return <span className="arc-band-count">{n === 1 ? `1 ${noun}` : `${n} ${noun}s`}</span>;
   };
 
   // What is on the wall right now, in this order, left where the layer can
@@ -999,7 +1013,7 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
 
   function clearFilters() {
     setPage(0);
-    setSearch(''); setGenre(''); setGenresOpen(false);
+    setSearch(''); setKind(''); setGenre(''); setGenresOpen(false);
     setFavoritesOnly(false); setMasterpiecesOnly(false); setFormativeOnly(false);
     setYearPicked(null);
   }
@@ -1010,7 +1024,7 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
   // number in a filled badge until 2026-10-22 (the wall's filters brief): the
   // underline already says something is on, and the badge was the shape that
   // change took out.
-  const narrowed = Boolean(genre) || favoritesOnly || masterpiecesOnly || formativeOnly || yearActive;
+  const narrowed = Boolean(kind) || Boolean(genre) || favoritesOnly || masterpiecesOnly || formativeOnly || yearActive;
   const hasActiveFilters = Boolean(search) || narrowed;
 
   return (
@@ -1194,9 +1208,9 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
             type="button"
             ref={filterBtnRef}
             className={'arc-ctl' + (narrowed ? ' arc-ctl--on' : '')}
-            onClick={() => setFiltersOpen(v => !v)}
+            onClick={() => (filtersOpen ? closeFilters() : setFiltersOpen(true))}
             aria-label="Filters"
-            aria-expanded={filtersOpen}
+            aria-expanded={filtersOpen && !filtersLeaving}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <line x1="3" y1="7" x2="21" y2="7" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="17" x2="21" y2="17" />
@@ -1225,6 +1239,7 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
           isPhone={isPhone}
           scroller={scroller}
           anchorRef={filterBtnRef}
+          kind={kind} setKind={setKind}
           genre={genre} setGenre={setGenre} genres={genres} genresShown={genresShown} genresRest={genresRest}
           genresOpen={genresOpen} setGenresOpen={setGenresOpen}
           yearBounds={yearBounds} yearRange={yearRange} setYearPicked={setYearPicked}
@@ -1234,6 +1249,7 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
           hasActiveFilters={hasActiveFilters} clearFilters={clearFilters}
           shownCount={filtered.length}
           density={density} changeDensity={changeDensity}
+          leaving={filtersLeaving}
         />
       )}
     </>
@@ -1243,7 +1259,7 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
 // A shape's heading: five bars, the horizon's own idea, standing on one line.
 function ShapeBars({ bars }) {
   return (
-    <svg className="arc-band-bars" width="19" height="11" viewBox="0 0 19 11" aria-hidden="true" focusable="false">
+    <svg className="arc-band-bars" width={bars.length * 4 - 1} height="11" viewBox={`0 0 ${bars.length * 4 - 1} 11`} aria-hidden="true" focusable="false">
       {bars.map((h, i) => (
         <rect key={i} x={i * 4} y={11 - h * 2.2} width="3" height={h * 2.2} rx="0.6" fill="currentColor" />
       ))}

@@ -388,18 +388,15 @@
 /* touch-action: none so a drag on the scrim cannot pan the floors behind the
    sheet — the lock lands on the wall's own scroller, not the pane. */
 .arc-scrim { position: fixed; inset: 0; z-index: 150; touch-action: none; }
-@keyframes arcFade { from { opacity: 0; } to { opacity: 1; } }
 .arc-sheet {
   /* left/top are set inline from the button's own position; these
      are the fallback for the first paint before it's measured. */
   position: fixed; z-index: 151;
   top: calc(var(--arc-nav-bottom) + 78px); left: max(24px, calc(50vw - 550px)); width: 290px;
-  /* The same frosted glass as the bar it hangs off, but at the
-     stronger opacity — this panel is big enough to sit over album
-     art rather than flat page, and --panel's 45% can't hold text
-     against that. */
-  background: var(--panel-strong);
-  backdrop-filter: var(--card-blur); -webkit-backdrop-filter: var(--card-blur);
+  /* The views menu's own panel, solid, so the two that drop from the line
+     are one thing (Miyel, 2026-10-22: "make filters match sort"). It was
+     frosted glass, which let the covers show through it. */
+  background: var(--panel-solid);
   border: 1px solid var(--panel-border);
   border-radius: 14px; box-shadow: var(--shadow-lift);
   padding: 16px; display: flex; flex-direction: column; gap: 16px;
@@ -482,7 +479,8 @@
   font-family: var(--font-display); font-weight: var(--font-display-weight);
   font-size: 15px; letter-spacing: 0; text-transform: none; line-height: 23px;
 }
-.arc-sheet-grip { display: none; }
+/* Folding away as it closes, the way the views menu does. */
+.arc-sheet--leaving { animation: arcPopOut 0.16s ease forwards; pointer-events: none; }
 
 /* A band's heading in a grouped view: the label face, faint, and a hairline
    running out to the edge, across every column of the grid it sits in. */
@@ -595,40 +593,15 @@
   .arc-grid[data-density="medium"] { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; }
   .arc-grid[data-density="small"]  { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
 
-  .arc-scrim { background: rgba(0,0,0,0.28); animation: arcFade 0.18s ease; }
-
-  /* The popover becomes a bottom sheet — a panel hanging off a
-     button is a desktop idiom, and up near the nav it's out of
-     thumb reach on a phone. */
+  /* The panel drops from the line on a phone too (2026-10-22): under the
+     whole line, the screen's width less its gutters, its top and its most
+     height set from the line when it opens (JournalFilters). It was a sheet
+     rising from the foot, which is the Listen bar's now. No dimming, as the
+     views menu has none. */
   .arc-sheet {
-    top: auto; bottom: 0; left: 0; right: 0; width: auto;
-    border-radius: 20px 20px 0 0; border-bottom: none;
-    padding: 10px 20px calc(20px + env(safe-area-inset-bottom));
-    animation: arcSlide 0.22s ease;
-    /* Fits an iPhone with room to spare, but a small phone or a
-       large accessibility text size can push it past the top. */
-    max-height: 82vh; overflow-y: auto; overscroll-behavior: contain;
-  }
-  @keyframes arcSlide { from { transform: translateY(100%); } to { transform: none; } }
-  /* Springs back when released short of the threshold; the drag
-     itself sets the transform inline and turns this off, so the
-     sheet tracks the finger 1:1 instead of easing behind it. */
-  .arc-sheet--dragging { animation: none; transition: none; }
-  .arc-sheet--settling { animation: none; transition: transform 0.2s ease-out; }
-
-  /* The grab area, not the bar itself — the visible handle is 4px
-     tall, which is nothing to aim at. This gives it a 28px target
-     spanning the sheet's full width. touch-action stops the browser
-     claiming the gesture as a scroll before we see it. */
-  .arc-sheet-grip {
-    display: block; width: 100%; height: 28px; padding: 0; border: none;
-    background: none; cursor: grab; touch-action: none;
-    margin: -6px 0 0;
-  }
-  .arc-sheet-grip:active { cursor: grabbing; }
-  .arc-sheet-grip::before {
-    content: ''; display: block; width: 36px; height: 4px;
-    border-radius: 999px; background: var(--border); margin: 8px auto 0;
+    bottom: auto; left: 12px; right: 12px; width: auto;
+    padding: 16px 18px;
+    overflow-y: auto; overscroll-behavior: contain;
   }
   /* A thumb's worth of height on each word without the rows growing apart. */
   .arc-word { padding: 6px 6px; }

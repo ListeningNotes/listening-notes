@@ -17,28 +17,31 @@
 // Journal owns every filter value — it is the one doing the filtering — and
 // this owns only how the sheet behaves: where the popover hangs, the pull
 // down that dismisses it on a phone, the scroll lock underneath, Escape.
-// It is mounted only while open, so opening it fresh is a fresh sheet: there
-// is no drag offset to reset because there is nothing left over.
+// It is mounted only while open, so opening it fresh is a fresh sheet.
+//
+// ── It drops from the line, 2026-10-22 ────────────────────────────────────
+// On a phone it was a sheet rising from the foot of the screen, pulled down
+// to dismiss. The foot is the Listen bar's now, and the views drop from the
+// line, so Miyel asked for the filters to match ("I like the dropdown"): on a
+// phone the panel hangs under the whole line, the width of the screen less
+// its gutters, the same shape as the views menu; on a desk it still hangs
+// under its button. Either way it closes on a press anywhere else, on
+// Escape, or on Show, and folds away as it goes (`leaving`).
 'use client';
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import { Fingerprint, Heart, SketchLogo } from '@phosphor-icons/react';
 import { useHoldStill } from '../../hooks/useHoldStill';
 import GridDensity from './GridDensity';
 
 export default function JournalFilters({
   onClose, isPhone, scroller, anchorRef,
+  kind, setKind,
   genre, setGenre, genres, genresShown, genresRest, genresOpen, setGenresOpen,
   yearBounds, yearRange, setYearPicked,
   favoritesOnly, setFavoritesOnly, masterpiecesOnly, setMasterpiecesOnly, formativeOnly, setFormativeOnly,
-  hasActiveFilters, clearFilters, shownCount, density, changeDensity,
+  hasActiveFilters, clearFilters, shownCount, density, changeDensity, leaving = false,
 }) {
-  // Drag-to-dismiss on the phone sheet. `drag` is how far down the finger
-  // has pulled it; `settling` marks the moment after release, when the
-  // transform is being animated rather than driven by the finger.
   const sheetRef = useRef(null);
-  const dragFromRef = useRef(null);
-  const [drag, setDrag] = useState(0);
-  const [settling, setSettling] = useState(false);
   // The scrim is what useHoldStill walks up from: it is present for exactly
   // as long as this sheet is, and it is inside whatever is behind it.
   const scrimRef = useRef(null);
@@ -55,12 +58,26 @@ export default function JournalFilters({
   // Written straight onto the popover rather than into state: a layout
   // effect runs before the browser paints, so the popover is never seen
   // anywhere but under its button, and there is no second render to pay for.
+  //
+  // On a phone it hangs under the whole line rather than under the button,
+  // and is never taller than what is left above the Listen bar: past that it
+  // scrolls inside itself.
   useLayoutEffect(() => {
-    if (isPhone) return;
-    const r = anchorRef.current?.getBoundingClientRect();
     const sheet = sheetRef.current;
-    if (!r || !sheet) return;
-    sheet.style.left = `${r.left}px`;
+    if (!sheet) return;
+    if (isPhone) {
+      const line = anchorRef.current?.closest('.arc-bar')?.getBoundingClientRect();
+      if (!line) return;
+      const top = line.bottom + 6;
+      sheet.style.top = `${top}px`;
+      sheet.style.maxHeight = `${Math.max(200, window.innerHeight - top - 80)}px`;
+      return;
+    }
+    // Its right edge on the button's, since the button sits at the right end
+    // of the line now and a panel hung from its left ran off the screen.
+    const r = anchorRef.current?.getBoundingClientRect();
+    if (!r) return;
+    sheet.style.left = `${Math.max(12, r.right - sheet.offsetWidth)}px`;
     sheet.style.top = `${r.bottom + 8}px`;
     sheet.style.right = 'auto';
   }, [isPhone, anchorRef]);
@@ -90,79 +107,29 @@ export default function JournalFilters({
     };
   }, [isPhone, scroller, onClose]);
 
-  // Pointer events rather than touch events: the same handlers then drive a
-  // finger on a phone and a mouse on a trackpad, and pointer capture keeps
-  // the drag alive when the finger leaves the grip's 28px band — which it
-  // does immediately, since dragging down is the whole gesture.
-  function onGripDown(e) {
-    dragFromRef.current = e.clientY;
-    setSettling(false);
-    e.currentTarget.setPointerCapture(e.pointerId);
-  }
-
-  function onGripMove(e) {
-    if (dragFromRef.current === null) return;
-    // Downward only. Letting it track upward would lift the sheet off the
-    // bottom of the screen and expose the page behind it.
-    setDrag(Math.max(0, e.clientY - dragFromRef.current));
-  }
-
-  function onGripUp() {
-    if (dragFromRef.current === null) return;
-    dragFromRef.current = null;
-    const height = sheetRef.current?.offsetHeight ?? 400;
-    // A short sheet shouldn't need a 120px pull to dismiss, and a tall one
-    // shouldn't dismiss on a twitch — whichever is smaller.
-    const closeAt = Math.min(120, height * 0.28);
-    setSettling(true);
-    if (drag > closeAt) {
-      setDrag(height);                       // ride it the rest of the way out
-      setTimeout(onClose, 180);
-    } else {
-      setDrag(0);                            // spring back
-    }
-  }
-
   return (
     <>
-          {/* A pull down anywhere over the covers puts the sheet away, on the
-              same handlers the grip uses rather than a second gesture written
-              out again: with the page behind held still, a downward drag over
-              the scrim had nothing left to do, and the thing somebody is
-              plainly reaching for when they do it is out. A tap still closes.
-              Phone only — on a desk this is an anchored popover and there is
-              no sheet to drag anywhere. */}
-          <div
-            ref={scrimRef}
-            className="arc-scrim"
-            onClick={onClose}
-            onPointerDown={isPhone ? onGripDown : undefined}
-            onPointerMove={isPhone ? onGripMove : undefined}
-            onPointerUp={isPhone ? onGripUp : undefined}
-          />
+          {/* A press anywhere off the panel closes it. */}
+          <div ref={scrimRef} className="arc-scrim" onClick={onClose} />
           <div
             ref={sheetRef}
-            className={'arc-sheet'
-              + (drag > 0 && !settling ? ' arc-sheet--dragging' : '')
-              + (settling ? ' arc-sheet--settling' : '')}
+            className={'arc-sheet' + (leaving ? ' arc-sheet--leaving' : '')}
             role="dialog"
             aria-label="Filters"
-            style={drag > 0 || settling ? { transform: `translateY(${drag}px)` } : undefined}
           >
-            {/* Phone only — the desktop popover is dismissed by clicking off
-                it, which is what a popover is expected to do. */}
-            {isPhone && (
-              <button
-                type="button"
-                className="arc-sheet-grip"
-                aria-label="Close filters"
-                onPointerDown={onGripDown}
-                onPointerMove={onGripMove}
-                onPointerUp={onGripUp}
-                onPointerCancel={onGripUp}
-                onClick={() => { if (drag === 0) onClose(); }}
-              />
-            )}
+            {/* A record logged as an album, or known by its tracks (Miyel,
+                2026-10-22: "filtering should get track vs album"). Albums
+                is every record with a listen; Tracks every record with a
+                track note, whether or not it also has a listen. */}
+            <div className="arc-sheet-group">
+              <div className="arc-sheet-label">Kind</div>
+              <div className="arc-sheet-opts">
+                {[['', 'All'], ['albums', 'Albums'], ['tracks', 'Tracks']].map(([value, said]) => (
+                  <button key={said} type="button" className={word(kind === value)}
+                    aria-pressed={kind === value} onClick={() => setKind(value)}>{said}</button>
+                ))}
+              </div>
+            </div>
 
             {/* Only worth a group once there's more than one genre to choose
                 between — on a young archive it would be a row with a single

@@ -984,6 +984,11 @@ of hue, then gray to black — named bands guessed wrong ("I only consider two o
 these orange"). The fun ones sit under the menu's rule: time of day, shape
 (read off the horizon), color, Shuffle. Search grows out of its magnifier.
 
+**The filters drop from the line, on a phone too, 2026-10-22, Miyel's call**
+("make filters match sort. i like the dropdown"): the views menu's solid panel,
+under the whole line. The sheet that rose from the foot is gone — the foot is
+the Listen bar's. The first group is Kind: All, Albums, Tracks.
+
 **Definitions ship as editable defaults, and custom listen types are ruled
 out.** Universal second-person text installs and the owner can edit any of
 it: stable keys, editable labels and bodies, one JSONB column. Fixing the
