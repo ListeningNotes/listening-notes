@@ -992,6 +992,12 @@ brief's "the thing that tells you where you are is the thing that moves you".
 The last band or two land only as high as the wall's foot lets them, and the
 heading then names the band before: no room is added at the foot (Miyel).
 
+**The Filters icon stays the way into the filters, 2026-10-23, Miyel's
+call.** The home brief made the count the button ("press the count to
+narrow"); built and tried on the sandbox (branch `count-door`), she kept the
+icon: "61 albums" pressed open beside the bands' own counts was
+"repetitive". The count stays words, and stays off a phone's line.
+
 **By color is a view, read off the covers, never stored, 2026-10-22, Miyel's
 ask.** The page reads Apple's covers; one kept elsewhere is read by the server
 (`/api/entries/[slug]/color`, the saved cover only). White, then one gradient

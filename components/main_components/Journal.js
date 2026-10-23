@@ -35,7 +35,7 @@ import AlbumTile from './AlbumTile';
 import StarRating from './StarRating';
 import { handOffOrder } from '../../library/handoff';
 import GridDensity, { DEFAULT_DENSITY, readStoredDensity, storeDensity } from './GridDensity';
-import JournalFilters from './JournalFilters';
+import JournalFilters, { roomFloor } from './JournalFilters';
 import { DELETE_ENTRY } from '../../hooks/useEntryEditor';
 import { SAVED_EVENT } from '../../hooks/useListeningSession';
 
@@ -1079,7 +1079,8 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
   // dropped from it ran off the foot (Miyel: "the screen should scroll down to
   // see the contents of opened fields"). So as a panel opens the page slides
   // up by what it is short of — never past the point where the line sticks,
-  // which is as high as the line goes — and the panel rides up with the line:
+  // which is as high as the line goes — to a little above the Listen bar,
+  // measured (JournalFilters, roomFloor) — and the panel rides up with the line:
   // the views hang from it, and the filters follow it on every step
   // (JournalFilters).
   //
@@ -1135,7 +1136,7 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
     if (!wrap || !port) return;
     const box = wrap.getBoundingClientRect();
     const stuckAt = parseFloat(getComputedStyle(wrap).top) || 0;
-    const floor = window.innerHeight - (isPhone ? 80 : 16);
+    const floor = roomFloor(box);
     const short = Math.min(box.bottom + 6 + tall - floor, box.top - stuckAt);
     if (short <= 1) return;
     const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;

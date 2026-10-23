@@ -938,6 +938,11 @@
   scrollbar-width: none;
 }
 .hn-pane::-webkit-scrollbar { display: none; }
+/* While the wall's search has the keys up, the home pane alone is held to
+   the part of the window you can see, and the cross keeps its height, so the
+   record over the wall keeps its size (HomeNav, the visualViewport effect).
+   A most height and not a height, so it is nothing the rest of the time. */
+.hn-pane--home { max-height: var(--hn-seen-h, none); }
 
 /* ── The crown ──────────────────────────────────────────────────────────────
    The mark, large and centred, at the top of every pane — the treatment the

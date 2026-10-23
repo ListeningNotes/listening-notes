@@ -31,6 +31,20 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { CaretDown, Envelope, Fingerprint, Heart, SketchLogo } from '@phosphor-icons/react';
 import { useHoldStill } from '../../hooks/useHoldStill';
 
+// The lowest a panel dropped from the wall's line may reach: a little above
+// the Listen bar where the bar is up under the line, and above the window's
+// foot where it is not. Measured, not assumed: it was the window less 80 on
+// a phone, and the bar stands taller than that on a phone with a home
+// indicator, so the views' last row ran under it (Miyel, 2026-10-23: "it's
+// cut off by the start a listen button"). Read by this panel for its most
+// height and by the wall for how far to slide the page (Journal.js,
+// makeRoom).
+export function roomFloor(line) {
+  const bar = document.querySelector('.lb:not(.lb--down)')?.getBoundingClientRect();
+  const under = bar && line && bar.top > line.bottom && bar.left < line.right && bar.right > line.left;
+  return Math.min(under ? bar.top : window.innerHeight, window.innerHeight) - 16;
+}
+
 export default function JournalFilters({
   onClose, isPhone, scroller, anchorRef,
   kind, setKind,
@@ -82,13 +96,13 @@ export default function JournalFilters({
       sheet.style.left = `${Math.max(12, r.right - sheet.offsetWidth)}px`;
       sheet.style.top = `${top}px`;
       sheet.style.right = 'auto';
-      sheet.style.maxHeight = `${Math.max(200, window.innerHeight - top - (isPhone ? 80 : 16))}px`;
+      sheet.style.maxHeight = `${Math.max(200, roomFloor(line) - top)}px`;
     };
     place();
     const port = scroller?.current || window;
     port.addEventListener('scroll', place, { passive: true });
     return () => port.removeEventListener('scroll', place);
-  }, [isPhone, anchorRef, scroller]);
+  }, [anchorRef, scroller]);
 
   useEffect(() => {
     const onKey = e => { if (e.key === 'Escape') onClose(); };
