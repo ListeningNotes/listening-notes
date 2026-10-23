@@ -989,6 +989,8 @@ until then. The home brief's views gain an A–Z, so a record can still be found
 by its name. **A grouped view's headings stick under the line, 2026-10-23,**
 each sliding over the last; pressed, one lists every band to jump to — the
 brief's "the thing that tells you where you are is the thing that moves you".
+The last band or two land only as high as the wall's foot lets them, and the
+heading then names the band before: no room is added at the foot (Miyel).
 
 **By color is a view, read off the covers, never stored, 2026-10-22, Miyel's
 ask.** The page reads Apple's covers; one kept elsewhere is read by the server
