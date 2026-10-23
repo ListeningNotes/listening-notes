@@ -20,7 +20,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { BookOpen, CheckCircle, Circle, MagnifyingGlass, Plus, User, X, XCircle } from '@phosphor-icons/react';
+import { BookOpen, CheckCircle, Circle, MagnifyingGlass, Plus, User, XCircle } from '@phosphor-icons/react';
 import { LnMark } from './SiteNav';
 import { journalUrl } from '../../library/return_address';
 
@@ -110,30 +110,23 @@ function InvitedBy({ invite }) {
 
 // ── The doors open where they are, 2026-10-22 ─────────────────────────────
 // Miyel: Start a journal should not "go to a whole nother page" but open on
-// this one, "in one animation, not just appearing", pushing Find my journal
-// out, and Find my journal "the reverse". A door pressed pushes the other out
-// of the row and comes to the middle, its glyph turning to a cross that
-// closes it; what it opens unfolds under it the way the site's other folds do
-// (a grid row from 0fr to 1fr on the site's curve, About.js), coming in from
-// the door's own side, and the record wall gives way below. Shut, a fold is
-// inert. The address bar follows the door, so a reload opens the same one:
-// `/get`, where every invite link points (InviteSheet.js), is Start open.
+// this one, "in one animation, not just appearing". Then, the same evening:
+// "it highlights as if it's open, and it opens underneath ... But the two
+// options stay there", pressed again it closes, and "if you click between
+// them, it switches the screen". So both doors stay; the one open is lit on
+// the site's raised surface (--panel, a generous corner, no rule) and the
+// other goes quiet; what it opens unfolds under them the way the site's
+// other folds do (a grid row from 0fr to 1fr on the site's curve, About.js),
+// coming in from the door's own side, and the record wall gives way below.
+// Shut, a fold is inert. The address bar follows the door, so a reload opens
+// the same one: `/get`, where every invite link points (InviteSheet.js), is
+// Start open.
 function Door({ which, open, onPress, glyph, children }) {
-  const mine = open === which;
-  const gone = Boolean(open) && !mine;
+  const lit = open === which;
   return (
-    <button
-      type="button"
-      className={`fr-door fd-door fd-door--${which}` + (mine ? ' fd-door--open' : '') + (gone ? ' fd-door--gone' : '')}
-      onClick={onPress}
-      aria-expanded={mine}
-      tabIndex={gone ? -1 : undefined}
-      aria-hidden={gone || undefined}
-    >
-      <span className="fd-door-glyph" aria-hidden="true">
-        <span className="fd-door-is">{glyph}</span>
-        <span className="fd-door-shut"><X size={20} weight="regular" /></span>
-      </span>
+    <button type="button" className={`fd-door fd-door--${which}` + (lit ? ' fd-door--lit' : '')}
+      onClick={onPress} aria-expanded={lit}>
+      {glyph}
       {children}
     </button>
   );
@@ -167,14 +160,14 @@ function Doors({ domain, left: firstLeft, invite, opening }) {
   return (
     <div className="fd-doors-all">
       {closed && <InvitedBy invite={invite} />}
-      <div className={'fr-doors-row fd-doors' + (open ? ' fd-doors--one' : '')}>
+      <div className={'fd-doors' + (open ? ' fd-doors--lit' : '')}>
         {!closed && (
           <Door which="start" open={open} onPress={() => press('start')} glyph={<BookWithPlus />}>
             Start a journal
           </Door>
         )}
         <Door which="find" open={open} onPress={() => press('find')}
-          glyph={<MagnifyingGlass size={22} weight="regular" />}>
+          glyph={<MagnifyingGlass size={22} weight="regular" aria-hidden="true" />}>
           Find my journal
         </Door>
       </div>
@@ -212,13 +205,23 @@ function FindFold({ domain }) {
     setBusy(false);
   }
 
+  // The same shape as Choose your address, line for line (Miyel: the two
+  // buttons should not differ): what the box is for, the address, a line
+  // for what was found, and setup's black button.
   return (
     <div className="fd-fold-body">
-      <AddressField value={name} onChange={setName} domain={domain} label="Your journal’s address" onEnter={open} />
-      <button type="button" className="st-save ln-word ln-word--on" onClick={open} disabled={!name || busy}>
+      <p className="fd-caption">Your journal’s address</p>
+      <AddressField
+        value={name}
+        onChange={value => { setName(value); setTrouble(''); }}
+        domain={domain}
+        label="Your journal’s address"
+        onEnter={open}
+      />
+      <p className="fd-state" role="status">{trouble || '\u00a0'}</p>
+      <button type="button" className="su-go fd-go" onClick={open} disabled={!name || busy}>
         {busy ? 'Looking…' : 'Open it'}
       </button>
-      {trouble && <p className="fd-trouble" role="alert">{trouble}</p>}
     </div>
   );
 }
@@ -332,7 +335,7 @@ function StartFold({ domain, invite, left, setLeft, making, setMaking }) {
   return (
     <div className="fd-fold-body">
       <InvitedBy invite={invite} />
-      <h1 className="fd-h">Choose your address</h1>
+      <p className="fd-caption">Choose your address</p>
       <AddressField
         value={name}
         onChange={value => { setName(value); setTrouble(''); if (!value) setState(null); }}

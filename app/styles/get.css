@@ -614,7 +614,6 @@
   background: var(--panel); color: var(--ink-faint);
 }
 .fd-invite-face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.fd-doors { max-width: 320px; margin-top: 6px; }
 .fd-places {
   margin: 0; font-family: var(--font-label); font-size: 10px; letter-spacing: 0.12em;
   text-transform: uppercase; color: var(--ink-faint);
@@ -738,34 +737,32 @@
   .fd-wall-col:nth-child(even) { margin-top: calc((108px - 100%) / 20); }
 }
 
-/* The doors open where they are (FrontDoor.js, Doors): the one pressed
-   comes to the middle as the other is pushed out its own side, its glyph
-   turning to a cross; what it opens unfolds under it from that side, the
-   site's fold (a grid row from 0fr to 1fr, About.js's prompt list), on the
-   site's curve. */
+/* The doors open where they are (FrontDoor.js, Doors): both stay; the one
+   open is lit on the site's raised surface and the other goes quiet; what it
+   opens unfolds under them from that door's side, the site's fold (a grid
+   row from 0fr to 1fr, About.js's prompt list), on the site's curve. */
 .fd-doors-all { display: flex; flex-direction: column; align-items: center; width: 100%; }
+/* Its own row and its own doors, not the Friends doors' (.fr-doors-row,
+   .fr-door): that sheet loads after this one, so its spacing and its
+   transition won over these. Drawn the same: a glyph over a word in the
+   display face. */
 .fd-doors {
-  justify-content: center; gap: 56px;
-  transition: gap 0.34s cubic-bezier(0.22, 0.61, 0.36, 1);
+  display: flex; align-items: flex-start; justify-content: center; gap: 20px;
+  width: 100%; max-width: 340px; margin-top: 6px;
 }
-.fd-doors--one { gap: 0; }
 .fd-door {
-  max-width: 170px; overflow: hidden;
-  transition: max-width 0.34s cubic-bezier(0.22, 0.61, 0.36, 1),
-              opacity 0.2s ease,
-              transform 0.34s cubic-bezier(0.22, 0.61, 0.36, 1);
+  display: inline-flex; flex-direction: column; align-items: center; gap: 8px;
+  border: 0; border-radius: 18px; background: transparent; padding: 10px 16px;
+  color: var(--ink); text-decoration: none; cursor: pointer;
+  font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
+  font-size: 13px; white-space: nowrap;
+  transition: background-color 0.24s ease, opacity 0.24s ease;
 }
-.fd-door--gone { max-width: 0; padding-left: 0; padding-right: 0; opacity: 0; pointer-events: none; }
-.fd-door--start.fd-door--gone { transform: translateX(-28px); }
-.fd-door--find.fd-door--gone { transform: translateX(28px); }
-.fd-door-glyph { display: inline-grid; place-items: center; height: 24px; }
-.fd-door-is, .fd-door-shut {
-  grid-area: 1 / 1; display: inline-flex;
-  transition: opacity 0.2s ease, transform 0.34s cubic-bezier(0.22, 0.61, 0.36, 1);
-}
-.fd-door-shut { opacity: 0; transform: rotate(-90deg) scale(0.6); }
-.fd-door--open .fd-door-is { opacity: 0; transform: rotate(90deg) scale(0.6); }
-.fd-door--open .fd-door-shut { opacity: 1; transform: none; }
+/* Only where there is a pointer to hover with: a phone keeps :hover on what
+   was last tapped. */
+@media (hover: hover) { .fd-door:hover { opacity: 0.65; } }
+.fd-door--lit { background: var(--panel); }
+.fd-doors--lit .fd-door:not(.fd-door--lit) { opacity: 0.45; }
 .fd-fold {
   display: grid; grid-template-rows: 0fr; width: 100%; max-width: 340px;
   transition: grid-template-rows 0.34s cubic-bezier(0.22, 0.61, 0.36, 1);
@@ -778,13 +775,24 @@
 .fd-fold--start .fd-fold-in { transform: translateX(-18px); }
 .fd-fold--find .fd-fold-in { transform: translateX(18px); }
 .fd-fold--open .fd-fold-in { opacity: 1; transform: none; transition-delay: 0.06s, 0s; }
+/* Both folds keep one rhythm: a heading, the address, a line for what it
+   is, and the black button. Spaced here rather than by setup's own margins
+   (.su-go loads after this sheet and would win). */
 .fd-fold-body {
-  display: flex; flex-direction: column; align-items: center; gap: 12px;
-  padding: 18px 2px 4px;
+  display: flex; flex-direction: column; align-items: center; gap: 0;
+  padding: 16px 2px 4px;
 }
-.fd-fold-body .fd-h { font-size: 18px; }
+.fd-caption {
+  margin: 0 0 10px; font-family: var(--font-label); font-size: 10px;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-soft);
+}
+.fd-fold-body .fd-invite { margin-bottom: 14px; }
+.fd-fold-body .fd-state { margin: 8px 0 6px; text-align: center; }
+.fd-fold-body .fd-go { margin-top: 0; }
+.fd-fold-body .fd-steps { margin-top: 12px; }
+.fd-fold-body .fd-trouble { margin-top: 10px; }
 .fd-doors-all .fd-places { margin-top: 16px; }
 @media (prefers-reduced-motion: reduce) {
   .fd-wall-col { animation: none; }
-  .fd-doors, .fd-door, .fd-door-is, .fd-door-shut, .fd-fold, .fd-fold-in { transition: none; }
+  .fd-door, .fd-fold, .fd-fold-in { transition: none; }
 }

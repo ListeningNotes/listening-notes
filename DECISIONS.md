@@ -1829,9 +1829,10 @@ ask SANDBOX, or a test reaches a real person.
 **The front door is a masthead over a record wall, 2026-10-22, Miyel's
 pick of three.** The mark and the two doors at the top; under them the covers
 keepers on the Board logged lately (covers only, never who), edge to edge, in
-staggered columns drifting up. A door opens where it is, pushing the other
-out — never a page of its own; `/get`, where invite links point, is Start
-open. Words never sit on a moving cover, nor on a sheet (it read as a pop-up).
+staggered columns drifting up. A door opens where it is, never a page of its
+own: both stay, the open one lit, and pressing the other switches; `/get`,
+where invite links point, is Start open. Words never sit on a moving cover,
+nor on a sheet (it read as a pop-up).
 
 **The month's prompt is a record from the keeper's own wall, sent on a
 press, 2026-10-22.** An entry already written — its record and writing as
