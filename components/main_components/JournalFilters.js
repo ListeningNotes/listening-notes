@@ -3,7 +3,7 @@
 // components/main_components/JournalFilters.js
 // The wall's filters: a sheet from the foot of the screen on a phone, a
 // popover under its button on a desk. Sort, genre, release year, the three
-// highlights, and the way out — and on a phone the album size too.
+// marks, and the way out — and on a phone the album size too.
 //
 // ── In the site's own language, 2026-10-22 ────────────────────────────────
 // Miyel's brief, the wall's filters: this was the last screen still built of
@@ -249,13 +249,15 @@ export default function JournalFilters({
             )}
 
             {/* The session's marks, drawn the way its album screen draws
-                them (session.css, .ses-mark) and named the same — a mark here
+                them (session.css, .ses-mark) and named the same, under the
+                label the brief's mockup gives them (it was Highlights while
+                they were three words in capsules) — a mark here
                 is the mark you gave the record there, and turning one on
                 keeps the wall to the records that wear it. In the session's
                 order too. Formative is the session's glyph, whatever that is
                 at the time. */}
             <div className="arc-sheet-group">
-              <div className="arc-sheet-label">Highlights</div>
+              <div className="arc-sheet-label">Marks</div>
               <div className="arc-marks">
                 <button type="button" className={mark(masterpiecesOnly, 'mp')}
                   aria-pressed={masterpiecesOnly} onClick={() => setMasterpiecesOnly(v => !v)}>

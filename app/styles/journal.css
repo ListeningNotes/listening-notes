@@ -366,17 +366,18 @@ select.arc-ctl { -webkit-appearance: none; appearance: none; color: var(--ink); 
 /* The words: .ln-word (base.css), set closer than on a bar so a group says
    its few choices in a line, with the first word's padding paid back so it
    lines up under its label. They were pills until 2026-10-22, filled black
-   when on. */
+   when on. In their own capitals, as the brief's mockup draws them, rather
+   than .ln-word's: a genre is a name, and a sheet of capitals left the
+   labels nothing to stand apart by. */
 .arc-sheet-opts { display: flex; flex-wrap: wrap; gap: 0; margin: 0 -6px; }
 .arc-word {
   display: inline-flex; align-items: center; gap: 5px;
   padding: 4px 6px;
+  font-size: 10px; letter-spacing: 0.03em; text-transform: none;
 }
-/* The session's marks (session.css, .ses-mark), in a row under their label.
-   Its first glyph's air paid back the same way, so the row starts where the
-   words above it start. */
-.arc-marks { display: flex; gap: 4px; margin: -4px 0 -6px -10px; }
-.arc-marks .ses-mark { width: auto; min-width: 64px; padding: 6px 10px; }
+/* The session's marks (session.css, .ses-mark), centred under their label
+   the way the session centres them. */
+.arc-marks { display: flex; justify-content: center; gap: 8px; margin: -4px 0 -6px; }
 
 /* ── Year range ──────────────────────────────────────────────────
    Two native range inputs on one track. Both are stretched across
@@ -415,13 +416,20 @@ select.arc-ctl { -webkit-appearance: none; appearance: none; color: var(--ink); 
   display: flex; justify-content: space-between;
   font-family: var(--font-label); font-size: 9px; color: var(--ink-faint);
 }
-/* The way out at the right, where the session keeps its Post, and on a phone
-   the album size at the left. Show is the same word as the choices, heavier:
-   it is how you leave the sheet, not a button that submits it. */
-.arc-sheet-foot { display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
+/* The way out at the right, where the session keeps its Post, under a
+   hairline, and on a phone the album size at the left. Show is the same word
+   as the choices, heavier — the title face, as the mockup draws it: it is how
+   you leave the sheet, not a button that submits it. */
+.arc-sheet-foot {
+  display: flex; align-items: center; gap: 8px; justify-content: flex-end;
+  border-top: 1px solid var(--border); padding-top: 12px;
+}
 .arc-sheet-foot .gd { margin-right: auto; margin-left: -6px; }
-.arc-sheet-ways { display: flex; align-items: center; margin-right: -6px; }
-.arc-sheet-done { font-weight: 500; }
+.arc-sheet-ways { display: flex; align-items: center; gap: 6px; margin-right: -6px; }
+.ln-word.arc-sheet-done {
+  font-family: var(--font-display); font-weight: var(--font-display-weight);
+  font-size: 15px; letter-spacing: 0; text-transform: none; line-height: 23px;
+}
 .arc-sheet-grip { display: none; }
 
 /* ── The grid. Density is set on the container, so every tile's size
