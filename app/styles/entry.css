@@ -219,6 +219,73 @@
 }
 @keyframes layRise { from { transform: translateY(100%); } to { transform: none; } }
 
+/* ── The listen is a sheet, 2026-10-21 ─────────────────────────────────────
+   Raised from the Listen bar and lowered back into it without ending
+   (Miyel's brief, home and the session). Raised, it covers home from just
+   under the status bar, so a strip of home shows over its rounded top and it
+   reads as a thing held up over the page, not a page you went to; a grip at
+   the top says it goes back down. The pull, Escape and the caret lower it;
+   Discard, Save draft and Post end it. Corners of 24 and a grip 38 by 4, her
+   mockup's.
+
+   Not all the way to the top, 2026-10-22 (Miyel: "it should be as if its a
+   tab you can always pull down"): it stops a good strip short of the status
+   bar, 44 under it or 64 where there is none, so home stays in sight over it
+   and the sheet never reads as the page. It was 34, or ten under the bar.
+   The gap holds while the keyboard is up too — moving the sheet as a field
+   takes the focus would fight the note sitting on the keyboard. */
+.lay--sheet {
+  --sheet-top: max(64px, calc(env(safe-area-inset-top, 0px) + 44px));
+  top: calc(var(--lay-lift, 0px) + var(--sheet-top));
+  border-radius: var(--radius, 24px) var(--radius, 24px) 0 0;
+  box-shadow: 0 -14px 46px rgba(0, 0, 0, 0.26);
+}
+/* ── The tab, always there, 2026-10-22 ─────────────────────────────────────
+   A band across the sheet's top edge with the grip in it, stuck there however
+   far down the listen has been scrolled, and a pull that starts on it lowers
+   the sheet from anywhere (LayerEntry) — the tab you can always pull down. A
+   band of the page's own colour rather than a line on nothing: a grip with no
+   ground floated over the writing as it scrolled under it (2026-10-21), and
+   the writing goes under this instead. touch-action none, so a drag on it is
+   the sheet's and never a scroll. A button since 2026-10-22: pressed, it puts
+   the sheet down, which is how a mouse does it (LayerEntry). */
+.lay-grip {
+  position: sticky;
+  top: 0;
+  z-index: 212;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  height: 22px;
+  margin: 0 0 -22px;
+  padding: 0;
+  border: 0;
+  background: var(--bg);
+  touch-action: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.lay-grip:hover::before { opacity: 0.9; }
+.lay-grip:focus-visible { outline: none; }
+.lay-grip:focus-visible::before { opacity: 1; outline: 2px solid var(--ink-faint); outline-offset: 3px; }
+/* The corner's caret stands down on a sheet: the grip puts it down, and the
+   sheet's top is the three words' row (.ses-bar, session.css). */
+.lay--sheet .lay-back-slot { display: none; }
+.lay-grip::before {
+  content: '';
+  display: block;
+  width: 38px;
+  height: 4px;
+  margin-top: 9px;
+  border-radius: 999px;
+  background: var(--ink-faint);
+  opacity: 0.5;
+}
+/* The status bar is outside the sheet now, so the page inside it starts
+   under the tab rather than under the clock. */
+.lay--sheet .ses-body--page { padding-top: 34px; }
+.lay--sheet .ses-picker { padding-top: 26px; }
+
 /* ── The header does not rise with it, 2026-09-20 ────────────────────────
    Miyel, on the album: "instead of opening from where it is, it can just
    slide up from the bottom, all the way from the bottom, covering the

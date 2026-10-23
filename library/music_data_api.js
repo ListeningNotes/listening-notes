@@ -26,6 +26,47 @@ export function sizedAlbumArt(url, size = 600) {
   return `https://is1-ssl.mzstatic.com/image/thumb/${path}/${size}x${size}bb.jpg`;
 }
 
+// ── A cover's color, 2026-10-22 ────────────────────────────────────────────
+// For the wall's By color (Journal.js), which reads each cover in the browser,
+// and for the server's reading of a cover a page may not read
+// (app/api/entries/[slug]/color) — one reading, so the two cannot disagree.
+// Given a cover drawn at COLOR_SIDE pixels square, as RGBA bytes.
+//
+// The hue it has most of, each pixel counted by how vivid it is, the middle
+// of the strongest ten degrees leant toward whichever neighbour is stronger
+// so two covers of one color still line up by shade; and `plain` for a cover
+// with hardly any color at all, which the wall puts after the colored ones,
+// dark to light by `light`.
+export const COLOR_SIDE = 24;
+// How much color a cover has to have, on average across its pixels, to be a
+// color at all. Set against the test copy's covers: thirteen read exactly
+// none, and the line falls between Back to Black and Grey Oceans.
+const COLOR_FLOOR = 0.08;
+
+export function colorOfArt(px) {
+  const bins = new Array(36).fill(0);
+  let vivid = 0;
+  let light = 0;
+  const count = px.length / 4;
+  for (let i = 0; i < px.length; i += 4) {
+    const r = px[i] / 255, g = px[i + 1] / 255, b = px[i + 2] / 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b), chroma = max - min;
+    light += (max + min) / 2;
+    if (chroma < 0.1) continue;
+    let hue = max === r ? ((g - b) / chroma) % 6 : max === g ? (b - r) / chroma + 2 : (r - g) / chroma + 4;
+    hue = (hue * 60 + 360) % 360;
+    bins[Math.floor(hue / 10)] += chroma;
+    vivid += chroma;
+  }
+  light /= count;
+  if (vivid / count < COLOR_FLOOR) return { hue: 0, light, plain: true };
+  let peak = 0;
+  bins.forEach((v, i) => { if (v > bins[peak]) peak = i; });
+  const left = bins[(peak + 35) % 36], right = bins[(peak + 1) % 36];
+  const hue = (peak * 10 + 5 + 5 * ((right - left) / (bins[peak] + left + right)) + 360) % 360;
+  return { hue, light, plain: false };
+}
+
 // Pull the FULL, ordered tracklist from iTunes/Apple Music. Two steps:
 //   1. find the album's collection (scored match, like fetchAlbumArtUrl)
 //   2. look up that exact collection's songs — returns every track in order

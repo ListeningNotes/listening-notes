@@ -156,6 +156,7 @@ The front doors — receive requests, hand them off, send back responses
     entries/route.js           Load all entries / save a new one
     entries/[slug]/route.js    Load, edit, or delete one specific entry
     entries/[slug]/code/route.js  GET: the entry's code, pressed out of its cover — public, rate-limited, cached a day
+    entries/[slug]/color/route.js GET: the entry's cover color for By color, read on the server only for a cover a page may not read (Bandcamp, Discogs) — the saved cover only, public, rate-limited, cached a day
     drafts/route.js            Unfinished listens — owner-only both ways, the read included
     drafts/[id]/route.js       DELETE one draft
     format/route.js            Assemble your notes into a post (local, no model)
@@ -219,8 +220,9 @@ The furniture — visual pieces
       IdentityCard.js          The ID: the portrait full width and square — the same object an entry's album art is — then the name, four counts — albums, songs, and the two flags in their colours — and the pinned record or song. Send and Add left it on 2026-09-19, and left the beacon too on 2026-09-27; a visitor sees the keeper here and nowhere else. This is the About page
       IdentificationCardEditor.js  Editing the card in place
       ListeningBeacon.js       The beacon — what is playing, or last played
-      Journal.js               The wall of covers, with its search, filters and sort
-      JournalFilters.js        The filter sheet — a popover on a desk, a pull-down sheet on a phone — and the year range
+      ListenBar.js             The way into a listen: a bar at the foot of home, the session closed — Start a listen at rest; with a listen lowered, its cover, the lit track and the live dot. Both raise /session as a sheet; the one thing shaped like a button
+      Journal.js               The wall of covers, with its search, filters and views (In order, A–Z, by month, era, genre, rating; then time of day, horizon, color, Shuffle; grouped views draw band headings, By color reads each cover in the browser; the album size sits at the foot of the views menu)
+      JournalFilters.js        The filters, dropping from the wall's line on a phone and a desk alike — kind (albums or tracks), genre, the year range and the marks; it takes records away, the views rearrange them
       AlbumTile.js             One record on that wall — a card for a record with a listen behind it, a page with its corner folded for a record known only by its track notes; the folder shape went on 2026-10-13 (Journal.js gathers entries into records, by title, artist and year)
       FolderFooter.js          A folder's tabs at the foot of the screen — Listen 1, Listen 2 or the song, the one you are on in ink — the one piece of chrome a folder adds; useFolder in LayerEntry.js does the flipping
       CodeSlot.js              A square that holds a picture and turns into that picture's code — the card's portrait and an entry's cover: the two faces, the copy and its pill, the corner mark, the wait
@@ -232,7 +234,7 @@ The furniture — visual pieces
       Dashboard.js             The desk, for the owner — Start a listen as a band, then Inbox, Feed, Address book and Settings as rows; the header holds the mark alone. On a desk only since 2026-09-19, as the spine's second page
       Friends.js               The address book as a grid of faces, pinned first; a face opens its three doors in place under its own row. Friends, under People, and /dashboard/people
       Feed.js                  What the people in the address book logged, read off their public feeds; Submissions and Recent; Compare on a row you also have. Its own page at /dashboard/feed since 2026-09-15
-      Footer.js                The band at the foot of the phone's cross — Card, Beacon, People, Inbox (Card, Beacon, People for a visitor), the one you are on in ink; presses move the rail exactly as a swipe does, and the stop you are on goes back up (twice: to floor one)
+      Header.js                The phone's top row — the keeper's face (to the card), the light switch, and Home · People · Inbox with only the lit one wearing its word; a visitor's has the mark instead of words. It replaced the band at the foot (Footer.js), 2026-10-22
       PullDown.js              Pull down to refresh: at the top of a scroller, the mark and a line in the gap the page opens, then asking — on the People pane first, Friends and Everyone alike
       EditingBar.js            The band at the foot of anything being corrected — what you are in the middle of, and Save and Cancel as words
       UpdateSwitch.js          Switching on the updater — a screen in setup, a section in Settings: hands the keeper a pre-filled GitHub link for the workflow file, then watches for the rebuild
@@ -307,7 +309,7 @@ The rooms — full pages assembled from furniture
       FullPostPage.js          The full public entry page — and, in preview mode, the session's preview
       TrackNotePage.js         A track note — an entry about one song: its card, read, corrected, and written for the first time on the listen's sheet
       opengraph-image.js       The picture an entry's link unfurls into — cover, title, score, marks — drawn on the server per request
-    archive/page.js            Every entry — search, sort, filters
+    archive/page.js            Every entry — search, views, filters
     key/page.js                What the stars and the three marks mean
     submit/page.js             Send the keeper an album
     shuffle/page.js            Redirect to a random entry
@@ -358,6 +360,8 @@ The rooms — full pages assembled from furniture
 | The full entry post page | app/entries/[slug]/FullPostPage.js |
 | A picture turning into its code (the portrait, a cover) | components/main_components/CodeSlot.js, styles under .ln-slot in app/styles/base.css |
 | Printing a record (the share printer) | components/main_components/EntryPlate.js draws the plate, hooks/usePress.js makes and saves the picture, Slug_Page/PrintBar.js is the bar, styles under .ln-print in app/styles/entry.css, app/printer/page.js opens it |
+| The Listen bar at the foot of home | components/main_components/ListenBar.js, styles under .lb in app/styles/nav.css |
+| The session as a sheet, and lowering it without ending | LayerEntry.js `sheet` (.lay--sheet in app/styles/entry.css); the before-leaving hook and keepInHand in app/session/page.js; putDown in hooks/useListeningSession.js |
 | The album picker | components/session_components/AlbumPicker.js |
 | The note-taking session | app/session/page.js, styles in app/styles/session.css |
 | The session's one screen and its preview | components/session_components/steps/ |

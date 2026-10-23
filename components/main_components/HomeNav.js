@@ -70,16 +70,16 @@
 import { startTransition, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { ArrowsLeftRight, CaretDown, X } from '@phosphor-icons/react';
-import { CAPTION, announce, useListeningBeacon } from '../../hooks/useListeningBeacon';
-import MarqueeTitle from './MarqueeTitle';
+import { ArrowsLeftRight, CaretDown } from '@phosphor-icons/react';
+import { announce, useListeningBeacon } from '../../hooks/useListeningBeacon';
 import { useSpineWidth } from '../../hooks/useSpineWidth';
 import { useTheme } from './Lightswitch';
 import { useBookplate } from './Bookplate';
 import ListeningBeacon from './ListeningBeacon';
+import ListenBar from './ListenBar';
 import Journal from './Journal';
+import Header from './Header';
 import MonthPrompt from './MonthPrompt';
-import Footer from './Footer';
 import About from './About';
 import Dashboard, { heldNow, subscribeHeld } from './Dashboard';
 // The two rooms that used to be behind the desk and are stops of their own
@@ -101,11 +101,10 @@ import { DIRECTORY_URL } from '../../library/version';
 // thing it asks of them is whether a row is a record you also have, and
 // therefore whether Compare is worth offering.
 import Feed, { DensityToggle, useFeedDensity } from './Feed';
-import AlbumPicker from '../session_components/AlbumPicker';
 // The same two the desk already reaches for, from the same module, so the
 // pane and the desk agree about what "a listen is open" means and say so the
 // same way. The hook itself is not called here.
-import { PENDING_KEY, SAVED_EVENT, TRACK_NOTE_KEY, saidSoAboutTheDesk } from '../../hooks/useListeningSession';
+import { SAVED_EVENT } from '../../hooks/useListeningSession';
 
 // You, then home. Home is the one you land on, which is why it is not index
 // 0 — the rail is scrolled to it on mount before the first paint. A visitor
@@ -123,6 +122,15 @@ const HOME = 1;
 // strangers and visitors can see this page"). The inbox stays the keeper's.
 const BOOK = 2;
 const INBOX = 3;
+// ── The rail starts at home on a phone, 2026-10-22 ────────────────────────
+// The card left the rail: it opens over the page from the keeper's face in
+// the top row (Header.js; DECISIONS, the frame — Miyel: "the profile should
+// only open if you click it and not be a swipe left"). The panes keep their
+// numbers — home is still 1, the book 2, the inbox 3, and the card's pane is
+// still the first of paneRefs — but the first one you can swipe to is home,
+// so a place on the rail is a pane less one. A desk's rail is a grid and is
+// never scrolled sideways.
+const RAIL_FROM = HOME;
 
 // Which face the spine was left on, per browser. Not a setting and not on the
 // settings row: it is where somebody put their own left-hand page down, the
@@ -137,53 +145,6 @@ const FACE_KEY = 'ln-spine-face';
 // nav.css too, on the transition; if one moves the other has to.
 const TURN_MS = 400;
 
-// ── The one flight left ───────────────────────────────────────────────────
-// Press *Start a listen* and the beacon's cover shrinks out of the card into
-// the small square in the nav bar, where it stays for as long as you are
-// choosing. That is the whole of the movement on this pane now, and Miyel
-// likes it: "I like the animation of the beacon becoming small."
-//
-// Everything else that used to be here is gone, and the list is worth keeping
-// because every item on it was built, watched and rejected on 2026-09-17 and
-// -18: a cover flying from the picker's tile into the beacon's slot, then a
-// second leg up to the session's header; the beacon having "its moment" lit
-// and full size before the listen arrived; an aperture closing on one record
-// and opening on another; a cross-fade; a horizontal erase; the whole screen
-// leaving by the floor and coming back. BLINK_MS, THE_TURN_MS, RISE_MS and
-// TURN_ON_MS were all constants here and all went with the moves they timed.
-//
-// What ended it was not a better animation. It was Miyel noticing that there
-// is nothing to animate: the sheet covers the screen, so the beacon changing
-// underneath it is not a thing anybody is in a position to watch. "You don't
-// see the transition." See beginListen below.
-const TO_THE_BAR_MS = 620;
-// ── And how long the record waits for the mark to get out of the way ──────
-// The two movements this press starts — the big mark leaving out of the top of
-// the screen, the record flying up out of the card into the bar — travel
-// through the same strip of screen, and until 2026-09-21 they did it at the
-// same time: measured, the cover slid through the logo from 220ms to 520ms.
-// Miyel: "i dont want them overlapping", and then "yes do the handover."
-//
-// So they take turns. The mark goes first, on its own slower curve (see
-// .hn--choosing .hn-bar-crown .hn-crown-svg in nav.css), and the record holds
-// at the card until it is clear — which reads as the logo making room rather
-// than as two things crossing. 300 is where the mark's foot passes the top of
-// the band the record is landing in, with a little to spare; the whole way in
-// is this plus TO_THE_BAR_MS, a shade over nine tenths of a second.
-//
-// The card is still standing down through all of it (a 0.7s collapse of its
-// own), so the record is not left hanging on its own anywhere: it sits with
-// the card it came from until it leaves it.
-const MAKE_ROOM_MS = 300;
-// The backstop for "the sheet has the screen", used only when the sheet's own
-// rise never announces itself — reduced motion, or a layout with no animation
-// on it. Comfortably past the longest rise there is (layRiseTall, 620ms on a
-// desk; layRise is 420 on a phone) plus the render the push has to do first.
-//
-// Late costs nothing here. Nobody can see the beacon change while the sheet is
-// over it, and a pull down cannot arrive before the sheet it would be pulling
-// has finished coming up, let alone before this.
-const BEHIND_THE_SHEET_MS = 900;
 // ── How long a saved listen takes to drop off the screen ──────────────────
 // 420 is the layer's own GROW_MS, and the time the sheet took to come up: it
 // goes back down the way it came, at the pace it came, onto the journal that
@@ -207,9 +168,10 @@ const ARRIVE_MAX_MS = 4000;
 // A record leaving the big slot and taking its place at the top of the column
 // beside it, everything under it stepping down, and the oldest going off the
 // end. Named by Miyel, 2026-09-19, and a name of its own because it is the
-// third movement this floor has: `landing` is a record's flight into a
-// session and `filing` is the save cutaway, and three unnamed movements in one
-// file is three things nobody can talk about.
+// third movement this floor had: `landing` was a record's flight into a
+// session (gone with the beacon's own picker, 2026-10-21) and `filing` is the
+// save cutaway, and three unnamed movements in one file is three things
+// nobody can talk about.
 //
 // Her brief: "it logs going from top to bottom. As a listen moves into being a
 // last played, it should move from the big spot over to the top in the row,
@@ -221,8 +183,8 @@ const ARRIVE_MAX_MS = 4000;
 // This is only the watching.
 //
 // ── Why it is done to the DOM rather than through state ───────────────────
-// `landing` is React state and a rendered <img>, which is right for it: it
-// starts on one press and is gone in one journey. This starts on a *change* —
+// A flight that starts on one press and is gone in one journey can be React
+// state and a rendered <img>. This starts on a *change* —
 // four objects have to move at once, three of which React has just finished
 // putting in their new places, and asking React to put them back where they
 // were so they can be animated forwards again is a second render of a layout
@@ -238,8 +200,7 @@ const ARRIVE_MAX_MS = 4000;
 // 0.7s, which is this floor's number and not a new one: the crown's collapse,
 // the card's gap, the name under it and the cover's own shrink are all moving
 // on it, and a record crossing the same screen at a different speed is a
-// second clock in one room. The flight into a session is 620 because it is
-// crossing into somewhere else.
+// second clock in one room.
 const PASS_MS = 700;
 const PASS_EASE = 'cubic-bezier(0.22, 0.61, 0.36, 1)';
 // What a record put down looks like. The same filter the beacon's own cover
@@ -592,9 +553,11 @@ export default function HomeNav() {
   // lock answers. Every effect that lists it re-runs then and re-attaches to
   // the panes that now exist, which is exactly right and is why they list it.
   const paneRefs = useMemo(
-    () => (authed ? [cardRef, homeRef, friendsRef, inboxRef]
-      : DIRECTORY_URL ? [cardRef, homeRef, friendsRef]
-      : [cardRef, homeRef]),
+    // A visitor's is the card and home since 2026-10-22: People moved to the
+    // commons, so a visitor's row has no words and the rail no People pane
+    // (DECISIONS, the frame). It held Everyone, wherever there was a
+    // directory, from 2026-10-07.
+    () => (authed ? [cardRef, homeRef, friendsRef, inboxRef] : [cardRef, homeRef]),
     [authed]
   );
   // Kept in step on every render, and read by the getter above. It has to be
@@ -623,293 +586,7 @@ export default function HomeNav() {
   // same way, so the two can never disagree about whether a listen is open.
   const inHand = useSyncExternalStore(subscribeHeld, heldNow, () => null);
 
-  // ── Choosing a record, on the pane ────────────────────────────────────────
-  // Floor one becomes the picker without leaving the page (Miyel's beacon
-  // brief, 2026-09-17). The beacon does not go: it shrinks and dims, so the
-  // page never blanks and the small cover is a target for the record that is
-  // about to land in it.
-  //
-  // The state is here and not in the beacon because it is about the whole
-  // floor — the band goes, the crown goes, the row of earlier covers goes,
-  // and the snap between floors stops while the picker is what the pane is.
-  const [choosing, setChoosing] = useState(false);
-  // ── What the bar's mini shows while you choose ──────────────────────────
-  // The record that was on the beacon when the picker opened, held still for
-  // as long as it is open — not the live beacon.
-  //
-  // It followed the beacon for half an hour on 2026-09-18, so picking a record
-  // snapped the bar to it and the session then resolved over the top carrying
-  // the same record. Measured: the bar's cover at x=134 and the session's at
-  // x=112, because the bar says the album and the session says the open track
-  // and a different word is a different width. Two copies of one record, 22px
-  // apart, sliding into each other for the length of a cross-fade — which is
-  // exactly what Miyel meant by "now the cross-fade doesn't work."
-  //
-  // They cannot be made to line up: the bar cannot know which track the
-  // session will open on. So the bar does not change. The session arriving IS
-  // the beacon updating, and there is one thing moving instead of two.
-  const [onTheBar, setOnTheBar] = useState(null);
-  // Whether the × has been pressed once and is showing what it will do. Reset
-  // on blur, the way the draft's discard is: a confirmation left armed behind
-  // your back is a confirmation you did not give.
-  const [ending, setEnding] = useState(false);
-  // ── The name travels with the record ────────────────────────────────────
-  // Miyel, 2026-09-18: "don't have text disappear on the transition, but
-  // rather move into place and shrink with art."
-  //
-  // It did disappear: the card's meta collapsed while the bar's appeared, so
-  // the album and the artist blinked out in one place and in again in
-  // another while the cover made an unhurried journey between them.
-  //
-  // The bar's own words are what travel — not a copy of the card's. They are
-  // put back where the card's were standing, at the size the card's were
-  // (0.625 apart, which is why the type had to agree first), and then let go.
-  // Drawn at the destination and pulled back to the origin, so the end of the
-  // movement is exactly right by construction and cannot land on a jump.
-  // Centres rather than corners: the card's are centred under a 180px cover
-  // and the bar's are left of a 44px one, and a corner-to-corner flight of
-  // two differently aligned blocks slides sideways for no reason.
-  const wordsFrom = useRef(null);
-  useEffect(() => {
-    const from = wordsFrom.current;
-    if (!from || !choosing) return;
-    wordsFrom.current = null;
-    const said = document.querySelector('.hn-bar-beacon .ses-head-text');
-    if (!said) return;
-    const to = said.getBoundingClientRect();
-    if (!to.width) return;
-    const k = 1 / 0.625;   // the card's type over the bar's
-    const dx = (from.left + from.width / 2) - (to.left + to.width / 2);
-    const dy = (from.top + from.height / 2) - (to.top + to.height / 2);
-    said.style.transition = 'none';
-    said.style.transform = `translate(${dx}px, ${dy}px) scale(${k})`;
-    // Released on the next frame — and by a clock as well, because a frame is
-    // not guaranteed. A tab the browser thinks is hidden runs no animation
-    // frames at all, and the whole of this is set-then-release: without the
-    // second way out, the name would sit at 1.6 times its size in the wrong
-    // place for as long as the picker was open. Seen exactly that way in the
-    // preview pane on 2026-09-18, which reports hidden always.
-    let gone = false;
-    const release = () => {
-      if (gone) return;
-      gone = true;
-      // The same wait the cover takes, or the record's name would set off
-      // without it and the two halves of one object would arrive apart.
-      said.style.transition = `transform ${TO_THE_BAR_MS}ms cubic-bezier(0.22, 0.61, 0.36, 1) ${MAKE_ROOM_MS}ms`;
-      said.style.transform = 'none';
-      flightTimers.current.push(setTimeout(() => {
-        said.style.transition = '';
-        said.style.transform = '';
-      }, MAKE_ROOM_MS + TO_THE_BAR_MS + 40));
-    };
-    flightTimers.current.push(requestAnimationFrame(release));
-    flightTimers.current.push(setTimeout(release, 120));
-  }, [choosing]);
   const router = useRouter();
-
-  // ── Off the picker and into the listen ────────────────────────────────────
-  // The record goes in the browser under the key the session reads once on
-  // mount, so the listen opens on it — the same handover the session's own
-  // picker does, and the same event after it, so the desk's row and the line
-  // under the beacon change in the same frame rather than on the next poll.
-  //
-  // `from` is the box the tapped cover was in, handed over by AlbumPicker. It
-  // is the start of the flight; the beacon slot is the end.
-  const [landing, setLanding] = useState(null);
-  const flightTimers = useRef([]);
-  useEffect(() => () => {
-    flightTimers.current.forEach(id => { clearTimeout(id); cancelAnimationFrame(id); });
-  }, []);
-
-  // A FLIP on the beacon's card lived here for ten minutes on 2026-09-18 and
-  // came out again. It was the wrong tool: the card's position is not a thing
-  // that jumps, it is a thing that is *dragged* by the crown above it
-  // collapsing, and the crown was already animating — on its own clock. Two
-  // animations for one movement, one of them measuring the other mid-flight
-  // and re-flipping off its own transform. The fix is one clock, below and in
-  // nav.css, not a second animation on top.
-
-  const openSession = useCallback(() => {
-    setChoosing(false);
-    router.push('/session');
-  }, [router]);
-
-  const beginListen = useCallback((record, from = null) => {
-    try { localStorage.setItem(PENDING_KEY, JSON.stringify(record)); } catch { /* the listen still opens */ }
-    // A record pressed is a listen, whatever song was last on the desk.
-    try { sessionStorage.removeItem(TRACK_NOTE_KEY); } catch { /* nothing to clear */ }
-    saidSoAboutTheDesk();
-    // The beacon is told now, whichever way this goes. Behind the sheet, but
-    // true — and the pane is what you come back to when the listen ends.
-    // `art`, not `artUrl` — announce names its fields the way the beacon's
-    // snapshot does and a record names them the way the picker does, so
-    // handing the record over whole dropped the cover silently and the
-    // owner's own beacon announced a blank square until the next poll caught
-    // up. Invisible until 2026-09-18, when the bar's mini started drawing
-    // from this the moment it is published.
-    announce({ album: record.album, artist: record.artist, art: record.artUrl });
-    const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-    if (!from || !record.artUrl || still) { openSession(); return; }
-    // ── The sheet comes up, and the beacon changes behind it ────────────
-    // Miyel, 2026-09-18, after two days of trying to make one record hand over
-    // to another in front of somebody: "it might be as simple as this. When
-    // you choose an album from the selector it simply comes up over the screen
-    // without the old beacon changing. On dragging down it basically leaves
-    // the new one behind." And then, in three words, the reason it works:
-    // "you don't see the transition."
-    //
-    // There isn't one. The sheet covers the whole screen, so the beacon under
-    // it can become the new record whenever it likes — and every attempt at
-    // this since the 17th had been choreographing a handover that nobody was
-    // ever in a position to watch. A record flying up from the tile, an
-    // aperture closing on one cover and opening on another, a cross-fade, two
-    // beacons measured to the tenth of a pixel so the seam would not show:
-    // all of it staging for an audience behind a curtain.
-    //
-    // So: the sheet goes up now, over a bar that has not moved. The record on
-    // it changes once the screen is covered. Pulling down reveals it — the
-    // listen leaves the record behind on the beacon on its way out, which is
-    // also exactly what putting a record down means.
-    //
-    // announce() above is untouched and still fires at the press: that is the
-    // *public* beacon, what a visitor sees, and it should say what is being
-    // listened to the moment it is true rather than half a second later.
-    flightTimers.current.push(setTimeout(() => router.push('/session'), 0));
-    // ── Not on a clock. When the sheet has actually arrived. ────────────
-    // This was a timer for an hour and Miyel saw straight through it: "let the
-    // selection screen delay the change, I shouldn't see it change at all — it
-    // will have to change after the notetaking session has opened all the way."
-    //
-    // The sheet exists in the DOM the moment it is pushed and spends the next
-    // half second climbing, and it climbs from the floor — so the bar, at the
-    // top of the screen, is the *last* thing it covers rather than the first.
-    // A timer set to the layer's 420ms left forty milliseconds of margin on a
-    // phone and none at all on a desk, where the rise is 620 (layRiseTall).
-    //
-    // So the sheet says when. Its own rise ending is the exact moment the
-    // screen is covered, on either layout and at either duration, and there is
-    // no number here to be wrong.
-    const settle = () => setOnTheBar({
-      art: record.artUrl, title: record.album, artist: record.artist, live: true,
-    });
-    let done = false;
-    const once = () => { if (done) return; done = true; settle(); };
-    let tries = 0;
-    const waitForTheSheet = () => {
-      if (done) return;
-      const sheet = document.querySelector('.lay--rises');
-      if (!sheet) {
-        // The push has not rendered yet. Keep looking, but not forever.
-        if (tries++ < 40) flightTimers.current.push(setTimeout(waitForTheSheet, 25));
-        else once();
-        return;
-      }
-      sheet.addEventListener('animationend', event => {
-        // Its own rise, not something animating inside it.
-        if (event.target === sheet) once();
-      });
-      // And a backstop, because a sheet that arrives with no animation at all
-      // — reduced motion, or a layout that does not use one — never fires.
-      flightTimers.current.push(setTimeout(once, BEHIND_THE_SHEET_MS));
-    };
-    waitForTheSheet();
-    // And the picker folds away once the sheet is over it — unseen, which is
-    // the point. Doing it now would empty the screen behind a sheet that has
-    // not covered it yet.
-// The picker is not put away. `choosing` stays true for as long as the
-    // session is open, so closing the session lands back on the drafts it was
-    // started from — "being in a session needs to take me back to drafts."
-    // Nothing has to tell this pane the session has closed; the pane never
-    // stopped being where it was.
-  }, [openSession, router]);
-
-  // ── Off the picker and into a track note, 2026-09-24 ───────────────────
-  // A song pressed in the Songs section. The same door as a listen — the song
-  // waits in the tab and /session opens on it as a sheet — and none of the
-  // rest of it: nothing is announced and nothing flies to the bar, because a
-  // track note is not a listen and nothing new appears on the beacon while
-  // one is written (the track-notes brief). Once saved it drops onto the
-  // journal the way a listen does, and the beacon takes it as the last thing
-  // logged (the drop, below). `choosing` stays on, as it does for a listen,
-  // so pulling the note down lands back on the picker.
-  const beginTrackNote = useCallback(song => {
-    try { sessionStorage.setItem(TRACK_NOTE_KEY, JSON.stringify(song)); } catch { /* the note still opens */ }
-    router.push('/session');
-  }, [router]);
-
-  // The journey: out of the picker and into the bar's slot, which is the
-  // session header's slot.
-  //
-  // The target is measured rather than worked out, and it is measured from
-  // where the sheet will be *at rest* rather than where it is this frame —
-  // the sheet is rising while this runs, so its header is still on its way up
-  // and a cover aimed at that would land below the slot and then have to
-  // shuffle. The sheet's own top is how far it still has to go, so taking it
-  // off gives the resting box.
-  //
-  // Two frames, not one: the first lets the push render the layer, the second
-  // measures a header that now exists.
-  //
-  // The timers live in a ref and not in this effect's cleanup: the effect runs
-  // again the moment the target is written, and a cleanup there would cancel
-  // the journey it had just started.
-  useEffect(() => {
-    if (!landing || landing.to) return;
-    // ── The one destination ─────────────────────────────────────────────
-    // The session's own cover, not the bar's. The bar's is centred, because
-    // while you are choosing there is nothing beside it; the session's sits
-    // left of centre with the record's name to its right, which on a 375px
-    // phone is 52px apart. Measured 2026-09-18 with the flight aimed at the
-    // bar's: the record landed at x=164 while the session's own cover was
-    // already drawn at x=112, so for one frame there were two of the same
-    // record in two places. The bar's cover stands down for the length of the
-    // flight (see the markup) so there is only ever one.
-    //
-    // Waited for rather than assumed: the session is pushed as the record
-    // leaves and draws its header on its first frame, but a first frame is
-    // not this frame.
-    const lookFor = (tries = 0) => {
-      const slot = document.querySelector(landing.into);
-      if (!slot && tries < 40) {
-        flightTimers.current.push(requestAnimationFrame(() => lookFor(tries + 1)));
-        return;
-      }
-      if (!slot) { setLanding(null); return; }
-      // Measured back out of the settle. The session arrives at scale(1.04)
-      // and eases to rest, so its header's box this frame is 4% wrong and
-      // shrinking — aiming at that lands the record somewhere the cover is
-      // only passing through. Undoing the scale about the sheet's own centre
-      // gives the box it is coming to rest in.
-      // Only a slot inside the arriving sheet needs this; the bar's is on the
-      // page and sits still. `closest` asks the target itself rather than the
-      // flight having to know which move it is on.
-      const sheet = slot.closest('.lay');
-      const at = slot.getBoundingClientRect();
-      let to = { left: at.left, top: at.top, width: at.width, height: at.height };
-      if (sheet) {
-        const k = new DOMMatrixReadOnly(getComputedStyle(sheet).transform).a || 1;
-        if (Math.abs(k - 1) > 0.001) {
-          const box = sheet.getBoundingClientRect();
-          const cx = box.left + box.width / 2;
-          const cy = box.top + box.height / 2;
-          to = {
-            left: cx + (at.left - cx) / k,
-            top: cy + (at.top - cy) / k,
-            width: at.width / k,
-            height: at.height / k,
-          };
-        }
-      }
-      setLanding(l => l && ({ ...l, to }));
-      flightTimers.current.push(requestAnimationFrame(() => setLanding(l => l && { ...l, go: true })));
-      // Arrived, and the session's own cover is already in that box — same
-      // image, same place, and in the browser's cache because this is the copy
-      // it has just finished flying. Letting go of the flown one is a frame
-      // with nothing in it to notice.
-      flightTimers.current.push(setTimeout(() => setLanding(null), (landing.wait || 0) + TO_THE_BAR_MS));
-    };
-    flightTimers.current.push(requestAnimationFrame(() => lookFor()));
-  }, [landing]);
 
   // ── The drop, 2026-09-24 ─────────────────────────────────────────────────
   // A listen becomes an entry, and the sheet it was written on goes back down
@@ -933,8 +610,8 @@ export default function HomeNav() {
   //
   // Now nothing scrolls where anybody can see it. It is the rule picking a
   // record already follows — "you don't see the transition" (2026-09-18) —
-  // run the other way: while the sheet still covers the screen the picker
-  // folds, the wall goes back to its own top and the pane goes to the wall,
+  // run the other way: while the sheet still covers the screen the wall goes
+  // back to its own top and the pane goes to the wall,
   // and then the sheet drops. What it uncovers is already the place you are
   // going. The one thing left moving is the sheet, which is one transform
   // and the same movement as pulling a listen down by hand.
@@ -954,12 +631,6 @@ export default function HomeNav() {
       // effect below. It was asked for on arrival at the wall until
       // 2026-09-18, and the pane sat there for about a second waiting.
       onTheWay.current = fetchEntries().catch(() => null);
-      // The picker folds now, behind the sheet. `choosing` stays on through
-      // a listen so that closing one lands back on the drafts; a saved one
-      // lands on the journal, and the journal is floor two, which is not on
-      // the page while the picker is floor one.
-      setEnding(false);
-      setChoosing(false);
       setFiling(record);
     };
     window.addEventListener(SAVED_EVENT, onSaved);
@@ -989,7 +660,7 @@ export default function HomeNav() {
     const wall = floorRef.current;
     const rail = railRef.current;
     const onTheRail = window.matchMedia('(max-width: 768px)').matches && rail;
-    const underTheSheet = !onTheRail || Math.round(rail.scrollLeft / (rail.clientWidth || 1)) === HOME;
+    const underTheSheet = !onTheRail || Math.round(rail.scrollLeft / (rail.clientWidth || 1)) + RAIL_FROM === HOME;
     if (underTheSheet) {
       if (wall && getComputedStyle(wall).overflowY === 'auto') wall.scrollTop = 0;
       if (pane) pane.scrollTop = floorTwo(pane);
@@ -1056,46 +727,18 @@ export default function HomeNav() {
     };
   }, [filing, fetchEntries, router]);
 
-  // Where the flying cover is drawn this frame: at its start until it is told
-  // to go, then translated and scaled onto the beacon's slot.
-  let flightStyle = null;
-  if (landing) {
-    const { from, to, go } = landing;
-    const travelling = go && to;
-    const dx = travelling ? to.left - from.left : 0;
-    const dy = travelling ? to.top - from.top : 0;
-    const k = travelling ? to.width / from.width : 1;
-    flightStyle = {
-      left: from.left, top: from.top, width: from.width, height: from.height,
-      transform: `translate(${dx}px, ${dy}px) scale(${k})`,
-      // `wait` is the beat it holds at the card before it sets off, so the big
-      // mark has the strip to itself on the way out — see MAKE_ROOM_MS. A
-      // flight with none simply leaves at once.
-      transition: travelling
-        ? `transform ${landing.ms}ms cubic-bezier(0.22, 0.61, 0.36, 1) ${landing.wait || 0}ms`
-        : 'none',
-    };
-  }
-
-  // A saved draft travels whole, so the session can put its notes back without
-  // a second round trip — the shape is the session's own `resume`.
-  // `from` is the box of the cover on the pressed row, so a resumed listen
-  // travels exactly as a new one does.
-  const resumeDraft = useCallback((draft, from = null) => {
-    beginListen({
-      album: draft.album,
-      artist: draft.artist || '',
-      year: draft.year || '',
-      artUrl: draft.album_art || '',
-      collectionId: draft.collection_id || null,
-      genre: draft.genre || '',
-      entryType: draft.entry_type || '',
-      submissionId: draft.submission_id ?? null,
-      draft,
-    }, from);
-  }, [beginListen]);
 
   const [pane, setPane] = useState(HOME);
+  // Whether the card is open over the page, on a phone (the frame,
+  // 2026-10-22). The face opens it and closes it again, and any of the three
+  // rooms puts it away on the way there; so does Escape.
+  const [cardOpen, setCardOpen] = useState(false);
+  useEffect(() => {
+    if (!cardOpen) return undefined;
+    const shut = event => { if (event.key === 'Escape') setCardOpen(false); };
+    window.addEventListener('keydown', shut);
+    return () => window.removeEventListener('keydown', shut);
+  }, [cardOpen]);
   // Coming away from the inbox asks again what is new — leaving its pane on a
   // phone, or its sheet closing over the desk — so the dot on Inbox goes once
   // what it was for has been opened (2026-10-20).
@@ -1253,44 +896,21 @@ export default function HomeNav() {
     // and where the bar's line falls on a phone with a notch.
     let base = null;
     const measure = () => {
-      // ── Not while the crown is folded away, 2026-09-21 ────────────────
-      // Starting a listen collapses it — height, padding and a scale down to
-      // a quarter (.hn--choosing .hn-crown in nav.css) — and a rect taken off
-      // a scaled ancestor is a scaled rect. Measured there, `top` is where a
-      // quarter-sized crown holds the mark and `height` is a fifth of what the
-      // mark is, and both get written into `base` and kept. That is what left
-      // the mark parked forty-eight pixels above its place after every
-      // session: nothing measured again once the crown had stood back up.
-      //
-      // The class rather than the `choosing` state, because this effect is
-      // built once and would hold whatever that was at the time.
-      //
-      // And the ground goes back to the bar's own height on the way in. It is
-      // written from the mark's foot, and the mark's foot while the crown is
-      // folded is a hundred and seventy pixels of opaque header standing over
-      // the picker's search field — which is what holding the last good
-      // measurement costs if the ground is not told. While you are choosing
-      // the band is a band: the record is in it, the mark is not, and there is
-      // nothing for it to be the ground of.
-      if (cross?.classList.contains('hn--choosing')) {
-        ground?.style.removeProperty('--ground');
-        return;
-      }
-      // ── Nor while it is on its way back, 2026-09-21 ───────────────────
-      // The class comes off the moment the session ends and the crown then
-      // takes 0.7s to grow back, so there is most of a second in which
-      // nothing is folded and nothing is settled either. The observer fires
-      // through all of it, and the half-grown answers it took were landing
-      // the mark on the header's line — where it sat for a beat before
-      // dropping the last forty-eight pixels into place. One arrival, not
-      // two: a transform on the crown means it is still moving, and a rect
-      // read off a moving box is not a measurement.
+      // ── Not while the crown is moving, 2026-09-21 ──────────────────────
+      // It folded away while a record was chosen on the beacon (gone,
+      // 2026-10-21) and took 0.7s to grow back, and the half-grown answers
+      // the observer took landed the mark on the header's line for a beat.
+      // A transform on the crown means it is still moving, and a rect read
+      // off a moving box is not a measurement.
       //
       // `draw` rather than a bare return, so the band behind the header is
       // kept true to the base we are holding. Skipping the measurement must
       // not also skip what the measurement was writing — see the gotcha.
       if (crown && getComputedStyle(crown).transform !== 'none') { draw(); return; }
-      if (!window.matchMedia('(max-width: 768px)').matches) {
+      // And not where there is no crown to leave, 2026-10-22: the phone's
+      // top row is the head of the page now and the big mark is not drawn
+      // over it (nav.css), so there is nothing to travel — the desk's answer.
+      if (!window.matchMedia('(max-width: 768px)').matches || !place.offsetWidth) {
         mark.style.transform = '';
         base = null;
         ground?.style.removeProperty('--ground');
@@ -1357,10 +977,6 @@ export default function HomeNav() {
     const ease = t => 1 - (1 - t) * (1 - t);
     const draw = () => {
       if (!base) return;
-      // Same reason as the measurement's: this runs on the pane's own scroll,
-      // and a scroll that happens while the crown is folded away would write
-      // the ground straight back.
-      if (cross?.classList.contains('hn--choosing')) return;
       const gone = pane.scrollTop;
       // How far through the handover: nothing until the wall is JOURNEY away,
       // all of it once the wall has landed. A pane with no wall in it falls
@@ -1641,8 +1257,10 @@ export default function HomeNav() {
     const el = railRef.current;
     if (!el) return;
     const params = new URLSearchParams(window.location.search);
-    const toCard = params.get('edit') === 'card';
-    el.scrollLeft = el.clientWidth * (toCard ? 0 : HOME);
+    // At home: the rail's first place since the card left it (RAIL_FROM).
+    // /?edit=card opens the card over it instead of scrolling to a pane.
+    el.scrollLeft = 0;
+    if (params.get('edit') === 'card') setCardOpen(true);
     if (params.get('q')) {
       const home = paneRefs[HOME].current;
       if (home) home.scrollTop = secondFloorTop(home);
@@ -1659,14 +1277,8 @@ export default function HomeNav() {
     if (!el) return;
     const onScroll = () => {
       const width = el.clientWidth || 1;
-      const here = Math.round(el.scrollLeft / width);
+      const here = Math.round(el.scrollLeft / width) + RAIL_FROM;
       setPane(here);
-      // Swiping off the beacon is backing out of the picker. It is the same
-      // answer the × gives, and it has to be: the picker is what floor one
-      // *is* while it is open, so leaving the pane leaves the picker, and
-      // coming back to a page still holding a half-typed search would be a
-      // mode nobody chose to still be in.
-      if (here !== HOME) setChoosing(false);
       stir();
     };
     el.addEventListener('scroll', onScroll, { passive: true });
@@ -1764,25 +1376,6 @@ export default function HomeNav() {
     passing(was, now, base);
   });
 
-  // ── Anywhere else puts the × back ────────────────────────────────────────
-  // Miyel, 2026-09-18: "clicking away anywhere will undo the animation and
-  // bring back a regular ×." The same answer the draft's delete gives, and for
-  // the same reason: once the mark has turned into the word there is no mark
-  // left to press, so the way back cannot be the control itself.
-  //
-  // Captured at the document, so the state is clear before the press reaches
-  // whatever it landed on — with the control excepted, because a press there
-  // is the yes.
-  useEffect(() => {
-    if (!ending) return undefined;
-    const away = event => {
-      if (event.target?.closest?.('.ses-shut')) return;
-      setEnding(false);
-    };
-    document.addEventListener('pointerdown', away, true);
-    return () => document.removeEventListener('pointerdown', away, true);
-  }, [ending]);
-
   // ── Measuring depth ───────────────────────────────────────────────────────
   // A pane is deep when its scroller overflows. Re-measured whenever the thing
   // inside it could have changed size — entries landing, the card's portrait
@@ -1873,7 +1466,9 @@ export default function HomeNav() {
   function goTo(index) {
     const el = railRef.current;
     if (!el) return;
-    el.scrollTo({ left: index * el.clientWidth, behavior: ease() });
+    // A room pressed puts the card away on the way there.
+    setCardOpen(false);
+    el.scrollTo({ left: (index - RAIL_FROM) * el.clientWidth, behavior: ease() });
   }
 
   // Back to the top of whichever pane you are in. The band across the top of a
@@ -2021,9 +1616,10 @@ export default function HomeNav() {
         clearTimeout(lift);
       };
     };
-    // The two panes that have a second floor. The card and the inbox are one
-    // screen each and have nothing to be carried to.
-    const offs = [paneRefs[HOME]?.current, paneRefs[BOOK]?.current].map(wire);
+    // The book, the one pane with a second floor left. Home was the other
+    // until 2026-10-22, when it became one page under the top row; the card
+    // and the inbox are one screen each and have nothing to be carried to.
+    const offs = [paneRefs[BOOK]?.current].map(wire);
     return () => offs.forEach(off => off());
   }, [paneRefs, authed]);
 
@@ -2108,8 +1704,48 @@ export default function HomeNav() {
     if (el) el.scrollTop = 0;
   }
 
+  // The sun and the moon. Drawn as a switch on a wall for an hour, on the
+  // grounds that the component is called Lightswitch; the file name was the
+  // whole argument and it was not enough (Miyel, 2026-09-15). Drawn once and
+  // placed twice: the bar's right end on a desk, beside the face in the
+  // phone's top row (Header.js, 2026-10-22 — her mockup's place for it, to
+  // settle in place).
+  const lights = (
+    <button className="hp-icon-btn hn-lights" onClick={toggleTheme} aria-label="Toggle theme">
+      {theme === 'dark' ? (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      ) : (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z"/></svg>
+      )}
+    </button>
+  );
+
+  // ── The top row's stops, 2026-10-22 ─────────────────────────────────────
+  // The keeper's three rooms, at the panes they are on the rail; a visitor
+  // has none — the row carries the mark instead (Header.js).
+  const stops = authed ? [
+    { key: 'home', word: 'Home', at: HOME },
+    { key: 'people', word: 'People', at: BOOK },
+    { key: 'inbox', word: 'Inbox', at: INBOX },
+  ] : [];
+
   const header = (
-    <div className={'hn-bar' + (down[pane] || choosing ? ' hn-bar--scrolled' : '')}>
+    <div className={'hn-bar' + (down[cardOpen ? 0 : pane] ? ' hn-bar--scrolled' : '')}>
+      {/* The phone's top row, over everything else the bar holds: the face,
+          the light switch, and the three rooms (Header.js). The face opens
+          the card over the page and closes it again; while it is open none of
+          the three is lit, because none of them is what you are looking at. */}
+      <Header
+        pane={cardOpen ? -1 : pane}
+        cardOpen={cardOpen}
+        stops={stops}
+        goTo={goTo}
+        onHere={goBack}
+        onFace={() => setCardOpen(open => !open)}
+        fresh={Boolean(waiting?.fresh)}
+        lights={lights}
+        mark={mark('hdr-mark-svg')}
+      />
       {/* ── The ground the header stands on, 2026-09-20 ──────────────────
           The bar is 80px of opaque page colour and the crown hangs below it,
           which made the crown a logo *floating over* the beacon: the record
@@ -2220,143 +1856,13 @@ export default function HomeNav() {
           </button>
         </span>
       )}
-      {/* ── The way out of the picker ────────────────────────────────────
-          In the corner the up-caret holds the rest of the time — the two never
-          want the row at once, because while the picker is open there is no
-          pane under it to go back to the top of.
-
-          This came off for an hour on 2026-09-18 and went straight back on,
-          and the pair of decisions is the useful part. Off, because nothing
-          else on the site has a close button and a pull down is how every
-          sheet goes back where it came from. On again, because of what a pull
-          costs *here*: Miyel, "from beacon to session the swipe down feels too
-          easy to close — we should keep it gated behind an ×."
-
-          She is right, and the reason is that this screen is not a sheet you
-          are reading. It is the front door of a listen: you have come off the
-          beacon to find a record, the search is half typed, and a stray
-          downward drag on a grid of covers puts you back on the beacon with
-          all of it gone. The listen behind it is the opposite case — it is
-          notetaking, it saves as it goes, and it keeps the pull. */}
-      {choosing ? (
-        // The session's own two-press ×, which is where it went when it came
-        // off the listen (Miyel, 2026-09-18: "then the rotating × lives on the
-        // selection screen — it's asking 'end session?'"). The same markup and
-        // the same stylesheet as the listen's was: the mark turns, goes, and
-        // leaves END standing where it stood, at the size the × was drawn at.
-        //
-        // It was a pair for a day — the × staying put with the word budding
-        // out of its right-hand side into the gap before the beacon — which
-        // put two things in the row saying two different things, and kept the
-        // word at 10px because 68px of gap was all it had. One at a time, in
-        // one place: "have the × turn into the End button… it can move out and
-        // leave the End as the only button."
-        //
-        // Pressing anywhere else turns it back, which is why the mark does not
-        // have to stay on screen to be pressed again — see the effect above.
-        <div className={'hn-shut ses-shut' + (ending ? ' ses-shut--sure' : '')}>
-          <button
-            type="button"
-            className="ses-shut-door"
-            onClick={() => setEnding(open => !open)}
-            aria-expanded={ending}
-            aria-label={ending ? 'Keep choosing' : 'End this session'}
-            title={ending ? 'Keep choosing' : 'End this session'}
-          >
-            <X size={20} weight="regular" aria-hidden="true" className="ses-shut-mark" />
-          </button>
-          {/* Out of the tab order and out of reach while it is closed, so
-              nothing can be pressed that cannot be read. */}
-          <span className="ses-shut-slot">
-            <button
-              type="button"
-              className="ses-shut-word"
-              onClick={() => {
-                // Back to the top as the picker folds, 2026-09-24. The floor
-                // grows with the picker now (nav.css), so a search scrolled
-                // down to its fourth row left the beacon coming back half off
-                // the top of the screen — measured, 119px of it.
-                if (homeRef.current) homeRef.current.scrollTop = 0;
-                setEnding(false);
-                setChoosing(false);
-              }}
-              tabIndex={ending ? 0 : -1}
-              aria-hidden={!ending}
-              title="End this session and go back to the beacon"
-            >
-              End
-            </button>
-          </span>
-        </div>
-      ) : down[pane] && (
+      {down[pane] && (
         <button
           type="button"
           className="hn-totop"
           onClick={() => goUp(pane)}
           aria-label="Back to the top"
         />
-      )}
-      {/* ── The record, in the bar, while you are choosing one ─────────────
-          Miyel, 2026-09-18: "when you start a session the beacon automatically
-          becomes the mini without the small LN logo in between — the art
-          becomes the beacon. You choose an album or a draft, that takes the
-          place of the mini beacon and the session shows up. It cuts that
-          middle step of becoming chosen and moving to the header."
-          Placed in the session header's own coordinates rather than the bar's
-          — 44px, 14px of radius, twelve below the notch — because the whole
-          point is that when the session resolves over this, its cover is
-          already exactly here and nothing appears to move. The bar's own row
-          shifts up to meet it (.hn--choosing .hn-bar in nav.css), so the ×
-          and the lights sit on the line they will sit on in a moment. */}
-      {/* The mini, once a record has been chosen — see the Start a listen
-          button. Until then the bar carries the mark, the way it does on every
-          other screen with nothing to say. */}
-      {choosing && onTheBar && (
-        <span
-          className={'ses-head-beacon hn-bar-beacon' + (landing ? ' hn-bar-beacon--flying' : '')}
-          aria-hidden="true"
-        >
-          {/* ── One beacon, two sizes ────────────────────────────────────
-              Miyel, 2026-09-18: "it should be one beacon, two sizes. The
-              search/draft beacon is the same as the session beacon."
-
-              So this is not a small beacon of its own: it is the session's
-              header beacon, drawn here, in the session's own classes. There
-              was a matching set of .hn-bar-* rules for a day — the same three
-              lines at the same three sizes, kept in step by hand — and they
-              had already drifted apart by the time she looked at them. The
-              bar said the record and the artist with no caption at all; the
-              session said the open song with no artist and NOW LOGGING
-              whether or not anything was. Three drawings of one thing, none
-              of them agreeing.
-
-              Drawn in .ses-head-beacon's own classes there is nothing left to
-              keep in step, and the handoff is free: the session resolving
-              over this row puts the identical beacon in the identical place,
-              so there is nothing to see at the seam. */}
-          <span className={'ses-cover' + (onTheBar.live ? '' : ' ses-cover--idle')}>
-            {onTheBar?.art
-              ? <img src={onTheBar.art} alt="" />
-              : <span className="ses-cover-none">♪</span>}
-          </span>
-          {onTheBar?.title && (
-            <span className="ses-head-text">
-              {/* The live row, and nothing when it is not live — the greyed
-                  cover is what says that, and it says it the instant you look
-                  at it. A green line under the bar was the signal for an hour
-                  and Miyel's read was that it is not one: "I don't like the
-                  line, it's not instantly recognisable." A dot is. */}
-              {onTheBar.live && (
-                <span className="ses-head-live">
-                  <span className="ses-head-dot" aria-hidden="true" />
-                  {CAPTION.logging}
-                </span>
-              )}
-              <MarqueeTitle text={onTheBar.title} textClassName="ses-head-album" />
-              {onTheBar.artist && <span className="ses-head-artist">{onTheBar.artist}</span>}
-            </span>
-          )}
-        </span>
       )}
       {/* The small mark. On a phone, only while the crown has scrolled away
           (the stylesheet hides it until then, so the crown and this are
@@ -2369,16 +1875,7 @@ export default function HomeNav() {
         {mark('hn-bar-svg')}
       </button>
       {onTheFeed && <DensityToggle density={density} onFlip={flipDensity} />}
-      <button className="hp-icon-btn hn-lights" onClick={toggleTheme} aria-label="Toggle theme">
-        {/* The sun and the moon. Drawn as a switch on a wall for an hour, on
-            the grounds that the component is called Lightswitch; the file name
-            was the whole argument and it was not enough (Miyel, 2026-09-15). */}
-        {theme === 'dark' ? (
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-        ) : (
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z"/></svg>
-        )}
-      </button>
+      {lights}
     </div>
   );
 
@@ -2458,165 +1955,6 @@ export default function HomeNav() {
       </div>
     </div>
   );
-
-  // ── The way in ───────────────────────────────────────────────────────────
-  // Under the recents, not under the artist, and in the captions' own voice.
-  //
-  // Miyel's brief, 2026-09-18: "every other control on this screen is either
-  // an icon or a mono caption. A bold sans button with an arrow is the only
-  // thing in a different voice, and it sits where the artwork needs to travel
-  // upward." Both halves are right — it was Nunito bold with an arrow in a
-  // screen of DM Mono labels, and it was standing in the beacon's own column,
-  // where the cover has to be able to grow.
-  //
-  // Full ink where LAST LOGGED and BEFORE THAT are muted, which is the whole
-  // of what makes it read as the one thing here you can press rather than a
-  // third caption. The arrow went that day and the glyph did that job in its
-  // place; the glyph went too on 2026-09-19 ("no glyph for now"), once there
-  // was a hairline over the line. A rule above it is a stronger statement
-  // that this is a thing and not more writing than a mark beside it was, and
-  // the two say the same thing twice.
-  //
-  // Both states live here, because they are one control: a record in hand and
-  // it is the way back to it, nothing in hand and it opens the picker. Leaving
-  // one under the artist in bold and moving the other would be two controls
-  // wearing different clothes for the same job.
-  const theWayIn = authed && (inHand ? (
-    // Resume listen, 2026-09-22. It said Back to the listen, and Miyel: "Back
-    // to the listen text is rough. Resume listen is better." Two short words
-    // in the ring, the shape Log a listen already has.
-    <Link href="/session" className="ln-onward" title={`Resume ${inHand.album}`} aria-label="Resume listen">
-      <span className="hn-go" aria-hidden="true">
-        <span className="hn-go-say">Resume</span>
-        <span className="hn-go-say">listen</span>
-      </span>
-    </Link>
-  ) : (
-    /* A button and not a link, because it does not navigate: floor one
-       becomes the picker where it stands. */
-    <button
-      type="button"
-      className="ln-onward"
-      onClick={event => {
-          // ── The beacon shrinks into the bar ──────────────
-          // Miyel, 2026-09-18: "bring back the mini beacon as
-          // the header of the draft/search page, with last log
-          // vs LN logo — I liked the beacon shrinking mini
-          // when you enter session."
-          //
-          // It carried the mark instead for twenty minutes, on
-          // the reasoning that you have not chosen anything yet
-          // and last night's record in the bar is a claim
-          // nobody made. True, and beside the point: the record
-          // up there is not claiming to be tonight's, it is the
-          // beacon, which is the thing this pane is, and
-          // watching it shrink into the row is what makes the
-          // picker feel like the same screen rather than a new
-          // one. The mark is what it falls back to when there
-          // is no record to carry at all.
-          // Found on the pane, not walked up to from the press. This was
-          // `event.currentTarget.closest('.beacon-card')` and it worked for
-          // exactly as long as this control lived inside the beacon's own
-          // meta stack — moving it out from under the artist on 2026-09-18
-          // made `closest` return null, which made `box` undefined, which made
-          // the guard below return, which took the whole flight off without a
-          // word. Miyel: "the animation from the beacon shrinking to mini
-          // seemed smoother before — did something outside of that change?"
-          // It had: this.
-          //
-          // Scoped to the pane because the beacon is drawn once there and the
-          // card is what the cover is leaving.
-          const card = document.querySelector('.hn-pane--home .beacon-card');
-          const art = card?.querySelector('img.beacon-art');
-          const box = art?.getBoundingClientRect();
-          const said = card?.querySelector('.beacon-meta')?.getBoundingClientRect();
-          // A copy of what the card is showing this second,
-          // state and all — Miyel, 2026-09-18: "it's gonna
-          // have to either have a live dot saying now logging,
-          // or it's gonna have to be dull and say last logged.
-          // It is a copy of the real beacon." Including the
-          // open song, because that is what the card says: the
-          // record's name only while nothing is playing.
-          setOnTheBar(onAirAlbum ? {
-            art: onAir,
-            title: onAirTrack || onAirAlbum,
-            artist: onAirArtist,
-            live: isLive,
-          } : null);
-          setChoosing(true);
-          // Never armed on the way in. The × keeps its state
-          // in this component and the picker's markup goes
-          // away and comes back around it, so without this a
-          // picker closed while the × was open — press the
-          // mark, change your mind, leave another way —
-          // reopened with END already showing, which is a
-          // confirmation nobody gave. Blur puts it away too,
-          // but blur is not the only way out of here.
-          setEnding(false);
-          if (!box || !onAir) return;
-          if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
-          // Where the record's name is standing, so it can
-          // travel rather than blink out — see wordsFrom.
-          if (said && said.width) wordsFrom.current = said;
-          setLanding({
-            art: onAir,
-            live: isLive,
-            from: { left: box.left, top: box.top, width: box.width, height: box.height },
-            to: null, go: false, ms: TO_THE_BAR_MS, wait: MAKE_ROOM_MS,
-            into: '.hn-bar-beacon .ses-cover',
-          });
-        }}
-      aria-label="Log a listen"
-    >
-      {/* ── The way in is a dial on the line, 2026-09-20 ────────────────────
-          Miyel: "make start a listen feel intentional — maybe it can be a
-          circle between the hairlines that looks like a button, that music
-          note then start a listen in the circle under the note, smaller font,
-          'start a' and 'listen' can be two separate lines. Maybe that will
-          feel better to me and also give more space."
-
-          It was a line of small caps under a rule with the note sitting in a
-          gap in that rule — three things on one axis, none of them shaped
-          like a control. The circle is one thing: the note keeps its place on
-          the line and the words move inside it, which is where the space
-          comes from as well.
-
-          The note is in the markup rather than on ::before now, because it
-          has to stack with the words. A visitor's calling card keeps the
-          ::before version — there is no control in that slot, so the mark
-          stays a mark on a rule. */}
-      <span className="hn-go" aria-hidden="true">
-        {/* ── No mark in it, 2026-09-20 ────────────────────────────────────
-            A ♪ sat over the words for an hour, because a ♪ had sat on the
-            rule before the circle existed and moving it inside was the
-            obvious thing to do. Miyel: "is there a better icon than that
-            music note — is it even needed?" It is not. It said *music* on a
-            site that is entirely about music, over two words that already say
-            what pressing does, in a circle 84 across with three things
-            stacked in it. The ring is the object on the rule now; the mark
-            was what the rule had instead of one.
-
-            The calling card keeps its ♪, and should: there is no control in
-            that slot, so what is on the rule there is a mark and nothing
-            else. */}
-        {/* The verb, then the article back: "get rid of a", "Log Listen",
-            "Log a / listen" (Miyel, 2026-09-20, in that order over ten
-            minutes). Log rather than Start because it is the word this
-            journal already uses for the act everywhere else — LAST LOGGED
-            over the cover, `I've already logged this` in the inbox, logged in
-            the feed. Start named the beginning of a flow, which is a thing
-            about the software; Log names the thing you came to do.
-
-            And the article earns its place after all: two words on two lines
-            read as two labels, where a phrase broken mid-sentence reads as
-            one thing said across a break. It is also what the line is for —
-            there has to be something in the first line to hold the second
-            one under it. */}
-        <span className="hn-go-say">Log a</span>
-        <span className="hn-go-say">listen</span>
-      </span>
-    </button>
-  ));
 
   // ── And nothing, for anybody else, 2026-09-27 ───────────────────────────
   // A visitor's slot held the keeper's face with Add and Send either side of
@@ -2719,9 +2057,9 @@ export default function HomeNav() {
         + (checked && !authed ? ' hn--visitor' : '')
         + (turning ? ' hn--turning' : '')
         + (spine.dragging ? ' hn--dragging' : '')
-        + (choosing ? ' hn--choosing' : '')
+        /* The card open over the page, on a phone (nav.css, .hn--card). */
+        + (cardOpen ? ' hn--card' : '')
         + (filing ? ' hn--filing' : '')
-        + (landing ? ' hn--flying' : '')
         /* Which floor of the friends pane you are on, so the corner of the
            bar can be handed from the book's + to the feed's toggle without
            either of them knowing about the other. See .hn-bar-add. */
@@ -2835,37 +2173,13 @@ export default function HomeNav() {
             <div className="hn-screen hn-band">
               <div className="hp-dashboard">
                 <div className="hp-dash-cell hp-dash-beacon">
-                  {/* ── The owner's way in ──────────────────────────────
-                      Under the artist, inside the record's own block, so it
-                      reads as the last line of what is on the beacon rather
-                      than as a control parked underneath it (Miyel's beacon
-                      brief, 2026-09-17). Text and an arrow: no pill and no
-                      tile, the voice the session already uses to move you on.
-
-                      It says Resume listen for as long as there is a
-                      record in hand, because that is what pressing it does —
-                      a door you can return through has to say so. The desk
-                      says "Listening now" in the same state and should: it is
-                      beside the session on a desktop and has to describe the
-                      page next to it. Here the beacon is one line up and has
-                      already said what is playing.
-
-                      Owner only, and it is a Link until item 2 of the brief
-                      turns it into the way floor one becomes the picker. A
-                      visitor has no listen to start, and the writing routes
-                      check the wristband for themselves whatever is drawn. */}
-                  <ListeningBeacon choosing={choosing} emptied={false} />
+                  <ListeningBeacon emptied={false} />
                 </div>
               </div>
-              {/* What came before, or what comes next. The row of earlier
-                  covers is about the journal's past and has nothing to say
-                  while a record is being chosen; the picker takes its room. */}
-              {choosing
-                ? <AlbumPicker inline onPick={beginListen} onResume={resumeDraft} onPickSong={beginTrackNote} />
-                : <>
-                    {recentRow}
-                    {theWayIn}
-                  </>}
+              {/* What came before. The picker took this room while a record
+                  was chosen on the beacon itself, until the session became a
+                  sheet raised from the Listen bar (2026-10-21). */}
+              {recentRow}
             </div>
             {/* ── The way down, in the flow ────────────────────────────
                 The same thing the book has, and Miyel asked for it here:
@@ -2890,11 +2204,11 @@ export default function HomeNav() {
 
                 The name stays on the label, for anybody the movement does not
                 reach. */}
-            {deep[HOME] && (
-              <button type="button" className="hn-down" onClick={() => goDown(HOME)} aria-label="The journal">
-                <CaretDown size={18} weight="bold" aria-hidden="true" />
-              </button>
-            )}
+            {/* No way down and no bar here any more, 2026-10-22: home is one
+                page — the record, then the wall, in one scroll — and the
+                Listen bar is the frame's, at the foot of every page (below).
+                The chevron went with the ring for the keeper on 2026-10-21
+                and for a visitor now; the floors went with both. */}
           </div>
           {/* Floor two — the wall, scrolling inside a box of its own, so
               the pane only ever has two stops. The entry's second screen,
@@ -2960,7 +2274,7 @@ export default function HomeNav() {
             a promise the page cannot keep. The cross learns the size of the
             book from the book — see onCount — and until it has, there is one
             floor. */}
-        {(authed || DIRECTORY_URL) && (
+        {authed && (
           <section
             className="hn-pane hn-pane--friends"
             ref={friendsRef}
@@ -3048,52 +2362,13 @@ export default function HomeNav() {
       {grip}
       {turnLine}
 
-      {/* ── The band at the foot ─────────────────────────────────────
-          Card · Beacon · Desk, named, with the one you are on in ink. It is
-          the whole of what is down there now: the dots are gone, the side
-          carets are gone, and what they were both trying to say — there are
-          three of these and that way is another one — a band of words says
-          outright (Miyel's brief, 2026-09-15).
-
-          Fixed over the rail rather than repeated inside each pane, for the
-          same reason the bar at the top is: it belongs to none of them, and
-          three copies would slide past each other during a swipe.
-
-          It does not fade while something is scrolling, where the old row did.
-          That row was three marks parked on top of somebody's album art and
-          getting out of the way was the kindest thing it could do; this is a
-          band along the edge with a ground of its own, and a navigation that
-          disappears when you move is one you cannot trust to be there.
-
-          What is left pointing anywhere is down, and only on the beacon — the
-          one pane with a whole screen and nothing cut off at its fold, so
-          nothing else needs telling there is more. It sits above the band,
-          fades while anything moves, and goes for good once you are down. */}
-      {/* The floating caret is gone, 2026-09-19. It lived above the band and
-          said "there is more that way" on whichever pane had a second floor.
-          Both of those panes say it themselves now, at the foot of their own
-          first floor, with a word and the top of what is down there showing
-          under it — which is the same sentence with a subject in it. */}
-
-      {/* The cover in the air. Fixed to the window and over everything, because
-          it is travelling between two boxes that belong to different parts of
-          the page and neither of them can hold it. */}
-      {landing && flightStyle && (
-        <img
-          src={landing.art}
-          alt=""
-          aria-hidden="true"
-          /* Greyed in the air when the record is greyed at both ends. The
-             flier is its own <img> — it is not either cover, it is the one
-             between them — so it drew in full colour while the card it left
-             and the slot it was landing in were both dull. Miyel, 2026-09-18:
-             "right now it gets colour then it goes grey again." */
-          className={'hn-flight' + (landing.live === false ? ' hn-flight--idle' : '')}
-          style={flightStyle}
-        />
-      )}
-
-      <Footer pane={pane} goTo={goTo} onHere={goBack} authed={authed} fresh={Boolean(waiting?.fresh)} />
+      {/* The band at the foot — Card · Beacon · People · Inbox — went on
+          2026-10-22 for the top row (Header.js, in the bar above): the foot
+          is the Listen bar's now (DECISIONS, the frame). It is the frame's,
+          not a pane's: it stays at the foot of the screen on every pane and
+          over an entry opened on the journal, and steps down when anything
+          else owns the foot (ListenBar.js). The keeper's alone. */}
+      {authed && <ListenBar held={inHand} live={isLive} />}
     </div>
   );
 }

@@ -58,9 +58,9 @@ import TrackNotes from '../../components/session_components/steps/TrackNotes';
 import AlbumNotes from '../../components/session_components/steps/AlbumNotes';
 import SessionPreview from '../../components/session_components/steps/SessionPreview';
 import Trouble from '../../components/session_components/Trouble';
-import SendSheet from '../../components/main_components/SendSheet';
 import TrackNotePage from '../entries/[slug]/TrackNotePage';
-import { useBeforeLeaving, useLayerExit } from '../../components/main_components/LayerEntry';
+import { useBeforeLeaving } from '../../components/main_components/LayerEntry';
+import { announce } from '../../hooks/useListeningBeacon';
 
 // How long the picked cover takes to reach the header. The step body slides in
 // on the same curve at nearly the same length, so the two read as one move.
@@ -133,6 +133,26 @@ export default function SessionPage() {
 
   const s = useListeningSession({ step });
 
+  // ── The bar's track, lit again when the sheet is raised, 2026-10-21 ──────
+  // Lowered, the record in hand carries the track that was lit (keepInHand,
+  // below), and the bar says it. Raised, the browser's copy of the draft puts
+  // it back on air only if something had been written, so a listen lowered
+  // after pressing a name came back with nothing lit while the bar had just
+  // said which track it was. Whenever the tracklist is in and nothing is lit,
+  // for as long as this is the record — opening it can run twice (React's
+  // development mode does, and the second clears what the first lit), so it
+  // is held until another record is opened rather than spent on the first go.
+  const relight = useRef(pending?.lit ? { ...pending.lit, album: pending.album } : null);
+  useEffect(() => {
+    const lit = relight.current;
+    if (!lit || !s.tracks?.length || s.onAir !== null) return;
+    if (s.albumInput && s.albumInput !== lit.album) { relight.current = null; return; }
+    const at = s.tracks.findIndex((t, i) => (t.number || i + 1) === lit.number && t.title === lit.title);
+    if (at >= 0) s.putOnAir(at);
+  // putOnAir is a state setter and never changes.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [s.tracks, s.onAir, s.albumInput]);
+
   // ── How wide the listen is, which is not how wide the screen is ─────────
   // On a desk the listen opens over the journal, beside the spine, and the
   // spine is dragged to whatever width its keeper likes (useSpineWidth). So
@@ -204,15 +224,6 @@ export default function SessionPage() {
   const ratedSoFar = Object.values(s.trackRatings || {}).filter(v => v > 0);
   const avg = ratedSoFar.length ? (ratedSoFar.reduce((a, b) => a + b, 0) / ratedSoFar.length).toFixed(2) : null;
 
-  // ── Sending a song from the tracklist, 2026-09-26 ───────────────────────
-  // The envelope on a track row (RecordContents) opens the one send sheet
-  // with that song in the left square: the record on the desk, and the
-  // track's title as the song. A track and not the album, because there is no
-  // entry yet and "hear this now" dies if it waits for the writing; the album
-  // keeps being sent from the finished entry. The session stays open behind
-  // it — the sheet is a popup over this page and the draft goes on saving
-  // itself underneath, so nothing is saved, paused or lost by sending.
-  const [sendingTrack, setSendingTrack] = useState(null);
 
   // ── The note comes up to meet the keyboard, 2026-09-22 ──────────────────
   // Miyel: "it still feels weird when I open the keyboard — it glitches just
@@ -606,6 +617,12 @@ export default function SessionPage() {
   // From the picker: a record, and the box its cover was tapped in.
   function pick(record, from) {
     try { localStorage.setItem(PENDING_KEY, JSON.stringify(record)); } catch { /* the listen still opens */ }
+    // The beacon says so at the press, as it did when the beacon's own picker
+    // chose the record (HomeNav's beginListen, until the picker moved into
+    // the sheet, 2026-10-21): home is under the sheet and the Listen bar is
+    // read from it the moment the sheet is lowered, so neither should wait
+    // out a poll to hear what is playing. The needle's own write follows.
+    announce({ album: record.album, artist: record.artist, art: record.artUrl });
     // A record pressed is a listen, whatever song was on the desk before it.
     try { sessionStorage.removeItem(TRACK_NOTE_KEY); } catch { /* nothing to clear */ }
     setSong(null);
@@ -678,7 +695,6 @@ export default function SessionPage() {
   // Set while a listen is being thrown away, so the sheet's own way out does
   // not write the draft it is in the middle of deleting.
   const discarding = useRef(false);
-  const exit = useLayerExit();
   const layered = useBeforeLeaving(async () => {
     if (discarding.current) return true;
     // A track note keeps its own words as they are typed (TrackNotePage), so
@@ -689,14 +705,46 @@ export default function SessionPage() {
       return true;
     }
     if (!s.saved && !(await s.saveDraft())) return false;
+    // ── Lowering is not ending, 2026-10-21 ──────────────────────────────
+    // The pull, Escape and the grip put the listen down: the record stays
+    // in hand and the Listen bar carries it until it is raised again
+    // (Miyel's brief, home and the session). Save draft, Discard and Post
+    // are the endings, and only they take the record off the desk — the
+    // first two without leaving the sheet, since 2026-10-22 (below).
+    if (!s.saved && pending?.album) {
+      keepInHand();
+      return true;
+    }
     try { localStorage.removeItem(PENDING_KEY); } catch { /* nothing to clear */ }
     saidSoAboutTheDesk();
     return true;
   });
 
+  // The record stays in hand, and says which track was lit when it was put
+  // down, for the bar to carry: the browser's copy of the draft knows too,
+  // but only once something has been written, and the bar has to say the
+  // track the moment a name is pressed. Then the needle is told to stay.
+  function keepInHand() {
+    const t = s.onAir === null ? null : s.tracks?.[s.onAir];
+    const lit = t ? { title: t.title, number: t.number || s.onAir + 1, duration: t.duration ?? null } : null;
+    try { localStorage.setItem(PENDING_KEY, JSON.stringify({ ...pending, lit })); } catch { /* the bar says the record instead */ }
+    s.putDown();
+    saidSoAboutTheDesk();
+  }
+
+  // Opened cold there is no sheet to lower, so lowering is going home with
+  // the record still in hand — the pull from the top and the mouse's caret
+  // both, the same as over the journal. A draft that will not save keeps
+  // you here, as everywhere.
+  async function lower() {
+    if (!s.saved && !(await s.saveDraft())) return false;
+    keepInHand();
+    return true;
+  }
+
 
   // Back to the picker. Nothing is confirmed and nothing is lost: a listen with
-  // writing on it is kept as a draft first, so it is waiting under Unfinished
+  // writing on it is kept as a draft first, so it is waiting under Drafts
   // when the picker comes back.
   async function leave() {
     // Kept, always — not only when something has been written. A record you
@@ -719,15 +767,28 @@ export default function SessionPage() {
     return true;
   }
 
-  // ── The three words at the foot, 2026-09-29 ──────────────────────────────
-  // Save draft keeps the listen and leaves. The draft was already saving
-  // itself as you went and again on the way out, so this is a visible way
-  // out rather than a new ability: over the journal it closes the sheet the
-  // way the pull does, and the sheet's own hook writes the draft first;
-  // opened cold it puts the record down and shows the picker.
-  function saveDraftAndLeave() {
-    if (exit) { exit(); return; }
-    leave();
+  // ── The three words, 2026-09-29 ─────────────────────────────────────────
+  // Save draft keeps the listen and leaves it. The draft was already saving
+  // itself as you went, so this is a visible way out rather than a new
+  // ability: the record comes off the desk and the picker comes back.
+  //
+  // ── Back to the picker, and the sheet stays up, 2026-10-22 ─────────────
+  // Over the journal it used to close the sheet the way the pull does.
+  // Miyel, with the sheet on her phone: "discard and draft technically are
+  // back (or should work that way)". In a sheet that opens on the picker,
+  // ending a listen lands on choosing the next one, and the grip is what puts
+  // the whole thing away. It replaced a back caret that lived in the corner
+  // for an hour. Opened cold it always did this.
+  async function saveDraftAndLeave() {
+    if (!(await leave())) return;
+    toTheTop();
+  }
+  // The picker comes back at the top of the sheet, not wherever the tracks
+  // had been scrolled to.
+  function toTheTop() {
+    const sheet = root.current?.closest('.lay');
+    if (sheet) sheet.scrollTo({ top: 0 });
+    else window.scrollTo({ top: 0 });
   }
 
   // Discard throws the listen away, draft included, and asks first: the
@@ -747,22 +808,24 @@ export default function SessionPage() {
     await s.discardDraft();
     try { localStorage.removeItem(PENDING_KEY); } catch { /* nothing to clear */ }
     saidSoAboutTheDesk();
-    if (exit) { exit(); return; }
     setLanding(null);
     show(null);
     discarding.current = false;
+    toTheTop();
   }
 
   // ── The way back, for a mouse, on a listen opened on its own ────────────
   // Over the journal the sheet has a caret and the pull; opened cold — a
   // reload mid-listen, the installed app — there was no way out a mouse
-  // could make. This is Save draft's own move, then the journal, since there
-  // is nothing behind a cold page to go back to. Drawn for a mouse and never
-  // on a phone (.ses-back, entry.css).
+  // could make. This lowers the listen and goes to the journal, since there
+  // is nothing behind a cold page to go back to — the record stays in hand
+  // and the Listen bar carries it there (2026-10-21; it was Save draft's own
+  // move, which ended the listen, until the session became a sheet). Drawn
+  // for a mouse and never on a phone (.ses-back, entry.css).
   async function backToTheJournal() {
     if (song) {
       try { sessionStorage.removeItem(TRACK_NOTE_KEY); } catch { /* nothing to clear */ }
-    } else if (pending?.album && !(await leave())) return;
+    } else if (pending?.album && !(await lower())) return;
     router.push('/');
   }
 
@@ -841,9 +904,9 @@ export default function SessionPage() {
     // would put the record down twice. Opened cold there is no layer and no
     // pull, and since the × came off (2026-09-18) there would otherwise be no
     // way out of the page at all — so the same gesture is honoured here, from
-    // the top of the screen, and `leave` writes the draft exactly as the
-    // sheet's own way out does.
-    if (!layered && from.top && dy > 80 && dy > Math.abs(dx) * 1.5) { leave(); return; }
+    // the top of the screen, and lowers the listen the way the sheet's own
+    // pull does: the draft written, the record kept in hand, home.
+    if (!layered && from.top && dy > 80 && dy > Math.abs(dx) * 1.5) { backToTheJournal(); return; }
     if (Math.abs(dx) < 56 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
     if (dx < 0) forward(); else goToStep(step - 1);
   }
@@ -934,20 +997,25 @@ export default function SessionPage() {
           }}
           onLeave={() => {
             try { sessionStorage.removeItem(TRACK_NOTE_KEY); } catch { /* nothing to clear */ }
-            if (layered) router.back();
-            else setSong(null);
+            // Back to the picker, in the sheet as well, 2026-10-22: ending
+            // anything in the sheet lands on choosing the next thing, the
+            // way Discard and Save draft do; the grip puts it all away.
+            setSong(null);
+            toTheTop();
           }}
         />
       ) : !open ? (
-        <AlbumPicker onPick={pick} onResume={resume} onPickSong={beginTrackNote} />
+        <AlbumPicker onPick={pick} onResume={resume} onPickSong={beginTrackNote} sheet={layered} />
       ) : (
         <>
-          {/* ── The foot: Discard · Save draft · Post ────────────────────
+          {/* ── The three words: Discard · Save draft · Post ─────────────
               The band the entry's correction bar is (.ln-editing-bar), with
               three words: the one that ends the listen faint, the one that
-              keeps it in ink, the one that goes forward underlined. On a desk
-              the same three sit in a row at the top (.ses-bar). Only on the
-              session: the preview has its own foot, with its own words.
+              keeps it in ink, the one that goes forward underlined. In a
+              sheet they are a row under the grip, phone and desk alike
+              (2026-10-22, her pick); opened cold, the foot on a phone and a
+              row at the top on a desk (.ses-bar). Only on the session: the
+              preview has its own foot, with its own words.
 
               Post, not Preview, 2026-10-17. Miyel: "some people found it
               confusing that it says preview because they don't really
@@ -986,7 +1054,6 @@ export default function SessionPage() {
                 onOpenNote={setNoting}
                 setTrackNotes={s.setTrackNotes}
                 onShutNote={shutNote}
-                onSend={setSendingTrack}
                 onLookAgain={s.lookAgain}
                 onHandTracks={s.takeHandTracks}
               />
@@ -1030,22 +1097,6 @@ export default function SessionPage() {
         onClose={() => s.setTrouble(null)}
       />
 
-      {/* The send sheet, with the song from the row that was pressed. A
-          popup over the whole page (it portals onto the body), so it is
-          centred on the screen and not on the layer. */}
-      <SendSheet
-        open={Boolean(sendingTrack)}
-        onClose={() => setSendingTrack(null)}
-        record={sendingTrack ? {
-          album: s.albumInput,
-          artist: s.artistName,
-          year: s.year || '',
-          album_art: s.albumArt || '',
-          collection_id: s.collectionIdRef?.current || '',
-          song: sendingTrack.title || '',
-        } : null}
-        foot="Your session stays open behind this"
-      />
     </div>
   );
 }
