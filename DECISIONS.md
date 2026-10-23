@@ -103,6 +103,10 @@ House, Users and Envelope, and only the lit one wears its word, underlined —
 `.ln-word`'s logic. Tap a word or swipe: the swipe is Home ↔ People ↔ Inbox,
 and the card is no longer a stop. The archive has the band and the card pane.
 
+**The face is in the top row on every page, People included, 2026-10-22,
+Miyel's call** — over the People brief's "no face on People": the row keeps
+one shape as you swipe, and the card is always one tap away.
+
 **A visitor's top row is their face and the LN. mark, no words, 2026-10-22.**
 People moved to the commons, so there is nothing there for a visitor to press,
 and a visitor has no Listen bar. The Source line and the version still stand
