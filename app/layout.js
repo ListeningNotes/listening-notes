@@ -259,9 +259,9 @@ async function holdTheDoor() {
 
 export default async function RootLayout({ children, layer }) {
   const holding = await holdTheDoor();
-  // The front door draws no journal, so it reads none — not the
-  // publication's, which answers one door at the same address
-  // (library/hosting_directory.js, publishing).
+  // The front door draws no journal, so it reads none — not the studio's,
+  // which answers one door at the same address (library/hosting_directory.js,
+  // studio).
   const all = holding?.reason === 'front-door' ? {} : await pull_settings();
 
   // ── This journal moved, 2026-10-21 ───────────────────────────────────────

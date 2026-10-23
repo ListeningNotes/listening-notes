@@ -119,7 +119,7 @@ function Welcome({ domain, left, invite }) {
     setTrouble('');
     const said = await fetch(`/api/front-door?name=${encodeURIComponent(name)}`).then(r => r.json()).catch(() => null);
     // A kept word is never a door, even with a journal behind it: the
-    // publication's back office is kept at one (2026-10-22).
+    // studio is kept at one (2026-10-22).
     if (said?.state === 'taken' && !said?.kept) {
       window.location.href = addressUrl(said.name, domain);
       return;

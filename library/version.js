@@ -58,9 +58,9 @@ export const DIRECTORY_URL =
 // Where keepers send Listening Notes, the publication, a record for the
 // month's prompt (2026-10-22, Miyel: "listeningnotes.blog is the magazine.
 // It is the publication. It is where people send"): the magazine's own
-// address. What arrives is kept by the publication's own journal, its back
-// office, at an address nobody is shown (library/hosting_directory.js,
-// publishing; library/month_prompt.js). A constant like the others, for the
+// address. What arrives is kept by the studio, the publication's own
+// journal, at an address nobody is shown (library/hosting_directory.js,
+// studio; library/month_prompt.js). A constant like the others, for the
 // same reason; a fork sets NEXT_PUBLIC_PUBLICATION_URL, or leaves it empty
 // and nothing is sent.
 export const PUBLICATION_URL =

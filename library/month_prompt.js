@@ -120,9 +120,9 @@ export async function send_to_prompt({ prompt, entry, keeper, from }) {
 
 // Whether this journal is the publication's own — the one PUBLICATION_URL
 // names, by either address it answers to: the bare domain the records are
-// posted to, or its back office's (library/hosting_directory.js,
-// publishing). A copy that hosts one journal is the publication's only when
-// a fork points PUBLICATION_URL at it.
+// posted to, or the studio's (library/hosting_directory.js, studio). A copy
+// that hosts one journal is the publication's only when a fork points
+// PUBLICATION_URL at it.
 export async function takesPrompts() {
   let there = '';
   try { there = new URL(PUBLICATION_URL).host.toLowerCase(); } catch { there = ''; }

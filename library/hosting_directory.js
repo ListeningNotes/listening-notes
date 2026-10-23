@@ -85,31 +85,32 @@ export function forwarding() {
   return { from: `www.${domain}`, to };
 }
 
-// ── The publication's back office, 2026-10-22 ─────────────────────────────
-// PUBLICATION_ADDRESS: where Listening Notes, the publication, keeps a
-// journal of its own — its back office, at an address nobody is shown
-// (Miyel: "listening notes gets its own backoffice"; the magazine has no
-// sign-in on it). The magazine is the bare domain, and what keepers send for
-// the month's prompt is posted there (PUBLICATION_URL), so that one door at
-// the bare domain is answered as the back office's journal; every other
-// thing at the bare domain stays the front door's, or is forwarded as
-// before (next.config.mjs).
-export function publishing() {
+// ── The studio, 2026-10-22 ────────────────────────────────────────────────
+// STUDIO_ADDRESS: where Listening Notes is made — a journal of its own, kept
+// by the canonical keeper and her team, at an address nobody is shown
+// (Miyel's word, "studio": "my instagram tools could potentially move here
+// too and updates, where i send ln admin notes, everything"; the magazine
+// has no sign-in on it). To begin with it keeps what keepers send for the
+// month's prompt. The magazine is the bare domain, and those records are
+// posted there (PUBLICATION_URL), so that one door at the bare domain is
+// answered as the studio; every other thing at the bare domain stays the
+// front door's, or is forwarded as before (next.config.mjs).
+export function studio() {
   const domain = tidyHost(process.env.HOSTED_DOMAIN || '');
-  const to = tidyHost(process.env.PUBLICATION_ADDRESS || '');
+  const to = tidyHost(process.env.STUDIO_ADDRESS || '');
   if (!hosting() || !domain || !to) return null;
   return { from: domain, to };
 }
 
 // The address of the journal a request made to `host` is for: the same
 // address, except the one a journal moved from, which is that journal's new
-// one, and the bare domain, whose journal is the publication's.
+// one, and the bare domain, whose journal is the studio.
 export function journalAddress(host) {
   const at = tidyHost(host);
   const moved = forwarding();
   if (moved && at === moved.from) return moved.to;
-  const published = publishing();
-  return published && at === published.from ? published.to : at;
+  const made = studio();
+  return made && at === made.from ? made.to : at;
 }
 
 // Whether `address` is the journal this request reached, by either name it

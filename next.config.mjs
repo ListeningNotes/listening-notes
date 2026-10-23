@@ -42,13 +42,13 @@ function forwards() {
   const wantsTheJournal = ['from', 'as', 'add'].map(key => ({ type: 'query', key }));
   // The picture an invite link's preview shows is the front door's own too
   // (Invite, 2026-10-21: library/front_door.js), drawn with its words. And
-  // with a publication (PUBLICATION_ADDRESS, 2026-10-22), the door records
-  // for the month's prompt are posted to, answered there as the
-  // publication's own journal (library/hosting_directory.js, publishing).
+  // with a studio (STUDIO_ADDRESS, 2026-10-22), the door records for the
+  // month's prompt are posted to, answered there as the studio's journal
+  // (library/hosting_directory.js, studio).
   const frontDoorAnswers = [
     'api/front-door(?:/|$)', 'get$', 'get/gift-preview$', '_next/',
     'icon\\.png$', 'apple-icon\\.png$', 'manifest\\.webmanifest$', 'favicon\\.ico$',
-    ...(tidy(process.env.PUBLICATION_ADDRESS) ? ['api/submissions$'] : []),
+    ...(tidy(process.env.STUDIO_ADDRESS) ? ['api/submissions$'] : []),
   ];
   return [
     { source: '/', has: [at(`www.${domain}`)], missing: wantsTheJournal, destination: `${frontDoor}/`, permanent: false },

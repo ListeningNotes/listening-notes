@@ -372,12 +372,13 @@ forwards from `www.` to the journal are the kind a browser remembers; the
 rest lead to and from the bare domain, where the publication will grow.
 Read when the site is built, so changing it is a redeploy.
 
-**`PUBLICATION_ADDRESS`**, in the deployment's settings, names the address
-of the publication's own journal: Listening Notes' back office, where the
-records keepers send for the month's prompt are kept, at an address nobody
-is shown (`library/hosting_directory.js`, `publishing`; the magazine at the
-bare domain has no sign-in). Its word goes in `KEPT_NAMES`, so nobody can
-start a journal at it and Find my journal never opens it. With it, one door
+**`STUDIO_ADDRESS`**, in the deployment's settings, names the address of
+the studio, `studio.listeningnotes.blog`: the publication's own journal,
+where Listening Notes is made and where the records keepers send for the
+month's prompt are kept, at an address nobody is shown
+(`library/hosting_directory.js`, `studio`; the magazine at the bare domain
+has no sign-in). `studio` is in `KEPT_NAMES`, so nobody can start a journal
+at it and Find my journal never opens it. With it, one door
 at the bare domain — `/api/submissions`, where every copy posts a record for
 the prompt (`PUBLICATION_URL`) — is answered as that journal; the bare
 domain's pages and every other forward stay as they were. That journal takes
