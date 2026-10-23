@@ -469,7 +469,7 @@ export async function pull_today() {
 // The records keepers on the Board have logged lately, as covers and nothing
 // else — no title, no keeper, no address — for the rows that slide over the
 // front door (components/main_components/FrontDoor.js; Miyel's pick, records
-// above and paper below). The newest first, never the most logged; one of
+// above and words below). The newest first, never the most logged; one of
 // each cover; only journals still on the Board.
 const COVERS_MOST = 60;
 export async function pull_covers() {

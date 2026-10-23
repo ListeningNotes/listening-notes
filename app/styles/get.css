@@ -679,36 +679,39 @@
   background: var(--ink); color: var(--bg); box-shadow: 0 0 0 2px var(--bg);
 }
 
-/* ── Records above, paper below, 2026-10-22 ───────────────────────────────────
-   Miyel's pick (A), from the share printer's journal plate: three rows of
-   covers slide across the top of the front door, the slow one against the
-   other two, and the words sit on paper below, so type never sits on a
-   moving cover (FrontDoor.js, CoverRows). Still for anyone who asks for
-   less motion. */
-.fd-page--records { justify-content: flex-end; gap: 0; padding: 0; }
+/* ── Records above, words below, 2026-10-22 ───────────────────────────────────
+   Miyel's pick (A), from the share printer's journal plate: rows of covers
+   slide across the top of the front door, the slow one against the others,
+   and the words sit under them on the same page (FrontDoor.js, CoverRows):
+   one surface, no sheet and no shadow, which read as a pop-up; the two held
+   together in the middle of the screen. The rows fade out at the sides
+   rather than being cut off. Each cover carries its own space after it, so
+   a third of a row is exactly one round and the loop never jumps. Still for
+   anyone who asks for less motion. A row of covers is a lane here: the
+   feed's rows already own .fd-row (nav.css), and borrowed its gap. */
+/* A little more room under than over: the eye's middle sits above the
+   page's. */
+.fd-page--records { gap: 44px; padding: 24px 0 56px; }
 .fd-band {
-  flex: 1 1 auto; min-height: 210px; width: 100%; overflow: hidden;
-  display: flex; flex-direction: column; justify-content: center; gap: 10px;
-  padding: 22px 0;
+  width: 100%; overflow: hidden;
+  display: flex; flex-direction: column; gap: 10px;
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 9%, #000 91%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 9%, #000 91%, transparent);
 }
-.fd-row { display: flex; gap: 10px; width: max-content; animation: fd-slide 80s linear infinite; }
-.fd-row--1 { animation-duration: 110s; animation-direction: reverse; }
-.fd-row--2 { animation-duration: 95s; }
+.fd-lane { display: flex; width: max-content; animation: fd-slide 80s linear infinite; }
+.fd-lane--1 { animation-duration: 110s; animation-direction: reverse; }
+.fd-lane--2 { animation-duration: 95s; }
 .fd-cover {
-  flex: none; width: 92px; height: 92px; border-radius: 10px; object-fit: cover;
-  background: var(--panel); display: block;
+  flex: none; width: 92px; height: 92px; margin-right: 10px; border-radius: 10px;
+  object-fit: cover; background: var(--panel); display: block;
 }
-@keyframes fd-slide { to { transform: translateX(-50%); } }
-@media (prefers-reduced-motion: reduce) { .fd-row { animation: none; } }
-.fd-paper {
-  width: 100%; box-sizing: border-box;
+@keyframes fd-slide { to { transform: translateX(calc(-100% / 3)); } }
+@media (prefers-reduced-motion: reduce) { .fd-lane { animation: none; } }
+.fd-words {
+  width: 100%; box-sizing: border-box; padding: 0 20px;
   display: flex; flex-direction: column; align-items: center; gap: 16px;
-  padding: 30px 20px max(34px, calc(18px + env(safe-area-inset-bottom, 0px)));
-  background: var(--panel-solid); border-top: 1px solid var(--border);
-  border-radius: 26px 26px 0 0;
-  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.06);
 }
 @media (min-width: 769px) {
-  .fd-cover { width: 120px; height: 120px; border-radius: 12px; }
-  .fd-paper { max-width: 560px; margin: 0 auto; border: 1px solid var(--border); border-bottom: 0; }
+  .fd-cover { width: 120px; height: 120px; margin-right: 12px; border-radius: 12px; }
+  .fd-band { gap: 12px; }
 }

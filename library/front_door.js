@@ -64,9 +64,9 @@ export const inviterAtTheDoor = cache(async () => {
 // What keepers on the Board have logged lately, asked of the Board's own list
 // (DIRECTORY_URL, ?covers) — covers only, never who — for the rows that slide
 // across the top of the front door (Miyel's pick, from the share printer's
-// journal plate: records above, paper below). Kept ten minutes, so a busy
+// journal plate: records above, words below). Kept ten minutes, so a busy
 // front door asks once; when the list cannot be read, the last covers stay,
-// and with none the paper stands alone. Sized small: they are tiles.
+// and with none the words stand alone. Sized small: they are tiles.
 const COVERS_KEPT_MS = 10 * 60 * 1000;
 let coversHeld = { at: 0, covers: [] };
 export async function frontDoorCovers() {

@@ -1826,11 +1826,12 @@ ask SANDBOX, or a test reaches a real person.
 
 ---
 
-**The front door is records above, paper below, 2026-10-22, Miyel's pick.**
+**The front door is records above, words below, 2026-10-22, Miyel's pick.**
 Rows of covers keepers on the Board logged lately slide across the top —
-covers only, never who, the same records the Board already shows — and the
-words sit on paper below, never on a moving cover (the printer's rule).
-With no covers the paper stands alone.
+covers only, never who — and the mark and doors sit under them on the same
+page: never on a moving cover, never on a sheet of their own, which read as
+a pop-up. A card over the old screensavers, tried the same day, was less
+clear (her word).
 
 **The month's prompt is a record from the keeper's own wall, sent on a
 press, 2026-10-22.** An entry already written — its record and writing as

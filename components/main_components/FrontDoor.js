@@ -130,7 +130,6 @@ function Welcome({ domain, left, invite }) {
 
   return (
     <>
-      <p className="fd-said">A listening journal of your own.</p>
       <div className="fr-doors-row fd-doors">
         {left > 0 ? (
           <a className="fr-door" href={invite ? `/get?invite=${encodeURIComponent(invite.address)}` : '/get'}>
@@ -292,29 +291,31 @@ function Start({ domain, left: firstLeft, invite }) {
   );
 }
 
-// ── Records above, paper below, 2026-10-22 ────────────────────────────────
+// ── Records above, words below, 2026-10-22 ────────────────────────────────
 // Miyel's pick (A), from the share printer's journal plate: rows of the
 // covers keepers on the Board have logged lately slide across the top, and
-// the front door's words sit on paper below — type never on moving covers
-// (the printer brief). Covers only, never who (library/front_door.js,
-// frontDoorCovers). A few covers are repeated until a row is full; with none
-// the paper stands alone, centred, as before.
-const ROWS = 3;
+// the front door's words sit under them on the same page — never on a
+// moving cover (the printer brief), and never on a sheet of their own, which
+// read as a pop-up (her word, the same day). Covers only, never who
+// (library/front_door.js, frontDoorCovers). A few covers are repeated until a
+// row is full; with none the words stand alone, centred, as before. Choose
+// your address has two rows rather than three, so its button stays on a
+// small phone's screen.
 const PER_ROW = 18;
 const ROW_LEAST = 14;
-function CoverRows({ covers }) {
+function CoverRows({ covers, count }) {
   // Each row its own covers while there are enough to go round, and a row
   // never so long that it races: eighteen at most, fourteen at least.
   const length = Math.max(ROW_LEAST, Math.min(PER_ROW, covers.length));
-  const rows = Array.from({ length: ROWS }, (_, r) =>
+  const rows = Array.from({ length: count }, (_, r) =>
     Array.from({ length }, (_, i) => covers[(r * PER_ROW + r * 5 + i) % covers.length]));
   return (
     <div className="fd-band" aria-hidden="true">
       {rows.map((row, r) => (
-        // Twice over, and moved by half its width, so the row comes round
-        // without a seam.
-        <div key={r} className={`fd-row fd-row--${r}`}>
-          {row.concat(row).map((src, i) => (
+        // Three times over, and moved by one of the three, so the row comes
+        // round without a seam on the widest screen.
+        <div key={r} className={`fd-lane fd-lane--${r}`}>
+          {[...row, ...row, ...row].map((src, i) => (
             <img key={i} className="fd-cover" src={src} alt="" loading="lazy" decoding="async" />
           ))}
         </div>
@@ -329,7 +330,7 @@ export default function FrontDoor({ path = '/', domain = '', left = 0, invite = 
   // was never a journal.
   const known = invite?.name ? invite : null;
   const records = covers.length > 0;
-  const paper = (
+  const words = (
     <>
       {/* Plain anchors, here and on Start, for the holding page's reason
           (ComingSoon.js): the root layout draws this page in place of a
@@ -344,8 +345,8 @@ export default function FrontDoor({ path = '/', domain = '', left = 0, invite = 
   );
   return (
     <main className={'fd-page' + (records ? ' fd-page--records' : '')}>
-      {records && <CoverRows covers={covers} />}
-      {records ? <div className="fd-paper">{paper}</div> : paper}
+      {records && <CoverRows covers={covers} count={path === '/get' ? 2 : 3} />}
+      {records ? <div className="fd-words">{words}</div> : words}
     </main>
   );
 }
