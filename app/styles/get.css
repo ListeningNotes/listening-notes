@@ -788,7 +788,10 @@
 }
 .fd-fold-body .fd-invite { margin-bottom: 14px; }
 .fd-fold-body .fd-state { margin: 8px 0 6px; text-align: center; }
-.fd-fold-body .fd-go { margin-top: 0; }
+/* One word on it now (Create, Open), so no wider than it needs to be
+   (Miyel, 2026-10-22); both the same width, so it holds still as the doors
+   switch. */
+.fd-fold-body .fd-go { margin-top: 0; width: 160px; }
 .fd-fold-body .fd-steps { margin-top: 12px; }
 .fd-fold-body .fd-trouble { margin-top: 10px; }
 .fd-doors-all .fd-places { margin-top: 16px; }
