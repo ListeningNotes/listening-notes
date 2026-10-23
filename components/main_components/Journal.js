@@ -29,7 +29,7 @@
 
 import { Fragment, memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { flushSync } from 'react-dom';
-import { CaretDown } from '@phosphor-icons/react';
+import { CaretDown, X } from '@phosphor-icons/react';
 import { parseRating } from '../../library/entry_formatter';
 import { sizedAlbumArt } from '../../library/music_data_api';
 import AlbumTile from './AlbumTile';
@@ -188,36 +188,32 @@ const BANDS = {
 };
 
 // ── Read off the covers, 2026-10-22 ────────────────────────────────────────
-// By color, Miyel's ask: the rainbow, red to violet, and a last band for the
-// covers that are black, white and gray. The brief parked it because it
-// seemed to need a hue stored for every cover and a pass over every record.
-// It needs neither: Apple's covers let a page read their pixels, so each one
-// is read here, in the browser, from a 60px copy, the first time By color is
-// asked for in a visit — nothing stored, nothing written, nothing on the
-// server. A cover that cannot be read (a hand-pasted address that refuses)
-// and a record with none go in the last band.
+// By color, Miyel's ask: the wall as one gradient of hue, red round through
+// orange, yellow, green and blue to violet, and then the covers with hardly
+// any color, dark to light. It was seven named bands for an hour, and she
+// found the names guessing — "the orange section, I only consider two of
+// these orange" — so nothing is named now: a cover between orange and yellow
+// simply sits between them.
 //
-// A cover's color is the hue it has most of, weighted by how vivid each
-// pixel is, so a black sleeve with a red title is red only if the red is
-// most of what color it has, and gray if color is barely there at all.
-const COLOR_BANDS = [
-  { key: 'red',    label: 'Red',    swatch: '#e0453a', to: 15 },
-  { key: 'orange', label: 'Orange', swatch: '#ee8a2c', to: 42 },
-  { key: 'yellow', label: 'Yellow', swatch: '#e8c536', to: 70 },
-  { key: 'green',  label: 'Green',  swatch: '#45a96a', to: 170 },
-  { key: 'blue',   label: 'Blue',   swatch: '#3b8ed8', to: 228 },
-  { key: 'indigo', label: 'Indigo', swatch: '#4a52c2', to: 262 },
-  { key: 'violet', label: 'Violet', swatch: '#9a58c8', to: 345 },
-];
-const NEUTRAL = { key: 'neutral', label: 'Black, white and gray', swatch: null };
-// Hues from 345 round to 15 are one red: measured from 345, the bands' ends
-// rise in order and the red band's two halves meet.
+// The brief parked it because it seemed to need a hue stored for every cover
+// and a pass over every record. It needs neither: Apple's covers let a page
+// read their pixels, so each one is read here, in the browser, from a 60px
+// copy, the first time By color is asked for in a visit — nothing stored,
+// nothing written, nothing on the server. A cover kept somewhere else
+// (Bandcamp, Discogs) refuses to be read, and goes with a record that has
+// none, at the very end.
+//
+// A cover's color is the hue it has most of, each pixel counted by how vivid
+// it is. Counting by the square of that, so a little bright color would win
+// over a lot of skin and brown, was tried the same hour and moved a green
+// cover with red figures on it in among the reds. Hues from 345 round to 15
+// are one red, so the gradient starts at 345.
 const fromRed = hue => (hue + 15) % 360;
-const bandForHue = hue => COLOR_BANDS.findIndex(b => fromRed(hue) < fromRed(b.to) || b.key === 'violet');
 
-// What has been read this visit, by the cover's address: { band, hue, light },
-// band -1 for black, white and gray.
+// What has been read this visit, by the cover's address: { hue, light, plain },
+// plain for a cover with hardly any color, or one that could not be read.
 const coverColors = new Map();
+const UNREAD = { hue: 0, light: 2, plain: true };
 
 function colorOfPixels(px) {
   const bins = new Array(36).fill(0);
@@ -235,14 +231,14 @@ function colorOfPixels(px) {
     vivid += chroma;
   }
   light /= count;
-  if (vivid / count < COLOR_FLOOR) return { band: -1, hue: 0, light };
+  if (vivid / count < COLOR_FLOOR) return { hue: 0, light, plain: true };
   let peak = 0;
   bins.forEach((v, i) => { if (v > bins[peak]) peak = i; });
   // The middle of the strongest ten degrees, leant toward whichever side of
   // it is stronger, so two covers in one band still line up by shade.
   const left = bins[(peak + 35) % 36], right = bins[(peak + 1) % 36];
   const hue = (peak * 10 + 5 + 5 * ((right - left) / (bins[peak] + left + right)) + 360) % 360;
-  return { band: bandForHue(hue), hue, light };
+  return { hue, light, plain: false };
 }
 // How much color a cover has to have, on average across its pixels, to be a
 // color at all. Set against the test copy's covers.
@@ -270,7 +266,7 @@ function readCoverColor(address) {
 }
 
 const colorKnown = album => !album.face.album_art || coverColors.has(album.face.album_art);
-const colorOf = album => coverColors.get(album.face.album_art) || { band: -1, hue: 0, light: 0.5 };
+const colorOf = album => coverColors.get(album.face.album_art) || UNREAD;
 
 // The same shuffle for as long as the reader stays on it, and a new one each
 // time Shuffle is pressed: a wall that reshuffled on every render would move
@@ -297,20 +293,17 @@ function shuffled(albums, seed) {
 // (null in a view without bands).
 function arrange(albums, view, seed) {
   if (view === 'shuffle') return shuffled(albums, seed).map(album => ({ album, band: null }));
-  // Red to violet, each band by shade, and the black, white and gray last,
-  // dark to light. Until every cover on the wall has been read the wall
-  // stays as it is rather than rearranging itself once per cover.
+  // One gradient: the colored covers by hue from red, then the plain ones
+  // dark to light, then any that could not be read. No bands, so no names.
+  // Until every cover on the wall has been read the wall stays as it is
+  // rather than rearranging itself once per cover.
   if (view === 'color') {
     if (!albums.every(colorKnown)) return [...albums].sort(newestArrival).map(album => ({ album, band: null }));
+    const place = c => (c.plain ? 360 + c.light * 100 : fromRed(c.hue));
     return albums
-      .map(album => {
-        const c = colorOf(album);
-        const kind = c.band < 0 ? NEUTRAL : COLOR_BANDS[c.band];
-        return { album, c, band: { key: kind.key, label: kind.label, swatch: kind.swatch, rank: c.band < 0 ? Infinity : c.band } };
-      })
-      .sort((x, y) => (x.band.rank - y.band.rank)
-        || (x.band.rank === Infinity ? x.c.light - y.c.light : fromRed(x.c.hue) - fromRed(y.c.hue)))
-      .map(({ album, band }) => ({ album, band }));
+      .map(album => ({ album, at: place(colorOf(album)) }))
+      .sort((x, y) => x.at - y.at)
+      .map(({ album }) => ({ album, band: null }));
   }
   // Genres in the order the filter sheet lists them: the most records first.
   let bandOf = BANDS[view];
@@ -443,6 +436,12 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
   const openSearch = () => {
     flushSync(() => setSearchOpen(true));
     searchField.current?.focus();
+  };
+  // The ×: closing is clearing, or the wall would stay narrowed by words
+  // nothing on the line shows any more.
+  const closeSearch = () => {
+    setSearch('');
+    setSearchOpen(false);
   };
 
   // ?mark= — one of the three marks a record can carry, read the same way and
@@ -826,7 +825,7 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
     if (!unread.length) return undefined;
     let here = true;
     Promise.all(unread.map(address => readCoverColor(address)
-      .then(c => coverColors.set(address, c || { band: -1, hue: 0, light: 0.5 }))))
+      .then(c => coverColors.set(address, c || UNREAD))))
       .then(() => { if (here) setColorsRead(n => n + 1); });
     return () => { here = false; };
   }, [view, filtered]);
@@ -930,15 +929,6 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
                     <h3 className="arc-band" aria-label={band.label}>
                       <StarRating rating={band.stars} size={11} />
                     </h3>
-                  ) : band.swatch !== undefined ? (
-                    /* By color's headings are the color, the way By rating's
-                       are the stars; the last band's is half black, half white. */
-                    <h3 className="arc-band" aria-label={band.label}>
-                      <span
-                        className={'arc-swatch' + (band.swatch ? '' : ' arc-swatch--plain')}
-                        style={band.swatch ? { background: band.swatch } : undefined}
-                      />
-                    </h3>
                   ) : <h3 className="arc-band">{band.label}</h3>
                 )}
                 <AlbumTile
@@ -1024,44 +1014,40 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
             )}
           </span>
           {searchOpen ? (
-            <label className="arc-search">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-                <circle cx="11" cy="11" r="7" /><line x1="16.5" y1="16.5" x2="21" y2="21" />
-              </svg>
-              {/* Nouns only: the magnifier to the left is the verb, so the
-                  words do not have to say Search as well. What it replaced
-                  read "Search albums, artists, notes" and arrived on a phone
-                  as "Search albums, artists, note" with the rest cut off — a
-                  placeholder that looks broken rather than one that lists
-                  what it covers.
+            <span className="arc-seeking">
+              {/* Nouns only: the magnifier was the verb, so the words do not
+                  have to say Search as well. It still searches the writing
+                  too; the placeholder just stops claiming it, and the full
+                  answer stays on the aria-label, where it is read out rather
+                  than measured.
 
-                  On a phone the field has the whole line while it is open
-                  (the view and the filters step aside), and the font cannot
-                  be made smaller to buy room anyway — 16px is what stops iOS
-                  zooming the page when the field takes focus.
-
-                  It still searches the writing as well; the placeholder just
-                  stops claiming it, and the full answer stays on the
-                  aria-label, where it is read out rather than measured.
-
-                  It closes back to the magnifier when it is left empty, and
-                  on Escape, which empties it. With words in it, it stays, so
-                  the line says what is narrowing the wall. */}
+                  It closes back to the magnifier when it is left empty, on
+                  the ×, and on Escape. With words in it, it stays, so the
+                  line says what is narrowing the wall. */}
               <input
                 ref={searchField}
+                className="arc-seeking-field"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 onFocus={() => setSearchOpen(true)}
                 onBlur={() => { if (!search) setSearchOpen(false); }}
-                onKeyDown={e => {
-                  if (e.key !== 'Escape') return;
-                  setSearch('');
-                  setSearchOpen(false);
-                }}
+                onKeyDown={e => { if (e.key === 'Escape') closeSearch(); }}
                 placeholder="Albums or artists"
                 aria-label="Search albums, artists and notes"
               />
-            </label>
+              {/* Held on the press so the field keeps the focus: left to blur
+                  an empty field first, the × would vanish under the finger and
+                  the press land on the magnifier that takes its place. */}
+              <button
+                type="button"
+                className="arc-seeking-shut"
+                onPointerDown={e => e.preventDefault()}
+                onClick={closeSearch}
+                aria-label="Close the search"
+              >
+                <X size={13} weight="bold" aria-hidden="true" />
+              </button>
+            </span>
           ) : (
             <button
               type="button"

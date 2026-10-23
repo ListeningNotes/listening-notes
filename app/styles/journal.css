@@ -275,26 +275,36 @@
   box-shadow: var(--shadow-soft);
 }
 
-/* Search: a real field at rest so it reads as searchable, growing to
-   take the whole bar while you type. flex-basis rather than width so
-   it gives room back to the controls when it collapses. */
-.arc-search { position: relative; display: flex; align-items: center; flex: 0 1 240px; min-width: 150px; margin-left: auto; }
-/* The magnifier the field is until it is pressed, at the right of the line
-   beside the filters, the view having the left. */
+/* Search: a magnifier at the right of the line, beside the filters, the view
+   having the left. Pressed, it opens into a small rounded field reaching about
+   half way along the line, and the magnifier becomes the × at its end that
+   closes it again (Miyel, 2026-10-22: "way more subtle"). It was a standing
+   field until that morning, and then for an hour one that took the line. */
 .arc-ctl.arc-seek { margin-left: auto; padding: 7px 6px; }
-.arc-search svg { position: absolute; left: 10px; color: var(--ink-faint); pointer-events: none; }
-/* Translucent, but with no backdrop-filter of their own — the bar
-   beneath has already blurred what's behind it, and these paint on
-   top of that result. Adding a second filter here would blur an
-   already-blurred layer and turn the whole bar to mud. */
-.arc-search input {
-  width: 100%; min-width: 0;
-  background: var(--panel); color: var(--ink);
-  border: 1px solid var(--border); border-radius: 9px;
-  padding: 7px 10px 7px 30px;
-  font-family: var(--font-label); font-size: 12px; outline: none;
+.arc-seeking {
+  margin-left: auto;
+  display: flex; align-items: center;
+  width: min(50%, 260px); min-width: 140px; height: 30px; flex-shrink: 1;
+  border: 1px solid var(--border); border-radius: 15px;
+  background: transparent;
+  animation: arcSeekOpen 0.22s ease;
+  transition: border-color 0.15s;
 }
-.arc-search input:focus { border-color: var(--ink-faint); }
+.arc-seeking:focus-within { border-color: var(--ink-faint); }
+@keyframes arcSeekOpen { from { width: 30px; } }
+.arc-seeking-field {
+  flex: 1; min-width: 0; height: 100%;
+  border: 0; background: transparent; outline: none;
+  padding: 0 2px 0 13px;
+  font-family: var(--font-label); font-size: 12px; color: var(--ink);
+}
+.arc-seeking-field::placeholder { color: var(--ink-faint); }
+.arc-seeking-shut {
+  flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  width: 30px; height: 28px; padding: 0;
+  border: 0; background: none; color: var(--ink-soft); cursor: pointer;
+}
+.arc-seeking-shut:hover { color: var(--ink); }
 
 .arc-ctl {
   /* The mark, not a mark in a container (DECISIONS, 2026-09-17): these were
@@ -458,13 +468,6 @@
   letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-faint);
 }
 .arc-band::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-/* By color's heading: the band's color as a dot the size of a star, and for
-   the black, white and gray, a dot that is half of each. */
-.arc-swatch { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
-.arc-swatch--plain {
-  background: linear-gradient(90deg, #161616 50%, #f4f4f2 50%);
-  box-shadow: 0 0 0 1px var(--border);
-}
 .arc-band:first-child { margin-top: 0; }
 
 /* ── The grid. Density is set on the container, so every tile's size
@@ -536,21 +539,11 @@
     box-shadow: none;
     padding: 8px 12px max(8px, env(safe-area-inset-bottom));
   }
-  /* 16px keeps iOS from zooming the page when the field takes focus, which is
-     why the room for the placeholder had to be found everywhere except here.
-     Four of it came off the right padding, which holds nothing — the
-     magnifier is on the left — and is the difference between fitting and
-     clipping by a pixel on a 360px Android. */
-  .arc-search input { font-size: 16px; padding: 6px 6px 6px 28px; }
-  /* Takes what is left rather than everything. It was `1 1 auto`, which grew
-     the field until the density buttons had to wrap to a second row — two
-     rows of controls at the foot of a phone, for four small buttons that fit
-     beside the field once the placeholder stopped being three nouns long. */
-  .arc-search { flex: 1 1 0; }
-  /* Typing gets the whole bar: the controls are still one tap away
-     once the field gives focus back. */
-  .arc-bar--searching .arc-ctl,
-  .arc-bar--searching .arc-count { display: none; }
+  /* 16px for what is typed keeps iOS from zooming the page when the field
+     takes focus; the placeholder is the label size, so it fits the half of
+     the line the field is given. */
+  .arc-seeking-field { font-size: 16px; }
+  .arc-seeking-field::placeholder { font-size: 12px; }
   .arc-ctl { padding: 7px 9px; }
   .arc-ctl-text { display: none; }
   /* The glyph alone on a phone, so the underline that says something is on

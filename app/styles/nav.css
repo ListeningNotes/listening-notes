@@ -3713,4 +3713,8 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
     background: var(--bg);
   }
   .hn--typing .hn-pane--home .arc-bar-wrap { bottom: auto; }
+  /* No hairline over it here (Miyel, 2026-10-22: it "should also leave"): the
+     line was the roof of a bar standing on the floor, and at the top of the
+     wall, under the record, it only cut the page in two. */
+  .hn .hn-pane--home .arc-bar { border-top: 0; }
 }

@@ -979,9 +979,10 @@ by its name.
 
 **By color is a view, read off the covers in the browser, 2026-10-22, Miyel's
 ask.** The brief parked it for needing a hue stored per cover; Apple's covers
-let a page read their pixels, so nothing is stored or written: red to violet,
-and a last band for black, white and gray. On the line, search is a magnifier
-beside the filters that opens the field (her call), never a standing field.
+let a page read their pixels, so nothing is stored or written. One gradient of
+hue, then the plain covers dark to light — no named bands, which guessed wrong
+("I only consider two of these orange"). Search is a magnifier that opens a
+small rounded field to half the line, its × closing it (her call).
 
 **Definitions ship as editable defaults, and custom listen types are ruled
 out.** Universal second-person text installs and the owner can edit any of
