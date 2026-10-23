@@ -970,6 +970,13 @@ first listen where you left it. Recency lives on the beacon, the recents and
 the feed. A sort by latest would be a toggle beside the density control, not
 a new default — parked until it is missed. The reversal is in the archive.
 
+**The wall's views replace Sort, 2026-10-22, Miyel's call.** A filter takes
+records away (genre, year, the marks); a view rearranges all of them. When the
+views are built, Sort leaves the filter sheet and becomes the view, named on
+the shelf line — "sort stays in the sheet on a phone" (2026-10-18) holds only
+until then. The home brief's views gain an A–Z, so a record can still be found
+by its name.
+
 **Definitions ship as editable defaults, and custom listen types are ruled
 out.** Universal second-person text installs and the owner can edit any of
 it: stable keys, editable labels and bodies, one JSONB column. Fixing the
