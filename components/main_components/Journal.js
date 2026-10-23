@@ -900,6 +900,19 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
   }, [view, filtered]);
   // eslint-disable-next-line react-hooks/exhaustive-deps -- colorsRead says the covers' colors (a module map) have changed
   const arranged = useMemo(() => arrange(filtered, view, seed), [filtered, view, seed, colorsRead]);
+  // How many records each band holds, all of it and not just this page's
+  // share, for the number at the end of its heading (Miyel, 2026-10-22: "I
+  // want to know how many late night"). A count on a group of records, the
+  // way the card counts them — never one beside a person.
+  const bandSizes = useMemo(() => {
+    const sizes = new Map();
+    for (const { band } of arranged) if (band) sizes.set(band.key, (sizes.get(band.key) || 0) + 1);
+    return sizes;
+  }, [arranged]);
+  const bandCount = band => {
+    const n = bandSizes.get(band.key) || 0;
+    return <span className="arc-band-count">{n === 1 ? '1 album' : `${n} albums`}</span>;
+  };
 
   // What is on the wall right now, in this order, left where the layer can
   // read it — so a swipe on an entry goes to the record beside it here, not
@@ -1032,20 +1045,24 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
                     file across when a record comes or goes. */}
                 {band && (i === 0 || shown[i - 1].band.key !== band.key) && (
                   band.stars ? (
-                    <h3 className="arc-band" aria-label={band.label}>
+                    <h3 className="arc-band">
                       <StarRating rating={band.stars} size={11} />
+                      <span className="arc-band-said">{band.label}</span>
+                      {bandCount(band)}
                     </h3>
                   ) : band.glyph ? (
                     <h3 className="arc-band">
                       <band.glyph size={13} weight="regular" aria-hidden="true" />
                       {band.label}
+                      {bandCount(band)}
                     </h3>
                   ) : band.bars ? (
                     <h3 className="arc-band">
                       <ShapeBars bars={band.bars} />
                       {band.label}
+                      {bandCount(band)}
                     </h3>
-                  ) : <h3 className="arc-band">{band.label}</h3>
+                  ) : <h3 className="arc-band">{band.label}{bandCount(band)}</h3>
                 )}
                 <AlbumTile
                   album={album}

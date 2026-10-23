@@ -497,7 +497,14 @@
 /* By time of day's glyph and By shape's bars, before the word, in its ink. */
 .arc-band svg { flex-shrink: 0; }
 .arc-band { gap: 7px; }
-.arc-band::after { margin-left: 3px; }
+.arc-band::after { margin-left: 3px; order: 1; }
+/* How many records the band holds, at the far end of its hairline. */
+.arc-band-count { order: 2; flex-shrink: 0; margin-left: 3px; }
+/* By rating's words are for a screen reader; its stars say it on the page. */
+.arc-band-said {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap;
+}
 .arc-band:first-child { margin-top: 0; }
 
 /* ── The grid. Density is set on the container, so every tile's size
