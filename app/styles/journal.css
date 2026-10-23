@@ -357,13 +357,20 @@
    order (Journal.js, Views, not sorting). The menu drops from it on a phone
    as on a desk — the floor is the Listen bar's — and closes on a press
    anywhere else, on Escape, or on a choice. */
-.arc-view { position: relative; display: flex; flex-shrink: 0; }
+/* It is the same size as the filters' panel (Miyel, 2026-10-22: "I don't
+   like how the sort and the filter are different sizes"): on a desk the
+   same 290px, hung from the line's left end where the filters hang from its
+   right; on a phone the line's width less its gutters, as theirs is. Two
+   columns, the views for finding and, past a hairline, the ones for fun. */
+.arc-bar { position: relative; }
+.arc-view { display: flex; flex-shrink: 0; }
 .arc-ctl.arc-view-now { gap: 4px; padding-left: 2px; color: var(--ink); }
 .arc-views-scrim { position: fixed; inset: 0; z-index: 0; }
 .arc-views {
-  position: absolute; top: calc(100% + 6px); left: -8px; z-index: 5;
-  display: flex; flex-direction: column; align-items: flex-start;
-  min-width: 150px; padding: 8px 6px;
+  position: absolute; top: calc(100% + 6px); left: 10px; z-index: 5;
+  width: 290px; box-sizing: border-box;
+  display: flex; align-items: stretch;
+  padding: 12px 6px;
   background: var(--panel-solid);
   border: 1px solid var(--panel-border); border-radius: 14px;
   box-shadow: var(--shadow-lift);
@@ -371,8 +378,9 @@
 }
 .arc-views--leaving { animation: arcPopOut 0.16s ease forwards; pointer-events: none; }
 @keyframes arcPopOut { to { opacity: 0; transform: translateY(-6px); } }
-.arc-views-word { padding: 5px 10px; }
-.arc-views-rule { align-self: stretch; height: 1px; margin: 6px 10px; background: var(--border); }
+.arc-views-col { flex: 1; display: flex; flex-direction: column; align-items: flex-start; }
+.arc-views-word { padding: 6px 10px; text-align: left; }
+.arc-views-rule { flex: 0 0 1px; margin: 4px 6px; background: var(--border); }
 
 .arc-count {
   margin-left: 4px; flex-shrink: 0; white-space: nowrap;
@@ -427,6 +435,17 @@
 /* The session's marks (session.css, .ses-mark), centred under their label
    the way the session centres them. */
 .arc-marks { display: flex; justify-content: center; gap: 8px; margin: -4px 0 -6px; }
+/* Album and Track drawn the way the marks are, in ink rather than a color of
+   their own: what a record is, not what it was to you. */
+.ses-mark--kind.ses-mark--on { color: var(--ink); }
+/* Genre folded to its line, the way the year shows its span on its line:
+   pressed, its words open under it. */
+.arc-sheet-label--door {
+  width: 100%; padding: 0; border: 0; background: none; cursor: pointer; text-align: left;
+}
+.arc-sheet-label--door .arc-sheet-value { display: inline-flex; align-items: center; gap: 4px; letter-spacing: 0.04em; text-transform: none; font-size: 10px; }
+.arc-sheet-label--door svg { transition: transform 0.2s ease; }
+.arc-sheet-label--door[aria-expanded="true"] svg { transform: rotate(180deg); }
 
 /* ── Year range ──────────────────────────────────────────────────
    Two native range inputs on one track. Both are stretched across
@@ -598,6 +617,7 @@
      height set from the line when it opens (JournalFilters). It was a sheet
      rising from the foot, which is the Listen bar's now. No dimming, as the
      views menu has none. */
+  .arc-views { left: 12px; right: 12px; width: auto; }
   .arc-sheet {
     bottom: auto; left: 12px; right: 12px; width: auto;
     padding: 16px 18px;

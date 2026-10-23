@@ -1143,18 +1143,23 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
             </button>
             {viewsOpen && (
               <span className={'arc-views' + (viewsLeaving ? ' arc-views--leaving' : '')} role="menu" aria-label="Views">
-                {VIEWS.map(v => (
-                  <Fragment key={v.value}>
-                    {v === VIEWS.find(w => w.fun) && <span className="arc-views-rule" aria-hidden="true" />}
-                    <button
-                      type="button"
-                      role="menuitemradio"
-                      aria-checked={v.value === view}
-                      className={'ln-word arc-views-word' + (v.value === view ? ' ln-word--on' : '')}
-                      onClick={() => chooseView(v.value)}
-                    >
-                      {v.label}
-                    </button>
+                {[VIEWS.filter(v => !v.fun), VIEWS.filter(v => v.fun)].map((column, i) => (
+                  <Fragment key={i}>
+                    {i > 0 && <span className="arc-views-rule" aria-hidden="true" />}
+                    <span className="arc-views-col">
+                      {column.map(v => (
+                        <button
+                          key={v.value}
+                          type="button"
+                          role="menuitemradio"
+                          aria-checked={v.value === view}
+                          className={'ln-word arc-views-word' + (v.value === view ? ' ln-word--on' : '')}
+                          onClick={() => chooseView(v.value)}
+                        >
+                          {v.label}
+                        </button>
+                      ))}
+                    </span>
                   </Fragment>
                 ))}
               </span>

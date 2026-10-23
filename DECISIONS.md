@@ -985,9 +985,11 @@ these orange"). The fun ones sit under the menu's rule: time of day, shape
 (read off the horizon), color, Shuffle. Search grows out of its magnifier.
 
 **The filters drop from the line, on a phone too, 2026-10-22, Miyel's call**
-("make filters match sort. i like the dropdown"): the views menu's solid panel,
-under the whole line. The sheet that rose from the foot is gone — the foot is
-the Listen bar's. The first group is Kind: All, Albums, Tracks.
+("make filters match sort"): the views menu's panel at the views menu's size;
+the sheet that rose from the foot is gone. The views are words, the filters
+glyphs, so the two read as two places: Album and Track drawn like the marks,
+genre folded to its one line. Nothing was taken out ("I just want it to look
+better").
 
 **Definitions ship as editable defaults, and custom listen types are ruled
 out.** Universal second-person text installs and the owner can edit any of

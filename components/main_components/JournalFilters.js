@@ -28,8 +28,8 @@
 // under its button. Either way it closes on a press anywhere else, on
 // Escape, or on Show, and folds away as it goes (`leaving`).
 'use client';
-import { useEffect, useLayoutEffect, useRef } from 'react';
-import { Fingerprint, Heart, SketchLogo } from '@phosphor-icons/react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { CaretDown, Fingerprint, Heart, SketchLogo } from '@phosphor-icons/react';
 import { useHoldStill } from '../../hooks/useHoldStill';
 import GridDensity from './GridDensity';
 
@@ -42,6 +42,8 @@ export default function JournalFilters({
   hasActiveFilters, clearFilters, shownCount, density, changeDensity, leaving = false,
 }) {
   const sheetRef = useRef(null);
+  // Genre is folded to its one line until pressed, unless it was left open.
+  const [genreShown, setGenreShown] = useState(false);
   // The scrim is what useHoldStill walks up from: it is present for exactly
   // as long as this sheet is, and it is inside whatever is behind it.
   const scrimRef = useRef(null);
@@ -76,9 +78,10 @@ export default function JournalFilters({
     // Its right edge on the button's, since the button sits at the right end
     // of the line now and a panel hung from its left ran off the screen.
     const r = anchorRef.current?.getBoundingClientRect();
-    if (!r) return;
+    const line = anchorRef.current?.closest('.arc-bar')?.getBoundingClientRect();
+    if (!r || !line) return;
     sheet.style.left = `${Math.max(12, r.right - sheet.offsetWidth)}px`;
-    sheet.style.top = `${r.bottom + 8}px`;
+    sheet.style.top = `${line.bottom + 6}px`;
     sheet.style.right = 'auto';
   }, [isPhone, anchorRef]);
 
@@ -118,16 +121,27 @@ export default function JournalFilters({
             aria-label="Filters"
           >
             {/* A record logged as an album, or known by its tracks (Miyel,
-                2026-10-22: "filtering should get track vs album"). Albums
-                is every record with a listen; Tracks every record with a
-                track note, whether or not it also has a listen. */}
+                2026-10-22: "filtering should get track vs album"), drawn as
+                the marks are, a glyph over a word — the square of a cover,
+                and the cover with its corner turned down that a record
+                known by its tracks wears on the wall ("more icon heavy on
+                this side"). Neither pressed is both; pressing the one that
+                is on lets it go. Album is every record with a listen; Track
+                every record with a track note, whether or not it also has a
+                listen. */}
             <div className="arc-sheet-group">
               <div className="arc-sheet-label">Kind</div>
-              <div className="arc-sheet-opts">
-                {[['', 'All'], ['albums', 'Albums'], ['tracks', 'Tracks']].map(([value, said]) => (
-                  <button key={said} type="button" className={word(kind === value)}
-                    aria-pressed={kind === value} onClick={() => setKind(value)}>{said}</button>
-                ))}
+              <div className="arc-marks">
+                <button type="button" className={mark(kind === 'albums', 'kind')}
+                  aria-pressed={kind === 'albums'} onClick={() => setKind(kind === 'albums' ? '' : 'albums')}>
+                  <KindGlyph folded={false} on={kind === 'albums'} />
+                  <span className="ses-mark-word">Album</span>
+                </button>
+                <button type="button" className={mark(kind === 'tracks', 'kind')}
+                  aria-pressed={kind === 'tracks'} onClick={() => setKind(kind === 'tracks' ? '' : 'tracks')}>
+                  <KindGlyph folded on={kind === 'tracks'} />
+                  <span className="ses-mark-word">Track</span>
+                </button>
               </div>
             </div>
 
@@ -136,8 +150,18 @@ export default function JournalFilters({
                 option and nothing to compare it against. */}
             {genres.length > 1 && (
               <div className="arc-sheet-group">
-                <div className="arc-sheet-label">Genre</div>
-                <div className="arc-sheet-opts">
+                {/* Folded to one line, which says the genre the wall is kept
+                    to, the way the year's line says its span: the panel reads
+                    as glyphs at a glance and the words wait to be asked for. */}
+                <button type="button" className="arc-sheet-label arc-sheet-label--door"
+                  aria-expanded={genreShown} onClick={() => setGenreShown(v => !v)}>
+                  Genre
+                  <span className="arc-sheet-value">
+                    {genre || 'All'}
+                    <CaretDown size={9} weight="bold" aria-hidden="true" />
+                  </span>
+                </button>
+                {genreShown && <div className="arc-sheet-opts">
                   <button type="button" className={word(!genre)} aria-pressed={!genre} onClick={() => setGenre('')}>All</button>
                   {genresShown.map(g => (
                     <button key={g.name} type="button"
@@ -159,7 +183,7 @@ export default function JournalFilters({
                       {genresOpen ? 'Less' : `+${genresRest.length} more`}
                     </button>
                   )}
-                </div>
+                </div>}
               </div>
             )}
 
@@ -226,6 +250,27 @@ export default function JournalFilters({
 }
 
 // ── Sub-components ─────────────────────────────────────────────────────
+
+// Album and Track: a cover's square, and the same square with its top right
+// corner turned down, the way a record known by its tracks sits on the wall.
+// Outlined off, filled on, as Favorite's heart is.
+function KindGlyph({ folded, on }) {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      {folded ? (
+        <>
+          <path d="M5 4.5h9.5L19.5 9.5V19.5H5Z" fill={on ? 'currentColor' : 'none'}
+            stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+          <path d="M14.5 4.5V9.5H19.5" fill="none" stroke={on ? 'var(--panel-solid)' : 'currentColor'}
+            strokeWidth="1.5" strokeLinejoin="round" />
+        </>
+      ) : (
+        <rect x="5" y="4.5" width="14.5" height="15" rx="1.5" fill={on ? 'currentColor' : 'none'}
+          stroke="currentColor" strokeWidth="1.5" />
+      )}
+    </svg>
+  );
+}
 
 // A choice in the sheet, and a mark: the classes, on or off.
 const word = on => 'ln-word arc-word' + (on ? ' ln-word--on' : '');
