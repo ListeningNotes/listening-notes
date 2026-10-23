@@ -145,10 +145,11 @@ const STARS = {
 const arrived = album => new Date(album.first.posted_at).getTime();
 const newestArrival = (a, b) => arrived(b) - arrived(a);
 // The record's own score, its newest listen's, to the half star the stars are
-// given in. An old row may say Masterpiece where a number goes; a record known
-// only by its songs has no score of its own.
+// given in. An old row may say Masterpiece where a number goes. A record known
+// only by its songs is placed by the stars its newest song was given — its
+// face — rather than as not rated (Miyel, 2026-10-22: "tracks show as not
+// rated"); a song note carries its track's stars.
 const scoreOf = album => {
-  if (!album.listens.length) return 0;
   const said = album.face.rating === 'Masterpiece' ? 5 : parseRating(album.face.rating);
   return Math.round(said * 2) / 2;
 };
