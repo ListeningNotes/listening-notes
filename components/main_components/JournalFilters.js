@@ -211,13 +211,13 @@ export default function JournalFilters({
             {/* The way out is the same word as the choices, heavier — not a
                 submit button. The album size went to the views menu: it says
                 how the wall is shown, not what is on it. */}
+            {/* Clear all at the box's left edge, under the glyphs and the
+                labels (Miyel, 2026-10-22); Show at its right. */}
             <div className="arc-sheet-foot">
-              <span className="arc-sheet-ways">
-                {hasActiveFilters && <button type="button" className="ln-word" onClick={clearFilters}>Clear all</button>}
-                <button type="button" className="ln-word ln-word--on arc-sheet-done" onClick={onClose}>
-                  Show {shownCount}
-                </button>
-              </span>
+              {hasActiveFilters && <button type="button" className="ln-word arc-sheet-clear" onClick={clearFilters}>Clear all</button>}
+              <button type="button" className="ln-word ln-word--on arc-sheet-done" onClick={onClose}>
+                Show {shownCount}
+              </button>
             </div>
           </div>
     </>

@@ -515,8 +515,10 @@
   display: flex; align-items: center; gap: 8px; justify-content: flex-end;
   border-top: 1px solid var(--border); padding-top: 12px;
 }
-.arc-sheet-ways { display: flex; align-items: center; gap: 6px; margin-right: -6px; }
-.ln-word.arc-sheet-done { font-weight: 500; }
+/* Each word's own padding paid back at the edge it stands on, so Clear all
+   lines up with the glyphs and the labels and Show with the year's end. */
+.ln-word.arc-sheet-clear { margin-left: -8px; }
+.ln-word.arc-sheet-done { font-weight: 500; margin-left: auto; margin-right: -8px; }
 /* Folding away as it closes, the way the views menu does. */
 .arc-sheet--leaving { animation: arcPopOut 0.16s ease forwards; pointer-events: none; }
 
