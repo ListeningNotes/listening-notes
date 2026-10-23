@@ -1800,6 +1800,26 @@ ask SANDBOX, or a test reaches a real person.
 
 ---
 
+**The front door is a masthead over a record wall, 2026-10-22, Miyel's
+pick of three.** The mark and the two doors at the top; under them the covers
+keepers on the Board logged lately (covers only, never who), edge to edge, in
+staggered columns drifting up. A door opens where it is, never a page of its
+own: both stay, the open one lit, and pressing the other switches; `/get`,
+where invite links point, is Start open. Words never sit on a moving cover,
+nor on a sheet (it read as a pop-up).
+
+**A journal nobody sets up is let go after an hour, 2026-10-22, Miyel.** It
+was a day. The places are few and a name should not be held by somebody who
+will not use it; setup takes minutes. The address is free again at once, and
+its page (or setup, left open) says the setup timed out, with Start again. A
+journal that is set up is never let go, however long it goes without a post.
+
+**The front door is by invitation while it is friends, 2026-10-22, Miyel.**
+Start a journal makes one only on a ticket from a keeper's Invite: one
+journal, once, within two weeks; the ticket says who invited, so an address
+written into a link names nobody. Without one, her words: handed out by
+people who have one. `OPEN_DOOR` opens it to anybody, the day she says.
+
 **The month's prompt is a record from the keeper's own wall, sent on a
 press, 2026-10-22.** An entry already written — its record and writing as
 they stand, read-only, never a blank box or a catalogue — goes to

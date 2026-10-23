@@ -34,7 +34,7 @@
 // serves, or one keeper's setting would open, or pay for, every journal on it
 // (deploymentSetting). Each hosted journal's live in its own vault.
 
-import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto';
+import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'node:crypto';
 import { neon } from '@neondatabase/serverless';
 
 export function hosting() {
@@ -156,12 +156,12 @@ function directory() {
   return book;
 }
 
-// The one table, made the first time it is needed. Additive only, like a
+// The tables, made the first time they are needed. Additive only, like a
 // journal's own schema: a column added later is added with IF NOT EXISTS.
 //
 // `neon_project`, 2026-10-20: the Neon project the front door made for a
 // journal at signup (library/front_door.js), so one that was never set up can
-// be cleared after a day. Empty for a journal placed by hand — one that
+// be cleared after an hour. Empty for a journal placed by hand — one that
 // moved in keeps its own database, and nothing here ever deletes it.
 const SHELF = [
   `CREATE TABLE IF NOT EXISTS journals (
@@ -170,6 +170,16 @@ const SHELF = [
     placed_at  timestamptz NOT NULL DEFAULT now()
   )`,
   'ALTER TABLE journals ADD COLUMN IF NOT EXISTS neon_project text',
+  // `tickets`, 2026-10-22: invitations to start a journal (below).
+  `CREATE TABLE IF NOT EXISTS tickets (
+    hash        text PRIMARY KEY,
+    inviter     text NOT NULL,
+    made_at     timestamptz NOT NULL DEFAULT now(),
+    used_at     timestamptz,
+    used_by     text,
+    retired_at  timestamptz
+  )`,
+  'CREATE INDEX IF NOT EXISTS tickets_by_inviter ON tickets (inviter, made_at)',
 ];
 let shelved = null;
 function shelf() {
@@ -287,6 +297,87 @@ export async function unplace_journal(host) {
   await shelf();
   await directory()`DELETE FROM journals WHERE host = ${tidyHost(host)}`;
   known.delete(tidyHost(host));
+}
+
+// ── Tickets, 2026-10-22 ───────────────────────────────────────────────────
+// While it is her and her friends, a journal starts only with an invitation
+// (Miyel: "they're scarce until I have everything figured out"; OPEN_DOOR
+// lets anybody in, library/front_door.js). A keeper's Invite asks for a
+// ticket (app/api/tickets): one journal, once, within two weeks. The row
+// keeps who invited — the address the keeper's own signed-in press came
+// from — so a link with an address written into it by hand names nobody
+// (her ask: "guard it as well against address overwriting"); and it keeps
+// only the code's hash, so the table read alone lets nobody in.
+//
+// A journal asks for at most TICKETS_A_DAY in a day, and keeps at most
+// TICKETS_WAITING unused: past that the oldest unused one runs out, so an
+// Invite opened and shut again wastes nothing that was sent. A journal that
+// is let go unfinished gives its ticket back (library/front_door.js), so the
+// same link starts again.
+const TICKET_DAYS = 14;
+const TICKETS_A_DAY = 20;
+const TICKETS_WAITING = 10;
+const ticketHash = code => createHash('sha256').update(String(code)).digest('base64url');
+const STILL_GOOD = `used_at IS NULL AND retired_at IS NULL AND made_at > now() - interval '${TICKET_DAYS} days'`;
+
+export async function make_ticket(inviter) {
+  await shelf();
+  const from = String(inviter || '').trim().toLowerCase();
+  if (!from) throw new Error('A ticket needs the journal that gives it.');
+  const [{ today }] = await directory()`
+    SELECT count(*)::int AS today FROM tickets WHERE inviter = ${from} AND made_at > now() - interval '1 day'`;
+  if (today >= TICKETS_A_DAY) return { refused: true, most: TICKETS_A_DAY };
+  await directory().query(
+    `UPDATE tickets SET retired_at = now() WHERE hash IN (
+       SELECT hash FROM tickets WHERE inviter = $1 AND ${STILL_GOOD}
+       ORDER BY made_at DESC OFFSET $2)`,
+    [from, TICKETS_WAITING - 1],
+  );
+  const code = randomBytes(16).toString('base64url');
+  await directory()`INSERT INTO tickets (hash, inviter) VALUES (${ticketHash(code)}, ${from})`;
+  return { code };
+}
+
+// What a ticket is now — good, used, or run out — and whose it is; null for
+// a code nobody was ever given.
+export async function ticket_state(code) {
+  if (!code || String(code).length > 64) return null;
+  await shelf();
+  const [row] = await directory().query(
+    `SELECT inviter, used_at IS NOT NULL AS used, (${STILL_GOOD}) AS good FROM tickets WHERE hash = $1`,
+    [ticketHash(code)],
+  );
+  if (!row) return null;
+  return { inviter: row.inviter, state: row.good ? 'good' : row.used ? 'used' : 'run out' };
+}
+
+// Takes a good ticket for a journal about to be made, in one statement, so
+// two people pressing Create on one link do not both get a journal; the
+// inviter it names, or null.
+export async function take_ticket(code) {
+  if (!code || String(code).length > 64) return null;
+  await shelf();
+  const [row] = await directory().query(
+    `UPDATE tickets SET used_at = now() WHERE hash = $1 AND ${STILL_GOOD} RETURNING inviter`,
+    [ticketHash(code)],
+  );
+  return row?.inviter || null;
+}
+
+// The journal a taken ticket made; or the ticket back, when the making failed.
+export async function ticket_made(code, host) {
+  await shelf();
+  await directory()`UPDATE tickets SET used_by = ${tidyHost(host)} WHERE hash = ${ticketHash(code)}`;
+}
+export async function give_back_ticket(code) {
+  await shelf();
+  await directory()`UPDATE tickets SET used_at = NULL WHERE hash = ${ticketHash(code)} AND used_by IS NULL`;
+}
+
+// A journal let go unfinished gives back the ticket that made it.
+export async function give_back_tickets_of(host) {
+  await shelf();
+  await directory()`UPDATE tickets SET used_at = NULL, used_by = NULL WHERE used_by = ${tidyHost(host)}`;
 }
 
 // ── Placing a journal ─────────────────────────────────────────────────────

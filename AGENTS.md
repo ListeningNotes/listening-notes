@@ -247,7 +247,9 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   for "also on your records", `pull_today` for "being logged everywhere"),
   listing and delisting, reading a journal's beacon, and `gather`, one round
   of the refresh with its decaying rate — run after a Board is read, its due
-  journals claimed so no two rounds ask one twice.
+  journals claimed so no two rounds ask one twice; and `pull_covers`, the
+  records keepers on the Board logged lately as covers alone, for the front
+  door's record wall.
 - `doorman.js` — rate limiting, in memory: the doors (login, message, send,
   wave, listing, the Board's lines and so on), how many tries each allows,
   who is knocking, and the 429 answer. Every count is filed under the
@@ -262,9 +264,13 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   `HOSTED_JOURNALS_MOST`, `make_journal` (a Neon project through the API,
   brought up to date, its address written, placed in the hosting directory,
   and its claim code), and `clear_never_set_up`, which takes down a journal it
-  made that nobody set up or wrote in within a day; `inviterAtTheDoor`, who
-  an invite link says invited the visitor, asked their name once a request;
-  and `frontDoorMetadata`, the front door's title and an invite's preview.
+  made that nobody set up or wrote in within an hour, giving back its ticket;
+  `openDoor` (`OPEN_DOOR`: anybody may start; unset, only a good ticket) and
+  `ticketAtTheDoor`, the ticket an invite link carries and who it says
+  invited the visitor, asked their name once a request;
+  `frontDoorMetadata`, the front door's title and an invite's preview; and
+  `frontDoorCovers`, the covers on its record wall, asked of the
+  Board's list and kept ten minutes.
 - `gold_burst.js` — the gold sparkle fired when a Masterpiece is marked.
 - `handoff.js` — module variables the wall leaves for the entry layer: the
   tapped record's first-screen fields so the layer opens without a wait, the
@@ -286,7 +292,10 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   studio, the publication's own journal (the month's prompt). And
   `isHere`, on any copy: whether an address is the journal a request
   reached, by any name it answers to, so a journal never says it moved to
-  itself.
+  itself. And `tickets`, the invitations to start a journal: `make_ticket`
+  (twenty a day, ten waiting), `ticket_state`, `take_ticket` (one journal,
+  once, in one statement), `ticket_made`, `give_back_ticket` and
+  `give_back_tickets_of`; only a code's hash is kept.
 - `install_guide.js` — what `/get` needs: the deploy button's URL and the ten
   install steps with their screenshots and the rings drawn over them.
 - `keyring.js` — the passkeys (`keyring`): a row per device's key, the

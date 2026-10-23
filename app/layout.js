@@ -17,7 +17,7 @@ import { headers } from 'next/headers';
 import { isSetUp, pull_settings, coverName, titleName } from '../library/settings_actions';
 import { hasDatabase, explainDatabaseError } from '../library/database_connection';
 import { journalHere, NoJournalHere, hostHere, isHere } from '../library/hosting_directory';
-import { isFrontDoor, hostedDomain, placesLeft, inviterAtTheDoor, frontDoorMetadata } from '../library/front_door';
+import { isFrontDoor, hostedDomain, placesLeft, ticketAtTheDoor, openDoor, frontDoorMetadata, frontDoorCovers } from '../library/front_door';
 import FrontDoor from '../components/main_components/FrontDoor';
 import { isCurrentCode } from '../library/portrait_code';
 import { takesReports } from '../library/report_actions';
@@ -232,6 +232,20 @@ const SETUP_PATH = '/setup';
 // 'front-door', 2026-10-20: the address a deployment that hosts journals
 // answers at itself, which has no journal of its own and draws the front
 // door's pages instead (library/front_door.js).
+// Where the front door's Start a journal is, from an address with no journal
+// at it: the deployment's own domain, by the scheme and port this request
+// came in on (a dev server's port, https behind Vercel). Empty where there is
+// no front door.
+async function frontDoorHome() {
+  const domain = hostedDomain();
+  if (!domain) return '';
+  const asked = await headers();
+  const raw = (asked.get('x-forwarded-host') || asked.get('host') || '').split(',')[0].trim();
+  const port = raw.match(/:\d+$/)?.[0] || '';
+  const scheme = (asked.get('x-forwarded-proto') || '').split(',')[0].trim() || (port ? 'http' : 'https');
+  return `${scheme}://${domain}${port}/get`;
+}
+
 async function holdTheDoor() {
   const path = (await headers()).get(PATH_HEADER) || '';
   if (path.startsWith('/api/')) return null;
@@ -239,14 +253,18 @@ async function holdTheDoor() {
   if (isFrontDoor(await hostHere())) {
     return {
       reason: 'front-door', path, left: await placesLeft().catch(() => 0),
-      // Who invited them, when an invite link brought them (Invite, 2026-10-21).
-      invite: await inviterAtTheDoor().catch(() => null),
+      // The ticket an invite link brought, and whether the door is open to
+      // anybody without one (2026-10-22, library/front_door.js).
+      ticket: await ticketAtTheDoor().catch(() => null),
+      open: openDoor(),
+      // The covers on its record wall (2026-10-22).
+      covers: await frontDoorCovers().catch(() => []),
     };
   }
   try {
     await journalHere();
   } catch (error) {
-    if (error instanceof NoJournalHere) return 'nobody';
+    if (error instanceof NoJournalHere) return { reason: 'nobody', home: await frontDoorHome() };
     return { reason: 'unreachable', said: explainDatabaseError(error) };
   }
   if (path === SETUP_PATH) return null;
@@ -363,9 +381,9 @@ export default async function RootLayout({ children, layer }) {
         <Bookplate settings={settings}>
           <Lightswitch>
             {holding?.reason === 'front-door'
-              ? <FrontDoor path={holding.path} domain={hostedDomain()} left={holding.left} invite={holding.invite} />
+              ? <FrontDoor path={holding.path} domain={hostedDomain()} left={holding.left} ticket={holding.ticket} open={holding.open} covers={holding.covers} />
               : holding
-              ? <ComingSoon reason={typeof holding === 'string' ? holding : holding.reason} said={holding.said} />
+              ? <ComingSoon reason={typeof holding === 'string' ? holding : holding.reason} said={holding.said} home={holding.home} />
               : <>
               {children}
               {layer}

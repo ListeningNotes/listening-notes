@@ -323,8 +323,16 @@ Vercel's default function region; a deployment whose functions run in
 Portland, `pdx1`, sets `aws-us-west-2`), and
 `HOSTED_JOURNALS_MOST`, the places (default 100). Each place a request comes
 from can start three journals an hour, and a journal the front door made that
-nobody set up or wrote in is taken down after a day. Nothing placed by hand
-is ever taken down.
+nobody set up or wrote in is taken down after an hour, and its address is
+free again. Nothing placed by hand is ever taken down, and nothing set up,
+however long it goes without a post.
+
+While it is friends the front door is by invitation: Start a journal makes
+one only for somebody holding a ticket from a keeper's Invite (one journal,
+once, within two weeks; a journal makes twenty a day at most and keeps ten
+waiting). `OPEN_DOOR=1` in the deployment's settings lets anybody start,
+ticket or not; take it away and the door is by invitation again. The
+tickets live beside the journals in the hosting directory, kept as hashes.
 
 ### Moving a journal in
 
@@ -378,7 +386,7 @@ where Listening Notes is made and where the records keepers send for the
 month's prompt are kept, at an address nobody is shown
 (`library/hosting_directory.js`, `studio`; the magazine at the bare domain
 has no sign-in). `studio` is in `KEPT_NAMES`, so nobody can start a journal
-at it and Find my journal never opens it. With it, one door
+at it and Find a journal never opens it. With it, one door
 at the bare domain — `/api/submissions`, where every copy posts a record for
 the prompt (`PUBLICATION_URL`) — is answered as that journal; the bare
 domain's pages and every other forward stay as they were. That journal takes

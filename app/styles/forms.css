@@ -2496,6 +2496,9 @@ a.pn-item-album:hover { text-decoration: underline; text-underline-offset: 3px; 
    keeps the paper every other code on the site is printed on (AddressCode). */
 [data-theme='dark'] .gv-code { background: #f5f4ef; }
 .gv-code svg { display: block; width: 100%; height: auto; }
+/* While the sheet waits for its ticket (2026-10-22): the code's own square,
+   empty, so nothing jumps when it comes. */
+.gv-code-wait { width: 100%; aspect-ratio: 1; }
 .gv-acts { display: flex; justify-content: center; gap: 26px; margin: 20px 0 2px; flex-shrink: 0; }
 .gv-act {
   display: inline-flex; align-items: center; gap: 10px;

@@ -20,12 +20,16 @@
 //
 // ── What the code carries ─────────────────────────────────────────────────
 // The front door's Choose your address, because there is exactly one place
-// the software comes from, and `?invite=` with this journal's address —
-// never `?from=`, which every page already reads as the *reader's* own
-// journal and would file on the friend's phone as theirs (DECISIONS,
-// 2026-09-22). The front door says who invited them and hands the inviter
-// on to the new journal's setup, which offers to add them and wave. Links
-// made before say `?gift=`, and are read the same (inviterIn).
+// the software comes from, and a ticket (2026-10-22, app/api/tickets): each
+// time the sheet opens this journal asks for a new one, good for one
+// journal, once — the front door is by invitation while it is Miyel and her
+// friends, and a ticket names who invited them, so a link with an address
+// written into it names nobody. The front door says who invited them and
+// hands the inviter on to the new journal's setup, which offers to add them
+// and wave. A journal on a copy of its own has no ticket to give yet, and
+// hands out its address as before (`?invite=`, never `?from=`, which every
+// page reads as the *reader's* own journal; DECISIONS, 2026-09-22), which
+// the front door takes once its door is open.
 //
 // ── What it never shows ───────────────────────────────────────────────────
 // A count of how many people you have invited, or who came. An invitation
@@ -55,7 +59,28 @@ const FAST_ENOUGH = 0.3;
 export default function InviteSheet({ open, onClose }) {
   const { site_address } = useBookplate();
   const journal = tidyJournal(site_address);
-  const link = journal ? `${GET}?invite=${encodeURIComponent(journal)}` : GET;
+  const byAddress = journal ? `${GET}?invite=${encodeURIComponent(journal)}` : GET;
+
+  // A new ticket each time the sheet opens; until it comes, no code and no
+  // button, and a line if it cannot be had.
+  const [made, setMade] = useState({ link: '', trouble: '' });
+  useEffect(() => {
+    if (!open) return undefined;
+    let stale = false;
+    fetch('/api/tickets', { method: 'POST' })
+      .then(async answer => {
+        const said = await answer.json().catch(() => ({}));
+        if (stale) return;
+        if (answer.ok && said.link) setMade({ link: said.link, trouble: '' });
+        else if (said.hosted === false) setMade({ link: byAddress, trouble: '' });
+        else setMade({ link: '', trouble: said.error || 'An invite couldn’t be made just now. Try again in a minute.' });
+      })
+      .catch(() => {
+        if (!stale) setMade({ link: '', trouble: 'An invite couldn’t be made just now. Try again in a minute.' });
+      });
+    return () => { stale = true; };
+  }, [open, byAddress]);
+  const link = made.link;
 
   // A tick and "Link copied" in place of the glyph and the words for a
   // moment (Miyel, 2026-09-22) — a silent clipboard write reads as a button
@@ -69,7 +94,7 @@ export default function InviteSheet({ open, onClose }) {
 
   // Every way out comes through here, so the sheet is put back as it goes
   // rather than tidied after it has gone.
-  const shut = useCallback(() => { setCopied(false); onClose?.(); }, [onClose]);
+  const shut = useCallback(() => { setCopied(false); setMade({ link: '', trouble: '' }); onClose?.(); }, [onClose]);
 
   // ── The pull ── the send sheet's, line for line: from a strip across the
   // top of the sheet, downwards only, a fifth of the way or a flick.
@@ -185,10 +210,11 @@ export default function InviteSheet({ open, onClose }) {
         {/* Large and on white, whatever the theme: a camera looks for dark on
             light (AddressCode). The plate is the white; the code draws none. */}
         <div className="gv-code">
-          <AddressCode text={link} paper={null} />
+          {link ? <AddressCode text={link} paper={null} /> : <div className="gv-code-wait" aria-hidden="true" />}
         </div>
+        {made.trouble && <p className="gv-line" role="alert">{made.trouble}</p>}
 
-        <div className="gv-acts">
+        {link && <div className="gv-acts">
           {canShare ? (
             <button
               type="button"
@@ -212,7 +238,7 @@ export default function InviteSheet({ open, onClose }) {
               <span aria-live="polite">{copied ? 'Link copied' : 'Copy link'}</span>
             </button>
           )}
-        </div>
+        </div>}
       </section>
     </>
   );
