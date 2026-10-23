@@ -1834,6 +1834,12 @@ own: both stay, the open one lit, and pressing the other switches; `/get`,
 where invite links point, is Start open. Words never sit on a moving cover,
 nor on a sheet (it read as a pop-up).
 
+**A journal nobody sets up is let go after an hour, 2026-10-22, Miyel.** It
+was a day. The places are few and a name should not be held by somebody who
+will not use it; setup takes minutes. The address is free again at once, and
+its page (or setup, left open) says the setup timed out, with Start again. A
+journal that is set up is never let go, however long it goes without a post.
+
 **The month's prompt is a record from the keeper's own wall, sent on a
 press, 2026-10-22.** An entry already written — its record and writing as
 they stand, read-only, never a blank box or a catalogue — goes to

@@ -83,7 +83,7 @@ export async function POST(request) {
 
   // One line of JSON for each step as it finishes, then where to go — or
   // what went wrong. A person who closes the page meanwhile is not told, and
-  // the journal they never reached is cleared after a day like any other.
+  // the journal they never reached is cleared after an hour like any other.
   const encoder = new TextEncoder();
   const lines = new ReadableStream({
     async start(controller) {

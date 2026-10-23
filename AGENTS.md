@@ -264,7 +264,7 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   `HOSTED_JOURNALS_MOST`, `make_journal` (a Neon project through the API,
   brought up to date, its address written, placed in the hosting directory,
   and its claim code), and `clear_never_set_up`, which takes down a journal it
-  made that nobody set up or wrote in within a day; `inviterAtTheDoor`, who
+  made that nobody set up or wrote in within an hour; `inviterAtTheDoor`, who
   an invite link says invited the visitor, asked their name once a request;
   `frontDoorMetadata`, the front door's title and an invite's preview; and
   `frontDoorCovers`, the covers on its record wall, asked of the

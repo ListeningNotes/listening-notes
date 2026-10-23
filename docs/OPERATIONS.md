@@ -323,8 +323,9 @@ Vercel's default function region; a deployment whose functions run in
 Portland, `pdx1`, sets `aws-us-west-2`), and
 `HOSTED_JOURNALS_MOST`, the places (default 100). Each place a request comes
 from can start three journals an hour, and a journal the front door made that
-nobody set up or wrote in is taken down after a day. Nothing placed by hand
-is ever taken down.
+nobody set up or wrote in is taken down after an hour, and its address is
+free again. Nothing placed by hand is ever taken down, and nothing set up,
+however long it goes without a post.
 
 ### Moving a journal in
 

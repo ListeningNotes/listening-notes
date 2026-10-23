@@ -27,9 +27,12 @@
 // ── What keeps a place from being wasted ──────────────────────────────────
 // Each place a request comes from can start a few journals an hour (the
 // doorman's `start` door), and a journal the front door made that nobody set
-// up, with nothing written in it, is cleared after a day — its database and
-// its row — so abandoned starts never hold a place. Nothing else is ever
-// cleared: a journal placed by hand, or set up, or written in, stays.
+// up, with nothing written in it, is cleared after an hour — its database
+// and its row — so abandoned starts never hold a place, and nobody can sit on
+// a name they will not use (Miyel, 2026-10-22: it was a day). The address is
+// free again at once, and its page says the setup timed out (ComingSoon.js,
+// app/setup). Nothing else is ever cleared: a journal placed by hand, or set
+// up, or written in, stays, however long it goes without a post.
 
 import { cache } from 'react';
 import { neon } from '@neondatabase/serverless';
@@ -303,9 +306,9 @@ export async function make_journal(value, { onStep = () => {} } = {}) {
 
 // ── Clearing what was never set up ────────────────────────────────────────
 // Asked whenever somebody starts a journal, so it needs no timer. A journal
-// is cleared only when the front door made it, a day has passed, nobody
+// is cleared only when the front door made it, an hour has passed, nobody
 // claimed it, and nothing was ever written in it; anything else stays.
-const CLEARED_AFTER = '1 day';
+const CLEARED_AFTER = '1 hour';
 
 export async function clear_never_set_up() {
   let candidates = [];
@@ -322,7 +325,7 @@ export async function clear_never_set_up() {
       if (setting?.setup_complete === true || written?.any === true) continue;
       await askNeon('DELETE', `/projects/${encodeURIComponent(journal.project)}`);
       await unplace_journal(journal.host);
-      console.log(`[front door] cleared ${journal.host}, made a day ago and never set up`);
+      console.log(`[front door] cleared ${journal.host}, made over an hour ago and never set up`);
     } catch (error) {
       console.error(`[front door] could not clear ${journal.host}:`, error?.message || error);
     }

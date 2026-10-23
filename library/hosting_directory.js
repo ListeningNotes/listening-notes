@@ -161,7 +161,7 @@ function directory() {
 //
 // `neon_project`, 2026-10-20: the Neon project the front door made for a
 // journal at signup (library/front_door.js), so one that was never set up can
-// be cleared after a day. Empty for a journal placed by hand — one that
+// be cleared after an hour. Empty for a journal placed by hand — one that
 // moved in keeps its own database, and nothing here ever deletes it.
 const SHELF = [
   `CREATE TABLE IF NOT EXISTS journals (
