@@ -276,35 +276,59 @@
 }
 
 /* Search: a magnifier at the right of the line, beside the filters, the view
-   having the left. Pressed, it opens into a small rounded field reaching about
-   half way along the line, and the magnifier becomes the × at its end that
-   closes it again (Miyel, 2026-10-22: "way more subtle"). It was a standing
-   field until that morning, and then for an hour one that took the line. */
-.arc-ctl.arc-seek { margin-left: auto; padding: 7px 6px; }
-.arc-seeking {
-  margin-left: auto;
-  display: flex; align-items: center;
-  width: min(50%, 260px); min-width: 140px; height: 30px; flex-shrink: 1;
-  border: 1px solid var(--border); border-radius: 15px;
-  background: transparent;
-  animation: arcSeekOpen 0.22s ease;
-  transition: border-color 0.15s;
+   having the left. Pressed, it grows into a small rounded field reaching about
+   half way along the line, and the magnifier draws itself into the × at its
+   end; the × folds it all back (Miyel, 2026-10-22: "way more subtle", then
+   "more fluid"). It was a standing field until that morning.
+
+   The field is always there, folded to nothing, so it grows rather than
+   appearing. The glyph is one drawing in both states: the diagonal stroke is
+   the handle when only its last third is drawn and one arm of the × when all
+   of it is; the lens closes to its centre; the other arm is drawn across. */
+.arc-seek {
+  --seek-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  margin-left: auto; flex-shrink: 1;
+  display: flex; align-items: center; justify-content: flex-end;
+  width: 30px; min-width: 30px; height: 30px; box-sizing: border-box;
+  border: 1px solid transparent; border-radius: 15px;
+  transition: width 0.34s var(--seek-ease), border-color 0.25s ease;
 }
-.arc-seeking:focus-within { border-color: var(--ink-faint); }
-@keyframes arcSeekOpen { from { width: 30px; } }
-.arc-seeking-field {
-  flex: 1; min-width: 0; height: 100%;
+.arc-seek--open { width: min(50%, 260px); min-width: 140px; border-color: var(--border); }
+.arc-seek--open:focus-within { border-color: var(--ink-faint); }
+.arc-seek-field {
+  flex: 1; min-width: 0; width: 0; height: 100%;
   border: 0; background: transparent; outline: none;
   padding: 0 2px 0 13px;
   font-family: var(--font-label); font-size: 12px; color: var(--ink);
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.18s ease;
 }
-.arc-seeking-field::placeholder { color: var(--ink-faint); }
-.arc-seeking-shut {
+.arc-seek--open .arc-seek-field { opacity: 1; pointer-events: auto; transition: opacity 0.22s ease 0.12s; }
+.arc-seek-field::placeholder { color: var(--ink-faint); }
+.arc-seek-mark {
   flex-shrink: 0; display: flex; align-items: center; justify-content: center;
-  width: 30px; height: 28px; padding: 0;
-  border: 0; background: none; color: var(--ink-soft); cursor: pointer;
+  width: 28px; height: 28px; padding: 0;
+  border: 0; background: none; color: var(--ink-faint); cursor: pointer;
+  transition: color 0.15s;
 }
-.arc-seeking-shut:hover { color: var(--ink); }
+.arc-seek-mark:hover, .arc-seek--open .arc-seek-mark { color: var(--ink-soft); }
+.arc-seek-mark:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 1px; border-radius: 50%; }
+.arc-seek-lens {
+  transform-origin: 10px 10px;
+  transition: transform 0.3s var(--seek-ease), opacity 0.2s ease;
+}
+.arc-seek-one, .arc-seek-two {
+  stroke-dasharray: 20 40;
+  transition: stroke-dashoffset 0.34s var(--seek-ease);
+}
+.arc-seek-one { stroke-dashoffset: 13.2; }
+.arc-seek-two { stroke-dashoffset: 21; }
+.arc-seek--open .arc-seek-lens { transform: scale(0); opacity: 0; }
+.arc-seek--open .arc-seek-one { stroke-dashoffset: 0; }
+.arc-seek--open .arc-seek-two { stroke-dashoffset: 0; transition-delay: 0.08s; }
+@media (prefers-reduced-motion: reduce) {
+  .arc-seek, .arc-seek-field, .arc-seek-lens, .arc-seek-one, .arc-seek-two { transition: none; }
+}
 
 .arc-ctl {
   /* The mark, not a mark in a container (DECISIONS, 2026-09-17): these were
@@ -345,6 +369,8 @@
   box-shadow: var(--shadow-lift);
   animation: arcPop 0.18s ease;
 }
+.arc-views--leaving { animation: arcPopOut 0.16s ease forwards; pointer-events: none; }
+@keyframes arcPopOut { to { opacity: 0; transform: translateY(-6px); } }
 .arc-views-word { padding: 5px 10px; }
 .arc-views-rule { align-self: stretch; height: 1px; margin: 6px 10px; background: var(--border); }
 
@@ -542,8 +568,8 @@
   /* 16px for what is typed keeps iOS from zooming the page when the field
      takes focus; the placeholder is the label size, so it fits the half of
      the line the field is given. */
-  .arc-seeking-field { font-size: 16px; }
-  .arc-seeking-field::placeholder { font-size: 12px; }
+  .arc-seek-field { font-size: 16px; }
+  .arc-seek-field::placeholder { font-size: 12px; }
   .arc-ctl { padding: 7px 9px; }
   .arc-ctl-text { display: none; }
   /* The glyph alone on a phone, so the underline that says something is on

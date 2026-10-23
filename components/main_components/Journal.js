@@ -28,8 +28,7 @@
 'use client';
 
 import { Fragment, memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import { flushSync } from 'react-dom';
-import { CaretDown, X } from '@phosphor-icons/react';
+import { CaretDown } from '@phosphor-icons/react';
 import { parseRating } from '../../library/entry_formatter';
 import { sizedAlbumArt } from '../../library/music_data_api';
 import AlbumTile from './AlbumTile';
@@ -69,6 +68,8 @@ const TILE_OUT_MS  = 520;   // the tile shrinking where it stands
 // of deleting." Slowed from 420 with the rest of the cutaway, which means the
 // delete slowed with it, which is the point of it being one number.
 const FILE_MS      = 700;
+// The views menu folding away; the length of .arc-views--leaving.
+const VIEWS_OUT_MS = 160;
 
 // Beyonce should find Beyoncé, and Bjork should find Bjork. Accents are a
 // spelling most people don't reach for and half the archive's artists have
@@ -99,6 +100,11 @@ const releaseYear = entry => {
 // changes, so a view is never something to clear. A–Z is hers, added to the
 // brief's list so a record can still be found by its name; so is By color,
 // which the brief had parked (below, Read off the covers).
+//
+// Under a rule at the foot of the menu, the ones that are for fun rather than
+// for finding: By color and Shuffle, the two with no headings (Miyel,
+// 2026-10-22: "maybe Shuffle and color need to go under that line as fun
+// things"; more may join them).
 //
 // A grouped view draws a heading over each band. Inside a band the records
 // keep the wall's own order, newest arrival first — but for A–Z, which is
@@ -429,12 +435,13 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
   const searchOpen = searchOpened ?? Boolean(linkedQuery);
   // The field is a magnifier until it is pressed (Miyel, 2026-10-22: "an icon
   // by the filter that then opens the search bar but not a constant field").
-  // Opened and focused inside the press itself — flushSync draws the field
-  // before the press is over — because a phone only raises its keyboard for
-  // a field focused by the finger, not for one focused a moment later.
+  // The field is always there, folded to nothing behind the magnifier, so it
+  // can be focused inside the press itself — a phone only raises its keyboard
+  // for a field focused by the finger, not for one drawn a moment later — and
+  // so it can grow out of the magnifier and fold back into it.
   const searchField = useRef(null);
   const openSearch = () => {
-    flushSync(() => setSearchOpen(true));
+    setSearchOpen(true);
     searchField.current?.focus();
   };
   // The ×: closing is clearing, or the wall would stay narrowed by words
@@ -493,6 +500,9 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
   const view = pickedView ?? storedView;
   const [seed, setSeed] = useState(freshSeed);
   const [viewsOpen, setViewsOpen] = useState(false);
+  // The menu folds away rather than vanishing: marked leaving, and taken off
+  // once it has (VIEWS_OUT_MS, the length of .arc-views--leaving).
+  const [viewsLeaving, setViewsLeaving] = useState(false);
   // The remembered density comes out of localStorage, which the server does
   // not have; the default is what it renders and the browser corrects it on
   // hydration. Once the reader picks one, theirs wins for the rest of the
@@ -826,7 +836,11 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
     let here = true;
     Promise.all(unread.map(address => readCoverColor(address)
       .then(c => coverColors.set(address, c || UNREAD))))
-      .then(() => { if (here) setColorsRead(n => n + 1); });
+      .then(() => {
+        if (!here) return;
+        glideFrom.current = positions();
+        setColorsRead(n => n + 1);
+      });
     return () => { here = false; };
   }, [view, filtered]);
   // eslint-disable-next-line react-hooks/exhaustive-deps -- colorsRead says the covers' colors (a module map) have changed
@@ -853,19 +867,56 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
   // A new view starts at its beginning: page four of one order is nothing in
   // particular of another. Shuffle pressed again is a new shuffle.
   function chooseView(value) {
+    glideFrom.current = positions();
     if (value === 'shuffle') setSeed(freshSeed());
     setView(value);
     storeView(value);
     setPage(0);
-    setViewsOpen(false);
+    closeViews();
+  }
+
+  function closeViews() {
+    setViewsLeaving(true);
+    clocks.current.push(setTimeout(() => { setViewsOpen(false); setViewsLeaving(false); }, VIEWS_OUT_MS));
   }
 
   useEffect(() => {
     if (!viewsOpen) return undefined;
-    const onKey = e => { if (e.key === 'Escape') setViewsOpen(false); };
+    const onKey = e => {
+      if (e.key !== 'Escape') return;
+      setViewsLeaving(true);
+      clocks.current.push(setTimeout(() => { setViewsOpen(false); setViewsLeaving(false); }, VIEWS_OUT_MS));
+    };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [viewsOpen]);
+
+  // ── The wall rearranging itself, 2026-10-22 ─────────────────────────────
+  // A new view moves the covers rather than redrawing them (Miyel: "more
+  // fluid, also everything fluid"): where every tile was is written down
+  // before the view changes, and once the new order is drawn — before it is
+  // painted — each one is put back where it was and let go, on the same
+  // curve and the same length the wall closes a gap with. A cover that was
+  // not on the wall before fades in where it lands. By color moves twice:
+  // when it is chosen, which leaves the wall as it is, and when the last
+  // cover has been read.
+  const glideFrom = useRef(null);
+  useLayoutEffect(() => {
+    const was = glideFrom.current;
+    glideFrom.current = null;
+    if (!was || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+    closeTheGap(was);
+    const box = grid.current;
+    if (!box) return;
+    const fresh = [...box.querySelectorAll('[data-tile-key]')].filter(tile => !was.has(tile.dataset.tileKey));
+    for (const tile of fresh) { tile.style.transition = 'none'; tile.style.opacity = '0'; }
+    const show = () => {
+      for (const tile of fresh) { tile.style.transition = `opacity ${FILE_MS}ms ease`; tile.style.opacity = ''; }
+      clocks.current.push(setTimeout(() => { for (const tile of fresh) tile.style.transition = ''; }, FILE_MS + 40));
+    };
+    clocks.current.push(requestAnimationFrame(show));
+    clocks.current.push(setTimeout(show, 120));
+  }, [arranged, closeTheGap]);
 
   // Turning a page leaves the scroll where it is. It went to the top, from
   // when the wall was the whole page; under the beacon the top is the
@@ -976,7 +1027,7 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
       <div className="arc-bar-wrap">
         {/* Catches the press that closes the views, and nothing else: it is
             clear, and before the bar so the bar stays above it. */}
-        {viewsOpen && <div className="arc-views-scrim" onClick={() => setViewsOpen(false)} />}
+        {viewsOpen && <div className="arc-views-scrim" onClick={closeViews} />}
         <div className={'arc-bar' + (searchOpen ? ' arc-bar--searching' : '')}>
           {/* The order the wall is in, which is also how to change it — the
               thing that tells you where you are is the thing that moves you.
@@ -986,8 +1037,8 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
             <button
               type="button"
               className="arc-ctl arc-view-now"
-              onClick={() => setViewsOpen(v => !v)}
-              aria-expanded={viewsOpen}
+              onClick={() => (viewsOpen ? closeViews() : setViewsOpen(true))}
+              aria-expanded={viewsOpen && !viewsLeaving}
               aria-haspopup="menu"
               aria-label={`The wall is ${activeView.label.toLowerCase()}. Change the view`}
             >
@@ -995,10 +1046,10 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
               <CaretDown size={10} weight="bold" aria-hidden="true" />
             </button>
             {viewsOpen && (
-              <span className="arc-views" role="menu" aria-label="Views">
+              <span className={'arc-views' + (viewsLeaving ? ' arc-views--leaving' : '')} role="menu" aria-label="Views">
                 {VIEWS.map(v => (
                   <Fragment key={v.value}>
-                    {v.value === 'shuffle' && <span className="arc-views-rule" aria-hidden="true" />}
+                    {v.value === 'color' && <span className="arc-views-rule" aria-hidden="true" />}
                     <button
                       type="button"
                       role="menuitemradio"
@@ -1013,53 +1064,49 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
               </span>
             )}
           </span>
-          {searchOpen ? (
-            <span className="arc-seeking">
-              {/* Nouns only: the magnifier was the verb, so the words do not
-                  have to say Search as well. It still searches the writing
-                  too; the placeholder just stops claiming it, and the full
-                  answer stays on the aria-label, where it is read out rather
-                  than measured.
+          {/* One thing that is a magnifier and a search: pressed, the field
+              grows out to the left and the magnifier draws itself into the ×
+              at its end — the handle running on to become one stroke of it,
+              the lens closing, the other stroke drawn across — and the × does
+              all of it backwards. Nouns only in the field: the magnifier was
+              the verb. It still searches the writing too; the full answer
+              stays on the aria-label, where it is read out.
 
-                  It closes back to the magnifier when it is left empty, on
-                  the ×, and on Escape. With words in it, it stays, so the
-                  line says what is narrowing the wall. */}
-              <input
-                ref={searchField}
-                className="arc-seeking-field"
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                onFocus={() => setSearchOpen(true)}
-                onBlur={() => { if (!search) setSearchOpen(false); }}
-                onKeyDown={e => { if (e.key === 'Escape') closeSearch(); }}
-                placeholder="Albums or artists"
-                aria-label="Search albums, artists and notes"
-              />
-              {/* Held on the press so the field keeps the focus: left to blur
-                  an empty field first, the × would vanish under the finger and
-                  the press land on the magnifier that takes its place. */}
-              <button
-                type="button"
-                className="arc-seeking-shut"
-                onPointerDown={e => e.preventDefault()}
-                onClick={closeSearch}
-                aria-label="Close the search"
-              >
-                <X size={13} weight="bold" aria-hidden="true" />
-              </button>
-            </span>
-          ) : (
+              It folds back when it is left empty, on the ×, and on Escape,
+              and the × clears it, or the wall would stay narrowed by words
+              nothing on the line shows. With words in it and the focus
+              elsewhere, it stays open, saying what is narrowing the wall. */}
+          <span className={'arc-seek' + (searchOpen ? ' arc-seek--open' : '')}>
+            <input
+              ref={searchField}
+              className="arc-seek-field"
+              tabIndex={searchOpen ? 0 : -1}
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              onFocus={() => setSearchOpen(true)}
+              onBlur={() => { if (!search) setSearchOpen(false); }}
+              onKeyDown={e => { if (e.key === 'Escape') closeSearch(); }}
+              placeholder="Albums or artists"
+              aria-label="Search albums, artists and notes"
+            />
+            {/* Held on the press while open, so the field keeps the focus: an
+                empty field left to blur first would fold before the press
+                landed, and the press would open it again. */}
             <button
               type="button"
-              className="arc-ctl arc-seek"
-              onClick={openSearch}
-              aria-label="Search albums, artists and notes"
+              className="arc-seek-mark"
+              onPointerDown={e => { if (searchOpen) e.preventDefault(); }}
+              onClick={searchOpen ? closeSearch : openSearch}
+              aria-label={searchOpen ? 'Close the search' : 'Search albums, artists and notes'}
+              aria-expanded={searchOpen}
             >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <circle cx="11" cy="11" r="7" /><line x1="16.5" y1="16.5" x2="21" y2="21" />
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                <circle className="arc-seek-lens" cx="10" cy="10" r="6" />
+                <line className="arc-seek-one" x1="19" y1="19" x2="5" y2="5" pathLength="20" />
+                <line className="arc-seek-two" x1="19" y1="5" x2="5" y2="19" pathLength="20" />
               </svg>
             </button>
-          )}
+          </span>
 
           <button
             type="button"

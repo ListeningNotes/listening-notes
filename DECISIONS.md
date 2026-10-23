@@ -981,8 +981,9 @@ by its name.
 ask.** The brief parked it for needing a hue stored per cover; Apple's covers
 let a page read their pixels, so nothing is stored or written. One gradient of
 hue, then the plain covers dark to light — no named bands, which guessed wrong
-("I only consider two of these orange"). Search is a magnifier that opens a
-small rounded field to half the line, its × closing it (her call).
+("I only consider two of these orange"). It and Shuffle sit under a rule in the
+menu, the fun ones. Search is a magnifier that grows into a small field and
+turns into its × (her call).
 
 **Definitions ship as editable defaults, and custom listen types are ruled
 out.** Universal second-person text installs and the owner can edit any of
