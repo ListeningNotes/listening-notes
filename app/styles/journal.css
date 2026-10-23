@@ -380,6 +380,10 @@
 @keyframes arcPopOut { to { opacity: 0; transform: translateY(-6px); } }
 .arc-views-word { padding: 6px 10px; text-align: left; }
 .arc-views-rule { align-self: stretch; height: 1px; margin: 5px 10px; background: var(--border); }
+/* And under a last hairline, how big the covers are: the views say how the
+   wall is shown, the filters what is on it, so the size is the views'
+   (Miyel, 2026-10-22: "is there a better place for wall view buttons?"). */
+.arc-views .gd { margin: 2px 4px 0; }
 
 .arc-count {
   margin-left: 4px; flex-shrink: 0; white-space: nowrap;
@@ -503,20 +507,16 @@
   display: flex; justify-content: space-between;
   font-family: var(--font-label); font-size: 9px; color: var(--ink-faint);
 }
-/* The way out at the right, where the session keeps its Post, under a
-   hairline, and on a phone the album size at the left. Show is the same word
-   as the choices, heavier — the title face, as the mockup draws it: it is how
-   you leave the sheet, not a button that submits it. */
+/* The way out at the right, where the session keeps its Post. Show is the
+   list's own word, heavier: it was the title face, large, until the panel
+   came down to the views menu's size, and there it read as a thing apart
+   (Miyel, 2026-10-22: "show and the number feels disjointed"). */
 .arc-sheet-foot {
   display: flex; align-items: center; gap: 8px; justify-content: flex-end;
   border-top: 1px solid var(--border); padding-top: 12px;
 }
-.arc-sheet-foot .gd { margin-right: auto; margin-left: -6px; }
 .arc-sheet-ways { display: flex; align-items: center; gap: 6px; margin-right: -6px; }
-.ln-word.arc-sheet-done {
-  font-family: var(--font-display); font-weight: var(--font-display-weight);
-  font-size: 15px; letter-spacing: 0; text-transform: none; line-height: 23px;
-}
+.ln-word.arc-sheet-done { font-weight: 500; }
 /* Folding away as it closes, the way the views menu does. */
 .arc-sheet--leaving { animation: arcPopOut 0.16s ease forwards; pointer-events: none; }
 
@@ -643,6 +643,6 @@
   }
   /* A thumb's worth of height on each word without the rows growing apart. */
   .arc-word { padding: 6px 6px; }
-  .arc-sheet .gd-btn { width: 34px; height: 32px; }
-  .arc-sheet .gd-btn--on::after { left: 10px; right: 10px; bottom: 2px; }
+  .arc-views .gd-btn { width: 34px; height: 32px; }
+  .arc-views .gd-btn--on::after { left: 10px; right: 10px; bottom: 2px; }
 }

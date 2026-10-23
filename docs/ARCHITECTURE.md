@@ -220,7 +220,7 @@ The furniture — visual pieces
       IdentificationCardEditor.js  Editing the card in place
       ListeningBeacon.js       The beacon — what is playing, or last played
       ListenBar.js             The way into a listen: a bar at the foot of home, the session closed — Start a listen at rest; with a listen lowered, its cover, the lit track and the live dot. Both raise /session as a sheet; the one thing shaped like a button
-      Journal.js               The wall of covers, with its search, filters and views (In order, A–Z, by month, era, genre, rating; then time of day, shape, color, Shuffle; grouped views draw band headings, By color reads each cover in the browser)
+      Journal.js               The wall of covers, with its search, filters and views (In order, A–Z, by month, era, genre, rating; then time of day, shape, color, Shuffle; grouped views draw band headings, By color reads each cover in the browser; the album size sits at the foot of the views menu)
       JournalFilters.js        The filters, dropping from the wall's line on a phone and a desk alike — kind (albums or tracks), genre, the year range and the marks; it takes records away, the views rearrange them
       AlbumTile.js             One record on that wall — a card for a record with a listen behind it, a page with its corner folded for a record known only by its track notes; the folder shape went on 2026-10-13 (Journal.js gathers entries into records, by title, artist and year)
       FolderFooter.js          A folder's tabs at the foot of the screen — Listen 1, Listen 2 or the song, the one you are on in ink — the one piece of chrome a folder adds; useFolder in LayerEntry.js does the flipping

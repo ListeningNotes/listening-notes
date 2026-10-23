@@ -1161,6 +1161,11 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
                     </button>
                   </Fragment>
                 ))}
+                {/* How big the covers are, under a last hairline: how the wall
+                    is shown, as the order is. The menu stays open for it, so
+                    the sizes can be tried one after another. */}
+                <span className="arc-views-rule" aria-hidden="true" />
+                <GridDensity value={density} onChange={changeDensity} />
               </span>
             )}
           </span>
@@ -1223,8 +1228,6 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
             <span className="arc-ctl-text">Filters</span>
           </button>
 
-          {/* On a phone it is in the sheet, with sort (JournalFilters). */}
-          {!isPhone && <GridDensity value={density} onChange={changeDensity} />}
 
           {/* Keyed off whether anything is actually hidden, not off whether a
               control is non-default — re-sorting changes no totals, and
@@ -1253,7 +1256,6 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
           sentOnly={sentOnly} setSentOnly={setSentOnly}
           hasActiveFilters={hasActiveFilters} clearFilters={clearFilters}
           shownCount={filtered.length}
-          density={density} changeDensity={changeDensity}
           leaving={filtersLeaving}
         />
       )}

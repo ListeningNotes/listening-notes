@@ -2,8 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // components/main_components/JournalFilters.js
 // The wall's filters, dropping from the wall's line: what a record is, its
-// marks, genre, release year, and the way out — and on a phone the album size
-// too. Sort was here until
+// marks, genre, release year, and the way out. Sort was here until
 // the wall's views replaced it (Journal.js, Views, not sorting): this sheet
 // only takes records away now, and the view on the line rearranges them.
 //
@@ -31,7 +30,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { CaretDown, Envelope, Fingerprint, Heart, SketchLogo } from '@phosphor-icons/react';
 import { useHoldStill } from '../../hooks/useHoldStill';
-import GridDensity from './GridDensity';
 
 export default function JournalFilters({
   onClose, isPhone, scroller, anchorRef,
@@ -40,7 +38,7 @@ export default function JournalFilters({
   yearBounds, yearRange, setYearPicked,
   favoritesOnly, setFavoritesOnly, masterpiecesOnly, setMasterpiecesOnly, formativeOnly, setFormativeOnly,
   sentOnly, setSentOnly,
-  hasActiveFilters, clearFilters, shownCount, density, changeDensity, leaving = false,
+  hasActiveFilters, clearFilters, shownCount, leaving = false,
 }) {
   const sheetRef = useRef(null);
   // Genre is folded to its one line until pressed, unless it was left open.
@@ -210,15 +208,12 @@ export default function JournalFilters({
 
             <span className="arc-sheet-rule" aria-hidden="true" />
 
-            {/* On a phone the album size lives here, off the line — the
-                line is the view's and the search field's, and a size is
-                picked once and remembered. Unlabelled, as it was in the bar:
-                each glyph is the grid it makes. The way out is the same word
-                as the choices, heavier — not a submit button. */}
+            {/* The way out is the same word as the choices, heavier — not a
+                submit button. The album size went to the views menu: it says
+                how the wall is shown, not what is on it. */}
             <div className="arc-sheet-foot">
-              {isPhone && <GridDensity value={density} onChange={changeDensity} />}
               <span className="arc-sheet-ways">
-                {hasActiveFilters && <button type="button" className={word(false)} onClick={clearFilters}>Clear all</button>}
+                {hasActiveFilters && <button type="button" className="ln-word" onClick={clearFilters}>Clear all</button>}
                 <button type="button" className="ln-word ln-word--on arc-sheet-done" onClick={onClose}>
                   Show {shownCount}
                 </button>

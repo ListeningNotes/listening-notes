@@ -989,7 +989,8 @@ these orange"). The fun ones sit under the menu's rule: time of day, shape
 prefered the size of the sort view"), a list each; the sheet from the foot is
 gone. The views are words, the filters a glyph beside each word: Album, Track,
 the marks and Submission's envelope, then genre folded to one line and the
-year. Nothing was taken out ("I just want it to look better").
+year. Nothing was taken out ("I just want it to look better"). The album size
+is the views' (how the wall is shown), under the menu's last hairline.
 
 **Definitions ship as editable defaults, and custom listen types are ruled
 out.** Universal second-person text installs and the owner can edit any of
