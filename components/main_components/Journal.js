@@ -28,8 +28,8 @@
 'use client';
 
 import { Fragment, memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import { CaretDown } from '@phosphor-icons/react';
-import { parseRating } from '../../library/entry_formatter';
+import { CaretDown, Moon, MoonStars, Sun, SunHorizon } from '@phosphor-icons/react';
+import { parseHorizon, parseRating } from '../../library/entry_formatter';
 import { COLOR_SIDE, colorOfArt, sizedAlbumArt } from '../../library/music_data_api';
 import AlbumTile from './AlbumTile';
 import StarRating from './StarRating';
@@ -102,9 +102,9 @@ const releaseYear = entry => {
 // which the brief had parked (below, Read off the covers).
 //
 // Under a rule at the foot of the menu, the ones that are for fun rather than
-// for finding: By color and Shuffle, the two with no headings (Miyel,
-// 2026-10-22: "maybe Shuffle and color need to go under that line as fun
-// things"; more may join them).
+// for finding (Miyel, 2026-10-22: "maybe Shuffle and color need to go under
+// that line as fun things"): By time of day and By shape joined them the same
+// evening, from the list of what the journal already knows.
 //
 // A grouped view draws a heading over each band. Inside a band the records
 // keep the wall's own order, newest arrival first — but for A–Z, which is
@@ -120,8 +120,10 @@ export const VIEWS = [
   { value: 'era',     label: 'By era' },
   { value: 'genre',   label: 'By genre' },
   { value: 'rating',  label: 'By rating' },
-  { value: 'color',   label: 'By color' },
-  { value: 'shuffle', label: 'Shuffle' },
+  { value: 'time',    label: 'By time of day', fun: true },
+  { value: 'shape',   label: 'By shape',       fun: true },
+  { value: 'color',   label: 'By color',       fun: true },
+  { value: 'shuffle', label: 'Shuffle',        fun: true },
 ];
 const VIEW_KEY = 'ln-wall-view';
 const DEFAULT_VIEW = 'order';
@@ -191,7 +193,63 @@ const BANDS = {
       ? { key: String(score), label: STARS[score], stars: score, rank: -score }
       : { key: 'none', label: 'Not rated', rank: Infinity };
   },
+  // The hour the record came into the journal, on this reader's clock, in the
+  // order a day runs; inside a band, by the minute, so each reads as a clock.
+  time: album => {
+    const when = new Date(album.first.posted_at);
+    const minute = when.getHours() * 60 + when.getMinutes();
+    const part = DAY_PARTS.find(p => p.until > minute) || DAY_PARTS[DAY_PARTS.length - 1];
+    return { key: part.label, label: part.label, glyph: part.glyph, rank: part.rank, at: (minute - 5 * 60 + 1440) % 1440 };
+  },
+  shape: album => {
+    const kind = SHAPES[shapeOf(album.face.horizon)];
+    return { key: kind.key, label: kind.label, bars: kind.bars, rank: kind.rank };
+  },
 };
+
+// ── By time of day, 2026-10-22 ─────────────────────────────────────────────
+// When the record was logged, which is when it was listened to for every
+// listen written here — but not for the records brought over from Tumblr,
+// which all carry the minute they were brought over. The day starts at five
+// in the morning, so late night is one band, nine at night round to five.
+const DAY_PARTS = [
+  { key: 'night-early', label: 'Late night', glyph: MoonStars, rank: 3, until: 5 * 60 },
+  { key: 'morning',     label: 'Morning',    glyph: SunHorizon, rank: 0, until: 12 * 60 },
+  { key: 'afternoon',   label: 'Afternoon',  glyph: Sun,        rank: 1, until: 17 * 60 },
+  { key: 'evening',     label: 'Evening',    glyph: Moon,       rank: 2, until: 21 * 60 },
+  { key: 'night',       label: 'Late night', glyph: MoonStars,  rank: 3, until: 24 * 60 },
+];
+
+// ── By shape, 2026-10-22 ───────────────────────────────────────────────────
+// The shape a record's track stars make, read off its horizon — the same row
+// of bars an entry draws. Its first third, middle and last third compared:
+// even when no two tracks are more than a star apart; otherwise best where
+// it is highest by half a star or more; up and down when no third stands out.
+// A record with fewer than three tracks starred has no shape to read.
+// Each heading draws its shape as five bars, the horizon's own idea.
+const SHAPES = {
+  even:   { key: 'even',   label: 'Even all the way',   bars: [4, 4, 4, 4, 4], rank: 0 },
+  first:  { key: 'first',  label: 'Best first',         bars: [5, 4, 3, 2, 1], rank: 1 },
+  middle: { key: 'middle', label: 'Best in the middle', bars: [2, 3, 5, 3, 2], rank: 2 },
+  last:   { key: 'last',   label: 'Best last',          bars: [1, 2, 3, 4, 5], rank: 3 },
+  wild:   { key: 'wild',   label: 'Up and down',        bars: [3, 5, 1, 5, 2], rank: 4 },
+  none:   { key: 'none',   label: 'No shape',           bars: null,            rank: Infinity },
+};
+const mean = list => list.reduce((sum, v) => sum + v, 0) / list.length;
+function shapeOf(horizon) {
+  const stars = parseHorizon(horizon).map(v => v * 5);
+  if (stars.length < 3) return 'none';
+  if (Math.max(...stars) - Math.min(...stars) <= 1) return 'even';
+  const third = Math.ceil(stars.length / 3);
+  const start = mean(stars.slice(0, third));
+  const end = mean(stars.slice(-third));
+  const middle = stars.length > 2 * third ? mean(stars.slice(third, -third)) : (start + end) / 2;
+  const STANDS_OUT = 0.5;
+  if (middle - Math.max(start, end) >= STANDS_OUT) return 'middle';
+  if (start - end >= STANDS_OUT && start >= middle) return 'first';
+  if (end - start >= STANDS_OUT && end >= middle) return 'last';
+  return 'wild';
+}
 
 // ── Read off the covers, 2026-10-22 ────────────────────────────────────────
 // By color, Miyel's ask: the wall as one gradient of hue, red round through
@@ -220,7 +278,10 @@ const fromRed = hue => (hue + 15) % 360;
 // What has been read this visit, by the cover's address: { hue, light, plain },
 // plain for a cover with hardly any color, or one that could not be read.
 const coverColors = new Map();
-const UNREAD = { hue: 0, light: 2, plain: true };
+const UNREAD = { hue: 0, light: 0, plain: true, unread: true };
+// How light a plain cover has to be to open the wall as white rather than
+// close it as gray. Set against the test copy: eight covers at 0.6 or more.
+const WHITE_FROM = 0.6;
 
 function readCoverColor(address) {
   return new Promise(resolve => {
@@ -286,13 +347,16 @@ function shuffled(albums, seed) {
 // (null in a view without bands).
 function arrange(albums, view, seed) {
   if (view === 'shuffle') return shuffled(albums, seed).map(album => ({ album, band: null }));
-  // One gradient: the colored covers by hue from red, then the plain ones
-  // dark to light, then any that could not be read. No bands, so no names.
-  // Until every cover on the wall has been read the wall stays as it is
-  // rather than rearranging itself once per cover.
+  // One gradient: white first, then the colored covers by hue from red, then
+  // the plain ones from gray to black, and any that could not be read last
+  // (Miyel, 2026-10-22: "have color start with white, into roy g biv then
+  // grey to black"). No bands, so no names. Until every cover on the wall has
+  // been read the wall stays as it is rather than rearranging once per cover.
   if (view === 'color') {
     if (!albums.every(colorKnown)) return [...albums].sort(newestArrival).map(album => ({ album, band: null }));
-    const place = c => (c.plain ? 360 + c.light * 100 : fromRed(c.hue));
+    const place = c => (c.unread ? 1000
+      : c.plain ? (c.light >= WHITE_FROM ? -c.light : 360 + (1 - c.light) * 100)
+      : fromRed(c.hue));
     return albums
       .map(album => ({ album, at: place(colorOf(album)) }))
       .sort((x, y) => x.at - y.at)
@@ -316,7 +380,9 @@ function arrange(albums, view, seed) {
   if (!bandOf) return [...albums].sort(newestArrival).map(album => ({ album, band: null }));
   const within = view === 'az'
     ? (x, y) => foldForSearch(x.album.face.album).localeCompare(foldForSearch(y.album.face.album))
-    : (x, y) => newestArrival(x.album, y.album);
+    : view === 'time'
+      ? (x, y) => x.band.at - y.band.at
+      : (x, y) => newestArrival(x.album, y.album);
   return albums
     .map(album => ({ album, band: bandOf(album) }))
     // The last band's rank is Infinity, and Infinity less itself is not a
@@ -969,6 +1035,16 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
                     <h3 className="arc-band" aria-label={band.label}>
                       <StarRating rating={band.stars} size={11} />
                     </h3>
+                  ) : band.glyph ? (
+                    <h3 className="arc-band">
+                      <band.glyph size={13} weight="regular" aria-hidden="true" />
+                      {band.label}
+                    </h3>
+                  ) : band.bars ? (
+                    <h3 className="arc-band">
+                      <ShapeBars bars={band.bars} />
+                      {band.label}
+                    </h3>
                   ) : <h3 className="arc-band">{band.label}</h3>
                 )}
                 <AlbumTile
@@ -1038,7 +1114,7 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
               <span className={'arc-views' + (viewsLeaving ? ' arc-views--leaving' : '')} role="menu" aria-label="Views">
                 {VIEWS.map(v => (
                   <Fragment key={v.value}>
-                    {v.value === 'color' && <span className="arc-views-rule" aria-hidden="true" />}
+                    {v === VIEWS.find(w => w.fun) && <span className="arc-views-rule" aria-hidden="true" />}
                     <button
                       type="button"
                       role="menuitemradio"
@@ -1144,6 +1220,17 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
         />
       )}
     </>
+  );
+}
+
+// A shape's heading: five bars, the horizon's own idea, standing on one line.
+function ShapeBars({ bars }) {
+  return (
+    <svg className="arc-band-bars" width="19" height="11" viewBox="0 0 19 11" aria-hidden="true" focusable="false">
+      {bars.map((h, i) => (
+        <rect key={i} x={i * 4} y={11 - h * 2.2} width="3" height={h * 2.2} rx="0.6" fill="currentColor" />
+      ))}
+    </svg>
   );
 }
 

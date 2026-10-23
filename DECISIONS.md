@@ -979,10 +979,10 @@ by its name.
 
 **By color is a view, read off the covers, never stored, 2026-10-22, Miyel's
 ask.** The page reads Apple's covers; one kept elsewhere is read by the server
-(`/api/entries/[slug]/color`, the saved cover only). One gradient of hue, then
-the plain covers dark to light — named bands guessed wrong ("I only consider
-two of these orange"). It and Shuffle sit under the menu's rule, the fun ones.
-Search is a magnifier that grows into a small field and turns into its ×.
+(`/api/entries/[slug]/color`, the saved cover only). White, then one gradient
+of hue, then gray to black — named bands guessed wrong ("I only consider two of
+these orange"). The fun ones sit under the menu's rule: time of day, shape
+(read off the horizon), color, Shuffle. Search grows out of its magnifier.
 
 **Definitions ship as editable defaults, and custom listen types are ruled
 out.** Universal second-person text installs and the owner can edit any of

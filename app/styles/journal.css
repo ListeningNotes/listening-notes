@@ -494,6 +494,10 @@
   letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-faint);
 }
 .arc-band::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+/* By time of day's glyph and By shape's bars, before the word, in its ink. */
+.arc-band svg { flex-shrink: 0; }
+.arc-band { gap: 7px; }
+.arc-band::after { margin-left: 3px; }
 .arc-band:first-child { margin-top: 0; }
 
 /* ── The grid. Density is set on the container, so every tile's size
