@@ -981,8 +981,8 @@ by its name.
 ask.** The page reads Apple's covers; one kept elsewhere is read by the server
 (`/api/entries/[slug]/color`, the saved cover only). White, then one gradient
 of hue, then gray to black — named bands guessed wrong ("I only consider two of
-these orange"). The fun ones sit under the menu's rule: time of day, shape
-(read off the horizon), color, Shuffle. Search grows out of its magnifier.
+these orange"). The fun ones sit under the menu's rule: time of day, horizon
+(the shape of the track stars), color, Shuffle. Search grows out of its magnifier.
 
 **The filters drop from the line, on a phone too, 2026-10-22, Miyel's call**
 ("make filters match sort"): both at the views menu's compact size ("i

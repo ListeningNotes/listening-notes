@@ -103,7 +103,7 @@ const releaseYear = entry => {
 //
 // Under a rule at the foot of the menu, the ones that are for fun rather than
 // for finding (Miyel, 2026-10-22: "maybe Shuffle and color need to go under
-// that line as fun things"): By time of day and By shape joined them the same
+// that line as fun things"): By time of day and By horizon joined them the same
 // evening, from the list of what the journal already knows.
 //
 // A grouped view draws a heading over each band. Inside a band the records
@@ -121,7 +121,10 @@ export const VIEWS = [
   { value: 'genre',   label: 'By genre' },
   { value: 'rating',  label: 'By rating' },
   { value: 'time',    label: 'By time of day', fun: true },
-  { value: 'shape',   label: 'By shape',       fun: true },
+  // Stored as 'shape', its first name, so a browser that remembered it still
+  // opens on it; named By horizon, after the row of bars it is read from
+  // (Miyel, 2026-10-22: "instead of by shape lets do by horizon").
+  { value: 'shape',   label: 'By horizon',     fun: true },
   { value: 'color',   label: 'By color',       fun: true },
   { value: 'shuffle', label: 'Shuffle',        fun: true },
 ];
@@ -220,7 +223,7 @@ const DAY_PARTS = [
   { key: 'night',       label: 'Late night', glyph: MoonStars,  rank: 3, until: 24 * 60 },
 ];
 
-// ── By shape, 2026-10-22 ───────────────────────────────────────────────────
+// ── By horizon (first called By shape), 2026-10-22 ─────────────────────────
 // The shape a record's track stars make, read off its horizon — the same row
 // of bars an entry draws. Its first third, middle and last third compared:
 // even when no two tracks are more than a star apart; otherwise best where
@@ -228,7 +231,8 @@ const DAY_PARTS = [
 // A record with fewer than three tracks starred has no shape to read. A record
 // known only by its songs is a song, not a record without a shape, and has
 // its band of its own, under one bar (Miyel, 2026-10-22: "songs are filed
-// under no shape"). Each heading draws its shape as bars, the horizon's idea.
+// under no shape" — No horizon now). Each heading draws its shape as bars, the
+// horizon's idea.
 const SHAPES = {
   even:   { key: 'even',   label: 'Even all the way',   bars: [4, 4, 4, 4, 4], rank: 0 },
   first:  { key: 'first',  label: 'Best first',         bars: [5, 4, 3, 2, 1], rank: 1 },
@@ -236,7 +240,7 @@ const SHAPES = {
   last:   { key: 'last',   label: 'Best last',          bars: [1, 2, 3, 4, 5], rank: 3 },
   wild:   { key: 'wild',   label: 'Up and down',        bars: [3, 5, 1, 5, 2], rank: 4 },
   song:   { key: 'song',   label: 'Tracks',             bars: [4],             rank: 5 },
-  none:   { key: 'none',   label: 'No shape',           bars: null,            rank: Infinity },
+  none:   { key: 'none',   label: 'No horizon',         bars: null,            rank: Infinity },
 };
 const mean = list => list.reduce((sum, v) => sum + v, 0) / list.length;
 function shapeOf(horizon) {
