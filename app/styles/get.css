@@ -678,3 +678,37 @@
   display: inline-flex; align-items: center; justify-content: center;
   background: var(--ink); color: var(--bg); box-shadow: 0 0 0 2px var(--bg);
 }
+
+/* ── Records above, paper below, 2026-10-22 ───────────────────────────────────
+   Miyel's pick (A), from the share printer's journal plate: three rows of
+   covers slide across the top of the front door, the slow one against the
+   other two, and the words sit on paper below, so type never sits on a
+   moving cover (FrontDoor.js, CoverRows). Still for anyone who asks for
+   less motion. */
+.fd-page--records { justify-content: flex-end; gap: 0; padding: 0; }
+.fd-band {
+  flex: 1 1 auto; min-height: 210px; width: 100%; overflow: hidden;
+  display: flex; flex-direction: column; justify-content: center; gap: 10px;
+  padding: 22px 0;
+}
+.fd-row { display: flex; gap: 10px; width: max-content; animation: fd-slide 80s linear infinite; }
+.fd-row--1 { animation-duration: 110s; animation-direction: reverse; }
+.fd-row--2 { animation-duration: 95s; }
+.fd-cover {
+  flex: none; width: 92px; height: 92px; border-radius: 10px; object-fit: cover;
+  background: var(--panel); display: block;
+}
+@keyframes fd-slide { to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .fd-row { animation: none; } }
+.fd-paper {
+  width: 100%; box-sizing: border-box;
+  display: flex; flex-direction: column; align-items: center; gap: 16px;
+  padding: 30px 20px max(34px, calc(18px + env(safe-area-inset-bottom, 0px)));
+  background: var(--panel-solid); border-top: 1px solid var(--border);
+  border-radius: 26px 26px 0 0;
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.06);
+}
+@media (min-width: 769px) {
+  .fd-cover { width: 120px; height: 120px; border-radius: 12px; }
+  .fd-paper { max-width: 560px; margin: 0 auto; border: 1px solid var(--border); border-bottom: 0; }
+}

@@ -28,11 +28,13 @@
 // a name — and, since piece three, a record — up. `?among=` answers which
 // of a journal's hashed addresses are on the Board, and what each is playing
 // (pull_among). `?alike=` answers who else logged a journal's records, asked
-// by each record's hash (pull_alike). The plain list stays as it was for
+// by each record's hash (pull_alike). `?covers`, the records keepers on the
+// Board have logged lately as covers alone — for the front door's rows,
+// 2026-10-22 (pull_covers). The plain list stays as it was for
 // anything that still asks for it.
 
 import { after } from 'next/server';
-import { pull_directory_page, pull_board, find_by_name, pull_among, pull_alike, gather } from '@/library/directory_actions';
+import { pull_directory_page, pull_board, find_by_name, pull_among, pull_alike, pull_covers, gather } from '@/library/directory_actions';
 import { answerNoJournal } from '@/library/hosting_directory';
 
 // A round can take a few seconds after the answer has gone: up to forty
@@ -53,6 +55,7 @@ export async function GET(request) {
       : asked.has('q') ? await find_by_name(asked.get('q'))
       : asked.has('among') ? await pull_among(String(asked.get('among')).split(',').filter(h => /^[0-9a-f]{16}$/.test(h)))
       : asked.has('alike') ? await pull_alike(String(asked.get('alike')).split(',').filter(h => /^[0-9a-f]{16}$/.test(h)))
+      : asked.has('covers') ? await pull_covers()
       : await pull_directory_page(asked.get('after') || '');
     return Response.json(page, {
       // The same for everybody: a shared cache may hold it for half a

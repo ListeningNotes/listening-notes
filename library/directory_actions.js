@@ -465,6 +465,27 @@ export async function pull_today() {
   return keepersOf(rows).slice(0, TODAY_MOST);
 }
 
+// ── The front door's covers, 2026-10-22 ───────────────────────────────────
+// The records keepers on the Board have logged lately, as covers and nothing
+// else — no title, no keeper, no address — for the rows that slide over the
+// front door (components/main_components/FrontDoor.js; Miyel's pick, records
+// above and paper below). The newest first, never the most logged; one of
+// each cover; only journals still on the Board.
+const COVERS_MOST = 60;
+export async function pull_covers() {
+  const rows = await database.query(
+    `SELECT art FROM (
+       SELECT DISTINCT ON (r.art) r.art, r.posted_at
+       FROM directory_records r JOIN directory d ON d.address = r.address
+       WHERE r.art IS NOT NULL AND r.art <> '' AND r.song IS NULL
+       ORDER BY r.art, r.posted_at DESC NULLS LAST
+     ) newest
+     ORDER BY posted_at DESC NULLS LAST
+     LIMIT ${COVERS_MOST}`,
+  );
+  return { covers: rows.map(row => row.art) };
+}
+
 // ── A record looked up ────────────────────────────────────────────────────
 // The Board's search, for a record: its title or its artist. A dozen records
 // at most, the most recently logged first.

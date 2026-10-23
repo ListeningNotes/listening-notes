@@ -292,13 +292,45 @@ function Start({ domain, left: firstLeft, invite }) {
   );
 }
 
-export default function FrontDoor({ path = '/', domain = '', left = 0, invite = null }) {
+// ── Records above, paper below, 2026-10-22 ────────────────────────────────
+// Miyel's pick (A), from the share printer's journal plate: rows of the
+// covers keepers on the Board have logged lately slide across the top, and
+// the front door's words sit on paper below — type never on moving covers
+// (the printer brief). Covers only, never who (library/front_door.js,
+// frontDoorCovers). A few covers are repeated until a row is full; with none
+// the paper stands alone, centred, as before.
+const ROWS = 3;
+const PER_ROW = 18;
+const ROW_LEAST = 14;
+function CoverRows({ covers }) {
+  // Each row its own covers while there are enough to go round, and a row
+  // never so long that it races: eighteen at most, fourteen at least.
+  const length = Math.max(ROW_LEAST, Math.min(PER_ROW, covers.length));
+  const rows = Array.from({ length: ROWS }, (_, r) =>
+    Array.from({ length }, (_, i) => covers[(r * PER_ROW + r * 5 + i) % covers.length]));
+  return (
+    <div className="fd-band" aria-hidden="true">
+      {rows.map((row, r) => (
+        // Twice over, and moved by half its width, so the row comes round
+        // without a seam.
+        <div key={r} className={`fd-row fd-row--${r}`}>
+          {row.concat(row).map((src, i) => (
+            <img key={i} className="fd-cover" src={src} alt="" loading="lazy" decoding="async" />
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export default function FrontDoor({ path = '/', domain = '', left = 0, invite = null, covers = [] }) {
   // Only an inviter whose journal answered with a name: the old gift went to
   // the deploy only then, and setup is spared asking after an address that
   // was never a journal.
   const known = invite?.name ? invite : null;
-  return (
-    <main className="fd-page">
+  const records = covers.length > 0;
+  const paper = (
+    <>
       {/* Plain anchors, here and on Start, for the holding page's reason
           (ComingSoon.js): the root layout draws this page in place of a
           journal and does not draw again on a client-side navigation, so
@@ -308,6 +340,12 @@ export default function FrontDoor({ path = '/', domain = '', left = 0, invite = 
       {path === '/get'
         ? <Start domain={domain} left={left} invite={known} />
         : <Welcome domain={domain} left={left} invite={known} />}
+    </>
+  );
+  return (
+    <main className={'fd-page' + (records ? ' fd-page--records' : '')}>
+      {records && <CoverRows covers={covers} />}
+      {records ? <div className="fd-paper">{paper}</div> : paper}
     </main>
   );
 }

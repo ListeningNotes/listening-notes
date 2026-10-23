@@ -39,6 +39,8 @@ import { inviterIn } from './return_address.js';
 import { ask_journal_name } from './people_actions.js';
 import { mayKnock, whoIsKnocking } from './doorman.js';
 import { SEARCH_HEADER } from '../proxy.js';
+import { ask_directory_read } from './outbox.js';
+import { sizedAlbumArt } from './music_data_api.js';
 
 // ── Who invited them, 2026-10-21 ──────────────────────────────────────────
 // An invite link (InviteSheet.js) names the inviter's journal. The front
@@ -57,6 +59,28 @@ export const inviterAtTheDoor = cache(async () => {
   const name = knock.allowed ? await ask_journal_name(address, 2500) : null;
   return { address, name };
 });
+
+// ── The covers over the front door, 2026-10-22 ────────────────────────────
+// What keepers on the Board have logged lately, asked of the Board's own list
+// (DIRECTORY_URL, ?covers) — covers only, never who — for the rows that slide
+// across the top of the front door (Miyel's pick, from the share printer's
+// journal plate: records above, paper below). Kept ten minutes, so a busy
+// front door asks once; when the list cannot be read, the last covers stay,
+// and with none the paper stands alone. Sized small: they are tiles.
+const COVERS_KEPT_MS = 10 * 60 * 1000;
+let coversHeld = { at: 0, covers: [] };
+export async function frontDoorCovers() {
+  if (Date.now() - coversHeld.at < COVERS_KEPT_MS) return coversHeld.covers;
+  const said = await ask_directory_read('covers');
+  const covers = Array.isArray(said?.covers)
+    ? said.covers.filter(art => typeof art === 'string' && /^https:\/\//.test(art)).map(art => sizedAlbumArt(art, 200))
+    : null;
+  // A failed ask is tried again in a minute rather than ten.
+  coversHeld = covers
+    ? { at: Date.now(), covers }
+    : { at: Date.now() - COVERS_KEPT_MS + 60_000, covers: coversHeld.covers };
+  return coversHeld.covers;
+}
 
 // What the front door's pages say about themselves (app/layout.js): the one
 // place called Listening Notes and nothing else, since it is the software's

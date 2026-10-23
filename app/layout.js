@@ -17,7 +17,7 @@ import { headers } from 'next/headers';
 import { isSetUp, pull_settings, coverName, titleName } from '../library/settings_actions';
 import { hasDatabase, explainDatabaseError } from '../library/database_connection';
 import { journalHere, NoJournalHere, hostHere, isHere } from '../library/hosting_directory';
-import { isFrontDoor, hostedDomain, placesLeft, inviterAtTheDoor, frontDoorMetadata } from '../library/front_door';
+import { isFrontDoor, hostedDomain, placesLeft, inviterAtTheDoor, frontDoorMetadata, frontDoorCovers } from '../library/front_door';
 import FrontDoor from '../components/main_components/FrontDoor';
 import { isCurrentCode } from '../library/portrait_code';
 import { takesReports } from '../library/report_actions';
@@ -241,6 +241,8 @@ async function holdTheDoor() {
       reason: 'front-door', path, left: await placesLeft().catch(() => 0),
       // Who invited them, when an invite link brought them (Invite, 2026-10-21).
       invite: await inviterAtTheDoor().catch(() => null),
+      // The covers that slide across the top (2026-10-22).
+      covers: await frontDoorCovers().catch(() => []),
     };
   }
   try {
@@ -363,7 +365,7 @@ export default async function RootLayout({ children, layer }) {
         <Bookplate settings={settings}>
           <Lightswitch>
             {holding?.reason === 'front-door'
-              ? <FrontDoor path={holding.path} domain={hostedDomain()} left={holding.left} invite={holding.invite} />
+              ? <FrontDoor path={holding.path} domain={hostedDomain()} left={holding.left} invite={holding.invite} covers={holding.covers} />
               : holding
               ? <ComingSoon reason={typeof holding === 'string' ? holding : holding.reason} said={holding.said} />
               : <>
