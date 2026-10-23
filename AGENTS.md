@@ -281,9 +281,12 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   door's `www.` is the old address of the journal that moved off it, and is
   answered as that journal, but for the front door's home and `/get`, which
   go to the bare domain. Nothing runs without `HOSTING_DIRECTORY_URL`.
-  The forwarding of its pages is in `next.config.mjs`. And `isHere`, on any
-  copy: whether an address is the journal a request reached, by either name
-  it answers to, so a journal never says it moved to itself.
+  The forwarding of its pages is in `next.config.mjs`. `publishing`: with
+  `PUBLICATION_ADDRESS`, the bare domain's submissions door is answered as
+  the publication's own journal, its back office (the month's prompt). And
+  `isHere`, on any copy: whether an address is the journal a request
+  reached, by any name it answers to, so a journal never says it moved to
+  itself.
 - `install_guide.js` — what `/get` needs: the deploy button's URL and the ten
   install steps with their screenshots and the rings drawn over them.
 - `keyring.js` — the passkeys (`keyring`): a row per device's key, the

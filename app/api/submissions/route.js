@@ -95,8 +95,14 @@ export async function POST(request) {
     // own as they stood when Send was pressed, and an entry with none is
     // still an answer — the record alone (the blog's brief) — so here, and
     // only here, a send may come without a note.
-    const forPrompt = server && body.prompt && typeof body.prompt === 'object'
-      && !Array.isArray(body.prompt) && (await takesPrompts());
+    const publication = await takesPrompts();
+    const forPrompt = publication && server && body.prompt && typeof body.prompt === 'object'
+      && !Array.isArray(body.prompt);
+    // And the publication's journal takes nothing else: it is nobody's
+    // friend, and its door is the magazine's address.
+    if (publication && !forPrompt) {
+      return Response.json({ error: 'Listening Notes takes records for the month’s prompt only.' }, { status: 403 });
+    }
 
     if (!album?.trim() || !artist?.trim() || (!forPrompt && !note?.trim())) {
       return Response.json({ error: 'Album, artist, and note are required.' }, { status: 400 });

@@ -24,6 +24,7 @@ import database from './database_connection.js';
 import { PUBLICATION_URL, SANDBOX, SANDBOX_SAID } from './version.js';
 import { tidyJournal } from './return_address.js';
 import { pull_own_addresses } from './settings_actions.js';
+import { isHere } from './hosting_directory.js';
 
 // The prompt this journal holds, open or closed; null when it holds none.
 export async function pull_month_prompt() {
@@ -118,14 +119,17 @@ export async function send_to_prompt({ prompt, entry, keeper, from }) {
 }
 
 // Whether this journal is the publication's own — the one PUBLICATION_URL
-// names, at any address it answers to. Compared without a port, which only
-// a test on this machine has.
-const bare = address => tidyJournal(address).replace(/:\d+$/, '');
+// names, by either address it answers to: the bare domain the records are
+// posted to, or its back office's (library/hosting_directory.js,
+// publishing). A copy that hosts one journal is the publication's only when
+// a fork points PUBLICATION_URL at it.
 export async function takesPrompts() {
-  const there = bare(PUBLICATION_URL);
+  let there = '';
+  try { there = new URL(PUBLICATION_URL).host.toLowerCase(); } catch { there = ''; }
   if (!there) return false;
+  if (await isHere(there)) return true;
   const own = await pull_own_addresses().catch(() => []);
-  return own.some(address => bare(address) === there);
+  return own.includes(tidyJournal(there));
 }
 
 // On the publication's journal: a record that arrived for a prompt is marked

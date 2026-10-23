@@ -17,7 +17,7 @@
 
 import { NextResponse } from 'next/server';
 import {
-  isFrontDoor, nameState, tidyName, journalHostFor, placesLeft, placesMost,
+  isFrontDoor, nameState, tidyName, journalHostFor, placesLeft, placesMost, KEPT_NAMES,
   make_journal, clear_never_set_up,
 } from '@/library/front_door';
 import { hostHere } from '@/library/hosting_directory';
@@ -37,7 +37,13 @@ export async function GET(request) {
     const left = await placesLeft();
     if (asked === null) return NextResponse.json({ left, most: placesMost() }, { headers: FRESH });
     return NextResponse.json(
-      { name: tidyName(asked), host: journalHostFor(asked), state: await nameState(asked), left },
+      {
+        name: tidyName(asked), host: journalHostFor(asked), state: await nameState(asked), left,
+        // A word nobody may start a journal at (KEPT_NAMES): "taken" to
+        // signup, and never a door for Find my journal — a back office kept
+        // at one is nobody's to be shown (2026-10-22).
+        kept: KEPT_NAMES.has(tidyName(asked)),
+      },
       { headers: FRESH },
     );
   } catch (error) {
