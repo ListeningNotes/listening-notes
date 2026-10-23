@@ -357,20 +357,20 @@
    order (Journal.js, Views, not sorting). The menu drops from it on a phone
    as on a desk — the floor is the Listen bar's — and closes on a press
    anywhere else, on Escape, or on a choice. */
-/* It is the same size as the filters' panel (Miyel, 2026-10-22: "I don't
-   like how the sort and the filter are different sizes"): on a desk the
-   same 290px, hung from the line's left end where the filters hang from its
-   right; on a phone the line's width less its gutters, as theirs is. Two
-   columns, the views for finding and, past a hairline, the ones for fun. */
-.arc-bar { position: relative; }
+/* The views menu and the filters are one size, this one's (Miyel,
+   2026-10-22: "I don't like how the sort and the filter are different
+   sizes", then "i prefered the size of the sort view"): 200px, on a phone
+   as on a desk, this one hung from the line's left end and the filters from
+   its right, both dropping to the same line. */
+.arc-bar { position: relative; --panel-w: 200px; }
 .arc-view { display: flex; flex-shrink: 0; }
 .arc-ctl.arc-view-now { gap: 4px; padding-left: 2px; color: var(--ink); }
 .arc-views-scrim { position: fixed; inset: 0; z-index: 0; }
 .arc-views {
   position: absolute; top: calc(100% + 6px); left: 10px; z-index: 5;
-  width: 290px; box-sizing: border-box;
-  display: flex; align-items: stretch;
-  padding: 12px 6px;
+  width: var(--panel-w); box-sizing: border-box;
+  display: flex; flex-direction: column; align-items: flex-start;
+  padding: 10px 8px;
   background: var(--panel-solid);
   border: 1px solid var(--panel-border); border-radius: 14px;
   box-shadow: var(--shadow-lift);
@@ -378,9 +378,8 @@
 }
 .arc-views--leaving { animation: arcPopOut 0.16s ease forwards; pointer-events: none; }
 @keyframes arcPopOut { to { opacity: 0; transform: translateY(-6px); } }
-.arc-views-col { flex: 1; display: flex; flex-direction: column; align-items: flex-start; }
 .arc-views-word { padding: 6px 10px; text-align: left; }
-.arc-views-rule { flex: 0 0 1px; margin: 4px 6px; background: var(--border); }
+.arc-views-rule { align-self: stretch; height: 1px; margin: 5px 10px; background: var(--border); }
 
 .arc-count {
   margin-left: 4px; flex-shrink: 0; white-space: nowrap;
@@ -400,14 +399,15 @@
   /* left/top are set inline from the button's own position; these
      are the fallback for the first paint before it's measured. */
   position: fixed; z-index: 151;
-  top: calc(var(--arc-nav-bottom) + 78px); left: max(24px, calc(50vw - 550px)); width: 290px;
+  top: calc(var(--arc-nav-bottom) + 78px); left: max(24px, calc(50vw - 550px)); width: 200px;
+  box-sizing: border-box;
   /* The views menu's own panel, solid, so the two that drop from the line
      are one thing (Miyel, 2026-10-22: "make filters match sort"). It was
      frosted glass, which let the covers show through it. */
   background: var(--panel-solid);
   border: 1px solid var(--panel-border);
   border-radius: 14px; box-shadow: var(--shadow-lift);
-  padding: 16px; display: flex; flex-direction: column; gap: 16px;
+  padding: 10px 8px; display: flex; flex-direction: column; gap: 4px;
   animation: arcPop 0.18s ease;
 }
 @keyframes arcPop { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
@@ -432,12 +432,31 @@
   padding: 4px 6px;
   font-size: 10px; letter-spacing: 0.03em; text-transform: none;
 }
-/* The session's marks (session.css, .ses-mark), centred under their label
-   the way the session centres them. */
-.arc-marks { display: flex; justify-content: center; gap: 8px; margin: -4px 0 -6px; }
-/* Album and Track drawn the way the marks are, in ink rather than a color of
-   their own: what a record is, not what it was to you. */
-.ses-mark--kind.ses-mark--on { color: var(--ink); }
+/* A row of the filters: a glyph beside its word, the word set as the views
+   menu sets its words, so the two menus read alike and differ by the glyph.
+   On, the word inks and underlines, and the glyph takes its mark's colour —
+   ink for Album, Track and Submission, which have none of their own. */
+.arc-picks { display: flex; flex-direction: column; align-items: stretch; }
+.arc-pick {
+  display: flex; align-items: center; gap: 10px;
+  padding: 5px 10px; border: 0; background: none; cursor: pointer; text-align: left;
+  font-family: var(--font-label); font-size: 9px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--ink-faint);
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s;
+}
+.arc-pick:hover { color: var(--ink-soft); }
+.arc-pick-glyph { display: flex; flex-shrink: 0; }
+.arc-pick--on { color: var(--ink); }
+.arc-pick--on .arc-pick-word { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 5px; }
+.arc-pick--mp.arc-pick--on .arc-pick-glyph { color: var(--mp); }
+.arc-pick--fav.arc-pick--on .arc-pick-glyph { color: var(--fav); }
+.arc-pick--formative.arc-pick--on .arc-pick-glyph { color: var(--formative); }
+.arc-pick:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: -2px; border-radius: 8px; }
+.arc-sheet-rule { height: 1px; margin: 4px 10px; background: var(--border); flex-shrink: 0; }
+/* The genre and year lines and the foot sit on the rows' own inset. */
+.arc-sheet .arc-sheet-group { padding: 4px 10px; }
+.arc-sheet .arc-sheet-foot { padding: 6px 10px 2px; border-top: 0; flex-wrap: wrap; row-gap: 4px; }
 /* Genre folded to its line, the way the year shows its span on its line:
    pressed, its words open under it. */
 .arc-sheet-label--door {
@@ -617,10 +636,9 @@
      height set from the line when it opens (JournalFilters). It was a sheet
      rising from the foot, which is the Listen bar's now. No dimming, as the
      views menu has none. */
-  .arc-views { left: 12px; right: 12px; width: auto; }
+  .arc-views { left: 12px; }
   .arc-sheet {
-    bottom: auto; left: 12px; right: 12px; width: auto;
-    padding: 16px 18px;
+    bottom: auto;
     overflow-y: auto; overscroll-behavior: contain;
   }
   /* A thumb's worth of height on each word without the rows growing apart. */

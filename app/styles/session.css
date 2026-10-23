@@ -515,10 +515,6 @@
    something describing the record, rather than as something to press. Miyel
    was skipping them.
 
-   The wall's filter sheet draws these same marks for its highlights
-   (JournalFilters.js, .arc-marks in journal.css), so a change here changes
-   both — which is the point: they are one set of marks.
-
    No container: a control is the mark, not a mark in a container (DECISIONS,
    2026-09-17). What grew is the mark itself, from 12px to 24, and the row
    still fits three on a 320px phone — 3 × 72 is 216 of 288. Measured.

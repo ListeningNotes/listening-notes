@@ -1,9 +1,9 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // components/main_components/JournalFilters.js
-// The wall's filters: a sheet from the foot of the screen on a phone, a
-// popover under its button on a desk. Genre, release year, the three marks,
-// and the way out — and on a phone the album size too. Sort was here until
+// The wall's filters, dropping from the wall's line: what a record is, its
+// marks, genre, release year, and the way out — and on a phone the album size
+// too. Sort was here until
 // the wall's views replaced it (Journal.js, Views, not sorting): this sheet
 // only takes records away now, and the view on the line rearranges them.
 //
@@ -29,7 +29,7 @@
 // Escape, or on Show, and folds away as it goes (`leaving`).
 'use client';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { CaretDown, Fingerprint, Heart, SketchLogo } from '@phosphor-icons/react';
+import { CaretDown, Envelope, Fingerprint, Heart, SketchLogo } from '@phosphor-icons/react';
 import { useHoldStill } from '../../hooks/useHoldStill';
 import GridDensity from './GridDensity';
 
@@ -39,6 +39,7 @@ export default function JournalFilters({
   genre, setGenre, genres, genresShown, genresRest, genresOpen, setGenresOpen,
   yearBounds, yearRange, setYearPicked,
   favoritesOnly, setFavoritesOnly, masterpiecesOnly, setMasterpiecesOnly, formativeOnly, setFormativeOnly,
+  sentOnly, setSentOnly,
   hasActiveFilters, clearFilters, shownCount, density, changeDensity, leaving = false,
 }) {
   const sheetRef = useRef(null);
@@ -65,24 +66,19 @@ export default function JournalFilters({
   // and is never taller than what is left above the Listen bar: past that it
   // scrolls inside itself.
   useLayoutEffect(() => {
-    const sheet = sheetRef.current;
-    if (!sheet) return;
-    if (isPhone) {
-      const line = anchorRef.current?.closest('.arc-bar')?.getBoundingClientRect();
-      if (!line) return;
-      const top = line.bottom + 6;
-      sheet.style.top = `${top}px`;
-      sheet.style.maxHeight = `${Math.max(200, window.innerHeight - top - 80)}px`;
-      return;
-    }
     // Its right edge on the button's, since the button sits at the right end
-    // of the line now and a panel hung from its left ran off the screen.
+    // of the line and a panel hung from its left ran off the screen; its top
+    // where the views menu's is, under the line. Never taller than what is
+    // left above the Listen bar on a phone: past that it scrolls inside.
+    const sheet = sheetRef.current;
     const r = anchorRef.current?.getBoundingClientRect();
     const line = anchorRef.current?.closest('.arc-bar')?.getBoundingClientRect();
-    if (!r || !line) return;
+    if (!sheet || !r || !line) return;
+    const top = line.bottom + 6;
     sheet.style.left = `${Math.max(12, r.right - sheet.offsetWidth)}px`;
-    sheet.style.top = `${line.bottom + 6}px`;
+    sheet.style.top = `${top}px`;
     sheet.style.right = 'auto';
+    sheet.style.maxHeight = `${Math.max(200, window.innerHeight - top - (isPhone ? 80 : 16))}px`;
   }, [isPhone, anchorRef]);
 
   useEffect(() => {
@@ -120,30 +116,43 @@ export default function JournalFilters({
             role="dialog"
             aria-label="Filters"
           >
-            {/* A record logged as an album, or known by its tracks (Miyel,
-                2026-10-22: "filtering should get track vs album"), drawn as
-                the marks are, a glyph over a word — the square of a cover,
-                and the cover with its corner turned down that a record
-                known by its tracks wears on the wall ("more icon heavy on
-                this side"). Neither pressed is both; pressing the one that
-                is on lets it go. Album is every record with a listen; Track
-                every record with a track note, whether or not it also has a
-                listen. */}
-            <div className="arc-sheet-group">
-              <div className="arc-sheet-label">Kind</div>
-              <div className="arc-marks">
-                <button type="button" className={mark(kind === 'albums', 'kind')}
-                  aria-pressed={kind === 'albums'} onClick={() => setKind(kind === 'albums' ? '' : 'albums')}>
-                  <KindGlyph folded={false} on={kind === 'albums'} />
-                  <span className="ses-mark-word">Album</span>
-                </button>
-                <button type="button" className={mark(kind === 'tracks', 'kind')}
-                  aria-pressed={kind === 'tracks'} onClick={() => setKind(kind === 'tracks' ? '' : 'tracks')}>
-                  <KindGlyph folded on={kind === 'tracks'} />
-                  <span className="ses-mark-word">Track</span>
-                </button>
-              </div>
+            {/* The views menu's own shape, a list, at its size (Miyel,
+                2026-10-22: "i prefered the size of the sort view"), but drawn
+                in glyphs where it is drawn in words, so the two read as two
+                places: a glyph beside each word, hairlines between the parts.
+
+                First what a record is (her "track vs album"): a cover's
+                square, and the same square with its corner turned down, the
+                way a record known by its tracks sits on the wall. Neither
+                pressed is both; pressing the one that is on lets it go.
+                Album is every record with a listen; Track every record with
+                a track note, whether or not it also has a listen. */}
+            <div className="arc-picks">
+              <Pick on={kind === 'albums'} onClick={() => setKind(kind === 'albums' ? '' : 'albums')}
+                glyph={<KindGlyph folded={false} on={kind === 'albums'} />} word="Album" />
+              <Pick on={kind === 'tracks'} onClick={() => setKind(kind === 'tracks' ? '' : 'tracks')}
+                glyph={<KindGlyph folded on={kind === 'tracks'} />} word="Track" />
             </div>
+            <span className="arc-sheet-rule" aria-hidden="true" />
+
+            {/* The marks, the session's glyphs in the session's colours and
+                order, each keeping the wall to the records that wear it — and
+                the fourth the wall's tiles wear, the envelope on a record
+                somebody sent (her ask, "maybe submissions joins"), in ink. A
+                submission here is what the feed calls one: sent, not credited
+                by hand. Formative is the session's glyph, whatever that is at
+                the time; bold, not fill, as the session has it. */}
+            <div className="arc-picks">
+              <Pick on={masterpiecesOnly} tone="mp" onClick={() => setMasterpiecesOnly(v => !v)}
+                glyph={<SketchLogo size={18} weight={masterpiecesOnly ? 'fill' : 'regular'} aria-hidden="true" />} word="Masterpiece" />
+              <Pick on={favoritesOnly} tone="fav" onClick={() => setFavoritesOnly(v => !v)}
+                glyph={<Heart size={18} weight={favoritesOnly ? 'fill' : 'regular'} aria-hidden="true" />} word="Favorite" />
+              <Pick on={formativeOnly} tone="formative" onClick={() => setFormativeOnly(v => !v)}
+                glyph={<Fingerprint size={18} weight={formativeOnly ? 'bold' : 'regular'} aria-hidden="true" />} word="Formative" />
+              <Pick on={sentOnly} onClick={() => setSentOnly(v => !v)}
+                glyph={<Envelope size={18} weight={sentOnly ? 'fill' : 'regular'} aria-hidden="true" />} word="Submission" />
+            </div>
+            <span className="arc-sheet-rule" aria-hidden="true" />
 
             {/* Only worth a group once there's more than one genre to choose
                 between — on a young archive it would be a row with a single
@@ -199,36 +208,7 @@ export default function JournalFilters({
               </div>
             )}
 
-            {/* The session's marks, drawn the way its album screen draws
-                them (session.css, .ses-mark) and named the same, under the
-                label the brief's mockup gives them (it was Highlights while
-                they were three words in capsules) — a mark here
-                is the mark you gave the record there, and turning one on
-                keeps the wall to the records that wear it. In the session's
-                order too. Formative is the session's glyph, whatever that is
-                at the time. */}
-            <div className="arc-sheet-group">
-              <div className="arc-sheet-label">Marks</div>
-              <div className="arc-marks">
-                <button type="button" className={mark(masterpiecesOnly, 'mp')}
-                  aria-pressed={masterpiecesOnly} onClick={() => setMasterpiecesOnly(v => !v)}>
-                  <SketchLogo size={24} weight={masterpiecesOnly ? 'fill' : 'regular'} aria-hidden="true" />
-                  <span className="ses-mark-word">Masterpiece</span>
-                </button>
-                <button type="button" className={mark(favoritesOnly, 'fav')}
-                  aria-pressed={favoritesOnly} onClick={() => setFavoritesOnly(v => !v)}>
-                  <Heart size={24} weight={favoritesOnly ? 'fill' : 'regular'} aria-hidden="true" />
-                  <span className="ses-mark-word">Favorite</span>
-                </button>
-                <button type="button" className={mark(formativeOnly, 'formative')}
-                  aria-pressed={formativeOnly} onClick={() => setFormativeOnly(v => !v)}>
-                  {/* Bold, not fill, as the session has it: Phosphor's filled
-                      fingerprint is a solid pad with the ridges knocked out. */}
-                  <Fingerprint size={24} weight={formativeOnly ? 'bold' : 'regular'} aria-hidden="true" />
-                  <span className="ses-mark-word">Formative</span>
-                </button>
-              </div>
-            </div>
+            <span className="arc-sheet-rule" aria-hidden="true" />
 
             {/* On a phone the album size lives here, off the line — the
                 line is the view's and the search field's, and a size is
@@ -251,12 +231,25 @@ export default function JournalFilters({
 
 // ── Sub-components ─────────────────────────────────────────────────────
 
+// One row of the filters: a glyph beside its word. On, the word inks and
+// underlines as a view does in its menu, and the glyph takes its mark's
+// colour, or ink for the ones with none of their own.
+function Pick({ on, onClick, glyph, word: said, tone = '' }) {
+  return (
+    <button type="button" aria-pressed={on} onClick={onClick}
+      className={'arc-pick' + (tone ? ` arc-pick--${tone}` : '') + (on ? ' arc-pick--on' : '')}>
+      <span className="arc-pick-glyph">{glyph}</span>
+      <span className="arc-pick-word">{said}</span>
+    </button>
+  );
+}
+
 // Album and Track: a cover's square, and the same square with its top right
 // corner turned down, the way a record known by its tracks sits on the wall.
 // Outlined off, filled on, as Favorite's heart is.
 function KindGlyph({ folded, on }) {
   return (
-    <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
       {folded ? (
         <>
           <path d="M5 4.5h9.5L19.5 9.5V19.5H5Z" fill={on ? 'currentColor' : 'none'}
@@ -272,9 +265,8 @@ function KindGlyph({ folded, on }) {
   );
 }
 
-// A choice in the sheet, and a mark: the classes, on or off.
+// A word among the genres: the class, on or off.
 const word = on => 'ln-word arc-word' + (on ? ' ln-word--on' : '');
-const mark = (on, kind) => `ses-mark ses-mark--${kind}${on ? ' ses-mark--on' : ''}`;
 
 // Two-handle year range, built from two native range inputs stacked on one
 // track. Native because it inherits keyboard support, the correct touch

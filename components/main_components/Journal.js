@@ -533,6 +533,9 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
   // same time as the other two and never given a way in here.
   const [formativeTyped, setFormativeOnly] = useState(null);
   const formativeOnly = formativeTyped ?? (linkedMark === 'formative');
+  // A record somebody sent: the envelope the wall's tiles wear (Feed.js,
+  // Marks) — a Submission, not a credit written in by hand.
+  const [sentOnly, setSentOnly] = useState(false);
   // What the reader has set the handles to, or null for "every year" — which
   // is the full span once the entries have landed and nothing before that.
   const [yearPicked, setYearPicked] = useState(null);
@@ -878,6 +881,7 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
         // rows that said so under the old relationship column were migrated
         // onto it before that column was dropped.
         if (formativeOnly && !marked(album.listens, x => x.formative === true || x.formative === 'true')) return false;
+        if (sentOnly && !marked(album.all, x => x.entry_type === 'Submission' && x.credit_by_hand !== true)) return false;
         if (yearActive) {
           const y = releaseYear(e);
           // An entry with no year can't be shown to fall inside a range, so
@@ -886,7 +890,7 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
         }
         return true;
       });
-  }, [albums, search, kind, genre, favoritesOnly, masterpiecesOnly, formativeOnly, yearActive, yearRange]);
+  }, [albums, search, kind, genre, favoritesOnly, masterpiecesOnly, formativeOnly, sentOnly, yearActive, yearRange]);
 
   // In the view's order, and with each record's band. In order is by the day
   // a record came into the journal, which never changes: the wall never
@@ -1014,7 +1018,7 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
   function clearFilters() {
     setPage(0);
     setSearch(''); setKind(''); setGenre(''); setGenresOpen(false);
-    setFavoritesOnly(false); setMasterpiecesOnly(false); setFormativeOnly(false);
+    setFavoritesOnly(false); setMasterpiecesOnly(false); setFormativeOnly(false); setSentOnly(false);
     setYearPicked(null);
   }
 
@@ -1024,7 +1028,7 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
   // number in a filled badge until 2026-10-22 (the wall's filters brief): the
   // underline already says something is on, and the badge was the shape that
   // change took out.
-  const narrowed = Boolean(kind) || Boolean(genre) || favoritesOnly || masterpiecesOnly || formativeOnly || yearActive;
+  const narrowed = Boolean(kind) || Boolean(genre) || favoritesOnly || masterpiecesOnly || formativeOnly || sentOnly || yearActive;
   const hasActiveFilters = Boolean(search) || narrowed;
 
   return (
@@ -1143,23 +1147,18 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
             </button>
             {viewsOpen && (
               <span className={'arc-views' + (viewsLeaving ? ' arc-views--leaving' : '')} role="menu" aria-label="Views">
-                {[VIEWS.filter(v => !v.fun), VIEWS.filter(v => v.fun)].map((column, i) => (
-                  <Fragment key={i}>
-                    {i > 0 && <span className="arc-views-rule" aria-hidden="true" />}
-                    <span className="arc-views-col">
-                      {column.map(v => (
-                        <button
-                          key={v.value}
-                          type="button"
-                          role="menuitemradio"
-                          aria-checked={v.value === view}
-                          className={'ln-word arc-views-word' + (v.value === view ? ' ln-word--on' : '')}
-                          onClick={() => chooseView(v.value)}
-                        >
-                          {v.label}
-                        </button>
-                      ))}
-                    </span>
+                {VIEWS.map(v => (
+                  <Fragment key={v.value}>
+                    {v === VIEWS.find(w => w.fun) && <span className="arc-views-rule" aria-hidden="true" />}
+                    <button
+                      type="button"
+                      role="menuitemradio"
+                      aria-checked={v.value === view}
+                      className={'ln-word arc-views-word' + (v.value === view ? ' ln-word--on' : '')}
+                      onClick={() => chooseView(v.value)}
+                    >
+                      {v.label}
+                    </button>
                   </Fragment>
                 ))}
               </span>
@@ -1251,6 +1250,7 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
           favoritesOnly={favoritesOnly} setFavoritesOnly={setFavoritesOnly}
           masterpiecesOnly={masterpiecesOnly} setMasterpiecesOnly={setMasterpiecesOnly}
           formativeOnly={formativeOnly} setFormativeOnly={setFormativeOnly}
+          sentOnly={sentOnly} setSentOnly={setSentOnly}
           hasActiveFilters={hasActiveFilters} clearFilters={clearFilters}
           shownCount={filtered.length}
           density={density} changeDensity={changeDensity}
