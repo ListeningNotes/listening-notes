@@ -448,9 +448,12 @@ away once a pane is scrolled: down in the wall or the reading, the only thing
 worth offering is more of what you are in. The swipe itself is untouched —
 hiding a control is a hint; disabling a gesture halfway down reads as broken.
 
-**Fifty covers to a page.** Past that you are scrolling rather than looking.
-Counted on the filtered set, so one artist inside three hundred records gives
-you their four on one page.
+**Fifty covers at a time, and fifty more before you reach the foot,
+2026-10-23** (Miyel: pages became "an infinite scroll", a reload back to the
+first fifty). The pages never saved a download: the wall is handed every
+record's summary and a cover loads near the screen. Past fifty you are
+scrolling rather than looking — still true; the sticking band heading is the
+answer, not a page. A new view draws from fifty again, at the wall's start.
 
 **Nothing sits at the foot of the wall.** The foot of the archive is where
 somebody has finished looking, and three links to elsewhere is the site

@@ -558,23 +558,9 @@
    covers, and the tiles are the page — the bar below already sits on
    the same 14. */
 @media (max-width: 768px) { .arc-main { padding: 0 14px 132px; } }
-.arc-pages {
-  display: flex; align-items: center; justify-content: center; gap: 14px;
-  margin-top: 34px;
-}
-.arc-page-step {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 34px; height: 34px; border-radius: 10px;
-  border: 1px solid var(--border); background: transparent;
-  color: var(--ink-soft); cursor: pointer;
-  transition: color 0.15s, border-color 0.15s;
-}
-.arc-page-step:hover:not(:disabled) { color: var(--ink); border-color: var(--ink-faint); }
-.arc-page-step:disabled { opacity: 0.3; cursor: default; }
-.arc-page-count {
-  font-family: var(--font-label); font-size: 10px;
-  letter-spacing: 0.14em; color: var(--ink-faint);
-}
+/* The foot of what is drawn so far, watched (Journal.js). A line's height,
+   so it has a place to be seen at. */
+.arc-more { height: 1px; }
 .arc-grid { display: grid; gap: 14px; }
 .arc-grid[data-density="large"]  { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
 .arc-grid[data-density="medium"] { grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); }

@@ -449,14 +449,20 @@ function gatherAlbums(entries) {
 // number as the sitewide mobile breakpoint in styles/base.css.
 const FLIP_BELOW = 768;
 
-// How many covers before the wall is broken into pages. Fifty is a wall you can
-// still scan and roughly two screens of the widest tiles; past that you are
-// scrolling rather than looking, and the sort you chose stops meaning anything
-// because you never reach the other end of it.
+// How many covers the wall draws at a time. It was a page, with arrows under
+// it, until 2026-10-23 (Miyel: "when you hit the bottom, it can load more so
+// that it turns into an infinite scroll, and then when you reset the page,
+// essentially it's back to the default"). The pages never saved a download —
+// the wall is handed every record's summary when it opens, and a cover's
+// picture loads only as it nears the screen — so all the arrows rationed was
+// drawing. Now the next fifty are drawn before you reach the foot, and a
+// reload is fifty again.
 //
-// It is a count of the *filtered* set, not of the archive — searching for one
-// artist inside three hundred records should give you their four, on one page.
-const PER_PAGE = 50;
+// Fifty was chosen because past it you are scrolling rather than looking, and
+// the order stops meaning anything because you never reach its other end.
+// That still holds; what answers it now is the band heading that sticks and
+// moves you between bands, not a page.
+const COVERS_AT_A_TIME = 50;
 
 // entries and loading are optional. The cross already asks /api/entries for its
 // recent row and its counts, so on the homepage the wall is handed what has
@@ -559,10 +565,10 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
   // popover closes on scroll (see the effect below).
   const filterBtnRef = useRef(null);
 
-  // Which page of the wall. Reset by anything that changes what the wall holds
-  // — landing on page four of a search that only has one page is a blank grid
-  // and no explanation.
-  const [page, setPage] = useState(0);
+  // How far down the wall is drawn. It only grows, as you near the foot
+  // (below), and goes back to fifty with a new view. A narrower set under a
+  // long reach is simply a shorter wall, so nothing that filters touches it.
+  const [drawn, setDrawn] = useState(COVERS_AT_A_TIME);
   // The view: remembered in this browser, read the way the density is below,
   // and the reader's pick wins for the rest of the visit. The shuffle's seed
   // is made when Shuffle is pressed, so a remembered Shuffle opens shuffled.
@@ -921,8 +927,8 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
   }, [view, filtered]);
   // eslint-disable-next-line react-hooks/exhaustive-deps -- colorsRead says the covers' colors (a module map) have changed
   const arranged = useMemo(() => arrange(filtered, view, seed), [filtered, view, seed, colorsRead]);
-  // How many records each band holds, all of it and not just this page's
-  // share, for the number at the end of its heading (Miyel, 2026-10-22: "I
+  // How many records each band holds, all of it and not just what is drawn
+  // so far, for the number at the end of its heading (Miyel, 2026-10-22: "I
   // want to know how many late night"). A count on a group of records, the
   // way the card counts them — never one beside a person.
   const bandSizes = useMemo(() => {
@@ -945,23 +951,44 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
   // through its folder and carries on to the record beside it.
   useEffect(() => { handOffOrder(arranged.flatMap(({ album }) => [...album.all].reverse())); }, [arranged]);
 
-  const pages = Math.max(1, Math.ceil(arranged.length / PER_PAGE));
-  // Clamped rather than reset in an effect: if the filters shrink the results
-  // under your feet, the page you are on may no longer exist, and the honest
-  // answer is the last one that does.
-  const current = Math.min(page, pages - 1);
-  const shown = pages > 1 ? arranged.slice(current * PER_PAGE, (current + 1) * PER_PAGE) : arranged;
+  const shown = arranged.slice(0, drawn);
+  const more = arranged.length > drawn;
+
+  // The next fifty, drawn while the foot is still most of a screen away, so
+  // scrolling never meets the end before it has moved. Watched afresh after
+  // every fifty: a watcher only speaks when the foot crosses its edge, and on
+  // a tall screen the foot can still be inside it once the fifty are down.
+  // The foot is held in state, not a ref, so the watcher starts when the foot
+  // is drawn: on home the records and the end of loading can land a render
+  // apart, and a watcher set up on the first found no foot and never looked
+  // again (on a phone, 2026-10-23).
+  const [wallEnd, setWallEnd] = useState(null);
+  useEffect(() => {
+    if (!wallEnd || typeof IntersectionObserver === 'undefined') return;
+    const watch = new IntersectionObserver(seen => {
+      if (seen.some(s => s.isIntersecting)) setDrawn(d => d + COVERS_AT_A_TIME);
+    }, { root: scroller?.current || null, rootMargin: '0px 0px 900px 0px' });
+    watch.observe(wallEnd);
+    return () => watch.disconnect();
+  }, [wallEnd, drawn, scroller]);
 
   const activeView = VIEWS.find(v => v.value === view) ?? VIEWS[0];
 
-  // A new view starts at its beginning: page four of one order is nothing in
-  // particular of another. Shuffle pressed again is a new shuffle.
+  // A new view starts at its beginning: two hundred covers into one order is
+  // nothing in particular of another. So it is drawn from fifty again, and if
+  // you were part way down, the wall comes back up to stand under its line —
+  // without the glide, which from that far would be covers flying in from
+  // two hundred places at once. Shuffle pressed again is a new shuffle.
   function chooseView(value) {
-    glideFrom.current = positions();
+    const wall = grid.current;
+    const wrap = lineWrap.current;
+    const under = wall && wrap ? wrap.getBoundingClientRect().bottom - wall.getBoundingClientRect().top : 0;
+    glideFrom.current = under > 1 ? null : positions();
     if (value === 'shuffle') setSeed(freshSeed());
     setView(value);
     storeView(value);
-    setPage(0);
+    setDrawn(COVERS_AT_A_TIME);
+    if (under > 1) (scroller?.current || document.scrollingElement)?.scrollBy({ top: -under });
     closeViews();
   }
 
@@ -1048,19 +1075,7 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
     clocks.current.push(setTimeout(show, 120));
   }, [arranged, closeTheGap]);
 
-  // Turning a page leaves the scroll where it is. It went to the top, from
-  // when the wall was the whole page; under the beacon the top is the
-  // beacon, and every press threw you a floor past the covers (2026-10-20).
-  // A page is fifty tiles, so the next one lays out exactly where this one
-  // was. A shorter last page is clamped by the browser, and the wall's floor
-  // is a screen tall at least, so the clamp lands on covers and never on the
-  // beacon above them.
-  function toPage(next) {
-    setPage(next);
-  }
-
   function clearFilters() {
-    setPage(0);
     setSearch(''); setKind(''); setGenre(''); setGenresOpen(false);
     setFavoritesOnly(false); setMasterpiecesOnly(false); setFormativeOnly(false); setSentOnly(false);
     setYearPicked(null);
@@ -1101,10 +1116,9 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
           <div className="arc-grid" data-density={density} ref={grid}>
             {shown.map(({ album, band }, i) => (
               <Fragment key={album.key}>
-                {/* A band's heading over its first record, and again at the
-                    top of a page that opens part way through one. Inside the
-                    grid, across every column, so the tiles keep one grid to
-                    file across when a record comes or goes. */}
+                {/* A band's heading over its first record. Inside the grid,
+                    across every column, so the tiles keep one grid to file
+                    across when a record comes or goes. */}
                 {band && (i === 0 || shown[i - 1].band.key !== band.key) && (
                   band.stars ? (
                     <h3 className="arc-band">
@@ -1139,34 +1153,11 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
           </div>
         )}
 
-        {foot}
-        {/* Only when there is more than one. A pager under a single page is a
-            control that says the collection is bigger than it is. */}
-        {pages > 1 && (
-          <nav className="arc-pages" aria-label="Pages">
-            <button
-              type="button"
-              className="arc-page-step"
-              onClick={() => toPage(current - 1)}
-              disabled={current === 0}
-              aria-label="Previous page"
-            >
-              ←
-            </button>
-            <span className="arc-page-count">
-              {current + 1} / {pages}
-            </span>
-            <button
-              type="button"
-              className="arc-page-step"
-              onClick={() => toPage(current + 1)}
-              disabled={current >= pages - 1}
-              aria-label="Next page"
-            >
-              →
-            </button>
-          </nav>
-        )}
+        {/* What the watcher above waits for. Nothing to see: the next fifty
+            arrive before it is reached. Whatever is under the wall comes
+            after the last of them, never in the middle. */}
+        {more && !loading && <div ref={setWallEnd} className="arc-more" aria-hidden="true" />}
+        {!more && foot}
       </main>
       <div className="arc-bar-wrap" ref={lineWrap}>
         {/* Catches the press that closes the views, and nothing else: it is
