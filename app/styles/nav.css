@@ -876,7 +876,8 @@
 .hn-bar-svg { height: 28px; width: auto; display: block; }
 .hn-bar-svg path { fill: var(--ink); }
 
-.hn-mark-dot { fill: var(--ink); }
+/* Its dot turns, rather than switching, when a listen starts and ends. */
+.hn-mark-dot { fill: var(--ink); transition: fill 0.6s ease; }
 /* The live indicator, and the only green on the site. Same keyframe the old
    cover used — the mark is on every pane now, so the one thing always on
    screen is also the one thing that has to say whether anything is playing. */
@@ -3587,6 +3588,16 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   }
   .hdr-mark { margin-left: auto; display: inline-flex; color: var(--ink); }
   .hdr-mark-svg { display: block; height: 22px; width: auto; fill: currentColor; }
+  /* The keeper's, in the middle of the row and of the screen, whatever the
+     face and the doors either side of it measure (Header.js). */
+  .hdr-mark--middle {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    margin: 0;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
 
   /* The bar's own moon, the big mark and the small one stand down: the row
      is the head of every pane now, and the big mark leaves home (her call,

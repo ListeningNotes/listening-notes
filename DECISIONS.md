@@ -107,6 +107,10 @@ and the card is no longer a stop. The archive has the band and the card pane.
 Miyel's call** — over the People brief's "no face on People": the row keeps
 one shape as you swipe, and the card is always one tap away.
 
+**The keeper's top row has the LN. mark in its middle, 2026-10-23, her
+pick.** Small, its dot green while a listen is open: when the big mark left
+home it took the only sign of a live listen with it ("I do miss it").
+
 **A visitor's top row is their face and the LN. mark, no words, 2026-10-22.**
 People moved to the commons, so there is nothing there for a visitor to press,
 and a visitor has no Listen bar. The Source line and the version still stand

@@ -30,6 +30,14 @@
 // would be, with no words at all: People moved to the commons, so there is
 // nothing on it for a visitor to press (DECISIONS, the frame).
 //
+// ── And the keeper's has the mark too, 2026-10-23 ─────────────────────────
+// In the middle of the row, small, its dot green while a listen is open and
+// ink while not. The big mark left home on 2026-10-22 and took the only
+// sign of a live listen with it (Miyel: "there's no type of indication that
+// someone is live or listening … I do miss it"); her pick of three mockups
+// puts it back here, where it costs the page no room and stands on every
+// pane, the way the mark always said whether anything was playing.
+//
 // On a phone only. A desk keeps its two pages until she has seen this (her
 // call, 2026-10-22), and draws none of it (nav.css).
 'use client';
@@ -58,6 +66,7 @@ export default function Header({
         {portrait && <img src={portrait} alt="" />}
       </button>
       {lights}
+      {stops.length > 0 && <span className="hdr-mark hdr-mark--middle" aria-hidden="true">{mark}</span>}
       {stops.length > 0 ? (
         <nav className="hdr-stops" aria-label="The journal">
           {stops.map(stop => {
