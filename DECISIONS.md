@@ -1295,12 +1295,12 @@ square on the grounds that a journal is a shelf of records. A person is a
 circle and a record a rounded square, which also tells the two apart in the
 band of cards, where both are drawn. The rest of the site's faces wait on her.
 
-**People's top is a row of faces over a friend's beacon, 2026-10-24, her
-calls.** Info top, wall bottom, as home is, no carry, no hairline. The row:
-Add, every face (live first, then the book's order), See all. A face pressed
-brings their record in, cover left, with the book's doors under it. Add finds
-a name on the Board, takes an address or a code, and invites; See all opens
-the whole book in place. No heading: *Quiet* read as a verdict on a person.
+**People's top is two words, the faces and one line, 2026-10-24, her
+calls.** + Add · See all in small capitals; every face, live first, then the
+book's order; one line — small cover, name, what, when. A face pressed dims
+the rest, and the book's doors open under its line. A hairline, then the
+wall. Never a beacon drawn large, and never Add or See all as circles ("three
+friends"). No heading: *Quiet* read as a verdict on a person.
 
 **The directory, 2026-10-07, Miyel's call, and no longer ruled out.**
 listeningnotes.blog keeps a table of the journals on the Board — the address,
@@ -1324,13 +1324,12 @@ dismissed. The proof is unchanged: a code from the registry's secret, served
 back at /api/public/listing; delisting needs the code and the journal to have
 forgotten it. (Off by default and a press, 2026-10-07, is what this replaced.)
 
-**People is one screen: a friend's beacon, a line with a scope, and a wall,
-2026-10-23, her People brief.** Whose records — Your friends · Your
-records · Everyone's (built, off until the Board is big enough: her call) —
-sits after the search, remembered as the view is; the address book opens
-in place from See all, at the row's end. The wall is home's, so views
-compose with the scope; covers wear their loggers' faces, yours first when
-you have it too (not a gold dot); the search is the Board's (her calls).
+**People is your friends alone, 2026-10-24, her call.** It reads the
+book's feeds, never the Board's list; finding people is the Board's (Add's
+name search and its way there aside). Whose records — Your friends · Your
+records · Everyone's — stood for a day and went: Your records was strangers
+on your own records, which the Board shows itself. The wall is home's; covers
+wear their loggers' faces, yours first when you have it too (not a gold dot).
 
 **A visitor's People holds the Board's public parts, 2026-10-07/08.** Miyel:
 "strangers and visitors can see this page." No Friends, no switch, no checks,

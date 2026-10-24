@@ -1059,11 +1059,13 @@ export default function HomeNav() {
   // handed to the inbox (Inbox, `sent`).
   const [inboxSent, setInboxSent] = useState(false);
   // ── The Board, read as People opens ─────────────────────────────────────
-  // Its first screen, once a visit. Nothing on People draws it while
-  // Everyone's is switched off (PeopleScreen.js), and it is still asked for:
-  // a look at the Board is what sets off the directory's refresh (DECISIONS,
-  // The Board refreshes itself when it is looked at), and keepers opening
-  // People are most of the looking.
+  // Its first screen, once a visit. Nothing on People draws it — People is
+  // the keeper's friends alone since 2026-10-24 (PeopleScreen.js) — and it is
+  // still asked for: a look at the Board is what sets off the directory's
+  // refresh (DECISIONS, The Board refreshes itself when it is looked at), and
+  // keepers opening People are most of the looking until the Board has a
+  // place of its own on the phone. Taken out, the Board's lists and the
+  // front door's covers would go stale.
   const { page: everyonePage } = useEveryone();
   useEffect(() => {
     if (pane === BOOK && DIRECTORY_URL && !everyonePage) readEveryone();

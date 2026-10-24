@@ -113,7 +113,7 @@ const PINS_MOST = 6;
 // absence is read, not measured. And nothing past a week: "43 days ago" is
 // the absence counted, which is the guilt meter the brief rules out, so the
 // line then names the record and leaves the time off.
-function since(iso) {
+export function since(iso) {
   const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
   if (!Number.isFinite(mins) || mins < 0) return '';
   if (mins < 2) return 'just now';

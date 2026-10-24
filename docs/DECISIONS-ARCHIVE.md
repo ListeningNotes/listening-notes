@@ -1154,3 +1154,36 @@ Replaced the next day, Miyel: People "should resemble more of a beacon and
 that is where your friends are", with the faces out from under the scope's
 menu (Who you've added sat at its foot) — info top, wall bottom, the way home
 is. TopBand still draws over the address book's own grid.
+
+---
+
+## The network — People's top and scope, 2026-10-23 to 2026-10-24
+
+Lives now in DECISIONS.md, The network: *People's top is two words, the faces
+and one line* and *People is your friends alone*.
+
+**People's top is a row of faces over a friend's beacon, 2026-10-24, her
+calls.** Info top, wall bottom, as home is, no carry, no hairline. The row:
+Add, every face (live first, then the book's order), See all. A face pressed
+brings their record in, cover left, with the book's doors under it. Add finds
+a name on the Board, takes an address or a code, and invites; See all opens
+the whole book in place. No heading: *Quiet* read as a verdict on a person.
+
+Built and shown the same day. Miyel, on the sandbox: the beacon was more
+than a line needed ("one short line with a very small album thumbnail and
+when it happened"), Add and See all as bubbles read as "three friends", the
+whole thing was busy, and nobody could tell who was open. The doors stayed.
+
+**People is one screen: a friend's beacon, a line with a scope, and a wall,
+2026-10-23, her People brief.** Whose records — Your friends · Your
+records · Everyone's (built, off until the Board is big enough: her call) —
+sits after the search, remembered as the view is; the address book opens
+in place from See all, at the row's end. The wall is home's, so views
+compose with the scope; covers wear their loggers' faces, yours first when
+you have it too (not a gold dot); the search is the Board's (her calls).
+
+Retired the next day with the Board: Miyel asked what Your records even
+showed — the Board's keepers, strangers included, on her own records — and
+whether People should stay strictly for friends. It should; the Board is to
+have a place of its own, with the blog.
+
