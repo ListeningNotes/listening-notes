@@ -1824,8 +1824,8 @@ textarea.st-field { resize: vertical; min-height: 96px; }
    face and a pinned one. Still, not breathing: the band's dot is the one
    that pulses. It is what still tells you who is on once the band above
    the grid has scrolled away. */
-.fr-one--live .fr-face, .fr-live .fr-live-one .fr-face { box-shadow: 0 0 0 1.5px var(--live-deep); }
-.fr-one--live .fr-ring::after, .fr-live .fr-live-one .fr-ring::after {
+.fr-one--live .fr-face, .fr-live .fr-live-one .fr-face, .ps-row-one--live .fr-face { box-shadow: 0 0 0 1.5px var(--live-deep); }
+.fr-one--live .fr-ring::after, .fr-live .fr-live-one .fr-ring::after, .ps-row-one--live .fr-ring::after {
   content: '';
   position: absolute; z-index: 1;
   right: calc(14.64% - 6px); bottom: calc(14.64% - 6px);
@@ -2125,10 +2125,69 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 }
 
 /* ── People, one screen, 2026-10-23 ───────────────────────────────────────
-   The band in the page's gutter, then the wall as home draws it, with its
-   line (PeopleScreen.js). */
+   A friend's beacon and the row of faces in the page's gutter, then the wall
+   as home draws it, with its line (PeopleScreen.js). */
 .ps { display: flex; flex-direction: column; }
-.ps > .fr-band { margin: 0 24px; }
+/* ── A friend's beacon, 2026-10-24 ────────────────────────────────────────
+   Home's beacon, smaller (Miyel: "doesn't have to be the same size but same
+   mechanic"): the cover with its shadow, grey with Last logged written on it
+   once they are not logging, then whose it is, the record and the artist.
+   A face pressed brings the next one in over the last, never a cut. */
+.ps-top {
+  margin: 0 24px;
+  padding-top: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.ps-beacon {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  text-align: center;
+  animation: ps-beacon-in 0.4s ease both;
+}
+@keyframes ps-beacon-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+.ps-beacon-card {
+  display: block; margin-bottom: 10px;
+  border-radius: 10%;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.ps-beacon .beacon-art-wrap { display: block; width: 156px; height: 156px; }
+.ps-beacon .beacon-art-placeholder { font-size: 3rem; }
+.ps-beacon .beacon-quiet { margin: 8px 0 4px; }
+.ps-beacon .beacon-track { font-size: 1.2rem; }
+.ps-beacon .beacon-artist { font-size: 0.8rem; }
+.ps-beacon-who {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-family: var(--font-label); font-size: 10.5px; letter-spacing: 0.04em;
+  color: var(--ink-soft); text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.ps-beacon-who .fr-ring, .ps-beacon-who .fr-face { width: 22px; }
+.ps-beacon-card:focus-visible, .ps-beacon-who:focus-visible {
+  outline: 2px solid var(--ink-faint); outline-offset: 4px;
+}
+/* Every face in the book, scrolling sideways once there are more than fit.
+   The one in the beacon grows and its name darkens: the book's own way of
+   saying this one (.fr-one--open), without the dimming. */
+.ps-row {
+  display: flex; align-items: flex-start; gap: 12px;
+  margin: 20px -24px 0; padding: 6px 24px 16px;
+  overflow-x: auto; overscroll-behavior-x: contain;
+  scroll-padding-inline: 24px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.ps-row::-webkit-scrollbar { display: none; }
+.ps-row-one .fr-ring { width: 54px; flex-shrink: 0; }
+.ps-row-one--chosen .fr-ring { transform: scale(1.1); }
+.ps-row-one--chosen .fr-live-name { color: var(--ink); }
+.ps-row-one:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 4px; border-radius: 10px; }
+.ps-row-add .fr-face { background: none; color: var(--ink-soft); box-shadow: inset 0 0 0 1px var(--border); }
+@media (prefers-reduced-motion: reduce) {
+  .ps-beacon { animation: none; }
+}
 /* Whose records: after the search, where home's line has its filters
    (Miyel, 2026-10-23), in ink, its caret beside it. Its menu hangs from the
    line's right end, as the filters do. */

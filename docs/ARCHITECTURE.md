@@ -62,8 +62,8 @@ publicly):
   wall now
 - `/dashboard/people` — the address book as a grid of faces (Friends), with
   the ways one gets in — a paste, a scanned code, a send that carried one —
-  and Invite and Add in its header. Who you've added, the drawer under
-  People's scope, on a phone; a page over the desk on a desk
+  and Invite and Add in its header. The drawer the + at the end of People's
+  row of faces opens, on a phone; a page over the desk on a desk
 - `/dashboard/people/[id]` — your page about one person: what you both have,
   where you agree and disagree hardest, what they sent you and how it landed
 - `/settings` — the machinery: address, the password, Back up your journal,
@@ -225,7 +225,7 @@ The furniture — visual pieces
       ListeningBeacon.js       The beacon — what is playing, or last played
       ListenBar.js             The way into a listen: a bar at the foot of home, the session closed — Start a listen at rest; with a listen lowered, its cover, the lit track and the live dot. Both raise /session as a sheet; the one thing shaped like a button
       Journal.js               The wall of covers, drawn fifty at a time as you scroll, with its search, filters and views (In order, A–Z, by month, era, genre, rating; then time of day, horizon, color, Shuffle; grouped views draw band headings that stick under the line and list the bands to jump to, By color reads each cover in the browser; the album size sits at the foot of the views menu). Draws People's wall too, handed somebody else's records, a tile and the scope for its line
-      PeopleScreen.js          People, one screen (2026-10-23): the top band (TopBand), the wall's line with whose records after its search — Your friends, Your records, Everyone's (off) — and Who you've added under its rule, and a wall of their covers with their faces in the corner, yours first on a record you have too. Your friends is read off the book's public feeds in the browser, the others through /api/board; the search asks the Board. Hands what came back from a send to the inbox, as the feed did
+      PeopleScreen.js          People, one screen (2026-10-23): a friend's beacon over a row of every face in the book, whose + opens the address book (2026-10-24), the wall's line with whose records after its search — Your friends, Your records, Everyone's (off) — and a wall of their covers with their faces in the corner, yours first on a record you have too. Your friends is read off the book's public feeds in the browser, the others through /api/board; the search asks the Board. Hands what came back from a send to the inbox, as the feed did
       JournalFilters.js        The filters, dropping from the wall's line on a phone and a desk alike — kind (albums or tracks), genre, the year range and the marks; it takes records away, the views rearrange them
       AlbumTile.js             One record on that wall — a card for a record with a listen behind it, a page with its corner folded for a record known only by its track notes; the folder shape went on 2026-10-13 (Journal.js gathers entries into records, by title, artist and year)
       FolderFooter.js          A folder's tabs at the foot of the screen — Listen 1, Listen 2 or the song, the one you are on in ink — the one piece of chrome a folder adds; useFolder in LayerEntry.js does the flipping
@@ -236,7 +236,7 @@ The furniture — visual pieces
       MonthPrompt.js           The month's prompt: pinned over the keeper's wall while open (what it asks, days left, the record sent); PromptSheet, the read-only sheet an entry's ··· Submit opens — what will be published and Send to Listening Notes; useMonthPrompt, one copy for the page
       WaveSheet.js             Just added somebody: "[name] is in your address book", Wave to [name] or Not now — the one moment a wave is offered
       Dashboard.js             The desk, for the owner — Start a listen as a band, then Inbox, Address book and Settings as rows; the header holds the mark alone. On a desk only since 2026-09-19, as the spine's second page
-      Friends.js               The address book as a grid of faces, pinned first; a face opens its three doors in place under its own row. /dashboard/people — a drawer over People (Who you've added) and a page on a desk. Exports TopBand: who is logging right now as faces, or the last thing that happened
+      Friends.js               The address book as a grid of faces, pinned first; a face opens its three doors in place under its own row. /dashboard/people — a drawer over People (its row's +) and a page on a desk. Exports TopBand: who is logging right now as faces, or the last thing that happened, over the grid
       Header.js                The phone's top row — the keeper's face (to the card), the light switch, and Home · People · Inbox with only the lit one wearing its word; a visitor's has the mark instead of words. It replaced the band at the foot (Footer.js), 2026-10-22
       PullDown.js              Pull down to refresh: at the top of a scroller, the mark and a line in the gap the page opens, then asking — on the People pane first, Friends and Everyone alike
       EditingBar.js            The band at the foot of anything being corrected — what you are in the middle of, and Save and Cancel as words

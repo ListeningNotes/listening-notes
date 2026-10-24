@@ -14,17 +14,24 @@
 // writing to get through.
 //
 // ── The three bands ───────────────────────────────────────────────────────
-// The top band is who is logging right now, or the last thing that happened
-// (TopBand, in Friends.js, which the address book draws too). A face here
-// opens their journal.
+// The top is a friend's beacon, as home's top is the keeper's (Miyel,
+// 2026-10-24: "info top, wall bottom", and the friends in sight rather than
+// behind the scope's menu): one friend's record drawn as a beacon draws one —
+// in colour while they are logging it, greyed with Last logged on it once
+// they are not — and under it a row of every face in the book, whoever is
+// logging first. A face pressed puts their record in the beacon; the record
+// opens their entry, the name their journal. The beacon starts on somebody
+// logging, or else whoever logged last. The + at the row's end opens the
+// address book, the drawer to add, invite or cross somebody out. It replaced
+// a band of the live faces or the last thing that happened (TopBand, which
+// the address book still draws).
 //
 // The shelf line is the wall's own (Journal.js): the views at its left and
 // the search, exactly as on home, and after the search, where home has its
 // filters, the scope — whose records: Your friends, Your records,
 // Everyone's (Miyel, 2026-10-23, both placings). The scope and the
-// view compose. Who you've added sits under a rule at the foot of the scope's
-// menu: the address book is a drawer you open to add or remove somebody, not
-// a place you go to look at your friends.
+// view compose. Who you've added sat under a rule at the foot of the scope's
+// menu until the faces came up to the top (2026-10-24); the drawer is the +.
 //
 // The wall is covers, with the faces of whoever logged each one in the
 // corner — the keeper's own first, when it is on their wall too. That was a
@@ -48,12 +55,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { CaretDown, User } from '@phosphor-icons/react';
+import { CaretDown, Plus, User } from '@phosphor-icons/react';
 import Journal, { foldForSearch } from './Journal';
-import { TopBand } from './Friends';
 import PullDown from './PullDown';
 import { useBookplate } from './Bookplate';
 import { useFriendsBeacons, refreshFriends } from '../../hooks/useFriendsBeacons';
+import { CAPTION } from '../../hooks/useListeningBeacon';
 import { carrySender, journalUrl, tidyJournal } from '../../library/return_address';
 import { DIRECTORY_URL } from '../../library/version';
 
@@ -507,7 +514,139 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
     );
   }, [there, myFace]);
 
-  // ── Whose records, and the drawer, after the search ─────────────────────
+  // ── A friend's beacon, and the row of faces ─────────────────────────────
+  // The row is the book, whoever is logging first and the rest in the
+  // book's own order — never by how much anybody logs. Each friend's record
+  // is what their own beacon says, as their home draws it; a journal whose
+  // beacon has not answered yet stands on the newest entry in its feed.
+  const [chosen, setChosen] = useState(null);
+  const lineup = useMemo(() => {
+    const byBeacon = new Map((beacons || []).map(b => [b.address, b]));
+    const all = (people || []).map(p => {
+      const b = byBeacon.get(p.address);
+      const j = journals[p.address];
+      const newest = (j?.entries || []).reduce((n, e) => (!n || newestFirst(e, n) < 0 ? e : n), null);
+      return {
+        address: p.address,
+        name: j?.name || p.name || b?.name || '',
+        beacon: b,
+        live: b?.state === 'logging' && Boolean(b.album),
+        newest,
+        entries: j?.entries || [],
+        at: Date.parse(b?.at || '') || Date.parse(newest?.posted_at || '') || 0,
+      };
+    });
+    return [...all.filter(f => f.live), ...all.filter(f => !f.live)];
+  }, [people, beacons, journals]);
+  const lead = lineup.find(f => f.address === chosen)
+    || lineup.find(f => f.live)
+    || lineup.reduce((best, f) => (!best || f.at > best.at ? f : best), null);
+  const record = useMemo(() => {
+    if (!lead) return null;
+    const b = lead.beacon;
+    if (b && b.album && (b.state === 'logging' || b.state === 'logged')) {
+      // The entry their beacon names, where their feed holds it, so the
+      // record opens on what they wrote; their journal while it is live.
+      const named = lead.live ? null : lead.entries.find(e => byName(e.album, e.artist) === byName(b.album, b.artist));
+      return {
+        live: lead.live,
+        title: b.track || b.album,
+        artist: b.artist || '',
+        art: b.art || named?.album_art || '',
+        path: named?.slug ? `/entries/${encodeURIComponent(named.slug)}` : '',
+      };
+    }
+    if (lead.newest) {
+      return {
+        live: false,
+        title: lead.newest.song || lead.newest.album,
+        artist: lead.newest.artist || '',
+        art: lead.newest.album_art || '',
+        path: `/entries/${encodeURIComponent(lead.newest.slug)}`,
+      };
+    }
+    return null;
+  }, [lead]);
+  // A cover that fails is remembered, as home's beacon does, so the browser's
+  // broken picture is never the largest thing on the screen.
+  const [badArt, setBadArt] = useState('');
+  const art = record?.art && record.art !== badArt ? record.art : '';
+  const faceOf = (address, size) => (
+    <span className="fr-ring" aria-hidden="true">
+      <span className="fr-face">
+        <User size={size} weight="regular" />
+        <img
+          src={`${journalUrl(address)}/api/portrait`}
+          alt=""
+          loading="lazy"
+          onError={e => { e.currentTarget.style.display = 'none'; }}
+        />
+      </span>
+    </span>
+  );
+  const top = people && people.length > 0 ? (
+    <div className="ps-top">
+      {lead && (
+        <div className="ps-beacon" key={lead.address}>
+          {record ? (
+            <a
+              className="ps-beacon-card"
+              href={there(lead.address, record.path)}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`${lead.name} ${record.live ? 'is logging' : 'last logged'} ${record.title}${record.artist ? ` by ${record.artist}` : ''}`}
+            >
+              <span className={'beacon-art-wrap' + (record.live ? ' beacon-art-wrap--live' : '')}>
+                {art
+                  ? <img src={art} alt="" className={'beacon-art' + (record.live ? '' : ' beacon-art--idle')} onError={() => setBadArt(art)} />
+                  : <span className="beacon-art-placeholder">&#9834;</span>}
+                {!record.live && art && <span className="beacon-idle-overlay"><span>{CAPTION.logged}</span></span>}
+              </span>
+            </a>
+          ) : (
+            <p className="beacon-quiet">Nothing logged yet.</p>
+          )}
+          <a
+            className="ps-beacon-who"
+            href={there(lead.address)}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`${lead.name}’s journal`}
+          >
+            {faceOf(lead.address, 12)}
+            <span>{lead.name}</span>
+          </a>
+          {record && !record.live && !art && <div className="beacon-status">{CAPTION.logged}</div>}
+          {record && <div className="beacon-track beacon-track--wrap">{record.title}</div>}
+          {record?.artist && <div className="beacon-artist">{record.artist}</div>}
+        </div>
+      )}
+      <div className="ps-row">
+        {lineup.map(f => (
+          <button
+            key={f.address}
+            type="button"
+            className={'fr-live-one ps-row-one'
+              + (f.live ? ' ps-row-one--live' : '')
+              + (lead && f.address === lead.address ? ' ps-row-one--chosen' : '')}
+            onClick={() => setChosen(f.address)}
+            aria-pressed={Boolean(lead && f.address === lead.address)}
+            aria-label={f.live ? `${f.name}, logging` : f.name}
+          >
+            {faceOf(f.address, 20)}
+            <span className="fr-live-name">{f.name}</span>
+          </button>
+        ))}
+        <Link href="/dashboard/people" className="fr-live-one ps-row-one ps-row-add" aria-label="Who you’ve added">
+          <span className="fr-ring" aria-hidden="true">
+            <span className="fr-face"><Plus size={18} weight="regular" /></span>
+          </span>
+        </Link>
+      </div>
+    </div>
+  ) : null;
+
+  // ── Whose records, after the search ─────────────────────────────────────
   const scopes = offered();
   const current = scopes.find(s => s.value === scope) || scopes[0];
   const tail = (
@@ -537,10 +676,6 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
               {s.label}
             </button>
           ))}
-          <span className="arc-views-rule" aria-hidden="true" />
-          <Link href="/dashboard/people" role="menuitem" className="ln-word arc-views-word" onClick={closeMenu}>
-            Who you&rsquo;ve added
-          </Link>
         </span>
       )}
     </span>
@@ -602,25 +737,7 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
   return (
     <div className="ps">
       <PullDown scroller={scroller} onPull={again} asking={'Asking your friends\u2026'} mark={pullMark} />
-      {people && people.length > 0 && (
-        <TopBand
-          people={people}
-          beacons={beacons}
-          open={(person, b, className, label, inside) => (
-            <a
-              key={b.address}
-              className={className}
-              href={there(b.address)}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={label}
-              title={label}
-            >
-              {inside}
-            </a>
-          )}
-        />
-      )}
+      {top}
       <div className="hn-under ps-wall">
         <Journal
           records={records}

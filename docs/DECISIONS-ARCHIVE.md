@@ -1136,3 +1136,21 @@ Retired by her People brief, 2026-10-23: "The feed is homework" — the same
 information as one line saying who logged what, in the opposite posture.
 Its records became People's wall; its match for what came back moved to
 PeopleScreen.js; its compare moved to the inbox.
+
+---
+
+## The network — People's top band, 2026-10-23 to 2026-10-24
+
+Lives now in DECISIONS.md, The network: *People's top is a friend's beacon*.
+
+**People's top band is who is live, or the last thing that happened,
+2026-10-23, her People brief.** One slot of one height: the faces logging
+right now, each with its name and the record under it; when nobody is, one
+line — face, name, what they logged, how long ago. No heading and no word for
+the room: *Quiet* read as a verdict on the person named. A face is there
+because they are live, never for how much they log.
+
+Replaced the next day, Miyel: People "should resemble more of a beacon and
+that is where your friends are", with the faces out from under the scope's
+menu (Who you've added sat at its foot) — info top, wall bottom, the way home
+is. TopBand still draws over the address book's own grid.

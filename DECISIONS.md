@@ -264,7 +264,8 @@ doesn't really need it anymore"). On a phone the wall's bar sits at the top of
 the wall, stuck under the row, as on a desk: the foot is the Listen bar's.
 
 **A two-floor screen is two stops, and that is not a snap, 2026-09-20.**
-The entry and the book have it (the beacon did, until home became one page). The record
+The entry has it (the beacon did, until home became one page; the book, until
+People became one screen, 2026-10-23: "there is no top and bottom"). The record
 is one thing to look at and what is under it is the next; move at all and
 let go and it finishes the journey, the way you were already going. It acts
 only between those two, never past the second floor, and only with a hand
@@ -1294,12 +1295,12 @@ square on the grounds that a journal is a shelf of records. A person is a
 circle and a record a rounded square, which also tells the two apart in the
 band of cards, where both are drawn. The rest of the site's faces wait on her.
 
-**People's top band is who is live, or the last thing that happened,
-2026-10-23, her People brief.** One slot of one height: the faces logging
-right now, each with its name and the record under it; when nobody is, one
-line — face, name, what they logged, how long ago. No heading and no word for
-the room: *Quiet* read as a verdict on the person named. A face is there
-because they are live, never for how much they log.
+**People's top is a friend's beacon, 2026-10-24, her call.** Info top, wall
+bottom, as home is, and no carry between them: one friend's record drawn as
+the beacon draws one (colour while live, grey with Last logged after), their
+face and name, then a row of every face in the book, live first, the book's
+order after; a face pressed brings theirs in, the + opens the address book.
+No heading: *Quiet* read as a verdict on the person named.
 
 **The directory, 2026-10-07, Miyel's call, and no longer ruled out.**
 listeningnotes.blog keeps a table of the journals on the Board — the address,
@@ -1323,11 +1324,11 @@ dismissed. The proof is unchanged: a code from the registry's secret, served
 back at /api/public/listing; delisting needs the code and the journal to have
 forgotten it. (Off by default and a press, 2026-10-07, is what this replaced.)
 
-**People is one screen: the top band, a line with a scope, and a wall,
+**People is one screen: a friend's beacon, a line with a scope, and a wall,
 2026-10-23, her People brief.** Whose records — Your friends · Your
 records · Everyone's (built, off until the Board is big enough: her call) —
-sits after the search, remembered as the view is; Who you've added, under
-its rule, opens the address book as a drawer. The wall is home's, so views
+sits after the search, remembered as the view is; the address book is a
+drawer, opened by the + in the row of faces. The wall is home's, so views
 compose with the scope; covers wear their loggers' faces, yours first when
 you have it too (not a gold dot); the search is the Board's (her calls).
 
