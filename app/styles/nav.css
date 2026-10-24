@@ -3790,7 +3790,8 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   /* The top row's ground wears the slice of the wash under it, and above
      the wash, if the page starts lower than the glass, its top colour
      (HomeNav, The wash under the top row). */
-  .hn[data-washed] .hn-bar-ground {
+  html[data-washed] .hn-bar-ground,
+  html[data-washed] .ln-brow {
     background-color: var(--bg);
     background-image: linear-gradient(var(--wash-top), var(--wash-top)), var(--wash-image);
     background-repeat: no-repeat;

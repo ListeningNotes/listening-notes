@@ -1503,13 +1503,19 @@ export default function HomeNav() {
   // under it disappears — which would draw a strip of page across the top of
   // the wash. So while home has a wash the ground wears the slice of the wash
   // that is under it: the same picture, placed where the wash is this
-  // moment, written onto the cross as properties (nav.css, data-washed).
+  // moment, written onto the page as properties (nav.css, data-washed).
   // Scrolled past the wash, the slice is page colour, which is what the
   // ground always was. Not in state: it moves on every scroll. Only on home,
   // and only on a phone, where the wash is drawn.
+  //
+  // And the brow under the clock wears it too (base.css, .ln-brow), so the
+  // colour reaches the top of the glass (Miyel: "all the way towards the top
+  // of the screen, even behind the time"). The brow stands over everything,
+  // so this is home's address only: an entry laid over home has the brow of
+  // the page's colour it always had.
   useEffect(() => {
     const home = paneRefs[HOME]?.current;
-    const root = railRef.current?.closest('.hn');
+    const root = document.documentElement;
     if (!home || !root) return undefined;
     const clear = () => {
       root.removeAttribute('data-washed');
@@ -1518,7 +1524,7 @@ export default function HomeNav() {
     const place = () => {
       const washEl = home.querySelector('.beacon-wash');
       const ground = root.querySelector('.hn-bar-ground');
-      if (!washEl || !ground || pane !== HOME || cardOpen || !washEl.offsetHeight) { clear(); return; }
+      if (!washEl || !ground || pane !== HOME || cardOpen || path !== '/' || !washEl.offsetHeight) { clear(); return; }
       const w = washEl.getBoundingClientRect();
       const g = ground.getBoundingClientRect();
       const y = Math.round(w.top - g.top);
@@ -1543,7 +1549,7 @@ export default function HomeNav() {
       watch?.disconnect();
       clear();
     };
-  }, [paneRefs, pane, cardOpen, wash, isLive]);
+  }, [paneRefs, pane, cardOpen, wash, isLive, path]);
 
   function goTo(index) {
     const el = railRef.current;

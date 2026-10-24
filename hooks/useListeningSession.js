@@ -258,7 +258,6 @@ export function useListeningSession({ step }) {
   // just opened says its own name. Cleared by a different record arriving,
   // and by nothing else.
   useEffect(() => {
-    if (!albumInput || saved) return undefined;
     // ── Every record in hand is a beacon, 2026-09-18 ──────────────────────
     // This was `if (step === 0 && !hasWriting) return undefined` — a record on
     // the album screen with nothing opened and nothing written was somebody
@@ -283,11 +282,19 @@ export function useListeningSession({ step }) {
     //
     // The two seconds below still stand between a mis-tap and a broadcast,
     // and leaving lifts the needle as it always did.
-    const t = setTimeout(() => {
-      fetch('/api/needle', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+    //
+    // ── Two seconds from the first change, not the last, 2026-10-23 ───────
+    // This was a timer set again on every change, so a listen that kept
+    // changing — a record switched in the picker and its tracks rated one
+    // after another — never wrote at all, and the beacon stayed dark behind
+    // a listen in full swing (Miyel, on the sandbox: "the issue mostly
+    // arises when I switch albums"). Now the first change starts the clock
+    // and every change after it only updates what the clock will send, so
+    // the beacon hears within two seconds however busy the listen is. And
+    // lowering the sheet sends it at once (the unmount, below), since the
+    // listen is still in hand and is just what somebody goes to look at.
+    if (!albumInput || saved) { needleNext.current = null; return undefined; }
+    needleNext.current = {
           album: albumInput,
           artist: artistName,
           album_art: albumArt,
@@ -305,19 +312,44 @@ export function useListeningSession({ step }) {
             { length: tracks?.length || (Math.max(-1, ...Object.keys(trackRatings).map(Number)) + 1) },
             (_, i) => Number(trackRatings[i]) || 0,
           ),
-        }),
-      }).then(() => { litRef.current = true; })
-        .catch(() => { /* the beacon is not worth an alert */ });
-    }, 2000);
-    return () => clearTimeout(t);
+    };
+    if (!needleClock.current) {
+      needleClock.current = setTimeout(() => {
+        needleClock.current = null;
+        writeNeedle();
+      }, 2000);
+    }
+    return undefined;
   }, [albumInput, artistName, albumArt, tracks, onAir, saved,
       overallNotes, trackNotes, trackRatings, trackFavorites,
       rating, Masterpiece, Favorite, Formative, step, hasWriting]);
 
   // The needle lifts. Called when the record comes off the desk, when the
-  // listen becomes an entry, and when the listen leaves the screen.
+  // listen becomes an entry, and when the listen leaves the screen. Whatever
+  // was waiting to be sent is not sent, or it would light the needle again
+  // straight after.
   function liftNeedle() {
+    clearTimeout(needleClock.current);
+    needleClock.current = null;
+    needleNext.current = null;
     fetch('/api/needle', { method: 'DELETE' }).catch(() => {});
+  }
+
+  // What the beacon is to be told next, and the clock that will tell it
+  // (the write effect above). keepalive, so a write sent as the sheet goes
+  // still lands after the page under it has moved on.
+  const needleNext = useRef(null);
+  const needleClock = useRef(null);
+  function writeNeedle() {
+    const body = needleNext.current;
+    if (!body) return;
+    fetch('/api/needle', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      keepalive: true,
+    }).then(() => { litRef.current = true; })
+      .catch(() => { /* the beacon is not worth an alert */ });
   }
 
   // Whether this listen ever lit the beacon. Read by the cleanup below, and
@@ -351,7 +383,20 @@ export function useListeningSession({ step }) {
   // which this is (putDown) before the sheet goes; the twenty-minute expiry
   // still catches a listen put down and never picked up again.
   const downRef = useRef(false);
-  useEffect(() => () => { if (litRef.current && !downRef.current) liftNeedle(); }, []);
+  useEffect(() => () => {
+    // Put down: whatever was waiting goes now, rather than dying with the
+    // sheet — the record switched or the last track rated just before it was
+    // lowered is what the beacon must say.
+    if (downRef.current) {
+      clearTimeout(needleClock.current);
+      needleClock.current = null;
+      writeNeedle();
+      return;
+    }
+    if (litRef.current) liftNeedle();
+    else { clearTimeout(needleClock.current); needleClock.current = null; }
+  // Once, on leaving: the refs hold what is current.
+  }, []);
 
   // Assemble the preview on arrival. Nothing here reaches a model — format_post
   // is a local join of what was written — so it is redone every time the
