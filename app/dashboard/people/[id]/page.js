@@ -5,227 +5,217 @@
 // Your page about one person in the address book.
 //
 // Compare is not a destination; it is what this page is. Everything
-// cumulative about a person lives here — how many records you both have,
-// where you agree hardest and disagree hardest, what they have sent you and
-// how you rated it, their hit rate with you — and it lives on your copy,
-// (What only they have heard was a list here too, and came off on Miyel's
-// call, 2026-09-13: their journal is a tap away and says it better.)
-// which is why it can hold what their journal never could: what they sent,
-// how it landed, how often they are right about you.
+// cumulative about a person lives here, and it lives on your copy, which is
+// why it can hold what their journal never could: what they sent you, how it
+// landed, which songs you both picked.
 //
-// ── Cards, one sentence each, 2026-10-23 ──────────────────────────────────
-// Her brief, "compare becomes a shape", made the page open on a picture —
-// your stars across, theirs up, a cover for every record you both rated,
-// a dotted line where you agree. Built as drawn, with numbers and lists
-// under it, it was "a bit confusing… very wordy and some of it i just dont
-// understand", and she wanted it "very clear understandable… like spotify
-// wrapped". So the page is a short run of cards, each one plain sentence
-// with its numbers inside it: how often you agree, with the picture; your
-// biggest argument; where you agree most; what they put you onto and how
-// much of it you loved; what you sent them that is still out. Every word on
-// it has to be understood by someone who has never heard of an offset.
+// ── You versus them, 2026-10-24 ───────────────────────────────────────────
+// Her brief, "compare becomes a shape", opened the page on a picture of who
+// agrees; the run of cards after it said the same thing in sentences. Both
+// were still a report, and she did not like *argument* and *agree* at all:
+// "i was thinking one person one side one person the other you click
+// through shared albums… almost like a vs screen in a video game. then other
+// fun cool metrics that are exciting that only my app could know." So the
+// page is a versus screen. You on the left, them on the right, one record at
+// a time: the cover, both of your stars and marks, both horizons, and one
+// line only this journal could write — the songs you both hearted above all,
+// which no other site can know. A row of filters chooses which records you
+// flip through, and a sentence over them says the one thing that view adds
+// up to. Between the two faces, the compare mark and not "vs" — her word,
+// the same day: friendly, "like an & or something else… i meant the
+// compare sign" — the same Shuffle every door that opens this page wears
+// (Friends, the inbox, the feed).
 //
-// Read in the browser: their public feed from their journal, your own
-// records and the sends from them from this copy. Nothing is stored and
-// nobody learns they were looked at. Their writing stays on their journal,
-// where every row here can take you.
+// **Nobody wins.** A game's versus screen has a score; this one has none —
+// no points, no "you beat them". AGENTS' Never keeps counts and rankings off
+// people so that a friendship never becomes something to grow, and that
+// still holds: the numbers here are about records the two of you share, on
+// the one page that is about the two of you.
 //
-// Agreeing allows for how each of you rates: a generous rater and a harsh
-// one with the same taste should come out alike (DECISIONS, The journal),
-// so their ratings are shifted by the average difference across what you
-// both have before the gap is measured. Three records in common are the
-// least that offset is trusted on. The offset decides who agrees and which
-// arguments are the biggest; it is never printed, and every rating the page
-// shows is the stars as each of you gave them.
+// **Every rating is the stars as each of you gave them.** The offset that
+// decided who "agreed" went with agreeing; nothing on the page needs it.
+//
+// Read in the browser: their public feed from their journal; your records,
+// what they sent you and what you sent them from this copy. Nothing is
+// stored and nobody learns they were looked at. Their writing stays on their
+// journal, where every one of their records here can take you.
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { CaretLeft, Printer, User } from '@phosphor-icons/react';
+import { CaretLeft, CaretRight, Printer, Shuffle, User } from '@phosphor-icons/react';
 import SiteNav from '../../../../components/main_components/SiteNav';
 import StarRating from '../../../../components/main_components/StarRating';
+import { HorizonRow, Marks } from '../../../../components/main_components/Feed';
+import { useBookplate } from '../../../../components/main_components/Bookplate';
 import { albumKey } from '../../../../hooks/useListeningBeacon';
-import { journalUrl, tidyJournal } from '../../../../library/return_address';
+import { parseHorizon } from '../../../../library/entry_formatter';
+import { carrySender, journalUrl, tidyJournal } from '../../../../library/return_address';
 import { arrivingBack } from '../../../../library/handoff';
 
-// Half a star, after the offset, is the same opinion typed slightly
-// differently. Four stars or better is a hit: something they sent that you
-// went on to log and rate well. Three records is the least the offset is
-// trusted on; fewer, and raw stars are compared.
-const ALIKE = 0.5;
+// Four stars or better is loved: something sent that went on to be logged
+// and rated well.
 const HIT = 4;
-const OFFSET_NEEDS = 3;
-const HARDEST = 3;
 const EACH_MS = 8000;
+// A record whose every song the keeper gave full marks says so, once it has
+// enough songs for that to mean something.
+const ALL_TOP_LEAST = 3;
+// How far a finger has to travel across the record to turn to the next one.
+const SWIPE_PX = 40;
 
 const num = v => (v === null || v === undefined || v === '' ? null : Number(v));
 const newestFirst = rows => [...rows].sort((a, b) => new Date(b.posted_at) - new Date(a.posted_at));
-// A rating as it is said: 4.5, 5, 1.5 — never 5.0.
 const said = v => { const n = num(v); return n === null ? '' : String(Math.round(n * 100) / 100); };
 const stars = v => `${said(v)} ${num(v) === 1 ? 'star' : 'stars'}`;
+const heartsOf = entry => String(entry?.hearts || '');
+const countHearts = h => [...h].filter(c => c === '1').length;
+const some = (n, one, many) => (n === 1 ? one : many.replace('#', n));
 
 // One entry per record, the most recent (DECISIONS: never average across
 // listens). Album listens only, 2026-09-24: a track note rates one song, and
 // set against somebody's whole-record score it would be a comparison of two
-// different things. An older copy sends no `song`, and its notes cannot be
-// told apart — which only happens once they have one.
+// different things.
 function latestPerKey(entries) {
   const latest = new Map();
   for (const e of newestFirst(entries)) if (e.album_key && !e.song && !latest.has(e.album_key)) latest.set(e.album_key, e);
   return latest;
 }
 
-function Face({ address }) {
+function Face({ src }) {
   return (
     <span className="pn-face" aria-hidden="true">
       <User size={26} weight="regular" />
-      <img src={`${journalUrl(address)}/api/portrait`} alt="" onError={e => { e.currentTarget.style.display = 'none'; }} />
+      <img src={src} alt="" onError={e => { e.currentTarget.style.display = 'none'; }} />
     </span>
   );
 }
 
-// ── The shape ─────────────────────────────────────────────────────────────
-// The axes run one to five, not zero: real ratings bunch at the top, and a
-// plot where everything huddles in a corner reads as broken. The plot is a
-// grid of square slots, nine across at the least — one per half star, so a
-// rating lands exactly on a slot — and more as the records you share grow,
-// so four hundred covers shrink rather than pile up. Each cover takes the
-// free slot nearest its own two ratings: a record that lands where another
-// already is nudges to the next square over instead of hiding it. The
-// arguments are placed first, so the ones the page is about sit where they
-// really are; then the rest, furthest from the line first, since the cloud
-// along the line is where the crowding happens and the least is lost there.
-const SLOTS_LEAST = 9;
-const ROOM_EACH = 2.5;
+// ── What the two listens share ────────────────────────────────────────────
+// The two horizons can be laid track against track only when they are the
+// same length — the same edition of the record. Otherwise each is drawn on
+// its own and nothing is said about songs, because the fifth song on one
+// tracklist is not the fifth on the other.
+function lineUp(mine, theirs) {
+  const yours = parseHorizon(mine?.horizon);
+  const hers = parseHorizon(theirs?.horizon);
+  const yourHearts = heartsOf(mine);
+  const theirHearts = heartsOf(theirs);
+  const comparable = yours.length > 0 && yours.length === hers.length
+    && yourHearts.length === yours.length && theirHearts.length === hers.length;
+  const both = [];
+  if (comparable) for (let i = 0; i < yours.length; i++) if (yourHearts[i] === '1' && theirHearts[i] === '1') both.push(i);
+  return { yours, hers, yourHearts, theirHearts, comparable, both };
+}
 
-function placeCovers(pairs, rings) {
-  const n = Math.max(SLOTS_LEAST, Math.ceil(Math.sqrt(pairs.length * ROOM_EACH)));
-  // In slots, from the left and from the foot: a one sits in the first
-  // slot's middle, a five in the last one's.
-  const at = r => 0.5 + ((Math.min(5, Math.max(1, num(r))) - 1) / 4) * (n - 1);
-  const order = [...pairs].sort((a, b) =>
-    (rings.has(b.mine.slug) - rings.has(a.mine.slug)) || (b.gap - a.gap) || String(a.mine.slug).localeCompare(String(b.mine.slug)));
-  const taken = new Set();
-  const placed = [];
-  for (const pair of order) {
-    const x = at(pair.mine.rating_value);
-    const y = at(pair.theirs.rating_value);
-    let best = null;
-    let bestDistance = Infinity;
-    for (let i = 0; i < n; i++) {
-      for (let j = 0; j < n; j++) {
-        if (taken.has(i * n + j)) continue;
-        const distance = (i + 0.5 - x) ** 2 + (j + 0.5 - y) ** 2;
-        if (distance < bestDistance) { bestDistance = distance; best = [i, j]; }
-      }
-    }
-    if (!best) break;
-    taken.add(best[0] * n + best[1]);
-    placed.push({ pair, left: best[0] / n, bottom: best[1] / n, ring: rings.has(pair.mine.slug) });
+const allTop = bars => bars.length >= ALL_TOP_LEAST && bars.every(v => v >= 1);
+
+// ── The one line ──────────────────────────────────────────────────────────
+// What only this journal knows about a record the two of you have, said the
+// way a person would say it, the most surprising thing first: the songs you
+// both picked, then a Masterpiece you share, then every song given full
+// marks, then favourites that never meet. The stars come last, since they
+// are drawn right above it. A record one of them put the other onto says so
+// first, as its own short sentence.
+function oneLine({ mine, theirs, from, shape, songs, name }) {
+  const lead = from === 'them' ? `${name} put you onto this.` : from === 'you' ? `You put ${name} onto this.` : null;
+  const say = rest => (lead ? <>{lead} {rest}</> : rest);
+  if (!mine) return say(<>You haven&rsquo;t logged it yet.</>);
+  if (!theirs) return say(<>{name} hasn&rsquo;t logged it yet.</>);
+
+  const m = num(mine.rating_value);
+  const t = num(theirs.rating_value);
+  const n = shape.both.length;
+  if (n > 0) {
+    const named = songs && n <= 2 && songs.length === n;
+    const what = named
+      ? <>{songs.map((s, i) => <span key={i}>{i > 0 && ' and '}<b>{s}</b></span>)}</>
+      : <>the same <b>{n}</b> {n === 1 ? 'song' : 'songs'}</>;
+    if (t === m && m !== null) return say(<>You both gave it {stars(m)} and picked {what}.</>);
+    // Half a star is the same opinion typed slightly differently; a "but"
+    // over it makes an argument out of nothing.
+    if (lead || m === null || t === null || Math.abs(t - m) <= 0.5) return say(<>You both picked {what}.</>);
+    if (t < m) return <>{name} gave it {stars(t)}, but you both picked {what}.</>;
+    return <>{name} liked it more than you did, but you both picked {what}.</>;
   }
-  return { n, placed };
+  const mp = e => e.masterpiece === true || e.masterpiece === 'true';
+  if (mp(mine) && mp(theirs)) return say(<>You both called it a Masterpiece.</>);
+  if (allTop(shape.hers) && !allTop(shape.yours)) return say(<>{name} gave every song full marks.</>);
+  if (allTop(shape.yours) && !allTop(shape.hers)) return say(<>You gave every song full marks.</>);
+  if (shape.comparable) {
+    const yh = countHearts(shape.yourHearts);
+    const th = countHearts(shape.theirHearts);
+    if (yh && th) return say(<>You each picked different favorite songs.</>);
+    if (yh && !th) return say(<>You picked {some(yh, 'one favorite song', '# favorite songs')}. {name} picked none.</>);
+    if (th && !yh) return say(<>{name} picked {some(th, 'one favorite song', '# favorite songs')}. You picked none.</>);
+  }
+  if (m !== null && t !== null) return say(m === t ? <>You both gave it {stars(m)}.</> : <>You gave it {stars(m)}. {name} gave it {stars(t)}.</>);
+  return lead || <>You&rsquo;ve both logged it.</>;
 }
 
-function Shape({ pairs, rings, name }) {
-  const { n, placed } = useMemo(() => placeCovers(pairs, rings), [pairs, rings]);
-  // The line runs from a one-and-one to a five-and-five, corner slot to
-  // corner slot, in hundredths of the plot.
-  const end = (0.5 / n) * 100;
+// One side of the screen: the stars as they gave them and their marks, or
+// that they have not logged it.
+function Side({ entry, theirs = false }) {
+  if (!entry) return <div className={'pn-side' + (theirs ? ' pn-side--theirs' : '')}><span className="pn-side-none">Not logged</span></div>;
+  const rating = num(entry.rating_value);
   return (
-    <figure className="pn-shape">
-      <div className="pn-shape-plot" role="img" aria-label={`Your stars across, ${name}'s up, a cover for every record you both rated.`}>
-        <svg className="pn-shape-line" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-          <line x1={end} y1={100 - end} x2={100 - end} y2={end} />
-        </svg>
-        {placed.map(({ pair, left, bottom, ring }) => (
-          <Link
-            key={pair.mine.slug}
-            href={`/entries/${pair.mine.slug}`}
-            className={'pn-plot' + (ring ? ' pn-plot--ring' : '')}
-            style={{ left: `${left * 100}%`, bottom: `${bottom * 100}%`, width: `${100 / n}%` }}
-            title={`${pair.mine.album} — you ${said(pair.mine.rating_value)}, ${name} ${said(pair.theirs.rating_value)}`}
-          >
-            {pair.mine.album_art
-              ? <img src={pair.mine.album_art} alt="" loading="lazy" />
-              : <span className="pn-plot-none" aria-hidden="true">♪</span>}
-          </Link>
-        ))}
+    <div className={'pn-side' + (theirs ? ' pn-side--theirs' : '')}>
+      {rating !== null ? <StarRating rating={rating} size={16} /> : <span className="pn-side-none">No stars</span>}
+      <Marks entry={entry} size={13} />
+    </div>
+  );
+}
+
+// ── The record on screen ──────────────────────────────────────────────────
+function Versus({ item, name, address, songs }) {
+  const { mine, theirs } = item;
+  const shape = lineUp(mine, theirs);
+  const face = mine || theirs || item;
+  // The cover goes to your own entry, as every record on this page always
+  // has; to theirs, on their journal, when you have not logged it.
+  const cover = face.album_art
+    ? <img src={face.album_art} alt="" />
+    : <span className="pn-vs-none" aria-hidden="true">♪</span>;
+  return (
+    <div className="pn-vs">
+      {mine
+        ? <Link href={`/entries/${mine.slug}`} className="pn-vs-art" aria-label={`${face.album}, your entry`}>{cover}</Link>
+        : theirs
+          ? <a href={carrySender(`${journalUrl(address.theirs)}/entries/${theirs.slug}`, address.me, { known: true })} className="pn-vs-art" aria-label={`${face.album}, on ${name}'s journal`}>{cover}</a>
+          : <span className="pn-vs-art">{cover}</span>}
+      <div className="pn-vs-album">{face.album}</div>
+      <div className="pn-vs-artist">{face.artist}</div>
+
+      <div className="pn-sides">
+        <Side entry={mine} />
+        <Side entry={theirs} theirs />
       </div>
-      <span className="pn-shape-y" aria-hidden="true">{name} &uarr;</span>
-      <figcaption className="pn-shape-x" aria-hidden="true">You &rarr;</figcaption>
-    </figure>
+
+      <p className="pn-vs-line">{oneLine({ ...item, shape, songs, name })}</p>
+
+      {(shape.yours.length > 0 || shape.hers.length > 0) && (
+        <div className="pn-rows">
+          {shape.yours.length > 0 && (
+            <>
+              <span className="pn-row-who">You</span>
+              <HorizonRow bars={shape.yours} hearts={shape.yourHearts} others={shape.comparable ? shape.theirHearts : null} className="fd-cmp-bars pn-bars pn-bars--you" label="How you heard it, track by track" />
+            </>
+          )}
+          {shape.hers.length > 0 && (
+            <>
+              <span className="pn-row-who">{name}</span>
+              <HorizonRow bars={shape.hers} hearts={shape.theirHearts} others={shape.comparable ? shape.yourHearts : null} className="fd-cmp-bars pn-bars pn-bars--theirs" label={`How ${name} heard it, track by track`} />
+            </>
+          )}
+        </div>
+      )}
+    </div>
   );
-}
-
-// The first card's sentence: how often you agree, said the way a person
-// would say it at every count, the odd ones included.
-function agreeSentence(facts, name) {
-  const both = facts.rated.length;
-  const alike = facts.alike.length;
-  if (!facts.pairs.length) return <>You and {name} haven&rsquo;t logged any of the same records yet.</>;
-  if (!both) return <>You&rsquo;ve both logged {facts.pairs.length === 1 ? 'one record' : `${facts.pairs.length} of the same records`}, but haven&rsquo;t both rated one.</>;
-  if (both === 1) return alike ? <>You and {name} agree on the one record you&rsquo;ve both rated.</> : <>You and {name} don&rsquo;t agree on the one record you&rsquo;ve both rated.</>;
-  if (alike === both) return <>You and {name} agree on all <b>{both}</b> records you&rsquo;ve both rated.</>;
-  if (!alike) return <>You and {name} don&rsquo;t agree on any of the <b>{both}</b> records you&rsquo;ve both rated.</>;
-  return <>You and {name} agree on <b>{alike}</b> of the <b>{both}</b> records you&rsquo;ve both rated.</>;
-}
-
-// What the top record of a card says: the two ratings as given.
-function bothSaid(pair, name) {
-  return num(pair.mine.rating_value) === num(pair.theirs.rating_value)
-    ? <>You both gave it {stars(pair.mine.rating_value)}.</>
-    : <>You gave it {stars(pair.mine.rating_value)}. {name} gave it {said(pair.theirs.rating_value)}.</>;
-}
-
-// The record a card is about: its cover large and its name beside it.
-function Lead({ pair }) {
-  return (
-    <Link href={`/entries/${pair.mine.slug}`} className="pn-lead">
-      <span className="pn-lead-art">{pair.mine.album_art && <img src={pair.mine.album_art} alt="" loading="lazy" />}</span>
-      <span className="pn-lead-said">
-        <span className="pn-lead-album">{pair.mine.album}</span>
-        <span className="pn-lead-artist">{pair.mine.artist}</span>
-      </span>
-    </Link>
-  );
-}
-
-// The runners-up under a card's record: a small cover, the name, and the
-// two ratings as plain words.
-function Runner({ pair, name }) {
-  const same = num(pair.mine.rating_value) === num(pair.theirs.rating_value);
-  return (
-    <Link href={`/entries/${pair.mine.slug}`} className="pn-runner">
-      <span className="pn-runner-art">{pair.mine.album_art && <img src={pair.mine.album_art} alt="" loading="lazy" />}</span>
-      <span className="pn-runner-album">{pair.mine.album}</span>
-      <span className="pn-runner-stars">{same ? `Both ${said(pair.mine.rating_value)}` : `You ${said(pair.mine.rating_value)} · ${name} ${said(pair.theirs.rating_value)}`}</span>
-    </Link>
-  );
-}
-
-// How many covers across in what they have sent you. Five, as her mockup
-// draws the shelf (2026-10-20); it was four, the faces in the book, until
-// the page became a picture.
-const SENT_ACROSS = 5;
-
-// A flat list into rows. CSS grid has no way to say "after whichever row
-// that item landed in", so the rows are real and the detail is a sibling of
-// the one it belongs under.
-function chunk(list, per) {
-  const out = [];
-  for (let i = 0; i < list.length; i += per) out.push(list.slice(i, i + per));
-  return out;
-}
-
-// Names in a sentence: "A", "A and B", "A, B and 2 more".
-function listed(titles) {
-  if (titles.length <= 2) return titles.join(' and ');
-  return `${titles.slice(0, 2).join(', ')} and ${titles.length - 2} more`;
 }
 
 export default function PersonPage({ layered = false }) {
   const { id } = useParams();
   const router = useRouter();
+  const { keeper_name, site_address } = useBookplate();
   // The way back, in the header's left slot: to the book or the feed this
   // opened from, or to the book when there is nothing behind it. The pull
   // down and Escape still work; this is the one that can be seen.
@@ -243,21 +233,23 @@ export default function PersonPage({ layered = false }) {
   // Their feed: null until asked, { entries, name } when it answered,
   // { failed: true } when it did not.
   const [theirs, setTheirs] = useState(null);
-  // Your own records: null until they have been read, so the first card
-  // does not say there is nothing in common while they are on their way.
+  // Your own records: null until they have been read, so the page does not
+  // say there is nothing in common while they are on their way.
   const [mine, setMine] = useState(null);
   const [sent, setSent] = useState([]);
-  // What you have sent them that they have not logged yet (the inbox's
-  // Sent list, library/sent_actions.js), narrowed to them. No age and no
-  // reminder on it, as there is none on that list.
+  // What you put them onto: what came back (they logged it, and their
+  // journal credits yours) and what is still out (the inbox's Sent list,
+  // library/sent_actions.js — no age and no reminder on it, as there is
+  // none there).
+  const [cameBack, setCameBack] = useState([]);
   const [out, setOut] = useState([]);
-  // Which sent record is showing its name and its note. Miyel, 2026-09-19:
-  // "in the what ___ has sent you, show them as just album covers; when
-  // clicked the actual name and note can open." Covers first because that is
-  // how a shelf is read — you know the record by its face long before you
-  // read its name — and because a column of rows for four sends was a table
-  // where a handful of squares is a shelf.
-  const [openSend, setOpenSend] = useState(null);
+  const [view, setView] = useState(null);
+  const [at, setAt] = useState(0);
+  // The titles of the songs on each of your records, read from your own
+  // entry the first time the record is on screen — the list carries the
+  // hearts but not the names. slug → [title, …].
+  const [titles, setTitles] = useState({});
+  const asked = useRef(new Set());
 
   useEffect(() => {
     fetch('/api/auth/check').then(r => r.json()).then(d => setAuthed(!!d.authed)).catch(() => {}).finally(() => setChecking(false));
@@ -273,6 +265,7 @@ export default function PersonPage({ layered = false }) {
         const p = d.person || false;
         setPerson(p);
         if (!p) return;
+        const theirAddress = tidyJournal(p.address);
         fetch(`${journalUrl(p.address)}/api/public/entries`, { signal: AbortSignal.timeout(EACH_MS) })
           .then(r => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
           .then(j => { if (!gone) setTheirs({ entries: j.entries || [], name: String(j.keeper_name || '').trim() || p.name || '' }); })
@@ -281,12 +274,13 @@ export default function PersonPage({ layered = false }) {
         // Every send this copy has, narrowed to theirs by the address the
         // send carried — the same spelling the book keeps.
         fetch('/api/submissions').then(r => r.json()).then(d3 => {
-          if (gone) return;
-          const theirsOnly = (d3.submissions || []).filter(s => tidyJournal(s.sender_url) === tidyJournal(p.address));
-          setSent(theirsOnly);
+          if (!gone) setSent((d3.submissions || []).filter(s => tidyJournal(s.sender_url) === theirAddress));
         }).catch(() => {});
-        fetch('/api/sent').then(r => (r.ok ? r.json() : { sent: [] })).then(d4 => {
-          if (!gone) setOut((d4.sent || []).filter(s => tidyJournal(s.journal) === tidyJournal(p.address)));
+        fetch('/api/came-back').then(r => (r.ok ? r.json() : { cameBack: [] })).then(d4 => {
+          if (!gone) setCameBack((d4.cameBack || []).filter(c => tidyJournal(c.journal) === theirAddress));
+        }).catch(() => {});
+        fetch('/api/sent').then(r => (r.ok ? r.json() : { sent: [] })).then(d5 => {
+          if (!gone) setOut((d5.sent || []).filter(s => tidyJournal(s.journal) === theirAddress));
         }).catch(() => {});
       })
       .catch(() => { if (!gone) setPerson(false); });
@@ -295,81 +289,172 @@ export default function PersonPage({ layered = false }) {
 
   const name = theirs?.name || person?.name || 'them';
 
-  const facts = useMemo(() => {
+  const decks = useMemo(() => {
     const mineLatest = latestPerKey(mine || []);
-    const theirLatest = latestPerKey(theirs?.entries || []);
+    const theirEntries = theirs?.entries || [];
+    const theirLatest = latestPerKey(theirEntries);
+    const theirBySlug = new Map(theirEntries.map(e => [e.slug, e]));
+    const later = item => Math.max(new Date(item.mine?.posted_at || 0), new Date(item.theirs?.posted_at || 0));
 
-    const pairs = [];
+    // Every record you have both logged, newest first by whichever of you
+    // logged it last.
+    const shared = [];
     for (const [key, m] of mineLatest) {
       const t = theirLatest.get(key);
-      if (t) pairs.push({ mine: m, theirs: t });
+      if (t) shared.push({ key, mine: m, theirs: t, from: null });
     }
-    const rated = pairs.filter(p => num(p.mine.rating_value) !== null && num(p.theirs.rating_value) !== null);
-    const offset = rated.length >= OFFSET_NEEDS
-      ? rated.reduce((sum, p) => sum + (num(p.theirs.rating_value) - num(p.mine.rating_value)), 0) / rated.length
-      : 0;
-    for (const p of rated) p.gap = Math.abs((num(p.theirs.rating_value) - offset) - num(p.mine.rating_value));
-    const alike = rated.filter(p => p.gap <= ALIKE);
-    const warmth = p => num(p.mine.rating_value) + num(p.theirs.rating_value);
-    const agree = [...alike].sort((a, b) => a.gap - b.gap || warmth(b) - warmth(a)).slice(0, HARDEST);
-    const disagree = rated.filter(p => p.gap > ALIKE).sort((a, b) => b.gap - a.gap).slice(0, HARDEST);
-    const rings = new Set(disagree.map(p => p.mine.slug));
+    shared.sort((a, b) => later(b) - later(a));
+    const songs = shared.filter(item => lineUp(item.mine, item.theirs).both.length > 0);
 
-    // One cover per record: the same record sent twice is one thing they
-    // put you onto, the newest send of it kept.
+    // What they put you onto. One per record — the same record sent twice is
+    // one thing they put you onto, the newest send of it kept — and the
+    // records credited to them by hand, which have no send row, only the
+    // name and journal on the entry (2026-09-14).
     const seen = new Set();
-    const sends = [];
+    const fromThem = [];
     for (const s of [...sent].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))) {
+      if (s.song) continue;
       const key = albumKey(s.album, s.artist);
       if (seen.has(key)) continue;
       seen.add(key);
-      const logged = mineLatest.get(key) || null;
-      const rating = logged ? num(logged.rating_value) : null;
-      sends.push({ ...s, logged, rating, hit: rating !== null && rating >= HIT });
+      fromThem.push({ key, mine: mineLatest.get(key) || null, theirs: theirLatest.get(key) || null, from: 'them', album: s.album, artist: s.artist, album_art: s.album_art });
     }
-    // What they are credited on, 2026-09-14: entries whose sender resolves
-    // to this address — a record logged from the old Tumblr and credited to
-    // them later has no send row, only the name and journal on the entry.
-    // One per record, and never a second copy of a send already counted. It
-    // carries no send date on purpose (the brief: the entry's own date is
-    // the ceiling), so it falls in with the others by the day it was logged.
     const address = tidyJournal(person?.address);
     if (address) {
       for (const e of newestFirst(mine || [])) {
-        if (tidyJournal(e.received_from_url) !== address || seen.has(e.album_key)) continue;
+        if (tidyJournal(e.received_from_url) !== address || seen.has(e.album_key) || e.song) continue;
         seen.add(e.album_key);
-        const logged = mineLatest.get(e.album_key) || e;
-        const rating = num(logged.rating_value);
-        sends.push({
-          id: `credited-${e.id}`, album: e.album, artist: e.artist, year: e.year, album_art: e.album_art,
-          created_at: null, note: null, logged, rating, hit: rating !== null && rating >= HIT,
-        });
+        fromThem.push({ key: e.album_key, mine: mineLatest.get(e.album_key) || e, theirs: theirLatest.get(e.album_key) || null, from: 'them' });
       }
     }
-    const when = s => new Date(s.created_at || s.logged?.posted_at || 0);
-    sends.sort((a, b) => when(b) - when(a));
-    // Loved is a hit, of what you logged: a record you have not got to yet
-    // is not a miss.
-    const loggedCount = sends.filter(s => s.logged).length;
-    const hits = sends.filter(s => s.hit).length;
 
-    return { pairs, rated, alike, agree, disagree, rings, sends, loggedCount, hits };
-  }, [mine, theirs, sent, person]);
+    // What you put them onto: what came back first, then what is still out.
+    const yours = new Set();
+    const fromYou = [];
+    for (const c of cameBack) {
+      if (c.song) continue;
+      const key = albumKey(c.album, c.artist);
+      if (yours.has(key)) continue;
+      yours.add(key);
+      const t = theirBySlug.get(c.slug) || theirLatest.get(key) || null;
+      fromYou.push({ key, mine: mineLatest.get(key) || null, theirs: t, from: 'you', album: c.album, artist: c.artist, album_art: c.album_art });
+    }
+    for (const s of out) {
+      if (s.song) continue;
+      const key = albumKey(s.album, s.artist);
+      if (yours.has(key)) continue;
+      yours.add(key);
+      fromYou.push({ key, mine: mineLatest.get(key) || null, theirs: theirLatest.get(key) || null, from: 'you', album: s.album, artist: s.artist, album_art: s.album_art });
+    }
+
+    // Their five-star records you have not logged: a list to go and hear,
+    // not a versus — there is nobody on your side of it yet.
+    const unheard = newestFirst([...theirLatest.values()].filter(t => num(t.rating_value) === 5 && !mineLatest.has(t.album_key)));
+    const sentKeys = new Set(fromThem.map(x => x.key));
+
+    const loved = list => list.filter(x => num(x.mine?.rating_value) !== null && num(x.mine.rating_value) >= HIT).length;
+    return { shared, songs, fromThem, fromYou, unheard, sentKeys, lovedOfThem: loved(fromThem) };
+  }, [mine, theirs, sent, cameBack, out, person]);
+
+  // The filters, in their order, and only the ones with something in them:
+  // a view with nothing to flip through is a door to an empty room.
+  const views = useMemo(() => [
+    { key: 'shared', label: 'Shared', list: decks.shared },
+    { key: 'songs', label: 'Same songs', list: decks.songs },
+    { key: 'them', label: `From ${name}`, list: decks.fromThem },
+    { key: 'you', label: 'From you', list: decks.fromYou },
+    { key: 'unheard', label: `${name}'s 5 stars`, list: decks.unheard },
+  ].filter(v => v.list.length > 0), [decks, name]);
+  const current = views.find(v => v.key === view) || views[0] || null;
+  const deck = current && current.key !== 'unheard' ? current.list : [];
+  const item = deck.length ? deck[Math.min(at, deck.length - 1)] : null;
+  const turn = step => setAt(i => (deck.length ? (Math.min(i, deck.length - 1) + step + deck.length) % deck.length : 0));
+  const choose = key => { setView(key); setAt(0); };
+
+  // The song names for the record on screen, once.
+  const slug = item?.mine?.slug;
+  useEffect(() => {
+    if (!slug || asked.current.has(slug)) return;
+    asked.current.add(slug);
+    fetch(`/api/entries/${encodeURIComponent(slug)}`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => {
+        const tracks = Array.isArray(d?.entry?.tracks) ? d.entry.tracks : [];
+        setTitles(was => ({ ...was, [slug]: tracks.map(t => String(t?.title || '').trim()) }));
+      })
+      .catch(() => {});
+  }, [slug]);
+  const songsOf = shown => {
+    if (!shown?.mine || !shown?.theirs) return null;
+    const list = titles[shown.mine.slug];
+    const shape = lineUp(shown.mine, shown.theirs);
+    if (!list || list.length !== shape.yours.length) return null;
+    const named = shape.both.map(i => list[i]).filter(Boolean);
+    return named.length === shape.both.length ? named : null;
+  };
+  const songs = songsOf(item);
+
+  // ← and → turn the record on a keyboard; a swipe across it does on a phone.
+  useEffect(() => {
+    if (deck.length < 2) return undefined;
+    const onKey = e => {
+      if (e.target?.closest?.('input, textarea, [contenteditable="true"]')) return;
+      if (e.key === 'ArrowLeft') turn(-1);
+      if (e.key === 'ArrowRight') turn(1);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  });
+  const touch = useRef(null);
+  const onTouchStart = e => { touch.current = e.touches[0]?.clientX ?? null; };
+  const onTouchEnd = e => {
+    const from = touch.current;
+    touch.current = null;
+    const to = e.changedTouches[0]?.clientX;
+    if (from === null || to === undefined || deck.length < 2) return;
+    if (to - from > SWIPE_PX) turn(-1);
+    else if (from - to > SWIPE_PX) turn(1);
+  };
 
   if (checking) return <div style={{ minHeight: '100vh', background: 'var(--bg)' }} />;
   if (!authed) { if (typeof window !== 'undefined') window.location.replace('/login'); return null; }
 
   const ready = !!theirs && mine !== null;
-  const [argument, ...moreArguments] = facts.disagree;
-  const [agreement, ...moreAgreements] = facts.agree;
+  const me = { name: keeper_name, address: site_address };
+
+  // The sentence over the filters: the one thing the view on screen adds up
+  // to, with its numbers inside it.
+  const sentence = () => {
+    if (!current) return <>You and {name} haven&rsquo;t logged any of the same records yet.</>;
+    const n = current.list.length;
+    if (current.key === 'shared') return <>You&rsquo;ve both logged {n === 1 ? 'one record' : <><b>{n}</b> of the same records</>}.</>;
+    if (current.key === 'songs') return <>You picked the same favorite songs on <b>{n}</b> of your <b>{decks.shared.length}</b> {decks.shared.length === 1 ? 'record' : 'records'}.</>;
+    if (current.key === 'them') {
+      const logged = decks.fromThem.filter(x => x.mine).length;
+      const lead = <>{name} put you onto {n === 1 ? 'one record' : <><b>{n}</b> records</>}.</>;
+      if (!logged) return <>{lead} You haven&rsquo;t logged {n === 1 ? 'it' : 'any'} yet.</>;
+      if (logged === 1) return <>{lead} {decks.lovedOfThem ? <>You loved the one you&rsquo;ve logged.</> : <>You&rsquo;ve logged one.</>}</>;
+      return <>{lead} You loved <b>{decks.lovedOfThem}</b> of the <b>{logged}</b> you&rsquo;ve logged.</>;
+    }
+    if (current.key === 'you') {
+      const logged = decks.fromYou.filter(x => x.theirs).length;
+      const lead = <>You put {name} onto {n === 1 ? 'one record' : <><b>{n}</b> records</>}.</>;
+      if (!logged) return <>{lead} {name} hasn&rsquo;t logged {n === 1 ? 'it' : 'any'} yet.</>;
+      if (n === 1) return <>{lead} {name} has logged it.</>;
+      return <>{lead} {name} has logged <b>{logged}</b>.</>;
+    }
+    return n === 1
+      ? <>{name} gave this 5 stars. You haven&rsquo;t logged it.</>
+      : <>{name} gave these 5 stars. You haven&rsquo;t logged them.</>;
+  };
 
   return (
     <div className={'own-screen' + (layered ? ' own-screen--layered' : '')}>
       {/* The header's left slot, where the owner's tools live on every page:
           the way back, and the printer's door — the press that prints the
-          shape of the agreement and withholds the writing, naming both
-          people (DECISIONS, The network) — the same glyph at the same size
-          the entry and the card wear it. */}
+          two of you and withholds the writing, naming both people
+          (DECISIONS, The network) — the same glyph at the same size the
+          entry and the card wear it. */}
       <SiteNav tools={(
         <>
           <button type="button" className="kt-tool" onClick={goBack} aria-label="Back" title="Back">
@@ -390,137 +475,82 @@ export default function PersonPage({ layered = false }) {
           <div className="pn-head"><div className="own-skeleton" style={{ width: 56, height: 56, borderRadius: '50%' }} /></div>
         ) : (
           <>
+            {/* The two of you, face to face. "Visit their journal" stood here
+                until 2026-09-22 (Miyel: you can go to their journal from the
+                friends page); every record of theirs below still links to
+                it. */}
             <header className="pn-head">
-              <Face address={person.address} />
-              <h1 className="pn-name">{name}</h1>
-              {/* "Visit their journal" stood here until 2026-09-22. Miyel: "we
-                  can remove the link to their journal on the compare page
-                  because you can just simply go to their journal from the
-                  actual friends page." One way there, from the faces. */}
+              <div className="pn-who">
+                <Face src="/api/portrait" />
+                <span className="pn-who-name">You</span>
+              </div>
+              <span className="pn-between" aria-hidden="true"><Shuffle size={26} weight="regular" /></span>
+              <div className="pn-who">
+                <Face src={`${journalUrl(person.address)}/api/portrait`} />
+                <h1 className="pn-who-name">{name}</h1>
+              </div>
             </header>
 
             {theirs?.failed && (
-              <p className="pn-note">{name}&rsquo;s journal isn&rsquo;t answering just now, so only what they&rsquo;ve put you onto is here.</p>
+              <p className="pn-note">{name}&rsquo;s journal isn&rsquo;t answering just now, so only what you&rsquo;ve sent each other is here.</p>
             )}
 
-            {!theirs?.failed && (ready ? (
+            {!ready ? <div className="own-skeleton pn-waiting" /> : (
               <>
-                {/* How often you agree, with the picture that shows it. */}
-                <section className="pn-card">
-                  <p className="pn-say">{agreeSentence(facts, name)}</p>
-                  {facts.rated.length > 0 && (
-                    <>
-                      <Shape pairs={facts.rated} rings={facts.rings} name={name} />
-                      <p className="pn-hint">The higher a record sits, the more {name} liked it. The further right, the more you did. On the line, you agree.</p>
-                    </>
-                  )}
-                </section>
+                <p className="pn-say">{sentence()}</p>
 
-                {argument && (
-                  <section className="pn-card">
-                    <span className="pn-card-label">Your biggest argument</span>
-                    <Lead pair={argument} />
-                    <p className="pn-say pn-say--small">{bothSaid(argument, name)}</p>
-                    {moreArguments.length > 0 && (
-                      <div className="pn-runners">{moreArguments.map(p => <Runner key={p.mine.slug} pair={p} name={name} />)}</div>
+                {views.length > 1 && (
+                  <nav className="pn-views" aria-label="Which records">
+                    {views.map(v => (
+                      <button key={v.key} type="button" className={'pn-view' + (v.key === current.key ? ' pn-view--on' : '')} aria-pressed={v.key === current.key} onClick={() => choose(v.key)}>
+                        {v.label}
+                      </button>
+                    ))}
+                  </nav>
+                )}
+
+                {item && (
+                  <section className="pn-stage" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+                    <Versus
+                      key={`${current.key}:${item.key}`}
+                      item={item}
+                      name={name}
+                      songs={songs}
+                      address={{ theirs: person.address, me }}
+                    />
+                    {deck.length > 1 && (
+                      <div className="pn-turn">
+                        <button type="button" className="pn-turn-btn" onClick={() => turn(-1)} aria-label="The record before">
+                          <CaretLeft size={18} weight="regular" aria-hidden="true" />
+                        </button>
+                        <span className="pn-turn-at">{Math.min(at, deck.length - 1) + 1} of {deck.length}</span>
+                        <button type="button" className="pn-turn-btn" onClick={() => turn(1)} aria-label="The next record">
+                          <CaretRight size={18} weight="regular" aria-hidden="true" />
+                        </button>
+                      </div>
                     )}
                   </section>
                 )}
 
-                {agreement && (
-                  <section className="pn-card">
-                    <span className="pn-card-label">Where you agree most</span>
-                    <Lead pair={agreement} />
-                    <p className="pn-say pn-say--small">{bothSaid(agreement, name)}</p>
-                    {moreAgreements.length > 0 && (
-                      <div className="pn-runners">{moreAgreements.map(p => <Runner key={p.mine.slug} pair={p} name={name} />)}</div>
-                    )}
-                  </section>
+                {current?.key === 'unheard' && (
+                  <ul className="pn-unheard">
+                    {current.list.map(t => (
+                      <li key={t.slug}>
+                        <a href={carrySender(`${journalUrl(person.address)}/entries/${t.slug}`, me, { known: true })} className="pn-unheard-row">
+                          <span className="pn-unheard-art">{t.album_art && <img src={t.album_art} alt="" loading="lazy" />}</span>
+                          <span className="pn-unheard-said">
+                            <span className="pn-unheard-album">{t.album}</span>
+                            <span className="pn-unheard-artist">{t.artist}</span>
+                          </span>
+                          {decks.sentKeys.has(t.album_key)
+                            ? <span className="pn-unheard-tag">Sent to you</span>
+                            : <Marks entry={t} size={12} />}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
                 )}
               </>
-            ) : <div className="own-skeleton pn-card-waiting" />)}
-
-            {/* ── What they have put you onto ──────────────────────────────
-                The part only this copy knows: their journal can show their
-                records and their ratings, never what they sent you and
-                whether it landed. One sentence, then the covers: greyed
-                until you have logged one — the site's one way of saying a
-                record is not in hand, the beacon's idle art wears the same —
-                and a dot of green on each you have.
-
-                The grid is chunked into rows so a record's detail can open
-                directly under the row it is in, which is the same thing the
-                friends pane does with a face and for the same reason: a
-                panel a row away from the thing that opened it is a panel
-                about nothing. */}
-            {facts.sends.length > 0 && (
-              <section className="pn-card">
-                <p className="pn-say pn-say--small">
-                  {name} put you onto <b>{facts.sends.length}</b> {facts.sends.length === 1 ? 'record' : 'records'}.{' '}
-                  {facts.loggedCount === 0
-                    ? <>You haven&rsquo;t logged {facts.sends.length === 1 ? 'it' : 'any'} yet.</>
-                    : facts.loggedCount === 1
-                      ? (facts.hits ? <>You loved the one you&rsquo;ve logged.</> : <>You&rsquo;ve logged one.</>)
-                      : <>You loved <b>{facts.hits}</b> of the <b>{facts.loggedCount}</b> you&rsquo;ve logged.</>}
-                </p>
-                {chunk(facts.sends, SENT_ACROSS).map((row, i) => {
-                  const here = row.find(x => x.id === openSend) || null;
-                  return (
-                    <div key={i} className={'pn-sent-row' + (here ? ' pn-sent-row--open' : '')}>
-                      <div className="pn-sent-grid">
-                        {row.map(x => (
-                          <button
-                            key={x.id}
-                            type="button"
-                            className={'pn-sent' + (here?.id === x.id ? ' pn-sent--open' : '')}
-                            onClick={() => setOpenSend(o => (o === x.id ? null : x.id))}
-                            aria-expanded={here?.id === x.id}
-                            title={`${x.album} — ${x.artist}`}
-                          >
-                            <span className={'pn-sent-art' + (x.logged ? '' : ' pn-sent-art--unlogged')}>
-                              {x.album_art
-                                ? <img src={x.album_art} alt="" loading="lazy" />
-                                : <span className="pn-sent-none" aria-hidden="true">♪</span>}
-                            </span>
-                            {x.logged && <span className="pn-sent-dot" aria-label="Logged" />}
-                          </button>
-                        ))}
-                      </div>
-                      {here && (
-                        <div className="pn-sent-said">
-                          {here.logged
-                            ? <Link href={`/entries/${here.logged.slug}`} className="pn-item-album">{here.album}</Link>
-                            : <span className="pn-item-album">{here.album}</span>}
-                          <div className="pn-item-artist">
-                            {here.artist}{here.year ? ` · ${here.year}` : ''}
-                            {here.created_at && <> &middot; {new Date(here.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</>}
-                          </div>
-                          {here.note && <p className="pn-item-note">{here.note}</p>}
-                          <div className="pn-sent-tail">
-                            {here.logged
-                              ? (here.rating !== null ? <StarRating rating={here.rating} size={12} /> : <span className="pn-gap">Logged</span>)
-                              : <span className="pn-gap">Not logged yet</span>}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </section>
-            )}
-
-            {/* What you have sent them that has not come back. The records
-                and that you sent them: no age and no reminder, the inbox's
-                Sent list's rule (library/sent_actions.js). */}
-            {out.length > 0 && (
-              <section className="pn-card">
-                <p className="pn-say pn-say--small">Still waiting on {name}: {listed(out.map(s => s.song || s.album))}.</p>
-                <div className="pn-out">
-                  {out.map(s => (
-                    <span key={s.id} className="pn-out-art" title={s.song || s.album}>{s.album_art && <img src={s.album_art} alt="" loading="lazy" />}</span>
-                  ))}
-                </div>
-              </section>
             )}
           </>
         )}
