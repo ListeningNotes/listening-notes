@@ -1030,13 +1030,16 @@
 .ses:not(.ses--wide) .ses-record-head + .ses-marks { margin-top: 16px; }
 /* And the writing on the page, under the marks, with no box round it: the
    box was what made it read as apart. Its question still stands in it until
-   something is written. */
-.ses:not(.ses--wide) .ses-album-box {
-  margin-top: 12px;
+   something is written. A track's note the same, written straight under its
+   row (Miyel: "take away the box around track notes when typing, it can
+   just match album notes"). */
+.ses:not(.ses--wide) .ses-album-box,
+.ses:not(.ses--wide) .ses-row-box {
   padding: 0 2px;
   border: 0; border-radius: 0;
   background: none;
 }
+.ses:not(.ses--wide) .ses-album-box { margin-top: 12px; }
 .ses--wide .ses-record-head,
 .ses--wide .ses-record-says { display: contents; }
 
