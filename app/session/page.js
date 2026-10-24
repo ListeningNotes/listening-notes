@@ -51,7 +51,7 @@
 'use client';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { CaretLeft } from '@phosphor-icons/react';
+import { BookmarkSimple, CaretLeft, PaperPlaneTilt, Trash } from '@phosphor-icons/react';
 import { useListeningSession, SESSION_STEPS, PENDING_KEY, TRACK_NOTE_KEY, saidSoAboutTheDesk, saidSoAboutTheEntry } from '../../hooks/useListeningSession';
 import AlbumPicker from '../../components/session_components/AlbumPicker';
 import TrackNotes from '../../components/session_components/steps/TrackNotes';
@@ -314,7 +314,19 @@ export default function SessionPage() {
     // the coordinates of the part of the screen being looked at: positive
     // up, negative down. `edge` is where the keyboard's top is, or will be.
     const GAP = 10;
-    const shift = (field, tapY, edge) => {
+    // ── And over the bar the keyboard floats, 2026-10-23 ────────────────
+    // An iPhone sets the form's ▲ ▼ ✓ bar over the page, above the keys,
+    // and the part of the screen the page is told it can see runs down
+    // under it to the keys' own top — so a note set on the keys had its foot
+    // under the bar (Miyel: "make sure … that the keyboard is under the
+    // entire text field"). On an iPhone the keys' edge is taken that bar's
+    // height higher. Measured off her screenshot: 56 points, the bar and the
+    // air either side of it.
+    const IPHONE = /iP(hone|ad|od)/.test(navigator.userAgent)
+      || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const KEY_BAR = IPHONE ? 56 : 0;
+    const shift = (field, tapY, keysAt) => {
+      const edge = keysAt - KEY_BAR;
       const root = field.closest('.ses');
       const scroller = field.closest('.lay') || document.scrollingElement;
       const frame = scroller === document.scrollingElement ? (vv?.offsetTop || 0) : scroller.getBoundingClientRect().top;
@@ -1022,14 +1034,32 @@ export default function SessionPage() {
               understand what a preview is." The word says where the press
               leads; the entry as it will look comes up on the way, with a
               green Post? at its foot (SessionPreview), her pick over posting
-              straight from here. */}
+              straight from here.
+
+              ── Doors at the foot, 2026-10-23 ─────────────────────────────
+              Three small words under the grip were easy to read past (Miyel:
+              "it's easy to miss. Can we redesign those as well?"). Her pick
+              of three: on a phone, in a sheet, a raised bar at the foot in
+              the Listen bar's own shape — the sheet came up out of it — with
+              a glyph over one word for each, the way her doors are drawn
+              elsewhere. It bends her pick of 2026-10-22 (the words at the
+              top, for being seen), and the reason that one gave, a longer
+              reach, is what this answers. A desk keeps its row; the glyphs
+              are drawn on the phone's bar only (session.css). */}
           {step === 0 && (
             <div className="ln-editing-bar ses-bar">
               <button type="button" className={'ln-word ses-bar-discard' + (armed ? ' ses-bar-discard--armed' : '')} onClick={discard}>
-                {armed ? 'Discard?' : 'Discard'}
+                <Trash className="ses-bar-glyph" size={21} weight="regular" aria-hidden="true" />
+                <span>{armed ? 'Discard?' : 'Discard'}</span>
               </button>
-              <button type="button" className="ln-word" onClick={saveDraftAndLeave}>Save draft</button>
-              <button type="button" className="ln-word ln-word--on" onClick={() => goToStep(1)}>Post</button>
+              <button type="button" className="ln-word" onClick={saveDraftAndLeave}>
+                <BookmarkSimple className="ses-bar-glyph" size={21} weight="regular" aria-hidden="true" />
+                <span>Save draft</span>
+              </button>
+              <button type="button" className="ln-word ln-word--on" onClick={() => goToStep(1)}>
+                <PaperPlaneTilt className="ses-bar-glyph" size={21} weight="regular" aria-hidden="true" />
+                <span>Post</span>
+              </button>
             </div>
           )}
 
@@ -1037,6 +1067,7 @@ export default function SessionPage() {
             <div className={'ses-page' + (landing ? ' ses-step ses-step--fade' : '')}>
               <AlbumNotes
                 album={s.albumInput} artist={s.artistName} year={s.year} albumArt={s.albumArt}
+                starSize={wide ? 26 : 22}
                 avg={avg} avgShown={avgShown} onReveal={() => setAvgShown(v => !v)}
                 overallNotes={s.overallNotes} setOverallNotes={s.setOverallNotes}
                 rating={s.rating} setRating={s.setRating}

@@ -327,7 +327,8 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   `takesPrompts` and `mark_prompt_record`, so its submissions take them.
 - `music_data_api.js` — Apple's catalogue: album art resizing
   (`sizedAlbumArt`), a cover's color (`colorOfArt`, for By color, in the
-  browser and on the server alike), tracklists and album facts, the record
+  browser and on the server alike; `readArtColor`, the browser's reading,
+  shared with the home beacon's wash), tracklists and album facts, the record
   search (`searchAlbums`), the song search (`searchSongs`), genre folding.
 - `needle.js` — the beacon's reading half: the one `needle` row saying what
   is being logged now, lifting it, `sat_with` for listens whose post was

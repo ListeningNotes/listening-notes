@@ -20,6 +20,9 @@ import StarRating from '../StarRating';
 // ghost.
 export default function AlbumNotes({
   album, artist, year, albumArt,
+  // The stars' size: a little smaller on a phone, where they stand beside
+  // the cover rather than under it (2026-10-23).
+  starSize = 26,
   overallNotes,
   setOverallNotes,
   rating,
@@ -40,6 +43,13 @@ export default function AlbumNotes({
 
   return (
     <section className="ses-record">
+      {/* ── The cover at the left, 2026-10-23 ───────────────────────────────
+          On a phone the cover stands at the left with the record beside it —
+          its name, artist and year, the stars — the way her session redesign
+          draws it (Miyel: "album art be left aligned with data to the
+          right"). On a desk this row is not a box at all, and the column
+          stands as it did (session.css). */}
+      <div className="ses-record-head">
       {/* Where the picked cover lands (app/session/page.js, the landing). Its
           own class, not .ses-cover: the nav bar under the sheet draws its
           small beacon in that one. */}
@@ -48,6 +58,7 @@ export default function AlbumNotes({
           ? <img src={albumArt} alt="" />
           : <span className="ses-record-cover-none">♪</span>}
       </span>
+      <div className="ses-record-says">
       <h1 className="ses-record-title">{album}</h1>
       <p className="ses-record-by">
         {artist}{year ? ` · ${year}` : ''}
@@ -57,7 +68,7 @@ export default function AlbumNotes({
           stars under a record you are logging are not ambiguous (Miyel,
           2026-09-18). */}
       <div className="ses-record-marks">
-        <StarRating value={rating} onChange={setRating} size={26} roomy ghost={avgShown && avg ? Number(avg) : 0} />
+        <StarRating value={rating} onChange={setRating} size={starSize} roomy ghost={avgShown && avg ? Number(avg) : 0} />
         {/* The eye, at the right of the stars: shut until pressed; open,
             with the number and "avg." beside it so the number explains
             itself (Miyel, 2026-09-29). The ghost in the stars is the same
@@ -76,17 +87,27 @@ export default function AlbumNotes({
             {avgShown
               ? <Eye size={16} weight="regular" aria-hidden="true" />
               : <EyeClosed size={16} weight="regular" aria-hidden="true" />}
-            {avgShown && <span className="ses-eye-n">{avg} avg.</span>}
+            {/* The word goes on a phone, where the stars stand beside the
+                cover and the number and its word broke onto two lines
+                (Miyel, 2026-10-23: "average cuts off into two rows"); the
+                eye and the ghost in the stars say what the number is. */}
+            {avgShown && <span className="ses-eye-n">{avg}<span className="ses-eye-avg"> avg.</span></span>}
           </button>
         )}
       </div>
+      </div>
+      </div>
       {/* The marks, a glyph over a word each — the album screen's own
           shape, back on Miyel's word ("let's label favorite and
-          formative"). */}
+          formative") — in a row under the cover and its words, as her
+          session redesign draws them (2026-10-23, after an evening of
+          other places for them). */}
       <div className="ses-marks">
         {/* Masterpiece is not pressed, 2026-09-17. It is read off the
             tracklist — every track rated, every rating five — so it turns
-            up when it is true and is simply absent when it is not. */}
+            up when it is true and is simply absent when it is not. It was
+            drawn faint in its place for an evening, 2026-10-23, and she
+            took it back out: "shouldn't masterpiece be hidden and earned". */}
         {Masterpiece && (
           <span className={flag(true, 'mp') + ' ses-mark--said'} title="Every track is five stars">
             <SketchLogo size={24} weight="fill" aria-hidden="true" />
@@ -116,10 +137,13 @@ export default function AlbumNotes({
           <span className="ses-mark-word">Formative</span>
         </button>
       </div>
-
       {/* The album note: a box, so it reads as the field it is, with the
           question inside it until something is written. Grown by layout,
-          never measured — see .ses-grow. */}
+          never measured — see .ses-grow.
+
+          On a phone the box is not drawn, 2026-10-23: the writing stands
+          on the page under the marks, as her session redesign has it — the
+          box was what made the two read as apart (session.css). */}
       <div className="ses-note-box ses-album-box">
         <div className="ses-grow" data-said={(overallNotes || '') + ' '}>
           <textarea

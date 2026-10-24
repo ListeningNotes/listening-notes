@@ -96,6 +96,7 @@ import { refreshFriends } from '../../hooks/useFriendsBeacons';
 // findable, drawn here and again at its own address (2026-10-07).
 import { Everyone, readEveryone, useEveryone } from '../../app/directory/Directory';
 import { DIRECTORY_URL } from '../../library/version';
+import { readArtColor } from '../../library/music_data_api';
 // The feed sits under the book as that pane's second floor. It is handed the
 // journal's own records — the same list the wall draws — because the one
 // thing it asks of them is whether a row is a record you also have, and
@@ -1477,6 +1478,79 @@ export default function HomeNav() {
     // while they move, and a `down` that never changes for them.
   }, [stir, paneRefs]);
 
+  // ── The wash, 2026-10-23 ──────────────────────────────────────────────────
+  // On a phone the head of home takes the record's colour, washed down from
+  // the top of the glass and faded into the page by the record's name, so it
+  // feels the record without cropping it (Miyel, picking her beacon mockups:
+  // "the album wash coming down … makes it feel a little bit more alive").
+  // The colour is the one the wall's By color reads off the same cover
+  // (readArtColor), so one cover is one colour; a cover with hardly any
+  // colour, or one that will not be read, has no wash. Kept apart from the
+  // cover's own bars, so it can go on its own if she does not like it built.
+  const [washOf, setWashOf] = useState({ art: '', color: '' });
+  useEffect(() => {
+    if (!onAir || washOf.art === onAir) return undefined;
+    let still = true;
+    readArtColor(onAir).then(c => {
+      if (still) setWashOf({ art: onAir, color: c && !c.plain ? `hsl(${Math.round(c.hue)} 58% 60%)` : '' });
+    });
+    return () => { still = false; };
+  }, [onAir, washOf.art]);
+  const wash = onAir && washOf.art === onAir ? washOf.color : '';
+
+  // ── The wash under the top row, 2026-10-23 ──────────────────────────────
+  // The top row stands on a ground of the page's colour, so what scrolls up
+  // under it disappears — which would draw a strip of page across the top of
+  // the wash. So while home has a wash the ground wears the slice of the wash
+  // that is under it: the same picture, placed where the wash is this
+  // moment, written onto the page as properties (nav.css, data-washed).
+  // Scrolled past the wash, the slice is page colour, which is what the
+  // ground always was. Not in state: it moves on every scroll. Only on home,
+  // and only on a phone, where the wash is drawn.
+  //
+  // And the brow under the clock wears it too (base.css, .ln-brow), so the
+  // colour reaches the top of the glass (Miyel: "all the way towards the top
+  // of the screen, even behind the time"). The brow stands over everything,
+  // so this is home's address only: an entry laid over home has the brow of
+  // the page's colour it always had.
+  useEffect(() => {
+    const home = paneRefs[HOME]?.current;
+    const root = document.documentElement;
+    if (!home || !root) return undefined;
+    const clear = () => {
+      root.removeAttribute('data-washed');
+      for (const name of ['--wash-image', '--wash-h', '--wash-y', '--wash-top', '--wash-fill-h']) root.style.removeProperty(name);
+    };
+    const place = () => {
+      const washEl = home.querySelector('.beacon-wash');
+      const ground = root.querySelector('.hn-bar-ground');
+      if (!washEl || !ground || pane !== HOME || cardOpen || path !== '/' || !washEl.offsetHeight) { clear(); return; }
+      const w = washEl.getBoundingClientRect();
+      const g = ground.getBoundingClientRect();
+      const y = Math.round(w.top - g.top);
+      root.style.setProperty('--wash-image', getComputedStyle(washEl).backgroundImage);
+      root.style.setProperty('--wash-h', `${Math.round(w.height)}px`);
+      root.style.setProperty('--wash-y', `${y}px`);
+      // Where the page starts below the glass, the strip above the wash is
+      // its top colour rather than the page's.
+      root.style.setProperty('--wash-top', `color-mix(in srgb, ${wash} ${isLive ? 52 : 30}%, var(--bg))`);
+      root.style.setProperty('--wash-fill-h', `${Math.max(0, y)}px`);
+      root.setAttribute('data-washed', '');
+    };
+    place();
+    home.addEventListener('scroll', place, { passive: true });
+    window.addEventListener('resize', place);
+    const watch = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(place);
+    const floor = home.querySelector('.hn-floor--beacon');
+    if (watch && floor) watch.observe(floor);
+    return () => {
+      home.removeEventListener('scroll', place);
+      window.removeEventListener('resize', place);
+      watch?.disconnect();
+      clear();
+    };
+  }, [paneRefs, pane, cardOpen, wash, isLive, path]);
+
   function goTo(index) {
     const el = railRef.current;
     if (!el) return;
@@ -2170,6 +2244,13 @@ export default function HomeNav() {
               came before. On a phone it is exactly one screen tall, so the
               snap has one place to land; on a desk it is a wrapper. */}
           <div className="hn-floor hn-floor--beacon">
+            {wash && (
+              <div
+                className={'beacon-wash' + (isLive ? '' : ' beacon-wash--quiet')}
+                style={{ '--wash': wash }}
+                aria-hidden="true"
+              />
+            )}
             {crown}
             {/* The screen on a phone; the band on a desk, where the same
                 children lie in one row — the cover and its words, and

@@ -52,7 +52,7 @@ import { CAPTION, useListeningBeacon } from '../../hooks/useListeningBeacon';
 // 4). Everything else stays where it is, so nothing on the screen moves while
 // one thing falls across it.
 export default function ListeningBeacon({ emptied = false }) {
-  const { state, album, artist, art, track, isLive } = useListeningBeacon();
+  const { state, album, artist, art, track, isLive, rated } = useListeningBeacon();
   // A song wherever there is one — including after a listen has been shut,
   // which keeps the track that was open up rather than dropping back to the
   // record's name. A whole record is what is left when the last thing logged
@@ -64,6 +64,19 @@ export default function ListeningBeacon({ emptied = false }) {
   // placeholder is drawn instead until the record changes.
   const [failed, setFailed] = useState('');
   const artUrl = art && art !== failed ? art : '';
+
+  // ── The bars rise and fall, 2026-10-23 ─────────────────────────────────
+  // Never appearing or vanishing (Miyel: "I never like when something just
+  // appears or disappears. Those horizon bars should rise or fall"). So the
+  // floor keeps its places once a listen has said how many there are, and a
+  // listen that ends lowers its bars to nothing in those same places rather
+  // than taking them away; a bar arriving grows up from the cover's edge
+  // (nav.css, beacon-bar-rise).
+  const live = isLive && !emptied;
+  const [places, setPlaces] = useState(0);
+  if (live && rated?.length && rated.length !== places) setPlaces(rated.length);
+  const count = live && rated?.length ? rated.length : places;
+  const anyRated = live && Boolean(rated?.some(r => r > 0));
 
   // Nothing at all: a copy on its first afternoon, before a record has been
   // picked up — or a journal whose keeper has switched the beacon off, which
@@ -108,6 +121,31 @@ export default function ListeningBeacon({ emptied = false }) {
               meant to be in full colour. */}
           {!emptied && !isLive && artUrl && (
             <div className="beacon-idle-overlay"><span>{CAPTION[state]}</span></div>
+          )}
+          {/* ── The cover wears its listen, 2026-10-23 ───────────────────
+              While a listen is open, a bar on the cover's foot for each
+              track rated, as tall as its rating, in the record's own order
+              and place: every track has a slot across the cover's width and
+              one not yet rated draws nothing, so a five-track record fills
+              it once it is done (Miyel's beacon brief, and her pick of the
+              mockups: "the horizon drawn directly onto the cover"). No
+              colour on the newest — the cover in colour already says it is
+              live. A shade at the foot of the art only, so white bars read on
+              a pale cover. Not HorizonChart, the entry's labelled chart:
+              this carries no labels, hearts or titles.
+
+              Retired the same day, her call: nothing sends the ratings, so
+              nothing is drawn here until it is turned back on (DECISIONS,
+              the bars on the beacon's cover). */}
+          {!emptied && artUrl && count > 0 && (
+            <div className={'beacon-foot' + (anyRated ? ' beacon-foot--up' : '')} aria-hidden="true">
+              <div className="beacon-floor">
+                {Array.from({ length: count }, (_, i) => {
+                  const r = live ? Number(rated?.[i]) || 0 : 0;
+                  return <i key={i} style={{ height: `${(r / 5) * 100}%` }} />;
+                })}
+              </div>
+            </div>
           )}
         </div>
         <div className="beacon-meta">

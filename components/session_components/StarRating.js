@@ -80,6 +80,14 @@ const EDGE = 12;
 // How long a finger rests on the stars before they come up without a slide.
 // Long enough that a thumb landing on a row on its way to scrolling the list
 // does not raise them; short enough to feel like a response.
+//
+// ── Up at the press, 2026-10-23 ──────────────────────────────────────────
+// Miyel: "can stars magnify right when pressed? I think there's a bit of a
+// delay." They stand up the moment a finger lands now, and this is how long
+// they stay only a picture: a thumb that goes up or down in that time was
+// scrolling the list, and they sit down and let it; one that lifts was a tap
+// and sets the small star it tapped, as a tap always has. Past it, a rest:
+// the big stars are the control and the page holds still.
 const REST_MS = 220;
 // How far up or down a rested thumb moves to put the big stars away unset.
 const LEAVE_PX = 40;
@@ -164,8 +172,10 @@ export default function StarRating({ value, onChange, size = 18, roomy = false, 
   // show. A rest only shows: it is set when the finger lifts.
   const zoom = useRef(null);
   const resting = useRef(null);
+  // Up, and still inside REST_MS: a picture only, the page free to scroll.
+  const fresh = useRef(false);
   useEffect(() => () => clearTimeout(resting.current), []);
-  const standUp = (y, x) => {
+  const standUp = (y, x, show = true) => {
     const across = window.innerWidth;
     const big = Math.max(32, Math.min(BIG_MOST, Math.floor((across - 2 * EDGE - 2 * BIG_PAD - 4 * BIG_GAP) / 5)));
     const width = 5 * big + 4 * BIG_GAP + 2 * BIG_PAD;
@@ -177,10 +187,13 @@ export default function StarRating({ value, onChange, size = 18, roomy = false, 
     if (top < EDGE) top = y + 56;
     // The stars themselves, inside the hairline and the padding.
     zoom.current = { left: left + 1 + BIG_PAD, width: 5 * big + 4 * BIG_GAP };
-    setLoupe({ left, top, big, showing: valueOn(x, zoom.current) });
+    // At the press itself they show the rating as it stands; the star over
+    // the thumb only once the finger has rested.
+    setLoupe({ left, top, big, showing: show ? valueOn(x, zoom.current) : null });
   };
   const sitDown = () => {
     clearTimeout(resting.current);
+    fresh.current = false;
     zoom.current = null;
     setLoupe(null);
   };
@@ -208,7 +221,7 @@ export default function StarRating({ value, onChange, size = 18, roomy = false, 
       ours = false;
     };
     const hold = e => {
-      if (zoom.current || dragging.current) ours = true;
+      if (dragging.current || (zoom.current && !fresh.current)) ours = true;
       else if (from && e.touches.length === 1) {
         const t = e.touches[0];
         const dx = Math.abs(t.clientX - from.x);
@@ -231,11 +244,15 @@ export default function StarRating({ value, onChange, size = 18, roomy = false, 
     setHover(null);
     clearTimeout(resting.current);
     if (!touch) return;
+    standUp(e.clientY, e.clientX, false);
+    fresh.current = true;
     resting.current = setTimeout(() => {
+      fresh.current = false;
       const p = press.current;
-      if (!p || dragging.current) return;
-      if (Math.abs(p.at.x - p.x) > STILL || Math.abs(p.at.y - p.y) > STILL) return;
-      standUp(p.y, p.x);
+      if (!p || dragging.current || !zoom.current) return;
+      // A rest: the big star over the thumb.
+      const shown = valueOn(p.at.x, zoom.current);
+      setLoupe(l => (l ? { ...l, showing: shown } : l));
     }, REST_MS);
   };
   const move = e => {
@@ -250,6 +267,9 @@ export default function StarRating({ value, onChange, size = 18, roomy = false, 
     if (r && zoom.current) {
       const dx = e.clientX - r.x;
       const dy = e.clientY - r.y;
+      // Up at the press and going up or down at once: a scroll. They sit
+      // down and the list moves.
+      if (fresh.current && Math.abs(dy) > STILL && Math.abs(dy) > Math.abs(dx)) { press.current = null; sitDown(); return; }
       if (Math.abs(dy) > LEAVE_PX && Math.abs(dy) > Math.abs(dx)) { press.current = null; sitDown(); return; }
       if (Math.abs(dx) > SIDEWAYS) {
         try { r.target.setPointerCapture?.(r.id); } catch { /* the slide still works */ }
@@ -296,12 +316,14 @@ export default function StarRating({ value, onChange, size = 18, roomy = false, 
   const up = e => {
     const p = press.current;
     const span = zoom.current;
+    // Let go inside REST_MS: a tap, whatever is drawn over it.
+    const tapped = fresh.current;
     press.current = null;
     sitDown();
     if (dragging.current) { dragging.current = false; return; }
     if (!p) return;
     // Up on a rest and let go without a slide: the star over the thumb.
-    if (span) { const next = valueOn(e.clientX, span); if (next !== value) onChange(next); return; }
+    if (span && !tapped) { const next = valueOn(e.clientX, span); if (next !== value) onChange(next); return; }
     if (Math.abs(e.clientX - p.x) < STILL && Math.abs(e.clientY - p.y) < STILL) set(e.clientX);
   };
   const cancel = () => { press.current = null; dragging.current = false; sitDown(); };

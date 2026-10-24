@@ -112,6 +112,10 @@ and the card is no longer a stop. The archive has the band and the card pane.
 Miyel's call** — over the People brief's "no face on People": the row keeps
 one shape as you swipe, and the card is always one tap away.
 
+**The keeper's top row has the LN. mark in its middle, 2026-10-23, her
+pick.** Small, its dot green while a listen is open: when the big mark left
+home it took the only sign of a live listen with it ("I do miss it").
+
 **A visitor's top row is their face and the LN. mark, no words, 2026-10-22.**
 People moved to the commons, so there is nothing there for a visitor to press,
 and a visitor has no Listen bar. The Source line and the version still stand
@@ -402,6 +406,18 @@ already carries every colour this journal has, and the art is in the cover
 88px away. The same call as the session's dark glass over a blurred cover,
 which went for the same reason: a blurred ground under type is the thing this
 site keeps reaching for and keeps taking back out.
+
+**On a phone the cover's colour washes down the head of home, 2026-10-23,**
+fading by the name, bending the rule above with her yes: one colour, never the
+cover blurred or cropped. A band of the cropped cover was built that day and
+dropped: harsh, it repeated the Listen bar, and the top row got lost on it.
+
+**The bars on the beacon's cover while live are built and retired,
+2026-10-23, her call** — a visitor watching them could anticipate the score,
+and the song on the beacon already says where a listen is. The drawing stays
+(ListeningBeacon, `.beacon-floor`); the ratings never leave the listen, and no
+column holds them. Turning them on is a migration and the writes (cover-listen,
+53cf70cb).
 
 **Prompts replace the free-text bio.** Nine openings in `library/bioprompt.js`;
 a keeper answers three, one line each, and the answer completes the sentence —
@@ -926,6 +942,13 @@ Masterpiece is the one flag with an objective definition, which is what lets
 the other two be subjective and what makes two journals comparable at all.
 Checked before shipping: the rule agreed with all 40 entries, so nothing
 gained or lost the mark.
+
+**On a phone the session's head is her redesign as drawn, 2026-10-23:** the
+cover at the left with the name, artist and stars beside it from its edge,
+the marks under, the writing on the page with no box. Centred words, the
+marks beside the cover and the marks heading a card were each tried that
+evening and dropped ("busy", "disjointed"). Masterpiece stays absent until
+earned. A desk keeps its column.
 
 **Favorite applies to tracks and albums. Masterpiece is album-only.**
 Masterpiece is a full five-star tracklist, which cannot apply to a single
@@ -2404,6 +2427,11 @@ Solid, the page's colour, no blur and no hairline; what scrolls goes under
 it rather than behind the clock. It is sixteen short of the inset, because
 that is where the site's fixed rows start (`--safe-top`); at the inset's
 full height it cut their tops off. Nothing where the inset is zero.
+
+**On a phone they are doors in a raised bar at the sheet's foot,
+2026-10-23, her pick of three, over the row below** — the words read past
+("easy to miss"); a glyph over one word each, the Listen bar's shape, gone
+while a note is written. A desk keeps the row.
 
 **Discard · Save draft · Post in a row under the sheet's grip, phone and
 desk alike, 2026-10-22, Miyel's pick** over the foot, at the cost of a
