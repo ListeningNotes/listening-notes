@@ -229,7 +229,9 @@ export default function PersonPage({ layered = false }) {
   // Their feed: null until asked, { entries, name } when it answered,
   // { failed: true } when it did not.
   const [theirs, setTheirs] = useState(null);
-  const [mine, setMine] = useState([]);
+  // Your own records: null until they have been read, so the shape does
+  // not say there is nothing in common while they are still on their way.
+  const [mine, setMine] = useState(null);
   const [sent, setSent] = useState([]);
   // What you have sent them that they have not logged yet (the inbox's
   // Sent list, library/sent_actions.js), narrowed to them. No age and no
@@ -261,7 +263,7 @@ export default function PersonPage({ layered = false }) {
           .then(r => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
           .then(j => { if (!gone) setTheirs({ entries: j.entries || [], name: String(j.keeper_name || '').trim() || p.name || '' }); })
           .catch(() => { if (!gone) setTheirs({ failed: true, entries: [], name: p.name || '' }); });
-        fetch('/api/entries').then(r => r.json()).then(d2 => { if (!gone) setMine(d2.entries || []); }).catch(() => {});
+        fetch('/api/entries').then(r => r.json()).then(d2 => { if (!gone) setMine(d2.entries || []); }).catch(() => { if (!gone) setMine([]); });
         // Every send this copy has, narrowed to theirs by the address the
         // send carried — the same spelling the book keeps.
         fetch('/api/submissions').then(r => r.json()).then(d3 => {
@@ -280,7 +282,7 @@ export default function PersonPage({ layered = false }) {
   const name = theirs?.name || person?.name || 'them';
 
   const facts = useMemo(() => {
-    const mineLatest = latestPerKey(mine);
+    const mineLatest = latestPerKey(mine || []);
     const theirLatest = latestPerKey(theirs?.entries || []);
 
     const pairs = [];
@@ -313,7 +315,7 @@ export default function PersonPage({ layered = false }) {
     const address = tidyJournal(person?.address);
     const counted = new Set(sends.map(s => albumKey(s.album, s.artist)));
     if (address) {
-      for (const e of newestFirst(mine)) {
+      for (const e of newestFirst(mine || [])) {
         if (tidyJournal(e.received_from_url) !== address || counted.has(e.album_key)) continue;
         counted.add(e.album_key);
         const logged = mineLatest.get(e.album_key) || e;
@@ -347,7 +349,7 @@ export default function PersonPage({ layered = false }) {
   const offsetSaid = !trusted ? '—' : leaning === 0 ? '0' : `${leaning > 0 ? '+' : '−'}${Math.abs(leaning).toFixed(1)}`;
   const offsetCaption = !trusted ? 'How they rate' : leaning > 0 ? 'They rate higher' : leaning < 0 ? 'They rate lower' : 'You rate alike';
 
-  const shapeEmpty = !theirs
+  const shapeEmpty = !theirs || mine === null
     ? null
     : facts.rated.length === 0
       ? (facts.pairs.length ? 'Nothing you have both rated yet.' : 'Nothing you both have yet.')
@@ -399,7 +401,7 @@ export default function PersonPage({ layered = false }) {
 
               {!theirs?.failed && (
                 <>
-                  {theirs
+                  {theirs && mine !== null
                     ? <Shape pairs={facts.rated} rings={facts.rings} name={name} empty={shapeEmpty} />
                     : <div className="own-skeleton pn-shape-waiting" />}
 
