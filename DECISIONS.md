@@ -398,6 +398,13 @@ already carries every colour this journal has, and the art is in the cover
 which went for the same reason: a blurred ground under type is the thing this
 site keeps reaching for and keeps taking back out.
 
+**The beacon's cover wears its listen, 2026-10-23, her pick of mockups.** A
+bar on the cover's foot a rated track, a slot a track, seen by everyone before
+the post (numbers only). On a phone the cover's colour washes down and fades
+by the name, bending the rule above with her yes: one colour, never the cover
+blurred or cropped. A band of the cropped cover was built that day and
+dropped: harsh, it repeated the Listen bar, and the top row got lost on it.
+
 **Prompts replace the free-text bio.** Nine openings in `library/bioprompt.js`;
 a keeper answers three, one line each, and the answer completes the sentence —
 `I can never skip — Voodoo, side two`. A blank box is a hard question badly

@@ -67,7 +67,7 @@ const CACHED = {
 
 // A journal with nothing to say: a copy on its first day, before a record has
 // been picked up.
-const NOTHING = { state: 'none', album: '', artist: '', art: '', track: '', at: null, before: [] };
+const NOTHING = { state: 'none', album: '', artist: '', art: '', track: '', rated: [], at: null, before: [] };
 
 // "Before that" — never the record on the beacon, which is already the largest
 // thing on the page and does not need repeating underneath itself at a third
@@ -119,6 +119,13 @@ export async function GET() {
       return Response.json({
         state: 'logging',
         album: needle.album, artist: needle.artist, art: needle.art, track: needle.track,
+        // The ratings given so far, one a track in track order, 0 for one
+        // not yet rated — the bars on the cover's foot, 2026-10-23. Everybody
+        // sees them fill in, before the listen is posted (Miyel's call): only
+        // the numbers, never a title or a word
+        // (migrations/043_horizon_floor.sql). A new field an older copy
+        // ignores.
+        rated: needle.rated,
         // No time while a listen is open, 2026-10-07: the needle's last move
         // is the second the keeper last touched their journal, which is a
         // "last seen" and nobody's business. The room says NOW LOGGING with
@@ -143,6 +150,7 @@ export async function GET() {
     return Response.json({
       state: 'logged',
       album: last.album, artist: last.artist, art: last.art, track: last.track || '',
+      rated: [],
       // When it was sat with, 2026-10-06, for the friends' room on other
       // copies ("logged Voodoo, 2 hours ago"). A copy older than this never
       // sends it and a reader treats it as optional: a new field an older

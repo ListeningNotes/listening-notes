@@ -20,13 +20,16 @@ export async function POST(request) {
   const blocked = await requireWristband(request);
   if (blocked) return blocked;
   try {
-    const { album, artist, album_art, track } = await request.json();
+    const { album, artist, album_art, track, rated } = await request.json();
     if (!album) return Response.json({ error: 'A record is needed' }, { status: 400 });
     await set_needle({
       album: String(album).slice(0, 300),
       artist: String(artist || '').slice(0, 300),
       album_art: String(album_art || '').slice(0, 1000),
       track: String(track || '').slice(0, 300),
+      // The bars on the cover's foot (library/needle.js, floorOf, which
+      // holds the ratings to the stars' own steps).
+      rated,
     });
     return Response.json({ ok: true });
   } catch (error) {

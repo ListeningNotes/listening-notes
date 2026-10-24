@@ -14,6 +14,8 @@
 // - isLive: whether a listen is open. It is what lights the dot on the mark.
 // - before: up to three records listened to lately, most recent first, each
 //   with a slug when it was published and none when it is still a draft.
+// - rated: while a listen is open, one number a track in track order, its
+//   rating or 0 — the bars on the cover's foot (2026-10-23). Empty otherwise.
 //
 // ── One poll, however many callers ─────────────────────────────────────────
 // This hook is called by four separate components — the beacon itself, the
@@ -103,6 +105,7 @@ const EMPTY = Object.freeze({
   artist: '',
   art: '',
   track: '',
+  rated: Object.freeze([]),
   isLive: false,
   before: [],
 });
@@ -128,6 +131,7 @@ function same(a, b) {
     && a.artist === b.artist
     && a.art === b.art
     && a.track === b.track
+    && a.rated.join() === b.rated.join()
     && a.before.length === b.before.length
     && a.before.every((x, i) => x.album === b.before[i]?.album);
 }
@@ -165,6 +169,8 @@ async function poll() {
     artist: data.artist || '',
     art: data.art || '',
     track: data.track || '',
+    // Numbers only, and only while live; an older copy sends none.
+    rated: state === 'logging' && Array.isArray(data.rated) ? data.rated.map(r => Number(r) || 0) : [],
     isLive: state === 'logging',
     before: Array.isArray(data.before) ? data.before : [],
   };
@@ -243,6 +249,8 @@ export function announce({ album, artist, art }, state = 'logging') {
     // No song yet: one has not been opened. The beacon names the record
     // instead, which is what the route does for the same case.
     track: '',
+    // Nothing rated yet on a record just put on.
+    rated: [],
     isLive: state === 'logging',
     before: beacon.snapshot.before || [],
   };

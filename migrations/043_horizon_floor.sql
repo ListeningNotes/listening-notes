@@ -1,0 +1,16 @@
+-- Copyright (C) 2026 Miyel Brown
+-- SPDX-License-Identifier: AGPL-3.0-or-later
+-- The horizon's floor, 2026-10-23: the bars drawn on the foot of the home
+-- beacon's cover, one for each track as it is rated while a listen is open
+-- (Miyel's beacon brief). The beacon is read by everybody, and nothing it
+-- said carried a rating, so the shape of the listen so far travels with the
+-- needle — her call, the same day: everyone sees the bars fill in, before
+-- the listen is posted.
+--
+-- `needle.rated` is one number a track, in track order: its rating, 0.5 to
+-- 5, or 0 for a track not yet rated, so the floor knows how many places the
+-- record has and a five-track record fills the cover's width once it is
+-- done. The bars and nothing else. No titles, no notes, no favourites — the
+-- writing stays in `drafts`, and the note in 013_needle.sql still holds:
+-- nothing private is here.
+ALTER TABLE needle ADD COLUMN IF NOT EXISTS rated jsonb;

@@ -295,6 +295,16 @@ export function useListeningSession({ step }) {
           // the tracklist is still being fetched. Blank is not the same as no
           // beacon: the route names the record instead.
           track: onAir === null ? '' : (tracks?.[onAir]?.title || ''),
+          // The ratings given so far, one a track in track order and 0 for
+          // a track not yet rated, for the bars on the beacon's cover: the
+          // record's every place, so its last bar lands at the cover's edge
+          // (Miyel's beacon brief, 2026-10-23). Numbers only: no title, no
+          // note. Before the tracklist arrives, as many places as the
+          // ratings reach.
+          rated: Array.from(
+            { length: tracks?.length || (Math.max(-1, ...Object.keys(trackRatings).map(Number)) + 1) },
+            (_, i) => Number(trackRatings[i]) || 0,
+          ),
         }),
       }).then(() => { litRef.current = true; })
         .catch(() => { /* the beacon is not worth an alert */ });

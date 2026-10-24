@@ -51,6 +51,22 @@ const TILE_PX = 600;
 // the rarer accident, and the smaller one.
 export const sameRecord = text => String(text ?? '').trim().toLowerCase();
 
+// ── The horizon's floor, 2026-10-23 ───────────────────────────────────────
+// The ratings a listen has given so far, as the cover's floor draws them:
+// one number a track, in track order, 0 for a track not yet rated
+// (migrations/043_horizon_floor.sql). Held to the stars' own steps and to a
+// length no record reaches, since it arrives from a request; and nothing at
+// all while nothing is rated.
+const FLOOR_MOST = 99;
+export function floorOf(value) {
+  if (!Array.isArray(value)) return [];
+  const slots = value.slice(0, FLOOR_MOST).map(v => {
+    const r = Number(v);
+    return Number.isFinite(r) && r > 0 && r <= 5 ? Math.round(r * 2) / 2 : 0;
+  });
+  return slots.some(r => r > 0) ? slots : [];
+}
+
 // ── What is on the desk ───────────────────────────────────────────────────
 // Null when there is nothing, when the needle has lifted, or when this copy
 // has not run the migration yet. All three mean the same thing to the beacon
@@ -58,7 +74,7 @@ export const sameRecord = text => String(text ?? '').trim().toLowerCase();
 export async function pull_needle() {
   try {
     const [row] = await database`
-      SELECT album, artist, album_art, track, updated_at
+      SELECT album, artist, album_art, track, rated, updated_at
       FROM needle
       WHERE id = 1
         AND ended_at IS NULL
@@ -70,6 +86,7 @@ export async function pull_needle() {
       artist: row.artist || '',
       art: sizedAlbumArt(row.album_art || '', TILE_PX),
       track: String(row.track || '').trim(),
+      rated: floorOf(row.rated),
       // When the needle last moved. The public beacon does not send it
       // while a listen is open (a last-seen to the second, 2026-10-07); it
       // is here for the keeper's own screens, should one want it.
@@ -85,17 +102,20 @@ export async function pull_needle() {
 
 // Written by the listen as it moves: a record picked, a track turned to, a
 // line typed. One row, overwritten, so putting a second record on the desk
-// takes the first one off with nothing having to check.
-export async function set_needle({ album, artist = '', album_art = '', track = '' }) {
+// takes the first one off with nothing having to check. And the ratings so
+// far, for the bars on the cover's foot.
+export async function set_needle({ album, artist = '', album_art = '', track = '', rated = [] }) {
   if (!album) throw new Error('The needle needs a record');
+  const floor = floorOf(rated);
   await database`
-    INSERT INTO needle (id, album, artist, album_art, track, updated_at, ended_at)
-    VALUES (1, ${album}, ${artist}, ${album_art}, ${track}, now(), NULL)
+    INSERT INTO needle (id, album, artist, album_art, track, rated, updated_at, ended_at)
+    VALUES (1, ${album}, ${artist}, ${album_art}, ${track}, ${floor.length ? JSON.stringify(floor) : null}::jsonb, now(), NULL)
     ON CONFLICT (id) DO UPDATE SET
       album = EXCLUDED.album,
       artist = EXCLUDED.artist,
       album_art = EXCLUDED.album_art,
       track = EXCLUDED.track,
+      rated = EXCLUDED.rated,
       updated_at = now(),
       -- A record on the desk is a listen happening, so a needle that had been
       -- lifted is down again. Without this, resuming after a close would write

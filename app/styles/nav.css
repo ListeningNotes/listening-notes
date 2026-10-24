@@ -3723,3 +3723,92 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
      in the source. */
   .hn .hn-pane--home .mp-note { order: -1; }
 }
+
+/* ── The cover wears its listen, 2026-10-23 ────────────────────────────────
+   Miyel's beacon brief, and her pick of its mockups: while a listen is open
+   the beacon's cover carries a bar on its foot for each track rated, every
+   track a slot across the cover's width, as tall as its rating, white over a
+   shade at the foot of the art only (ListeningBeacon.js). Nothing on the
+   newest: the cover in colour already says it is live. */
+.beacon-foot {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 42%;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.55));
+}
+.beacon-floor {
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  bottom: 0;
+  height: 38%;
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+}
+.beacon-floor i {
+  flex: 1 1 0;
+  min-width: 0;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 2px 2px 0 0;
+}
+
+/* ── And the page takes its colour, 2026-10-23 ─────────────────────────────
+   On a phone the record's colour washes down from the top of the glass and
+   fades into the page by the record's name, paler while nobody is logging
+   (HomeNav, The wash). Not the cover blurred, not a crop: one colour, read
+   off the cover the way By color reads it, so the cover itself stays whole
+   and the top row stays on a ground light enough for its ink. Its own
+   element and its own rules, so it can go on its own. And the beacon sits up
+   under the top row, a little smaller than it was (her ask, the same day:
+   "the gaps closed … take it all down a little bit in size"). */
+.beacon-wash { display: none; }
+@media (max-width: 768px) {
+  .hn .hn-pane--home .hn-floor--beacon { position: relative; }
+  .hn .hn-pane--home .beacon-wash {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: linear-gradient(180deg,
+      color-mix(in srgb, var(--wash) 52%, var(--bg)) 0%,
+      color-mix(in srgb, var(--wash) 26%, var(--bg)) 50%,
+      var(--bg) 100%);
+  }
+  .hn .hn-pane--home .beacon-wash--quiet {
+    background: linear-gradient(180deg,
+      color-mix(in srgb, var(--wash) 30%, var(--bg)) 0%,
+      color-mix(in srgb, var(--wash) 13%, var(--bg)) 50%,
+      var(--bg) 100%);
+  }
+  .hn .hn-pane--home .hn-floor--beacon > .hn-screen { position: relative; z-index: 1; }
+  /* The top row's ground wears the slice of the wash under it, and above
+     the wash, if the page starts lower than the glass, its top colour
+     (HomeNav, The wash under the top row). */
+  .hn[data-washed] .hn-bar-ground {
+    background-color: var(--bg);
+    background-image: linear-gradient(var(--wash-top), var(--wash-top)), var(--wash-image);
+    background-repeat: no-repeat;
+    background-size: 100% var(--wash-fill-h, 0px), 100% var(--wash-h);
+    background-position: 0 0, 0 var(--wash-y);
+  }
+
+  /* Up under the row, and smaller: 212 where it was 240, the covers beside
+     it 50 where they were 58, the name 21 where it was 24. */
+  .hn .hn-pane--home .hn-screen { padding-top: 6px; }
+  .hn .hn-pane--home .beacon-art-wrap { width: min(212px, calc(100vw - 150px), calc(var(--hn-h) * 0.28)); }
+  /* Its shadow falls below it and not above, now that it sits up under the
+     row: one reaching up under the row's ground was cut off along the
+     ground's edge, a line across the wash. */
+  .hn .hn-pane--home .beacon-art-wrap,
+  .hn .hn-pane--home .beacon-card:hover .beacon-art-wrap { box-shadow: 0 16px 30px -12px rgba(0, 0, 0, 0.3); }
+  .hn .hn-pane--home .beacon-art-wrap--live { box-shadow: 0 20px 36px -14px rgba(0, 0, 0, 0.36); }
+  .hn .hn-pane--home .hp-recent-tile { width: 50px; height: 50px; border-radius: 10px; }
+  .hn .hn-pane--home .hp-recent { gap: 7px; }
+  .hn .hn-pane--home .beacon-track { font-size: 21px; }
+}

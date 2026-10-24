@@ -67,6 +67,32 @@ export function colorOfArt(px) {
   return { hue, light, plain: false };
 }
 
+// Read in the browser: Apple's covers let a page read their pixels, so a
+// cover is drawn at COLOR_SIDE from a 60px copy and read as above. Null for
+// a cover that will not be read (one kept somewhere else, a failed load).
+// The wall's By color reads with this, and so does the home beacon's wash
+// (HomeNav, 2026-10-23), so the two say one color for one cover.
+export function readArtColor(address) {
+  return new Promise(resolve => {
+    if (typeof Image === 'undefined' || !address) { resolve(null); return; }
+    const art = new Image();
+    art.crossOrigin = 'anonymous';
+    art.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = COLOR_SIDE; canvas.height = COLOR_SIDE;
+        const pen = canvas.getContext('2d', { willReadFrequently: true });
+        pen.drawImage(art, 0, 0, COLOR_SIDE, COLOR_SIDE);
+        resolve(colorOfArt(pen.getImageData(0, 0, COLOR_SIDE, COLOR_SIDE).data));
+      } catch {
+        resolve(null);
+      }
+    };
+    art.onerror = () => resolve(null);
+    art.src = sizedAlbumArt(address, 60);
+  });
+}
+
 // Pull the FULL, ordered tracklist from iTunes/Apple Music. Two steps:
 //   1. find the album's collection (scored match, like fetchAlbumArtUrl)
 //   2. look up that exact collection's songs — returns every track in order

@@ -30,7 +30,7 @@
 import { Fragment, memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { ArrowsDownUp, CaretDown, Moon, MoonStars, Sun, SunHorizon } from '@phosphor-icons/react';
 import { parseHorizon, parseRating } from '../../library/entry_formatter';
-import { COLOR_SIDE, colorOfArt, sizedAlbumArt } from '../../library/music_data_api';
+import { readArtColor } from '../../library/music_data_api';
 import AlbumTile from './AlbumTile';
 import StarRating from './StarRating';
 import { handOffOrder } from '../../library/handoff';
@@ -290,25 +290,9 @@ const UNREAD = { hue: 0, light: 0, plain: true, unread: true };
 // close it as gray. Set against the test copy: eight covers at 0.6 or more.
 const WHITE_FROM = 0.6;
 
-function readCoverColor(address) {
-  return new Promise(resolve => {
-    const art = new Image();
-    art.crossOrigin = 'anonymous';
-    art.onload = () => {
-      try {
-        const canvas = document.createElement('canvas');
-        canvas.width = COLOR_SIDE; canvas.height = COLOR_SIDE;
-        const pen = canvas.getContext('2d', { willReadFrequently: true });
-        pen.drawImage(art, 0, 0, COLOR_SIDE, COLOR_SIDE);
-        resolve(colorOfArt(pen.getImageData(0, 0, COLOR_SIDE, COLOR_SIDE).data));
-      } catch {
-        resolve(null);
-      }
-    };
-    art.onerror = () => resolve(null);
-    art.src = sizedAlbumArt(address, 60);
-  });
-}
+// The reading itself is the library's (music_data_api.js, readArtColor),
+// shared with the home beacon's wash since 2026-10-23.
+const readCoverColor = readArtColor;
 
 // A cover kept somewhere that will not let a page read it (Bandcamp, Discogs)
 // is read by this journal's own server instead, which fetches the cover the
