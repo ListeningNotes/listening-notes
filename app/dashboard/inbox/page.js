@@ -4,19 +4,18 @@
 
 import { Fragment, useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Archive, ArrowCounterClockwise, ArrowsClockwise, ArrowUUpLeft, Article, BookOpen, Broadcast, Check, Envelope, Files, HandWaving, LinkSimple, MusicNoteSimple, PencilSimple, PencilSimpleLine, Plus, Shuffle, Signpost, User, VinylRecord, X } from '@phosphor-icons/react';
+import { Archive, ArrowCounterClockwise, ArrowsClockwise, ArrowUUpLeft, Article, BookOpen, Broadcast, Check, Envelope, Files, HandWaving, Heart, LinkSimple, MusicNoteSimple, PencilSimple, PencilSimpleLine, Plus, Shuffle, Signpost, User, VinylRecord, X } from '@phosphor-icons/react';
 import Link from 'next/link';
 import SiteNav, { LnMark } from '../../../components/main_components/SiteNav';
 import MiniAddressBook from '../../../components/main_components/MiniAddressBook';
 import SentList from '../../../components/main_components/SentList';
 import WaveSheet from '../../../components/main_components/WaveSheet';
 import MessageForm from '../../../components/main_components/Slug_Page/MessageForm';
-import { Compared } from '../../../components/main_components/Feed';
 import StarRating from '../../../components/main_components/StarRating';
 import { carrySender, journalUrl, tidyJournal } from '../../../library/return_address';
 import { useBookplate } from '../../../components/main_components/Bookplate';
 import { albumKey } from '../../../hooks/useListeningBeacon';
-import { lookup_key, splitNotes } from '../../../library/entry_formatter';
+import { lookup_key, parseHorizon, splitNotes } from '../../../library/entry_formatter';
 import { TRACK_NOTE_KEY } from '../../../hooks/useListeningSession';
 import { COPY_MADE } from '../../../components/main_components/JournalCopy';
 
@@ -159,6 +158,101 @@ const runsLong = words => words.length > 150 || (words.match(/\n/g) || []).lengt
 // somebody sent it — was hidden behind a button marked "Note". The view is a
 // shelf now and the message is on the front of every item, which is what it
 // was always for.
+
+// ── The compare, opened ────────────────────────────────────────────────────
+// One album and two listens of it, stacked: theirs above, yours below, and
+// how far apart the two verdicts are written on the line between them. From
+// Miyel's reference, 2026-09-20.
+//
+// **Theirs carries no stars of its own.** They are already on the entry four
+// lines up — this panel opens underneath them — and printing them again would
+// be the same fact twice on one screen. Yours are under your own horizon,
+// which is the only place they appear at all.
+//
+// **The two horizons are not mirrored.** A pair of charts growing away from a
+// shared line is a difference chart, and this is not one: these are two
+// listens of the same record, each with its own shape, and the honest drawing
+// of that is one above the other with the same baseline logic. Miyel: "don't
+// mirror beacons they should be one above the other."
+//
+// The track notes are writing and the feed carries none, so they stay where
+// they are and the foot of the panel points at both entries.
+// A '1' per hearted track, in track order, from the lists — see HEARTS_FIELD
+// in database_actions. A copy that has not been updated sends nothing, which
+// reads here as no hearts rather than as an error.
+const heartsOf = entry => String(entry?.hearts || '');
+
+//
+// The inbox's since 2026-09-29, where a message or a record that came back
+// offers the same comparison (the messages brief: the response this is built
+// for is another entry, shown against yours); the feed drew it first, and it
+// moved here when the feed was retired (2026-10-23). `theirStars` draws their
+// stars over their horizon, for a row that does not already carry them.
+function Compared({ mine, theirs, name, closing = false, theirStars = false }) {
+  const yours = parseHorizon(mine.horizon);
+  const hers = parseHorizon(theirs.horizon);
+  const yourHearts = heartsOf(mine);
+  const theirHearts = heartsOf(theirs);
+  const x = Number(mine.rating_value), y = Number(theirs.rating_value);
+  const apart = Number.isFinite(x) && Number.isFinite(y)
+    && mine.rating_value !== null && theirs.rating_value !== null
+    ? Math.abs(x - y)
+    : null;
+  const rated = mine.rating_value !== null && mine.rating_value !== undefined && mine.rating_value !== '';
+
+  return (
+    <div className={'fd-cmp' + (closing ? ' fd-cmp--shutting' : '')}>
+      {theirStars && theirs.rating_value !== null && theirs.rating_value !== undefined && theirs.rating_value !== '' && (
+        <div className="fd-cmp-stars fd-cmp-stars--theirs">
+          <StarRating rating={Number(theirs.rating_value)} size={17} />
+        </div>
+      )}
+      {hers.length > 0 && (
+        <div className="fd-cmp-bars fd-cmp-bars--theirs" aria-label={`How ${name} heard it, track by track`}>
+          {hers.map((v, i) => (
+            <span key={i} className={theirHearts[i] === '1' ? 'fd-cmp-bar fd-cmp-bar--loved' : 'fd-cmp-bar'} style={{ '--tall': `${Math.max(9, v * 100)}%` }}>
+              {theirHearts[i] === '1' && <Heart size={11} weight="fill" aria-hidden="true" />}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* The one number, on the line between the two listens. A rule with a
+          word sitting on it, which is the shape the beacon's slot already
+          uses — see .hn-pane--home's hairline and its note. */}
+      <p className="fd-apart">
+        <span>
+          {apart === null ? 'Not both rated' : apart === 0 ? 'The same' : `${apart.toFixed(1)} apart`}
+        </span>
+      </p>
+
+      {yours.length > 0 && (
+        <div className="fd-cmp-bars fd-cmp-bars--yours" aria-label="How you heard it, track by track">
+          {yours.map((v, i) => (
+            <span key={i} className={yourHearts[i] === '1' ? 'fd-cmp-bar fd-cmp-bar--loved' : 'fd-cmp-bar'} style={{ '--tall': `${Math.max(9, v * 100)}%` }}>
+              {yourHearts[i] === '1' && <Heart size={11} weight="fill" aria-hidden="true" />}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Yours, and only yours. Theirs are on the entry above this. */}
+      {rated && (
+        <div className="fd-cmp-stars">
+          <StarRating rating={Number(mine.rating_value)} size={17} />
+        </div>
+      )}
+
+      {/* Nothing under the stars. Theirs was linked from the cover above and
+          came off first; *Your copy* followed on 2026-09-20 — "it's
+          understandable without". The lower horizon is yours because the
+          stars under it are yours, and a label naming the thing you are
+          looking at is a caption on a photograph of your own house. Your
+          entry is on your own wall, one pane away, where it has always been.
+      */}
+    </div>
+  );
+}
 
 // `inPane` is the third way this page is drawn, from 2026-09-19: as a pane of
 // the cross rather than a screen of its own. The band at the foot made the

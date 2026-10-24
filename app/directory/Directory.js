@@ -42,11 +42,10 @@
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
-import { ArrowsClockwise, BookOpen, Check, MagnifyingGlass, Plus, User, X } from '@phosphor-icons/react';
+import { ArrowsClockwise, BookOpen, Check, Envelope, Fingerprint, Heart, MagnifyingGlass, Plus, SketchLogo, User, X } from '@phosphor-icons/react';
 import SiteNav from '../../components/main_components/SiteNav';
 import WaveSheet from '../../components/main_components/WaveSheet';
 import StarRating from '../../components/main_components/StarRating';
-import { Marks } from '../../components/main_components/Feed';
 import { useHoldStill } from '../../hooks/useHoldStill';
 import { useBookplate } from '../../components/main_components/Bookplate';
 import { DIRECTORY_URL } from '../../library/version';
@@ -405,6 +404,45 @@ function BoardNote() {
         <X size={16} weight="regular" aria-hidden="true" />
       </button>
     </div>
+  );
+}
+
+// The marks an entry wears, beside its stars, as marks and not words — the
+// strip at the head of an entry draws the three flags this way (MiniCard),
+// and a row is a glance (Miyel, 2026-09-13: the icon, not the tag's name).
+// Sent gets an envelope in faint ink, the inbox's own mark. The feed's until
+// it was retired (2026-10-23); the Board's rows are what draw it now.
+function Marks({ entry, size = 12 }) {
+  const fav = entry.favorite === true || entry.favorite === 'true';
+  const mp = entry.masterpiece === true || entry.masterpiece === 'true';
+  const formative = entry.formative === true || entry.formative === 'true';
+  // Sent, not credited by hand: the envelope is for a record somebody
+  // actually sent (credit_by_hand, 2026-09-22).
+  const sent = entry.entry_type === 'Submission' && entry.credit_by_hand !== true;
+  if (!fav && !mp && !formative && !sent) return null;
+  return (
+    <span className="ln-mini-flags fd-marks">
+      {sent && (
+        <span className="ln-mini-flag" style={{ color: 'var(--ink-faint)' }} role="img" aria-label="Submission" title="Submission">
+          <Envelope size={size} weight="regular" />
+        </span>
+      )}
+      {fav && (
+        <span className="ln-mini-flag" style={{ color: 'var(--fav, #f0484f)' }} role="img" aria-label="Favorite" title="Favorite">
+          <Heart size={size} weight="fill" />
+        </span>
+      )}
+      {mp && (
+        <span className="ln-mini-flag" style={{ color: 'var(--mp, #4a9bf0)' }} role="img" aria-label="Masterpiece" title="Masterpiece">
+          <SketchLogo size={size} weight="fill" />
+        </span>
+      )}
+      {formative && (
+        <span className="ln-mini-flag" style={{ color: 'var(--formative, #3fa96b)' }} role="img" aria-label="Formative" title="Formative">
+          <Fingerprint size={size} weight="bold" />
+        </span>
+      )}
+    </span>
   );
 }
 

@@ -1255,16 +1255,12 @@ and checks. Nobody learns they were read. **One feed** — the two views of
 2026-09-12 retired with the friends brief. **A shelf, not a river:** no
 counts, no badges, no unread state.
 
-**The feed is entries, not people, 2026-09-12; built 2026-09-13.** The
-Friends pane's second floor: entry-shaped rows with a small face and a name —
-what the people in the address book logged, not a list of who exists — read
-from each journal's public feed in the browser, never stored. Everyone in the
-book, newest first, forty at most; what came back from a send is an arrival
-in the inbox now, not a view of the feed (2026-09-22). A row offers Compare
-only when it is a record you also have — this album, their rating against
-yours and the two horizons; the track notes stay on the journals until an
-entry can be read across origins. Compare arrives because something
-happened; it is not a place you navigate to.
+**The feed is retired, 2026-10-23, her People brief.** What the people in
+the book logged is People's wall, read from the same public feeds; the feed
+was "a stack of other people's writing to get through". `/dashboard/feed`
+forwards to the address book, a bookmark being a promise. Compare lives on
+in the inbox, and the Board keeps the marks. The feed's own entry is in the
+archive.
 
 **Friends shows everyone's beacon, fetched through one route rather than ten
 from the browser, 2026-10-06.** `/api/friends/beacons` fans out to the people
@@ -1412,8 +1408,8 @@ until then a failed add held the screen. The giver's wave back is what
 teaches the new inbox. Both hellos are chosen; skipping is never mentioned.
 
 **A returned send is an arrival, and this copy keeps it, 2026-09-22.** When
-somebody in the book logs a record this journal put them onto, the feed's
-match hands it to this copy's server and the inbox shows it among the sends —
+somebody in the book logs a record this journal put them onto, the match
+(the feed's, People's since 2026-10-23) hands it to this copy's server and the inbox shows it among the sends —
 "Came back", the dot until opened, no count. A table of its own (`came_back`),
 because a copy kept no record of what it sent (it does from 2026-10-15, below). **The first write of its
 kind:** the browser telling its own server what it read on somebody else's

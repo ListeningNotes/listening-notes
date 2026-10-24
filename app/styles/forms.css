@@ -1795,7 +1795,7 @@ textarea.st-field { resize: vertical; min-height: 96px; }
    guard and not a fix, and it is the half of the problem this copy can close
    today. The keeper's own portrait on the card keeps its long press: it is
    their picture, on their card, and saving it is a thing they might mean. */
-.fr-face img, .fd-face img {
+.fr-face img {
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;

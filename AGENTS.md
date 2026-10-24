@@ -206,8 +206,8 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   ("I can never skip —"), the limit of three, and the reader that turns stored
   key-and-answer pairs into printable lines and drops retired keys.
 - `came_back_actions.js` — the `came_back` table: records this journal put
-  somebody onto that they then logged, noticed by the feed and written down so
-  the inbox can show them as arrivals.
+  somebody onto that they then logged, noticed by People as it reads the
+  book's journals and written down so the inbox can show them as arrivals.
 - `carbon_copy.js` — the journal as pages anybody can read: a Markdown page
   per entry, saying what the entry page says (its credit rule, its listen
   numbers, its edit stamps), and the zip that holds them beside the export
@@ -428,8 +428,8 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - `useJournalHost.js` — the journal's host, and `usePasswordName`: the hidden
   username a password manager files the password under — the keeper's name,
   the host only where no name is set (since 2026-10-21).
-- `useFriendsBeacons.js` — one shared poll, once a minute while the Friends
-  room or the Board is on screen, of `/api/friends/beacons`: what everyone in
+- `useFriendsBeacons.js` — one shared poll, once a minute while People, the
+  address book or the Board is on screen, of `/api/friends/beacons`: what everyone in
   the address book is logging, kept through a journal's failure, and `away`,
   the Board's friends of friends; `refreshFriends` for the pull,
   `fillFriends` for the whole book.

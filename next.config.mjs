@@ -64,7 +64,15 @@ function forwards() {
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   async redirects() {
-    return forwards();
+    return [
+      ...forwards(),
+      // The feed was retired with Miyel's People brief, 2026-10-23: what the
+      // people in the book log is People's wall now. Its address answers
+      // rather than 404s — a bookmark is a promise — with the address book.
+      // Temporary (307), so a browser never learns it for good and the
+      // address stays free.
+      { source: '/dashboard/feed', destination: '/dashboard/people', permanent: false },
+    ];
   },
   // Who is allowed to ask the dev server for dev-only things. Next blocks
   // every origin but localhost by default, and the block is quiet in the worst

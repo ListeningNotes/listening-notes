@@ -57,8 +57,9 @@ publicly):
   moved (Update), and problems keepers wrote in
 - `/dashboard/report` — report a problem: one box, sent to the copy the
   software comes from
-- `/dashboard/feed` — what the journals in the address book have logged.
-  Ran on down the desk's own scroll until 2026-09-15
+- `/dashboard/feed` — forwards to `/dashboard/people` (next.config.mjs): the
+  feed was retired with the People brief, 2026-10-23, its records on People's
+  wall now
 - `/dashboard/people` — the address book as a grid of faces (Friends), with
   the ways one gets in — a paste, a scanned code, a send that carried one —
   and Invite and Add in its header. Who you've added, the drawer under
@@ -92,7 +93,7 @@ The library — logic, no visuals
   library/
     background_scale.js        The factor that shrinks the screensavers' artwork on a phone so it stays background; exactly 1 on a desk
     bioprompt.js               The nine sentence openings a keeper finishes on the card, the limit of three, and the reader that prints stored key-and-answer pairs
-    came_back_actions.js       What came back: records this journal put somebody onto, logged on theirs — noticed by the feed, kept for the inbox
+    came_back_actions.js       What came back: records this journal put somebody onto, logged on theirs — noticed by People (PeopleScreen.js), kept for the inbox
     carbon_copy.js             The journal as pages anybody can read: a Markdown page per entry, saying what the entry page says, zipped beside journal.json — made in the browser by Back up your journal
     card_links.js              The marks a card can wear — which shape stands for the rig, which logo a link gets
     claim_notice.js            The box printed in the build log while a copy is unclaimed
@@ -168,7 +169,7 @@ The front doors — receive requests, hand them off, send back responses
     settings/route.js          The settings row — public to read, owner-only to write; `moved_to` is kept tidy and is never this journal's own address
     people/route.js            The address book — owner-only: the list, with every address this journal answers to (where it lives and where it lived), and filing an address
     outbox/route.js            Where a send leaves from — owner-only: the person resolved out of the address book, the record (or the song) handed to library/outbox.js, which posts to their copy's /api/submissions, and a send that landed written to `sent`; a wave goes the same road, and so does a reply, whose recipient is read off the message it answers
-    came-back/route.js         What came back — owner-only: the inbox's list, what the feed noticed, a row opened, and a row dismissed
+    came-back/route.js         What came back — owner-only: the inbox's list, what People noticed, a row opened, and a row dismissed
     sent/route.js              What this journal sent that has not come back — owner-only: the inbox's Sent list, and a row removed; written only by outbox/route.js
     waves/route.js             Waves — POST is public, from another copy's server: a journal and a name, nothing else, checked and counted; GET, PATCH and DELETE are the keeper's
     people/[id]/route.js       One person: reading them, crossing them out, and Update — `{ moved: true }` takes the move their journal said it made, everywhere this journal names them but its entries, at once
@@ -207,7 +208,7 @@ The hooks — reusable logic shared across pages
     useEntryEditor.js          The draft of an entry while its keeper corrects it in place; fetches the credit fields separately, since public reads strip them
     useHoldStill.js            Locks every scrolling ancestor behind an open overlay so nothing under it moves
     useJournalHost.js          The journal's host; usePasswordName, the keeper's name as the hidden username a password manager files the password under
-    useFriendsBeacons.js       Asks /api/friends/beacons once a minute while the Friends room is on screen — one poll shared by every caller — and keeps a journal's last word through a failure
+    useFriendsBeacons.js       Asks /api/friends/beacons once a minute while People or the address book is on screen — one poll shared by every caller — and keeps a journal's last word through a failure
     useListeningBeacon.js      Asks this journal's own beacon every 15 seconds — one poll shared by every component that draws it — logging or last logged
     useListeningSession.js     All session state — the record, tracks, notes, score, preview, saving; SESSION_STEPS
     usePress.js                The share printer as a hook: make the picture at a size, save or share it, copy the address
@@ -234,9 +235,8 @@ The furniture — visual pieces
       InviteSheet.js           Invite (Give until 2026-10-21): a code to the front door, listeningnotes.blog/get?invite=<this journal>, for a friend who has no journal — the ticket at the left of the address book's header, opposite Add
       MonthPrompt.js           The month's prompt: pinned over the keeper's wall while open (what it asks, days left, the record sent); PromptSheet, the read-only sheet an entry's ··· Submit opens — what will be published and Send to Listening Notes; useMonthPrompt, one copy for the page
       WaveSheet.js             Just added somebody: "[name] is in your address book", Wave to [name] or Not now — the one moment a wave is offered
-      Dashboard.js             The desk, for the owner — Start a listen as a band, then Inbox, Feed, Address book and Settings as rows; the header holds the mark alone. On a desk only since 2026-09-19, as the spine's second page
+      Dashboard.js             The desk, for the owner — Start a listen as a band, then Inbox, Address book and Settings as rows; the header holds the mark alone. On a desk only since 2026-09-19, as the spine's second page
       Friends.js               The address book as a grid of faces, pinned first; a face opens its three doors in place under its own row. /dashboard/people — a drawer over People (Who you've added) and a page on a desk. Exports TopBand: who is logging right now as faces, or the last thing that happened
-      Feed.js                  What the people in the address book logged, read off their public feeds; Submissions and Recent; Compare on a row you also have. Its own page at /dashboard/feed since 2026-09-15
       Header.js                The phone's top row — the keeper's face (to the card), the light switch, and Home · People · Inbox with only the lit one wearing its word; a visitor's has the mark instead of words. It replaced the band at the foot (Footer.js), 2026-10-22
       PullDown.js              Pull down to refresh: at the top of a scroller, the mark and a line in the gap the page opens, then asking — on the People pane first, Friends and Everyone alike
       EditingBar.js            The band at the foot of anything being corrected — what you are in the middle of, and Save and Cancel as words
@@ -334,7 +334,6 @@ The rooms — full pages assembled from furniture
     @layer/(.)get/story/page.js  The long note, opened over /get
     @layer/(.)session/page.js  The same listen, opened as a layer over the desk
     @layer/(.)dashboard/inbox/page.js  The inbox, opened as a sheet over the desk
-    @layer/(.)dashboard/feed/page.js  The feed, on the same sheet
     @layer/(.)dashboard/people/page.js  The address book, on the same sheet
     @layer/(.)dashboard/people/[id]/page.js  The page about a person, on the same sheet
     @layer/(.)dashboard/report/page.js  Report a problem, on the same sheet
@@ -342,7 +341,6 @@ The rooms — full pages assembled from furniture
     dashboard/
       page.js                  Redirect to / — the desk is a face of the cross's turning pane
       inbox/page.js            Everything that arrives, in one list: each row carries the mark of its kind and opens where it sits to its doors — plain, on the tokens, and a sheet over the desk; an LN. Admin letter pinned above it, the LN. mark for a face, Dismiss its only door
-      feed/page.js             What the journals in the address book have logged
       people/page.js           The address book — the list, the field, the scanner
       people/[id]/page.js      Your page about one person — the whole-journal compare, and what they sent you
       report/page.js           Report a problem — one box, Send
@@ -409,7 +407,7 @@ than what anyone remembers building.
 | `messages` | Somebody's words to the keeper, drawn in the inbox and nowhere else. Who it is from, what was said, the entry it is about as a journal and a slug with the record as it was, the line it answers when it is a reply, `seen_at` for the dot, `replied_at`, and `comment_id` with `was_comment` for one that used to be a comment. Dismissing deletes the row. |
 | `submissions` | Albums other people have sent you. `status` is pending, reviewed (a listen was started from the row), logged, or dismissed; `entry_id` is the record a send points at, set by hand on the row (*I've already logged this*) and never by matching; that press writes nothing on the record. `song` makes a send a track rather than a record, with the record it is off still in `album` and `artist`; empty is an album send, which every send before migration 026 is. `prompt` is filled only on the publication's own journal: the month's prompt a record was sent for. |
 | `waves` | Somebody added this journal and said so: one row per waving address, the name their journal gave when asked, when it arrived, and `seen_at`. No message column, now or later; Leave it deletes the row. |
-| `came_back` | Records this journal put somebody onto, logged on their journal: one row per entry, keyed by their journal and slug, with what their feed said about it, `seen_at` for the inbox's dot and `dismissed_at` for one put away — kept, so the feed does not bring it back. Written by the keeper's own browser, from the feed's match. |
+| `came_back` | Records this journal put somebody onto, logged on their journal: one row per entry, keyed by their journal and slug, with what their feed said about it, `seen_at` for the inbox's dot and `dismissed_at` for one put away — kept, so People does not bring it back. Written by the keeper's own browser, from People's match (the feed's until 2026-10-23). |
 | `sent` | Records this journal sent from its own copy, written once the other journal took them (from 2026-10-15; nothing before was kept): their address, the name the book gave them, the record or song, the cover and the note. Waiting until a `came_back` row from the same journal names the same record, matched when the list is read, or until the keeper removes it, which deletes the row. |
 | `people` | The address book: one row per journal address, the name that journal gave when it was filed, and `pinned_at` for the pinned row; `moved_to`, a move their journal said it made that the keeper has not taken — only Update in the Inbox changes the address, and a move taken back is forgotten. The face is never stored. |
 | `reports` | Problems keepers wrote in from their desks. Every copy has the table; only the one in `REPORTS_URL` is written to. |

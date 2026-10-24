@@ -1113,3 +1113,26 @@ question ("whose records is a setting, not a place"), the grid of every face
 had nothing to do with the moment you looked at it, and the Board became the
 search on the wall's line. /directory still draws the Board at its own
 address.
+
+---
+
+## The network — the feed, 2026-09-12 to 2026-10-23
+
+Lives now in DECISIONS.md, The network: *The feed is retired* and *People is
+one screen*.
+
+**The feed is entries, not people, 2026-09-12; built 2026-09-13.** The
+Friends pane's second floor: entry-shaped rows with a small face and a name —
+what the people in the address book logged, not a list of who exists — read
+from each journal's public feed in the browser, never stored. Everyone in the
+book, newest first, forty at most; what came back from a send is an arrival
+in the inbox now, not a view of the feed (2026-09-22). A row offers Compare
+only when it is a record you also have — this album, their rating against
+yours and the two horizons; the track notes stay on the journals until an
+entry can be read across origins. Compare arrives because something
+happened; it is not a place you navigate to.
+
+Retired by her People brief, 2026-10-23: "The feed is homework" — the same
+information as one line saying who logged what, in the opposite posture.
+Its records became People's wall; its match for what came back moved to
+PeopleScreen.js; its compare moved to the inbox.
