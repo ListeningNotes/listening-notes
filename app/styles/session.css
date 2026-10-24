@@ -623,6 +623,7 @@
 .ses-rows-disc { display: block; padding: 22px 20px 6px; }
 /* A row is about 58px shut: number, name, stars, heart. */
 .ses-row {
+  position: relative;
   display: flex; flex-wrap: wrap; align-items: flex-start; gap: 12px;
   padding: 12px 20px;
   border-bottom: 1px solid var(--border);
@@ -1084,4 +1085,18 @@
   .lay.lay--sheet .ses:not(.ses--wide) .ses-body--page {
     padding-bottom: calc(100px + max(15px, env(safe-area-inset-bottom, 0px)));
   }
+}
+
+/* ── Where the keyboard's ▲ ▼ land, 2026-10-23 ─────────────────────────────
+   A field on every closed row, at its foot, for an iPhone's ▲ ▼ to step to:
+   reached, it opens that track's note (TrackRow.js). A pixel, unseen, under
+   no finger; 16px type so a phone does not zoom to it. Not hidden or
+   display: none, which would take it out of the keys' order. */
+.ses-row-standin {
+  position: absolute; left: 20px; bottom: 0;
+  width: 1px; height: 1px;
+  margin: 0; padding: 0; border: 0; outline: none; resize: none; overflow: hidden;
+  font-size: 16px; line-height: 1;
+  background: transparent; color: transparent; caret-color: transparent;
+  opacity: 0; pointer-events: none;
 }

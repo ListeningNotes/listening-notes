@@ -178,6 +178,29 @@ function TrackRow({
         </div>
       )}
 
+      {/* ── A place for the keyboard's ▲ ▼ to land, 2026-10-23 ─────────────
+          An iPhone's ▲ ▼ over the keys go to the field before and after,
+          and a track's note is only a field while it is open — so they had
+          nowhere to go but the album note (Miyel: "can … the up and down
+          button in the bar above an open keyboard … take you up and down
+          tracklist notes, even if there aren't any?"). So every closed row
+          keeps one, out of sight and out of the way of a finger: landed on,
+          it opens this track's note, as pressing the note does, and the
+          cursor goes into the box at the end of what is there. The note
+          left behind shuts on its own as the cursor leaves it. In the list's
+          order, after the album note, so ▲ from the first track goes back
+          up to it; Tab on a desk walks the same way. */}
+      {!noting && (
+        <textarea
+          className="ses-row-standin"
+          value=""
+          onChange={() => {}}
+          onFocus={() => { caret.current = null; onNote(index); }}
+          aria-label={written ? `Edit the note on ${title}` : `Write about ${title}`}
+          rows={1}
+        />
+      )}
+
       {/* The note, in the same box the album note is written in, under the
           whole row (Miyel, 2026-09-29: "have the track notes match the
           album notes — that box opens"). Grown by layout, never measured —
