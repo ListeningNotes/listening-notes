@@ -1072,3 +1072,25 @@ fixed — the wall lives inside a pane of the cross.
 **The wall's bar sits on the floor, edge to edge.** Rounded corners and side
 margins made it a pill floating over the covers; square and full width it is
 the edge of the wall.
+
+---
+
+## The model — hosting ruled out, to 2026-10-20
+
+Reversed 2026-10-20 (Miyel), the night her journal moved onto the hosted deployment. The current rules are under The model and The lock in DECISIONS.md.
+
+**Hosting other people is ruled out.** Every reason to host is solved without a
+server: the feed is pull-based, compare fetches a file, the address book is
+local. Not "never" — just not a future being kept open.
+
+**The blast radius of a compromised copy is one journal.** Every copy checks
+its own password against its own server; there is no shared system to be let
+into and no database of everybody. That is a structural consequence of
+self-hosting, and the thing a hosted service can never offer.
+
+**Why it was reversed.** A post about the journal reached many people and
+almost none could get in: a copy needed a GitHub account, a Vercel account and
+a Neon account, so the door opened only for developers. The reasons above
+still hold — a hosted journal reads feeds, compares and keeps its address book
+exactly as a self-hosted one does; what changed is who runs the server, for
+the people who could not run one.
