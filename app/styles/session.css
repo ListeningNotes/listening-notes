@@ -506,7 +506,7 @@
 }
 .ses-eye:hover, .ses-eye--open { color: var(--ink-soft); }
 .ses-eye:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 2px; border-radius: 8px; }
-.ses-eye-n { font-family: var(--font-label); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; }
+.ses-eye-n { font-family: var(--font-label); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; }
 /* ── The three marks ───────────────────────────────────────────────────────
    A glyph over a word, which is the one shape this software uses to mean
    "here is something you can do" — an entry's ···, the address book's doors,
@@ -1027,6 +1027,10 @@
 .ses:not(.ses--wide) .ses-record-head + .ses-album-box,
 .ses:not(.ses--wide) .ses-record-head ~ .ses-album-box { margin-top: 20px; }
 .ses:not(.ses--wide) .ses-record-says .ses-marks { margin-top: 8px; gap: 2px; }
+/* The average beside the stars, the number alone: with its word it did not
+   fit the room the cover leaves and broke onto two lines. */
+.ses:not(.ses--wide) .ses-record-head .ses-eye-avg { display: none; }
+.ses:not(.ses--wide) .ses-record-head .ses-record-marks { gap: 10px; flex-wrap: nowrap; }
 .ses:not(.ses--wide) .ses-record-says .ses-mark { width: 62px; gap: 5px; padding: 4px 0; }
 .ses:not(.ses--wide) .ses-record-says .ses-mark svg { width: 19px; height: 19px; }
 .ses:not(.ses--wide) .ses-record-says .ses-mark-word { font-size: 7.5px; }

@@ -87,7 +87,11 @@ export default function AlbumNotes({
             {avgShown
               ? <Eye size={16} weight="regular" aria-hidden="true" />
               : <EyeClosed size={16} weight="regular" aria-hidden="true" />}
-            {avgShown && <span className="ses-eye-n">{avg} avg.</span>}
+            {/* The word goes on a phone, where the stars stand beside the
+                cover and the number and its word broke onto two lines
+                (Miyel, 2026-10-23: "average cuts off into two rows"); the
+                eye and the ghost in the stars say what the number is. */}
+            {avgShown && <span className="ses-eye-n">{avg}<span className="ses-eye-avg"> avg.</span></span>}
           </button>
         )}
       </div>
