@@ -1298,6 +1298,13 @@ square on the grounds that a journal is a shelf of records. A person is a
 circle and a record a rounded square, which also tells the two apart in the
 band of cards, where both are drawn. The rest of the site's faces wait on her.
 
+**People's top band is who is live, or the last thing that happened,
+2026-10-23, her People brief.** One slot of one height: the faces logging
+right now, each with its name and the record under it; when nobody is, one
+line — face, name, what they logged, how long ago. No heading and no word for
+the room: *Quiet* read as a verdict on the person named. A face is there
+because they are live, never for how much they log.
+
 **The directory, 2026-10-07, Miyel's call, and no longer ruled out.**
 listeningnotes.blog keeps a table of the journals on the Board — the address,
 the code it proved it with, when, and the last beacon seen. A copy draws the

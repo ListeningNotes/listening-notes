@@ -1824,8 +1824,8 @@ textarea.st-field { resize: vertical; min-height: 96px; }
    face and a pinned one. Still, not breathing: the band's dot is the one
    that pulses. It is what still tells you who is on once the band above
    the grid has scrolled away. */
-.fr-one--live .fr-face { box-shadow: 0 0 0 1.5px var(--live-deep); }
-.fr-one--live .fr-ring::after {
+.fr-one--live .fr-face, .fr-live-one .fr-face { box-shadow: 0 0 0 1.5px var(--live-deep); }
+.fr-one--live .fr-ring::after, .fr-live-one .fr-ring::after {
   content: '';
   position: absolute; z-index: 1;
   right: calc(14.64% - 6px); bottom: calc(14.64% - 6px);
@@ -1960,13 +1960,13 @@ textarea.st-field { resize: vertical; min-height: 96px; }
   .fr-on, .fr-ring { transition: none; }
 }
 
-/* ── Who is logging right now, and the quiet line, 2026-10-06 ─────────────
+/* ── Who is logging right now, 2026-10-06 ──────────────────────────────────
    To the brief's mock-up (friends-room.html), measure for measure: a dot
    that pulses outward and LOGGING RIGHT NOW in the label face, then a row
    of cards that scrolls sideways and settles on a card, bled to the
    gutters; a card is the record's art, the friend with a live dot, the
-   record and the artist. When nobody is on, the quiet line stands where the
-   band would. Either one ends on a hairline above the grid. */
+   record and the artist. The Board's band since People's top band became
+   faces (2026-10-23, below). */
 .fr-now {
   padding: 0 0 22px;
   border-bottom: 1px solid var(--border);
@@ -2046,20 +2046,83 @@ textarea.st-field { resize: vertical; min-height: 96px; }
   font-size: 12px; color: var(--ink-soft);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.fr-quiet {
-  display: flex; align-items: center; gap: 10px;
-  margin: 0; padding: 14px 2px 22px;
+/* ── The top band of People, 2026-10-23 ───────────────────────────────────
+   Miyel's People brief and its mockup: one slot of one height holding
+   either the strip of who is logging right now or the line of who was here
+   last, so nothing under it moves when somebody starts or stops. Both end
+   on the hairline the old band ended on. */
+.fr-band {
+  display: flex; align-items: center;
+  height: 104px; box-sizing: border-box;
   border-bottom: 1px solid var(--border);
-  font-size: 13.5px; line-height: 1.5; color: var(--ink-soft);
 }
-.fr-quiet-word {
-  font-family: var(--font-label);
-  font-size: 9.5px; letter-spacing: 0.22em; text-transform: uppercase;
+/* The strip: faces bled to the gutters, scrolling sideways once there are
+   more than fit, and only then (see the note in Friends.js). */
+.fr-live {
+  flex: 1; min-width: 0;
+  display: flex; align-items: flex-start; gap: 12px;
+  /* Room above and below, or the scroller clips the live ring. */
+  margin: 0 -24px; padding: 4px 24px;
+  overflow-x: auto; overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scroll-padding-inline: 24px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.fr-live::-webkit-scrollbar { display: none; }
+.fr-live-one {
+  flex: 0 0 64px; min-width: 0;
+  display: flex; flex-direction: column; align-items: center;
+  border: 0; background: none; padding: 0;
+  color: inherit; font: inherit; text-decoration: none;
+  cursor: pointer;
+  scroll-snap-align: start;
+  -webkit-tap-highlight-color: transparent;
+}
+.fr-live-one .fr-ring, .fr-last .fr-ring { width: 54px; flex-shrink: 0; }
+/* The name in the label face and the record fainter under it, as drawn. */
+.fr-live-name, .fr-live-rec {
+  max-width: 100%;
+  font-family: var(--font-label); letter-spacing: 0.02em; line-height: 1.3;
+  text-align: center;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.fr-live-name { margin-top: 8px; font-size: 10.5px; color: var(--ink-soft); }
+.fr-live-rec { margin-top: 1px; font-size: 9.5px; color: var(--ink-faint); }
+/* The line: their face, their name over what they logged and when, and the
+   record at the end. */
+.fr-last {
+  flex: 1; min-width: 0;
+  display: flex; align-items: center; gap: 12px;
+  border: 0; background: none; padding: 0;
+  color: inherit; font: inherit; text-align: left; text-decoration: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.fr-last-says { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.fr-last-name {
+  font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
+  font-size: 16px; line-height: 1.2; color: var(--ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+/* Two lines at most: a long record's name wraps rather than losing the
+   time off the end. */
+.fr-last-what {
+  font-family: var(--font-label); font-size: 10px; line-height: 1.45;
   color: var(--ink-faint);
-  flex-shrink: 0;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+  overflow: hidden;
 }
-.fr-quiet-said { min-width: 0; }
-.fr-quiet b { color: var(--ink); font-weight: var(--font-display-weight, 700); }
+.fr-last-when { white-space: nowrap; }
+.fr-last-art {
+  flex: 0 0 46px; height: 46px;
+  border-radius: 8px; overflow: hidden;
+  background: var(--bg-warm);
+}
+.fr-last-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.fr-live-one:focus-visible, .fr-last:focus-visible {
+  outline: 2px solid var(--ink-faint); outline-offset: 4px; border-radius: 10px;
+}
 
 /* Their beacon inside the doors, as the mock-up draws it: the record small
    in a hairline square, a tracked caption, the record and the artist, above

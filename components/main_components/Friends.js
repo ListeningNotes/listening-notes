@@ -590,7 +590,7 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null, 
   useEffect(() => {
     if (open === null) return undefined;
     const away = event => {
-      if (event.target.closest?.('.fr-one, .fr-doors, .fr-now')) return;
+      if (event.target.closest?.('.fr-one, .fr-doors, .fr-band')) return;
       choose(open);
     };
     document.addEventListener('pointerdown', away, true);
@@ -968,18 +968,22 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null, 
 
         <p className="bk-said" role="status">{said}</p>
 
-        {/* ── Who is logging right now, 2026-10-06 ─────────────────────────
-            A row of cards that scrolls sideways: the record, the friend
-            with a live dot, the record's name and the artist. Pressing one
-            opens that friend's doors in the grid below, which the shelf
-            then scrolls to show; a friend past what the shelf holds opens
-            the whole book instead. Above the shelf rather than in it, so
-            the shelf's own count of what fits (reckon) stays true — it is
-            given less room and says so. The row is a sideways scroller only
-            once it overflows, from three cards on a phone: a swipe that
-            begins on it then browses the cards, and the rail's swipe is
-            everywhere else. With one or two cards there is nothing to
-            browse and the swipe is the rail's, as it should be. */}
+        {/* ── The top band, 2026-10-23 ─────────────────────────────────────
+            Miyel's People brief: one slot, two states, never both. While
+            anybody in the book is logging, a strip of their faces, each with
+            its name and the record under it — only the live, which is why it
+            is three and not a hundred. While nobody is, one line in the same
+            slot at the same height: the last thing that happened. No heading
+            and no empty state. It replaced a row of cards under LOGGING
+            RIGHT NOW (2026-10-06); the Board still draws those cards.
+
+            Pressing a face, or the line, opens that friend's doors in the
+            grid below, which the shelf then scrolls to show; a friend past
+            what the shelf holds opens the whole book instead. Above the
+            shelf rather than in it, so the shelf's own count of what fits
+            (reckon) stays true. The strip scrolls sideways only once it
+            overflows: a swipe that begins on it then browses the faces, and
+            the rail's swipe is everywhere else. */}
         {/* The book's search on the cross, 2026-10-08: at the top of the
             floor, in the Board's own field, once the book passes a dozen —
             the bar's middle is the two words now (see onBusy, above). */}
@@ -997,69 +1001,95 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null, 
             />
           </label>
         )}
-        {onNow.length > 0 ? (
-          <div className="fr-now">
-            <p className="fr-now-head">
-              <span className="fr-now-pulse" aria-hidden="true" />
-              Logging right now
-            </p>
-            <div className="fr-now-row">
-              {onNow.map(b => {
-                const person = byAddress.get(b.address);
-                const name = person?.name || b.name;
-                const title = b.track || b.album;
-                const by = b.track ? `${b.album} · ${b.artist}` : b.artist;
-                // Only a face that is actually drawn can open its doors —
-                // a search can hide the pinned row and narrow the rest.
-                const onShelf = rows.some(r => r.people.some(p => p.id === person?.id));
-                const inside = (
-                  <>
-                    <span className="fr-on-art" aria-hidden="true">
-                      {b.art
-                        ? <img src={b.art} alt="" loading="lazy" onError={e => { e.currentTarget.style.display = 'none'; }} />
-                        : <span>&#9834;</span>}
-                    </span>
-                    <span className="fr-on-who">
-                      <span className="fr-on-dot" aria-hidden="true" />
-                      {name}
-                    </span>
-                    <span className="fr-on-rec">{title}</span>
-                    <span className="fr-on-by">{by}</span>
-                  </>
-                );
-                const label = `${name} is logging ${title}${by ? ` · ${by}` : ''}`;
-                return onShelf ? (
-                  <button
-                    key={b.address}
-                    type="button"
-                    className="fr-on"
-                    onClick={() => { if (person && open !== person.id) choose(person.id); }}
-                    aria-label={label}
-                    title={label}
-                  >
-                    {inside}
-                  </button>
-                ) : (
-                  <Link key={b.address} href="/dashboard/people" className="fr-on" aria-label={label} title={label}>
-                    {inside}
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-        ) : lastIn && (
-          /* QUIET, and who was here last. Only when a friend's copy says
-             when — until theirs is new enough to, there is no honest
-             "last" to name and the grid simply begins. */
-          <p className="fr-quiet">
-            <span className="fr-quiet-word">Quiet</span>
-            <span className="fr-quiet-said">
-              <b>{byAddress.get(lastIn.address)?.name || lastIn.name}</b>
-              {' logged '}{lastIn.album}
-              {since(lastIn.at) ? ` \u00b7 ${since(lastIn.at)}` : ''}
+        {(() => {
+          // A face in the band, or the line, opens that friend's doors —
+          // but only a face that is actually drawn on the shelf can: a
+          // search can hide the pinned row and narrow the rest.
+          const press = (person, key, className, label, inside) => (
+            rows.some(r => r.people.some(p => p.id === person?.id)) ? (
+              <button
+                key={key}
+                type="button"
+                className={className}
+                onClick={() => { if (person && open !== person.id) choose(person.id); }}
+                aria-label={label}
+                title={label}
+              >
+                {inside}
+              </button>
+            ) : (
+              <Link key={key} href="/dashboard/people" className={className} aria-label={label} title={label}>
+                {inside}
+              </Link>
+            )
+          );
+          // Their journal's own portrait, as the grid draws it (below).
+          const faceOf = address => (
+            <span className="fr-ring" aria-hidden="true">
+              <span className="fr-face">
+                <User size={20} weight="regular" />
+                <img
+                  src={`${journalUrl(address)}/api/portrait`}
+                  alt=""
+                  loading="lazy"
+                  onError={e => { e.currentTarget.style.display = 'none'; }}
+                />
+              </span>
             </span>
-          </p>
-        )}
+          );
+          if (onNow.length > 0) {
+            return (
+              <div className="fr-band">
+                <div className="fr-live">
+                  {onNow.map(b => {
+                    const person = byAddress.get(b.address);
+                    const name = person?.name || b.name;
+                    const title = b.track || b.album;
+                    const by = b.track ? `${b.album} · ${b.artist}` : b.artist;
+                    return press(person, b.address, 'fr-live-one', `${name} is logging ${title}${by ? ` · ${by}` : ''}`, (
+                      <>
+                        {faceOf(b.address)}
+                        <span className="fr-live-name">{name}</span>
+                        <span className="fr-live-rec">{title}</span>
+                      </>
+                    ));
+                  })}
+                </div>
+              </div>
+            );
+          }
+          // Who was here last. Only when a friend's copy says when — until
+          // theirs is new enough to, there is no honest "last" to name and
+          // the grid simply begins.
+          if (!lastIn) return null;
+          const person = byAddress.get(lastIn.address);
+          const name = person?.name || lastIn.name;
+          const when = since(lastIn.at);
+          const said = `logged ${lastIn.album}`;
+          return (
+            <div className="fr-band">
+              {press(person, lastIn.address, 'fr-last', `${name} ${said}${when ? `, ${when}` : ''}`, (
+                <>
+                  {faceOf(lastIn.address)}
+                  <span className="fr-last-says">
+                    <span className="fr-last-name">{name}</span>
+                    {/* The time travels as one piece, so a line that has
+                        to wrap never leaves "ago" alone on the next. */}
+                    <span className="fr-last-what">
+                      {said}
+                      {when && <span className="fr-last-when">{` \u00b7 ${when}`}</span>}
+                    </span>
+                  </span>
+                  {lastIn.art && (
+                    <span className="fr-last-art" aria-hidden="true">
+                      <img src={lastIn.art} alt="" loading="lazy" onError={e => { e.currentTarget.style.display = 'none'; }} />
+                    </span>
+                  )}
+                </>
+              ))}
+            </div>
+          );
+        })()}
 
         {/* ── The shelf ───────────────────────────────────────────────────
             A box of settled height with the faces clipped inside it, which is

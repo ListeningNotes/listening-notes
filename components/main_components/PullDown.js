@@ -89,7 +89,7 @@ export default function PullDown({ scroller, onPull, asking = 'Checking\u2026', 
       if (document.documentElement.classList.contains('ln-locked')) return false;
       const typing = document.activeElement;
       if (typing && (typing.tagName === 'TEXTAREA' || typing.tagName === 'INPUT' || typing.isContentEditable)) return false;
-      if (target?.closest?.('input, textarea, [role="slider"], [data-slide], .fr-now-row')) return false;
+      if (target?.closest?.('input, textarea, [role="slider"], [data-slide], .fr-now-row, .fr-live')) return false;
       return true;
     };
 
