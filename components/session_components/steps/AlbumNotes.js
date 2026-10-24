@@ -49,15 +49,6 @@ export default function AlbumNotes({
           draws it (Miyel: "album art be left aligned with data to the
           right"). On a desk this row is not a box at all, and the column
           stands as it did (session.css). */}
-      {/* The name and the artist over all of it, centred (Miyel, the same
-          evening: "everything in the album field … is just bulky … title
-          and artist centered above the whole thing, then art and stars,
-          tags, then writing"). On a desk they stand under the cover as they
-          always did (session.css). */}
-      <h1 className="ses-record-title">{album}</h1>
-      <p className="ses-record-by">
-        {artist}{year ? ` · ${year}` : ''}
-      </p>
       <div className="ses-record-head">
       {/* Where the picked cover lands (app/session/page.js, the landing). Its
           own class, not .ses-cover: the nav bar under the sheet draws its
@@ -68,6 +59,10 @@ export default function AlbumNotes({
           : <span className="ses-record-cover-none">♪</span>}
       </span>
       <div className="ses-record-says">
+      <h1 className="ses-record-title">{album}</h1>
+      <p className="ses-record-by">
+        {artist}{year ? ` · ${year}` : ''}
+      </p>
 
       {/* The stars and the marks on one line. No label over the stars: five
           stars under a record you are logging are not ambiguous (Miyel,
@@ -100,11 +95,13 @@ export default function AlbumNotes({
           </button>
         )}
       </div>
+      </div>
+      </div>
       {/* The marks, a glyph over a word each — the album screen's own
           shape, back on Miyel's word ("let's label favorite and
-          formative") — up beside the cover with the name and the stars,
-          2026-10-23: everything about the record at the top, and the
-          writing under it (her pick of the mockups). */}
+          formative") — in a row under the cover and its words, as her
+          session redesign draws them (2026-10-23, after an evening of
+          other places for them). */}
       <div className="ses-marks">
         {/* Masterpiece is not pressed, 2026-09-17. It is read off the
             tracklist — every track rated, every rating five — so it turns
@@ -140,15 +137,13 @@ export default function AlbumNotes({
           <span className="ses-mark-word">Formative</span>
         </button>
       </div>
-      </div>
-      </div>
       {/* The album note: a box, so it reads as the field it is, with the
           question inside it until something is written. Grown by layout,
           never measured — see .ses-grow.
 
-          The marks headed this card for an evening, 2026-10-23 (her pick,
-          to stop the two reading as apart); the same night she moved them
-          up beside the cover, so the writing has its box to itself. */}
+          On a phone the box is not drawn, 2026-10-23: the writing stands
+          on the page under the marks, as her session redesign has it — the
+          box was what made the two read as apart (session.css). */}
       <div className="ses-note-box ses-album-box">
         <div className="ses-grow" data-said={(overallNotes || '') + ' '}>
           <textarea

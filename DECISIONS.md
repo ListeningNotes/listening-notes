@@ -933,11 +933,12 @@ the other two be subjective and what makes two journals comparable at all.
 Checked before shipping: the rule agreed with all 40 entries, so nothing
 gained or lost the mark.
 
-**On a phone the session's head is the name and artist centred, then the
-cover with the stars and marks beside it, then the writing, 2026-10-23, her
-call** ("bulky … title and artist centered above the whole thing"). A desk
-keeps its column. Masterpiece stays absent until earned: drawn faint in its
-place for an evening, she took it back out ("hidden and earned").
+**On a phone the session's head is her redesign as drawn, 2026-10-23:** the
+cover at the left with the name, artist and stars beside it from its edge,
+the marks under, the writing on the page with no box. Centred words, the
+marks beside the cover and the marks heading a card were each tried that
+evening and dropped ("busy", "disjointed"). Masterpiece stays absent until
+earned. A desk keeps its column.
 
 **Favorite applies to tracks and albums. Masterpiece is album-only.**
 Masterpiece is a full five-star tracklist, which cannot apply to a single
