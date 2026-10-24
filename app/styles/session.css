@@ -1008,12 +1008,17 @@
 .ses-record-head {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 18px;
   align-self: stretch;
   text-align: left;
 }
 .ses-record-says {
-  flex: 1 1 auto;
+  /* As wide as what it says, so a short name stands close beside the cover
+     instead of in the middle of the room the cover leaves; a long one
+     takes the room and wraps (Miyel: "the album art looks really far from
+     the stars in the title … narrowed unless the album title is much,
+     much longer"). */
+  flex: 0 1 auto;
   min-width: 0;
   display: flex;
   flex-direction: column;
