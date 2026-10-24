@@ -14,17 +14,20 @@
 // writing to get through.
 //
 // ── The three bands ───────────────────────────────────────────────────────
-// The top is a friend's beacon, as home's top is the keeper's (Miyel,
-// 2026-10-24: "info top, wall bottom", and the friends in sight rather than
-// behind the scope's menu): one friend's record drawn as a beacon draws one —
-// in colour while they are logging it, greyed with Last logged on it once
-// they are not — and under it a row of every face in the book, whoever is
-// logging first. A face pressed puts their record in the beacon; the record
-// opens their entry, the name their journal. The beacon starts on somebody
-// logging, or else whoever logged last. The + at the row's end opens the
-// address book, the drawer to add, invite or cross somebody out. It replaced
-// a band of the live faces or the last thing that happened (TopBand, which
-// the address book still draws).
+// The top is a row of faces over a friend's beacon, as home's top is the
+// keeper's (Miyel, 2026-10-24: "info top, wall bottom", and the friends in
+// sight rather than behind the scope's menu). The row is Add, every face in
+// the book with whoever is logging first, and See all. A face pressed puts
+// their record in the beacon — the cover at the left, in colour while they
+// are logging it and greyed with Last logged on it once they are not, their
+// name and the record beside it — and their doors under it, the address
+// book's own: Visit, Compare, Send, Pin, and Keep private and Remove on the
+// quiet line. The beacon starts on somebody logging, or else whoever logged
+// last. Add turns the beacon into the way in: one field that finds a name on
+// the Board or takes an address, the camera for a code, and Invite. See all
+// opens the whole book under the beacon, searchable, pushing the wall down
+// (Friends.js, `inPeople`). It replaced a band of the live faces or the last
+// thing that happened (TopBand, which the address book still draws).
 //
 // The shelf line is the wall's own (Journal.js): the views at its left and
 // the search, exactly as on home, and after the search, where home has its
@@ -55,8 +58,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { CaretDown, Plus, User } from '@phosphor-icons/react';
+import { ArrowRight, BookOpen, Camera, CaretDown, PaperPlaneTilt, Plus, PushPin, Shuffle, Ticket, User, UsersThree } from '@phosphor-icons/react';
 import Journal, { foldForSearch } from './Journal';
+import Friends, { shakeNo } from './Friends';
+import CodeScanner from './CodeScanner';
+import SendSheet from './SendSheet';
+import InviteSheet from './InviteSheet';
+import WaveSheet from './WaveSheet';
 import PullDown from './PullDown';
 import { useBookplate } from './Bookplate';
 import { useFriendsBeacons, refreshFriends } from '../../hooks/useFriendsBeacons';
@@ -110,6 +118,9 @@ const FACES_MOST = 3;
 const CAME_BACK_MOST = 30;
 // The scope's menu folds away the way the views menu does (Journal.js).
 const MENU_OUT_MS = 160;
+// The most a book pins, as the book says (Friends.js); the write refuses a
+// seventh regardless.
+const PINS_MOST = 6;
 
 const releaseYear = entry => {
   const m = String(entry?.year || '').match(/\d{4}/);
@@ -527,6 +538,7 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
       const j = journals[p.address];
       const newest = (j?.entries || []).reduce((n, e) => (!n || newestFirst(e, n) < 0 ? e : n), null);
       return {
+        person: p,
         address: p.address,
         name: j?.name || p.name || b?.name || '',
         beacon: b,
@@ -584,65 +596,335 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
       </span>
     </span>
   );
-  const top = people && people.length > 0 ? (
-    <div className="ps-top">
-      {lead && (
-        <div className="ps-beacon" key={lead.address}>
-          {record ? (
-            <a
-              className="ps-beacon-card"
-              href={there(lead.address, record.path)}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={`${lead.name} ${record.live ? 'is logging' : 'last logged'} ${record.title}${record.artist ? ` by ${record.artist}` : ''}`}
-            >
-              <span className={'beacon-art-wrap' + (record.live ? ' beacon-art-wrap--live' : '')}>
-                {art
-                  ? <img src={art} alt="" className={'beacon-art' + (record.live ? '' : ' beacon-art--idle')} onError={() => setBadArt(art)} />
-                  : <span className="beacon-art-placeholder">&#9834;</span>}
-                {!record.live && art && <span className="beacon-idle-overlay"><span>{CAPTION.logged}</span></span>}
-              </span>
-            </a>
-          ) : (
-            <p className="beacon-quiet">Nothing logged yet.</p>
-          )}
+
+  // ── Their doors, the address book's ─────────────────────────────────────
+  // The same four and the same quiet line as a face pressed in the book
+  // (Friends.js), under the beacon that is now about them: Miyel, "where did
+  // our actual buttons go". The writes are the book's own routes; the row
+  // reads the book again after each, so it moves the way the book does.
+  const [sendingTo, setSendingTo] = useState(null);
+  const [sure, setSure] = useState(false);
+  useEffect(() => { setSure(false); }, [lead?.address]);
+  const pinnedCount = (people || []).filter(p => p.pinned_at).length;
+  const change = useCallback(async (id, body) => {
+    await fetch(`/api/people/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    }).catch(() => null);
+    readBook();
+  }, [readBook]);
+  const cross = useCallback(async id => {
+    setSure(false);
+    await fetch(`/api/people/${id}`, { method: 'DELETE' }).catch(() => null);
+    setChosen(null);
+    readBook();
+  }, [readBook]);
+  // A press anywhere else puts Remove back, as it does in the book.
+  const binRef = useRef(null);
+  useEffect(() => {
+    if (!sure) return undefined;
+    const away = e => { if (!binRef.current?.contains(e.target)) setSure(false); };
+    document.addEventListener('pointerdown', away);
+    return () => document.removeEventListener('pointerdown', away);
+  }, [sure]);
+
+  // ── Adding, in place ────────────────────────────────────────────────────
+  // Add turns the beacon into the way in (Miyel, 2026-10-24): a name found on
+  // the Board, an address typed, or a code to the camera. It does not open
+  // the keyboard — most people scan (the book's own rule, 2026-09-19).
+  const [adding, setAdding] = useState(false);
+  const [scanning, setScanning] = useState(false);
+  const [inviting, setInviting] = useState(false);
+  const [wavingTo, setWavingTo] = useState(null);
+  const [typed, setTyped] = useState('');
+  const [filing, setFiling] = useState(false);
+  const [said, setSaid] = useState('');
+  const [named, setNamed] = useState({ term: '', journals: [] });
+  const looksLikeAddress = /\./.test(typed) && !/\s/.test(typed.trim());
+  useEffect(() => {
+    const q = typed.trim();
+    if (!adding || !DIRECTORY_URL || q.length < 2 || looksLikeAddress) return undefined;
+    let gone = false;
+    const wait = setTimeout(() => {
+      fetch(`/api/board?q=${encodeURIComponent(q)}`, { cache: 'no-store' })
+        .then(r => (r.ok ? r.json() : null))
+        .then(d => {
+          if (gone) return;
+          const found = (Array.isArray(d?.journals) ? d.journals : [])
+            .filter(j => j?.address && j.name && !myAddresses.has(tidyJournal(j.address)));
+          setNamed({ term: q, journals: found });
+        })
+        .catch(() => { if (!gone) setNamed({ term: q, journals: [] }); });
+    }, ASK_AFTER_MS);
+    return () => { gone = true; clearTimeout(wait); };
+  }, [typed, adding, looksLikeAddress, myAddresses]);
+  const stopAdding = () => { setAdding(false); setTyped(''); setSaid(''); setNamed({ term: '', journals: [] }); };
+  // Files an address however it came — found, typed or scanned — as the
+  // book does, and offers the wave to somebody new.
+  const file = useCallback(async value => {
+    const address = tidyJournal(value);
+    if (!address) { setSaid("That doesn't look like a web address."); return; }
+    setFiling(true);
+    setSaid('');
+    try {
+      const r = await fetch('/api/people', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) { setSaid(d.error || 'That could not be added.'); return; }
+      setAdding(false);
+      setTyped('');
+      setNamed({ term: '', journals: [] });
+      setSaid(d.reached ? '' : "Added, but that journal isn't answering just now, so there's no name yet.");
+      setChosen(d.person.address);
+      readBook();
+      if (d.fresh) setWavingTo(d.person);
+    } catch {
+      setSaid('That could not be added.');
+    } finally {
+      setFiling(false);
+    }
+  }, [readBook]);
+  const q = typed.trim();
+  const namedNow = named.term === q ? named.journals : [];
+  const stillNaming = Boolean(DIRECTORY_URL) && q.length >= 2 && !looksLikeAddress && named.term !== q;
+
+  // ── See all ─────────────────────────────────────────────────────────────
+  // The whole book, searchable, opened under the beacon and pushing the wall
+  // down (Miyel, 2026-10-24). Drawn the first time it is asked for and kept,
+  // so it opens and closes rather than appearing.
+  const [allOpen, setAllOpen] = useState(false);
+  const [allSeen, setAllSeen] = useState(false);
+  const onBook = useCallback(() => readBook(), [readBook]);
+
+  const pressFace = address => {
+    if (adding) stopAdding();
+    setChosen(address);
+  };
+
+  const beaconHere = lead && !adding ? (
+    <div className="ps-beacon" key={lead.address}>
+      <div className="ps-beacon-main">
+        {record && (
           <a
-            className="ps-beacon-who"
-            href={there(lead.address)}
+            className="ps-beacon-card"
+            href={there(lead.address, record.path)}
             target="_blank"
             rel="noopener noreferrer"
-            aria-label={`${lead.name}’s journal`}
+            aria-label={`${lead.name} ${record.live ? 'is logging' : 'last logged'} ${record.title}${record.artist ? ` by ${record.artist}` : ''}`}
           >
+            <span className={'beacon-art-wrap' + (record.live ? ' beacon-art-wrap--live' : '')}>
+              {art
+                ? <img src={art} alt="" className={'beacon-art' + (record.live ? '' : ' beacon-art--idle')} onError={() => setBadArt(art)} />
+                : <span className="beacon-art-placeholder">&#9834;</span>}
+              {!record.live && art && <span className="beacon-idle-overlay"><span>{CAPTION.logged}</span></span>}
+            </span>
+          </a>
+        )}
+        <div className="ps-beacon-words">
+          <span className={'ps-beacon-who' + (record?.live ? ' ps-beacon-who--live' : '')}>
             {faceOf(lead.address, 12)}
             <span>{lead.name}</span>
-          </a>
+          </span>
           {record && !record.live && !art && <div className="beacon-status">{CAPTION.logged}</div>}
-          {record && <div className="beacon-track beacon-track--wrap">{record.title}</div>}
+          {record
+            ? <div className="beacon-track beacon-track--wrap">{record.title}</div>
+            : <p className="beacon-quiet">Nothing logged yet.</p>}
           {record?.artist && <div className="beacon-artist">{record.artist}</div>}
         </div>
-      )}
-      <div className="ps-row">
-        {lineup.map(f => (
+      </div>
+      <div className="fr-doors-row ps-doors">
+        <a className="fr-door" href={there(lead.address)} target="_blank" rel="noopener noreferrer">
+          <BookOpen size={22} weight="regular" aria-hidden="true" />
+          Visit
+        </a>
+        <Link className="fr-door" href={`/dashboard/people/${lead.person.id}`}>
+          <Shuffle size={22} weight="regular" aria-hidden="true" />
+          Compare
+        </Link>
+        <button type="button" className="fr-door" onClick={() => setSendingTo(lead.person)}>
+          <PaperPlaneTilt size={22} weight="regular" aria-hidden="true" />
+          Send
+        </button>
+        <button
+          type="button"
+          className={'fr-door' + (lead.person.pinned_at ? ' fr-door--on' : '')
+            + (!lead.person.pinned_at && pinnedCount >= PINS_MOST ? ' fr-door--full' : '')}
+          onClick={event => {
+            if (!lead.person.pinned_at && pinnedCount >= PINS_MOST) { shakeNo(event.currentTarget); return; }
+            change(lead.person.id, { pinned: !lead.person.pinned_at });
+          }}
+          aria-pressed={Boolean(lead.person.pinned_at)}
+          aria-disabled={(!lead.person.pinned_at && pinnedCount >= PINS_MOST) || undefined}
+          title={!lead.person.pinned_at && pinnedCount >= PINS_MOST ? 'Six is the most you can pin. Unpin somebody first.' : undefined}
+        >
+          <PushPin size={22} weight={lead.person.pinned_at ? 'fill' : 'regular'} aria-hidden="true" />
+          {lead.person.pinned_at ? 'Unpin' : 'Pin'}
+        </button>
+      </div>
+      <div className="fr-quiets ps-quiets">
+        {DIRECTORY_URL && (
           <button
-            key={f.address}
             type="button"
-            className={'fr-live-one ps-row-one'
-              + (f.live ? ' ps-row-one--live' : '')
-              + (lead && f.address === lead.address ? ' ps-row-one--chosen' : '')}
-            onClick={() => setChosen(f.address)}
-            aria-pressed={Boolean(lead && f.address === lead.address)}
-            aria-label={f.live ? `${f.name}, logging` : f.name}
+            className={'fr-cut fr-keep' + (lead.person.private ? ' fr-keep--on' : '')}
+            onClick={() => change(lead.person.id, { private: !lead.person.private })}
+            aria-pressed={Boolean(lead.person.private)}
+            title={lead.person.private
+              ? `${lead.name || 'They'} stay off everyone's board but yours. Press to share them again.`
+              : `Keep ${lead.name || 'them'} off everyone's board but yours`}
           >
-            {faceOf(f.address, 20)}
-            <span className="fr-live-name">{f.name}</span>
+            {lead.person.private ? 'Kept private' : 'Keep private'}
           </button>
-        ))}
-        <Link href="/dashboard/people" className="fr-live-one ps-row-one ps-row-add" aria-label="Who you’ve added">
+        )}
+        <button
+          ref={binRef}
+          type="button"
+          className={'fr-cut' + (sure ? ' fr-cut--sure' : '')}
+          onClick={() => { if (!sure) { setSure(true); return; } cross(lead.person.id); }}
+          title={sure
+            ? `Press again to take ${lead.name || 'them'} out of your book`
+            : `Take ${lead.name || 'them'} out of your book`}
+        >
+          {sure ? 'Remove from journal?' : 'Remove from journal'}
+        </button>
+      </div>
+    </div>
+  ) : null;
+
+  const addHere = adding ? (
+    <div className="ps-add">
+      <div className="ps-add-line">
+        <button
+          type="button"
+          className="fr-scan"
+          onClick={() => setScanning(true)}
+          aria-label="Point the camera at a code"
+          title="Scan a code"
+        >
+          <Camera size={18} weight="regular" aria-hidden="true" />
+        </button>
+        <label className="dir-search ps-add-field">
+          <input
+            value={typed}
+            onChange={e => { setTyped(e.target.value); setSaid(''); }}
+            onKeyDown={e => { if (e.key === 'Enter' && looksLikeAddress) { e.preventDefault(); file(typed); } }}
+            placeholder="Name or address"
+            aria-label="A name on the Board, or the address of a journal to add"
+            autoComplete="off"
+            spellCheck={false}
+          />
+          {looksLikeAddress && (
+            <button
+              type="button"
+              className="fr-go"
+              onClick={() => file(typed)}
+              disabled={filing}
+              aria-label="Add this journal"
+              title="Add"
+            >
+              <ArrowRight size={18} weight="bold" aria-hidden="true" />
+            </button>
+          )}
+        </label>
+        <button
+          type="button"
+          className="fr-give"
+          onClick={() => setInviting(true)}
+          aria-label="Invite someone"
+          title="Invite someone"
+        >
+          <Ticket size={18} weight="regular" aria-hidden="true" />
+        </button>
+      </div>
+      {namedNow.length > 0 && (
+        <div className="ps-found ps-add-found">
+          {namedNow.map(j => {
+            const known = inBook.has(tidyJournal(j.address));
+            return (
+              <button
+                key={j.address}
+                type="button"
+                className={'fr-live-one ps-found-one ps-add-one' + (known ? ' ps-add-one--known' : '')}
+                onClick={() => { if (known) pressFace(j.address); else file(j.address); }}
+                disabled={filing}
+                aria-label={known ? `${j.name}, already in your book` : `Add ${j.name}`}
+                title={j.name}
+              >
+                {faceOf(j.address, 20)}
+                <span className="ps-add-mark" aria-hidden="true">{known ? '✓' : '+'}</span>
+                <span className="fr-live-name">{j.name}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+      {!looksLikeAddress && q.length >= 2 && !stillNaming && namedNow.length === 0 && (
+        <p className="ps-add-said">Nothing by that name.</p>
+      )}
+    </div>
+  ) : null;
+
+  const top = people ? (
+    <div className="ps-top">
+      <div className="ps-row">
+        <button
+          type="button"
+          className={'fr-live-one ps-row-one ps-row-add' + (adding ? ' ps-row-add--shut' : '')}
+          onClick={() => { if (adding) stopAdding(); else { setAdding(true); setSaid(''); } }}
+          aria-expanded={adding}
+          aria-label={adding ? 'Never mind' : 'Add a journal'}
+        >
           <span className="fr-ring" aria-hidden="true">
             <span className="fr-face"><Plus size={18} weight="regular" /></span>
           </span>
-        </Link>
+          <span className="fr-live-name">Add</span>
+        </button>
+        <div className="ps-row-faces">
+          {lineup.map(f => (
+            <button
+              key={f.address}
+              type="button"
+              className={'fr-live-one ps-row-one'
+                + (f.live ? ' ps-row-one--live' : '')
+                + (!adding && lead && f.address === lead.address ? ' ps-row-one--chosen' : '')}
+              onClick={() => pressFace(f.address)}
+              aria-pressed={Boolean(!adding && lead && f.address === lead.address)}
+              aria-label={f.live ? `${f.name}, logging` : f.name}
+            >
+              {faceOf(f.address, 20)}
+              <span className="fr-live-name">{f.name}</span>
+            </button>
+          ))}
+        </div>
+        {people.length > 0 && (
+          <button
+            type="button"
+            className={'fr-live-one ps-row-one ps-row-all' + (allOpen ? ' ps-row-all--open' : '')}
+            onClick={() => { setAllSeen(true); setAllOpen(o => !o); }}
+            aria-expanded={allOpen}
+          >
+            <span className="fr-ring" aria-hidden="true">
+              <span className="fr-face"><UsersThree size={20} weight="regular" /></span>
+            </span>
+            <span className="fr-live-name">See all</span>
+          </button>
+        )}
       </div>
+      {said && <p className="bk-said ps-said" role="status">{said}</p>}
+      {addHere}
+      {beaconHere}
+      <div className={'ps-all' + (allOpen ? ' ps-all--open' : '')} inert={allOpen ? undefined : true}>
+        <div className="ps-all-in">
+          {allSeen && <Friends inPeople onBook={onBook} />}
+        </div>
+      </div>
+      {scanning && <CodeScanner onRead={text => { setScanning(false); file(text); }} onClose={() => setScanning(false)} />}
+      <SendSheet open={Boolean(sendingTo)} person={sendingTo} onClose={() => setSendingTo(null)} />
+      <InviteSheet open={inviting} onClose={() => setInviting(false)} />
+      <WaveSheet person={wavingTo} onClose={() => setWavingTo(null)} />
     </div>
   ) : null;
 
@@ -692,7 +974,7 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
     empty = (
       <div className="arc-empty ps-empty">
         Nobody in your address book yet.<br />
-        <Link href="/dashboard/people">Add someone</Link> and what they log shows up here.
+        <button type="button" className="ps-empty-add" onClick={() => { setAdding(true); scroller?.current?.scrollTo({ top: 0, behavior: 'smooth' }); }}>Add someone</button> and what they log shows up here.
       </div>
     );
   } else if (scope === 'people') {

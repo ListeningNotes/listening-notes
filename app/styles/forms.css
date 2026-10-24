@@ -2128,65 +2128,124 @@ textarea.st-field { resize: vertical; min-height: 96px; }
    A friend's beacon and the row of faces in the page's gutter, then the wall
    as home draws it, with its line (PeopleScreen.js). */
 .ps { display: flex; flex-direction: column; }
-/* ── A friend's beacon, 2026-10-24 ────────────────────────────────────────
-   Home's beacon, smaller (Miyel: "doesn't have to be the same size but same
-   mechanic"): the cover with its shadow, grey with Last logged written on it
-   once they are not logging, then whose it is, the record and the artist.
-   A face pressed brings the next one in over the last, never a cut. */
-.ps-top {
-  margin: 0 24px;
-  padding-top: 10px;
-  border-bottom: 1px solid var(--border);
+/* ── The top of People, 2026-10-24 ────────────────────────────────────────
+   A row of faces, then a friend's beacon on its side with their doors under
+   it — home's beacon, smaller (Miyel: "doesn't have to be the same size but
+   same mechanic", then "left to right", shorter). No hairline under it: the
+   wall's line follows the way home's follows its beacon. */
+.ps-top { margin: 0 24px; padding-top: 6px; }
+
+/* The row: Add first and See all last, standing still, with every face in
+   the book scrolling sideways between them once there are more than fit. */
+.ps-row { display: flex; align-items: flex-start; gap: 12px; }
+.ps-row-faces {
+  flex: 1; min-width: 0;
+  display: flex; align-items: flex-start; gap: 12px;
+  /* Room above and below, or the scroller clips the ring that grows. */
+  margin: -6px 0; padding: 6px 4px 8px;
+  overflow-x: auto; overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
 }
+.ps-row-faces::-webkit-scrollbar { display: none; }
+.ps-row-one { flex: 0 0 58px; }
+.ps-row-one .fr-ring { width: 52px; flex-shrink: 0; }
+.ps-row-one--chosen .fr-ring { transform: scale(1.1); }
+.ps-row-one--chosen .fr-live-name { color: var(--ink); }
+.ps-row-one:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 4px; border-radius: 10px; }
+/* Add and See all: a ring of hairline with a mark in it, so they read as
+   doors beside the faces rather than as people. Add turns into the way out
+   while the field is open, as the book's + does. */
+.ps-row-add .fr-face, .ps-row-all .fr-face {
+  background: none; color: var(--ink-soft);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+.ps-row-add .fr-face svg { transition: transform 0.34s cubic-bezier(0.22, 0.61, 0.36, 1); }
+.ps-row-add--shut .fr-face svg { transform: rotate(45deg); }
+.ps-row-all--open .fr-face { color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--ink-soft); }
+
+/* A friend's beacon, on its side: the cover at the left and what it is
+   beside it, top-aligned, then their doors. A face pressed brings the next
+   one in over the last, never a cut. */
 .ps-beacon {
-  display: flex; flex-direction: column; align-items: center; gap: 8px;
-  text-align: center;
+  padding: 18px 0 4px;
   animation: ps-beacon-in 0.4s ease both;
 }
 @keyframes ps-beacon-in {
   from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: none; }
 }
+.ps-beacon-main { display: flex; align-items: flex-start; gap: 18px; }
 .ps-beacon-card {
-  display: block; margin-bottom: 10px;
+  flex: 0 0 auto; display: block;
   border-radius: 10%;
   text-decoration: none;
   -webkit-tap-highlight-color: transparent;
 }
-.ps-beacon .beacon-art-wrap { display: block; width: 156px; height: 156px; }
-.ps-beacon .beacon-art-placeholder { font-size: 3rem; }
-.ps-beacon .beacon-quiet { margin: 8px 0 4px; }
+.ps-beacon .beacon-art-wrap { display: block; width: 124px; height: 124px; }
+.ps-beacon .beacon-art-wrap { box-shadow: 0 12px 28px rgba(0, 0, 0, 0.16); }
+.ps-beacon .beacon-art-wrap--live { box-shadow: 0 16px 34px rgba(0, 0, 0, 0.22); }
+.ps-beacon .beacon-art-placeholder { font-size: 2.5rem; }
+.ps-beacon .beacon-idle-overlay { font-size: 0.5rem; letter-spacing: 0.14em; }
+.ps-beacon-words {
+  flex: 1; min-width: 0;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 7px;
+  padding-top: 4px;
+  text-align: left;
+}
 .ps-beacon .beacon-track { font-size: 1.2rem; }
+.ps-beacon .beacon-track--wrap { max-width: none; margin: 0; text-wrap: pretty; }
 .ps-beacon .beacon-artist { font-size: 0.8rem; }
+.ps-beacon .beacon-quiet { margin: 2px 0 0; }
 .ps-beacon-who {
   display: inline-flex; align-items: center; gap: 7px;
   font-family: var(--font-label); font-size: 10.5px; letter-spacing: 0.04em;
-  color: var(--ink-soft); text-decoration: none;
-  -webkit-tap-highlight-color: transparent;
+  color: var(--ink-soft);
 }
 .ps-beacon-who .fr-ring, .ps-beacon-who .fr-face { width: 22px; }
-.ps-beacon-card:focus-visible, .ps-beacon-who:focus-visible {
-  outline: 2px solid var(--ink-faint); outline-offset: 4px;
+.ps-beacon-who--live .fr-face { box-shadow: 0 0 0 1.5px var(--live-deep); }
+.ps-beacon-card:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 4px; }
+/* Their doors, the book's own, open for good here: no hairlines round them,
+   because nothing above or below them is a row of faces they part. */
+.ps-doors { margin-top: 18px; }
+.ps-quiets { margin-top: 6px; }
+
+/* Adding, in place of the beacon: the camera, one field, Invite. */
+.ps-add { padding: 16px 0 4px; animation: ps-beacon-in 0.4s ease both; }
+.ps-add-line { display: flex; align-items: center; gap: 8px; }
+.ps-add-field { flex: 1; min-width: 0; margin: 0; }
+.ps-add-found { margin: 14px -24px 0; padding: 4px 24px 2px; }
+.ps-add-one { position: relative; }
+.ps-add-mark {
+  position: absolute; top: 34px; left: 50%; margin-left: 12px;
+  display: flex; align-items: center; justify-content: center;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--ink); color: var(--bg);
+  font-family: var(--font-label); font-size: 12px; line-height: 1;
+  box-shadow: 0 0 0 2px var(--bg);
 }
-/* Every face in the book, scrolling sideways once there are more than fit.
-   The one in the beacon grows and its name darkens: the book's own way of
-   saying this one (.fr-one--open), without the dimming. */
-.ps-row {
-  display: flex; align-items: flex-start; gap: 12px;
-  margin: 20px -24px 0; padding: 6px 24px 16px;
-  overflow-x: auto; overscroll-behavior-x: contain;
-  scroll-padding-inline: 24px;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
+.ps-add-one--known .ps-add-mark { background: var(--panel-strong); color: var(--ink-soft); }
+.ps-add-said, .ps-said {
+  margin: 12px 0 0;
+  font-family: var(--font-label); font-size: 11px; color: var(--ink-faint);
 }
-.ps-row::-webkit-scrollbar { display: none; }
-.ps-row-one .fr-ring { width: 54px; flex-shrink: 0; }
-.ps-row-one--chosen .fr-ring { transform: scale(1.1); }
-.ps-row-one--chosen .fr-live-name { color: var(--ink); }
-.ps-row-one:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 4px; border-radius: 10px; }
-.ps-row-add .fr-face { background: none; color: var(--ink-soft); box-shadow: inset 0 0 0 1px var(--border); }
+.ps-empty-add {
+  border: 0; background: none; padding: 0;
+  font: inherit; color: var(--ink-soft); text-decoration: underline; cursor: pointer;
+}
+
+/* See all: the whole book under the beacon, opened downward and pushing
+   the wall with it rather than appearing. */
+.ps-all {
+  display: grid; grid-template-rows: 0fr;
+  transition: grid-template-rows 0.4s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.ps-all--open { grid-template-rows: 1fr; }
+.ps-all-in { min-height: 0; overflow: hidden; }
+.ps-all--open .ps-all-in { padding-top: 18px; }
 @media (prefers-reduced-motion: reduce) {
-  .ps-beacon { animation: none; }
+  .ps-beacon, .ps-add { animation: none; }
+  .ps-all, .ps-row-add .fr-face svg { transition: none; }
 }
 /* Whose records: after the search, where home's line has its filters
    (Miyel, 2026-10-23), in ink, its caret beside it. Its menu hangs from the

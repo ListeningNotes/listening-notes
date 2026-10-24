@@ -257,7 +257,7 @@ export function TopBand({ people, beacons, open }) {
 //
 // Small and quick. It is a refusal, not an alarm: four pixels each way and
 // gone in a third of a second, which is a head shake rather than a shout.
-function shakeNo(el) {
+export function shakeNo(el) {
   if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
   // Press it twice quickly and there is one head shake, not two on top of
   // each other. Only this one is cancelled by name — the door has colour
@@ -356,7 +356,12 @@ function travel(box, was) {
 // while somebody could be looking at it. `away` is whether the People tab is
 // showing Everyone instead (2026-10-07): the book stays mounted underneath,
 // keeping what it has read, but its header leaves the bar to the two words.
-export default function Friends({ shelf = false, onCount = null, onBusy = null, onScreen = true, away = false }) {
+//
+// `inPeople` is the whole book opened on People by See all (2026-10-24):
+// the search and the faces with their doors, and no header or band, because
+// People has its own add, invite and row of faces above it. `onBook` is told
+// the book whenever it changes here — a pin, a removal — so that row keeps up.
+export default function Friends({ shelf = false, onCount = null, onBusy = null, onScreen = true, away = false, inPeople = false, onBook = null }) {
   // Who this copy belongs to, carried on every link out to another journal so
   // the form there knows who is sending. See carrySender.
   const { keeper_name: myName, site_address: myAddress } = useBookplate();
@@ -460,6 +465,7 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null, 
 
   // Up to whoever is drawing this, once it is known and whenever it changes.
   useEffect(() => { if (!loading) onCount?.(people.length); }, [loading, people.length, onCount]);
+  useEffect(() => { if (!loading) onBook?.(people); }, [loading, people, onBook]);
 
   useEffect(() => {
     fetch('/api/people').then(r => r.json()).then(d => {
@@ -1027,7 +1033,7 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null, 
 
             `inert` on whichever one is away, so the keyboard and a screen
             reader only ever meet the field that is actually there. */}
-        {barSlot ? (away ? null : createPortal(head, barSlot)) : head}
+        {inPeople ? null : barSlot ? (away ? null : createPortal(head, barSlot)) : head}
 
         {/* The Add / Scan row that stood here is gone, 2026-09-20. Both of
             them are in the header now — Add as a mark at the end of the
@@ -1065,7 +1071,7 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null, 
         {/* The book's search on the cross, 2026-10-08: at the top of the
             floor, in the Board's own field, once the book passes a dozen —
             the bar's middle is the two words now (see onBusy, above). */}
-        {shelf && searchable && (
+        {(shelf || inPeople) && searchable && (
           <label className="dir-search fr-floor-find">
             <MagnifyingGlass size={16} weight="regular" aria-hidden="true" />
             <input
@@ -1082,7 +1088,7 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null, 
         {/* A face in the band, or the line, opens that friend's doors —
             but only a face that is actually drawn on the shelf can: a
             search can hide the pinned row and narrow the rest. */}
-        <TopBand
+        {!inPeople && <TopBand
           people={people}
           beacons={beacons}
           open={(person, b, className, label, inside) => (
@@ -1103,7 +1109,7 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null, 
               </Link>
             )
           )}
-        />
+        />}
 
         {/* ── The shelf ───────────────────────────────────────────────────
             A box of settled height with the faces clipped inside it, which is
