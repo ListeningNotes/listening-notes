@@ -20,7 +20,7 @@
 //
 // The shelf line is the wall's own (Journal.js): the views at its left and
 // the search, exactly as on home, and after the search, where home has its
-// filters, the scope — whose records: Your people's, On your records,
+// filters, the scope — whose records: Your friends, Your records,
 // Everyone's (Miyel, 2026-10-23, both placings). The scope and the
 // view compose. Who you've added sits under a rule at the foot of the scope's
 // menu: the address book is a drawer you open to add or remove somebody, not
@@ -34,9 +34,9 @@
 // is written on anybody's record here and nothing opens a thread.
 //
 // ── Where each wall comes from ────────────────────────────────────────────
-// Nothing new crosses between copies. Your people's is each journal in the
+// Nothing new crosses between copies. Your friends is each journal in the
 // book's public feed, read from this browser the way the feed read it;
-// On your records is the Board's `pull_alike`, through /api/board; Everyone's
+// Your records is the Board's `pull_alike`, through /api/board; Everyone's
 // is the Board's last day of records, which /api/board already reads for
 // its first screen. The search is the Board's own search.
 //
@@ -64,8 +64,8 @@ import { DIRECTORY_URL } from '../../library/version';
 // on is this one line, and nothing else on the screen changes when it does.
 const EVERYONES_ON = false;
 const SCOPES = [
-  { value: 'people', label: 'Your people’s' },
-  { value: 'records', label: 'On your records', board: true },
+  { value: 'people', label: 'Your friends' },
+  { value: 'records', label: 'Your records', board: true },
   { value: 'everyone', label: 'Everyone’s', board: true, off: !EVERYONES_ON },
 ];
 const DEFAULT_SCOPE = 'people';
@@ -113,7 +113,7 @@ const releaseYear = entry => {
 const byName = (album, artist) => `${foldForSearch(album)}|${foldForSearch(artist)}`;
 const newestFirst = (a, b) => new Date(b.posted_at || 0) - new Date(a.posted_at || 0);
 
-// ── Your people's records, as the wall draws records ──────────────────────
+// ── Your friends' records, as the wall draws records ──────────────────────
 // gatherAlbums' shape (Journal.js), with who logged each: one tile per
 // record — its key and its year, as on home — across everybody in the book.
 // `first` is its newest entry, not its oldest: home's wall is a shelf in the
@@ -146,11 +146,14 @@ function gatherTheirs(rows, mine) {
 // keeper who logged it, and never the writing. Each keeper's is a listen
 // here, newest first. Where it is a record of the keeper's own, its year and
 // genre are read off the keeper's own listen of it, so By era and By genre
-// can place it; the Board keeps neither.
-function fromBoard(record, mine) {
+// can place it; the Board keeps neither. Never the keeper's own listing
+// (`me`, every address this journal answers to): a journal on the Board is
+// on it too, and was one of the others on every record of its own — the
+// whole wall, with two of the keeper's faces on each (Miyel, 2026-10-23).
+function fromBoard(record, mine, me) {
   const ownKey = record.album_key || '';
   const own = (ownKey && mine.byKey.get(ownKey)) || mine.byName.get(byName(record.album, record.artist)) || null;
-  const all = (record.keepers || []).map(k => ({
+  const all = (record.keepers || []).filter(k => !me.has(tidyJournal(k.address))).map(k => ({
     slug: k.slug,
     album: record.album,
     artist: record.artist,
@@ -341,7 +344,7 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
     closeMenu();
   };
 
-  // ── On your records, and Everyone's ─────────────────────────────────────
+  // ── Your records, and Everyone's ────────────────────────────────────────
   // Asked the first time each is chosen in a visit, and kept.
   const [alike, setAlike] = useState(null);
   const [today, setToday] = useState(null);
@@ -405,20 +408,20 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
 
   // ── The wall for this scope ─────────────────────────────────────────────
   const scoped = useMemo(() => {
-    if (scope === 'records') return (alike || []).map(r => fromBoard(r, mine)).filter(Boolean);
-    if (scope === 'everyone') return (today || []).map(r => fromBoard(r, mine)).filter(Boolean);
+    if (scope === 'records') return (alike || []).map(r => fromBoard(r, mine, myAddresses)).filter(Boolean);
+    if (scope === 'everyone') return (today || []).map(r => fromBoard(r, mine, myAddresses)).filter(Boolean);
     return ours;
-  }, [scope, alike, today, ours, mine]);
+  }, [scope, alike, today, ours, mine, myAddresses]);
   const records = useMemo(() => {
     if (!found.term || found.term !== term) return scoped;
     const here = new Set(scoped.map(a => byName(a.face.album, a.face.artist)));
     const extra = found.records
       .filter(r => !here.has(byName(r.album, r.artist)))
-      .map(r => fromBoard(r, mine))
+      .map(r => fromBoard(r, mine, myAddresses))
       .filter(Boolean)
       .map(a => ({ ...a, key: `found:${a.key}` }));
     return [...scoped, ...extra];
-  }, [scoped, found, term, mine]);
+  }, [scoped, found, term, mine, myAddresses]);
   const loading = scope === 'records' ? alike === null
     : scope === 'everyone' ? today === null
       : people === null || (stillAsking && ours.length === 0);
@@ -433,11 +436,12 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
     }
     if (found.term === term) {
       for (const j of found.journals) {
-        if (j.name && !out.some(o => tidyJournal(o.address) === tidyJournal(j.address))) out.push({ address: j.address, name: j.name });
+        if (!j.name || myAddresses.has(tidyJournal(j.address))) continue;
+        if (!out.some(o => tidyJournal(o.address) === tidyJournal(j.address))) out.push({ address: j.address, name: j.name });
       }
     }
     return out;
-  }, [term, people, found]);
+  }, [term, people, found, myAddresses]);
 
   // ── A record on the wall ────────────────────────────────────────────────
   // The cover, and in its corner the keeper's own face when it is on their

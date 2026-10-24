@@ -1324,9 +1324,9 @@ back at /api/public/listing; delisting needs the code and the journal to have
 forgotten it. (Off by default and a press, 2026-10-07, is what this replaced.)
 
 **People is one screen: the top band, a line with a scope, and a wall,
-2026-10-23, her People brief.** Whose records — Your people's · On your
+2026-10-23, her People brief.** Whose records — Your friends · Your
 records · Everyone's (built, off until the Board is big enough: her call) —
-is the line's left end, remembered as the view is; Who you've added, under
+sits after the search, remembered as the view is; Who you've added, under
 its rule, opens the address book as a drawer. The wall is home's, so views
 compose with the scope; covers wear their loggers' faces, yours first when
 you have it too (not a gold dot); the search is the Board's (her calls).
