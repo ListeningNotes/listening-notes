@@ -70,6 +70,13 @@ const QUIET_MS = 60000;
 // the ten seconds /api/public/beacon may be served from the edge cache, plus a
 // poll's own flight — see `announce` and the check in `poll`.
 const HOLD_MS = 12000;
+// And while a listen in this tab is telling the beacon what it is doing, as
+// it changes (useListeningSession, 2026-10-23): long enough to clear the
+// edge's ten seconds and the twenty it may go on serving the old answer
+// while it fetches a new one, so the keeper's own home never steps back to
+// what the server said a moment ago (Miyel: "how much of a delay there is
+// between the actual song that you're on and what the beacon shows").
+export const LISTEN_HOLD_MS = 30000;
 
 // The same key the database generates for every entry, written out in
 // JavaScript so a record can be matched against the journal without asking
@@ -202,8 +209,12 @@ async function poll() {
   // wedging the beacon if the server genuinely disagrees, for instance
   // because the same journal is being written in on another phone.
   if (beacon.heldUntil > Date.now()) {
+    // And, while a listen is being told from here, the song and the bars
+    // too: the server has caught up when it says what this tab said.
+    const told = beacon.held.state === 'logging';
     const caughtUp = snapshot.state === beacon.held.state
-      && snapshot.album === beacon.held.album;
+      && snapshot.album === beacon.held.album
+      && (!told || (snapshot.track === beacon.held.track && snapshot.rated.join() === beacon.held.rated.join()));
     if (!caughtUp) return;
     beacon.heldUntil = 0;
   }
@@ -240,24 +251,33 @@ async function poll() {
 // is the end of the drop (HomeNav): the record falls into the journal and the
 // slot refills with it, captioned Last logged, without waiting to be told
 // something it already knows.
-export function announce({ album, artist, art }, state = 'logging') {
+//
+// ── And the listen tells it as it goes, 2026-10-23 ────────────────────────
+// The song and the ratings so far come too, from the listen itself on every
+// change (useListeningSession), held for LISTEN_HOLD_MS: the keeper's own
+// home is told by the listen rather than by the server, which the world
+// polls through a cache and which can be half a minute behind. A visitor
+// still reads the server, and is that far behind on purpose — it is what
+// keeps a beacon cheap to watch.
+export function announce({ album, artist, art, track = '', rated = [] }, state = 'logging', hold = HOLD_MS) {
   const next = {
     state,
     album: album || '',
     artist: artist || '',
     art: art || '',
-    // No song yet: one has not been opened. The beacon names the record
-    // instead, which is what the route does for the same case.
-    track: '',
-    // Nothing rated yet on a record just put on.
-    rated: [],
+    // The song being logged, when the listen says one; blank names the
+    // record, which is what the route does for the same case.
+    track: track || '',
+    // The bars, the way the server keeps them: nothing while nothing is
+    // rated (library/needle.js, floorOf).
+    rated: Array.isArray(rated) && rated.some(r => r > 0) ? rated.map(r => Number(r) || 0) : [],
     isLive: state === 'logging',
     before: beacon.snapshot.before || [],
   };
   // Held before it is published, so a poll that answers mid-publish is already
   // being measured against this.
   beacon.held = next;
-  beacon.heldUntil = Date.now() + HOLD_MS;
+  beacon.heldUntil = Date.now() + hold;
   publish(next);
   // A listen begun or ended here changes the pace at once: the next ask is a
   // full live or quiet beat from now, and lands after the hold has done its

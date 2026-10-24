@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 'use client';
 import { useState, useEffect, useRef } from 'react';
-import { fetchTracklist, fetchAlbumFacts, fetchAlbumArtUrl } from '../library/music_data_api';
+import { fetchTracklist, fetchAlbumFacts, fetchAlbumArtUrl, sizedAlbumArt } from '../library/music_data_api';
+import { announce, LISTEN_HOLD_MS } from './useListeningBeacon';
 import { serializeTracks } from '../library/entry_formatter';
 import { useSessionDraft } from './useSessionDraft';
 
@@ -313,6 +314,17 @@ export function useListeningSession({ step }) {
             (_, i) => Number(trackRatings[i]) || 0,
           ),
     };
+    // This tab's own beacon hears it now, not in two seconds and not from
+    // the server: the record, the song and the bars, at the size the server
+    // sends the cover (library/needle.js, TILE_PX), so nothing redraws when
+    // the server agrees (hooks/useListeningBeacon.js, announce).
+    announce({
+      album: albumInput,
+      artist: artistName,
+      art: sizedAlbumArt(albumArt, 600),
+      track: needleNext.current.track,
+      rated: needleNext.current.rated,
+    }, 'logging', LISTEN_HOLD_MS);
     if (!needleClock.current) {
       needleClock.current = setTimeout(() => {
         needleClock.current = null;
@@ -331,7 +343,13 @@ export function useListeningSession({ step }) {
   function liftNeedle() {
     clearTimeout(needleClock.current);
     needleClock.current = null;
+    // And this tab's beacon hears it at once, as the server will say it: a
+    // lifted needle stands as the last listen, its song still on it
+    // (library/needle.js, lift_needle), so the record goes quiet rather than
+    // vanishing — and quiet now, not when the hold above runs out.
+    const was = needleNext.current;
     needleNext.current = null;
+    if (was) announce({ album: was.album, artist: was.artist, art: sizedAlbumArt(was.album_art, 600), track: was.track }, 'logged');
     fetch('/api/needle', { method: 'DELETE' }).catch(() => {});
   }
 
