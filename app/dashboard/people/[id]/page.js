@@ -13,28 +13,30 @@
 // which is why it can hold what their journal never could: what they sent,
 // how it landed, how often they are right about you.
 //
-// ── A shape, then the numbers, 2026-10-23 ─────────────────────────────────
-// Her brief, "compare becomes a shape": the page was a report — four facts in
-// a table and three lists — and the last screen still built that way. It
-// opens on a picture now: your stars across, theirs up, a cover for every
-// record you both rated, and a dotted line corner to corner where you agree.
-// Three numbers under it and nothing else; the other facts are captions on
-// the sections they belong to. The arguments come before the agreements,
-// because agreement is what the shape already showed. What they sent you is
-// covers with green where you logged it, the one thing their journal can
-// never say.
+// ── Cards, one sentence each, 2026-10-23 ──────────────────────────────────
+// Her brief, "compare becomes a shape", made the page open on a picture —
+// your stars across, theirs up, a cover for every record you both rated,
+// a dotted line where you agree. Built as drawn, with numbers and lists
+// under it, it was "a bit confusing… very wordy and some of it i just dont
+// understand", and she wanted it "very clear understandable… like spotify
+// wrapped". So the page is a short run of cards, each one plain sentence
+// with its numbers inside it: how often you agree, with the picture; your
+// biggest argument; where you agree most; what they put you onto and how
+// much of it you loved; what you sent them that is still out. Every word on
+// it has to be understood by someone who has never heard of an offset.
 //
 // Read in the browser: their public feed from their journal, your own
 // records and the sends from them from this copy. Nothing is stored and
 // nobody learns they were looked at. Their writing stays on their journal,
 // where every row here can take you.
 //
-// Rated alike allows for how each of you rates: a generous rater and a
-// harsh one with the same taste should come out alike (DECISIONS, The
-// journal), so their ratings are shifted by the average difference across
-// what you both have before the gap is measured. Three records in common
-// are the least that offset is trusted on. The shape plots raw stars; the
-// ring and the arguments use the offset.
+// Agreeing allows for how each of you rates: a generous rater and a harsh
+// one with the same taste should come out alike (DECISIONS, The journal),
+// so their ratings are shifted by the average difference across what you
+// both have before the gap is measured. Three records in common are the
+// least that offset is trusted on. The offset decides who agrees and which
+// arguments are the biggest; it is never printed, and every rating the page
+// shows is the stars as each of you gave them.
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
@@ -60,6 +62,7 @@ const num = v => (v === null || v === undefined || v === '' ? null : Number(v));
 const newestFirst = rows => [...rows].sort((a, b) => new Date(b.posted_at) - new Date(a.posted_at));
 // A rating as it is said: 4.5, 5, 1.5 — never 5.0.
 const said = v => { const n = num(v); return n === null ? '' : String(Math.round(n * 100) / 100); };
+const stars = v => `${said(v)} ${num(v) === 1 ? 'star' : 'stars'}`;
 
 // One entry per record, the most recent (DECISIONS: never average across
 // listens). Album listens only, 2026-09-24: a track note rates one song, and
@@ -81,21 +84,6 @@ function Face({ address }) {
   );
 }
 
-// `all` is for a section that is not a list of rows — the sends, which are a
-// grid of covers and have to be laid out as a whole. Everything else still
-// hands over a row renderer.
-function Section({ title, note, rows, empty, children, all = null }) {
-  return (
-    <section className="pn-section">
-      <div className="pn-section-head">
-        <span className="pn-section-title">{title}</span>
-        {note && <span className="pn-section-note">{note}</span>}
-      </div>
-      {rows.length === 0 ? <div className="pn-empty">{empty}</div> : (all || rows.map(children))}
-    </section>
-  );
-}
-
 // ── The shape ─────────────────────────────────────────────────────────────
 // The axes run one to five, not zero: real ratings bunch at the top, and a
 // plot where everything huddles in a corner reads as broken. The plot is a
@@ -104,7 +92,7 @@ function Section({ title, note, rows, empty, children, all = null }) {
 // so four hundred covers shrink rather than pile up. Each cover takes the
 // free slot nearest its own two ratings: a record that lands where another
 // already is nudges to the next square over instead of hiding it. The
-// arguments are placed first, so the three the page is about sit where they
+// arguments are placed first, so the ones the page is about sit where they
 // really are; then the rest, furthest from the line first, since the cloud
 // along the line is where the crowding happens and the least is lost there.
 const SLOTS_LEAST = 9;
@@ -138,7 +126,7 @@ function placeCovers(pairs, rings) {
   return { n, placed };
 }
 
-function Shape({ pairs, rings, name, empty }) {
+function Shape({ pairs, rings, name }) {
   const { n, placed } = useMemo(() => placeCovers(pairs, rings), [pairs, rings]);
   // The line runs from a one-and-one to a five-and-five, corner slot to
   // corner slot, in hundredths of the plot.
@@ -162,34 +150,56 @@ function Shape({ pairs, rings, name, empty }) {
               : <span className="pn-plot-none" aria-hidden="true">♪</span>}
           </Link>
         ))}
-        {empty && <div className="pn-shape-empty">{empty}</div>}
       </div>
-      <span className="pn-shape-y" aria-hidden="true">{name} &rarr;</span>
-      <figcaption className="pn-shape-x" aria-hidden="true">You &middot; one to five &rarr;</figcaption>
+      <span className="pn-shape-y" aria-hidden="true">{name} &uarr;</span>
+      <figcaption className="pn-shape-x" aria-hidden="true">You &rarr;</figcaption>
     </figure>
   );
 }
 
-// One record you both rated: its cover and name, then the two ratings —
-// yours in ink, theirs faint, so whose is whose needs no label — and how far
-// apart, allowing for how each of you rates.
-function Pair({ pair, near }) {
-  const same = num(pair.mine.rating_value) === num(pair.theirs.rating_value);
-  const apart = same
-    ? (num(pair.mine.rating_value) === 5 ? 'Both five' : 'Dead on')
-    : `${pair.gap.toFixed(1)} apart`;
+// The first card's sentence: how often you agree, said the way a person
+// would say it at every count, the odd ones included.
+function agreeSentence(facts, name) {
+  const both = facts.rated.length;
+  const alike = facts.alike.length;
+  if (!facts.pairs.length) return <>You and {name} haven&rsquo;t logged any of the same records yet.</>;
+  if (!both) return <>You&rsquo;ve both logged {facts.pairs.length === 1 ? 'one record' : `${facts.pairs.length} of the same records`}, but haven&rsquo;t both rated one.</>;
+  if (both === 1) return alike ? <>You and {name} agree on the one record you&rsquo;ve both rated.</> : <>You and {name} don&rsquo;t agree on the one record you&rsquo;ve both rated.</>;
+  if (alike === both) return <>You and {name} agree on all <b>{both}</b> records you&rsquo;ve both rated.</>;
+  if (!alike) return <>You and {name} don&rsquo;t agree on any of the <b>{both}</b> records you&rsquo;ve both rated.</>;
+  return <>You and {name} agree on <b>{alike}</b> of the <b>{both}</b> records you&rsquo;ve both rated.</>;
+}
+
+// What the top record of a card says: the two ratings as given.
+function bothSaid(pair, name) {
+  return num(pair.mine.rating_value) === num(pair.theirs.rating_value)
+    ? <>You both gave it {stars(pair.mine.rating_value)}.</>
+    : <>You gave it {stars(pair.mine.rating_value)}. {name} gave it {said(pair.theirs.rating_value)}.</>;
+}
+
+// The record a card is about: its cover large and its name beside it.
+function Lead({ pair }) {
   return (
-    <div className="pn-pair">
-      <Link href={`/entries/${pair.mine.slug}`} className="pn-item-art">{pair.mine.album_art && <img src={pair.mine.album_art} alt="" loading="lazy" />}</Link>
-      <div className="pn-item-said">
-        <Link href={`/entries/${pair.mine.slug}`} className="pn-item-album">{pair.mine.album}</Link>
-        <div className="pn-item-artist">{pair.mine.artist}{pair.mine.year ? ` · ${pair.mine.year}` : ''}</div>
-      </div>
-      <div className="pn-pair-score">
-        <span className="pn-pair-stars">{said(pair.mine.rating_value)}<span>{said(pair.theirs.rating_value)}</span></span>
-        <span className={'pn-pair-apart' + (near ? ' pn-pair-apart--near' : '')}>{apart}</span>
-      </div>
-    </div>
+    <Link href={`/entries/${pair.mine.slug}`} className="pn-lead">
+      <span className="pn-lead-art">{pair.mine.album_art && <img src={pair.mine.album_art} alt="" loading="lazy" />}</span>
+      <span className="pn-lead-said">
+        <span className="pn-lead-album">{pair.mine.album}</span>
+        <span className="pn-lead-artist">{pair.mine.artist}</span>
+      </span>
+    </Link>
+  );
+}
+
+// The runners-up under a card's record: a small cover, the name, and the
+// two ratings as plain words.
+function Runner({ pair, name }) {
+  const same = num(pair.mine.rating_value) === num(pair.theirs.rating_value);
+  return (
+    <Link href={`/entries/${pair.mine.slug}`} className="pn-runner">
+      <span className="pn-runner-art">{pair.mine.album_art && <img src={pair.mine.album_art} alt="" loading="lazy" />}</span>
+      <span className="pn-runner-album">{pair.mine.album}</span>
+      <span className="pn-runner-stars">{same ? `Both ${said(pair.mine.rating_value)}` : `You ${said(pair.mine.rating_value)} · ${name} ${said(pair.theirs.rating_value)}`}</span>
+    </Link>
   );
 }
 
@@ -207,7 +217,11 @@ function chunk(list, per) {
   return out;
 }
 
-const ARGUMENT_WORDS = ['No arguments', 'One argument', 'Two arguments', 'Three arguments'];
+// Names in a sentence: "A", "A and B", "A, B and 2 more".
+function listed(titles) {
+  if (titles.length <= 2) return titles.join(' and ');
+  return `${titles.slice(0, 2).join(', ')} and ${titles.length - 2} more`;
+}
 
 export default function PersonPage({ layered = false }) {
   const { id } = useParams();
@@ -229,13 +243,13 @@ export default function PersonPage({ layered = false }) {
   // Their feed: null until asked, { entries, name } when it answered,
   // { failed: true } when it did not.
   const [theirs, setTheirs] = useState(null);
-  // Your own records: null until they have been read, so the shape does
-  // not say there is nothing in common while they are still on their way.
+  // Your own records: null until they have been read, so the first card
+  // does not say there is nothing in common while they are on their way.
   const [mine, setMine] = useState(null);
   const [sent, setSent] = useState([]);
   // What you have sent them that they have not logged yet (the inbox's
   // Sent list, library/sent_actions.js), narrowed to them. No age and no
-  // count on it, as there is none on that list.
+  // reminder on it, as there is none on that list.
   const [out, setOut] = useState([]);
   // Which sent record is showing its name and its note. Miyel, 2026-09-19:
   // "in the what ___ has sent you, show them as just album covers; when
@@ -301,11 +315,18 @@ export default function PersonPage({ layered = false }) {
     const disagree = rated.filter(p => p.gap > ALIKE).sort((a, b) => b.gap - a.gap).slice(0, HARDEST);
     const rings = new Set(disagree.map(p => p.mine.slug));
 
-    const sends = sent.map(s => {
-      const logged = mineLatest.get(albumKey(s.album, s.artist)) || null;
+    // One cover per record: the same record sent twice is one thing they
+    // put you onto, the newest send of it kept.
+    const seen = new Set();
+    const sends = [];
+    for (const s of [...sent].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))) {
+      const key = albumKey(s.album, s.artist);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const logged = mineLatest.get(key) || null;
       const rating = logged ? num(logged.rating_value) : null;
-      return { ...s, logged, rating, hit: rating !== null && rating >= HIT };
-    });
+      sends.push({ ...s, logged, rating, hit: rating !== null && rating >= HIT });
+    }
     // What they are credited on, 2026-09-14: entries whose sender resolves
     // to this address — a record logged from the old Tumblr and credited to
     // them later has no send row, only the name and journal on the entry.
@@ -313,11 +334,10 @@ export default function PersonPage({ layered = false }) {
     // carries no send date on purpose (the brief: the entry's own date is
     // the ceiling), so it falls in with the others by the day it was logged.
     const address = tidyJournal(person?.address);
-    const counted = new Set(sends.map(s => albumKey(s.album, s.artist)));
     if (address) {
       for (const e of newestFirst(mine || [])) {
-        if (tidyJournal(e.received_from_url) !== address || counted.has(e.album_key)) continue;
-        counted.add(e.album_key);
+        if (tidyJournal(e.received_from_url) !== address || seen.has(e.album_key)) continue;
+        seen.add(e.album_key);
         const logged = mineLatest.get(e.album_key) || e;
         const rating = num(logged.rating_value);
         sends.push({
@@ -328,32 +348,20 @@ export default function PersonPage({ layered = false }) {
     }
     const when = s => new Date(s.created_at || s.logged?.posted_at || 0);
     sends.sort((a, b) => when(b) - when(a));
+    // Loved is a hit, of what you logged: a record you have not got to yet
+    // is not a miss.
     const loggedCount = sends.filter(s => s.logged).length;
     const hits = sends.filter(s => s.hit).length;
-    // The hit rate is of what you logged, as her mockup counts it ("5 of 7,
-    // you rated four or more"): a record you have not got to yet is not a
-    // miss. The average is of the ones you rated.
-    const ratedSends = sends.filter(s => s.rating !== null);
-    const average = ratedSends.length ? ratedSends.reduce((sum, s) => sum + s.rating, 0) / ratedSends.length : null;
 
-    return { pairs, rated, offset, alike, agree, disagree, rings, sends, loggedCount, hits, average };
+    return { pairs, rated, alike, agree, disagree, rings, sends, loggedCount, hits };
   }, [mine, theirs, sent, person]);
 
   if (checking) return <div style={{ minHeight: '100vh', background: 'var(--bg)' }} />;
   if (!authed) { if (typeof window !== 'undefined') window.location.replace('/login'); return null; }
 
-  // The offset, the third number: which way their stars sit from yours and
-  // how far, once three records in common make it worth saying.
-  const trusted = facts.rated.length >= OFFSET_NEEDS;
-  const leaning = Math.round(facts.offset * 10) / 10;
-  const offsetSaid = !trusted ? '—' : leaning === 0 ? '0' : `${leaning > 0 ? '+' : '−'}${Math.abs(leaning).toFixed(1)}`;
-  const offsetCaption = !trusted ? 'How they rate' : leaning > 0 ? 'They rate higher' : leaning < 0 ? 'They rate lower' : 'You rate alike';
-
-  const shapeEmpty = !theirs || mine === null
-    ? null
-    : facts.rated.length === 0
-      ? (facts.pairs.length ? 'Nothing you have both rated yet.' : 'Nothing you both have yet.')
-      : null;
+  const ready = !!theirs && mine !== null;
+  const [argument, ...moreArguments] = facts.disagree;
+  const [agreement, ...moreAgreements] = facts.agree;
 
   return (
     <div className={'own-screen' + (layered ? ' own-screen--layered' : '')}>
@@ -384,84 +392,78 @@ export default function PersonPage({ layered = false }) {
           <>
             <header className="pn-head">
               <Face address={person.address} />
-              <div className="pn-head-said">
-                <h1 className="pn-name">{name}</h1>
-                <span className="pn-kicker">Your page about them</span>
-              </div>
+              <h1 className="pn-name">{name}</h1>
               {/* "Visit their journal" stood here until 2026-09-22. Miyel: "we
                   can remove the link to their journal on the compare page
                   because you can just simply go to their journal from the
                   actual friends page." One way there, from the faces. */}
             </header>
 
-            <div className="pn-sheet">
-              {theirs?.failed && (
-                <p className="pn-note">{name}&rsquo;s journal isn&rsquo;t answering just now, so only what they&rsquo;ve put you onto is here.</p>
-              )}
+            {theirs?.failed && (
+              <p className="pn-note">{name}&rsquo;s journal isn&rsquo;t answering just now, so only what they&rsquo;ve put you onto is here.</p>
+            )}
 
-              {!theirs?.failed && (
-                <>
-                  {theirs && mine !== null
-                    ? <Shape pairs={facts.rated} rings={facts.rings} name={name} empty={shapeEmpty} />
-                    : <div className="own-skeleton pn-shape-waiting" />}
-
-                  <div className="pn-numbers">
-                    <div className="pn-number"><b>{theirs ? facts.pairs.length : '—'}</b><span>Both have</span></div>
-                    <div className="pn-number"><b>{facts.rated.length ? <>{facts.alike.length}<small>of {facts.rated.length}</small></> : '—'}</b><span>Rated alike</span></div>
-                    <div className="pn-number"><b>{offsetSaid}</b><span>{offsetCaption}</span></div>
-                  </div>
-
-                  <Section
-                    title={ARGUMENT_WORDS[facts.disagree.length]}
-                    note={facts.disagree.length ? 'Allowing for how each rates' : null}
-                    rows={facts.disagree}
-                    empty={facts.rated.length ? 'Nowhere, allowing for how each of you rates.' : 'Nothing you both have yet.'}
-                  >
-                    {p => <Pair key={p.mine.slug} pair={p} />}
-                  </Section>
-
-                  <Section
-                    title="Where you agree hardest"
-                    rows={facts.agree}
-                    empty={facts.rated.length ? 'Nowhere yet, allowing for how each of you rates.' : 'Nothing you both have yet.'}
-                  >
-                    {p => <Pair key={p.mine.slug} pair={p} near />}
-                  </Section>
-                </>
-              )}
-
-              {/* ── What they have put you onto ────────────────────────────
-                  The part only this copy knows: their journal can show their
-                  records and their ratings, never what they sent you and
-                  whether it landed. Their hit rate as two numbers, then the
-                  sends as covers with green where you logged it.
-
-                  The grid is chunked into rows so a record's detail can open
-                  directly under the row it is in, which is the same thing
-                  the friends pane does with a face and for the same reason:
-                  a panel a row away from the thing that opened it is a panel
-                  about nothing.
-
-                  A cover that has not been logged is greyed, which is the
-                  site's one way of saying a record is not in hand — the
-                  beacon's idle art and the past listens beside it wear the
-                  same filter. So the shelf answers "what did they send me
-                  and what have I got to" before anything is pressed. */}
-              {facts.sends.length > 0 && (
-                <section className="pn-section">
-                  <div className="pn-section-head"><span className="pn-section-title">Their hit rate with you</span></div>
-                  <div className="pn-numbers pn-numbers--two">
-                    <div className="pn-number"><b>{facts.loggedCount ? <>{facts.hits}<small>of {facts.loggedCount}</small></> : '—'}</b><span>You rated four or more</span></div>
-                    <div className="pn-number"><b>{facts.average === null ? '—' : facts.average.toFixed(1)}</b><span>Average when you did</span></div>
-                  </div>
+            {!theirs?.failed && (ready ? (
+              <>
+                {/* How often you agree, with the picture that shows it. */}
+                <section className="pn-card">
+                  <p className="pn-say">{agreeSentence(facts, name)}</p>
+                  {facts.rated.length > 0 && (
+                    <>
+                      <Shape pairs={facts.rated} rings={facts.rings} name={name} />
+                      <p className="pn-hint">The higher a record sits, the more {name} liked it. The further right, the more you did. On the line, you agree.</p>
+                    </>
+                  )}
                 </section>
-              )}
-              <Section
-                title={facts.sends.length === 1 ? 'One send' : facts.sends.length ? `${facts.sends.length} sends` : `What ${name} has put you onto`}
-                note={facts.loggedCount ? 'Green means you logged it' : null}
-                rows={facts.sends}
-                empty={`${name} hasn't put you onto anything yet.`}
-                all={chunk(facts.sends, SENT_ACROSS).map((row, i) => {
+
+                {argument && (
+                  <section className="pn-card">
+                    <span className="pn-card-label">Your biggest argument</span>
+                    <Lead pair={argument} />
+                    <p className="pn-say pn-say--small">{bothSaid(argument, name)}</p>
+                    {moreArguments.length > 0 && (
+                      <div className="pn-runners">{moreArguments.map(p => <Runner key={p.mine.slug} pair={p} name={name} />)}</div>
+                    )}
+                  </section>
+                )}
+
+                {agreement && (
+                  <section className="pn-card">
+                    <span className="pn-card-label">Where you agree most</span>
+                    <Lead pair={agreement} />
+                    <p className="pn-say pn-say--small">{bothSaid(agreement, name)}</p>
+                    {moreAgreements.length > 0 && (
+                      <div className="pn-runners">{moreAgreements.map(p => <Runner key={p.mine.slug} pair={p} name={name} />)}</div>
+                    )}
+                  </section>
+                )}
+              </>
+            ) : <div className="own-skeleton pn-card-waiting" />)}
+
+            {/* ── What they have put you onto ──────────────────────────────
+                The part only this copy knows: their journal can show their
+                records and their ratings, never what they sent you and
+                whether it landed. One sentence, then the covers: greyed
+                until you have logged one — the site's one way of saying a
+                record is not in hand, the beacon's idle art wears the same —
+                and a dot of green on each you have.
+
+                The grid is chunked into rows so a record's detail can open
+                directly under the row it is in, which is the same thing the
+                friends pane does with a face and for the same reason: a
+                panel a row away from the thing that opened it is a panel
+                about nothing. */}
+            {facts.sends.length > 0 && (
+              <section className="pn-card">
+                <p className="pn-say pn-say--small">
+                  {name} put you onto <b>{facts.sends.length}</b> {facts.sends.length === 1 ? 'record' : 'records'}.{' '}
+                  {facts.loggedCount === 0
+                    ? <>You haven&rsquo;t logged {facts.sends.length === 1 ? 'it' : 'any'} yet.</>
+                    : facts.loggedCount === 1
+                      ? (facts.hits ? <>You loved the one you&rsquo;ve logged.</> : <>You&rsquo;ve logged one.</>)
+                      : <>You loved <b>{facts.hits}</b> of the <b>{facts.loggedCount}</b> you&rsquo;ve logged.</>}
+                </p>
+                {chunk(facts.sends, SENT_ACROSS).map((row, i) => {
                   const here = row.find(x => x.id === openSend) || null;
                   return (
                     <div key={i} className={'pn-sent-row' + (here ? ' pn-sent-row--open' : '')}>
@@ -504,28 +506,22 @@ export default function PersonPage({ layered = false }) {
                     </div>
                   );
                 })}
-              >
-                {() => null}
-              </Section>
+              </section>
+            )}
 
-              {/* What you have sent them that has not come back. The record
-                  and that you sent it: no age and no reminder, the inbox's
-                  Sent list's rule (library/sent_actions.js). */}
-              {out.length > 0 && (
-                <section className="pn-section">
-                  <div className="pn-section-head"><span className="pn-section-title">Still out</span></div>
+            {/* What you have sent them that has not come back. The records
+                and that you sent them: no age and no reminder, the inbox's
+                Sent list's rule (library/sent_actions.js). */}
+            {out.length > 0 && (
+              <section className="pn-card">
+                <p className="pn-say pn-say--small">Still waiting on {name}: {listed(out.map(s => s.song || s.album))}.</p>
+                <div className="pn-out">
                   {out.map(s => (
-                    <div key={s.id} className="pn-pair">
-                      <span className="pn-item-art">{s.album_art && <img src={s.album_art} alt="" loading="lazy" />}</span>
-                      <div className="pn-item-said">
-                        <span className="pn-item-album">{s.song || s.album}</span>
-                        <div className="pn-item-artist">You sent it</div>
-                      </div>
-                    </div>
+                    <span key={s.id} className="pn-out-art" title={s.song || s.album}>{s.album_art && <img src={s.album_art} alt="" loading="lazy" />}</span>
                   ))}
-                </section>
-              )}
-            </div>
+                </div>
+              </section>
+            )}
           </>
         )}
       </div>
