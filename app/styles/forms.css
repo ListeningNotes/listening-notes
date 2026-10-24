@@ -2217,49 +2217,113 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 /* ── from app/printer/page.js ─────────────────────────────────────────── */
 
 /* ── from app/dashboard/people/[id]/page.js ──────────────────────────── */
-/* The page about a person: their face and name over a panel of the counted
-   facts and four short lists. The same sheet as the book it opens from. */
+/* The page about a person: their face and name, then the shape of what you
+   both rated, three numbers, the arguments, the agreements and what they
+   put you onto (her brief, "compare becomes a shape", 2026-10-23). On the
+   page rather than in a card, like People and the inbox. */
 .pn-body { max-width: 720px; padding: 18px 24px 40px; }
-.pn-head { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; padding: 6px 0 22px; }
-/* Their journal's portrait, the card's shape at a size that is a face. */
+.pn-head { display: flex; align-items: center; gap: 14px; padding: 6px 2px 20px; }
+.pn-head-said { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+/* Their journal's portrait, a circle as every face on the site is. */
 .pn-face {
-  position: relative; width: 108px; height: 108px; border-radius: 24px; overflow: hidden;
-  background: var(--panel); border: 1px solid var(--border); box-shadow: 0 14px 36px rgba(0,0,0,0.14);
+  position: relative; flex-shrink: 0; width: 56px; height: 56px; border-radius: 50%; overflow: hidden;
+  background: var(--panel); border: 1px solid var(--border);
   display: flex; align-items: center; justify-content: center; color: var(--ink-faint);
 }
 .pn-face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.pn-name { font-family: var(--font-display); font-weight: var(--font-display-weight, 700); font-size: 28px; line-height: 1.1; margin: 6px 0 0; color: var(--ink); overflow-wrap: anywhere; }
-.pn-panel { border-radius: 24px; }
-.pn-scroll { position: relative; z-index: 1; flex: 1; padding: 22px 26px 28px; }
-/* The counted facts, one table: the card's label-and-answer shape. */
-.pn-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 18px; margin: 0 0 8px; }
-.pn-fact { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 14px; background: var(--bg); }
-.pn-fact dt { font-family: var(--font-label); font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-faint); }
-.pn-fact dd { margin: 0; font-family: var(--font-display); font-weight: var(--font-display-weight, 700); font-size: 22px; line-height: 1.1; color: var(--ink); }
-.pn-fact dd small { font-family: var(--font-label); font-size: 10px; font-weight: 400; letter-spacing: 0.08em; color: var(--ink-soft); margin-left: 6px; }
+.pn-name { font-family: var(--font-display); font-weight: var(--font-display-weight, 700); font-size: 26px; line-height: 1.1; margin: 0; color: var(--ink); overflow-wrap: anywhere; }
+.pn-kicker { font-family: var(--font-label); font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-faint); }
+.pn-sheet { padding: 0 0 28px; }
 .pn-note { font-size: 13px; line-height: 1.6; color: var(--ink-soft); margin: 10px 2px 0; }
-.pn-section { margin-top: 26px; }
-.pn-section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
-.pn-section-title { font-family: var(--font-display); font-weight: var(--font-display-weight, 700); font-size: 17px; color: var(--ink); }
-.pn-section-note { font-family: var(--font-label); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); white-space: nowrap; }
-.pn-empty { padding: 18px 2px; font-family: var(--font-label); font-size: 11px; color: var(--ink-faint); }
-/* ── What they have sent you: a shelf ──────────────────────────────────────
-   Covers, four across, with the name and the note behind a press. Miyel,
-   2026-09-19. The same square and the same 10% as a record everywhere else
-   on this site, and the same grid-of-squares the friends pane draws — this
-   page and that pane are the same two objects at two sizes.
 
-   `.pn-item` and its parts stay: the other sections on this page are still
-   rows, and the opened detail borrows the album, artist and note from them
-   rather than growing a second set of type. */
+/* ── The shape ──
+   Your stars across, theirs up. The plot is square, its covers placed in
+   hundredths of it by the page (placeCovers), with the dotted line drawn
+   corner slot to corner slot. Their name runs up the left edge and yours
+   along the foot, so whose axis is whose needs nothing else. Held to a size
+   a phone shows whole, and no bigger on a wide screen. */
+.pn-shape {
+  margin: 0 auto; max-width: 440px;
+  display: grid; grid-template-columns: 14px minmax(0, 1fr); gap: 8px 8px;
+}
+.pn-shape-plot {
+  grid-column: 2; grid-row: 1; position: relative; aspect-ratio: 1;
+  border-left: 1px solid var(--border); border-bottom: 1px solid var(--border);
+}
+.pn-shape-line { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.pn-shape-line line { stroke: var(--ink-faint); stroke-width: 1.5; stroke-dasharray: 1 6; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.pn-shape-y {
+  grid-column: 1; grid-row: 1; align-self: end; justify-self: center;
+  writing-mode: vertical-rl; transform: rotate(180deg);
+  font-family: var(--font-label); font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-faint);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-height: 100%;
+}
+.pn-shape-x {
+  grid-column: 2; grid-row: 2; text-align: center;
+  font-family: var(--font-label); font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-faint);
+}
+.pn-shape-empty {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 24px;
+  font-family: var(--font-label); font-size: 11px; color: var(--ink-faint); text-align: center;
+}
+.pn-shape-waiting { max-width: 440px; margin: 0 auto; aspect-ratio: 1; border-radius: 14px; }
+/* A cover in the plot: a square with a hair of room round it, so a crowd
+   along the line still reads as covers rather than one block. */
+.pn-plot { position: absolute; aspect-ratio: 1; padding: 1.5px; box-sizing: border-box; display: block; z-index: 1; transition: transform 0.15s; }
+.pn-plot img, .pn-plot-none {
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; height: 100%; object-fit: cover; border-radius: 10%;
+  background: var(--panel); color: var(--ink-faint); font-size: 10px;
+}
+.pn-plot:hover { transform: scale(1.25); z-index: 3; }
+/* The arguments wear a ring in the Favorite red: the records furthest from
+   the line, allowing for how each of you rates, and the ones listed below. */
+.pn-plot--ring { z-index: 2; }
+.pn-plot--ring img, .pn-plot--ring .pn-plot-none { outline: 2px solid var(--fav); outline-offset: 1px; }
+@media (prefers-reduced-motion: reduce) { .pn-plot { transition: none; } }
+
+/* ── The numbers ── Three under the shape, two over the sends: big figures
+   with their captions in small capitals, a hairline between them. */
+.pn-numbers { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 20px 0 0; }
+.pn-numbers--two { grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 4px 0 0; }
+.pn-number { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 4px 8px; text-align: center; }
+.pn-number + .pn-number { border-left: 1px solid var(--border); }
+.pn-number b { font-family: var(--font-display); font-weight: var(--font-display-weight, 700); font-size: 26px; line-height: 1.1; color: var(--ink); white-space: nowrap; }
+.pn-number b small { font-family: var(--font-label); font-size: 10px; font-weight: 400; letter-spacing: 0.06em; color: var(--ink-soft); margin-left: 4px; }
+.pn-number span { font-family: var(--font-label); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-faint); }
+
+.pn-section { margin-top: 30px; }
+.pn-section-head { display: flex; align-items: baseline; gap: 14px; padding-bottom: 6px; }
+.pn-section-title { font-family: var(--font-label); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink); }
+.pn-section-note { font-family: var(--font-label); font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pn-empty { padding: 14px 2px; font-family: var(--font-label); font-size: 11px; color: var(--ink-faint); }
+
+/* ── A record you both rated ── Cover, name, then the two ratings — yours in
+   ink, theirs faint — and how far apart: red for an argument, green where
+   you agree. */
+.pn-pair { display: flex; align-items: center; gap: 14px; padding: 12px 2px; border-bottom: 1px solid var(--border); }
+.pn-pair:last-child { border-bottom: none; }
+.pn-pair-score { flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.pn-pair-stars { font-family: var(--font-display); font-weight: var(--font-display-weight, 700); font-size: 17px; line-height: 1; color: var(--ink); white-space: nowrap; }
+.pn-pair-stars span { color: var(--ink-faint); margin-left: 7px; }
+.pn-pair-apart { font-family: var(--font-label); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--fav); white-space: nowrap; }
+.pn-pair-apart--near { color: var(--live-deep); }
+
+/* ── What they have sent you: a shelf ──────────────────────────────────────
+   Covers, five across, with the name and the note behind a press. Miyel,
+   2026-09-19. The same square and the same 10% as a record everywhere else
+   on this site. A dot of green on the corner of each one you logged.
+
+   The album, artist and note in an opened cover borrow `.pn-item-*`, so the
+   detail does not grow a second set of type. */
 .pn-sent-row { display: flex; flex-direction: column; }
 .pn-sent-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px 10px;
-  padding: 12px 0;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px 8px;
+  padding: 8px 0 12px;
 }
-.pn-sent { border: 0; background: none; padding: 0; cursor: pointer; min-width: 0; }
+.pn-sent { position: relative; border: 0; background: none; padding: 0; cursor: pointer; min-width: 0; }
 .pn-sent-art {
   position: relative; display: flex; align-items: center; justify-content: center;
   width: 100%; aspect-ratio: 1;
@@ -2276,6 +2340,10 @@ textarea.st-field { resize: vertical; min-height: 96px; }
    the shelf answers what they sent and what you got to before anything is
    pressed. */
 .pn-sent-art--unlogged { filter: grayscale(80%) brightness(0.7); }
+.pn-sent-dot {
+  position: absolute; right: -3px; bottom: -3px; width: 11px; height: 11px; border-radius: 50%;
+  background: var(--live-deep); box-shadow: 0 0 0 2px var(--bg);
+}
 .pn-sent--open .pn-sent-art {
   box-shadow: 0 0 0 2px var(--ink);
   transform: scale(1.06);
@@ -2303,8 +2371,6 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 }
 @media (prefers-reduced-motion: reduce) { .pn-sent-art { transition: none; } }
 
-.pn-item { display: flex; align-items: center; gap: 14px; padding: 12px 2px; border-bottom: 1px solid var(--border); }
-.pn-item:last-child { border-bottom: none; }
 .pn-item-art { width: 54px; height: 54px; border-radius: 8px; overflow: hidden; flex-shrink: 0; background: var(--bg); display: block; }
 .pn-item-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .pn-item-said { flex: 1; min-width: 0; }
@@ -2312,15 +2378,11 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 a.pn-item-album:hover { text-decoration: underline; text-underline-offset: 3px; }
 .pn-item-artist { font-family: var(--font-label); font-size: 10px; color: var(--ink-soft); margin-top: 2px; }
 .pn-item-note { font-size: 13px; line-height: 1.55; color: var(--ink-soft); margin: 6px 0 0; overflow-wrap: anywhere; }
-.pn-item-tail { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; text-align: right; font-family: var(--font-label); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-soft); }
-.pn-item-tail b { color: var(--ink); font-weight: 600; }
-.pn-item-tail a { color: var(--ink-soft); text-decoration: none; border-bottom: 1px solid var(--border); }
-.pn-item-tail a:hover { color: var(--ink); }
 .pn-gap { color: var(--ink-faint); }
 @media (max-width: 640px) {
-  .pn-facts { gap: 10px; }
-  .pn-item { flex-wrap: wrap; }
-  .pn-item-tail { align-items: flex-start; text-align: left; flex-basis: 100%; padding-left: 68px; }
+  .pn-body { padding: 14px 18px 40px; }
+  .pn-pair { gap: 12px; }
+  .pn-item-art { width: 46px; height: 46px; }
 }
 
 /* ── from app/dashboard/report/page.js ───────────────────────────────── */
