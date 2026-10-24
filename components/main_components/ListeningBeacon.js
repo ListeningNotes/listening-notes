@@ -132,7 +132,11 @@ export default function ListeningBeacon({ emptied = false }) {
               colour on the newest — the cover in colour already says it is
               live. A shade at the foot of the art only, so white bars read on
               a pale cover. Not HorizonChart, the entry's labelled chart:
-              this carries no labels, hearts or titles. */}
+              this carries no labels, hearts or titles.
+
+              Retired the same day, her call: nothing sends the ratings, so
+              nothing is drawn here until it is turned back on (DECISIONS,
+              the bars on the beacon's cover). */}
           {!emptied && artUrl && count > 0 && (
             <div className={'beacon-foot' + (anyRated ? ' beacon-foot--up' : '')} aria-hidden="true">
               <div className="beacon-floor">

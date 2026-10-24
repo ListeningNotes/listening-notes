@@ -303,19 +303,9 @@ export function useListeningSession({ step }) {
           // the tracklist is still being fetched. Blank is not the same as no
           // beacon: the route names the record instead.
           track: onAir === null ? '' : (tracks?.[onAir]?.title || ''),
-          // The ratings given so far, one a track in track order and 0 for
-          // a track not yet rated, for the bars on the beacon's cover: the
-          // record's every place, so its last bar lands at the cover's edge
-          // (Miyel's beacon brief, 2026-10-23). Numbers only: no title, no
-          // note. Before the tracklist arrives, as many places as the
-          // ratings reach.
-          rated: Array.from(
-            { length: tracks?.length || (Math.max(-1, ...Object.keys(trackRatings).map(Number)) + 1) },
-            (_, i) => Number(trackRatings[i]) || 0,
-          ),
     };
     // This tab's own beacon hears it now, not in two seconds and not from
-    // the server: the record, the song and the bars, at the size the server
+    // the server: the record and the song, at the size the server
     // sends the cover (library/needle.js, TILE_PX), so nothing redraws when
     // the server agrees (hooks/useListeningBeacon.js, announce).
     announce({
@@ -323,7 +313,6 @@ export function useListeningSession({ step }) {
       artist: artistName,
       art: sizedAlbumArt(albumArt, 600),
       track: needleNext.current.track,
-      rated: needleNext.current.rated,
     }, 'logging', LISTEN_HOLD_MS);
     if (!needleClock.current) {
       needleClock.current = setTimeout(() => {

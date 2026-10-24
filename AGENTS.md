@@ -331,9 +331,8 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   shared with the home beacon's wash), tracklists and album facts, the record
   search (`searchAlbums`), the song search (`searchSongs`), genre folding.
 - `needle.js` — the beacon's reading half: the one `needle` row saying what
-  is being logged now — with the ratings so far, a slot a track, for the bars
-  on the cover's foot (`floorOf`) — lifting it, `sat_with` for listens whose
-  post was deleted, and the recent listens drawn under the beacon.
+  is being logged now, lifting it, `sat_with` for listens whose post was
+  deleted, and the recent listens drawn under the beacon.
 - `outbox.js` — a send, a wave or a reply leaving this copy for another,
   server to server: posts to their `/api/submissions`, `/api/waves` or
   `/api/messages` and reports what came back in plain words; and
