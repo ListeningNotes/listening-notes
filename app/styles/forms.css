@@ -2263,87 +2263,104 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 .pn-view:hover { color: var(--ink-soft); }
 .pn-view--on { color: var(--ink); border-bottom-color: var(--ink); }
 
-/* ── The record on screen ── */
-.pn-stage {
-  margin-top: 16px; padding: 22px 20px 14px;
-  background: var(--panel); border: 1px solid var(--border); border-radius: 22px;
-  touch-action: pan-y;
-}
+/* ── The record on screen ──
+   Drawn as an entry's first screen is (app/styles/entry.css, .ln-screen-one):
+   the cover large with its rounded corner, border and lift, the title in the
+   display face, the artist and year in small capitals, the stars, the marks
+   as chips. No panel round it — it is the record on the page, as an entry
+   is. Yours solid; theirs a ghost of the same thing (Miyel, 2026-10-24). */
+.pn-stage { margin-top: 22px; touch-action: pan-y; }
 .pn-vs { display: flex; flex-direction: column; align-items: center; animation: pn-arrive 0.28s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
 @keyframes pn-arrive { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.pn-vs-top { display: grid; grid-template-columns: 40px auto 40px; align-items: center; gap: 10px; }
 .pn-vs-art {
   display: flex; align-items: center; justify-content: center;
-  width: 168px; height: 168px; border-radius: 10%; overflow: hidden; background: var(--bg); color: var(--ink-faint);
+  width: min(60vw, 250px); aspect-ratio: 1 / 1;
+  border-radius: 16px; overflow: hidden;
+  border: 1px solid var(--panel-border); box-shadow: var(--shadow-lift);
+  background: var(--panel); color: var(--ink-faint);
 }
 .pn-vs-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.pn-vs-none { font-size: 28px; }
+.pn-vs-none { font-size: 32px; }
+.pn-turn-at { margin-top: 10px; font-family: var(--font-label); font-size: 10px; letter-spacing: 0.12em; color: var(--ink-faint); }
 .pn-vs-album {
-  margin-top: 12px; text-align: center;
+  margin: 14px 0 0; text-align: center;
   font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
-  font-size: 18px; line-height: 1.2; color: var(--ink); overflow-wrap: anywhere;
+  font-size: clamp(1.4rem, 5.6vw, 1.9rem); line-height: 1.22; padding-bottom: 0.1em; color: var(--ink);
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
 }
-.pn-vs-artist { margin-top: 3px; font-family: var(--font-label); font-size: 11px; color: var(--ink-soft); text-align: center; }
+.pn-vs-artist {
+  margin-top: 2px; text-align: center;
+  font-family: var(--font-label); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-soft);
+}
 
-/* Your stars and marks on your side, theirs on theirs, in softer ink. */
-.pn-sides { display: flex; justify-content: space-between; align-items: flex-start; width: 100%; margin-top: 16px; }
-.pn-side { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-height: 36px; }
-.pn-side--theirs { align-items: flex-end; opacity: 0.62; }
-.pn-side-none { font-family: var(--font-label); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); padding-top: 2px; }
+/* Your stars, and theirs as a faint row under them, each row with its
+   owner's face. Ghosting is opacity on the whole row, so the stars keep
+   their own colour and only their weight changes. */
+.pn-ghost { opacity: 0.34; }
+.pn-stars { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-top: 16px; }
+.pn-star-row { display: flex; align-items: center; gap: 10px; }
+/* The marks as the entry wears them, theirs faint after yours. */
+.pn-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: 12px; }
+.pn-chips-theirs { display: contents; }
+.pn-chips-theirs > * { opacity: 0.34; }
 
 /* The line only this journal could write. */
 .pn-vs-line {
-  margin: 14px 4px 4px; text-align: center;
+  margin: 16px 4px 4px; text-align: center;
   font-size: 16px; line-height: 1.5; color: var(--ink); overflow-wrap: anywhere;
 }
 .pn-vs-line b { font-weight: 700; }
 
-/* ── Both horizons ── one above the other, never mirrored (the feed's
-   compare, and her word for it: "one above the other"). Yours in ink;
-   theirs a dashed outline beside it, the brief's ghost. A song you both
-   hearted keeps the Favorite red; one only one of you hearted sits back,
-   so the shared songs are what the eye finds. */
-.pn-rows { width: 100%; margin-top: 14px; display: flex; flex-direction: column; gap: 4px; }
-.pn-row-who { font-family: var(--font-label); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); margin-top: 6px; }
+/* ── The horizon, theirs behind yours ── (HorizonPair, Feed.js). When two
+   tracklists do not line up, two rows: yours over theirs, theirs the same
+   ghost. */
+.pn-rows { width: 100%; margin-top: 16px; display: flex; flex-direction: column; gap: 6px; }
 .pn-bars { height: 44px; }
-/* What the bars are, under them: a swatch of each, and the heart. */
-.pn-key { display: flex; justify-content: center; align-items: center; gap: 16px; margin-top: 10px; font-family: var(--font-label); font-size: 10px; letter-spacing: 0.06em; color: var(--ink-faint); }
+.pn-bars .fd-cmp-bar, .pn-rows .fd-cmp-bar { animation-delay: 0.05s; }
+.pn-bars--you .fd-cmp-bar { background: color-mix(in srgb, var(--ink) 88%, transparent); }
+.pn-bars--theirs .fd-cmp-bar { background: color-mix(in srgb, var(--ink) 15%, transparent); }
+.pn-bars--theirs .fd-cmp-bar--loved svg { opacity: 0.38; }
+/* What the bars are, under them: a swatch of each. */
+.pn-key { display: flex; justify-content: center; align-items: center; gap: 16px; margin-top: 6px; font-family: var(--font-label); font-size: 10px; letter-spacing: 0.06em; color: var(--ink-faint); }
 .pn-key span { display: inline-flex; align-items: center; gap: 6px; }
 .pn-key i { display: inline-block; width: 8px; height: 12px; border-radius: 2px 2px 0 0; }
-.pn-key-you { background: var(--ink); opacity: 0.88; }
-.pn-key-them { border: 1px dashed var(--ink-faint); box-sizing: border-box; }
-.pn-key svg { color: var(--fav); }
-.pn-bars .fd-cmp-bar, .pn-rows .fd-cmp-bar { animation-delay: 0.05s; }
-.pn-bars--you .fd-cmp-bar { background: var(--ink); opacity: 0.88; }
-.pn-bars--theirs .fd-cmp-bar { background: transparent; border: 1px dashed var(--ink-faint); box-sizing: border-box; }
+.pn-key-you { background: color-mix(in srgb, var(--ink) 88%, transparent); }
+.pn-key-them { background: color-mix(in srgb, var(--ink) 15%, transparent); }
 
-/* ── Both notes ── under a hairline, yours first. Each wears its author's
-   face, small, and its own words in full; a long one opens folded, its last
-   lines fading, with Read all under it. */
-.pn-notes { width: 100%; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 18px; }
+/* ── Both notes, side by side ── under a hairline: yours on the left, theirs
+   on the right in softer ink. Each wears its author's face, small, and its
+   own words in full; a long one opens folded, its last lines fading, with
+   Read all under it. */
+.pn-notes { width: 100%; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 16px; }
+.pn-notes-pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+.pn-notes-pair--one { grid-template-columns: minmax(0, 1fr); }
 .pn-face--small { width: 22px; height: 22px; }
-.pn-said { margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.pn-said { margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .pn-said-who {
-  display: flex; align-items: center; gap: 8px;
+  display: flex; align-items: center; gap: 8px; min-width: 0;
   font-family: var(--font-label); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint);
 }
-.pn-said-text { font-size: 15px; line-height: 1.6; color: var(--ink); white-space: pre-line; overflow-wrap: anywhere; }
+.pn-said-text { font-size: 14px; line-height: 1.55; color: var(--ink); white-space: pre-line; overflow-wrap: anywhere; }
+.pn-said--ghost .pn-said-text { color: var(--ink-soft); }
+.pn-said--ghost .pn-said-who .pn-face { opacity: 0.7; }
 .pn-said-text p { margin: 0 0 0.7em; }
 .pn-said-text p:last-child { margin-bottom: 0; }
 .pn-said-text--folded {
-  max-height: calc(1.6em * 10); overflow: hidden;
+  max-height: calc(1.55em * 12); overflow: hidden;
   -webkit-mask-image: linear-gradient(to bottom, #000 70%, transparent);
   mask-image: linear-gradient(to bottom, #000 70%, transparent);
 }
-.pn-said-foot { display: flex; gap: 18px; align-items: baseline; }
+.pn-said-none { margin: 0; font-size: 14px; line-height: 1.5; color: var(--ink-faint); }
+.pn-said-foot { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: baseline; }
 .pn-said-door {
   border: 0; background: none; padding: 0; cursor: pointer; text-decoration: none;
   font-family: var(--font-label); font-size: 11px; letter-spacing: 0.04em; color: var(--ink-soft);
 }
 .pn-said-door:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
-.pn-notes-none { margin: 0; display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; font-size: 14px; line-height: 1.5; color: var(--ink-soft); }
-/* A word you both used: the Favorite red, softly, the way a heart you both
-   gave a song is red — wherever it stands in either note, and in the line
-   that names it. */
+.pn-notes-none { margin: 0; display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; justify-content: center; font-size: 14px; line-height: 1.5; color: var(--ink-soft); }
+/* A word you both used: the Favorite red, softly — wherever it stands in
+   either note, and in the line that names it. */
 .pn-words { margin: 0; text-align: center; font-size: 15px; line-height: 1.5; color: var(--ink); }
 .pn-word {
   color: inherit; font: inherit; border-radius: 3px; padding: 0 2px; margin: 0 -2px;
@@ -2351,14 +2368,12 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 }
 .pn-words .pn-word { font-weight: 700; }
 
-/* ── Turning ── */
-.pn-turn { display: flex; align-items: center; justify-content: space-between; margin-top: 14px; }
+/* ── Turning ── the arrows stand either side of the cover. */
 .pn-turn-btn {
   border: 0; background: none; cursor: pointer; color: var(--ink-soft);
-  width: 40px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 10px;
+  width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 10px;
 }
-.pn-turn-btn:hover { color: var(--ink); background: var(--bg); }
-.pn-turn-at { font-family: var(--font-label); font-size: 11px; color: var(--ink-faint); }
+.pn-turn-btn:hover { color: var(--ink); background: var(--panel); }
 
 /* ── Their five stars you have not heard ── a list of doors to their
    journal. */
@@ -2375,8 +2390,9 @@ a.pn-unheard-row:hover .pn-unheard-album { text-decoration: underline; text-unde
 @media (prefers-reduced-motion: reduce) { .pn-vs { animation: none; } }
 @media (max-width: 640px) {
   .pn-body { padding: 14px 16px 40px; }
-  .pn-stage { padding: 20px 16px 12px; }
   .pn-say { font-size: 20px; }
+  .pn-vs-top { gap: 4px; grid-template-columns: 34px auto 34px; }
+  .pn-notes-pair { gap: 14px; }
 }
 
 /* ── from app/dashboard/report/page.js ───────────────────────────────── */

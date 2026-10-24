@@ -2058,9 +2058,13 @@ span.hn-bar-word { cursor: default; }
      the bars start as it lands and take three quarters of a second over it,
      which is about the pace of the record falling into the slot on the
      beacon — this site's one speed for a thing settling into place. */
-  animation: fd-rise 0.72s cubic-bezier(0.22, 0.61, 0.36, 1) 0.34s both;
+  animation: fd-cmp-rise 0.72s cubic-bezier(0.22, 0.61, 0.36, 1) 0.34s both;
 }
-@keyframes fd-rise { from { height: 4px; } to { height: var(--tall); } }
+/* Its own name, 2026-10-24: it was fd-rise, which the front door's record
+   wall also names (get.css), and the one loaded last won — every compare's
+   bars rose by sliding up a third of their height instead of growing, and
+   stood that far off their baseline. */
+@keyframes fd-cmp-rise { from { height: 4px; } to { height: var(--tall); } }
 /* A hearted track carries its ♥ above the bar, which is where the horizon
    draws one everywhere else on this site (HorizonChart). Above, not on: a
    mark inside the bar is a mark inside somebody's rating. */
@@ -2076,25 +2080,23 @@ span.hn-bar-word { cursor: default; }
 /* Theirs is the listen you came to look at, so it is the lit one. Yours is
    the line you are measuring it against and sits back. */
 .fd-cmp-bars--theirs .fd-cmp-bar { background: var(--ink); opacity: 0.92; }
-/* Two listens track against track (HorizonPair, Feed.js): a pair of thin
-   bars per song, yours filled, theirs a dashed outline beside it. The
-   heart two of you share sits over the pair, rising with the bars. */
+/* Two listens track against track (HorizonPair, Feed.js): theirs a wide
+   ghost behind each song, yours a narrower solid bar in front. Both colours
+   are mixed rather than faded with opacity, which would make each bar its
+   own layer and bury the ghost's heart under your bar; the hearts are lifted
+   over both. Theirs is faint and stands a little to the right, so a song you
+   both hearted wears two. */
 .fd-cmp-pairs {
-  display: flex; align-items: flex-end; gap: 5px;
-  height: 64px; width: 100%;
-  padding-top: 14px; box-sizing: content-box;
+  display: flex; align-items: flex-end; gap: 4px;
+  height: 72px; width: 100%;
+  padding-top: 16px; box-sizing: content-box;
 }
-.fd-cmp-pair { flex: 1 1 0; min-width: 0; height: 100%; position: relative; display: flex; align-items: flex-end; gap: 2px; }
-.fd-cmp-bar--mine { background: var(--ink); opacity: 0.88; }
-.fd-cmp-bar--other { background: transparent; border: 1px dashed var(--ink-faint); box-sizing: border-box; }
-.fd-cmp-bar--alone svg { color: var(--ink-faint); }
-.fd-cmp-pair-heart {
-  position: absolute; left: 50%; transform: translateX(-50%);
-  display: inline-flex; line-height: 1; color: var(--fav); pointer-events: none;
-  animation: fd-cmp-heart 0.4s ease 0.9s both;
-}
-@keyframes fd-cmp-heart { from { opacity: 0; } to { opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { .fd-cmp-pair-heart { animation: none; } }
+.fd-cmp-pair { flex: 1 1 0; min-width: 0; height: 100%; position: relative; }
+.fd-cmp-pair .fd-cmp-bar { position: absolute; bottom: 0; }
+.fd-cmp-bar--other { left: 0; right: 0; background: color-mix(in srgb, var(--ink) 15%, transparent); }
+.fd-cmp-bar--mine { left: 24%; right: 24%; background: color-mix(in srgb, var(--ink) 88%, transparent); }
+.fd-cmp-pair .fd-cmp-bar--loved svg { z-index: 2; }
+.fd-cmp-bar--other.fd-cmp-bar--loved svg { opacity: 0.38; transform: translate(-15%, -4px); }
 .fd-cmp-bars--yours .fd-cmp-bar { background: var(--ink-faint); opacity: 0.85; }
 /* The distance, on the rule between the two listens: the shape the beacon's
    slot already uses, a hairline with one thing sitting on it. */

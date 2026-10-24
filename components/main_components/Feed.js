@@ -268,64 +268,48 @@ function Face({ address }) {
 const heartsOf = entry => String(entry?.hearts || '');
 
 // One listen's horizon, read off the feed: a bar per track and a ♥ over each
-// one hearted. Both listens in a compare are drawn by this, and so is each
-// side of a person's page (app/dashboard/people/[id]), so the app has one
-// drawing of a horizon from a feed and not two. `others` is the other
-// listen's hearts, when the two can be laid track against track: a song you
-// both hearted is marked as such, and one only this listen hearted sits back.
-export function HorizonRow({ bars, hearts, others = null, className, label }) {
+// one hearted. Both listens in a compare are drawn by this, and so is a
+// person's page (app/dashboard/people/[id]) when two tracklists do not line
+// up, so the app has one drawing of a horizon from a feed and not two.
+export function HorizonRow({ bars, hearts, className, label }) {
   if (!bars.length) return null;
   return (
     <div className={className} aria-label={label}>
-      {bars.map((v, i) => {
-        const loved = hearts[i] === '1';
-        const shared = loved && others !== null && others[i] === '1';
-        const look = !loved ? '' : others === null ? ' fd-cmp-bar--loved' : shared ? ' fd-cmp-bar--loved fd-cmp-bar--both' : ' fd-cmp-bar--loved fd-cmp-bar--alone';
-        return (
-          <span key={i} className={'fd-cmp-bar' + look} style={{ '--tall': `${Math.max(9, v * 100)}%` }}>
-            {loved && <Heart size={11} weight="fill" aria-hidden="true" />}
-          </span>
-        );
-      })}
+      {bars.map((v, i) => (
+        <span key={i} className={hearts[i] === '1' ? 'fd-cmp-bar fd-cmp-bar--loved' : 'fd-cmp-bar'} style={{ '--tall': `${Math.max(9, v * 100)}%` }}>
+          {hearts[i] === '1' && <Heart size={11} weight="fill" aria-hidden="true" />}
+        </span>
+      ))}
     </div>
   );
 }
 
 
-// Two listens of one record laid track against track, 2026-10-24: for each
-// song a pair of thin bars, yours filled and theirs a dashed outline beside
-// it — the brief's ghost — so where you heard it differently is read across
-// one line. Miyel, on the two stacked rows a person's page drew first: "its
-// hard above and below". A song you both hearted wears one heart, over the
-// pair; a song only one of you hearted wears a faint one over that bar.
-// Only for two horizons of the same length (the same tracklist); anything
-// else is drawn as two rows, since the fifth song of one edition is not the
-// fifth of another.
+// Two listens of one record laid track against track, 2026-10-24: their
+// horizon is a ghost standing behind yours, song by song — a wide faint bar
+// for theirs, your narrower solid one in front of it — so where you heard
+// it differently is read in one shape. Miyel, on two rows stacked: "its hard
+// above and below"; and then, for the person's page, "ghosted horizon
+// underneath… with hearts ghosted". Each heart stands over the bar that
+// earned it, yours in full and theirs faint and a little to one side, so a
+// song you both hearted wears two. Only for two horizons of the same length
+// (the same tracklist); anything else is drawn as two rows, since the fifth
+// song of one edition is not the fifth of another.
 export function HorizonPair({ yours, hers, yourHearts, theirHearts, label }) {
-  const heart = yours.length > 16 ? 8 : 10;
-  const tall = v => Math.max(9, v * 100);
+  const heart = yours.length > 16 ? 9 : 11;
+  const tall = v => Math.max(6, v * 100);
   return (
     <div className="fd-cmp-pairs" aria-label={label}>
-      {yours.map((v, i) => {
-        const a = yourHearts[i] === '1';
-        const b = theirHearts[i] === '1';
-        const both = a && b;
-        return (
-          <span key={i} className="fd-cmp-pair">
-            <span className={'fd-cmp-bar fd-cmp-bar--mine' + (a && !both ? ' fd-cmp-bar--loved fd-cmp-bar--alone' : '')} style={{ '--tall': `${tall(v)}%` }}>
-              {a && !both && <Heart size={heart} weight="fill" aria-hidden="true" />}
-            </span>
-            <span className={'fd-cmp-bar fd-cmp-bar--other' + (b && !both ? ' fd-cmp-bar--loved fd-cmp-bar--alone' : '')} style={{ '--tall': `${tall(hers[i])}%` }}>
-              {b && !both && <Heart size={heart} weight="fill" aria-hidden="true" />}
-            </span>
-            {both && (
-              <span className="fd-cmp-pair-heart" style={{ bottom: `calc(${Math.max(tall(v), tall(hers[i]))}% + 5px)` }}>
-                <Heart size={heart + 1} weight="fill" aria-hidden="true" />
-              </span>
-            )}
+      {yours.map((v, i) => (
+        <span key={i} className="fd-cmp-pair">
+          <span className={'fd-cmp-bar fd-cmp-bar--other' + (theirHearts[i] === '1' ? ' fd-cmp-bar--loved' : '')} style={{ '--tall': `${tall(hers[i])}%` }}>
+            {theirHearts[i] === '1' && <Heart size={heart} weight="fill" aria-hidden="true" />}
           </span>
-        );
-      })}
+          <span className={'fd-cmp-bar fd-cmp-bar--mine' + (yourHearts[i] === '1' ? ' fd-cmp-bar--loved' : '')} style={{ '--tall': `${tall(v)}%` }}>
+            {yourHearts[i] === '1' && <Heart size={heart} weight="fill" aria-hidden="true" />}
+          </span>
+        </span>
+      ))}
     </div>
   );
 }

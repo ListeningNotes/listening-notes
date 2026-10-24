@@ -43,10 +43,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { CaretLeft, CaretRight, Heart, Printer, Shuffle, User } from '@phosphor-icons/react';
+import { CaretLeft, CaretRight, Printer, Shuffle, User } from '@phosphor-icons/react';
 import SiteNav from '../../../../components/main_components/SiteNav';
 import StarRating from '../../../../components/main_components/StarRating';
 import { HorizonPair, HorizonRow, Marks } from '../../../../components/main_components/Feed';
+import Chip from '../../../../components/main_components/Slug_Page/Chip';
 import { useBookplate } from '../../../../components/main_components/Bookplate';
 import { albumKey } from '../../../../hooks/useListeningBeacon';
 import { parseHorizon, splitNotes } from '../../../../library/entry_formatter';
@@ -62,9 +63,9 @@ const EACH_MS = 8000;
 const ALL_TOP_LEAST = 3;
 // How far a finger has to travel across the record to turn to the next one.
 const SWIPE_PX = 40;
-// A note longer than this opens folded, ten lines of it showing and Read all
+// A note longer than this opens folded, twelve lines of it showing and Read all
 // under it. Most notes are shorter and never fold.
-const FOLD_AT = 600;
+const FOLD_AT = 450;
 // The most of somebody else's note this page will draw. Their journal's
 // answer is read as text and never as markup, and this is only a ceiling on
 // a reply nobody's note would reach.
@@ -218,19 +219,23 @@ function Marked({ text, words }) {
   ));
 }
 
-// One person's note: their face and name over it, folded when it is long.
-function Note({ who, face, text, words, home = null }) {
+// One person's note, in its column: their face and name over it, their own
+// words in full, folded when long. Theirs is the ghost, as their stars and
+// their horizon are: the same words, in softer ink.
+function Note({ who, face, text, words, ghost = false, cannot = false, home = null }) {
   const [open, setOpen] = useState(false);
   const long = text.length > FOLD_AT;
   return (
-    <figure className="pn-said">
+    <figure className={'pn-said' + (ghost ? ' pn-said--ghost' : '')}>
       <figcaption className="pn-said-who"><Face src={face} small />{who}</figcaption>
-      <div className={'pn-said-text' + (long && !open ? ' pn-said-text--folded' : '')}>
-        <Marked text={text} words={words} />
-      </div>
-      {(long && !open) || home ? (
+      {text ? (
+        <div className={'pn-said-text' + (long && !open ? ' pn-said-text--folded' : '')}>
+          <Marked text={text} words={words} />
+        </div>
+      ) : !cannot && <p className="pn-said-none">Didn&rsquo;t write about it.</p>}
+      {(text && long && !open) || home ? (
         <div className="pn-said-foot">
-          {long && !open && <button type="button" className="pn-said-door" onClick={() => setOpen(true)}>Read all</button>}
+          {text && long && !open && <button type="button" className="pn-said-door" onClick={() => setOpen(true)}>Read all</button>}
           {home}
         </div>
       ) : null}
@@ -238,14 +243,14 @@ function Note({ who, face, text, words, home = null }) {
   );
 }
 
-// ── Both notes ────────────────────────────────────────────────────────────
-// Yours first, because it is your page; theirs under it with their face on
-// it and the way to the entry it lives on. Their note is read from their
-// journal when the record is on screen and kept only while this page is
-// open (AGENTS, Never). Most entries have no writing, so the plain case is
-// said plainly: who did not write, and the way to their entry. A journal
-// that cannot give a note — an older copy, a quiet entry — shows only the
-// way there, with nothing said about why.
+// ── Both notes, side by side ──────────────────────────────────────────────
+// Yours on the left, because it is your page; theirs on the right with their
+// face on it and the way to the entry it lives on (Miyel, 2026-10-24: "then
+// the notes side by side"). Their note is read from their journal when the
+// record is on screen and kept only while this page is open (AGENTS, Never).
+// Most entries have no writing, so the plain case is said plainly, and a
+// journal that cannot give a note — an older copy, a quiet entry — shows only
+// the way there, with nothing said about why.
 function Notes({ mine, theirs, myNote, theirNote, name, theirFace, home }) {
   if (mine && myNote === undefined) return null;
   if (theirs && theirNote === undefined) return null;
@@ -262,6 +267,7 @@ function Notes({ mine, theirs, myNote, theirNote, name, theirFace, home }) {
     );
   }
   const words = yours && hers ? sharedWords(yours, hers, [mine?.album, mine?.artist, ...(mine?.titles || []), name]) : [];
+  const both = Boolean(mine && theirs);
   return (
     <div className="pn-notes">
       {words.length > 0 && (
@@ -270,33 +276,44 @@ function Notes({ mine, theirs, myNote, theirNote, name, theirFace, home }) {
           {words.map((w, i) => <span key={w}>{i > 0 && (i === words.length - 1 ? ' and ' : ', ')}<mark className="pn-word">{w}</mark></span>)}.
         </p>
       )}
-      {yours && <Note who="You" face="/api/portrait" text={yours} words={words} />}
-      {hers
-        ? <Note who={name} face={theirFace} text={hers} words={words} home={way} />
-        : theirs && <p className="pn-notes-none">{!cannot && `${name} didn’t write about it.`}{way}</p>}
+      <div className={'pn-notes-pair' + (both ? '' : ' pn-notes-pair--one')}>
+        {mine && <Note who="You" face="/api/portrait" text={yours} words={words} />}
+        {theirs && <Note who={name} face={theirFace} text={hers} words={words} ghost cannot={cannot} home={way} />}
+      </div>
     </div>
   );
 }
 
-// One side of the screen: the stars as they gave them and their marks, or
-// that they have not logged it.
-function Side({ entry, theirs = false }) {
-  if (!entry) return <div className={'pn-side' + (theirs ? ' pn-side--theirs' : '')}><span className="pn-side-none">Not logged</span></div>;
-  const rating = num(entry.rating_value);
+// The marks an entry wears, as the entry page wears them: a chip each.
+function Chips({ entry }) {
+  if (!entry) return null;
+  const on = v => v === true || v === 'true';
   return (
-    <div className={'pn-side' + (theirs ? ' pn-side--theirs' : '')}>
-      {rating !== null ? <StarRating rating={rating} size={16} /> : <span className="pn-side-none">No stars</span>}
-      <Marks entry={entry} size={13} />
-    </div>
+    <>
+      {on(entry.favorite) && <Chip tone="fav">Favorite</Chip>}
+      {on(entry.masterpiece) && <Chip tone="mp">Masterpiece</Chip>}
+      {on(entry.formative) && <Chip tone="formative">Formative</Chip>}
+    </>
   );
 }
 
 // ── The record on screen ──────────────────────────────────────────────────
-function Versus({ item, name, address, songs, myNote, theirNote, titles }) {
+// Drawn as an entry is drawn (Miyel, 2026-10-24: "more like you're looking at
+// an actual entry, but one ghosted"): the cover, the title, the artist and
+// the year, the stars, the marks, the horizon and the notes — yours solid,
+// and theirs as a ghost of the same thing beside or behind it. Their stars
+// are a faint row under yours, each row with its own small face; their
+// marks are faint chips after yours; their horizon stands behind yours, song
+// by song, with their hearts faint.
+function Versus({ item, name, address, songs, myNote, theirNote, titles, turn, at, count }) {
   const { mine, theirs } = item;
   const theirHome = theirs ? carrySender(`${journalUrl(address.theirs)}/entries/${theirs.slug}`, address.me, { known: true }) : null;
+  const theirFace = `${journalUrl(address.theirs)}/api/portrait`;
   const shape = lineUp(mine, theirs);
   const face = mine || theirs || item;
+  const year = String(face.year || '').match(/[0-9]{4}/)?.[0] || '';
+  const myRating = num(mine?.rating_value);
+  const theirRating = num(theirs?.rating_value);
   // The cover goes to your own entry, as every record on this page always
   // has; to theirs, on their journal, when you have not logged it.
   const cover = face.album_art
@@ -304,47 +321,59 @@ function Versus({ item, name, address, songs, myNote, theirNote, titles }) {
     : <span className="pn-vs-none" aria-hidden="true">♪</span>;
   return (
     <div className="pn-vs">
-      {mine
-        ? <Link href={`/entries/${mine.slug}`} className="pn-vs-art" aria-label={`${face.album}, your entry`}>{cover}</Link>
-        : theirs
-          ? <a href={theirHome} className="pn-vs-art" aria-label={`${face.album}, on ${name}'s journal`}>{cover}</a>
-          : <span className="pn-vs-art">{cover}</span>}
-      <div className="pn-vs-album">{face.album}</div>
-      <div className="pn-vs-artist">{face.artist}</div>
+      <div className="pn-vs-top">
+        {count > 1
+          ? <button type="button" className="pn-turn-btn" onClick={() => turn(-1)} aria-label="The record before"><CaretLeft size={20} weight="regular" aria-hidden="true" /></button>
+          : <span />}
+        {mine
+          ? <Link href={`/entries/${mine.slug}`} className="pn-vs-art" aria-label={`${face.album}, your entry`}>{cover}</Link>
+          : theirs
+            ? <a href={theirHome} className="pn-vs-art" aria-label={`${face.album}, on ${name}'s journal`}>{cover}</a>
+            : <span className="pn-vs-art">{cover}</span>}
+        {count > 1
+          ? <button type="button" className="pn-turn-btn" onClick={() => turn(1)} aria-label="The next record"><CaretRight size={20} weight="regular" aria-hidden="true" /></button>
+          : <span />}
+      </div>
+      {count > 1 && <div className="pn-turn-at">{at + 1} of {count}</div>}
+      <h2 className="pn-vs-album">{face.album}</h2>
+      <div className="pn-vs-artist">{face.artist}{year ? ` · ${year}` : ''}</div>
 
-      <div className="pn-sides">
-        <Side entry={mine} />
-        <Side entry={theirs} theirs />
+      {(myRating !== null || theirRating !== null) && (
+        <div className="pn-stars">
+          {myRating !== null && (
+            <div className="pn-star-row"><Face src="/api/portrait" small /><StarRating rating={myRating} size={22} /></div>
+          )}
+          {theirRating !== null && (
+            <div className="pn-star-row pn-ghost" aria-label={`${name}: ${stars(theirRating)}`}><Face src={theirFace} small /><StarRating rating={theirRating} size={22} /></div>
+          )}
+        </div>
+      )}
+      <div className="pn-chips">
+        <Chips entry={mine} />
+        <span className="pn-ghost pn-chips-theirs"><Chips entry={theirs} /></span>
       </div>
 
       <p className="pn-vs-line">{oneLine({ ...item, shape, songs, name })}</p>
 
-      {/* Track against track when the two tracklists line up, with a key
-          under it; two labelled rows when they do not. */}
+      {/* Theirs behind yours, song by song, when the two tracklists line up,
+          with a key under it; two rows, yours over theirs, when they do not. */}
       {shape.comparable && (
         <div className="pn-rows">
           <HorizonPair yours={shape.yours} hers={shape.hers} yourHearts={shape.yourHearts} theirHearts={shape.theirHearts} label={`How you and ${name} heard it, track by track`} />
           <div className="pn-key" aria-hidden="true">
             <span><i className="pn-key-you" />You</span>
             <span><i className="pn-key-them" />{name}</span>
-            {shape.both.length > 0 && <span><Heart size={10} weight="fill" />Both</span>}
           </div>
         </div>
       )}
       {!shape.comparable && (shape.yours.length > 0 || shape.hers.length > 0) && (
         <div className="pn-rows">
-          {shape.yours.length > 0 && (
-            <>
-              <span className="pn-row-who">You</span>
-              <HorizonRow bars={shape.yours} hearts={shape.yourHearts} others={shape.comparable ? shape.theirHearts : null} className="fd-cmp-bars pn-bars pn-bars--you" label="How you heard it, track by track" />
-            </>
-          )}
-          {shape.hers.length > 0 && (
-            <>
-              <span className="pn-row-who">{name}</span>
-              <HorizonRow bars={shape.hers} hearts={shape.theirHearts} others={shape.comparable ? shape.yourHearts : null} className="fd-cmp-bars pn-bars pn-bars--theirs" label={`How ${name} heard it, track by track`} />
-            </>
-          )}
+          <HorizonRow bars={shape.yours} hearts={shape.yourHearts} className="fd-cmp-bars pn-bars pn-bars--you" label="How you heard it, track by track" />
+          <HorizonRow bars={shape.hers} hearts={shape.theirHearts} className="fd-cmp-bars pn-bars pn-bars--theirs" label={`How ${name} heard it, track by track`} />
+          <div className="pn-key" aria-hidden="true">
+            {shape.yours.length > 0 && <span><i className="pn-key-you" />You</span>}
+            {shape.hers.length > 0 && <span><i className="pn-key-them" />{name}</span>}
+          </div>
         </div>
       )}
 
@@ -354,7 +383,7 @@ function Versus({ item, name, address, songs, myNote, theirNote, titles }) {
         myNote={myNote}
         theirNote={theirNote}
         name={name}
-        theirFace={`${journalUrl(address.theirs)}/api/portrait`}
+        theirFace={theirFace}
         home={theirHome}
       />
     </div>
@@ -688,18 +717,10 @@ export default function PersonPage({ layered = false }) {
                       myNote={item.mine ? full[item.mine.slug]?.note : null}
                       theirNote={item.theirs ? (theirNotes[item.theirs.slug] === false ? false : theirNotes[item.theirs.slug]?.note) : null}
                       address={{ theirs: person.address, me }}
+                      turn={turn}
+                      at={Math.min(at, deck.length - 1)}
+                      count={deck.length}
                     />
-                    {deck.length > 1 && (
-                      <div className="pn-turn">
-                        <button type="button" className="pn-turn-btn" onClick={() => turn(-1)} aria-label="The record before">
-                          <CaretLeft size={18} weight="regular" aria-hidden="true" />
-                        </button>
-                        <span className="pn-turn-at">{Math.min(at, deck.length - 1) + 1} of {deck.length}</span>
-                        <button type="button" className="pn-turn-btn" onClick={() => turn(1)} aria-label="The next record">
-                          <CaretRight size={18} weight="regular" aria-hidden="true" />
-                        </button>
-                      </div>
-                    )}
                   </section>
                 )}
 
