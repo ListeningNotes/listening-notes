@@ -467,7 +467,9 @@ const COVERS_AT_A_TIME = 50;
 //             for them, and no ?q= or ?mark= in the address narrows them
 //   tile      draws one record (the default is the journal's own AlbumTile);
 //             whatever it draws carries data-tile-key, which the glides read
-//   lead      put first on the line — People's scope
+//   tail      on the line after the search, where home has its filters —
+//             People's scope (Miyel, 2026-10-23: "to the right after search
+//             similar to main screen")
 //   filters   false leaves the Filters button and its sheet off
 //   viewKey   where this wall's view is remembered, apart from home's
 //   empty     what stands where there are no records at all
@@ -475,7 +477,7 @@ const COVERS_AT_A_TIME = 50;
 //   before    over the wall, under the line — People's faces from a search
 function Journal({
   entries: given, loading: givenLoading, scroller, foot = null,
-  records = null, tile = null, lead = null, filters = true, viewKey = VIEW_KEY,
+  records = null, tile = null, tail = null, filters = true, viewKey = VIEW_KEY,
   empty = null, seek = null, before = null,
 }) {
   const [ownEntries, setOwnEntries] = useState([]);
@@ -1320,7 +1322,6 @@ function Journal({
             clear, and before the bar so the bar stays above it. */}
         {viewsOpen && <div className="arc-views-scrim" onClick={closeViews} />}
         <div className={'arc-bar' + (searchOpen ? ' arc-bar--searching' : '')}>
-          {lead}
           {/* The order the wall is in, which is also how to change it — the
               thing that tells you where you are is the thing that moves you.
               It drops from the line, on a phone too: the floor is the Listen
@@ -1413,6 +1414,7 @@ function Journal({
             </button>
           </span>
 
+          {tail}
           {filters && (
           <button
             type="button"

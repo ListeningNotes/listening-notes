@@ -1332,8 +1332,8 @@ forgotten it. (Off by default and a press, 2026-10-07, is what this replaced.)
 records · Everyone's (built, off until the Board is big enough: her call) —
 is the line's left end, remembered as the view is; Who you've added, under
 its rule, opens the address book as a drawer. The wall is home's, so views
-compose with the scope; covers wear their loggers' faces and a gold dot on a
-record you have, in every scope; the search is the Board's (her calls).
+compose with the scope; covers wear their loggers' faces, yours first when
+you have it too (not a gold dot); the search is the Board's (her calls).
 
 **A visitor's People holds the Board's public parts, 2026-10-07/08.** Miyel:
 "strangers and visitors can see this page." No Friends, no switch, no checks,

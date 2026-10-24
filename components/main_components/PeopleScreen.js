@@ -18,18 +18,20 @@
 // (TopBand, in Friends.js, which the address book draws too). A face here
 // opens their journal.
 //
-// The shelf line is the wall's own (Journal.js), with a scope at its left —
-// whose records: Your people's, On your records, Everyone's — and the views,
-// the search and the count after it, exactly as on home. The scope and the
+// The shelf line is the wall's own (Journal.js): the views at its left and
+// the search, exactly as on home, and after the search, where home has its
+// filters, the scope — whose records: Your people's, On your records,
+// Everyone's (Miyel, 2026-10-23, both placings). The scope and the
 // view compose. Who you've added sits under a rule at the foot of the scope's
 // menu: the address book is a drawer you open to add or remove somebody, not
 // a place you go to look at your friends.
 //
 // The wall is covers, with the faces of whoever logged each one in the
-// corner and a gold dot on a record you have logged too (Miyel: in every
-// scope, 2026-10-23). A cover opens the entry on the journal of whoever
-// logged it last. Nothing is written on anybody's record here and nothing
-// opens a thread.
+// corner — the keeper's own first, when it is on their wall too. That was a
+// gold dot for an afternoon, and Miyel asked why a record showed only her
+// friend and "not me and" them (2026-10-23): one mark, the face, says both.
+// A cover opens the entry on the journal of whoever logged it last. Nothing
+// is written on anybody's record here and nothing opens a thread.
 //
 // ── Where each wall comes from ────────────────────────────────────────────
 // Nothing new crosses between copies. Your people's is each journal in the
@@ -94,7 +96,8 @@ function storeScope(value) {
 const EACH_MS = 8000;
 // How long the search waits for the typing to stop before asking the Board.
 const ASK_AFTER_MS = 350;
-// The faces in a cover's corner: the newest few of whoever logged it.
+// The faces in a cover's corner: the newest few of whoever else logged it,
+// after the keeper's own.
 const FACES_MOST = 3;
 // What came back from a send goes to the inbox (below), the newest this many.
 const CAME_BACK_MOST = 30;
@@ -173,7 +176,7 @@ function fromBoard(record, mine) {
 // `scroller` is the pane that scrolls; `pullMark` is the mark the pull down
 // draws in the gap it opens (PullDown.js).
 export default function PeopleScreen({ scroller, onScreen = true, entries = [], pullMark = null }) {
-  const { keeper_name, site_address } = useBookplate();
+  const { keeper_name, site_address, portrait_url: myFace } = useBookplate();
   const me = useMemo(() => ({ name: keeper_name, address: site_address }), [keeper_name, site_address]);
 
   // ── The book, and what each journal in it has logged ────────────────────
@@ -231,7 +234,7 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
   // while this screen is the one on show.
   const { friends: beacons } = useFriendsBeacons(onScreen);
 
-  // ── The keeper's own records, for the gold dot ──────────────────────────
+  // ── The keeper's own records, for their face on a cover ─────────────────
   const mine = useMemo(() => {
     const keys = new Set();
     const byKey = new Map();
@@ -437,10 +440,11 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
   }, [term, people, found]);
 
   // ── A record on the wall ────────────────────────────────────────────────
-  // The cover, the faces of whoever logged it in its corner, newest first,
-  // and the gold dot when it is on the keeper's wall too. It opens the entry
-  // on the journal of whoever logged it last, carrying who this copy
-  // belongs to (carrySender), and that it is somebody already in the book.
+  // The cover, and in its corner the keeper's own face when it is on their
+  // wall too, then the faces of whoever else logged it, newest first. It
+  // opens the entry on the journal of whoever logged it last, carrying who
+  // this copy belongs to (carrySender), and that it is somebody already in
+  // the book.
   const there = useCallback((address, path = '') => carrySender(
     `${journalUrl(address)}${path}`, me, { known: inBook.has(tidyJournal(address)) },
   ), [me, inBook]);
@@ -448,10 +452,9 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
     const face = album.face;
     const last = album.loggers[0];
     const folded = album.listens.length === 0;
-    const names = album.loggers.map(l => l.name).filter(Boolean);
+    const names = [...(album.mine ? ['you'] : []), ...album.loggers.map(l => l.name).filter(Boolean)];
     const said = face.album + (face.artist ? ` by ${face.artist}` : '')
-      + (names.length ? `, logged by ${names.join(', ')}` : '')
-      + (album.mine ? ', on your wall too' : '');
+      + (names.length ? `, logged by ${names.join(', ')}` : '');
     return (
       <a
         href={there(last.address, `/entries/${encodeURIComponent(last.slug)}`)}
@@ -477,8 +480,13 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
             </div>
           </div>
         </div>
-        {album.mine && <span className="ps-mine" aria-hidden="true" />}
         <span className="ps-who" aria-hidden="true">
+          {album.mine && (
+            <span className="ps-who-face">
+              <User size={10} weight="regular" />
+              {myFace && <img src={myFace} alt="" loading="lazy" onError={e => { e.currentTarget.style.display = 'none'; }} />}
+            </span>
+          )}
           {album.loggers.slice(0, FACES_MOST).map(l => (
             <span key={l.address} className="ps-who-face">
               <User size={10} weight="regular" />
@@ -493,12 +501,12 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
         </span>
       </a>
     );
-  }, [there]);
+  }, [there, myFace]);
 
-  // ── The line's left end: whose records, and the drawer ──────────────────
+  // ── Whose records, and the drawer, after the search ─────────────────────
   const scopes = offered();
   const current = scopes.find(s => s.value === scope) || scopes[0];
-  const lead = (
+  const tail = (
     <span className="arc-view ps-scope">
       <button
         type="button"
@@ -615,7 +623,7 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
           loading={loading}
           scroller={scroller}
           tile={tile}
-          lead={lead}
+          tail={tail}
           filters={false}
           viewKey={VIEW_KEY}
           empty={empty}

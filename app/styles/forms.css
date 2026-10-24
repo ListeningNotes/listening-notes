@@ -2129,11 +2129,17 @@ textarea.st-field { resize: vertical; min-height: 96px; }
    line (PeopleScreen.js). */
 .ps { display: flex; flex-direction: column; }
 .ps > .fr-band { margin: 0 24px; }
-/* Whose records: the line's first word, in ink, its caret beside it. */
+/* Whose records: after the search, where home's line has its filters
+   (Miyel, 2026-10-23), in ink, its caret beside it. Its menu hangs from the
+   line's right end, as the filters do. */
 .ps-scope-now { gap: 5px; }
+.arc-views.ps-scopes { left: auto; right: 10px; }
+/* With the search open the view's name folds to its arrows, so the field,
+   the scope and the arrows keep to one row on a phone. */
+.ps .arc-bar--searching .arc-view:not(.ps-scope) .arc-view-now span { display: none; }
 /* A record on People's wall wears, over the cover, the faces of whoever
-   logged it in the corner — newest first, overlapping — and a gold dot when
-   it is on the keeper's wall too: her mockup's marks, measure for measure. */
+   logged it in the corner, overlapping — the keeper's own first when it is
+   on their wall too (it was a gold dot for an afternoon, 2026-10-23). */
 .ps-who {
   position: absolute; right: 5px; bottom: 5px; z-index: 1;
   display: flex;
@@ -2151,13 +2157,6 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 .ps-who-face img {
   position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
   -webkit-touch-callout: none; user-select: none;
-}
-.ps-mine {
-  position: absolute; left: 6px; top: 6px; z-index: 1;
-  width: 8px; height: 8px; border-radius: 50%;
-  background: var(--gold);
-  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.85);
-  pointer-events: none;
 }
 /* A search's faces, over the wall: the band's faces, in a row that scrolls
    sideways once it overflows. */
