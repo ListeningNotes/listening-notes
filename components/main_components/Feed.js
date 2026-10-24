@@ -291,6 +291,45 @@ export function HorizonRow({ bars, hearts, others = null, className, label }) {
   );
 }
 
+
+// Two listens of one record laid track against track, 2026-10-24: for each
+// song a pair of thin bars, yours filled and theirs a dashed outline beside
+// it — the brief's ghost — so where you heard it differently is read across
+// one line. Miyel, on the two stacked rows a person's page drew first: "its
+// hard above and below". A song you both hearted wears one heart, over the
+// pair; a song only one of you hearted wears a faint one over that bar.
+// Only for two horizons of the same length (the same tracklist); anything
+// else is drawn as two rows, since the fifth song of one edition is not the
+// fifth of another.
+export function HorizonPair({ yours, hers, yourHearts, theirHearts, label }) {
+  const heart = yours.length > 16 ? 8 : 10;
+  const tall = v => Math.max(9, v * 100);
+  return (
+    <div className="fd-cmp-pairs" aria-label={label}>
+      {yours.map((v, i) => {
+        const a = yourHearts[i] === '1';
+        const b = theirHearts[i] === '1';
+        const both = a && b;
+        return (
+          <span key={i} className="fd-cmp-pair">
+            <span className={'fd-cmp-bar fd-cmp-bar--mine' + (a && !both ? ' fd-cmp-bar--loved fd-cmp-bar--alone' : '')} style={{ '--tall': `${tall(v)}%` }}>
+              {a && !both && <Heart size={heart} weight="fill" aria-hidden="true" />}
+            </span>
+            <span className={'fd-cmp-bar fd-cmp-bar--other' + (b && !both ? ' fd-cmp-bar--loved fd-cmp-bar--alone' : '')} style={{ '--tall': `${tall(hers[i])}%` }}>
+              {b && !both && <Heart size={heart} weight="fill" aria-hidden="true" />}
+            </span>
+            {both && (
+              <span className="fd-cmp-pair-heart" style={{ bottom: `calc(${Math.max(tall(v), tall(hers[i]))}% + 5px)` }}>
+                <Heart size={heart + 1} weight="fill" aria-hidden="true" />
+              </span>
+            )}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
 //
 // Exported for the inbox, 2026-09-29, where a message or a record that came
 // back offers the same comparison (the messages brief: the response this is

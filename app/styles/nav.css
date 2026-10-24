@@ -2076,6 +2076,25 @@ span.hn-bar-word { cursor: default; }
 /* Theirs is the listen you came to look at, so it is the lit one. Yours is
    the line you are measuring it against and sits back. */
 .fd-cmp-bars--theirs .fd-cmp-bar { background: var(--ink); opacity: 0.92; }
+/* Two listens track against track (HorizonPair, Feed.js): a pair of thin
+   bars per song, yours filled, theirs a dashed outline beside it. The
+   heart two of you share sits over the pair, rising with the bars. */
+.fd-cmp-pairs {
+  display: flex; align-items: flex-end; gap: 5px;
+  height: 64px; width: 100%;
+  padding-top: 14px; box-sizing: content-box;
+}
+.fd-cmp-pair { flex: 1 1 0; min-width: 0; height: 100%; position: relative; display: flex; align-items: flex-end; gap: 2px; }
+.fd-cmp-bar--mine { background: var(--ink); opacity: 0.88; }
+.fd-cmp-bar--other { background: transparent; border: 1px dashed var(--ink-faint); box-sizing: border-box; }
+.fd-cmp-bar--alone svg { color: var(--ink-faint); }
+.fd-cmp-pair-heart {
+  position: absolute; left: 50%; transform: translateX(-50%);
+  display: inline-flex; line-height: 1; color: var(--fav); pointer-events: none;
+  animation: fd-cmp-heart 0.4s ease 0.9s both;
+}
+@keyframes fd-cmp-heart { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .fd-cmp-pair-heart { animation: none; } }
 .fd-cmp-bars--yours .fd-cmp-bar { background: var(--ink-faint); opacity: 0.85; }
 /* The distance, on the rule between the two listens: the shape the beacon's
    slot already uses, a hairline with one thing sitting on it. */

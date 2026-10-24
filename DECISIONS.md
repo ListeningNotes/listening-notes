@@ -1344,6 +1344,13 @@ rule was "about people writing on other people's journals... nobody's words
 about albums or comments, not this." A line from a keeper's own public entry,
 linked to it, may stand on the Board; a visitor's words never do.
 
+**A friend's note may sit beside yours on your page about them, 2026-10-24.**
+Her compare brief: reading what they actually said "is the entire point". It
+is their writing shown in full outside their journal, which the Board's quote
+is not, so it is held to three things: one entry at a time through
+`/api/public/notes/[slug]`, never a list; read live and stored nowhere; their
+face on it and their entry one press away. A quiet entry gives nothing.
+
 **The directory keeps each listed journal's records, 2026-10-08.** Titles,
 stars and marks, read from the public feed by the same job — never the
 writing. A quoted line is read from the keeper's own journal by the viewing

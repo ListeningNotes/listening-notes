@@ -2305,10 +2305,51 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 .pn-rows { width: 100%; margin-top: 14px; display: flex; flex-direction: column; gap: 4px; }
 .pn-row-who { font-family: var(--font-label); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); margin-top: 6px; }
 .pn-bars { height: 44px; }
-.pn-bars .fd-cmp-bar { animation-delay: 0.05s; }
+/* What the bars are, under them: a swatch of each, and the heart. */
+.pn-key { display: flex; justify-content: center; align-items: center; gap: 16px; margin-top: 10px; font-family: var(--font-label); font-size: 10px; letter-spacing: 0.06em; color: var(--ink-faint); }
+.pn-key span { display: inline-flex; align-items: center; gap: 6px; }
+.pn-key i { display: inline-block; width: 8px; height: 12px; border-radius: 2px 2px 0 0; }
+.pn-key-you { background: var(--ink); opacity: 0.88; }
+.pn-key-them { border: 1px dashed var(--ink-faint); box-sizing: border-box; }
+.pn-key svg { color: var(--fav); }
+.pn-bars .fd-cmp-bar, .pn-rows .fd-cmp-bar { animation-delay: 0.05s; }
 .pn-bars--you .fd-cmp-bar { background: var(--ink); opacity: 0.88; }
 .pn-bars--theirs .fd-cmp-bar { background: transparent; border: 1px dashed var(--ink-faint); box-sizing: border-box; }
-.fd-cmp-bar--alone svg { color: var(--ink-faint); }
+
+/* ── Both notes ── under a hairline, yours first. Each wears its author's
+   face, small, and its own words in full; a long one opens folded, its last
+   lines fading, with Read all under it. */
+.pn-notes { width: 100%; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 18px; }
+.pn-face--small { width: 22px; height: 22px; }
+.pn-said { margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.pn-said-who {
+  display: flex; align-items: center; gap: 8px;
+  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint);
+}
+.pn-said-text { font-size: 15px; line-height: 1.6; color: var(--ink); white-space: pre-line; overflow-wrap: anywhere; }
+.pn-said-text p { margin: 0 0 0.7em; }
+.pn-said-text p:last-child { margin-bottom: 0; }
+.pn-said-text--folded {
+  max-height: calc(1.6em * 10); overflow: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, #000 70%, transparent);
+  mask-image: linear-gradient(to bottom, #000 70%, transparent);
+}
+.pn-said-foot { display: flex; gap: 18px; align-items: baseline; }
+.pn-said-door {
+  border: 0; background: none; padding: 0; cursor: pointer; text-decoration: none;
+  font-family: var(--font-label); font-size: 11px; letter-spacing: 0.04em; color: var(--ink-soft);
+}
+.pn-said-door:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+.pn-notes-none { margin: 0; display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; font-size: 14px; line-height: 1.5; color: var(--ink-soft); }
+/* A word you both used: the Favorite red, softly, the way a heart you both
+   gave a song is red — wherever it stands in either note, and in the line
+   that names it. */
+.pn-words { margin: 0; text-align: center; font-size: 15px; line-height: 1.5; color: var(--ink); }
+.pn-word {
+  color: inherit; font: inherit; border-radius: 3px; padding: 0 2px; margin: 0 -2px;
+  background: color-mix(in srgb, var(--fav) 16%, transparent);
+}
+.pn-words .pn-word { font-weight: 700; }
 
 /* ── Turning ── */
 .pn-turn { display: flex; align-items: center; justify-content: space-between; margin-top: 14px; }

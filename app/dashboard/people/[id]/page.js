@@ -43,13 +43,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { CaretLeft, CaretRight, Printer, Shuffle, User } from '@phosphor-icons/react';
+import { CaretLeft, CaretRight, Heart, Printer, Shuffle, User } from '@phosphor-icons/react';
 import SiteNav from '../../../../components/main_components/SiteNav';
 import StarRating from '../../../../components/main_components/StarRating';
-import { HorizonRow, Marks } from '../../../../components/main_components/Feed';
+import { HorizonPair, HorizonRow, Marks } from '../../../../components/main_components/Feed';
 import { useBookplate } from '../../../../components/main_components/Bookplate';
 import { albumKey } from '../../../../hooks/useListeningBeacon';
-import { parseHorizon } from '../../../../library/entry_formatter';
+import { parseHorizon, splitNotes } from '../../../../library/entry_formatter';
 import { carrySender, journalUrl, tidyJournal } from '../../../../library/return_address';
 import { arrivingBack } from '../../../../library/handoff';
 
@@ -62,6 +62,16 @@ const EACH_MS = 8000;
 const ALL_TOP_LEAST = 3;
 // How far a finger has to travel across the record to turn to the next one.
 const SWIPE_PX = 40;
+// A note longer than this opens folded, ten lines of it showing and Read all
+// under it. Most notes are shorter and never fold.
+const FOLD_AT = 600;
+// The most of somebody else's note this page will draw. Their journal's
+// answer is read as text and never as markup, and this is only a ceiling on
+// a reply nobody's note would reach.
+const NOTE_MOST = 20000;
+// The words you both used: at most three, each at least four letters.
+const WORDS_MOST = 3;
+const WORD_LEAST = 4;
 
 const num = v => (v === null || v === undefined || v === '' ? null : Number(v));
 const newestFirst = rows => [...rows].sort((a, b) => new Date(b.posted_at) - new Date(a.posted_at));
@@ -81,10 +91,10 @@ function latestPerKey(entries) {
   return latest;
 }
 
-function Face({ src }) {
+function Face({ src, small = false }) {
   return (
-    <span className="pn-face" aria-hidden="true">
-      <User size={26} weight="regular" />
+    <span className={'pn-face' + (small ? ' pn-face--small' : '')} aria-hidden="true">
+      <User size={small ? 12 : 26} weight="regular" />
       <img src={src} alt="" onError={e => { e.currentTarget.style.display = 'none'; }} />
     </span>
   );
@@ -152,6 +162,122 @@ function oneLine({ mine, theirs, from, shape, songs, name }) {
   return lead || <>You&rsquo;ve both logged it.</>;
 }
 
+// ── The words you both used ───────────────────────────────────────────────
+// Her idea, 2026-10-23: "You both used the word ____ to describe this." The
+// two notes are folded to their words; the ones in both, minus the words
+// everybody uses and the record's own names — its title, its artist, its
+// songs and your two names would match every time and say nothing — are
+// what you both reached for. The longest first, since a long shared word is
+// rarer than a short one, then in the order they come in your note.
+const PLAIN_WORDS = new Set(`
+  about above after again album albums almost also always another anything around away back
+  because been before being best better between both bring came come comes could didn does
+  doing done down each even ever every everything feel feels felt first from gets give going
+  gonna good great have having here into just keep kind know last like little listen listened
+  listening long look lots made make many maybe more most much music must never next nothing
+  only other over part pretty quite really record records right said same says should since
+  some something song songs sound sounds still such sure take than that their them then there
+  these they thing things think this those though thought through time track tracks very want
+  well went were what when where which while whole will with would year years your actually
+  definitely probably especially without yeah also
+`.split(/\s+/).filter(Boolean));
+
+const fold = text => String(text || '').toLowerCase().replace(/[‘’]/g, "'");
+function wordsOf(text) {
+  return (fold(text).match(/\p{L}[\p{L}']*/gu) || [])
+    .map(w => w.replace(/'s$/, '').replace(/'+$/, ''))
+    .filter(w => w.length >= WORD_LEAST && !w.includes("'") && !PLAIN_WORDS.has(w));
+}
+
+// A note as it reads, not as it was typed: a [[link]] is its words, and a
+// written link is its text.
+const plainNote = text => String(text || '')
+  .replace(/\[\[([^\]|]*)\|([^\]]*)\]\]/g, '$2')
+  .replace(/\[\[([^\]]*)\]\]/g, '$1')
+  .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+  .trim();
+
+function sharedWords(yours, theirs, names) {
+  const skip = new Set(names.flatMap(n => wordsOf(n)));
+  const order = [...new Set(wordsOf(yours))].filter(w => !skip.has(w));
+  const theirSet = new Set(wordsOf(theirs));
+  const both = order.filter(w => theirSet.has(w));
+  const kept = new Set([...both].sort((a, b) => b.length - a.length).slice(0, WORDS_MOST));
+  return both.filter(w => kept.has(w));
+}
+
+// The note's words, the shared ones marked wherever they stand.
+function Marked({ text, words }) {
+  const find = words.length
+    ? new RegExp(`(?<![\\p{L}\\p{N}])(${words.join('|')})(?![\\p{L}\\p{N}])`, 'giu')
+    : null;
+  return text.split(/\n\s*\n/).map((para, i) => (
+    <p key={i}>
+      {find ? para.split(find).map((piece, j) => (j % 2 ? <mark key={j} className="pn-word">{piece}</mark> : piece)) : para}
+    </p>
+  ));
+}
+
+// One person's note: their face and name over it, folded when it is long.
+function Note({ who, face, text, words, home = null }) {
+  const [open, setOpen] = useState(false);
+  const long = text.length > FOLD_AT;
+  return (
+    <figure className="pn-said">
+      <figcaption className="pn-said-who"><Face src={face} small />{who}</figcaption>
+      <div className={'pn-said-text' + (long && !open ? ' pn-said-text--folded' : '')}>
+        <Marked text={text} words={words} />
+      </div>
+      {(long && !open) || home ? (
+        <div className="pn-said-foot">
+          {long && !open && <button type="button" className="pn-said-door" onClick={() => setOpen(true)}>Read all</button>}
+          {home}
+        </div>
+      ) : null}
+    </figure>
+  );
+}
+
+// ── Both notes ────────────────────────────────────────────────────────────
+// Yours first, because it is your page; theirs under it with their face on
+// it and the way to the entry it lives on. Their note is read from their
+// journal when the record is on screen and kept only while this page is
+// open (AGENTS, Never). Most entries have no writing, so the plain case is
+// said plainly: who did not write, and the way to their entry. A journal
+// that cannot give a note — an older copy, a quiet entry — shows only the
+// way there, with nothing said about why.
+function Notes({ mine, theirs, myNote, theirNote, name, theirFace, home }) {
+  if (mine && myNote === undefined) return null;
+  if (theirs && theirNote === undefined) return null;
+  const yours = mine ? plainNote(myNote) : '';
+  const hers = typeof theirNote === 'string' ? plainNote(theirNote) : '';
+  const cannot = theirs && theirNote === false;
+  if (!yours && !theirs) return null;
+  const way = theirs ? <a href={home} className="pn-said-door">On their journal</a> : null;
+  if (!yours && !hers) {
+    return (
+      <div className="pn-notes">
+        <p className="pn-notes-none">{!cannot && (mine ? 'Neither of you wrote about it.' : `${name} didn’t write about it.`)}{way}</p>
+      </div>
+    );
+  }
+  const words = yours && hers ? sharedWords(yours, hers, [mine?.album, mine?.artist, ...(mine?.titles || []), name]) : [];
+  return (
+    <div className="pn-notes">
+      {words.length > 0 && (
+        <p className="pn-words">
+          You both used the {words.length === 1 ? 'word' : 'words'}{' '}
+          {words.map((w, i) => <span key={w}>{i > 0 && (i === words.length - 1 ? ' and ' : ', ')}<mark className="pn-word">{w}</mark></span>)}.
+        </p>
+      )}
+      {yours && <Note who="You" face="/api/portrait" text={yours} words={words} />}
+      {hers
+        ? <Note who={name} face={theirFace} text={hers} words={words} home={way} />
+        : theirs && <p className="pn-notes-none">{!cannot && `${name} didn’t write about it.`}{way}</p>}
+    </div>
+  );
+}
+
 // One side of the screen: the stars as they gave them and their marks, or
 // that they have not logged it.
 function Side({ entry, theirs = false }) {
@@ -166,8 +292,9 @@ function Side({ entry, theirs = false }) {
 }
 
 // ── The record on screen ──────────────────────────────────────────────────
-function Versus({ item, name, address, songs }) {
+function Versus({ item, name, address, songs, myNote, theirNote, titles }) {
   const { mine, theirs } = item;
+  const theirHome = theirs ? carrySender(`${journalUrl(address.theirs)}/entries/${theirs.slug}`, address.me, { known: true }) : null;
   const shape = lineUp(mine, theirs);
   const face = mine || theirs || item;
   // The cover goes to your own entry, as every record on this page always
@@ -180,7 +307,7 @@ function Versus({ item, name, address, songs }) {
       {mine
         ? <Link href={`/entries/${mine.slug}`} className="pn-vs-art" aria-label={`${face.album}, your entry`}>{cover}</Link>
         : theirs
-          ? <a href={carrySender(`${journalUrl(address.theirs)}/entries/${theirs.slug}`, address.me, { known: true })} className="pn-vs-art" aria-label={`${face.album}, on ${name}'s journal`}>{cover}</a>
+          ? <a href={theirHome} className="pn-vs-art" aria-label={`${face.album}, on ${name}'s journal`}>{cover}</a>
           : <span className="pn-vs-art">{cover}</span>}
       <div className="pn-vs-album">{face.album}</div>
       <div className="pn-vs-artist">{face.artist}</div>
@@ -192,7 +319,19 @@ function Versus({ item, name, address, songs }) {
 
       <p className="pn-vs-line">{oneLine({ ...item, shape, songs, name })}</p>
 
-      {(shape.yours.length > 0 || shape.hers.length > 0) && (
+      {/* Track against track when the two tracklists line up, with a key
+          under it; two labelled rows when they do not. */}
+      {shape.comparable && (
+        <div className="pn-rows">
+          <HorizonPair yours={shape.yours} hers={shape.hers} yourHearts={shape.yourHearts} theirHearts={shape.theirHearts} label={`How you and ${name} heard it, track by track`} />
+          <div className="pn-key" aria-hidden="true">
+            <span><i className="pn-key-you" />You</span>
+            <span><i className="pn-key-them" />{name}</span>
+            {shape.both.length > 0 && <span><Heart size={10} weight="fill" />Both</span>}
+          </div>
+        </div>
+      )}
+      {!shape.comparable && (shape.yours.length > 0 || shape.hers.length > 0) && (
         <div className="pn-rows">
           {shape.yours.length > 0 && (
             <>
@@ -208,6 +347,16 @@ function Versus({ item, name, address, songs }) {
           )}
         </div>
       )}
+
+      <Notes
+        mine={mine && { album: mine.album, artist: mine.artist, titles }}
+        theirs={theirs}
+        myNote={myNote}
+        theirNote={theirNote}
+        name={name}
+        theirFace={`${journalUrl(address.theirs)}/api/portrait`}
+        home={theirHome}
+      />
     </div>
   );
 }
@@ -245,11 +394,16 @@ export default function PersonPage({ layered = false }) {
   const [out, setOut] = useState([]);
   const [view, setView] = useState(null);
   const [at, setAt] = useState(0);
-  // The titles of the songs on each of your records, read from your own
-  // entry the first time the record is on screen — the list carries the
-  // hearts but not the names. slug → [title, …].
-  const [titles, setTitles] = useState({});
+  // Your own entry for each record, read the first time the record is on
+  // screen: the names of its songs (the list carries the hearts but not the
+  // titles) and your note. slug → { titles, note }.
+  const [full, setFull] = useState({});
   const asked = useRef(new Set());
+  // Their note on each record, read from their journal the first time the
+  // record is on screen and held only while this page is open: slug →
+  // { note }, or false when their journal could not give one.
+  const [theirNotes, setTheirNotes] = useState({});
+  const heard = useRef(new Set());
 
   useEffect(() => {
     fetch('/api/auth/check').then(r => r.json()).then(d => setAuthed(!!d.authed)).catch(() => {}).finally(() => setChecking(false));
@@ -371,7 +525,7 @@ export default function PersonPage({ layered = false }) {
   const turn = step => setAt(i => (deck.length ? (Math.min(i, deck.length - 1) + step + deck.length) % deck.length : 0));
   const choose = key => { setView(key); setAt(0); };
 
-  // The song names for the record on screen, once.
+  // Your entry for the record on screen, once.
   const slug = item?.mine?.slug;
   useEffect(() => {
     if (!slug || asked.current.has(slug)) return;
@@ -380,13 +534,27 @@ export default function PersonPage({ layered = false }) {
       .then(r => (r.ok ? r.json() : null))
       .then(d => {
         const tracks = Array.isArray(d?.entry?.tracks) ? d.entry.tracks : [];
-        setTitles(was => ({ ...was, [slug]: tracks.map(t => String(t?.title || '').trim()) }));
+        setFull(was => ({ ...was, [slug]: { titles: tracks.map(t => String(t?.title || '').trim()), note: splitNotes(d?.entry?.notes).albumNotes } }));
       })
-      .catch(() => {});
+      .catch(() => setFull(was => ({ ...was, [slug]: { titles: [], note: '' } })));
   }, [slug]);
+  // Their note for the record on screen, once, from their journal.
+  const theirSlug = item?.theirs?.slug;
+  const theirJournal = person?.address;
+  useEffect(() => {
+    if (!theirSlug || !theirJournal || heard.current.has(theirSlug)) return;
+    heard.current.add(theirSlug);
+    fetch(`${journalUrl(theirJournal)}/api/public/notes/${encodeURIComponent(theirSlug)}`, { signal: AbortSignal.timeout(EACH_MS), cache: 'no-store' })
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => {
+        const note = typeof d?.note === 'string' ? d.note.slice(0, NOTE_MOST) : null;
+        setTheirNotes(was => ({ ...was, [theirSlug]: note === null ? false : { note } }));
+      })
+      .catch(() => setTheirNotes(was => ({ ...was, [theirSlug]: false })));
+  }, [theirSlug, theirJournal]);
   const songsOf = shown => {
     if (!shown?.mine || !shown?.theirs) return null;
-    const list = titles[shown.mine.slug];
+    const list = full[shown.mine.slug]?.titles;
     const shape = lineUp(shown.mine, shown.theirs);
     if (!list || list.length !== shape.yours.length) return null;
     const named = shape.both.map(i => list[i]).filter(Boolean);
@@ -516,6 +684,9 @@ export default function PersonPage({ layered = false }) {
                       item={item}
                       name={name}
                       songs={songs}
+                      titles={item.mine ? full[item.mine.slug]?.titles : null}
+                      myNote={item.mine ? full[item.mine.slug]?.note : null}
+                      theirNote={item.theirs ? (theirNotes[item.theirs.slug] === false ? false : theirNotes[item.theirs.slug]?.note) : null}
                       address={{ theirs: person.address, me }}
                     />
                     {deck.length > 1 && (
