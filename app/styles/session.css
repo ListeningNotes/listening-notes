@@ -989,8 +989,9 @@
    On a phone the record's head is a row: the cover at the left and beside
    it the name, the artist and year, and the stars, all from its left edge
    (Miyel: "album art be left aligned with data to the right like in
-   screenshot of session redesign"). The marks and the note stay under it as
-   they were. On a desk the row and its column are no boxes at all, so the
+   screenshot of session redesign"), the name and artist centred over the
+   stars in the room beside the cover (her word, the same evening). The marks
+   and the note stay under it as they were. On a desk the row and its column are no boxes at all, so the
    head stands in its column as it always did. */
 .ses-record-head {
   display: flex;
@@ -1000,14 +1001,16 @@
   text-align: left;
 }
 .ses-record-says {
+  flex: 1 1 auto;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
+  text-align: center;
 }
 .ses:not(.ses--wide) .ses-record-head .ses-record-cover { flex: 0 0 auto; width: 104px; height: 104px; }
 .ses:not(.ses--wide) .ses-record-head .ses-record-title { margin: 0; max-width: none; font-size: clamp(1.25rem, 5vw, 1.5rem); text-wrap: pretty; }
 .ses:not(.ses--wide) .ses-record-head .ses-record-by { margin-top: 2px; font-size: 14px; }
-.ses:not(.ses--wide) .ses-record-head .ses-record-marks { justify-content: flex-start; margin-top: 10px; }
+.ses:not(.ses--wide) .ses-record-head .ses-record-marks { justify-content: center; margin-top: 10px; }
 .ses--wide .ses-record-head,
 .ses--wide .ses-record-says { display: contents; }
