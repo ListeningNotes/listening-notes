@@ -3738,8 +3738,17 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   height: 42%;
   z-index: 1;
   pointer-events: none;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.55));
 }
+/* The shade comes and goes with the bars, fading rather than switching. */
+.beacon-foot::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.55));
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+.beacon-foot--up::before { opacity: 1; }
 .beacon-floor {
   position: absolute;
   left: 6px;
@@ -3755,6 +3764,15 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   min-width: 0;
   background: rgba(255, 255, 255, 0.92);
   border-radius: 2px 2px 0 0;
+  /* A rating changed moves its bar to the new height; a listen that ends
+     lowers them all; a bar that is new grows up from the edge. */
+  transition: height 0.55s cubic-bezier(0.22, 0.61, 0.36, 1);
+  animation: beacon-bar-rise 0.55s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+@keyframes beacon-bar-rise { from { height: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .beacon-floor i { transition: none; animation: none; }
+  .beacon-foot::before { transition: none; }
 }
 
 /* ── And the page takes its colour, 2026-10-23 ─────────────────────────────

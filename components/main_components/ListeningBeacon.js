@@ -65,6 +65,19 @@ export default function ListeningBeacon({ emptied = false }) {
   const [failed, setFailed] = useState('');
   const artUrl = art && art !== failed ? art : '';
 
+  // ── The bars rise and fall, 2026-10-23 ─────────────────────────────────
+  // Never appearing or vanishing (Miyel: "I never like when something just
+  // appears or disappears. Those horizon bars should rise or fall"). So the
+  // floor keeps its places once a listen has said how many there are, and a
+  // listen that ends lowers its bars to nothing in those same places rather
+  // than taking them away; a bar arriving grows up from the cover's edge
+  // (nav.css, beacon-bar-rise).
+  const live = isLive && !emptied;
+  const [places, setPlaces] = useState(0);
+  if (live && rated?.length && rated.length !== places) setPlaces(rated.length);
+  const count = live && rated?.length ? rated.length : places;
+  const anyRated = live && Boolean(rated?.some(r => r > 0));
+
   // Nothing at all: a copy on its first afternoon, before a record has been
   // picked up — or a journal whose keeper has switched the beacon off, which
   // says the same thing on purpose, because a visitor is owed neither.
@@ -120,10 +133,13 @@ export default function ListeningBeacon({ emptied = false }) {
               live. A shade at the foot of the art only, so white bars read on
               a pale cover. Not HorizonChart, the entry's labelled chart:
               this carries no labels, hearts or titles. */}
-          {!emptied && isLive && artUrl && rated?.some(r => r > 0) && (
-            <div className="beacon-foot" aria-hidden="true">
+          {!emptied && artUrl && count > 0 && (
+            <div className={'beacon-foot' + (anyRated ? ' beacon-foot--up' : '')} aria-hidden="true">
               <div className="beacon-floor">
-                {rated.map((r, i) => <i key={i} style={{ height: `${(r / 5) * 100}%` }} />)}
+                {Array.from({ length: count }, (_, i) => {
+                  const r = live ? Number(rated?.[i]) || 0 : 0;
+                  return <i key={i} style={{ height: `${(r / 5) * 100}%` }} />;
+                })}
               </div>
             </div>
           )}
