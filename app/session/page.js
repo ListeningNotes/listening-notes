@@ -51,7 +51,7 @@
 'use client';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { CaretLeft } from '@phosphor-icons/react';
+import { BookmarkSimple, CaretLeft, PaperPlaneTilt, Trash } from '@phosphor-icons/react';
 import { useListeningSession, SESSION_STEPS, PENDING_KEY, TRACK_NOTE_KEY, saidSoAboutTheDesk, saidSoAboutTheEntry } from '../../hooks/useListeningSession';
 import AlbumPicker from '../../components/session_components/AlbumPicker';
 import TrackNotes from '../../components/session_components/steps/TrackNotes';
@@ -1034,14 +1034,32 @@ export default function SessionPage() {
               understand what a preview is." The word says where the press
               leads; the entry as it will look comes up on the way, with a
               green Post? at its foot (SessionPreview), her pick over posting
-              straight from here. */}
+              straight from here.
+
+              ── Doors at the foot, 2026-10-23 ─────────────────────────────
+              Three small words under the grip were easy to read past (Miyel:
+              "it's easy to miss. Can we redesign those as well?"). Her pick
+              of three: on a phone, in a sheet, a raised bar at the foot in
+              the Listen bar's own shape — the sheet came up out of it — with
+              a glyph over one word for each, the way her doors are drawn
+              elsewhere. It bends her pick of 2026-10-22 (the words at the
+              top, for being seen), and the reason that one gave, a longer
+              reach, is what this answers. A desk keeps its row; the glyphs
+              are drawn on the phone's bar only (session.css). */}
           {step === 0 && (
             <div className="ln-editing-bar ses-bar">
               <button type="button" className={'ln-word ses-bar-discard' + (armed ? ' ses-bar-discard--armed' : '')} onClick={discard}>
-                {armed ? 'Discard?' : 'Discard'}
+                <Trash className="ses-bar-glyph" size={21} weight="regular" aria-hidden="true" />
+                <span>{armed ? 'Discard?' : 'Discard'}</span>
               </button>
-              <button type="button" className="ln-word" onClick={saveDraftAndLeave}>Save draft</button>
-              <button type="button" className="ln-word ln-word--on" onClick={() => goToStep(1)}>Post</button>
+              <button type="button" className="ln-word" onClick={saveDraftAndLeave}>
+                <BookmarkSimple className="ses-bar-glyph" size={21} weight="regular" aria-hidden="true" />
+                <span>Save draft</span>
+              </button>
+              <button type="button" className="ln-word ln-word--on" onClick={() => goToStep(1)}>
+                <PaperPlaneTilt className="ses-bar-glyph" size={21} weight="regular" aria-hidden="true" />
+                <span>Post</span>
+              </button>
             </div>
           )}
 

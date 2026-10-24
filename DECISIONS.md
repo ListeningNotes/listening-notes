@@ -933,6 +933,12 @@ the other two be subjective and what makes two journals comparable at all.
 Checked before shipping: the rule agreed with all 40 entries, so nothing
 gained or lost the mark.
 
+**In the session the marks stand beside the cover, Masterpiece always,
+2026-10-23, her pick of the mockups.** The name, artist, stars and the three
+marks together at the top, the writing under them; Masterpiece is drawn
+faint and unpressable until the tracks earn it ("it does look empty without
+it there"), not left out.
+
 **Favorite applies to tracks and albums. Masterpiece is album-only.**
 Masterpiece is a full five-star tracklist, which cannot apply to a single
 track. **Formative is an album's or a track note's, 2026-09-30:** a song can
@@ -2411,6 +2417,11 @@ Solid, the page's colour, no blur and no hairline; what scrolls goes under
 it rather than behind the clock. It is sixteen short of the inset, because
 that is where the site's fixed rows start (`--safe-top`); at the inset's
 full height it cut their tops off. Nothing where the inset is zero.
+
+**On a phone they are doors in a raised bar at the sheet's foot,
+2026-10-23, her pick of three, over the row below** — the words read past
+("easy to miss"); a glyph over one word each, the Listen bar's shape, gone
+while a note is written. A desk keeps the row.
 
 **Discard · Save draft · Post in a row under the sheet's grip, phone and
 desk alike, 2026-10-22, Miyel's pick** over the foot, at the cost of a

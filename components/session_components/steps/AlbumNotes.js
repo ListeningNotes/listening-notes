@@ -91,55 +91,60 @@ export default function AlbumNotes({
           </button>
         )}
       </div>
+      {/* The marks, a glyph over a word each — the album screen's own
+          shape, back on Miyel's word ("let's label favorite and
+          formative") — up beside the cover with the name and the stars,
+          2026-10-23: everything about the record at the top, and the
+          writing under it (her pick of the mockups). */}
+      <div className="ses-marks">
+        {/* Masterpiece is not pressed, 2026-09-17. It is read off the
+            tracklist — every track rated, every rating five.
+
+            ── Always there, faint until earned, 2026-10-23 ─────────────
+            It was absent until it was true, and the row looked empty
+            without it (Miyel: "it does look empty without it there"). So
+            it stands in its place, faint and not pressable, and lights on
+            its own the moment the tracks earn it. */}
+        <span
+          className={flag(Masterpiece, 'mp') + ' ses-mark--said' + (Masterpiece ? '' : ' ses-mark--unearned')}
+          title={Masterpiece ? 'Every track is five stars' : 'Earned when every track is five stars'}
+        >
+          <SketchLogo size={24} weight={Masterpiece ? 'fill' : 'regular'} aria-hidden="true" />
+          <span className="ses-mark-word">Masterpiece</span>
+        </span>
+        <button
+          type="button"
+          className={flag(Favorite, 'fav')}
+          onClick={() => setFavorite(!Favorite)}
+          aria-pressed={Favorite}
+          title="An album you love"
+        >
+          <Heart size={24} weight={Favorite ? 'fill' : 'regular'} aria-hidden="true" />
+          <span className="ses-mark-word">Favorite</span>
+        </button>
+        <button
+          type="button"
+          className={flag(Formative, 'formative')}
+          onClick={() => setFormative(!Formative)}
+          aria-pressed={Formative}
+          title="An album that made you"
+        >
+          {/* Bold, not fill: Phosphor's filled fingerprint is a solid pad
+              with the ridges knocked out of it (Miyel, 2026-09-18). */}
+          <Fingerprint size={24} weight={Formative ? 'bold' : 'regular'} aria-hidden="true" />
+          <span className="ses-mark-word">Formative</span>
+        </button>
+      </div>
       </div>
       </div>
       {/* The album note: a box, so it reads as the field it is, with the
           question inside it until something is written. Grown by layout,
           never measured — see .ses-grow.
 
-          ── And the marks head it, 2026-10-23 ─────────────────────────────
-          They floated, three glyphs on their own over a box of another
-          shape, and the two read as apart (Miyel: "any suggestion for
-          making the marks and the text field not feel as disjointed"). Her
-          pick of three: one card, the marks across its top over a
-          hairline, the writing under them — what it was to you, then why. */}
+          The marks headed this card for an evening, 2026-10-23 (her pick,
+          to stop the two reading as apart); the same night she moved them
+          up beside the cover, so the writing has its box to itself. */}
       <div className="ses-note-box ses-album-box">
-        {/* The marks, a glyph over a word each — the album screen's own
-            shape, back on Miyel's word ("let's label favorite and
-            formative"). */}
-        <div className="ses-marks">
-          {/* Masterpiece is not pressed, 2026-09-17. It is read off the
-              tracklist — every track rated, every rating five — so it turns
-              up when it is true and is simply absent when it is not. */}
-          {Masterpiece && (
-            <span className={flag(true, 'mp') + ' ses-mark--said'} title="Every track is five stars">
-              <SketchLogo size={24} weight="fill" aria-hidden="true" />
-              <span className="ses-mark-word">Masterpiece</span>
-            </span>
-          )}
-          <button
-            type="button"
-            className={flag(Favorite, 'fav')}
-            onClick={() => setFavorite(!Favorite)}
-            aria-pressed={Favorite}
-            title="An album you love"
-          >
-            <Heart size={24} weight={Favorite ? 'fill' : 'regular'} aria-hidden="true" />
-            <span className="ses-mark-word">Favorite</span>
-          </button>
-          <button
-            type="button"
-            className={flag(Formative, 'formative')}
-            onClick={() => setFormative(!Formative)}
-            aria-pressed={Formative}
-            title="An album that made you"
-          >
-            {/* Bold, not fill: Phosphor's filled fingerprint is a solid pad
-                with the ridges knocked out of it (Miyel, 2026-09-18). */}
-            <Fingerprint size={24} weight={Formative ? 'bold' : 'regular'} aria-hidden="true" />
-            <span className="ses-mark-word">Formative</span>
-          </button>
-        </div>
         <div className="ses-grow" data-said={(overallNotes || '') + ' '}>
           <textarea
             className="ses-textarea"
