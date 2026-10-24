@@ -984,3 +984,30 @@
    for a press and hold: a grid of album art is a wall of somebody's record
    covers, and a row of little crosses over them is the software asking, on
    every one, whether you meant to keep it. */
+
+/* ── The cover at the left, 2026-10-23 ────────────────────────────────────
+   On a phone the record's head is a row: the cover at the left and beside
+   it the name, the artist and year, and the stars, all from its left edge
+   (Miyel: "album art be left aligned with data to the right like in
+   screenshot of session redesign"). The marks and the note stay under it as
+   they were. On a desk the row and its column are no boxes at all, so the
+   head stands in its column as it always did. */
+.ses-record-head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  align-self: stretch;
+  text-align: left;
+}
+.ses-record-says {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.ses:not(.ses--wide) .ses-record-head .ses-record-cover { flex: 0 0 auto; width: 104px; height: 104px; }
+.ses:not(.ses--wide) .ses-record-head .ses-record-title { margin: 0; max-width: none; font-size: clamp(1.25rem, 5vw, 1.5rem); text-wrap: pretty; }
+.ses:not(.ses--wide) .ses-record-head .ses-record-by { margin-top: 2px; font-size: 14px; }
+.ses:not(.ses--wide) .ses-record-head .ses-record-marks { justify-content: flex-start; margin-top: 10px; }
+.ses--wide .ses-record-head,
+.ses--wide .ses-record-says { display: contents; }

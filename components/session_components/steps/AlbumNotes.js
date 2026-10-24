@@ -20,6 +20,9 @@ import StarRating from '../StarRating';
 // ghost.
 export default function AlbumNotes({
   album, artist, year, albumArt,
+  // The stars' size: a little smaller on a phone, where they stand beside
+  // the cover rather than under it (2026-10-23).
+  starSize = 26,
   overallNotes,
   setOverallNotes,
   rating,
@@ -40,6 +43,13 @@ export default function AlbumNotes({
 
   return (
     <section className="ses-record">
+      {/* ── The cover at the left, 2026-10-23 ───────────────────────────────
+          On a phone the cover stands at the left with the record beside it —
+          its name, artist and year, the stars — the way her session redesign
+          draws it (Miyel: "album art be left aligned with data to the
+          right"). On a desk this row is not a box at all, and the column
+          stands as it did (session.css). */}
+      <div className="ses-record-head">
       {/* Where the picked cover lands (app/session/page.js, the landing). Its
           own class, not .ses-cover: the nav bar under the sheet draws its
           small beacon in that one. */}
@@ -48,6 +58,7 @@ export default function AlbumNotes({
           ? <img src={albumArt} alt="" />
           : <span className="ses-record-cover-none">♪</span>}
       </span>
+      <div className="ses-record-says">
       <h1 className="ses-record-title">{album}</h1>
       <p className="ses-record-by">
         {artist}{year ? ` · ${year}` : ''}
@@ -57,7 +68,7 @@ export default function AlbumNotes({
           stars under a record you are logging are not ambiguous (Miyel,
           2026-09-18). */}
       <div className="ses-record-marks">
-        <StarRating value={rating} onChange={setRating} size={26} roomy ghost={avgShown && avg ? Number(avg) : 0} />
+        <StarRating value={rating} onChange={setRating} size={starSize} roomy ghost={avgShown && avg ? Number(avg) : 0} />
         {/* The eye, at the right of the stars: shut until pressed; open,
             with the number and "avg." beside it so the number explains
             itself (Miyel, 2026-09-29). The ghost in the stars is the same
@@ -79,6 +90,8 @@ export default function AlbumNotes({
             {avgShown && <span className="ses-eye-n">{avg} avg.</span>}
           </button>
         )}
+      </div>
+      </div>
       </div>
       {/* The marks, a glyph over a word each — the album screen's own
           shape, back on Miyel's word ("let's label favorite and
