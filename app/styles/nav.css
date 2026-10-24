@@ -3653,35 +3653,31 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
    the print bar (400) — and stepping down whenever something else owns the
    foot (ListenBar.js, .lb--down). Every scroller in the cross already ends
    --hn-foot-h above the bottom, so for the keeper that is the bar's room. */
-/* ── A true footer, 2026-10-22 ──────────────────────────────────────────
-   Miyel, on the sandbox: "lets make the listen bar a true footer, flush to
-   the bottom of the page." Edge to edge and on the screen's own floor, its
-   ground running under the phone's home bar with the word held above it; the
-   top corners stay round and the grip stays, because it is still the session
-   closed and the sheet that rises out of it has the same corners. It was a
-   raised panel 14 in from the sides and 15 up from the foot. */
+/* ── A raised panel again, 2026-10-23 ──────────────────────────────────
+   It was a true footer for a day (Miyel, 2026-10-22: "lets make the listen
+   bar a true footer, flush to the bottom of the page"), edge to edge with
+   its ground under the phone's home bar. Seen on the wall, the strip it
+   stood on read as screen lost: "right now feels off or like it's cutting
+   off precious room of the screen." Her pick of four mockups, 2026-10-23:
+   the panel of her first mockup — 14 in from the sides, rounded all round,
+   floating over the wall, which runs on under it to the glass. It stands on
+   the home bar's line rather than 15 above it, so the panel sits as low as
+   the phone allows; 15 up where there is no home bar. */
 @media (max-width: 768px) {
   .lb {
     position: fixed;
-    left: 0; right: 0; bottom: 0;
+    left: 14px; right: 14px;
+    bottom: max(15px, env(safe-area-inset-bottom, 0px));
     z-index: 230;
     margin: 0;
-    height: calc(56px + env(safe-area-inset-bottom, 0px));
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-    border-radius: 18px 18px 0 0;
-    box-shadow: 0 -6px 22px rgba(26, 26, 26, 0.12);
-    transition: transform 0.3s cubic-bezier(0.22, 0.61, 0.36, 1), opacity 0.3s ease;
   }
-  .lb--held { height: calc(62px + env(safe-area-inset-bottom, 0px)); padding-bottom: calc(9px + env(safe-area-inset-bottom, 0px)); }
-  [data-theme='dark'] .lb { box-shadow: 0 -6px 22px rgba(0, 0, 0, 0.5); }
-  /* A press gives a little without lifting the footer off the floor. */
-  .lb:active { transform: none; opacity: 0.92; }
-  .hn--keeper { --hn-foot-h: calc(62px + env(safe-area-inset-bottom, 0px)); }
+  /* The room every scroller and an entry keep under their last line, so it
+     can scroll clear of the panel: the panel carrying a listen (62), where
+     it stands, and ten of air. */
+  .hn--keeper { --hn-foot-h: calc(72px + max(15px, env(safe-area-inset-bottom, 0px))); }
   /* An entry, or anything else laid over the journal that is not the
      session, keeps its last lines clear of the bar while it is up. */
-  html[data-listen] .lay:not(.lay--sheet) .lay-content { padding-bottom: calc(62px + env(safe-area-inset-bottom, 0px)); }
-  /* Stepping down is going off the floor it stands on. */
-  .lb.lb--down { transform: translateY(100%); }
+  html[data-listen] .lay:not(.lay--sheet) .lay-content { padding-bottom: calc(72px + max(15px, env(safe-area-inset-bottom, 0px))); }
 }
 .lb--down {
   opacity: 0;

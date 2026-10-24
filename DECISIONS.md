@@ -190,6 +190,12 @@ licenses no second one (Miyel's brief, home and the session). The ring and
 the keeper's chevron went for it: "everything leaves in exchange for this."
 The ring of 2026-09-20 is in the archive.
 
+**On a phone the bar floats over the wall, 2026-10-23, Miyel's pick.** A
+panel 14 in from the sides, rounded all round, standing on the home bar's
+line, with the wall running on under it. It was a footer flush to the foot
+for a day (her ask, 2026-10-22), and the strip it stood on read as screen
+lost: "cutting off precious room." Of four mockups she chose this one.
+
 **No loose icons in headers, 2026-09-15.** The mark is centred and the sides
 are for navigation. A single ··· is not a row of tools, it is a door, and it
 is allowed. Anything that acts on the thing you are looking at goes behind
