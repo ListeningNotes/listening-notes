@@ -1094,3 +1094,22 @@ a Neon account, so the door opened only for developers. The reasons above
 still hold — a hosted journal reads feeds, compares and keeps its address book
 exactly as a self-hosted one does; what changed is who runs the server, for
 the people who could not run one.
+
+---
+
+## The network — People as two words, Friends · Board, 2026-10-08 to 2026-10-23
+
+Lives now in DECISIONS.md, The network: *People is one screen*.
+
+**People is one tab: Friends · Board, Miyel's call.** Two words in the bar,
+each with its count: Friends (the book, unchanged) and Board — her word on
+2026-10-08, after Everyone, Commons, All Users, Hub and Keepers. The Board is
+ordered by distance from the viewer: logging right now, a friend away, also
+on your records, being logged everywhere, further out (shuffled). Adding is
+a door on a press; somebody already in the book wears a check.
+
+Her People brief of 2026-10-23 retired it: the two words were the wrong
+question ("whose records is a setting, not a place"), the grid of every face
+had nothing to do with the moment you looked at it, and the Board became the
+search on the wall's line. /directory still draws the Board at its own
+address.

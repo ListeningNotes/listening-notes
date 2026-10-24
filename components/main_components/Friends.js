@@ -126,6 +126,122 @@ function since(iso) {
   return days < 7 ? `${days} days ago` : '';
 }
 
+// ── The top band, 2026-10-23 ──────────────────────────────────────────────
+// Miyel's People brief: one slot, two states, never both. While anybody in
+// the book is logging, a strip of their faces, each with its name and the
+// record under it — only the live, which is why it is three and not a
+// hundred. While nobody is, one line in the same slot at the same height:
+// the last thing that happened, the most recent "logged" among the friends
+// whose copy says when. No heading and no empty state. It replaced a row of
+// cards under LOGGING RIGHT NOW (2026-10-06); the Board still draws those
+// cards.
+//
+// Only people still in the book, so somebody just removed does not linger
+// for the length of a round; and only those the book has a name for, since
+// the band says who and an address is never printed in a name's place (the
+// name usually arrives within seconds — the book asks again for anybody
+// filed without one). In the book's own order. No count anywhere: four
+// faces is a feeling, "4 listening" is a score.
+//
+// Drawn on People (PeopleScreen.js), where a face opens their journal, and
+// over the address book, where it opens their doors: `open` makes the
+// pressable thing, given the person, their beacon, its class, what it says
+// and what is inside it. The strip scrolls sideways only once it overflows:
+// a swipe that begins on it then browses the faces, and the rail's swipe is
+// everywhere else.
+export function TopBand({ people, beacons, open }) {
+  const byAddress = useMemo(() => new Map(people.map(p => [p.address, p])), [people]);
+  const live = useMemo(
+    () => beacons.filter(b => b.state === 'logging' && byAddress.get(b.address)?.name),
+    [beacons, byAddress]
+  );
+  const last = useMemo(() => {
+    if (live.length > 0) return null;
+    let best = null;
+    for (const b of beacons) {
+      if (b.state !== 'logged' || !b.at || !byAddress.get(b.address)?.name) continue;
+      if (!best || Date.parse(b.at) > Date.parse(best.at)) best = b;
+    }
+    return best;
+  }, [live.length, beacons, byAddress]);
+  // "an hour ago" is read off the clock when the band draws, and nothing
+  // else would redraw it, so while the line is up it is redrawn once a
+  // minute.
+  const [, tick] = useState(0);
+  useEffect(() => {
+    if (!last) return undefined;
+    const clock = setInterval(() => tick(n => n + 1), 60 * 1000);
+    return () => clearInterval(clock);
+  }, [last]);
+
+  // Their journal's own portrait, as the book's grid draws it.
+  const faceOf = address => (
+    <span className="fr-ring" aria-hidden="true">
+      <span className="fr-face">
+        <User size={20} weight="regular" />
+        <img
+          src={`${journalUrl(address)}/api/portrait`}
+          alt=""
+          loading="lazy"
+          onError={e => { e.currentTarget.style.display = 'none'; }}
+        />
+      </span>
+    </span>
+  );
+
+  if (live.length > 0) {
+    return (
+      <div className="fr-band">
+        <div className="fr-live">
+          {live.map(b => {
+            const person = byAddress.get(b.address);
+            const name = person?.name || b.name;
+            const title = b.track || b.album;
+            const by = b.track ? `${b.album} \u00b7 ${b.artist}` : b.artist;
+            return open(person, b, 'fr-live-one', `${name} is logging ${title}${by ? ` \u00b7 ${by}` : ''}`, (
+              <>
+                {faceOf(b.address)}
+                <span className="fr-live-name">{name}</span>
+                <span className="fr-live-rec">{title}</span>
+              </>
+            ));
+          })}
+        </div>
+      </div>
+    );
+  }
+  // Who was here last. Only when a friend's copy says when — until theirs is
+  // new enough to, there is no honest "last" to name and nothing is drawn.
+  if (!last) return null;
+  const person = byAddress.get(last.address);
+  const name = person?.name || last.name;
+  const when = since(last.at);
+  const said = `logged ${last.album}`;
+  return (
+    <div className="fr-band">
+      {open(person, last, 'fr-last', `${name} ${said}${when ? `, ${when}` : ''}`, (
+        <>
+          {faceOf(last.address)}
+          <span className="fr-last-says">
+            <span className="fr-last-name">{name}</span>
+            {/* The time travels as one piece, so a line that has to wrap
+                never leaves "ago" alone on the next. */}
+            <span className="fr-last-what">
+              {said}
+              {when && <span className="fr-last-when">{` \u00b7 ${when}`}</span>}
+            </span>
+          </span>
+          {last.art && (
+            <span className="fr-last-art" aria-hidden="true">
+              <img src={last.art} alt="" loading="lazy" onError={e => { e.currentTarget.style.display = 'none'; }} />
+            </span>
+          )}
+        </>
+      ))}
+    </div>
+  );
+}
+
 // ── Saying no ─────────────────────────────────────────────────────────────
 // A door with no room behind it used to be `disabled`, which meant pressing
 // it did nothing at all — and nothing at all is the one answer that does not
@@ -266,44 +382,16 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null, 
   const beaconOf = useMemo(() => new Map(beacons.map(b => [b.address, b])), [beacons]);
   useEffect(() => { if (!shelf) fillFriends(); }, [shelf]);
 
-  // ── The band above the grid, and the quiet line ─────────────────────────
-  // Who is logging right now, in the book's own order, as a row of cards —
-  // only people still in the book, so somebody just removed does not linger
-  // for the length of a round. When nobody is on, the room says who was
-  // here last instead of leaving a hole: the most recent "logged" among the
-  // friends whose copy says when. An empty room that says nothing reads as
-  // abandoned; one that tells you who just left reads as a room (the
-  // brief). No count anywhere: four cards is a feeling, "4 listening" is a
-  // score.
-  const byAddress = useMemo(() => new Map(people.map(p => [p.address, p])), [people]);
-  // A journal the book has no name for yet is left out of both: the band
-  // and the line say who, and an address is never printed in a name's place.
-  // Its face still lights; the name usually arrives within seconds, since the
-  // page asks again for anybody filed without one (above).
-  const onNow = useMemo(
-    () => beacons.filter(b => b.state === 'logging' && byAddress.get(b.address)?.name),
-    [beacons, byAddress]
-  );
-  const lastIn = useMemo(() => {
-    if (onNow.length > 0) return null;
-    let best = null;
-    for (const b of beacons) {
-      if (b.state !== 'logged' || !b.at || !byAddress.get(b.address)?.name) continue;
-      if (!best || Date.parse(b.at) > Date.parse(best.at)) best = b;
-    }
-    return best;
-  }, [onNow.length, beacons, byAddress]);
-
-  // "2 hours ago" is read off the clock when the room draws, and nothing
-  // else would redraw it: a round that says the same thing publishes nothing.
-  // So while a time is on screen — the quiet line, or a pressed face's
-  // doors — the room is redrawn once a minute, and the words keep up.
+  // "Last logged · yesterday" is read off the clock when the doors draw, and
+  // nothing else would redraw it: a round that says the same thing publishes
+  // nothing. So while a pressed face's doors are open the room is redrawn
+  // once a minute, and the words keep up. The band keeps its own clock.
   const [, tick] = useState(0);
   useEffect(() => {
-    if (!lastIn && open === null) return undefined;
+    if (open === null) return undefined;
     const clock = setInterval(() => tick(n => n + 1), 60 * 1000);
     return () => clearInterval(clock);
-  }, [lastIn, open]);
+  }, [open]);
   // ── And the one on its way out ──────────────────────────────────────────
   // The doors have to be in the DOM to collapse, and the person they belong
   // to has to still be known while they do it, or the panel empties halfway
@@ -968,22 +1056,12 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null, 
 
         <p className="bk-said" role="status">{said}</p>
 
-        {/* ── The top band, 2026-10-23 ─────────────────────────────────────
-            Miyel's People brief: one slot, two states, never both. While
-            anybody in the book is logging, a strip of their faces, each with
-            its name and the record under it — only the live, which is why it
-            is three and not a hundred. While nobody is, one line in the same
-            slot at the same height: the last thing that happened. No heading
-            and no empty state. It replaced a row of cards under LOGGING
-            RIGHT NOW (2026-10-06); the Board still draws those cards.
-
-            Pressing a face, or the line, opens that friend's doors in the
-            grid below, which the shelf then scrolls to show; a friend past
-            what the shelf holds opens the whole book instead. Above the
+        {/* ── The top band (TopBand, above) ─────────────────────────────
+            Here, pressing a face or the line opens that friend's doors in
+            the grid below, which the shelf then scrolls to show; a friend
+            past what the shelf holds opens the whole book instead. Above the
             shelf rather than in it, so the shelf's own count of what fits
-            (reckon) stays true. The strip scrolls sideways only once it
-            overflows: a swipe that begins on it then browses the faces, and
-            the rail's swipe is everywhere else. */}
+            (reckon) stays true. */}
         {/* The book's search on the cross, 2026-10-08: at the top of the
             floor, in the Board's own field, once the book passes a dozen —
             the bar's middle is the two words now (see onBusy, above). */}
@@ -1001,14 +1079,16 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null, 
             />
           </label>
         )}
-        {(() => {
-          // A face in the band, or the line, opens that friend's doors —
-          // but only a face that is actually drawn on the shelf can: a
-          // search can hide the pinned row and narrow the rest.
-          const press = (person, key, className, label, inside) => (
+        {/* A face in the band, or the line, opens that friend's doors —
+            but only a face that is actually drawn on the shelf can: a
+            search can hide the pinned row and narrow the rest. */}
+        <TopBand
+          people={people}
+          beacons={beacons}
+          open={(person, b, className, label, inside) => (
             rows.some(r => r.people.some(p => p.id === person?.id)) ? (
               <button
-                key={key}
+                key={b.address}
                 type="button"
                 className={className}
                 onClick={() => { if (person && open !== person.id) choose(person.id); }}
@@ -1018,78 +1098,12 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null, 
                 {inside}
               </button>
             ) : (
-              <Link key={key} href="/dashboard/people" className={className} aria-label={label} title={label}>
+              <Link key={b.address} href="/dashboard/people" className={className} aria-label={label} title={label}>
                 {inside}
               </Link>
             )
-          );
-          // Their journal's own portrait, as the grid draws it (below).
-          const faceOf = address => (
-            <span className="fr-ring" aria-hidden="true">
-              <span className="fr-face">
-                <User size={20} weight="regular" />
-                <img
-                  src={`${journalUrl(address)}/api/portrait`}
-                  alt=""
-                  loading="lazy"
-                  onError={e => { e.currentTarget.style.display = 'none'; }}
-                />
-              </span>
-            </span>
-          );
-          if (onNow.length > 0) {
-            return (
-              <div className="fr-band">
-                <div className="fr-live">
-                  {onNow.map(b => {
-                    const person = byAddress.get(b.address);
-                    const name = person?.name || b.name;
-                    const title = b.track || b.album;
-                    const by = b.track ? `${b.album} · ${b.artist}` : b.artist;
-                    return press(person, b.address, 'fr-live-one', `${name} is logging ${title}${by ? ` · ${by}` : ''}`, (
-                      <>
-                        {faceOf(b.address)}
-                        <span className="fr-live-name">{name}</span>
-                        <span className="fr-live-rec">{title}</span>
-                      </>
-                    ));
-                  })}
-                </div>
-              </div>
-            );
-          }
-          // Who was here last. Only when a friend's copy says when — until
-          // theirs is new enough to, there is no honest "last" to name and
-          // the grid simply begins.
-          if (!lastIn) return null;
-          const person = byAddress.get(lastIn.address);
-          const name = person?.name || lastIn.name;
-          const when = since(lastIn.at);
-          const said = `logged ${lastIn.album}`;
-          return (
-            <div className="fr-band">
-              {press(person, lastIn.address, 'fr-last', `${name} ${said}${when ? `, ${when}` : ''}`, (
-                <>
-                  {faceOf(lastIn.address)}
-                  <span className="fr-last-says">
-                    <span className="fr-last-name">{name}</span>
-                    {/* The time travels as one piece, so a line that has
-                        to wrap never leaves "ago" alone on the next. */}
-                    <span className="fr-last-what">
-                      {said}
-                      {when && <span className="fr-last-when">{` \u00b7 ${when}`}</span>}
-                    </span>
-                  </span>
-                  {lastIn.art && (
-                    <span className="fr-last-art" aria-hidden="true">
-                      <img src={lastIn.art} alt="" loading="lazy" onError={e => { e.currentTarget.style.display = 'none'; }} />
-                    </span>
-                  )}
-                </>
-              ))}
-            </div>
-          );
-        })()}
+          )}
+        />
 
         {/* ── The shelf ───────────────────────────────────────────────────
             A box of settled height with the faces clipped inside it, which is

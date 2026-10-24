@@ -1327,12 +1327,13 @@ dismissed. The proof is unchanged: a code from the registry's secret, served
 back at /api/public/listing; delisting needs the code and the journal to have
 forgotten it. (Off by default and a press, 2026-10-07, is what this replaced.)
 
-**People is one tab: Friends · Board, Miyel's call.** Two words in the bar,
-each with its count: Friends (the book, unchanged) and Board — her word on
-2026-10-08, after Everyone, Commons, All Users, Hub and Keepers. The Board is
-ordered by distance from the viewer: logging right now, a friend away, also
-on your records, being logged everywhere, further out (shuffled). Adding is
-a door on a press; somebody already in the book wears a check.
+**People is one screen: the top band, a line with a scope, and a wall,
+2026-10-23, her People brief.** Whose records — Your people's · On your
+records · Everyone's (built, off until the Board is big enough: her call) —
+is the line's left end, remembered as the view is; Who you've added, under
+its rule, opens the address book as a drawer. The wall is home's, so views
+compose with the scope; covers wear their loggers' faces and a gold dot on a
+record you have, in every scope; the search is the Board's (her calls).
 
 **A visitor's People holds the Board's public parts, 2026-10-07/08.** Miyel:
 "strangers and visitors can see this page." No Friends, no switch, no checks,

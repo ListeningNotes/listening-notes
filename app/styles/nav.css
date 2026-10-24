@@ -3735,6 +3735,26 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .hn .hn-pane--home .mp-note { order: -1; }
 }
 
+/* ── People is one screen, 2026-10-23 ──────────────────────────────────────
+   Miyel's People brief: other people's beacons, a shelf line and a wall of
+   their records, in one scroll, as home is (PeopleScreen.js). The band
+   starts under the top row; the wall's line sticks there as you read down,
+   exactly as home's does. */
+@media (max-width: 768px) {
+  .hn-pane--friends .ps { padding-top: var(--hn-bar-h); }
+  .hn .hn-pane--friends .arc-bar-wrap {
+    order: -1;
+    top: var(--hn-bar-h);
+    bottom: auto;
+    opacity: 1;
+    pointer-events: auto;
+    padding-top: 8px;
+    background: var(--bg);
+  }
+  .hn--typing .hn-pane--friends .arc-bar-wrap { bottom: auto; }
+  .hn .hn-pane--friends .arc-bar { border-top: 0; }
+}
+
 /* ── The cover wears its listen, 2026-10-23 ────────────────────────────────
    Miyel's beacon brief, and her pick of its mockups: while a listen is open
    the beacon's cover carries a bar on its foot for each track rated, every

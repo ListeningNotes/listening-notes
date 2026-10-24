@@ -61,7 +61,8 @@ publicly):
   Ran on down the desk's own scroll until 2026-09-15
 - `/dashboard/people` — the address book as a grid of faces (Friends), with
   the ways one gets in — a paste, a scanned code, a send that carried one —
-  and Invite and Add in its header. The Friends stop on the phone's band
+  and Invite and Add in its header. Who you've added, the drawer under
+  People's scope, on a phone; a page over the desk on a desk
 - `/dashboard/people/[id]` — your page about one person: what you both have,
   where you agree and disagree hardest, what they sent you and how it landed
 - `/settings` — the machinery: address, the password, Back up your journal,
@@ -216,13 +217,14 @@ The hooks — reusable logic shared across pages
 The furniture — visual pieces
   components/
     main_components/           Everything on the public side
-      HomeNav.js               The cross itself — on a phone a rail of panes with the band at the foot (Card, Beacon, People, Inbox for the keeper; Card, Beacon, People for a visitor where there is a directory). People is the book's pane with two words in the bar, Friends · Board, each with its count: the faces and the feed under one, the directory's list under the other; on a desk an open book — the spine on the left, the journal on the right, the fold, and a control in the spine's header to turn between its two pages
+      HomeNav.js               The cross itself — on a phone a rail of panes with the band at the foot (Card, Beacon, People, Inbox for the keeper; Card, Beacon, People for a visitor where there is a directory). People is one screen, PeopleScreen.js (2026-10-23); on a desk an open book — the spine on the left, the journal on the right, the fold, and a control in the spine's header to turn between its two pages
       About.js                 One face of the turning pane: the card, then the writing under it, in one scroll
       IdentityCard.js          The ID: the portrait full width and square — the same object an entry's album art is — then the name, four counts — albums, songs, and the two flags in their colours — and the pinned record or song. Send and Add left it on 2026-09-19, and left the beacon too on 2026-09-27; a visitor sees the keeper here and nowhere else. This is the About page
       IdentificationCardEditor.js  Editing the card in place
       ListeningBeacon.js       The beacon — what is playing, or last played
       ListenBar.js             The way into a listen: a bar at the foot of home, the session closed — Start a listen at rest; with a listen lowered, its cover, the lit track and the live dot. Both raise /session as a sheet; the one thing shaped like a button
-      Journal.js               The wall of covers, drawn fifty at a time as you scroll, with its search, filters and views (In order, A–Z, by month, era, genre, rating; then time of day, horizon, color, Shuffle; grouped views draw band headings that stick under the line and list the bands to jump to, By color reads each cover in the browser; the album size sits at the foot of the views menu)
+      Journal.js               The wall of covers, drawn fifty at a time as you scroll, with its search, filters and views (In order, A–Z, by month, era, genre, rating; then time of day, horizon, color, Shuffle; grouped views draw band headings that stick under the line and list the bands to jump to, By color reads each cover in the browser; the album size sits at the foot of the views menu). Draws People's wall too, handed somebody else's records, a tile and the scope for its line
+      PeopleScreen.js          People, one screen (2026-10-23): the top band (TopBand), the wall's line with whose records at its left — Your people's, On your records, Everyone's (off) — and Who you've added under its rule, and a wall of their covers with their faces in the corner and a gold dot on yours. Your people's is read off the book's public feeds in the browser, the others through /api/board; the search asks the Board. Hands what came back from a send to the inbox, as the feed did
       JournalFilters.js        The filters, dropping from the wall's line on a phone and a desk alike — kind (albums or tracks), genre, the year range and the marks; it takes records away, the views rearrange them
       AlbumTile.js             One record on that wall — a card for a record with a listen behind it, a page with its corner folded for a record known only by its track notes; the folder shape went on 2026-10-13 (Journal.js gathers entries into records, by title, artist and year)
       FolderFooter.js          A folder's tabs at the foot of the screen — Listen 1, Listen 2 or the song, the one you are on in ink — the one piece of chrome a folder adds; useFolder in LayerEntry.js does the flipping
@@ -233,7 +235,7 @@ The furniture — visual pieces
       MonthPrompt.js           The month's prompt: pinned over the keeper's wall while open (what it asks, days left, the record sent); PromptSheet, the read-only sheet an entry's ··· Submit opens — what will be published and Send to Listening Notes; useMonthPrompt, one copy for the page
       WaveSheet.js             Just added somebody: "[name] is in your address book", Wave to [name] or Not now — the one moment a wave is offered
       Dashboard.js             The desk, for the owner — Start a listen as a band, then Inbox, Feed, Address book and Settings as rows; the header holds the mark alone. On a desk only since 2026-09-19, as the spine's second page
-      Friends.js               The address book as a grid of faces, pinned first; a face opens its three doors in place under its own row. Friends, under People, and /dashboard/people
+      Friends.js               The address book as a grid of faces, pinned first; a face opens its three doors in place under its own row. /dashboard/people — a drawer over People (Who you've added) and a page on a desk. Exports TopBand: who is logging right now as faces, or the last thing that happened
       Feed.js                  What the people in the address book logged, read off their public feeds; Submissions and Recent; Compare on a row you also have. Its own page at /dashboard/feed since 2026-09-15
       Header.js                The phone's top row — the keeper's face (to the card), the light switch, and Home · People · Inbox with only the lit one wearing its word; a visitor's has the mark instead of words. It replaced the band at the foot (Footer.js), 2026-10-22
       PullDown.js              Pull down to refresh: at the top of a scroller, the mark and a line in the gap the page opens, then asking — on the People pane first, Friends and Everyone alike

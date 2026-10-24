@@ -90,6 +90,8 @@ import Dashboard, { heldNow, subscribeHeld } from './Dashboard';
 // component the page is a frame around, which is why Friends.js exists.
 import Inbox from '../../app/dashboard/inbox/page';
 import Friends from './Friends';
+// People, one screen (2026-10-23): the band, the scope and the wall.
+import PeopleScreen from './PeopleScreen';
 import PullDown from './PullDown';
 import { refreshFriends } from '../../hooks/useFriendsBeacons';
 // Everyone, the second word of the People tab: the journals that chose to be
@@ -1783,7 +1785,9 @@ export default function HomeNav() {
   const barSays = onBook && authed && !onEveryone && atFeed ? 'Recent listens' : null;
   // The words step aside for the field the + opens, which arrives in this
   // same row: "it needs to open and replace address book text."
-  const barWords = onBook && !(authed && !onEveryone && (atFeed || bookBusy));
+  // People is one screen since 2026-10-23, its scope on the wall's own line:
+  // the bar's Friends · Board words are gone from it.
+  const barWords = onBook && !authed;
   const onInbox = pane === INBOX && authed;
   // A word pressed: the other room, or the top of this one, as on People.
   function chooseInboxRoom(sent) {
@@ -2377,73 +2381,18 @@ export default function HomeNav() {
           >
             {visited[BOOK] && (
               <>
-                {/* Pulling down at the top of the book asks everyone's beacon
-                    again, past the route's minute (PullDown.js). The first
-                    scroller to carry it; the rest follow once this one is
-                    seen (AGENTS: the shared piece first). */}
-                <PullDown
+                {/* ── People, one screen, 2026-10-23 ─────────────────────
+                    Miyel's People brief: other people's beacons, a shelf
+                    line and a wall of their records, in one scroll, the way
+                    home is one page. It replaced the book's two floors —
+                    the faces, and the feed under them — and the Board as
+                    the bar's second word. */}
+                <PeopleScreen
                   scroller={friendsRef}
-                  onPull={onEveryone ? askEveryoneAgain : refreshFriends}
-                  asking={onEveryone ? 'Asking everyone\u2026' : 'Asking your friends\u2026'}
-                  mark={mark('ln-pull-svg')}
+                  onScreen={pane === BOOK}
+                  entries={entries}
+                  pullMark={mark('ln-pull-svg')}
                 />
-                {/* The book's two floors are the keeper's, and hidden rather
-                    than taken down while Everyone shows (see `room`). */}
-                {authed && (
-                <div className={'hn-floor hn-floor--book' + (onEveryone ? ' hn-floor--away' : '')}>
-                  <Friends shelf onCount={setBookSize} onBusy={setBookBusy} onScreen={pane === BOOK && !onEveryone} away={onEveryone} />
-                  {/* The feed's name lives here rather than at the top of
-                      the feed (Miyel, 2026-09-19: "can i see feed living
-                      above the down caret?"). It is the right place for it:
-                      down here it labels the way down, which is a thing you
-                      are deciding whether to do — at the top of the list it
-                      would be naming a place you had already arrived at. Her
-                      own mock-up drew it exactly this way, the word and the
-                      chevron under it, and the site took a week to get back
-                      to what she drew. */}
-                  {bookSize > 0 && (
-                    <button
-                      type="button"
-                      /* Out of sight the moment the bar has the word, so the
-                         two are never both on the screen. Hidden and not
-                         removed: the scroll listener goes on measuring it to
-                         know when to hand the word back on the way up. */
-                      className="hn-down"
-                      onClick={() => goDown(BOOK)}
-                      aria-label="Recent listens"
-                    >
-                      {/* The chevron drawn here rather than through EdgeCaret,
-                          which is a button of its own and cannot go inside
-                          one. Same glyph at the same weight and size the
-                          beacon's caret uses, so the two read as one mark.
-                          The word over it went on 2026-09-20 — see the note on
-                          the beacon's copy, above. */}
-                      <CaretDown size={18} weight="bold" aria-hidden="true" />
-                    </button>
-                  )}
-                </div>
-                )}
-                {/* No inner scroller, unlike the journal under the beacon.
-                    That floor is never visible until you arrive at it; this
-                    one shows a sliver of itself at rest, and a scroller you
-                    can reach before you have arrived is one you scroll by
-                    accident — the feed slid up inside its own box while the
-                    pane sat still on the faces. The floor is a snap area
-                    taller than the screen instead, which the snap allows to
-                    rest anywhere once it covers the screen: it catches you on
-                    the way in and then gets out of the way. */}
-                {authed && bookSize > 0 && (
-                  <div className={'hn-floor hn-floor--feed' + (onEveryone ? ' hn-floor--away' : '')}>
-                    <Feed entries={entries} density={density} />
-                  </div>
-                )}
-                {/* Everyone: one floor, the whole list. Not an .hn-floor, so
-                    nothing measures it as a second floor to settle on. */}
-                {onEveryone && (
-                  <div className="hn-everyone">
-                    <Everyone keeper={authed} refreshRef={everyoneAgain} />
-                  </div>
-                )}
               </>
             )}
           </section>
