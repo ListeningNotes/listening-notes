@@ -24,13 +24,18 @@ replaced.
 
 ## The model
 
-**Free software, self-hosted, one copy per person.** Nobody pays, ever. Free is
-what keeps API relationships simple — "commercial use" is the trigger clause in
-Apple's terms, and was in Last.fm's while this used them.
+**Free software, one journal per person, hosted or self-hosted.** Nobody pays,
+ever: hosting is capped to what can be run for free (`HOSTED_JOURNALS_MOST`),
+and a copy of your own has no cap. Free is what keeps API relationships
+simple — "commercial use" is the trigger clause in Apple's terms, and was in
+Last.fm's while this used them.
 
-**Hosting other people is ruled out.** Every reason to host is solved without a
-server: the feed is pull-based, compare fetches a file, the address book is
-local. Not "never" — just not a future being kept open.
+**Listening Notes hosts journals, 2026-10-20 (Miyel; ruled out before, see
+the archive).** Each lives at its own address under listeningnotes.blog with
+its own database and lock, and talks to other journals as a self-hosted copy
+does; self-hosting stays, and Make a copy and Bring your journal move a
+journal between the two. Why: the door opened only for developers, and people
+do not mind who serves the site — they want to own their data.
 
 **There is exactly one Listening Notes, at one address.** It is the only place
 the software comes from, which is what makes anything else claiming the name
@@ -1933,10 +1938,9 @@ send without one, and a record arriving with nothing said about it is a link.
 no accounts, nothing to be here but yourself: a yes/no key to a locked room in
 a building anybody may walk into.
 
-**The blast radius of a compromised copy is one journal.** Every copy checks
-its own password against its own server; there is no shared system to be let
-into and no database of everybody. That is a structural consequence of
-self-hosting, and the thing a hosted service can never offer.
+**The blast radius of a compromised journal is one journal.** Every journal
+checks its own password against its own database, and nobody's sign-in is
+kept anywhere else.
 **A keeper signs in at their own journal's address and nowhere else**
 (Miyel, 2026-10-20: "keep the lock on each journal"). Never through another
 address, the canonical one included: a shared sign-in is one door to every
