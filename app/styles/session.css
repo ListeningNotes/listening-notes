@@ -591,6 +591,18 @@
 .ses-note-box .ses-textarea { border-bottom: 0; min-height: 0; padding: 4px 0; }
 .ses-note-box .ses-grow::after { padding: 4px 0; }
 .ses-album-box { margin-top: 24px; }
+/* The marks head the album note's card, 2026-10-23: across its top, a
+   hairline under them, the writing below (AlbumNotes.js). The card carries
+   the padding the row and the writing each need, so the marks keep the
+   whole width to spread across. */
+.ses-note-box.ses-album-box { padding: 0; margin-top: 18px; overflow: hidden; }
+.ses-album-box .ses-marks {
+  margin: 0;
+  padding: 8px 6px 6px;
+  justify-content: space-around;
+  border-bottom: 1px solid var(--border);
+}
+.ses-album-box .ses-grow { padding: 10px 16px 12px; }
 /* A track's note: the same box, under the whole row. The row wraps to make
    the room. */
 .ses-row-box { margin: 0 0 4px; }
