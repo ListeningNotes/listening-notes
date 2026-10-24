@@ -190,6 +190,12 @@ licenses no second one (Miyel's brief, home and the session). The ring and
 the keeper's chevron went for it: "everything leaves in exchange for this."
 The ring of 2026-09-20 is in the archive.
 
+**On a phone the bar floats over the wall, 2026-10-23, Miyel's pick.** A
+panel 14 in from the sides, rounded all round, standing on the home bar's
+line, with the wall running on under it. It was a footer flush to the foot
+for a day (her ask, 2026-10-22), and the strip it stood on read as screen
+lost: "cutting off precious room." Of four mockups she chose this one.
+
 **No loose icons in headers, 2026-09-15.** The mark is centred and the sides
 are for navigation. A single ··· is not a row of tools, it is a door, and it
 is allowed. Anything that acts on the thing you are looking at goes behind
@@ -991,6 +997,12 @@ each sliding over the last; pressed, one lists every band to jump to — the
 brief's "the thing that tells you where you are is the thing that moves you".
 The last band or two land only as high as the wall's foot lets them, and the
 heading then names the band before: no room is added at the foot (Miyel).
+
+**The Filters icon stays the way into the filters, 2026-10-23, Miyel's
+call.** The home brief made the count the button ("press the count to
+narrow"); built and tried on the sandbox (branch `count-door`), she kept the
+icon: "61 albums" pressed open beside the bands' own counts was
+"repetitive". The count stays words, and stays off a phone's line.
 
 **By color is a view, read off the covers, never stored, 2026-10-22, Miyel's
 ask.** The page reads Apple's covers; one kept elsewhere is read by the server

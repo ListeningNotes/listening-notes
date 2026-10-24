@@ -1153,13 +1153,26 @@ export default function HomeNav() {
     // is undone once, on the way in — not on every resize, which would yank
     // somebody back to the top while they scrolled results with the keyboard
     // still up.
+    //
+    // But not for the wall's own search, 2026-10-23. Home is one page now,
+    // the record over the wall, and everything on it is sized from the
+    // cross's height, so the cross made as tall as the part above the keys
+    // shrank the record and walked it up the screen while somebody searched
+    // the wall under it (Miyel: "why does search make the beacon smaller?").
+    // And putting the pane back at its top threw them off the wall they were
+    // searching. For that field only the home pane is held to what you can
+    // see (--hn-seen-h), so the results still scroll above the keys, and
+    // nothing on the page moves.
     let wasOpen = false;
     const sync = () => {
       root.style.setProperty('--hn-lift', `${Math.round(vv.offsetTop)}px`);
       const open = window.innerHeight - vv.height > 120;
-      if (open) root.style.setProperty('--hn-h', `${Math.round(vv.height)}px`);
+      const onWall = open && Boolean(document.activeElement?.closest?.('.hn-pane--home .arc-bar'));
+      if (open && !onWall) root.style.setProperty('--hn-h', `${Math.round(vv.height)}px`);
       else root.style.removeProperty('--hn-h');
-      if (open && !wasOpen) {
+      if (onWall) root.style.setProperty('--hn-seen-h', `${Math.round(vv.height)}px`);
+      else root.style.removeProperty('--hn-seen-h');
+      if (open && !wasOpen && !onWall) {
         const pane = paneRefs[HOME].current;
         if (pane) pane.scrollTop = 0;
       }
@@ -1173,6 +1186,7 @@ export default function HomeNav() {
       vv.removeEventListener('resize', sync);
       root.style.removeProperty('--hn-lift');
       root.style.removeProperty('--hn-h');
+      root.style.removeProperty('--hn-seen-h');
     };
   }, [paneRefs]);
 
