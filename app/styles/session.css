@@ -591,9 +591,7 @@
 .ses-note-box .ses-textarea { border-bottom: 0; min-height: 0; padding: 4px 0; }
 .ses-note-box .ses-grow::after { padding: 4px 0; }
 .ses-album-box { margin-top: 24px; }
-/* Masterpiece before the tracks have earned it: in its place, faint, not
-   pressable (AlbumNotes.js, 2026-10-23). */
-.ses-mark--unearned { opacity: 0.5; }
+
 /* A track's note: the same box, under the whole row. The row wraps to make
    the room. */
 .ses-row-box { margin: 0 0 4px; }
@@ -1017,10 +1015,14 @@
   align-items: center;
   text-align: center;
 }
-.ses:not(.ses--wide) .ses-record-head .ses-record-cover { flex: 0 0 auto; width: 104px; height: 104px; }
-.ses:not(.ses--wide) .ses-record-head .ses-record-title { margin: 0; max-width: none; font-size: clamp(1.25rem, 5vw, 1.5rem); text-wrap: pretty; }
-.ses:not(.ses--wide) .ses-record-head .ses-record-by { margin-top: 2px; font-size: 14px; }
-.ses:not(.ses--wide) .ses-record-head .ses-record-marks { justify-content: center; margin-top: 10px; }
+.ses:not(.ses--wide) .ses-record-head .ses-record-cover { flex: 0 0 auto; width: 88px; height: 88px; }
+/* The name and the artist over the whole head, centred, and then the row
+   (Miyel, 2026-10-23: "title and artist centered above the whole thing,
+   then art and stars, tags, then writing"). */
+.ses:not(.ses--wide) .ses-record > .ses-record-title { margin: 0; font-size: clamp(1.3rem, 5.2vw, 1.6rem); }
+.ses:not(.ses--wide) .ses-record > .ses-record-by { margin-top: 2px; font-size: 14px; }
+.ses:not(.ses--wide) .ses-record > .ses-record-head { margin-top: 14px; }
+.ses:not(.ses--wide) .ses-record-head .ses-record-marks { justify-content: center; margin-top: 0; }
 /* And the marks under the stars, beside the cover, 2026-10-23: everything
    about the record at the top and the writing under it (her pick of the
    mockups). A little smaller, to stand in the room the cover leaves; still a
@@ -1037,6 +1039,8 @@
 .ses:not(.ses--wide) .ses-record-says .ses-mark-word { font-size: 7.5px; }
 .ses--wide .ses-record-head,
 .ses--wide .ses-record-says { display: contents; }
+/* A desk keeps the cover at the head of its column, over the name. */
+.ses--wide .ses-record-cover { order: -1; }
 
 /* ── Doors at the foot, 2026-10-23 ────────────────────────────────────────
    On a phone, in a sheet, Discard · Save draft · Post are a raised bar at

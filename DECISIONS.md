@@ -933,11 +933,11 @@ the other two be subjective and what makes two journals comparable at all.
 Checked before shipping: the rule agreed with all 40 entries, so nothing
 gained or lost the mark.
 
-**In the session the marks stand beside the cover, Masterpiece always,
-2026-10-23, her pick of the mockups.** The name, artist, stars and the three
-marks together at the top, the writing under them; Masterpiece is drawn
-faint and unpressable until the tracks earn it ("it does look empty without
-it there"), not left out.
+**On a phone the session's head is the name and artist centred, then the
+cover with the stars and marks beside it, then the writing, 2026-10-23, her
+call** ("bulky … title and artist centered above the whole thing"). A desk
+keeps its column. Masterpiece stays absent until earned: drawn faint in its
+place for an evening, she took it back out ("hidden and earned").
 
 **Favorite applies to tracks and albums. Masterpiece is album-only.**
 Masterpiece is a full five-star tracklist, which cannot apply to a single

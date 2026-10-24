@@ -49,6 +49,15 @@ export default function AlbumNotes({
           draws it (Miyel: "album art be left aligned with data to the
           right"). On a desk this row is not a box at all, and the column
           stands as it did (session.css). */}
+      {/* The name and the artist over all of it, centred (Miyel, the same
+          evening: "everything in the album field … is just bulky … title
+          and artist centered above the whole thing, then art and stars,
+          tags, then writing"). On a desk they stand under the cover as they
+          always did (session.css). */}
+      <h1 className="ses-record-title">{album}</h1>
+      <p className="ses-record-by">
+        {artist}{year ? ` · ${year}` : ''}
+      </p>
       <div className="ses-record-head">
       {/* Where the picked cover lands (app/session/page.js, the landing). Its
           own class, not .ses-cover: the nav bar under the sheet draws its
@@ -59,10 +68,6 @@ export default function AlbumNotes({
           : <span className="ses-record-cover-none">♪</span>}
       </span>
       <div className="ses-record-says">
-      <h1 className="ses-record-title">{album}</h1>
-      <p className="ses-record-by">
-        {artist}{year ? ` · ${year}` : ''}
-      </p>
 
       {/* The stars and the marks on one line. No label over the stars: five
           stars under a record you are logging are not ambiguous (Miyel,
@@ -102,20 +107,16 @@ export default function AlbumNotes({
           writing under it (her pick of the mockups). */}
       <div className="ses-marks">
         {/* Masterpiece is not pressed, 2026-09-17. It is read off the
-            tracklist — every track rated, every rating five.
-
-            ── Always there, faint until earned, 2026-10-23 ─────────────
-            It was absent until it was true, and the row looked empty
-            without it (Miyel: "it does look empty without it there"). So
-            it stands in its place, faint and not pressable, and lights on
-            its own the moment the tracks earn it. */}
-        <span
-          className={flag(Masterpiece, 'mp') + ' ses-mark--said' + (Masterpiece ? '' : ' ses-mark--unearned')}
-          title={Masterpiece ? 'Every track is five stars' : 'Earned when every track is five stars'}
-        >
-          <SketchLogo size={24} weight={Masterpiece ? 'fill' : 'regular'} aria-hidden="true" />
-          <span className="ses-mark-word">Masterpiece</span>
-        </span>
+            tracklist — every track rated, every rating five — so it turns
+            up when it is true and is simply absent when it is not. It was
+            drawn faint in its place for an evening, 2026-10-23, and she
+            took it back out: "shouldn't masterpiece be hidden and earned". */}
+        {Masterpiece && (
+          <span className={flag(true, 'mp') + ' ses-mark--said'} title="Every track is five stars">
+            <SketchLogo size={24} weight="fill" aria-hidden="true" />
+            <span className="ses-mark-word">Masterpiece</span>
+          </span>
+        )}
         <button
           type="button"
           className={flag(Favorite, 'fav')}
