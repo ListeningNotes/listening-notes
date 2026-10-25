@@ -62,7 +62,9 @@ publicly):
 - `/dashboard/people` — the address book as a grid of faces (Friends), with
   the ways one gets in — a paste, a scanned code, a send that carried one —
   and Invite and Add in its header. The Friends stop on the phone's band
-- `/dashboard/people/[id]` — your page about one person: the two of you, the
+- `/dashboard/people/[id]` — your page about one person: the two of you, a
+  colour each; face to face, your share of your records against theirs by
+  genre, decade, artist, stars or how new (a menu like the wall's views); the
   facts as cards swiped through (the two of you as listeners — top genre,
   decade and artist, oldest record, latest Masterpiece and the like — and on
   the records you share, stars, Masterpieces and hearts; a shared answer said

@@ -49,7 +49,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { CaretLeft, CaretRight, Heart, Printer, Shuffle, SketchLogo, Sparkle, User } from '@phosphor-icons/react';
+import { CaretDown, CaretLeft, CaretRight, Heart, Printer, Shuffle, SketchLogo, Sparkle, User } from '@phosphor-icons/react';
 import SiteNav from '../../../../components/main_components/SiteNav';
 import StarRating from '../../../../components/main_components/StarRating';
 import { HorizonRow } from '../../../../components/main_components/Feed';
@@ -57,6 +57,7 @@ import Chip from '../../../../components/main_components/Slug_Page/Chip';
 import { useBookplate } from '../../../../components/main_components/Bookplate';
 import { albumKey } from '../../../../hooks/useListeningBeacon';
 import { parseHorizon, splitNotes } from '../../../../library/entry_formatter';
+import { foldGenre } from '../../../../library/music_data_api';
 import { carrySender, journalUrl, tidyJournal } from '../../../../library/return_address';
 import { arrivingBack } from '../../../../library/handoff';
 
@@ -92,7 +93,14 @@ const heartsOf = entry => String(entry?.hearts || '');
 const countHearts = h => [...h].filter(c => c === '1').length;
 const some = (n, one, many) => (n === 1 ? one : many.replace('#', n));
 const isOn = v => v === true || v === 'true';
-const genreOf = entry => String(entry?.genre || '').trim() || null;
+// A genre as the wall folds it (foldGenre), and Rap with Hip-Hop/Rap, which
+// Apple files records under both ways: two journals are only compared fairly
+// when one genre is not two rows. A genre typed by hand as a list is its
+// first.
+const genreOf = entry => {
+  const g = foldGenre(String(entry?.genre || '').split(/[,;]/)[0]);
+  return (g.toLowerCase() === 'rap' ? 'Hip-Hop/Rap' : g) || null;
+};
 const yearOf = entry => String(entry?.year || '').match(/[0-9]{4}/)?.[0] || null;
 const decadeOf = entry => { const y = yearOf(entry); return y ? `${y.slice(0, 3)}0s` : null; };
 // The answer given most often, the first to reach it on a tie; none when
@@ -143,6 +151,72 @@ function tasteOf(entries) {
     first: first && { entry: first, says: monthOf(first.posted_at) },
   };
 }
+
+// ── Face to face ──────────────────────────────────────────────────────────
+// How each of you spreads over one question's answers — which genres, which
+// decades — as the share of your own records, so a journal of three hundred
+// and one of thirty are set side by side fairly. Records are album listens,
+// one per record, as everywhere on this page.
+function spread(mine, theirs, answerOf) {
+  const tally = records => {
+    const m = new Map();
+    let total = 0;
+    for (const e of records) {
+      const a = answerOf(e);
+      if (!a) continue;
+      total += 1;
+      const id = a.toLowerCase();
+      m.set(id, { label: m.get(id)?.label || a, n: (m.get(id)?.n || 0) + 1 });
+    }
+    return { m, total };
+  };
+  const a = tally(mine);
+  const b = tally(theirs);
+  if (!a.total && !b.total) return [];
+  return [...new Set([...a.m.keys(), ...b.m.keys()])].map(id => ({
+    id,
+    label: (a.m.get(id) || b.m.get(id)).label,
+    you: a.total ? (a.m.get(id)?.n || 0) / a.total : 0,
+    them: b.total ? (b.m.get(id)?.n || 0) / b.total : 0,
+  }));
+}
+
+const starsOf = e => {
+  const v = num(e.rating_value);
+  if (v === null) return null;
+  const half = Math.round(v * 2) / 2;
+  if (half < 3) return 'Under 3';
+  return `${String(Math.floor(half))}${half % 1 ? '½' : ''} ${half === 1 ? 'star' : 'stars'}`;
+};
+const STAR_ORDER = ['5 stars', '4½ stars', '4 stars', '3½ stars', '3 stars', 'Under 3'];
+// How old a record was when it was logged: the year it was logged less the
+// year it came out.
+const AGES = ['That year', '1–2 years old', '3–9 years old', '10–29 years old', '30+ years old'];
+const ageOf = e => {
+  const made = Number(yearOf(e));
+  const heard = new Date(e.posted_at).getFullYear();
+  if (!made || !heard) return null;
+  const gap = heard - made;
+  return gap <= 0 ? AGES[0] : gap <= 2 ? AGES[1] : gap <= 9 ? AGES[2] : gap <= 29 ? AGES[3] : AGES[4];
+};
+const both = r => r.you + r.them;
+const inOrder = order => (x, y) => order.indexOf(x.label) - order.indexOf(y.label);
+// The views, in the menu's order. `most` keeps the longest lists to the
+// answers that say the most; `together` is when a row counts as one you
+// share, and is lit.
+const LENSES = [
+  { key: 'genres', label: 'Genres', answerOf: genreOf, sort: (x, y) => both(y) - both(x), most: 8 },
+  { key: 'decades', label: 'Decades', answerOf: decadeOf, sort: (x, y) => x.label.localeCompare(y.label) },
+  {
+    key: 'artists', label: 'Artists', answerOf: e => String(e.artist || '').trim() || null, most: 8,
+    // The artists you both logged first, then each of yours and theirs.
+    sort: (x, y) => (Math.min(y.you, y.them) > 0) - (Math.min(x.you, x.them) > 0) || both(y) - both(x),
+    together: r => r.you > 0 && r.them > 0,
+  },
+  { key: 'stars', label: 'Stars', answerOf: starsOf, sort: inOrder(STAR_ORDER) },
+  { key: 'age', label: 'How new', answerOf: ageOf, sort: inOrder(AGES) },
+];
+const TOGETHER_LEAST = 0.1;
 
 // One entry per record, the most recent (DECISIONS: never average across
 // listens). Album listens only, 2026-09-24: a track note rates one song, and
@@ -315,8 +389,9 @@ function Chips({ entry }) {
 // the year, then the two of you in two columns, the way the faces stand at
 // the top of the page — "left me right ghost", her word the same day. Each
 // column is one listen: the face, the stars, the marks, the horizon with its
-// hearts, the note. Yours is solid; theirs is the same thing as a ghost, and
-// their note, which has to be read, is in softer ink rather than faded. The
+// hearts, the note. Each column wears its owner's colour, as the faces at
+// the top of the page do; theirs was a ghost of yours until the same day
+// ("we don't need the other person to be a ghost anymore"). The
 // columns keep row with each other, so the two sets of stars, the two
 // horizons and the two notes each start level.
 //
@@ -353,9 +428,9 @@ function Versus({ item, name, address, songs, myNote, theirNote, titles, turn, a
   const anyBars = shape.yours.length > 0 || shape.hers.length > 0;
 
   // A row is two cells, yours and theirs, so the grid keeps them level.
-  const row = (what, left, right, ghost = true) => [
+  const row = (what, left, right) => [
     <div key={`${what}-you`} className={`pn-cell pn-cell--you pn-cell--${what}`}><div className="pn-side">{left}</div></div>,
-    <div key={`${what}-them`} className={`pn-cell pn-cell--them pn-cell--${what}`}><div className={'pn-side' + (ghost ? ' pn-ghost' : '')}>{right}</div></div>,
+    <div key={`${what}-them`} className={`pn-cell pn-cell--them pn-cell--${what}`}><div className="pn-side">{right}</div></div>,
   ];
   const unlogged = <p className="pn-unlogged">Not logged yet.</p>;
   const noNote = <p className="pn-said-none">Didn&rsquo;t write about it.</p>;
@@ -384,12 +459,10 @@ function Versus({ item, name, address, songs, myNote, theirNote, titles, turn, a
       <div className="pn-sides">
         {row('who',
           <><Face src="/api/portrait" small />You</>,
-          <><Face src={theirFace} small />{name}</>,
-          false)}
+          <><Face src={theirFace} small />{name}</>)}
         {row('stars',
           mine ? (myRating !== null && <div className="pn-stars-of"><StarRating rating={myRating} size={20} /></div>) : unlogged,
-          theirs ? (theirRating !== null && <div className="pn-stars-of" aria-label={`${name}: ${stars(theirRating)}`}><StarRating rating={theirRating} size={20} /></div>) : unlogged,
-          Boolean(theirs))}
+          theirs ? (theirRating !== null && <div className="pn-stars-of" aria-label={`${name}: ${stars(theirRating)}`}><StarRating rating={theirRating} size={20} /></div>) : unlogged)}
         {anyChips && row('chips', <Chips entry={mine} />, <Chips entry={theirs} />)}
         {anyBars && row('bars',
           <HorizonRow bars={shape.yours} hearts={shape.yourHearts} className="fd-cmp-bars pn-bars" label="How you heard it, track by track" />,
@@ -410,8 +483,7 @@ function Versus({ item, name, address, songs, myNote, theirNote, titles, turn, a
                 {hers ? <Note text={hers} words={words} /> : !cannot && noNote}
                 {way}
               </>
-            ),
-            false))}
+            )))}
       </div>
     </div>
   );
@@ -583,11 +655,83 @@ function Opened({ from, tile, turn, count, onGone, children }) {
   );
 }
 
+// The two of you face to face over one question (Miyel, 2026-10-24: "i
+// like the bars with different views"): the answers down the middle, your
+// share of your records growing to the left in your colour and theirs to the
+// right in theirs. An even shape is taste that matches; a lopsided one sways,
+// and shows which way. An answer you both give a tenth of your records or
+// more is lit. The menu over it changes the question, as the wall's views
+// menu changes its order, and is drawn the same.
+function FaceToFace({ lenses, name }) {
+  const [key, setKey] = useState(lenses[0]?.key);
+  const [open, setOpen] = useState(false);
+  const lens = lenses.find(l => l.key === key) || lenses[0];
+  useEffect(() => {
+    if (!open) return undefined;
+    const onKey = e => { if (e.key === 'Escape') { e.stopPropagation(); setOpen(false); } };
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
+  }, [open]);
+  if (!lens) return null;
+  const top = Math.max(...lens.rows.map(r => Math.max(r.you, r.them)), 0.0001);
+  const pct = v => `${Math.round(v * 100)}%`;
+  return (
+    <section className="pn-ftf" aria-label={`${lens.label}: you and ${name}`}>
+      <div className="pn-ftf-head">
+        <span className="pn-ftf-who pn-ftf-who--you">You</span>
+        <span className="pn-ftf-lens">
+          {open && <div className="arc-views-scrim" onClick={() => setOpen(false)} />}
+          <button type="button" className="arc-ctl pn-ftf-now" onClick={() => setOpen(o => !o)} aria-expanded={open} aria-haspopup="menu">
+            {lens.label}<CaretDown size={11} weight="bold" aria-hidden="true" />
+          </button>
+          {open && (
+            <span className="arc-views pn-ftf-menu" role="menu" aria-label="Compare by">
+              {lenses.map(l => (
+                <button
+                  key={l.key}
+                  type="button"
+                  role="menuitemradio"
+                  aria-checked={l.key === lens.key}
+                  className={'ln-word arc-views-word' + (l.key === lens.key ? ' ln-word--on' : '')}
+                  onClick={() => { setKey(l.key); setOpen(false); }}
+                >
+                  {l.label}
+                </button>
+              ))}
+            </span>
+          )}
+        </span>
+        <span className="pn-ftf-who pn-ftf-who--them">{name}</span>
+      </div>
+      <div className="pn-ftf-rows" key={lens.key}>
+        {lens.rows.map((r, i) => (
+          <div
+            key={r.id}
+            className={'pn-ftf-row' + (r.together ? ' pn-ftf-row--both' : '')}
+            style={{ '--i': i }}
+            aria-label={`${r.label}: you ${pct(r.you)}, ${name} ${pct(r.them)}`}
+          >
+            <span className="pn-ftf-side pn-ftf-side--you" aria-hidden="true">
+              {r.you > 0 && <span className="pn-ftf-pct">{pct(r.you)}</span>}
+              <i style={{ width: `${(r.you / top) * 100}%` }} />
+            </span>
+            <span className="pn-ftf-label" aria-hidden="true">{r.label}</span>
+            <span className="pn-ftf-side pn-ftf-side--them" aria-hidden="true">
+              <i style={{ width: `${(r.them / top) * 100}%` }} />
+              {r.them > 0 && <span className="pn-ftf-pct">{pct(r.them)}</span>}
+            </span>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 // ── The facts ─────────────────────────────────────────────────────────────
 // A card each, swiped through sideways (Miyel, 2026-10-24: "maybe they are
 // a big screen swiped through" — a list of them ran too long down the
 // page). On a card, the question, then your answer on your side and theirs
-// on theirs, faint, as the faces above stand. When the two of you give the
+// on theirs, each in its owner's colour, as the faces above stand. When the two of you give the
 // same answer it is said once, in the middle, with a sparkle either side —
 // the fun of it is finding out ("this is fun to do. it should feel that
 // way"). The marks wear their own emblems, as the entry wears them: stars
@@ -862,7 +1006,15 @@ export default function PersonPage({ layered = false }) {
       { kind: 'hearts', label: 'Favorite songs', sub: onShared, you: hearts('mine'), them: hearts('theirs') },
     ] : [];
 
-    return { shared, facts: { taste, together, each } };
+    const mineRecords = [...mineLatest.values()];
+    const theirRecords = [...theirLatest.values()];
+    const lenses = LENSES.map(l => {
+      const rows = spread(mineRecords, theirRecords, l.answerOf).sort(l.sort).slice(0, l.most || undefined)
+        .map(r => ({ ...r, together: l.together ? l.together(r) : Math.min(r.you, r.them) >= TOGETHER_LEAST }));
+      return { key: l.key, label: l.label, rows };
+    }).filter(l => l.rows.length > 0);
+
+    return { shared, lenses, facts: { taste, together, each } };
   }, [mine, theirs, sent, cameBack, out, person]);
 
   const deck = decks.shared;
@@ -972,6 +1124,7 @@ export default function PersonPage({ layered = false }) {
 
             {!ready ? <div className="own-skeleton pn-waiting" /> : (
               <>
+                <FaceToFace lenses={decks.lenses} name={name} />
                 <Facts facts={decks.facts} name={name} />
                 {deck.length === 0 && <p className="pn-note">You and {name} haven&rsquo;t logged any of the same records yet.</p>}
 

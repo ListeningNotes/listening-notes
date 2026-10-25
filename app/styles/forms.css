@@ -2222,6 +2222,15 @@ textarea.st-field { resize: vertical; min-height: 96px; }
    game"): the two faces, a sentence, the filters, then one record at a
    time with both of you on it. Nobody's side is bigger and nobody scores. */
 .pn-body { max-width: 560px; padding: 18px 24px 40px; }
+/* A colour each, 2026-10-24: the ghost that told their side from yours is
+   gone (Miyel: "we don't need the other person to be a ghost anymore"), and
+   each of you wears a colour instead — round your face, on your bars, on
+   your answers. Here and on a record opened over the page, which is drawn
+   outside it. */
+.pn-body, .pn-open { --pn-you: #e0603f; --pn-them: #2f8f8a; }
+[data-theme='dark'] .pn-body, [data-theme='dark'] .pn-open { --pn-you: #f08262; --pn-them: #4fb5ae; }
+.pn-head .pn-who:first-child .pn-face { box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--pn-you); }
+.pn-head .pn-who:last-child .pn-face { box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--pn-them); }
 .pn-head { display: flex; align-items: flex-start; justify-content: center; gap: 22px; padding: 6px 2px 4px; }
 .pn-who { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 120px; min-width: 0; }
 .pn-who-name {
@@ -2243,6 +2252,41 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 .pn-face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .pn-note { font-size: 13px; line-height: 1.6; color: var(--ink-soft); margin: 14px 2px 0; text-align: center; }
 .pn-waiting { margin-top: 18px; height: 520px; border-radius: 22px; }
+
+/* ── Face to face ── (Miyel, 2026-10-24: "i like the bars with different
+   views"). The answers down the middle; your share growing left in your
+   colour, theirs right in theirs, each from the middle out, with the share
+   at its end. An answer you both give is lit. The menu over it is the
+   wall's views menu (journal.css), hung from the middle. */
+.pn-ftf { margin-top: 22px; display: flex; flex-direction: column; gap: 10px; }
+.pn-ftf-head, .pn-ftf-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(84px, auto) minmax(0, 1fr); align-items: center; gap: 8px; }
+.pn-ftf-who { font-family: var(--font-label); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pn-ftf-who--you { color: var(--pn-you); text-align: right; }
+.pn-ftf-who--them { color: var(--pn-them); }
+.pn-ftf-lens { position: relative; display: flex; justify-content: center; }
+.arc-ctl.pn-ftf-now { color: var(--ink); gap: 5px; font-size: 10px; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 5px; }
+.pn-ftf-menu { left: 50%; transform: translateX(-50%); width: 170px; animation: none; }
+.pn-ftf-rows { display: flex; flex-direction: column; gap: 6px; }
+.pn-ftf-row { animation: pn-arrive 0.32s cubic-bezier(0.22, 0.61, 0.36, 1) both; animation-delay: calc(var(--i, 0) * 40ms); }
+.pn-ftf-label {
+  text-align: center; font-size: 12px; font-weight: 600; line-height: 1.2; color: var(--ink-faint);
+  overflow-wrap: anywhere;
+}
+.pn-ftf-row--both .pn-ftf-label { color: var(--ink); font-weight: 800; }
+.pn-ftf-side { display: flex; align-items: center; gap: 6px; min-width: 0; height: 14px; }
+.pn-ftf-side--you { justify-content: flex-end; }
+.pn-ftf-side i { display: block; height: 100%; min-width: 0; flex-shrink: 1; animation: pn-ftf-grow 0.6s cubic-bezier(0.22, 0.61, 0.36, 1) both; animation-delay: calc(var(--i, 0) * 40ms + 0.08s); }
+.pn-ftf-side--you i { background: var(--pn-you); border-radius: 7px 2px 2px 7px; transform-origin: right center; }
+.pn-ftf-side--them i { background: var(--pn-them); border-radius: 2px 7px 7px 2px; transform-origin: left center; }
+@keyframes pn-ftf-grow { from { transform: scaleX(0); } to { transform: none; } }
+.pn-ftf-pct { flex-shrink: 0; font-family: var(--font-label); font-size: 9px; color: var(--ink-faint); }
+@media (prefers-reduced-motion: reduce) { .pn-ftf-row, .pn-ftf-side i { animation: none; } }
+
+/* On a card, each answer in its owner's colour. */
+.pn-card-vs .pn-card-side:first-child .pn-fact-word,
+.pn-card-vs .pn-card-side:first-child .pn-fact-album { color: color-mix(in srgb, var(--pn-you) 82%, var(--ink)); }
+.pn-card-side--them .pn-fact-word,
+.pn-card-side--them .pn-fact-album { color: color-mix(in srgb, var(--pn-them) 82%, var(--ink)); }
 
 /* ── The facts ── (Miyel, 2026-10-24: "maybe they are a big screen swiped
    through"). A card each in a strip that scrolls sideways and stops on
@@ -2271,7 +2315,6 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 .pn-card-sub { font-family: var(--font-label); font-size: 10px; letter-spacing: 0.04em; color: var(--ink-faint); text-align: center; }
 .pn-card-vs { width: 100%; margin-top: 10px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: center; }
 .pn-card-side { display: flex; justify-content: center; text-align: center; min-width: 0; }
-.pn-card-side--them { opacity: 0.45; }
 .pn-card-both { margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 12px; min-width: 0; }
 .pn-sparkle { color: #E8B84B; flex-shrink: 0; }
 
@@ -2383,7 +2426,6 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 
 /* Ghosting is opacity on the whole thing, so their stars, chips and bars
    keep their own colours and only their weight changes. */
-.pn-ghost { opacity: 0.38; }
 
 /* The line only this journal could write, over the two of you. */
 .pn-vs-line {
@@ -2413,7 +2455,8 @@ textarea.st-field { resize: vertical; min-height: 96px; }
   font-family: var(--font-label); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint);
   overflow-wrap: anywhere;
 }
-.pn-cell--them.pn-cell--who .pn-face { opacity: 0.7; }
+.pn-cell--you.pn-cell--who .pn-side { color: var(--pn-you); }
+.pn-cell--them.pn-cell--who .pn-side { color: var(--pn-them); }
 .pn-face--small { width: 22px; height: 22px; }
 .pn-stars-of { display: flex; justify-content: center; }
 .pn-unlogged { margin: 2px 0 0; font-size: 13px; line-height: 1.5; color: var(--ink-faint); text-align: center; }
@@ -2421,7 +2464,9 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 .pn-cell--chips .pn-side { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 6px; }
 /* Each listen's horizon, its hearts over the bars that earned them. */
 .pn-bars { height: 48px; gap: 2px; }
-.pn-bars .fd-cmp-bar { animation-delay: 0.05s; background: color-mix(in srgb, var(--ink) 88%, transparent); }
+.pn-bars .fd-cmp-bar { animation-delay: 0.05s; }
+.pn-cell--you .pn-bars .fd-cmp-bar { background: var(--pn-you); }
+.pn-cell--them .pn-bars .fd-cmp-bar { background: var(--pn-them); }
 
 /* ── The notes ── under the horizons, each in its column, in full; a long
    one opens folded, its last lines fading, with Read all under it. Theirs
@@ -2429,7 +2474,6 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 .pn-cell--note { padding-top: 18px; }
 .pn-cell--note .pn-side { align-items: stretch; gap: 8px; }
 .pn-said-text { font-size: 14px; line-height: 1.55; color: var(--ink); white-space: pre-line; overflow-wrap: anywhere; }
-.pn-cell--them .pn-said-text { color: var(--ink-soft); }
 .pn-said-text p { margin: 0 0 0.7em; }
 .pn-said-text p:last-child { margin-bottom: 0; }
 .pn-said-text--folded {
