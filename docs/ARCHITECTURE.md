@@ -62,10 +62,11 @@ publicly):
 - `/dashboard/people` — the address book as a grid of faces (Friends), with
   the ways one gets in — a paste, a scanned code, a send that carried one —
   and Invite and Add in its header. The Friends stop on the phone's band
-- `/dashboard/people/[id]` — your page about one person: the two of you, one
-  record at a time — both stars, both horizons song by song, both notes, the
-  songs and words you share — with filters for what you both have, what each
-  of you put the other onto, and their five stars you have not logged
+- `/dashboard/people/[id]` — your page about one person: the two of you over
+  a wall of covers, with filters for what you both have, what each of you put
+  the other onto, and their five stars you have not logged; a cover opens,
+  growing out of itself as an entry does, to the two of you on that record in
+  two columns — stars, marks, horizons, notes, the songs and words you share
 - `/settings` — the machinery: address, the password, Back up your journal,
   keeping up to date, the home-screen step, and Sign out. Reached from the
   card's ··· and, on a desk, from the desk's Settings row. The card's own
@@ -345,7 +346,7 @@ The rooms — full pages assembled from furniture
       inbox/page.js            Everything that arrives, in one list: each row carries the mark of its kind and opens where it sits to its doors — plain, on the tokens, and a sheet over the desk; an LN. Admin letter pinned above it, the LN. mark for a face, Dismiss its only door
       feed/page.js             What the journals in the address book have logged
       people/page.js           The address book — the list, the field, the scanner
-      people/[id]/page.js      Your page about one person — the two of you, one record at a time, and what you put each other onto
+      people/[id]/page.js      Your page about one person — the two of you over a wall of the records you share, each opening to both of you on it, and what you put each other onto
       report/page.js           Report a problem — one box, Send
 
 ---

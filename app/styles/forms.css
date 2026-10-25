@@ -2263,13 +2263,40 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 .pn-view:hover { color: var(--ink-soft); }
 .pn-view--on { color: var(--ink); border-bottom-color: var(--ink); }
 
-/* ── The record on screen ──
+/* ── The wall ── the records the two of you share, as your own wall draws
+   them (.arc-grid and .ft, journal.css): covers alone, three across on a
+   phone. A cover is a button rather than a link, since what it opens is
+   not an address. */
+.pn-grid { margin-top: 22px; }
+.pn-tile { border: 0; padding: 0; background: none; font: inherit; width: 100%; }
+
+/* ── A record, opened ── over everything, the full screen, growing out of
+   its cover the way an entry grows out of its tile (.lay, entry.css). It
+   scrolls itself; the page under it holds still. */
+.pn-open {
+  position: fixed; inset: 0; z-index: 340;
+  background: var(--bg);
+  overflow-y: auto; overscroll-behavior: contain;
+  touch-action: pan-y; transform-origin: 0 0;
+}
+.pn-open-page { max-width: 560px; margin: 0 auto; padding: 58px 16px 48px; box-sizing: border-box; }
+/* The way back, in the corner the entry's own sits in on a wide window. */
+.pn-open-back {
+  position: fixed; z-index: 1;
+  top: calc(env(safe-area-inset-top, 0px) + 14px); left: 12px;
+  width: 38px; height: 38px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  border: 0; cursor: pointer; color: var(--ink-soft);
+  background: color-mix(in srgb, var(--bg) 86%, transparent);
+}
+.pn-open-back:hover { color: var(--ink); background: var(--panel); }
+
+/* ── The record, opened ──
    Drawn as an entry's first screen is (app/styles/entry.css, .ln-screen-one):
    the cover large with its rounded corner, border and lift, the title in the
-   display face, the artist and year in small capitals, the stars, the marks
-   as chips. No panel round it — it is the record on the page, as an entry
-   is. Yours solid; theirs a ghost of the same thing (Miyel, 2026-10-24). */
-.pn-stage { margin-top: 22px; touch-action: pan-y; }
+   display face, the artist and year in small capitals. No panel round it —
+   it is the record on the page, as an entry is. Yours solid; theirs a ghost
+   of the same thing (Miyel, 2026-10-24). */
 .pn-vs { display: flex; flex-direction: column; align-items: center; animation: pn-arrive 0.28s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
 @keyframes pn-arrive { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 .pn-vs-top { display: grid; grid-template-columns: 40px auto 40px; align-items: center; gap: 10px; }
@@ -2376,18 +2403,6 @@ textarea.st-field { resize: vertical; min-height: 96px; }
   width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 10px;
 }
 .pn-turn-btn:hover { color: var(--ink); background: var(--panel); }
-
-/* ── Their five stars you have not heard ── a list of doors to their
-   journal. */
-.pn-unheard { list-style: none; margin: 16px 0 0; padding: 0; border-top: 1px solid var(--border); }
-.pn-unheard-row { display: flex; align-items: center; gap: 12px; padding: 10px 2px; border-bottom: 1px solid var(--border); text-decoration: none; color: inherit; }
-.pn-unheard-art { width: 48px; height: 48px; flex-shrink: 0; border-radius: 10%; overflow: hidden; background: var(--panel); }
-.pn-unheard-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.pn-unheard-said { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-.pn-unheard-album { font-size: 14px; font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.pn-unheard-artist { font-family: var(--font-label); font-size: 11px; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.pn-unheard-tag { flex-shrink: 0; font-family: var(--font-label); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); }
-a.pn-unheard-row:hover .pn-unheard-album { text-decoration: underline; text-underline-offset: 3px; }
 
 @media (prefers-reduced-motion: reduce) { .pn-vs { animation: none; } }
 @media (max-width: 640px) {

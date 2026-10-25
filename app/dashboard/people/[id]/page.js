@@ -16,12 +16,15 @@
 // "i was thinking one person one side one person the other you click
 // through shared albums… almost like a vs screen in a video game. then other
 // fun cool metrics that are exciting that only my app could know." So the
-// page is a versus screen. You on the left, them on the right, one record at
-// a time: the cover, both of your stars and marks, both horizons, and one
-// line only this journal could write — the songs you both hearted above all,
-// which no other site can know. A row of filters chooses which records you
-// flip through, and a sentence over them says the one thing that view adds
-// up to. Between the two faces, the compare mark and not "vs" — her word,
+// page is a versus screen: you on the left, them on the right. A row of
+// filters chooses which records, a sentence over them says the one thing
+// that view adds up to, and the records are a wall of covers, as your own
+// is (her next word, the same day: "a grid of shared albums then opening it
+// opens just like a regular wall entry would but compared"). A record opens
+// to the two of you on it: both of your stars, marks, horizons and notes,
+// and one line only this journal could write — the songs you both hearted
+// above all, which no other site can know. That is what this page has and
+// their wall does not: their wall is them alone. Between the two faces, the compare mark and not "vs" — her word,
 // the same day: friendly, "like an & or something else… i meant the
 // compare sign" — the same Shuffle every door that opens this page wears
 // (Friends, the inbox, the feed).
@@ -40,13 +43,14 @@
 // stored and nobody learns they were looked at. Their writing stays on their
 // journal, where every one of their records here can take you.
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { CaretLeft, CaretRight, Printer, Shuffle, User } from '@phosphor-icons/react';
 import SiteNav from '../../../../components/main_components/SiteNav';
 import StarRating from '../../../../components/main_components/StarRating';
-import { HorizonRow, Marks } from '../../../../components/main_components/Feed';
+import { HorizonRow } from '../../../../components/main_components/Feed';
 import Chip from '../../../../components/main_components/Slug_Page/Chip';
 import { useBookplate } from '../../../../components/main_components/Bookplate';
 import { albumKey } from '../../../../hooks/useListeningBeacon';
@@ -63,6 +67,10 @@ const EACH_MS = 8000;
 const ALL_TOP_LEAST = 3;
 // How far a finger has to travel across the record to turn to the next one.
 const SWIPE_PX = 40;
+// How long an opened record takes to grow out of its cover, on the curve
+// the entry layer grows on (LayerEntry.js).
+const GROW_MS = 420;
+const GROW_EASE = 'cubic-bezier(0.22, 0.61, 0.36, 1)';
 // A note longer than this opens folded, twelve lines of it showing and Read all
 // under it. Most notes are shorter and never fold.
 const FOLD_AT = 450;
@@ -355,6 +363,172 @@ function Versus({ item, name, address, songs, myNote, theirNote, titles, turn, a
   );
 }
 
+// ── A record, opened ──────────────────────────────────────────────────────
+// The page is a wall of the records the two of you share, and a record
+// opens off it the way an entry opens off your own wall (Miyel, 2026-10-24:
+// "a grid of shared albums then opening it opens just like a regular wall
+// entry would but compared"): it grows out of the cover that was pressed to
+// fill the screen, and goes back into it — a copy of the cover flying home
+// while the rest fades — on a pull down from the top, Escape, or the caret.
+// Sideways is the neighbours on the wall, in its order, by swipe, by the
+// arrows either side of the cover, or by ← and →. It is the entry layer's
+// way of opening (LayerEntry.js) without its route: this page may already
+// be on a sheet of its own, and a record here is not an address.
+//
+// Drawn over everything, outside the page, so the sheet this page may sit on
+// never sees its touches; and its keys are taken before the sheet's, so
+// Escape puts the record down rather than the whole page.
+function Opened({ from, tile, turn, count, onGone, children }) {
+  const sheet = useRef(null);
+  const going = useRef(false);
+
+  useLayoutEffect(() => {
+    const el = sheet.current;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!el || !from || reduced) {
+      const run = el?.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 240, easing: 'ease-out' });
+      return () => run?.cancel();
+    }
+    const W = el.offsetWidth || window.innerWidth;
+    const H = el.offsetHeight || window.innerHeight;
+    const run = el.animate([
+      { transformOrigin: '0 0', transform: `translate(${from.x}px, ${from.y}px) scale(${from.w / W}, ${from.h / H})`, borderRadius: '14px' },
+      { transformOrigin: '0 0', transform: 'none', borderRadius: '0px' },
+    ], { duration: GROW_MS, easing: GROW_EASE });
+    return () => run.cancel();
+  }, [from]);
+
+  // The page under it holds still while it is open. Only a lock this put on
+  // comes off with it: on a sheet, the sheet's own is left where it was.
+  useEffect(() => {
+    const root = document.documentElement;
+    if (root.classList.contains('ln-locked')) return undefined;
+    root.classList.add('ln-locked');
+    return () => root.classList.remove('ln-locked');
+  }, []);
+
+  const leave = useCallback((pulled = 0) => {
+    if (going.current) return;
+    going.current = true;
+    const el = sheet.current;
+    let gone = false;
+    const done = () => { if (gone) return; gone = true; onGone(); };
+    window.setTimeout(done, GROW_MS + 100);
+    if (!el) { done(); return; }
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const fade = el.animate([
+      { opacity: 1, transform: `translateY(${pulled}px)` },
+      { opacity: 0, transform: `translateY(${pulled}px)` },
+    ], { duration: 200, easing: 'ease-out', fill: 'forwards' });
+    const box = reduced ? null : tile()?.getBoundingClientRect();
+    const cover = el.querySelector('.pn-vs-art img');
+    if (!box || !cover || box.bottom < 0 || box.top > window.innerHeight) {
+      fade.onfinish = done;
+      return;
+    }
+    const at = cover.getBoundingClientRect();
+    cover.style.visibility = 'hidden';
+    const flyer = document.createElement('img');
+    flyer.src = cover.currentSrc || cover.src;
+    flyer.alt = '';
+    Object.assign(flyer.style, {
+      position: 'fixed', zIndex: 341, left: `${at.left}px`, top: `${at.top}px`,
+      width: `${at.width}px`, height: `${at.height}px`, objectFit: 'cover',
+      borderRadius: '16px', transformOrigin: '0 0', pointerEvents: 'none',
+    });
+    document.body.appendChild(flyer);
+    const run = flyer.animate([
+      { transform: 'none' },
+      { transform: `translate(${box.left - at.left}px, ${box.top - at.top}px) scale(${box.width / at.width}, ${box.height / at.height})`, borderRadius: '10px' },
+    ], { duration: GROW_MS * 0.75, easing: GROW_EASE, fill: 'forwards' });
+    const land = () => { flyer.remove(); done(); };
+    run.onfinish = land;
+    run.oncancel = land;
+    window.setTimeout(() => flyer.remove(), GROW_MS + 100);
+  }, [tile, onGone]);
+
+  // Before the sheet's keys, and instead of them.
+  useEffect(() => {
+    const onKey = e => {
+      if (e.key === 'Escape') { e.stopPropagation(); leave(); }
+      else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        e.stopPropagation();
+        if (count > 1) turn(e.key === 'ArrowLeft' ? -1 : 1);
+      }
+    };
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
+  }, [leave, turn, count]);
+
+  // The finger, decided on its first move as the entry layer decides it:
+  // mostly down from the top is the pull, which the sheet follows and which
+  // puts the record down past a fifth of the screen or on a flick; mostly
+  // sideways is the neighbour. Native listeners, so the first move can be
+  // kept from the browser.
+  useEffect(() => {
+    const el = sheet.current;
+    if (!el) return undefined;
+    let pull = null;
+    const begin = e => {
+      if (e.touches.length !== 1) { pull = null; return; }
+      const t = e.touches[0];
+      pull = { x: t.clientX, y: t.clientY, at: e.timeStamp, dx: 0, dy: 0, axis: null, top: el.scrollTop <= 0 };
+    };
+    const move = e => {
+      if (!pull || e.touches.length !== 1) return;
+      const t = e.touches[0];
+      pull.dx = t.clientX - pull.x;
+      pull.dy = t.clientY - pull.y;
+      pull.last = e.timeStamp;
+      if (!pull.axis) {
+        if (Math.abs(pull.dx) < 6 && Math.abs(pull.dy) < 6) return;
+        if (Math.abs(pull.dx) > Math.abs(pull.dy)) pull.axis = 'x';
+        else if (pull.top && pull.dy > 0) pull.axis = 'y';
+        else { pull = null; return; }
+      }
+      if (e.cancelable) e.preventDefault();
+      if (pull.axis === 'y') {
+        el.style.transition = 'none';
+        el.style.transform = `translateY(${Math.max(0, pull.dy)}px)`;
+      }
+    };
+    const end = () => {
+      const done = pull;
+      pull = null;
+      if (!done || !done.axis) return;
+      if (done.axis === 'x') {
+        if (count > 1 && Math.abs(done.dx) > SWIPE_PX) turn(done.dx < 0 ? 1 : -1);
+        return;
+      }
+      const dy = Math.max(0, done.dy);
+      const fast = dy / Math.max(1, (done.last || done.at) - done.at) > 0.3;
+      if (dy > el.offsetHeight * 0.2 || fast) { el.style.transform = ''; leave(dy); return; }
+      el.style.transition = `transform 0.28s ${GROW_EASE}`;
+      el.style.transform = '';
+    };
+    el.addEventListener('touchstart', begin, { passive: true });
+    el.addEventListener('touchmove', move, { passive: false });
+    el.addEventListener('touchend', end);
+    el.addEventListener('touchcancel', end);
+    return () => {
+      el.removeEventListener('touchstart', begin);
+      el.removeEventListener('touchmove', move);
+      el.removeEventListener('touchend', end);
+      el.removeEventListener('touchcancel', end);
+    };
+  }, [leave, turn, count]);
+
+  return createPortal(
+    <div ref={sheet} className="pn-open" role="dialog" aria-modal="true">
+      <button type="button" className="pn-open-back" onClick={() => leave()} aria-label="Close" title="Close">
+        <CaretLeft size={18} weight="regular" aria-hidden="true" />
+      </button>
+      <div className="pn-open-page">{children}</div>
+    </div>,
+    document.body,
+  );
+}
+
 export default function PersonPage({ layered = false }) {
   const { id } = useParams();
   const router = useRouter();
@@ -388,6 +562,9 @@ export default function PersonPage({ layered = false }) {
   const [out, setOut] = useState([]);
   const [view, setView] = useState(null);
   const [at, setAt] = useState(0);
+  // The record open over the wall, if one is: where its cover was when it
+  // was pressed, for it to grow out of.
+  const [opened, setOpened] = useState(null);
   // Your own entry for each record, read the first time the record is on
   // screen: the names of its songs (the list carries the hearts but not the
   // titles) and your note. slug → { titles, note }.
@@ -495,13 +672,14 @@ export default function PersonPage({ layered = false }) {
       fromYou.push({ key, mine: mineLatest.get(key) || null, theirs: theirLatest.get(key) || null, from: 'you', album: s.album, artist: s.artist, album_art: s.album_art });
     }
 
-    // Their five-star records you have not logged: a list to go and hear,
-    // not a versus — there is nobody on your side of it yet.
-    const unheard = newestFirst([...theirLatest.values()].filter(t => num(t.rating_value) === 5 && !mineLatest.has(t.album_key)));
+    // Their five-star records you have not logged, to go and hear: your
+    // side of each is empty, and one they sent you says so.
     const sentKeys = new Set(fromThem.map(x => x.key));
+    const unheard = newestFirst([...theirLatest.values()].filter(t => num(t.rating_value) === 5 && !mineLatest.has(t.album_key)))
+      .map(t => ({ key: t.album_key, mine: null, theirs: t, from: sentKeys.has(t.album_key) ? 'them' : null }));
 
     const loved = list => list.filter(x => num(x.mine?.rating_value) !== null && num(x.mine.rating_value) >= HIT).length;
-    return { shared, songs, fromThem, fromYou, unheard, sentKeys, lovedOfThem: loved(fromThem) };
+    return { shared, songs, fromThem, fromYou, unheard, lovedOfThem: loved(fromThem) };
   }, [mine, theirs, sent, cameBack, out, person]);
 
   // The filters, in their order, and only the ones with something in them:
@@ -514,13 +692,24 @@ export default function PersonPage({ layered = false }) {
     { key: 'unheard', label: `${name}'s 5 stars`, list: decks.unheard },
   ].filter(v => v.list.length > 0), [decks, name]);
   const current = views.find(v => v.key === view) || views[0] || null;
-  const deck = current && current.key !== 'unheard' ? current.list : [];
+  const deck = current ? current.list : [];
   const item = deck.length ? deck[Math.min(at, deck.length - 1)] : null;
-  const turn = step => setAt(i => (deck.length ? (Math.min(i, deck.length - 1) + step + deck.length) % deck.length : 0));
-  const choose = key => { setView(key); setAt(0); };
+  // Only an opened record is read for: the wall is covers alone.
+  const shown = opened ? item : null;
+  const count = deck.length;
+  const turn = useCallback(step => setAt(i => (count ? (Math.min(i, count - 1) + step + count) % count : 0)), [count]);
+  const choose = key => { setView(key); setAt(0); setOpened(null); };
+  const open = (i, tile) => {
+    const box = tile.getBoundingClientRect();
+    setAt(i);
+    setOpened({ from: { x: box.left, y: box.top, w: box.width, h: box.height } });
+  };
+  // The cover on the wall for the record open now, which it goes back into.
+  const tileOfOpen = useCallback(() => document.querySelector(`[data-pn-tile="${Math.min(at, count - 1)}"]`), [at, count]);
+  const putDown = useCallback(() => setOpened(null), []);
 
-  // Your entry for the record on screen, once.
-  const slug = item?.mine?.slug;
+  // Your entry for the record open, once.
+  const slug = shown?.mine?.slug;
   useEffect(() => {
     if (!slug || asked.current.has(slug)) return;
     asked.current.add(slug);
@@ -532,8 +721,8 @@ export default function PersonPage({ layered = false }) {
       })
       .catch(() => setFull(was => ({ ...was, [slug]: { titles: [], note: '' } })));
   }, [slug]);
-  // Their note for the record on screen, once, from their journal.
-  const theirSlug = item?.theirs?.slug;
+  // Their note for the record open, once, from their journal.
+  const theirSlug = shown?.theirs?.slug;
   const theirJournal = person?.address;
   useEffect(() => {
     if (!theirSlug || !theirJournal || heard.current.has(theirSlug)) return;
@@ -555,28 +744,6 @@ export default function PersonPage({ layered = false }) {
     return named.length === shape.both.length ? named : null;
   };
   const songs = songsOf(item);
-
-  // ← and → turn the record on a keyboard; a swipe across it does on a phone.
-  useEffect(() => {
-    if (deck.length < 2) return undefined;
-    const onKey = e => {
-      if (e.target?.closest?.('input, textarea, [contenteditable="true"]')) return;
-      if (e.key === 'ArrowLeft') turn(-1);
-      if (e.key === 'ArrowRight') turn(1);
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  });
-  const touch = useRef(null);
-  const onTouchStart = e => { touch.current = e.touches[0]?.clientX ?? null; };
-  const onTouchEnd = e => {
-    const from = touch.current;
-    touch.current = null;
-    const to = e.changedTouches[0]?.clientX;
-    if (from === null || to === undefined || deck.length < 2) return;
-    if (to - from > SWIPE_PX) turn(-1);
-    else if (from - to > SWIPE_PX) turn(1);
-  };
 
   if (checking) return <div style={{ minHeight: '100vh', background: 'var(--bg)' }} />;
   if (!authed) { if (typeof window !== 'undefined') window.location.replace('/login'); return null; }
@@ -671,8 +838,30 @@ export default function PersonPage({ layered = false }) {
                   </nav>
                 )}
 
-                {item && (
-                  <section className="pn-stage" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+                {/* The records, as your wall draws them: covers alone. */}
+                <div className="arc-grid pn-grid" data-density="medium">
+                  {deck.map((x, i) => {
+                    const f = x.mine || x.theirs || x;
+                    return (
+                      <button key={x.key} type="button" className="ft pn-tile" data-pn-tile={i} onClick={e => open(i, e.currentTarget)} aria-label={f.album + (f.artist ? ` by ${f.artist}` : '')}>
+                        <div className="ft-inner">
+                          <div className="ft-face ft-face--front">
+                            {f.album_art
+                              ? <img src={f.album_art} alt="" className="ft-art" loading="lazy" draggable={false} />
+                              : <div className="ft-placeholder">{(f.album || '?')[0]}</div>}
+                            <div className="ft-hover">
+                              <div className="ft-hover-album">{f.album}</div>
+                              <div className="ft-hover-artist">{f.artist}</div>
+                            </div>
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {opened && item && (
+                  <Opened from={opened.from} tile={tileOfOpen} turn={turn} count={count} onGone={putDown}>
                     <Versus
                       key={`${current.key}:${item.key}`}
                       item={item}
@@ -683,29 +872,10 @@ export default function PersonPage({ layered = false }) {
                       theirNote={item.theirs ? (theirNotes[item.theirs.slug] === false ? false : theirNotes[item.theirs.slug]?.note) : null}
                       address={{ theirs: person.address, me }}
                       turn={turn}
-                      at={Math.min(at, deck.length - 1)}
-                      count={deck.length}
+                      at={Math.min(at, count - 1)}
+                      count={count}
                     />
-                  </section>
-                )}
-
-                {current?.key === 'unheard' && (
-                  <ul className="pn-unheard">
-                    {current.list.map(t => (
-                      <li key={t.slug}>
-                        <a href={carrySender(`${journalUrl(person.address)}/entries/${t.slug}`, me, { known: true })} className="pn-unheard-row">
-                          <span className="pn-unheard-art">{t.album_art && <img src={t.album_art} alt="" loading="lazy" />}</span>
-                          <span className="pn-unheard-said">
-                            <span className="pn-unheard-album">{t.album}</span>
-                            <span className="pn-unheard-artist">{t.artist}</span>
-                          </span>
-                          {decks.sentKeys.has(t.album_key)
-                            ? <span className="pn-unheard-tag">Sent to you</span>
-                            : <Marks entry={t} size={12} />}
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
+                  </Opened>
                 )}
               </>
             )}
