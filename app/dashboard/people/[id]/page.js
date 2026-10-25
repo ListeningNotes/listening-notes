@@ -861,6 +861,26 @@ function Facts({ facts, name }) {
   );
 }
 
+// Who the page is about: somebody in the address book, by their number in
+// it, or any journal at all, by its address — a keeper off the Board you
+// have never added (Miyel, 2026-10-24: "i want to look here at a glance and
+// know how our taste compares even if its a stranger"). A journal that is in
+// the book after all is read as the book has them. Nobody is told they were
+// looked at: everything about them is read from their public feed.
+async function whoIs(id) {
+  const said = decodeURIComponent(String(id || ''));
+  if (/^[0-9]+$/.test(said)) {
+    const r = await fetch(`/api/people/${said}`);
+    const d = r.ok ? await r.json() : {};
+    return d.person || false;
+  }
+  const address = tidyJournal(said);
+  if (!address || !address.includes('.')) return false;
+  const r = await fetch('/api/people');
+  const d = r.ok ? await r.json() : {};
+  return (d.people || []).find(p => tidyJournal(p.address) === address) || { address, name: '' };
+}
+
 export default function PersonPage({ layered = false }) {
   const { id } = useParams();
   const router = useRouter();
@@ -914,11 +934,9 @@ export default function PersonPage({ layered = false }) {
   useEffect(() => {
     if (!authed || !id) return undefined;
     let gone = false;
-    fetch(`/api/people/${id}`)
-      .then(r => (r.ok ? r.json() : { person: false }))
-      .then(d => {
+    whoIs(id)
+      .then(p => {
         if (gone) return;
-        const p = d.person || false;
         setPerson(p);
         if (!p) return;
         const theirAddress = tidyJournal(p.address);
@@ -1087,8 +1105,8 @@ export default function PersonPage({ layered = false }) {
           <button type="button" className="kt-tool" onClick={goBack} aria-label="Back" title="Back">
             <CaretLeft size={18} weight="regular" aria-hidden="true" />
           </button>
-          {person && (
-            <Link href={`/printer?person=${encodeURIComponent(id)}`} className="kt-tool" aria-label="Print the shape of the agreement" title="Print the shape of the agreement">
+          {person?.id && (
+            <Link href={`/printer?person=${encodeURIComponent(person.id)}`} className="kt-tool" aria-label="Print the shape of the agreement" title="Print the shape of the agreement">
               <Printer size={18} weight="regular" aria-hidden="true" />
             </Link>
           )}

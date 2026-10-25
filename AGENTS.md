@@ -114,7 +114,8 @@ reasoning; these are inline so nobody has to go looking.
   quotes it in their own writing. The Board may quote a keeper's own words
   from their own public entry, linked to it: that is them on their journal,
   not somebody writing on yours (Miyel, 2026-10-08). So may your page about
-  a friend show their note on a record you both logged, in full: read live
+  somebody — a friend, or a keeper off the Board — show their note on a
+  record you both logged, in full: read live
   from their journal when the record is on screen, stored nowhere, with
   their face on it and their entry one press away — you reading them, shown
   only to you (Miyel, 2026-10-24).

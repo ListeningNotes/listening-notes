@@ -1344,7 +1344,9 @@ rule was "about people writing on other people's journals... nobody's words
 about albums or comments, not this." A line from a keeper's own public entry,
 linked to it, may stand on the Board; a visitor's words never do.
 
-**A friend's note may sit beside yours on your page about them, 2026-10-24.**
+**Their note may sit beside yours on your page about them, 2026-10-24** —
+a friend's, or a stranger's off the Board, whose page opens by their address
+(her words the same day: "even if its a stranger").
 Her compare brief: reading what they actually said "is the entire point". It
 is their writing shown in full outside their journal, which the Board's quote
 is not, so it is held to three things: one entry at a time through
