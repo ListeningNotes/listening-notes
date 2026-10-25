@@ -2244,12 +2244,20 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 .pn-note { font-size: 13px; line-height: 1.6; color: var(--ink-soft); margin: 14px 2px 0; text-align: center; }
 .pn-waiting { margin-top: 18px; height: 520px; border-radius: 22px; }
 
-/* ── The facts ── (Miyel, 2026-10-24: "facts vs. the sentences"). What you
-   share, three numbers in a row for the two of you; then a row per question
-   asked of each of you, your answer under your face and theirs under
-   theirs, faint, the question between in the label face. */
-.pn-facts { margin-top: 20px; display: flex; flex-direction: column; gap: 14px; }
-.pn-facts-together { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding-bottom: 14px; border-bottom: 1px solid var(--border); }
+/* ── The facts ── (Miyel, 2026-10-24: "facts vs. the sentences… more fun on
+   this page"). A row per question: your answer under your face, theirs
+   under theirs and faint, the question in the middle with its emblem over
+   it. The same answer from both of you is said once, in the middle, with a
+   sparkle either side. Then what you share, three numbers for the two of
+   you, and the same three questions asked of each. Every fact arrives a
+   beat after the one before it. */
+.pn-facts { margin-top: 22px; display: flex; flex-direction: column; gap: 18px; }
+.pn-facts-rows { display: flex; flex-direction: column; gap: 14px; }
+.pn-facts-together {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px;
+  padding: 18px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+}
+.pn-fact, .pn-fact-row { animation: pn-arrive 0.36s cubic-bezier(0.22, 0.61, 0.36, 1) both; animation-delay: calc(var(--i, 0) * 70ms); }
 .pn-fact { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; min-width: 0; }
 .pn-fact-n {
   font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
@@ -2259,26 +2267,63 @@ textarea.st-field { resize: vertical; min-height: 96px; }
   font-family: var(--font-label); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
   line-height: 1.35; color: var(--ink-faint); text-align: center;
 }
-.pn-facts-rows { display: flex; flex-direction: column; gap: 8px; }
-.pn-facts-rows + .pn-facts-rows { padding-top: 14px; border-top: 1px solid var(--border); }
-.pn-fact-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(96px, auto) minmax(0, 1fr); align-items: baseline; gap: 14px; }
-.pn-fact-you, .pn-fact-them {
+/* The emblems: the marks in their own colours, as the entry wears them;
+   the stars in the stars' gold; the rest in the faint ink of the labels. */
+.pn-emblem { display: inline-flex; color: var(--ink-faint); }
+.pn-emblem--masterpiece { color: var(--mp); }
+.pn-emblem--hearts { color: var(--fav); }
+.pn-emblem--stars { color: #E8B84B; }
+.pn-emblem--records { color: var(--ink-soft); }
+
+.pn-fact-row {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(92px, auto) minmax(0, 1fr);
+  align-items: center; gap: 14px;
+}
+.pn-fact-q { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.pn-fact-you { display: flex; justify-content: flex-end; text-align: right; min-width: 0; }
+.pn-fact-them { display: flex; justify-content: flex-start; text-align: left; min-width: 0; opacity: 0.45; }
+.pn-fact-word {
   font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
   font-size: 18px; line-height: 1.25; color: var(--ink); overflow-wrap: anywhere;
 }
-.pn-fact-you { text-align: right; }
-.pn-fact-them { text-align: left; opacity: 0.45; }
-
-/* ── The filters ── plain words in the label face, the one on screen
-   underlined: no pills (her standing word). */
-.pn-views { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 16px; margin: 16px 0 0; }
-.pn-view {
-  border: 0; background: none; padding: 4px 0 3px; cursor: pointer;
-  font-family: var(--font-label); font-size: 11px; letter-spacing: 0.06em; color: var(--ink-faint);
-  border-bottom: 1px solid transparent;
+.pn-fact-none { font-size: 16px; color: var(--ink-faint); }
+.pn-fact-small { font-family: var(--font-label); font-size: 11px; color: var(--ink-soft); }
+.pn-fact-stars { display: inline-flex; flex-direction: column; gap: 3px; }
+.pn-fact-you .pn-fact-stars { align-items: flex-end; }
+.pn-fact-marks, .pn-fact-hearts { display: inline-flex; align-items: center; gap: 3px; flex-wrap: wrap; }
+.pn-fact-marks { color: var(--mp); }
+.pn-fact-hearts { color: var(--fav); gap: 6px; }
+.pn-fact-you .pn-fact-hearts { flex-direction: row-reverse; }
+/* A record as an answer: its cover, small, on the side nearest the middle,
+   the title and one line beside it. */
+.pn-fact-record { display: inline-flex; align-items: center; gap: 10px; min-width: 0; }
+.pn-fact-you .pn-fact-record { flex-direction: row-reverse; }
+.pn-fact-cover { width: 46px; height: 46px; flex-shrink: 0; border-radius: 8px; overflow: hidden; background: var(--panel); border: 1px solid var(--panel-border); }
+.pn-fact-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pn-fact-said { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.pn-fact-album {
+  font-size: 13px; font-weight: 700; line-height: 1.25; color: var(--ink);
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: anywhere;
 }
-.pn-view:hover { color: var(--ink-soft); }
-.pn-view--on { color: var(--ink); border-bottom-color: var(--ink); }
+.pn-fact-says { font-family: var(--font-label); font-size: 10px; letter-spacing: 0.04em; color: var(--ink-soft); }
+/* The same answer from both of you: once, in the middle, in full ink. */
+.pn-fact-row--same .pn-fact-q { grid-column: 1 / -1; }
+.pn-fact-row--same .pn-fact-you, .pn-fact-row--same .pn-fact-them { display: none; }
+.pn-fact-both { display: inline-flex; align-items: center; gap: 8px; margin-top: 3px; }
+.pn-fact-both .pn-fact-record { flex-direction: column; text-align: center; gap: 6px; }
+.pn-fact-both .pn-fact-said { align-items: center; }
+.pn-sparkle { color: #E8B84B; flex-shrink: 0; }
+@media (prefers-reduced-motion: reduce) { .pn-fact, .pn-fact-row { animation: none; } }
+/* On a phone the question's words take two lines rather than the record's
+   title, and a record's title goes under its cover. */
+@media (max-width: 640px) {
+  .pn-fact-row { grid-template-columns: minmax(0, 1fr) minmax(64px, 84px) minmax(0, 1fr); gap: 10px; }
+  .pn-fact-row--record .pn-fact-record { flex-direction: column; gap: 6px; }
+  .pn-fact-you .pn-fact-record, .pn-fact-you .pn-fact-said { align-items: flex-end; }
+  .pn-fact-them .pn-fact-record, .pn-fact-them .pn-fact-said { align-items: flex-start; }
+  .pn-fact-cover { width: 52px; height: 52px; }
+}
+
 
 /* ── The wall ── the records the two of you share, as your own wall draws
    them (.arc-grid and .ft, journal.css): covers alone, three across on a

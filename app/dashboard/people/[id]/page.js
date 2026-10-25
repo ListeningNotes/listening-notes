@@ -49,7 +49,10 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { CaretLeft, CaretRight, Printer, Shuffle, User } from '@phosphor-icons/react';
+import {
+  CalendarBlank, CaretLeft, CaretRight, FlagPennant, Heart, Hourglass, MicrophoneStage, MusicNotes,
+  Printer, Repeat, Shuffle, SketchLogo, Sparkle, Star, User, VinylRecord,
+} from '@phosphor-icons/react';
 import SiteNav from '../../../../components/main_components/SiteNav';
 import StarRating from '../../../../components/main_components/StarRating';
 import { HorizonRow } from '../../../../components/main_components/Feed';
@@ -80,6 +83,9 @@ const NOTE_MOST = 20000;
 // The words you both used: at most three, each at least four letters.
 const WORDS_MOST = 3;
 const WORD_LEAST = 4;
+// Masterpieces drawn one mark each up to this many; past it, one mark and
+// the number.
+const MARKS_DRAWN = 5;
 
 const num = v => (v === null || v === undefined || v === '' ? null : Number(v));
 const newestFirst = rows => [...rows].sort((a, b) => new Date(b.posted_at) - new Date(a.posted_at));
@@ -88,18 +94,55 @@ const stars = v => `${said(v)} ${num(v) === 1 ? 'star' : 'stars'}`;
 const heartsOf = entry => String(entry?.hearts || '');
 const countHearts = h => [...h].filter(c => c === '1').length;
 const some = (n, one, many) => (n === 1 ? one : many.replace('#', n));
+const isOn = v => v === true || v === 'true';
 const genreOf = entry => String(entry?.genre || '').trim() || null;
-const decadeOf = entry => { const y = String(entry?.year || '').match(/[0-9]{4}/)?.[0]; return y ? `${y.slice(0, 3)}0s` : null; };
-// The answer given most often, the first to reach it on a tie.
-function mostOf(values) {
+const yearOf = entry => String(entry?.year || '').match(/[0-9]{4}/)?.[0] || null;
+const decadeOf = entry => { const y = yearOf(entry); return y ? `${y.slice(0, 3)}0s` : null; };
+// The answer given most often, the first to reach it on a tie; none when
+// nothing was given at least `least` times. Compared folded, so two
+// spellings of one artist are one answer.
+function mostOf(values, least = 1) {
   const seen = new Map();
   let top = null;
   for (const v of values) {
     if (!v) continue;
-    seen.set(v, (seen.get(v) || 0) + 1);
-    if (top === null || seen.get(v) > seen.get(top)) top = v;
+    const k = v.toLowerCase();
+    const n = (seen.get(k)?.n || 0) + 1;
+    seen.set(k, { v: seen.get(k)?.v || v, n });
+    if (top === null || n > seen.get(top).n) top = k;
   }
-  return top;
+  return top !== null && seen.get(top).n >= least ? seen.get(top).v : null;
+}
+const monthOf = when => {
+  const d = new Date(when);
+  return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString(undefined, { month: 'short', year: 'numeric' });
+};
+
+// One journal as a listener, from its entries: album listens only, one per
+// record where a record is meant, every listen where listens are counted.
+// A record is { entry, says }, `says` the small line under its title.
+function tasteOf(entries) {
+  const records = [...latestPerKey(entries).values()];
+  const listens = newestFirst(entries.filter(e => e.album_key && !e.song));
+  const times = new Map();
+  for (const e of listens) times.set(e.album_key, (times.get(e.album_key) || 0) + 1);
+  let oldest = null;
+  for (const e of records) if (yearOf(e) && (!oldest || yearOf(e) < yearOf(oldest))) oldest = e;
+  let returned = null;
+  for (const e of records) if ((times.get(e.album_key) || 0) > 1 && (!returned || times.get(e.album_key) > times.get(returned.album_key))) returned = e;
+  const masterpiece = listens.find(e => isOn(e.masterpiece)) || null;
+  const first = listens[listens.length - 1] || null;
+  return {
+    genre: mostOf(records.map(genreOf)),
+    decade: mostOf(records.map(decadeOf)),
+    // An artist is only "top" with two records or more; with one each, the
+    // pick would be a coin toss.
+    artist: mostOf(records.map(e => String(e.artist || '').trim()), 2),
+    oldest: oldest && { entry: oldest, says: yearOf(oldest) },
+    masterpiece: masterpiece && { entry: masterpiece, says: masterpiece.artist },
+    returned: returned && { entry: returned, says: `${times.get(returned.album_key)} listens` },
+    first: first && { entry: first, says: monthOf(first.posted_at) },
+  };
 }
 
 // One entry per record, the most recent (DECISIONS: never average across
@@ -542,35 +585,110 @@ function Opened({ from, tile, turn, count, onGone, children }) {
 }
 
 // ── The facts ─────────────────────────────────────────────────────────────
-// What you share, as numbers for the two of you; then a question asked of
-// each of you, laid out as the page is — your answer under your face, theirs
-// under theirs and faint, the question between. Nothing adds up to a score:
-// no row has a winner drawn on it.
-function Facts({ facts, name }) {
-  const row = f => (
-    <div key={f.label} className="pn-fact-row" aria-label={`${f.label}: you ${f.you ?? 'none'}, ${name} ${f.them ?? 'none'}`}>
-      <span className="pn-fact-you">{f.you ?? '—'}</span>
-      <span className="pn-fact-label">{f.label}</span>
-      <span className="pn-fact-them">{f.them ?? '—'}</span>
+// Laid out as the page is: your answer under your face, theirs under theirs
+// and faint, the question between with its emblem over it. When the two of
+// you give the same answer it is said once, in the middle, lit — the fun of
+// it is finding out (Miyel, 2026-10-24: "this is fun to do. it should feel
+// that way"). Each one arrives a beat after the last. Nothing adds up to a
+// score: no row has a winner drawn on it.
+const EMBLEMS = {
+  genre: MusicNotes, decade: CalendarBlank, artist: MicrophoneStage, oldest: Hourglass,
+  masterpiece: SketchLogo, returned: Repeat, first: FlagPennant,
+  records: VinylRecord, stars: Star, hearts: Heart,
+};
+function Emblem({ of, size = 16 }) {
+  const Glyph = EMBLEMS[of];
+  return <span className={`pn-emblem pn-emblem--${of}`} aria-hidden="true"><Glyph size={size} weight="fill" /></span>;
+}
+
+const sameAnswer = f => (f.kind === 'record'
+  ? Boolean(f.you && f.them && f.you.entry.album_key === f.them.entry.album_key)
+  : f.kind === 'word' && Boolean(f.you && f.them && f.you.toLowerCase() === f.them.toLowerCase()));
+
+// One side's answer, in the shape the question asks for.
+function Answer({ f, side }) {
+  const v = f[side];
+  if (v === null || v === undefined) return <span className="pn-fact-none">—</span>;
+  if (f.kind === 'word') return <span className="pn-fact-word">{v}</span>;
+  if (f.kind === 'record') {
+    return (
+      <span className="pn-fact-record">
+        <span className="pn-fact-cover">{v.entry.album_art ? <img src={v.entry.album_art} alt="" loading="lazy" /> : null}</span>
+        <span className="pn-fact-said">
+          <span className="pn-fact-album">{v.entry.album}</span>
+          {v.says && <span className="pn-fact-says">{v.says}</span>}
+        </span>
+      </span>
+    );
+  }
+  if (f.kind === 'stars') {
+    return (
+      <span className="pn-fact-stars">
+        <StarRating rating={Math.round(v * 2) / 2} size={14} />
+        <span className="pn-fact-small">{v.toFixed(1)}</span>
+      </span>
+    );
+  }
+  if (f.kind === 'marks') {
+    if (!v) return <span className="pn-fact-none">—</span>;
+    return (
+      <span className="pn-fact-marks">
+        {v <= MARKS_DRAWN
+          ? Array.from({ length: v }, (_, i) => <SketchLogo key={i} size={16} weight="fill" />)
+          : <><SketchLogo size={16} weight="fill" /><span className="pn-fact-small">×{v}</span></>}
+      </span>
+    );
+  }
+  return <span className="pn-fact-hearts"><Heart size={15} weight="fill" /><span className="pn-fact-word">{v}</span></span>;
+}
+
+function Fact({ f, i, name }) {
+  const same = sameAnswer(f);
+  const said = v => (v === null || v === undefined ? 'none' : typeof v === 'object' ? v.entry.album : typeof v === 'number' && f.kind === 'stars' ? v.toFixed(1) : v);
+  return (
+    <div
+      className={'pn-fact-row' + (same ? ' pn-fact-row--same' : '') + (f.kind === 'record' ? ' pn-fact-row--record' : '')}
+      style={{ '--i': i }}
+      aria-label={same ? `${f.label}: both of you, ${said(f.you)}` : `${f.label}: you ${said(f.you)}, ${name} ${said(f.them)}`}
+    >
+      <span className="pn-fact-you" aria-hidden="true">{!same && <Answer f={f} side="you" />}</span>
+      <span className="pn-fact-q" aria-hidden="true">
+        <Emblem of={f.emblem} />
+        <span className="pn-fact-label">{f.label}</span>
+        {same && (
+          <span className="pn-fact-both">
+            <Sparkle size={12} weight="fill" className="pn-sparkle" />
+            <Answer f={f} side="you" />
+            <Sparkle size={12} weight="fill" className="pn-sparkle" />
+          </span>
+        )}
+      </span>
+      <span className="pn-fact-them" aria-hidden="true">{!same && <Answer f={f} side="them" />}</span>
     </div>
   );
+}
+
+function Facts({ facts, name }) {
+  let i = 0;
   return (
     <section className="pn-facts">
+      <div className="pn-facts-rows">
+        {facts.taste.map(f => <Fact key={f.label} f={f} i={i++} name={name} />)}
+      </div>
       <div className="pn-facts-together">
         {facts.together.map(f => (
-          <div key={f.label} className="pn-fact">
+          <div key={f.label} className="pn-fact" style={{ '--i': i++ }}>
+            <Emblem of={f.emblem} size={18} />
             <span className="pn-fact-n">{f.value}</span>
             <span className="pn-fact-label">{f.label}</span>
           </div>
         ))}
       </div>
-      <div className="pn-facts-rows">
-        {facts.shared.map(row)}
-        {row(facts.sent)}
-      </div>
-      <div className="pn-facts-rows">
-        {facts.taste.filter(f => f.you || f.them).map(row)}
-      </div>
+      {facts.each.length > 0 && (
+        <div className="pn-facts-rows">
+          {facts.each.map(f => <Fact key={f.label} f={f} i={i++} name={name} />)}
+        </div>
+      )}
     </section>
   );
 }
@@ -606,7 +724,6 @@ export default function PersonPage({ layered = false }) {
   // none there).
   const [cameBack, setCameBack] = useState([]);
   const [out, setOut] = useState([]);
-  const [view, setView] = useState(null);
   const [at, setAt] = useState(0);
   // The record open over the wall, if one is: where its cover was when it
   // was pressed, for it to grow out of.
@@ -664,105 +781,71 @@ export default function PersonPage({ layered = false }) {
     const mineLatest = latestPerKey(mine || []);
     const theirEntries = theirs?.entries || [];
     const theirLatest = latestPerKey(theirEntries);
-    const theirBySlug = new Map(theirEntries.map(e => [e.slug, e]));
     const later = item => Math.max(new Date(item.mine?.posted_at || 0), new Date(item.theirs?.posted_at || 0));
+
+    // Which of the records one of you put the other onto, so an opened record
+    // can say so: their sends and the records credited to them by hand, which
+    // have no send row, only the name and journal on the entry (2026-09-14);
+    // yours, what came back and what is still out. The lists themselves are
+    // the inbox's (Miyel, 2026-10-24: "isn't that accessible in inbox?").
+    const address = tidyJournal(person?.address);
+    const keyOf = r => albumKey(r.album, r.artist);
+    const fromThem = new Set([
+      ...sent.filter(s => !s.song).map(keyOf),
+      ...(address ? (mine || []).filter(e => !e.song && tidyJournal(e.received_from_url) === address).map(e => e.album_key) : []),
+    ]);
+    const fromYou = new Set([...cameBack, ...out].filter(r => !r.song).map(keyOf));
 
     // Every record you have both logged, newest first by whichever of you
     // logged it last.
     const shared = [];
     for (const [key, m] of mineLatest) {
       const t = theirLatest.get(key);
-      if (t) shared.push({ key, mine: m, theirs: t, from: null });
+      if (t) shared.push({ key, mine: m, theirs: t, from: fromThem.has(key) ? 'them' : fromYou.has(key) ? 'you' : null });
     }
     shared.sort((a, b) => later(b) - later(a));
 
-    // What they put you onto. One per record — the same record sent twice is
-    // one thing they put you onto, the newest send of it kept — and the
-    // records credited to them by hand, which have no send row, only the
-    // name and journal on the entry (2026-09-14).
-    const seen = new Set();
-    const fromThem = [];
-    for (const s of [...sent].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))) {
-      if (s.song) continue;
-      const key = albumKey(s.album, s.artist);
-      if (seen.has(key)) continue;
-      seen.add(key);
-      fromThem.push({ key, mine: mineLatest.get(key) || null, theirs: theirLatest.get(key) || null, from: 'them', album: s.album, artist: s.artist, album_art: s.album_art });
-    }
-    const address = tidyJournal(person?.address);
-    if (address) {
-      for (const e of newestFirst(mine || [])) {
-        if (tidyJournal(e.received_from_url) !== address || seen.has(e.album_key) || e.song) continue;
-        seen.add(e.album_key);
-        fromThem.push({ key: e.album_key, mine: mineLatest.get(e.album_key) || e, theirs: theirLatest.get(e.album_key) || null, from: 'them' });
-      }
-    }
+    // ── The facts (Miyel, 2026-10-24) ──
+    // First the two of you as listeners, across everything each of you has
+    // logged ("the best things are fun comparing our favorite genre, decade,
+    // i want more like that"); then the records you share, counted for the
+    // two of you, and the same three questions asked of each.
+    const you = tasteOf(mine || []);
+    const them = tasteOf(theirEntries);
+    const taste = [
+      { kind: 'word', emblem: 'genre', label: 'Top genre', you: you.genre, them: them.genre },
+      { kind: 'word', emblem: 'decade', label: 'Top decade', you: you.decade, them: them.decade },
+      { kind: 'word', emblem: 'artist', label: 'Top artist', you: you.artist, them: them.artist },
+      { kind: 'record', emblem: 'oldest', label: 'Oldest record', you: you.oldest, them: them.oldest },
+      { kind: 'record', emblem: 'masterpiece', label: 'Latest Masterpiece', you: you.masterpiece, them: them.masterpiece },
+      { kind: 'record', emblem: 'returned', label: 'Most returned to', you: you.returned, them: them.returned },
+      { kind: 'record', emblem: 'first', label: 'First logged', you: you.first, them: them.first },
+    ].filter(f => f.you || f.them);
 
-    // What you put them onto: what came back first, then what is still out.
-    const yours = new Set();
-    const fromYou = [];
-    for (const c of cameBack) {
-      if (c.song) continue;
-      const key = albumKey(c.album, c.artist);
-      if (yours.has(key)) continue;
-      yours.add(key);
-      const t = theirBySlug.get(c.slug) || theirLatest.get(key) || null;
-      fromYou.push({ key, mine: mineLatest.get(key) || null, theirs: t, from: 'you', album: c.album, artist: c.artist, album_art: c.album_art });
-    }
-    for (const s of out) {
-      if (s.song) continue;
-      const key = albumKey(s.album, s.artist);
-      if (yours.has(key)) continue;
-      yours.add(key);
-      fromYou.push({ key, mine: mineLatest.get(key) || null, theirs: theirLatest.get(key) || null, from: 'you', album: s.album, artist: s.artist, album_art: s.album_art });
-    }
-
-    // The facts over the wall (Miyel, 2026-10-24: "more comparative overall
-    // metadata as facts vs. the sentences"). What you share first, said once
-    // for the two of you; then the same question asked of each of you, your
-    // answer on your side and theirs on theirs.
-    const on = v => v === true || v === 'true';
-    const both = shared.map(x => ({ x, shape: lineUp(x.mine, x.theirs) }));
+    const both = shared.map(x => lineUp(x.mine, x.theirs));
     const rated = side => shared.map(x => num(x[side].rating_value)).filter(v => v !== null);
-    const average = list => (list.length ? (list.reduce((a, b) => a + b, 0) / list.length).toFixed(1) : null);
-    const hearts = side => both.reduce((n, { shape }) => n + countHearts(side === 'mine' ? shape.yourHearts : shape.theirHearts), 0);
-    const facts = {
-      together: [
-        { label: shared.length === 1 ? 'Record' : 'Records', value: shared.length },
-        { label: 'Same stars', value: shared.filter(x => num(x.mine.rating_value) !== null && num(x.mine.rating_value) === num(x.theirs.rating_value)).length },
-        { label: 'Same favorite song', value: both.filter(({ shape }) => shape.both.length > 0).length },
-      ],
-      shared: [
-        { label: 'Average stars', you: average(rated('mine')), them: average(rated('theirs')) },
-        { label: 'Masterpieces', you: shared.filter(x => on(x.mine.masterpiece)).length, them: shared.filter(x => on(x.theirs.masterpiece)).length },
-        { label: 'Favorite songs', you: hearts('mine'), them: hearts('theirs') },
-      ],
-      sent: { label: 'Sent', you: fromYou.length, them: fromThem.length },
-      // Across everything each of you has logged, not only what you share.
-      taste: [
-        { label: 'Top genre', you: mostOf([...mineLatest.values()].map(genreOf)), them: mostOf([...theirLatest.values()].map(genreOf)) },
-        { label: 'Top decade', you: mostOf([...mineLatest.values()].map(decadeOf)), them: mostOf([...theirLatest.values()].map(decadeOf)) },
-      ],
-    };
+    const average = list => (list.length ? list.reduce((a, b) => a + b, 0) / list.length : null);
+    const hearts = side => both.reduce((n, shape) => n + countHearts(side === 'mine' ? shape.yourHearts : shape.theirHearts), 0);
+    const together = [
+      { emblem: 'records', label: shared.length === 1 ? 'Record' : 'Records', value: shared.length },
+      { emblem: 'stars', label: 'Same stars', value: shared.filter(x => num(x.mine.rating_value) !== null && num(x.mine.rating_value) === num(x.theirs.rating_value)).length },
+      { emblem: 'hearts', label: 'Same favorite song', value: both.filter(shape => shape.both.length > 0).length },
+    ];
+    const each = shared.length ? [
+      { kind: 'stars', emblem: 'stars', label: 'Average stars', you: average(rated('mine')), them: average(rated('theirs')) },
+      { kind: 'marks', emblem: 'masterpiece', label: 'Masterpieces', you: shared.filter(x => isOn(x.mine.masterpiece)).length, them: shared.filter(x => isOn(x.theirs.masterpiece)).length },
+      { kind: 'hearts', emblem: 'hearts', label: 'Favorite songs', you: hearts('mine'), them: hearts('theirs') },
+    ] : [];
 
-    return { shared, fromThem, fromYou, facts };
+    return { shared, facts: { taste, together, each } };
   }, [mine, theirs, sent, cameBack, out, person]);
 
-  // The filters, in their order, and only the ones with something in them:
-  // a view with nothing to flip through is a door to an empty room.
-  const views = useMemo(() => [
-    { key: 'shared', label: 'Shared', list: decks.shared },
-    { key: 'you', label: 'Sent', list: decks.fromYou },
-    { key: 'them', label: 'Received', list: decks.fromThem },
-  ].filter(v => v.list.length > 0), [decks]);
-  const current = views.find(v => v.key === view) || views[0] || null;
-  const deck = current ? current.list : [];
+  const deck = decks.shared;
   const item = deck.length ? deck[Math.min(at, deck.length - 1)] : null;
   // Only an opened record is read for: the wall is covers alone.
   const shown = opened ? item : null;
   const count = deck.length;
   const turn = useCallback(step => setAt(i => (count ? (Math.min(i, count - 1) + step + count) % count : 0)), [count]);
-  const choose = key => { setView(key); setAt(0); setOpened(null); };
   const open = (i, tile) => {
     const box = tile.getBoundingClientRect();
     setAt(i);
@@ -865,16 +948,7 @@ export default function PersonPage({ layered = false }) {
             {!ready ? <div className="own-skeleton pn-waiting" /> : (
               <>
                 <Facts facts={decks.facts} name={name} />
-
-                {views.length > 1 && (
-                  <nav className="pn-views" aria-label="Which records">
-                    {views.map(v => (
-                      <button key={v.key} type="button" className={'pn-view' + (v.key === current.key ? ' pn-view--on' : '')} aria-pressed={v.key === current.key} onClick={() => choose(v.key)}>
-                        {v.label}
-                      </button>
-                    ))}
-                  </nav>
-                )}
+                {deck.length === 0 && <p className="pn-note">You and {name} haven&rsquo;t logged any of the same records yet.</p>}
 
                 {/* The records, as your wall draws them: covers alone. */}
                 <div className="arc-grid pn-grid" data-density="medium">
@@ -901,7 +975,7 @@ export default function PersonPage({ layered = false }) {
                 {opened && item && (
                   <Opened from={opened.from} tile={tileOfOpen} turn={turn} count={count} onGone={putDown}>
                     <Versus
-                      key={`${current.key}:${item.key}`}
+                      key={item.key}
                       item={item}
                       name={name}
                       songs={songs}
