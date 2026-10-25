@@ -63,10 +63,11 @@ publicly):
   the ways one gets in — a paste, a scanned code, a send that carried one —
   and Invite and Add in its header. The Friends stop on the phone's band
 - `/dashboard/people/[id]` — your page about one person: the two of you, the
-  facts (the two of you as listeners — top genre, decade and artist, oldest
-  record, latest Masterpiece and the like, a shared answer lit in the middle
-  — then the records you share, counted, with emblems), and a wall of those
-  records; a cover opens,
+  facts as cards swiped through (the two of you as listeners — top genre,
+  decade and artist, oldest record, latest Masterpiece and the like — and on
+  the records you share, stars, Masterpieces and hearts; a shared answer said
+  once, in the middle), three numbers for what you share, and a wall of
+  those records; a cover opens,
   growing out of itself as an entry does, to the two of you on that record in
   two columns — stars, marks, horizons, notes, the songs and words you share
 - `/settings` — the machinery: address, the password, Back up your journal,

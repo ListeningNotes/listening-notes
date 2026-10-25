@@ -49,10 +49,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import {
-  CalendarBlank, CaretLeft, CaretRight, FlagPennant, Heart, Hourglass, MicrophoneStage, MusicNotes,
-  Printer, Repeat, Shuffle, SketchLogo, Sparkle, Star, User, VinylRecord,
-} from '@phosphor-icons/react';
+import { CaretLeft, CaretRight, Heart, Printer, Shuffle, SketchLogo, Sparkle, User } from '@phosphor-icons/react';
 import SiteNav from '../../../../components/main_components/SiteNav';
 import StarRating from '../../../../components/main_components/StarRating';
 import { HorizonRow } from '../../../../components/main_components/Feed';
@@ -124,12 +121,14 @@ const monthOf = when => {
 function tasteOf(entries) {
   const records = [...latestPerKey(entries).values()];
   const listens = newestFirst(entries.filter(e => e.album_key && !e.song));
-  const times = new Map();
-  for (const e of listens) times.set(e.album_key, (times.get(e.album_key) || 0) + 1);
   let oldest = null;
   for (const e of records) if (yearOf(e) && (!oldest || yearOf(e) < yearOf(oldest))) oldest = e;
+  // How many times a record was listened to is the journal's own count, on
+  // every listen, and not a count of entries by title and artist: two albums
+  // by one artist can share a name (Miyel, 2026-10-24, two of them, years
+  // apart), and the journal tells them apart where a title cannot.
   let returned = null;
-  for (const e of records) if ((times.get(e.album_key) || 0) > 1 && (!returned || times.get(e.album_key) > times.get(returned.album_key))) returned = e;
+  for (const e of listens) if ((num(e.listen_total) || 0) > 1 && (!returned || num(e.listen_total) > num(returned.listen_total))) returned = e;
   const masterpiece = listens.find(e => isOn(e.masterpiece)) || null;
   const first = listens[listens.length - 1] || null;
   return {
@@ -140,7 +139,7 @@ function tasteOf(entries) {
     artist: mostOf(records.map(e => String(e.artist || '').trim()), 2),
     oldest: oldest && { entry: oldest, says: yearOf(oldest) },
     masterpiece: masterpiece && { entry: masterpiece, says: masterpiece.artist },
-    returned: returned && { entry: returned, says: `${times.get(returned.album_key)} listens` },
+    returned: returned && { entry: returned, says: `${num(returned.listen_total)} listens` },
     first: first && { entry: first, says: monthOf(first.posted_at) },
   };
 }
@@ -585,25 +584,24 @@ function Opened({ from, tile, turn, count, onGone, children }) {
 }
 
 // ── The facts ─────────────────────────────────────────────────────────────
-// Laid out as the page is: your answer under your face, theirs under theirs
-// and faint, the question between with its emblem over it. When the two of
-// you give the same answer it is said once, in the middle, lit — the fun of
-// it is finding out (Miyel, 2026-10-24: "this is fun to do. it should feel
-// that way"). Each one arrives a beat after the last. Nothing adds up to a
-// score: no row has a winner drawn on it.
-const EMBLEMS = {
-  genre: MusicNotes, decade: CalendarBlank, artist: MicrophoneStage, oldest: Hourglass,
-  masterpiece: SketchLogo, returned: Repeat, first: FlagPennant,
-  records: VinylRecord, stars: Star, hearts: Heart,
-};
-function Emblem({ of, size = 16 }) {
-  const Glyph = EMBLEMS[of];
-  return <span className={`pn-emblem pn-emblem--${of}`} aria-hidden="true"><Glyph size={size} weight="fill" /></span>;
+// A card each, swiped through sideways (Miyel, 2026-10-24: "maybe they are
+// a big screen swiped through" — a list of them ran too long down the
+// page). On a card, the question, then your answer on your side and theirs
+// on theirs, faint, as the faces above stand. When the two of you give the
+// same answer it is said once, in the middle, with a sparkle either side —
+// the fun of it is finding out ("this is fun to do. it should feel that
+// way"). The marks wear their own emblems, as the entry wears them: stars
+// as stars, Masterpieces as the Masterpiece mark, favourite songs as hearts;
+// the questions wear none ("we went overboard with icons"). Nothing adds up
+// to a score: no card has a winner drawn on it.
+function sameAnswer(f) {
+  const { you, them } = f;
+  if (you === null || you === undefined || them === null || them === undefined) return false;
+  if (f.kind === 'record') return you.entry.album_key === them.entry.album_key;
+  if (f.kind === 'word') return you.toLowerCase() === them.toLowerCase();
+  if (f.kind === 'stars') return you.toFixed(1) === them.toFixed(1);
+  return you > 0 && you === them;
 }
-
-const sameAnswer = f => (f.kind === 'record'
-  ? Boolean(f.you && f.them && f.you.entry.album_key === f.them.entry.album_key)
-  : f.kind === 'word' && Boolean(f.you && f.them && f.you.toLowerCase() === f.them.toLowerCase()));
 
 // One side's answer, in the shape the question asks for.
 function Answer({ f, side }) {
@@ -614,18 +612,16 @@ function Answer({ f, side }) {
     return (
       <span className="pn-fact-record">
         <span className="pn-fact-cover">{v.entry.album_art ? <img src={v.entry.album_art} alt="" loading="lazy" /> : null}</span>
-        <span className="pn-fact-said">
-          <span className="pn-fact-album">{v.entry.album}</span>
-          {v.says && <span className="pn-fact-says">{v.says}</span>}
-        </span>
+        <span className="pn-fact-album">{v.entry.album}</span>
+        {v.says && <span className="pn-fact-says">{v.says}</span>}
       </span>
     );
   }
   if (f.kind === 'stars') {
     return (
       <span className="pn-fact-stars">
-        <StarRating rating={Math.round(v * 2) / 2} size={14} />
-        <span className="pn-fact-small">{v.toFixed(1)}</span>
+        <StarRating rating={Math.round(v * 2) / 2} size={22} />
+        <span className="pn-fact-says">{v.toFixed(1)}</span>
       </span>
     );
   }
@@ -634,61 +630,89 @@ function Answer({ f, side }) {
     return (
       <span className="pn-fact-marks">
         {v <= MARKS_DRAWN
-          ? Array.from({ length: v }, (_, i) => <SketchLogo key={i} size={16} weight="fill" />)
-          : <><SketchLogo size={16} weight="fill" /><span className="pn-fact-small">×{v}</span></>}
+          ? Array.from({ length: v }, (_, i) => <SketchLogo key={i} size={24} weight="fill" />)
+          : <><SketchLogo size={24} weight="fill" /><span className="pn-fact-word">×{v}</span></>}
       </span>
     );
   }
-  return <span className="pn-fact-hearts"><Heart size={15} weight="fill" /><span className="pn-fact-word">{v}</span></span>;
+  return <span className="pn-fact-hearts"><Heart size={22} weight="fill" /><span className="pn-fact-word">{v}</span></span>;
 }
 
-function Fact({ f, i, name }) {
+function FactCard({ f, name }) {
   const same = sameAnswer(f);
-  const said = v => (v === null || v === undefined ? 'none' : typeof v === 'object' ? v.entry.album : typeof v === 'number' && f.kind === 'stars' ? v.toFixed(1) : v);
+  const said = v => (v === null || v === undefined ? 'none' : typeof v === 'object' ? v.entry.album : f.kind === 'stars' ? v.toFixed(1) : v);
   return (
-    <div
-      className={'pn-fact-row' + (same ? ' pn-fact-row--same' : '') + (f.kind === 'record' ? ' pn-fact-row--record' : '')}
-      style={{ '--i': i }}
-      aria-label={same ? `${f.label}: both of you, ${said(f.you)}` : `${f.label}: you ${said(f.you)}, ${name} ${said(f.them)}`}
+    <article
+      className={'pn-card' + (same ? ' pn-card--same' : '')}
+      aria-label={same ? `${f.label}: both of you, ${said(f.you)}` : `${f.label}: you, ${said(f.you)}; ${name}, ${said(f.them)}`}
     >
-      <span className="pn-fact-you" aria-hidden="true">{!same && <Answer f={f} side="you" />}</span>
-      <span className="pn-fact-q" aria-hidden="true">
-        <Emblem of={f.emblem} />
-        <span className="pn-fact-label">{f.label}</span>
-        {same && (
-          <span className="pn-fact-both">
-            <Sparkle size={12} weight="fill" className="pn-sparkle" />
+      <div className="pn-card-face" aria-hidden="true">
+        <div className="pn-card-q">{f.label}</div>
+        {f.sub && <div className="pn-card-sub">{f.sub}</div>}
+        {same ? (
+          <div className="pn-card-both">
+            <Sparkle size={14} weight="fill" className="pn-sparkle" />
             <Answer f={f} side="you" />
-            <Sparkle size={12} weight="fill" className="pn-sparkle" />
-          </span>
+            <Sparkle size={14} weight="fill" className="pn-sparkle" />
+          </div>
+        ) : (
+          <div className="pn-card-vs">
+            <div className="pn-card-side"><Answer f={f} side="you" /></div>
+            <div className="pn-card-side pn-card-side--them"><Answer f={f} side="them" /></div>
+          </div>
         )}
-      </span>
-      <span className="pn-fact-them" aria-hidden="true">{!same && <Answer f={f} side="them" />}</span>
-    </div>
+      </div>
+    </article>
   );
 }
 
 function Facts({ facts, name }) {
-  let i = 0;
+  const strip = useRef(null);
+  const [on, setOn] = useState(0);
+  const cards = [...facts.taste, ...facts.each];
+  const go = i => {
+    const el = strip.current;
+    if (!el) return;
+    const to = Math.max(0, Math.min(cards.length - 1, i));
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    el.scrollTo({ left: to * el.clientWidth, behavior: reduced ? 'auto' : 'smooth' });
+  };
+  const onScroll = () => {
+    const el = strip.current;
+    if (el && el.clientWidth) setOn(Math.round(el.scrollLeft / el.clientWidth));
+  };
   return (
     <section className="pn-facts">
-      <div className="pn-facts-rows">
-        {facts.taste.map(f => <Fact key={f.label} f={f} i={i++} name={name} />)}
-      </div>
+      {cards.length > 0 && (
+        <>
+          {/* data-slide: a drag across the cards is theirs, never the sheet's
+              (LayerEntry). */}
+          <div className="pn-cards" ref={strip} onScroll={onScroll} data-slide>
+            {cards.map(f => <FactCard key={f.label} f={f} name={name} />)}
+          </div>
+          {cards.length > 1 && (
+            <div className="pn-dots">
+              <button type="button" className="pn-dots-step" onClick={() => go(on - 1)} disabled={on === 0} aria-label="The fact before">
+                <CaretLeft size={14} weight="regular" aria-hidden="true" />
+              </button>
+              {cards.map((f, i) => (
+                <button key={f.label} type="button" className={'pn-dot' + (i === on ? ' pn-dot--on' : '')} onClick={() => go(i)} aria-label={f.label} aria-current={i === on} />
+              ))}
+              <button type="button" className="pn-dots-step" onClick={() => go(on + 1)} disabled={on === cards.length - 1} aria-label="The next fact">
+                <CaretRight size={14} weight="regular" aria-hidden="true" />
+              </button>
+            </div>
+          )}
+        </>
+      )}
       <div className="pn-facts-together">
         {facts.together.map(f => (
-          <div key={f.label} className="pn-fact" style={{ '--i': i++ }}>
-            <Emblem of={f.emblem} size={18} />
+          <div key={f.label} className="pn-fact">
             <span className="pn-fact-n">{f.value}</span>
             <span className="pn-fact-label">{f.label}</span>
           </div>
         ))}
       </div>
-      {facts.each.length > 0 && (
-        <div className="pn-facts-rows">
-          {facts.each.map(f => <Fact key={f.label} f={f} i={i++} name={name} />)}
-        </div>
-      )}
     </section>
   );
 }
@@ -813,13 +837,13 @@ export default function PersonPage({ layered = false }) {
     const you = tasteOf(mine || []);
     const them = tasteOf(theirEntries);
     const taste = [
-      { kind: 'word', emblem: 'genre', label: 'Top genre', you: you.genre, them: them.genre },
-      { kind: 'word', emblem: 'decade', label: 'Top decade', you: you.decade, them: them.decade },
-      { kind: 'word', emblem: 'artist', label: 'Top artist', you: you.artist, them: them.artist },
-      { kind: 'record', emblem: 'oldest', label: 'Oldest record', you: you.oldest, them: them.oldest },
-      { kind: 'record', emblem: 'masterpiece', label: 'Latest Masterpiece', you: you.masterpiece, them: them.masterpiece },
-      { kind: 'record', emblem: 'returned', label: 'Most returned to', you: you.returned, them: them.returned },
-      { kind: 'record', emblem: 'first', label: 'First logged', you: you.first, them: them.first },
+      { kind: 'word', label: 'Top genre', you: you.genre, them: them.genre },
+      { kind: 'word', label: 'Top decade', you: you.decade, them: them.decade },
+      { kind: 'word', label: 'Top artist', you: you.artist, them: them.artist },
+      { kind: 'record', label: 'Oldest record', you: you.oldest, them: them.oldest },
+      { kind: 'record', label: 'Latest Masterpiece', you: you.masterpiece, them: them.masterpiece },
+      { kind: 'record', label: 'Most returned to', you: you.returned, them: them.returned },
+      { kind: 'record', label: 'First logged', you: you.first, them: them.first },
     ].filter(f => f.you || f.them);
 
     const both = shared.map(x => lineUp(x.mine, x.theirs));
@@ -827,14 +851,15 @@ export default function PersonPage({ layered = false }) {
     const average = list => (list.length ? list.reduce((a, b) => a + b, 0) / list.length : null);
     const hearts = side => both.reduce((n, shape) => n + countHearts(side === 'mine' ? shape.yourHearts : shape.theirHearts), 0);
     const together = [
-      { emblem: 'records', label: shared.length === 1 ? 'Record' : 'Records', value: shared.length },
-      { emblem: 'stars', label: 'Same stars', value: shared.filter(x => num(x.mine.rating_value) !== null && num(x.mine.rating_value) === num(x.theirs.rating_value)).length },
-      { emblem: 'hearts', label: 'Same favorite song', value: both.filter(shape => shape.both.length > 0).length },
+      { label: shared.length === 1 ? 'Record' : 'Records', value: shared.length },
+      { label: 'Same stars', value: shared.filter(x => num(x.mine.rating_value) !== null && num(x.mine.rating_value) === num(x.theirs.rating_value)).length },
+      { label: 'Same favorite song', value: both.filter(shape => shape.both.length > 0).length },
     ];
+    const onShared = shared.length === 1 ? 'On the record you share' : `On the ${shared.length} records you share`;
     const each = shared.length ? [
-      { kind: 'stars', emblem: 'stars', label: 'Average stars', you: average(rated('mine')), them: average(rated('theirs')) },
-      { kind: 'marks', emblem: 'masterpiece', label: 'Masterpieces', you: shared.filter(x => isOn(x.mine.masterpiece)).length, them: shared.filter(x => isOn(x.theirs.masterpiece)).length },
-      { kind: 'hearts', emblem: 'hearts', label: 'Favorite songs', you: hearts('mine'), them: hearts('theirs') },
+      { kind: 'stars', label: 'Average stars', sub: onShared, you: average(rated('mine')), them: average(rated('theirs')) },
+      { kind: 'marks', label: 'Masterpieces', sub: onShared, you: shared.filter(x => isOn(x.mine.masterpiece)).length, them: shared.filter(x => isOn(x.theirs.masterpiece)).length },
+      { kind: 'hearts', label: 'Favorite songs', sub: onShared, you: hearts('mine'), them: hearts('theirs') },
     ] : [];
 
     return { shared, facts: { taste, together, each } };

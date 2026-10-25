@@ -2244,20 +2244,69 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 .pn-note { font-size: 13px; line-height: 1.6; color: var(--ink-soft); margin: 14px 2px 0; text-align: center; }
 .pn-waiting { margin-top: 18px; height: 520px; border-radius: 22px; }
 
-/* ── The facts ── (Miyel, 2026-10-24: "facts vs. the sentences… more fun on
-   this page"). A row per question: your answer under your face, theirs
-   under theirs and faint, the question in the middle with its emblem over
-   it. The same answer from both of you is said once, in the middle, with a
-   sparkle either side. Then what you share, three numbers for the two of
-   you, and the same three questions asked of each. Every fact arrives a
-   beat after the one before it. */
-.pn-facts { margin-top: 22px; display: flex; flex-direction: column; gap: 18px; }
-.pn-facts-rows { display: flex; flex-direction: column; gap: 14px; }
+/* ── The facts ── (Miyel, 2026-10-24: "maybe they are a big screen swiped
+   through"). A card each in a strip that scrolls sideways and stops on
+   every card; dots under it say which, and step through it with a mouse.
+   On a card the question in the label face, then your answer on the left
+   and theirs on the right, faint. The same answer from both of you is said
+   once, in the middle, a sparkle either side. Then, over the wall, what you
+   share: three numbers for the two of you. */
+.pn-facts { margin-top: 22px; display: flex; flex-direction: column; gap: 14px; }
+.pn-cards {
+  display: flex; overflow-x: auto; overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory; scrollbar-width: none;
+  touch-action: pan-x pan-y;
+}
+.pn-cards::-webkit-scrollbar { display: none; }
+.pn-card { flex: 0 0 100%; min-width: 0; scroll-snap-align: center; box-sizing: border-box; padding: 0 3px; }
+.pn-card-face {
+  height: 230px; box-sizing: border-box; padding: 20px 18px;
+  border-radius: 20px; background: var(--panel); border: 1px solid var(--panel-border);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+}
+.pn-card-q {
+  font-family: var(--font-label); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--ink-soft); text-align: center;
+}
+.pn-card-sub { font-family: var(--font-label); font-size: 10px; letter-spacing: 0.04em; color: var(--ink-faint); text-align: center; }
+.pn-card-vs { width: 100%; margin-top: 10px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: center; }
+.pn-card-side { display: flex; justify-content: center; text-align: center; min-width: 0; }
+.pn-card-side--them { opacity: 0.45; }
+.pn-card-both { margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 12px; min-width: 0; }
+.pn-sparkle { color: #E8B84B; flex-shrink: 0; }
+
+.pn-fact-word {
+  font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
+  font-size: 24px; line-height: 1.2; color: var(--ink); overflow-wrap: anywhere;
+}
+.pn-fact-none { font-size: 20px; color: var(--ink-faint); }
+.pn-fact-says { font-family: var(--font-label); font-size: 10px; letter-spacing: 0.04em; color: var(--ink-soft); }
+.pn-fact-stars { display: inline-flex; flex-direction: column; align-items: center; gap: 6px; }
+.pn-fact-marks { display: inline-flex; align-items: center; justify-content: center; gap: 4px; flex-wrap: wrap; color: var(--mp); }
+.pn-fact-hearts { display: inline-flex; align-items: center; gap: 8px; color: var(--fav); }
+/* A record as an answer: its cover, then its title and one line. */
+.pn-fact-record { display: inline-flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; }
+.pn-fact-cover { width: 92px; height: 92px; flex-shrink: 0; border-radius: 10px; overflow: hidden; background: var(--bg); border: 1px solid var(--panel-border); }
+.pn-fact-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pn-fact-album {
+  font-size: 13px; font-weight: 700; line-height: 1.25; color: var(--ink); max-width: 100%;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: anywhere;
+}
+
+/* The dots: one per card, the one on screen in ink, and a caret at each
+   end for a mouse. */
+.pn-dots { display: flex; align-items: center; justify-content: center; gap: 2px; }
+.pn-dot { width: 18px; height: 18px; border: 0; padding: 0; background: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.pn-dot::after { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--ink-faint); opacity: 0.45; transition: opacity 0.2s, transform 0.2s; }
+.pn-dot--on::after { background: var(--ink); opacity: 1; transform: scale(1.2); }
+.pn-dots-step { border: 0; background: none; cursor: pointer; color: var(--ink-soft); width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 8px; }
+.pn-dots-step:disabled { opacity: 0.3; cursor: default; }
+.pn-dots-step:not(:disabled):hover { color: var(--ink); background: var(--panel); }
+
 .pn-facts-together {
   display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px;
-  padding: 18px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+  padding: 16px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
 }
-.pn-fact, .pn-fact-row { animation: pn-arrive 0.36s cubic-bezier(0.22, 0.61, 0.36, 1) both; animation-delay: calc(var(--i, 0) * 70ms); }
 .pn-fact { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; min-width: 0; }
 .pn-fact-n {
   font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
@@ -2267,63 +2316,12 @@ textarea.st-field { resize: vertical; min-height: 96px; }
   font-family: var(--font-label); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
   line-height: 1.35; color: var(--ink-faint); text-align: center;
 }
-/* The emblems: the marks in their own colours, as the entry wears them;
-   the stars in the stars' gold; the rest in the faint ink of the labels. */
-.pn-emblem { display: inline-flex; color: var(--ink-faint); }
-.pn-emblem--masterpiece { color: var(--mp); }
-.pn-emblem--hearts { color: var(--fav); }
-.pn-emblem--stars { color: #E8B84B; }
-.pn-emblem--records { color: var(--ink-soft); }
-
-.pn-fact-row {
-  display: grid; grid-template-columns: minmax(0, 1fr) minmax(92px, auto) minmax(0, 1fr);
-  align-items: center; gap: 14px;
-}
-.pn-fact-q { display: flex; flex-direction: column; align-items: center; gap: 3px; }
-.pn-fact-you { display: flex; justify-content: flex-end; text-align: right; min-width: 0; }
-.pn-fact-them { display: flex; justify-content: flex-start; text-align: left; min-width: 0; opacity: 0.45; }
-.pn-fact-word {
-  font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
-  font-size: 18px; line-height: 1.25; color: var(--ink); overflow-wrap: anywhere;
-}
-.pn-fact-none { font-size: 16px; color: var(--ink-faint); }
-.pn-fact-small { font-family: var(--font-label); font-size: 11px; color: var(--ink-soft); }
-.pn-fact-stars { display: inline-flex; flex-direction: column; gap: 3px; }
-.pn-fact-you .pn-fact-stars { align-items: flex-end; }
-.pn-fact-marks, .pn-fact-hearts { display: inline-flex; align-items: center; gap: 3px; flex-wrap: wrap; }
-.pn-fact-marks { color: var(--mp); }
-.pn-fact-hearts { color: var(--fav); gap: 6px; }
-.pn-fact-you .pn-fact-hearts { flex-direction: row-reverse; }
-/* A record as an answer: its cover, small, on the side nearest the middle,
-   the title and one line beside it. */
-.pn-fact-record { display: inline-flex; align-items: center; gap: 10px; min-width: 0; }
-.pn-fact-you .pn-fact-record { flex-direction: row-reverse; }
-.pn-fact-cover { width: 46px; height: 46px; flex-shrink: 0; border-radius: 8px; overflow: hidden; background: var(--panel); border: 1px solid var(--panel-border); }
-.pn-fact-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.pn-fact-said { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.pn-fact-album {
-  font-size: 13px; font-weight: 700; line-height: 1.25; color: var(--ink);
-  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: anywhere;
-}
-.pn-fact-says { font-family: var(--font-label); font-size: 10px; letter-spacing: 0.04em; color: var(--ink-soft); }
-/* The same answer from both of you: once, in the middle, in full ink. */
-.pn-fact-row--same .pn-fact-q { grid-column: 1 / -1; }
-.pn-fact-row--same .pn-fact-you, .pn-fact-row--same .pn-fact-them { display: none; }
-.pn-fact-both { display: inline-flex; align-items: center; gap: 8px; margin-top: 3px; }
-.pn-fact-both .pn-fact-record { flex-direction: column; text-align: center; gap: 6px; }
-.pn-fact-both .pn-fact-said { align-items: center; }
-.pn-sparkle { color: #E8B84B; flex-shrink: 0; }
-@media (prefers-reduced-motion: reduce) { .pn-fact, .pn-fact-row { animation: none; } }
-/* On a phone the question's words take two lines rather than the record's
-   title, and a record's title goes under its cover. */
 @media (max-width: 640px) {
-  .pn-fact-row { grid-template-columns: minmax(0, 1fr) minmax(64px, 84px) minmax(0, 1fr); gap: 10px; }
-  .pn-fact-row--record .pn-fact-record { flex-direction: column; gap: 6px; }
-  .pn-fact-you .pn-fact-record, .pn-fact-you .pn-fact-said { align-items: flex-end; }
-  .pn-fact-them .pn-fact-record, .pn-fact-them .pn-fact-said { align-items: flex-start; }
-  .pn-fact-cover { width: 52px; height: 52px; }
+  .pn-card-face { height: 250px; padding: 18px 12px; }
+  .pn-card-vs { gap: 10px; }
+  .pn-fact-word { font-size: 21px; }
+  .pn-fact-cover { width: 84px; height: 84px; }
 }
-
 
 /* ── The wall ── the records the two of you share, as your own wall draws
    them (.arc-grid and .ft, journal.css): covers alone, three across on a
