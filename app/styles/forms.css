@@ -2244,13 +2244,30 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 .pn-note { font-size: 13px; line-height: 1.6; color: var(--ink-soft); margin: 14px 2px 0; text-align: center; }
 .pn-waiting { margin-top: 18px; height: 520px; border-radius: 22px; }
 
-/* The one sentence the view on screen adds up to, numbers inside it. */
-.pn-say {
-  margin: 18px 4px 0; text-align: center;
+/* ── The facts ── (Miyel, 2026-10-24: "facts vs. the sentences"). What you
+   share, three numbers in a row for the two of you; then a row per question
+   asked of each of you, your answer under your face and theirs under
+   theirs, faint, the question between in the label face. */
+.pn-facts { margin-top: 20px; display: flex; flex-direction: column; gap: 14px; }
+.pn-facts-together { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding-bottom: 14px; border-bottom: 1px solid var(--border); }
+.pn-fact { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; min-width: 0; }
+.pn-fact-n {
   font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
-  font-size: 22px; line-height: 1.3; color: var(--ink); overflow-wrap: anywhere;
+  font-size: 28px; line-height: 1.1; color: var(--ink);
 }
-.pn-say b { font-weight: inherit; font-size: 1.12em; }
+.pn-fact-label {
+  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
+  line-height: 1.35; color: var(--ink-faint); text-align: center;
+}
+.pn-facts-rows { display: flex; flex-direction: column; gap: 8px; }
+.pn-facts-rows + .pn-facts-rows { padding-top: 14px; border-top: 1px solid var(--border); }
+.pn-fact-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(96px, auto) minmax(0, 1fr); align-items: baseline; gap: 14px; }
+.pn-fact-you, .pn-fact-them {
+  font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
+  font-size: 18px; line-height: 1.25; color: var(--ink); overflow-wrap: anywhere;
+}
+.pn-fact-you { text-align: right; }
+.pn-fact-them { text-align: left; opacity: 0.45; }
 
 /* ── The filters ── plain words in the label face, the one on screen
    underlined: no pills (her standing word). */
@@ -2407,7 +2424,6 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 @media (prefers-reduced-motion: reduce) { .pn-vs { animation: none; } }
 @media (max-width: 640px) {
   .pn-body { padding: 14px 16px 40px; }
-  .pn-say { font-size: 20px; }
   .pn-vs-top { gap: 4px; grid-template-columns: 34px auto 34px; }
   .pn-cell--you { padding-right: 12px; }
   .pn-cell--them { padding-left: 12px; }

@@ -16,9 +16,11 @@
 // "i was thinking one person one side one person the other you click
 // through shared albums… almost like a vs screen in a video game. then other
 // fun cool metrics that are exciting that only my app could know." So the
-// page is a versus screen: you on the left, them on the right. A row of
-// filters chooses which records, a sentence over them says the one thing
-// that view adds up to, and the records are a wall of covers, as your own
+// page is a versus screen: you on the left, them on the right. Under the
+// faces, the facts (her word, the same day, for what had been a sentence:
+// "more comparative overall metadata as facts"); then the filters — what
+// you share, what you sent, what you received — and the records they choose
+// as a wall of covers, as your own
 // is (her next word, the same day: "a grid of shared albums then opening it
 // opens just like a regular wall entry would but compared"). A record opens
 // to the two of you on it: both of your stars, marks, horizons and notes,
@@ -58,9 +60,6 @@ import { parseHorizon, splitNotes } from '../../../../library/entry_formatter';
 import { carrySender, journalUrl, tidyJournal } from '../../../../library/return_address';
 import { arrivingBack } from '../../../../library/handoff';
 
-// Four stars or better is loved: something sent that went on to be logged
-// and rated well.
-const HIT = 4;
 const EACH_MS = 8000;
 // A record whose every song the keeper gave full marks says so, once it has
 // enough songs for that to mean something.
@@ -89,6 +88,19 @@ const stars = v => `${said(v)} ${num(v) === 1 ? 'star' : 'stars'}`;
 const heartsOf = entry => String(entry?.hearts || '');
 const countHearts = h => [...h].filter(c => c === '1').length;
 const some = (n, one, many) => (n === 1 ? one : many.replace('#', n));
+const genreOf = entry => String(entry?.genre || '').trim() || null;
+const decadeOf = entry => { const y = String(entry?.year || '').match(/[0-9]{4}/)?.[0]; return y ? `${y.slice(0, 3)}0s` : null; };
+// The answer given most often, the first to reach it on a tie.
+function mostOf(values) {
+  const seen = new Map();
+  let top = null;
+  for (const v of values) {
+    if (!v) continue;
+    seen.set(v, (seen.get(v) || 0) + 1);
+    if (top === null || seen.get(v) > seen.get(top)) top = v;
+  }
+  return top;
+}
 
 // One entry per record, the most recent (DECISIONS: never average across
 // listens). Album listens only, 2026-09-24: a track note rates one song, and
@@ -529,6 +541,40 @@ function Opened({ from, tile, turn, count, onGone, children }) {
   );
 }
 
+// ── The facts ─────────────────────────────────────────────────────────────
+// What you share, as numbers for the two of you; then a question asked of
+// each of you, laid out as the page is — your answer under your face, theirs
+// under theirs and faint, the question between. Nothing adds up to a score:
+// no row has a winner drawn on it.
+function Facts({ facts, name }) {
+  const row = f => (
+    <div key={f.label} className="pn-fact-row" aria-label={`${f.label}: you ${f.you ?? 'none'}, ${name} ${f.them ?? 'none'}`}>
+      <span className="pn-fact-you">{f.you ?? '—'}</span>
+      <span className="pn-fact-label">{f.label}</span>
+      <span className="pn-fact-them">{f.them ?? '—'}</span>
+    </div>
+  );
+  return (
+    <section className="pn-facts">
+      <div className="pn-facts-together">
+        {facts.together.map(f => (
+          <div key={f.label} className="pn-fact">
+            <span className="pn-fact-n">{f.value}</span>
+            <span className="pn-fact-label">{f.label}</span>
+          </div>
+        ))}
+      </div>
+      <div className="pn-facts-rows">
+        {facts.shared.map(row)}
+        {row(facts.sent)}
+      </div>
+      <div className="pn-facts-rows">
+        {facts.taste.filter(f => f.you || f.them).map(row)}
+      </div>
+    </section>
+  );
+}
+
 export default function PersonPage({ layered = false }) {
   const { id } = useParams();
   const router = useRouter();
@@ -629,7 +675,6 @@ export default function PersonPage({ layered = false }) {
       if (t) shared.push({ key, mine: m, theirs: t, from: null });
     }
     shared.sort((a, b) => later(b) - later(a));
-    const songs = shared.filter(item => lineUp(item.mine, item.theirs).both.length > 0);
 
     // What they put you onto. One per record — the same record sent twice is
     // one thing they put you onto, the newest send of it kept — and the
@@ -672,25 +717,44 @@ export default function PersonPage({ layered = false }) {
       fromYou.push({ key, mine: mineLatest.get(key) || null, theirs: theirLatest.get(key) || null, from: 'you', album: s.album, artist: s.artist, album_art: s.album_art });
     }
 
-    // Their five-star records you have not logged, to go and hear: your
-    // side of each is empty, and one they sent you says so.
-    const sentKeys = new Set(fromThem.map(x => x.key));
-    const unheard = newestFirst([...theirLatest.values()].filter(t => num(t.rating_value) === 5 && !mineLatest.has(t.album_key)))
-      .map(t => ({ key: t.album_key, mine: null, theirs: t, from: sentKeys.has(t.album_key) ? 'them' : null }));
+    // The facts over the wall (Miyel, 2026-10-24: "more comparative overall
+    // metadata as facts vs. the sentences"). What you share first, said once
+    // for the two of you; then the same question asked of each of you, your
+    // answer on your side and theirs on theirs.
+    const on = v => v === true || v === 'true';
+    const both = shared.map(x => ({ x, shape: lineUp(x.mine, x.theirs) }));
+    const rated = side => shared.map(x => num(x[side].rating_value)).filter(v => v !== null);
+    const average = list => (list.length ? (list.reduce((a, b) => a + b, 0) / list.length).toFixed(1) : null);
+    const hearts = side => both.reduce((n, { shape }) => n + countHearts(side === 'mine' ? shape.yourHearts : shape.theirHearts), 0);
+    const facts = {
+      together: [
+        { label: shared.length === 1 ? 'Record' : 'Records', value: shared.length },
+        { label: 'Same stars', value: shared.filter(x => num(x.mine.rating_value) !== null && num(x.mine.rating_value) === num(x.theirs.rating_value)).length },
+        { label: 'Same favorite song', value: both.filter(({ shape }) => shape.both.length > 0).length },
+      ],
+      shared: [
+        { label: 'Average stars', you: average(rated('mine')), them: average(rated('theirs')) },
+        { label: 'Masterpieces', you: shared.filter(x => on(x.mine.masterpiece)).length, them: shared.filter(x => on(x.theirs.masterpiece)).length },
+        { label: 'Favorite songs', you: hearts('mine'), them: hearts('theirs') },
+      ],
+      sent: { label: 'Sent', you: fromYou.length, them: fromThem.length },
+      // Across everything each of you has logged, not only what you share.
+      taste: [
+        { label: 'Top genre', you: mostOf([...mineLatest.values()].map(genreOf)), them: mostOf([...theirLatest.values()].map(genreOf)) },
+        { label: 'Top decade', you: mostOf([...mineLatest.values()].map(decadeOf)), them: mostOf([...theirLatest.values()].map(decadeOf)) },
+      ],
+    };
 
-    const loved = list => list.filter(x => num(x.mine?.rating_value) !== null && num(x.mine.rating_value) >= HIT).length;
-    return { shared, songs, fromThem, fromYou, unheard, lovedOfThem: loved(fromThem) };
+    return { shared, fromThem, fromYou, facts };
   }, [mine, theirs, sent, cameBack, out, person]);
 
   // The filters, in their order, and only the ones with something in them:
   // a view with nothing to flip through is a door to an empty room.
   const views = useMemo(() => [
     { key: 'shared', label: 'Shared', list: decks.shared },
-    { key: 'songs', label: 'Same songs', list: decks.songs },
-    { key: 'them', label: `From ${name}`, list: decks.fromThem },
-    { key: 'you', label: 'From you', list: decks.fromYou },
-    { key: 'unheard', label: `${name}'s 5 stars`, list: decks.unheard },
-  ].filter(v => v.list.length > 0), [decks, name]);
+    { key: 'you', label: 'Sent', list: decks.fromYou },
+    { key: 'them', label: 'Received', list: decks.fromThem },
+  ].filter(v => v.list.length > 0), [decks]);
   const current = views.find(v => v.key === view) || views[0] || null;
   const deck = current ? current.list : [];
   const item = deck.length ? deck[Math.min(at, deck.length - 1)] : null;
@@ -751,32 +815,6 @@ export default function PersonPage({ layered = false }) {
   const ready = !!theirs && mine !== null;
   const me = { name: keeper_name, address: site_address };
 
-  // The sentence over the filters: the one thing the view on screen adds up
-  // to, with its numbers inside it.
-  const sentence = () => {
-    if (!current) return <>You and {name} haven&rsquo;t logged any of the same records yet.</>;
-    const n = current.list.length;
-    if (current.key === 'shared') return <>You&rsquo;ve both logged {n === 1 ? 'one record' : <><b>{n}</b> of the same records</>}.</>;
-    if (current.key === 'songs') return <>You picked the same favorite songs on <b>{n}</b> of your <b>{decks.shared.length}</b> {decks.shared.length === 1 ? 'record' : 'records'}.</>;
-    if (current.key === 'them') {
-      const logged = decks.fromThem.filter(x => x.mine).length;
-      const lead = <>{name} put you onto {n === 1 ? 'one record' : <><b>{n}</b> records</>}.</>;
-      if (!logged) return <>{lead} You haven&rsquo;t logged {n === 1 ? 'it' : 'any'} yet.</>;
-      if (logged === 1) return <>{lead} {decks.lovedOfThem ? <>You loved the one you&rsquo;ve logged.</> : <>You&rsquo;ve logged one.</>}</>;
-      return <>{lead} You loved <b>{decks.lovedOfThem}</b> of the <b>{logged}</b> you&rsquo;ve logged.</>;
-    }
-    if (current.key === 'you') {
-      const logged = decks.fromYou.filter(x => x.theirs).length;
-      const lead = <>You put {name} onto {n === 1 ? 'one record' : <><b>{n}</b> records</>}.</>;
-      if (!logged) return <>{lead} {name} hasn&rsquo;t logged {n === 1 ? 'it' : 'any'} yet.</>;
-      if (n === 1) return <>{lead} {name} has logged it.</>;
-      return <>{lead} {name} has logged <b>{logged}</b>.</>;
-    }
-    return n === 1
-      ? <>{name} gave this 5 stars. You haven&rsquo;t logged it.</>
-      : <>{name} gave these 5 stars. You haven&rsquo;t logged them.</>;
-  };
-
   return (
     <div className={'own-screen' + (layered ? ' own-screen--layered' : '')}>
       {/* The header's left slot, where the owner's tools live on every page:
@@ -826,7 +864,7 @@ export default function PersonPage({ layered = false }) {
 
             {!ready ? <div className="own-skeleton pn-waiting" /> : (
               <>
-                <p className="pn-say">{sentence()}</p>
+                <Facts facts={decks.facts} name={name} />
 
                 {views.length > 1 && (
                   <nav className="pn-views" aria-label="Which records">

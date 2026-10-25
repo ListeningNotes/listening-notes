@@ -62,9 +62,10 @@ publicly):
 - `/dashboard/people` — the address book as a grid of faces (Friends), with
   the ways one gets in — a paste, a scanned code, a send that carried one —
   and Invite and Add in its header. The Friends stop on the phone's band
-- `/dashboard/people/[id]` — your page about one person: the two of you over
-  a wall of covers, with filters for what you both have, what each of you put
-  the other onto, and their five stars you have not logged; a cover opens,
+- `/dashboard/people/[id]` — your page about one person: the two of you, the
+  facts (what you share, then your answer and theirs to the same questions),
+  and a wall of covers, filtered to what you share, what you sent and what
+  you received; a cover opens,
   growing out of itself as an entry does, to the two of you on that record in
   two columns — stars, marks, horizons, notes, the songs and words you share
 - `/settings` — the machinery: address, the password, Back up your journal,
