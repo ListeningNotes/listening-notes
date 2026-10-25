@@ -2080,23 +2080,6 @@ span.hn-bar-word { cursor: default; }
 /* Theirs is the listen you came to look at, so it is the lit one. Yours is
    the line you are measuring it against and sits back. */
 .fd-cmp-bars--theirs .fd-cmp-bar { background: var(--ink); opacity: 0.92; }
-/* Two listens track against track (HorizonPair, Feed.js): theirs a wide
-   ghost behind each song, yours a narrower solid bar in front. Both colours
-   are mixed rather than faded with opacity, which would make each bar its
-   own layer and bury the ghost's heart under your bar; the hearts are lifted
-   over both. Theirs is faint and stands a little to the right, so a song you
-   both hearted wears two. */
-.fd-cmp-pairs {
-  display: flex; align-items: flex-end; gap: 4px;
-  height: 72px; width: 100%;
-  padding-top: 16px; box-sizing: content-box;
-}
-.fd-cmp-pair { flex: 1 1 0; min-width: 0; height: 100%; position: relative; }
-.fd-cmp-pair .fd-cmp-bar { position: absolute; bottom: 0; }
-.fd-cmp-bar--other { left: 0; right: 0; background: color-mix(in srgb, var(--ink) 15%, transparent); }
-.fd-cmp-bar--mine { left: 24%; right: 24%; background: color-mix(in srgb, var(--ink) 88%, transparent); }
-.fd-cmp-pair .fd-cmp-bar--loved svg { z-index: 2; }
-.fd-cmp-bar--other.fd-cmp-bar--loved svg { opacity: 0.38; transform: translate(-15%, -4px); }
 .fd-cmp-bars--yours .fd-cmp-bar { background: var(--ink-faint); opacity: 0.85; }
 /* The distance, on the rule between the two listens: the shape the beacon's
    slot already uses, a hairline with one thing sitting on it. */

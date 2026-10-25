@@ -46,7 +46,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { CaretLeft, CaretRight, Printer, Shuffle, User } from '@phosphor-icons/react';
 import SiteNav from '../../../../components/main_components/SiteNav';
 import StarRating from '../../../../components/main_components/StarRating';
-import { HorizonPair, HorizonRow, Marks } from '../../../../components/main_components/Feed';
+import { HorizonRow, Marks } from '../../../../components/main_components/Feed';
 import Chip from '../../../../components/main_components/Slug_Page/Chip';
 import { useBookplate } from '../../../../components/main_components/Bookplate';
 import { albumKey } from '../../../../hooks/useListeningBeacon';
@@ -219,68 +219,18 @@ function Marked({ text, words }) {
   ));
 }
 
-// One person's note, in its column: their face and name over it, their own
-// words in full, folded when long. Theirs is the ghost, as their stars and
-// their horizon are: the same words, in softer ink.
-function Note({ who, face, text, words, ghost = false, cannot = false, home = null }) {
+// One person's note, in their column: their own words in full, folded when
+// long, with Read all under it.
+function Note({ text, words }) {
   const [open, setOpen] = useState(false);
   const long = text.length > FOLD_AT;
   return (
-    <figure className={'pn-said' + (ghost ? ' pn-said--ghost' : '')}>
-      <figcaption className="pn-said-who"><Face src={face} small />{who}</figcaption>
-      {text ? (
-        <div className={'pn-said-text' + (long && !open ? ' pn-said-text--folded' : '')}>
-          <Marked text={text} words={words} />
-        </div>
-      ) : !cannot && <p className="pn-said-none">Didn&rsquo;t write about it.</p>}
-      {(text && long && !open) || home ? (
-        <div className="pn-said-foot">
-          {text && long && !open && <button type="button" className="pn-said-door" onClick={() => setOpen(true)}>Read all</button>}
-          {home}
-        </div>
-      ) : null}
-    </figure>
-  );
-}
-
-// ── Both notes, side by side ──────────────────────────────────────────────
-// Yours on the left, because it is your page; theirs on the right with their
-// face on it and the way to the entry it lives on (Miyel, 2026-10-24: "then
-// the notes side by side"). Their note is read from their journal when the
-// record is on screen and kept only while this page is open (AGENTS, Never).
-// Most entries have no writing, so the plain case is said plainly, and a
-// journal that cannot give a note — an older copy, a quiet entry — shows only
-// the way there, with nothing said about why.
-function Notes({ mine, theirs, myNote, theirNote, name, theirFace, home }) {
-  if (mine && myNote === undefined) return null;
-  if (theirs && theirNote === undefined) return null;
-  const yours = mine ? plainNote(myNote) : '';
-  const hers = typeof theirNote === 'string' ? plainNote(theirNote) : '';
-  const cannot = theirs && theirNote === false;
-  if (!yours && !theirs) return null;
-  const way = theirs ? <a href={home} className="pn-said-door">On their journal</a> : null;
-  if (!yours && !hers) {
-    return (
-      <div className="pn-notes">
-        <p className="pn-notes-none">{!cannot && (mine ? 'Neither of you wrote about it.' : `${name} didn’t write about it.`)}{way}</p>
+    <>
+      <div className={'pn-said-text' + (long && !open ? ' pn-said-text--folded' : '')}>
+        <Marked text={text} words={words} />
       </div>
-    );
-  }
-  const words = yours && hers ? sharedWords(yours, hers, [mine?.album, mine?.artist, ...(mine?.titles || []), name]) : [];
-  const both = Boolean(mine && theirs);
-  return (
-    <div className="pn-notes">
-      {words.length > 0 && (
-        <p className="pn-words">
-          You both used the {words.length === 1 ? 'word' : 'words'}{' '}
-          {words.map((w, i) => <span key={w}>{i > 0 && (i === words.length - 1 ? ' and ' : ', ')}<mark className="pn-word">{w}</mark></span>)}.
-        </p>
-      )}
-      <div className={'pn-notes-pair' + (both ? '' : ' pn-notes-pair--one')}>
-        {mine && <Note who="You" face="/api/portrait" text={yours} words={words} />}
-        {theirs && <Note who={name} face={theirFace} text={hers} words={words} ghost cannot={cannot} home={way} />}
-      </div>
-    </div>
+      {long && !open && <button type="button" className="pn-said-door" onClick={() => setOpen(true)}>Read all</button>}
+    </>
   );
 }
 
@@ -300,11 +250,19 @@ function Chips({ entry }) {
 // ── The record on screen ──────────────────────────────────────────────────
 // Drawn as an entry is drawn (Miyel, 2026-10-24: "more like you're looking at
 // an actual entry, but one ghosted"): the cover, the title, the artist and
-// the year, the stars, the marks, the horizon and the notes — yours solid,
-// and theirs as a ghost of the same thing beside or behind it. Their stars
-// are a faint row under yours, each row with its own small face; their
-// marks are faint chips after yours; their horizon stands behind yours, song
-// by song, with their hearts faint.
+// the year, then the two of you in two columns, the way the faces stand at
+// the top of the page — "left me right ghost", her word the same day. Each
+// column is one listen: the face, the stars, the marks, the horizon with its
+// hearts, the note. Yours is solid; theirs is the same thing as a ghost, and
+// their note, which has to be read, is in softer ink rather than faded. The
+// columns keep row with each other, so the two sets of stars, the two
+// horizons and the two notes each start level.
+//
+// Their note is read from their journal when the record is on screen and
+// kept only while this page is open (AGENTS, Never). Most entries have no
+// writing, so the plain case is said plainly, and a journal that cannot give
+// a note — an older copy, a quiet entry — shows only the way there, with
+// nothing said about why.
 function Versus({ item, name, address, songs, myNote, theirNote, titles, turn, at, count }) {
   const { mine, theirs } = item;
   const theirHome = theirs ? carrySender(`${journalUrl(address.theirs)}/entries/${theirs.slug}`, address.me, { known: true }) : null;
@@ -319,6 +277,27 @@ function Versus({ item, name, address, songs, myNote, theirNote, titles, turn, a
   const cover = face.album_art
     ? <img src={face.album_art} alt="" />
     : <span className="pn-vs-none" aria-hidden="true">♪</span>;
+
+  // The notes: undefined while they are being read, false where their
+  // journal cannot give one.
+  const yours = mine && typeof myNote === 'string' ? plainNote(myNote) : '';
+  const hers = theirs && typeof theirNote === 'string' ? plainNote(theirNote) : '';
+  const cannot = Boolean(theirs) && theirNote === false;
+  const heard = (!mine || myNote !== undefined) && (!theirs || theirNote !== undefined);
+  const words = yours && hers ? sharedWords(yours, hers, [face.album, face.artist, ...(titles || []), name]) : [];
+  const neither = heard && mine && theirs && !yours && !hers && !cannot;
+  const way = theirs ? <a href={theirHome} className="pn-said-door">On their journal</a> : null;
+  const anyChips = [mine, theirs].some(e => e && ['favorite', 'masterpiece', 'formative'].some(k => e[k] === true || e[k] === 'true'));
+  const anyBars = shape.yours.length > 0 || shape.hers.length > 0;
+
+  // A row is two cells, yours and theirs, so the grid keeps them level.
+  const row = (what, left, right, ghost = true) => [
+    <div key={`${what}-you`} className={`pn-cell pn-cell--you pn-cell--${what}`}><div className="pn-side">{left}</div></div>,
+    <div key={`${what}-them`} className={`pn-cell pn-cell--them pn-cell--${what}`}><div className={'pn-side' + (ghost ? ' pn-ghost' : '')}>{right}</div></div>,
+  ];
+  const unlogged = <p className="pn-unlogged">Not logged yet.</p>;
+  const noNote = <p className="pn-said-none">Didn&rsquo;t write about it.</p>;
+
   return (
     <div className="pn-vs">
       <div className="pn-vs-top">
@@ -338,54 +317,40 @@ function Versus({ item, name, address, songs, myNote, theirNote, titles, turn, a
       <h2 className="pn-vs-album">{face.album}</h2>
       <div className="pn-vs-artist">{face.artist}{year ? ` · ${year}` : ''}</div>
 
-      {(myRating !== null || theirRating !== null) && (
-        <div className="pn-stars">
-          {myRating !== null && (
-            <div className="pn-star-row"><Face src="/api/portrait" small /><StarRating rating={myRating} size={22} /></div>
-          )}
-          {theirRating !== null && (
-            <div className="pn-star-row pn-ghost" aria-label={`${name}: ${stars(theirRating)}`}><Face src={theirFace} small /><StarRating rating={theirRating} size={22} /></div>
-          )}
-        </div>
-      )}
-      <div className="pn-chips">
-        <Chips entry={mine} />
-        <span className="pn-ghost pn-chips-theirs"><Chips entry={theirs} /></span>
-      </div>
-
       <p className="pn-vs-line">{oneLine({ ...item, shape, songs, name })}</p>
 
-      {/* Theirs behind yours, song by song, when the two tracklists line up,
-          with a key under it; two rows, yours over theirs, when they do not. */}
-      {shape.comparable && (
-        <div className="pn-rows">
-          <HorizonPair yours={shape.yours} hers={shape.hers} yourHearts={shape.yourHearts} theirHearts={shape.theirHearts} label={`How you and ${name} heard it, track by track`} />
-          <div className="pn-key" aria-hidden="true">
-            <span><i className="pn-key-you" />You</span>
-            <span><i className="pn-key-them" />{name}</span>
-          </div>
-        </div>
-      )}
-      {!shape.comparable && (shape.yours.length > 0 || shape.hers.length > 0) && (
-        <div className="pn-rows">
-          <HorizonRow bars={shape.yours} hearts={shape.yourHearts} className="fd-cmp-bars pn-bars pn-bars--you" label="How you heard it, track by track" />
-          <HorizonRow bars={shape.hers} hearts={shape.theirHearts} className="fd-cmp-bars pn-bars pn-bars--theirs" label={`How ${name} heard it, track by track`} />
-          <div className="pn-key" aria-hidden="true">
-            {shape.yours.length > 0 && <span><i className="pn-key-you" />You</span>}
-            {shape.hers.length > 0 && <span><i className="pn-key-them" />{name}</span>}
-          </div>
-        </div>
-      )}
+      <div className="pn-sides">
+        {row('who',
+          <><Face src="/api/portrait" small />You</>,
+          <><Face src={theirFace} small />{name}</>,
+          false)}
+        {row('stars',
+          mine ? (myRating !== null && <div className="pn-stars-of"><StarRating rating={myRating} size={20} /></div>) : unlogged,
+          theirs ? (theirRating !== null && <div className="pn-stars-of" aria-label={`${name}: ${stars(theirRating)}`}><StarRating rating={theirRating} size={20} /></div>) : unlogged,
+          Boolean(theirs))}
+        {anyChips && row('chips', <Chips entry={mine} />, <Chips entry={theirs} />)}
+        {anyBars && row('bars',
+          <HorizonRow bars={shape.yours} hearts={shape.yourHearts} className="fd-cmp-bars pn-bars" label="How you heard it, track by track" />,
+          <HorizonRow bars={shape.hers} hearts={shape.theirHearts} className="fd-cmp-bars pn-bars" label={`How ${name} heard it, track by track`} />)}
 
-      <Notes
-        mine={mine && { album: mine.album, artist: mine.artist, titles }}
-        theirs={theirs}
-        myNote={myNote}
-        theirNote={theirNote}
-        name={name}
-        theirFace={theirFace}
-        home={theirHome}
-      />
+        {words.length > 0 && (
+          <p className="pn-cell--wide pn-words">
+            You both used the {words.length === 1 ? 'word' : 'words'}{' '}
+            {words.map((w, i) => <span key={w}>{i > 0 && (i === words.length - 1 ? ' and ' : ', ')}<mark className="pn-word">{w}</mark></span>)}.
+          </p>
+        )}
+        {heard && (neither
+          ? <p className="pn-cell--wide pn-notes-none">Neither of you wrote about it.{way}</p>
+          : row('note',
+            mine && (yours ? <Note text={yours} words={words} /> : noNote),
+            theirs && (
+              <>
+                {hers ? <Note text={hers} words={words} /> : !cannot && noNote}
+                {way}
+              </>
+            ),
+            false))}
+      </div>
     </div>
   );
 }

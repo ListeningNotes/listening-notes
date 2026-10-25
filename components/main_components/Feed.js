@@ -268,9 +268,9 @@ function Face({ address }) {
 const heartsOf = entry => String(entry?.hearts || '');
 
 // One listen's horizon, read off the feed: a bar per track and a ♥ over each
-// one hearted. Both listens in a compare are drawn by this, and so is a
-// person's page (app/dashboard/people/[id]) when two tracklists do not line
-// up, so the app has one drawing of a horizon from a feed and not two.
+// one hearted. Both listens in a compare are drawn by this, and so are the
+// two columns of a person's page (app/dashboard/people/[id]), so the app
+// has one drawing of a horizon from a feed and not two.
 export function HorizonRow({ bars, hearts, className, label }) {
   if (!bars.length) return null;
   return (
@@ -278,36 +278,6 @@ export function HorizonRow({ bars, hearts, className, label }) {
       {bars.map((v, i) => (
         <span key={i} className={hearts[i] === '1' ? 'fd-cmp-bar fd-cmp-bar--loved' : 'fd-cmp-bar'} style={{ '--tall': `${Math.max(9, v * 100)}%` }}>
           {hearts[i] === '1' && <Heart size={11} weight="fill" aria-hidden="true" />}
-        </span>
-      ))}
-    </div>
-  );
-}
-
-
-// Two listens of one record laid track against track, 2026-10-24: their
-// horizon is a ghost standing behind yours, song by song — a wide faint bar
-// for theirs, your narrower solid one in front of it — so where you heard
-// it differently is read in one shape. Miyel, on two rows stacked: "its hard
-// above and below"; and then, for the person's page, "ghosted horizon
-// underneath… with hearts ghosted". Each heart stands over the bar that
-// earned it, yours in full and theirs faint and a little to one side, so a
-// song you both hearted wears two. Only for two horizons of the same length
-// (the same tracklist); anything else is drawn as two rows, since the fifth
-// song of one edition is not the fifth of another.
-export function HorizonPair({ yours, hers, yourHearts, theirHearts, label }) {
-  const heart = yours.length > 16 ? 9 : 11;
-  const tall = v => Math.max(6, v * 100);
-  return (
-    <div className="fd-cmp-pairs" aria-label={label}>
-      {yours.map((v, i) => (
-        <span key={i} className="fd-cmp-pair">
-          <span className={'fd-cmp-bar fd-cmp-bar--other' + (theirHearts[i] === '1' ? ' fd-cmp-bar--loved' : '')} style={{ '--tall': `${tall(hers[i])}%` }}>
-            {theirHearts[i] === '1' && <Heart size={heart} weight="fill" aria-hidden="true" />}
-          </span>
-          <span className={'fd-cmp-bar fd-cmp-bar--mine' + (yourHearts[i] === '1' ? ' fd-cmp-bar--loved' : '')} style={{ '--tall': `${tall(v)}%` }}>
-            {yourHearts[i] === '1' && <Heart size={heart} weight="fill" aria-hidden="true" />}
-          </span>
         </span>
       ))}
     </div>

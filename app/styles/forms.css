@@ -2294,56 +2294,55 @@ textarea.st-field { resize: vertical; min-height: 96px; }
   font-family: var(--font-label); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-soft);
 }
 
-/* Your stars, and theirs as a faint row under them, each row with its
-   owner's face. Ghosting is opacity on the whole row, so the stars keep
-   their own colour and only their weight changes. */
-.pn-ghost { opacity: 0.34; }
-.pn-stars { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-top: 16px; }
-.pn-star-row { display: flex; align-items: center; gap: 10px; }
-/* The marks as the entry wears them, theirs faint after yours. */
-.pn-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: 12px; }
-.pn-chips-theirs { display: contents; }
-.pn-chips-theirs > * { opacity: 0.34; }
+/* Ghosting is opacity on the whole thing, so their stars, chips and bars
+   keep their own colours and only their weight changes. */
+.pn-ghost { opacity: 0.38; }
 
-/* The line only this journal could write. */
+/* The line only this journal could write, over the two of you. */
 .pn-vs-line {
-  margin: 16px 4px 4px; text-align: center;
+  margin: 14px 4px 0; text-align: center;
   font-size: 16px; line-height: 1.5; color: var(--ink); overflow-wrap: anywhere;
 }
 .pn-vs-line b { font-weight: 700; }
 
-/* ── The horizon, theirs behind yours ── (HorizonPair, Feed.js). When two
-   tracklists do not line up, two rows: yours over theirs, theirs the same
-   ghost. */
-.pn-rows { width: 100%; margin-top: 16px; display: flex; flex-direction: column; gap: 6px; }
-.pn-bars { height: 44px; }
-.pn-bars .fd-cmp-bar, .pn-rows .fd-cmp-bar { animation-delay: 0.05s; }
-.pn-bars--you .fd-cmp-bar { background: color-mix(in srgb, var(--ink) 88%, transparent); }
-.pn-bars--theirs .fd-cmp-bar { background: color-mix(in srgb, var(--ink) 15%, transparent); }
-.pn-bars--theirs .fd-cmp-bar--loved svg { opacity: 0.38; }
-/* What the bars are, under them: a swatch of each. */
-.pn-key { display: flex; justify-content: center; align-items: center; gap: 16px; margin-top: 6px; font-family: var(--font-label); font-size: 10px; letter-spacing: 0.06em; color: var(--ink-faint); }
-.pn-key span { display: inline-flex; align-items: center; gap: 6px; }
-.pn-key i { display: inline-block; width: 8px; height: 12px; border-radius: 2px 2px 0 0; }
-.pn-key-you { background: color-mix(in srgb, var(--ink) 88%, transparent); }
-.pn-key-them { background: color-mix(in srgb, var(--ink) 15%, transparent); }
-
-/* ── Both notes, side by side ── under a hairline: yours on the left, theirs
-   on the right in softer ink. Each wears its author's face, small, and its
-   own words in full; a long one opens folded, its last lines fading, with
-   Read all under it. */
-.pn-notes { width: 100%; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 16px; }
-.pn-notes-pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
-.pn-notes-pair--one { grid-template-columns: minmax(0, 1fr); }
-.pn-face--small { width: 22px; height: 22px; }
-.pn-said { margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
-.pn-said-who {
-  display: flex; align-items: center; gap: 8px; min-width: 0;
-  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint);
+/* ── The two of you, in two columns ── yours on the left, theirs on the
+   right as its ghost (Miyel, 2026-10-24: "left me right ghost"), a hairline
+   between. Each row is a cell of yours and a cell of theirs, so the stars,
+   the horizons and the notes start level; a row nobody fills is left out,
+   and a line about both of you runs across the two. */
+.pn-sides {
+  width: 100%; margin-top: 18px;
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: stretch;
 }
+/* The hairline is on the cell and the ghost on what is inside it, so the
+   line between you stays one line. */
+.pn-cell { min-width: 0; padding-top: 12px; }
+.pn-cell--you { padding-right: 16px; }
+.pn-cell--them { padding-left: 16px; border-left: 1px solid var(--border); }
+.pn-side { width: 100%; display: flex; flex-direction: column; align-items: center; }
+.pn-cell--who { padding-top: 0; }
+.pn-cell--who .pn-side {
+  flex-direction: row; justify-content: center; gap: 8px;
+  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint);
+  overflow-wrap: anywhere;
+}
+.pn-cell--them.pn-cell--who .pn-face { opacity: 0.7; }
+.pn-face--small { width: 22px; height: 22px; }
+.pn-stars-of { display: flex; justify-content: center; }
+.pn-unlogged { margin: 2px 0 0; font-size: 13px; line-height: 1.5; color: var(--ink-faint); text-align: center; }
+/* The marks as the entry wears them, a chip each, wrapping in the column. */
+.pn-cell--chips .pn-side { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 6px; }
+/* Each listen's horizon, its hearts over the bars that earned them. */
+.pn-bars { height: 48px; gap: 2px; }
+.pn-bars .fd-cmp-bar { animation-delay: 0.05s; background: color-mix(in srgb, var(--ink) 88%, transparent); }
+
+/* ── The notes ── under the horizons, each in its column, in full; a long
+   one opens folded, its last lines fading, with Read all under it. Theirs
+   is in softer ink rather than faded, since it has to be read. */
+.pn-cell--note { padding-top: 18px; }
+.pn-cell--note .pn-side { align-items: stretch; gap: 8px; }
 .pn-said-text { font-size: 14px; line-height: 1.55; color: var(--ink); white-space: pre-line; overflow-wrap: anywhere; }
-.pn-said--ghost .pn-said-text { color: var(--ink-soft); }
-.pn-said--ghost .pn-said-who .pn-face { opacity: 0.7; }
+.pn-cell--them .pn-said-text { color: var(--ink-soft); }
 .pn-said-text p { margin: 0 0 0.7em; }
 .pn-said-text p:last-child { margin-bottom: 0; }
 .pn-said-text--folded {
@@ -2352,16 +2351,19 @@ textarea.st-field { resize: vertical; min-height: 96px; }
   mask-image: linear-gradient(to bottom, #000 70%, transparent);
 }
 .pn-said-none { margin: 0; font-size: 14px; line-height: 1.5; color: var(--ink-faint); }
-.pn-said-foot { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: baseline; }
 .pn-said-door {
+  align-self: flex-start;
   border: 0; background: none; padding: 0; cursor: pointer; text-decoration: none;
   font-family: var(--font-label); font-size: 11px; letter-spacing: 0.04em; color: var(--ink-soft);
 }
 .pn-said-door:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
-.pn-notes-none { margin: 0; display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; justify-content: center; font-size: 14px; line-height: 1.5; color: var(--ink-soft); }
+/* A line about both of you, across the two columns. */
+.pn-cell--wide { grid-column: 1 / -1; margin: 0; padding-top: 18px; text-align: center; }
+.pn-notes-none { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; justify-content: center; font-size: 14px; line-height: 1.5; color: var(--ink-soft); }
+.pn-notes-none .pn-said-door { align-self: auto; }
 /* A word you both used: the Favorite red, softly — wherever it stands in
    either note, and in the line that names it. */
-.pn-words { margin: 0; text-align: center; font-size: 15px; line-height: 1.5; color: var(--ink); }
+.pn-words { font-size: 15px; line-height: 1.5; color: var(--ink); }
 .pn-word {
   color: inherit; font: inherit; border-radius: 3px; padding: 0 2px; margin: 0 -2px;
   background: color-mix(in srgb, var(--fav) 16%, transparent);
@@ -2392,7 +2394,8 @@ a.pn-unheard-row:hover .pn-unheard-album { text-decoration: underline; text-unde
   .pn-body { padding: 14px 16px 40px; }
   .pn-say { font-size: 20px; }
   .pn-vs-top { gap: 4px; grid-template-columns: 34px auto 34px; }
-  .pn-notes-pair { gap: 14px; }
+  .pn-cell--you { padding-right: 12px; }
+  .pn-cell--them { padding-left: 12px; }
 }
 
 /* ── from app/dashboard/report/page.js ───────────────────────────────── */
