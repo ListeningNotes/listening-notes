@@ -2,34 +2,51 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 'use client';
 // app/dashboard/people/[id]/page.js
-// Your page about one person in the address book.
+// A friend's journal page, on your own copy.
 //
-// Compare is not a destination; it is what this page is. Everything
-// cumulative about a person lives here — how many records you both have,
-// where you agree hardest and disagree hardest, what they have sent you and
-// how you rated it, their hit rate with you — and it lives on your copy,
+// ── Their journal, drawn by yours, 2026-10-26 ─────────────────────────────
+// Miyel's Friends answers: "the page is mine, the data is theirs." It was
+// your page about them, a report — Compare's numbers and lists — and it is
+// now their journal as your journal draws it: a strip with their face and
+// their name, then their beacon, the line and the wall, the same components
+// home uses handed their rows, so a web of sites reads as one app. Nothing
+// is framed and nothing of theirs is drawn by them; the records come from
+// their public feed and their beacon, the allow-listed reads every journal
+// already answers, and the writing stays on their journal, where every
+// record here opens.
+//
+// Read in the browser, as Compare and People always have been: their public
+// feed and beacon from their journal, your own records and the sends from
+// them from this copy. Nothing is stored and nobody learns they were looked
+// at.
+//
+// ── Compare is a view here, not the page ──────────────────────────────────
+// What this page was, opened in place under the strip and rolled up again:
+// how many records you both have, where you agree and disagree hardest, what
+// they have sent you and how it landed. It is still cumulative and still
+// only yours, which is why it can hold what their journal never could.
 // (What only they have heard was a list here too, and came off on Miyel's
 // call, 2026-09-13: their journal is a tap away and says it better.)
-// which is why it can hold what their journal never could: what they sent,
-// how it landed, how often they are right about you.
-//
-// Read in the browser: their public feed from their journal, your own
-// records and the sends from them from this copy. Nothing is stored and
-// nobody learns they were looked at. Their writing stays on their journal,
-// where every row here can take you.
 //
 // Rated alike allows for how each of you rates: a generous rater and a
 // harsh one with the same taste should come out alike (DECISIONS, The
 // journal), so their ratings are shifted by the average difference across
 // what you both have before the gap is measured. Three records in common
 // are the least that offset is trusted on.
+//
+// The strip carries Compare, Added and Wave (Miyel: "Wave once added"), and
+// the foot of the wall carries what you have sent them that is still out —
+// the inbox's Sent door, for one person — and Remove. Pin went, her call.
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { CaretLeft, Printer, User } from '@phosphor-icons/react';
+import { CaretLeft, Check, HandWaving, Printer, Shuffle, User, UserCheck } from '@phosphor-icons/react';
 import SiteNav from '../../../../components/main_components/SiteNav';
 import StarRating from '../../../../components/main_components/StarRating';
+import Journal, { foldForSearch, gatherAlbums } from '../../../../components/main_components/Journal';
+import { BeaconCard } from '../../../../components/main_components/ListeningBeacon';
+import SentList from '../../../../components/main_components/SentList';
 import { albumKey } from '../../../../hooks/useListeningBeacon';
 import { carrySender, journalUrl, tidyJournal } from '../../../../library/return_address';
 import { useBookplate } from '../../../../components/main_components/Bookplate';
@@ -44,6 +61,10 @@ const HIT = 4;
 const OFFSET_NEEDS = 3;
 const HARDEST = 3;
 const EACH_MS = 8000;
+// Their beacon is asked again on People's clock while the page is on screen.
+const BEACON_MS = 60000;
+// Where the wall's view is remembered, apart from home's and People's.
+const VIEW_KEY = 'ln-person-view';
 
 const num = v => (v === null || v === undefined || v === '' ? null : Number(v));
 const newestFirst = rows => [...rows].sort((a, b) => new Date(b.posted_at) - new Date(a.posted_at));
@@ -59,10 +80,35 @@ function latestPerKey(entries) {
   return latest;
 }
 
+// "Keeping since March", or "since March 2024" when it was not this year:
+// their oldest entry, which for a journal that brought an archive in is the
+// archive's start, and that is when they began keeping one.
+function keepingSince(entries) {
+  let first = null;
+  for (const e of entries) {
+    const at = new Date(e.posted_at);
+    if (!Number.isNaN(at.getTime()) && (!first || at < first)) first = at;
+  }
+  if (!first) return '';
+  return first.toLocaleDateString(undefined, first.getFullYear() === new Date().getFullYear()
+    ? { month: 'long' }
+    : { month: 'long', year: 'numeric' });
+}
+
+// The nearest box that scrolls: the layer's sheet when this arrives over the
+// journal, nothing (the page itself) when it is opened on its own.
+function scrollingBox(el) {
+  for (let at = el?.parentElement; at; at = at.parentElement) {
+    const y = getComputedStyle(at).overflowY;
+    if (y === 'auto' || y === 'scroll') return at;
+  }
+  return null;
+}
+
 function Face({ address }) {
   return (
     <span className="pn-face" aria-hidden="true">
-      <User size={40} weight="regular" />
+      <User size={22} weight="regular" />
       <img src={`${journalUrl(address)}/api/portrait`} alt="" onError={e => { e.currentTarget.style.display = 'none'; }} />
     </span>
   );
@@ -103,7 +149,7 @@ export default function PersonPage({ layered = false }) {
   // Who this copy belongs to, carried on every link out to another journal
   // so the form there knows who is sending. See carrySender.
   const { keeper_name: myName, site_address: myAddress } = useBookplate();
-  const me = { name: myName, address: myAddress };
+  const me = useMemo(() => ({ name: myName, address: myAddress }), [myName, myAddress]);
   // The way back, in the header's left slot: to the book or the feed this
   // opened from, or to the book when there is nothing behind it. The pull
   // down and Escape still work; this is the one that can be seen.
@@ -121,6 +167,8 @@ export default function PersonPage({ layered = false }) {
   // Their feed: null until asked, { entries, name } when it answered,
   // { failed: true } when it did not.
   const [theirs, setTheirs] = useState(null);
+  // Their beacon as their journal answers it; null until it has.
+  const [beacon, setBeacon] = useState(null);
   const [mine, setMine] = useState([]);
   const [sent, setSent] = useState([]);
   // Which sent record is showing its name and its note. Miyel, 2026-09-19:
@@ -130,6 +178,19 @@ export default function PersonPage({ layered = false }) {
   // read its name — and because a column of rows for four sends was a table
   // where a handful of squares is a shelf.
   const [openSend, setOpenSend] = useState(null);
+  const [comparing, setComparing] = useState(false);
+  // 'idle' · 'waving' · 'waved' · 'failed', with what went wrong beside it.
+  const [wave, setWave] = useState('idle');
+  const [waveSaid, setWaveSaid] = useState('');
+  const [sure, setSure] = useState(false);
+  const [removing, setRemoving] = useState(false);
+
+  const rootRef = useRef(null);
+  // Handed to the wall, which draws more as its foot nears the edge of this.
+  // Set in a layout effect so it is in place before the wall's own effects
+  // first look at it.
+  const scroller = useRef(null);
+  useLayoutEffect(() => { scroller.current = scrollingBox(rootRef.current); });
 
   useEffect(() => {
     fetch('/api/auth/check').then(r => r.json()).then(d => setAuthed(!!d.authed)).catch(() => {}).finally(() => setChecking(false));
@@ -162,7 +223,34 @@ export default function PersonPage({ layered = false }) {
     return () => { gone = true; };
   }, [authed, id]);
 
+  // Their beacon: asked on arrival and again each minute while the tab is
+  // in view. A journal that does not answer keeps the last thing it said.
+  const address = person ? person.address : '';
+  useEffect(() => {
+    if (!address) return undefined;
+    let gone = false;
+    const ask = () => {
+      if (document.hidden) return;
+      fetch(`${journalUrl(address)}/api/public/beacon`, { signal: AbortSignal.timeout(EACH_MS) })
+        .then(r => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+        .then(b => {
+          if (gone) return;
+          setBeacon({
+            state: b.state || 'nothing', album: b.album || '', artist: b.artist || '', art: b.art || '',
+            track: b.track || '', isLive: b.state === 'logging',
+          });
+        })
+        .catch(() => {});
+    };
+    ask();
+    const timer = setInterval(ask, BEACON_MS);
+    document.addEventListener('visibilitychange', ask);
+    return () => { gone = true; clearInterval(timer); document.removeEventListener('visibilitychange', ask); };
+  }, [address]);
+
   const name = theirs?.name || person?.name || 'them';
+  const since = useMemo(() => keepingSince(theirs?.entries || []), [theirs]);
+  const records = useMemo(() => gatherAlbums(theirs?.entries || []), [theirs]);
 
   const facts = useMemo(() => {
     const mineLatest = latestPerKey(mine);
@@ -194,11 +282,11 @@ export default function PersonPage({ layered = false }) {
     // One per record, and never a second copy of a send already counted. It
     // carries no send date on purpose (the brief: the entry's own date is
     // the ceiling), so it falls in with the others by the day it was logged.
-    const address = tidyJournal(person?.address);
+    const theirAddress = tidyJournal(person?.address);
     const counted = new Set(sends.map(s => albumKey(s.album, s.artist)));
-    if (address) {
+    if (theirAddress) {
       for (const e of newestFirst(mine)) {
-        if (tidyJournal(e.received_from_url) !== address || counted.has(e.album_key)) continue;
+        if (tidyJournal(e.received_from_url) !== theirAddress || counted.has(e.album_key)) continue;
         counted.add(e.album_key);
         const logged = mineLatest.get(e.album_key) || e;
         const rating = num(logged.rating_value);
@@ -216,26 +304,132 @@ export default function PersonPage({ layered = false }) {
     return { pairs, rated, offset, alike, agree, disagree, sends, loggedCount, hits };
   }, [mine, theirs, sent, person]);
 
+  const there = address ? journalUrl(address) : '';
+  // Every link to their journal carries who this copy belongs to.
+  const theirEntry = useCallback(e => carrySender(`${there}/entries/${e.slug}`, me, { known: true }), [there, me]);
+
+  // Their record, drawn the way People draws a friend's: the cover, opening
+  // their entry on their journal, where the writing is.
+  const tile = useCallback(album => {
+    const face = album.face;
+    const folded = album.listens.length === 0;
+    return (
+      <a
+        href={theirEntry(face)}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={'ft' + (folded ? ' ft--page' : '')}
+        data-tile-key={album.key}
+        aria-label={face.album + (face.artist ? ` by ${face.artist}` : '')}
+      >
+        <div className="ft-inner">
+          <div className={'ft-face ft-face--front' + (folded ? ' ln-fold' : '')}>
+            {face.album_art
+              ? <img src={face.album_art} alt="" className="ft-art" loading="lazy" draggable={false} />
+              : <div className="ft-placeholder">{(face.album || '?')[0]}</div>}
+            {folded && (
+              <span className="ln-fold-flap" aria-hidden="true">
+                {face.album_art && <img src={face.album_art} alt="" loading="lazy" draggable={false} />}
+              </span>
+            )}
+            <div className="ft-hover">
+              <div className="ft-hover-album">{face.album}</div>
+              <div className="ft-hover-artist">{face.artist}</div>
+            </div>
+          </div>
+        </div>
+      </a>
+    );
+  }, [theirEntry]);
+
+  const seek = useMemo(() => ({
+    placeholder: 'Albums, artists or songs',
+    label: `Search ${name}’s records`,
+    matches: (album, q) => (foldForSearch(album.face.album).includes(q)
+      || foldForSearch(album.face.artist).includes(q)
+      || album.notes.some(n => foldForSearch(n.song).includes(q))),
+  }), [name]);
+
+  async function waveAt() {
+    if (wave === 'waving' || wave === 'waved' || !person) return;
+    setWave('waving');
+    try {
+      const r = await fetch('/api/outbox', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ wave: true, person_id: person.id }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (d.ok) { setWave('waved'); return; }
+      setWaveSaid(d.error || 'The wave did not go.');
+      setWave('failed');
+    } catch {
+      setWaveSaid('The wave did not go.');
+      setWave('failed');
+    }
+  }
+
+  async function remove() {
+    if (!sure) { setSure(true); return; }
+    setRemoving(true);
+    const r = await fetch(`/api/people/${person.id}`, { method: 'DELETE' }).catch(() => null);
+    if (r?.ok) { arrivingBack(); router.push('/dashboard/people'); return; }
+    setRemoving(false);
+    setSure(false);
+  }
+
   if (checking) return <div style={{ minHeight: '100vh', background: 'var(--bg)' }} />;
   if (!authed) { if (typeof window !== 'undefined') window.location.replace('/login'); return null; }
 
-  const there = person ? journalUrl(person.address) : '';
-  // Every link to their journal carries who this copy belongs to.
-  const theirEntry = e => carrySender(`${there}/entries/${e.slug}`, me, { known: true });
+  const loading = person === null || (person && theirs === null);
+  const wall = person && (
+    <Journal
+      records={records}
+      loading={loading}
+      scroller={scroller}
+      tile={tile}
+      filters={false}
+      viewKey={VIEW_KEY}
+      seek={seek}
+      empty={(
+        <div className="arc-empty">
+          {theirs?.failed
+            ? <span className="arc-empty-said">{name}&rsquo;s journal isn&rsquo;t answering just now.</span>
+            : <span className="arc-empty-said">Nothing logged yet.</span>}
+        </div>
+      )}
+      foot={(
+        <div className="pn-foot">
+          <SentList journal={person.address} title={`Still out with ${name}`} />
+          <p className="pn-quiet">
+            <button
+              type="button"
+              className={'pn-quiet-act' + (sure ? ' pn-quiet-act--sure' : '')}
+              onClick={remove}
+              onBlur={() => setSure(false)}
+              disabled={removing}
+              aria-label={sure ? `Press again to take ${name} out of your book` : undefined}
+            >
+              {sure ? 'Remove?' : 'Remove'}
+            </button>
+          </p>
+        </div>
+      )}
+    />
+  );
 
   return (
-    <div className={'own-screen' + (layered ? ' own-screen--layered' : '')}>
+    <div ref={rootRef} className={'own-screen' + (layered ? ' own-screen--layered' : '')}>
       {/* The header's left slot, where the owner's tools live on every page:
-          the way back, and the printer's door — the press that prints the
-          shape of the agreement and withholds the writing, naming both
-          people (DECISIONS, The network) — the same glyph at the same size
-          the entry and the card wear it. */}
+          the way back, and — while Compare is open — the printer's door, the
+          press that prints the shape of the agreement and withholds the
+          writing, naming both people (DECISIONS, The network). */}
       <SiteNav tools={(
         <>
           <button type="button" className="kt-tool" onClick={goBack} aria-label="Back" title="Back">
             <CaretLeft size={18} weight="regular" aria-hidden="true" />
           </button>
-          {person && (
+          {person && comparing && (
             <Link href={`/printer?person=${encodeURIComponent(id)}`} className="kt-tool" aria-label="Print the shape of the agreement" title="Print the shape of the agreement">
               <Printer size={18} weight="regular" aria-hidden="true" />
             </Link>
@@ -245,22 +439,54 @@ export default function PersonPage({ layered = false }) {
 
       <div className="own-body pn-body">
         {person === false ? (
-          <div className="own-empty">Nobody by that page. <Link href="/dashboard/people" className="own-link">The address book</Link></div>
+          <div className="own-empty">Nobody by that page. <Link href="/dashboard/people" className="own-link">Your friends</Link></div>
         ) : person === null ? (
-          <div className="pn-head"><div className="own-skeleton" style={{ width: 108, height: 108, borderRadius: 24 }} /></div>
+          <div className="pn-strip"><div className="own-skeleton" style={{ width: 44, height: 44, borderRadius: '50%' }} /></div>
         ) : (
           <>
-            <header className="pn-head">
+            {/* ── The strip ──────────────────────────────────────────────
+                Their face, their name, a line under it, and what you can
+                do from here, each a glyph over a word in the line's small
+                capitals (Miyel's Friends answers). */}
+            <header className="pn-strip">
               <Face address={person.address} />
               <h1 className="pn-name">{name}</h1>
-              {/* "Visit their journal" stood here until 2026-09-22. Miyel: "we
-                  can remove the link to their journal on the compare page
-                  because you can just simply go to their journal from the
-                  actual friends page." One way there, from the faces. */}
+              {/* Under the name and the doors both, so it has the width it
+                  needs on a phone. */}
+              <div className="pn-sub">{since ? `Keeping since ${since} · ` : ''}In your friends</div>
+              <div className="pn-acts">
+                <button
+                  type="button"
+                  className={'pn-act' + (comparing ? ' pn-act--on' : '')}
+                  onClick={() => setComparing(c => !c)}
+                  aria-expanded={comparing}
+                >
+                  <Shuffle size={20} weight="regular" aria-hidden="true" />
+                  Compare
+                </button>
+                <span className="pn-act pn-act--still">
+                  <UserCheck size={20} weight="regular" aria-hidden="true" />
+                  Added
+                </span>
+                <button
+                  type="button"
+                  className={'pn-act' + (wave === 'waved' ? ' pn-act--on' : '')}
+                  onClick={waveAt}
+                  disabled={wave === 'waving'}
+                  aria-label={wave === 'waved' ? `You waved at ${name}` : `Wave at ${name}`}
+                >
+                  {wave === 'waved'
+                    ? <Check size={20} weight="regular" aria-hidden="true" />
+                    : <HandWaving size={20} weight="regular" aria-hidden="true" />}
+                  {wave === 'waved' ? 'Waved' : 'Wave'}
+                </button>
+              </div>
             </header>
+            {wave === 'failed' && <p className="pn-said" role="status">{waveSaid}</p>}
 
-            <div className="own-panel pn-panel">
-              <div className="pn-scroll">
+            {/* ── Compare, opened in place ─────────────────────────────── */}
+            <div className={'pn-compare' + (comparing ? ' pn-compare--open' : '')} aria-hidden={!comparing} inert={!comparing}>
+              <div className="pn-compare-in">
                 {theirs?.failed && (
                   <p className="pn-note">{name}&rsquo;s journal isn&rsquo;t answering just now, so only what they&rsquo;ve put you onto is here.</p>
                 )}
@@ -371,12 +597,28 @@ export default function PersonPage({ layered = false }) {
                 >
                   {() => null}
                 </Section>
-
               </div>
             </div>
+
+            {/* ── Their beacon ─────────────────────────────────────────── */}
+            {beacon && (
+              <section className="pn-beacon" aria-label={`What ${name} is logging`}>
+                <BeaconCard beacon={beacon} />
+                {/* Home's beacon says it is live with the dot on the mark;
+                    theirs has no mark here, so it says it under the record,
+                    as People's line does. */}
+                {beacon.isLive && (
+                  <p className="pn-live"><span className="pn-live-dot" aria-hidden="true" />Logging</p>
+                )}
+              </section>
+            )}
           </>
         )}
       </div>
+
+      {/* ── Their wall ─────────────────────────────────────────────────
+          Outside the narrow column, at the width home's wall is drawn. */}
+      {wall && <div className="pn-wall hn-under">{wall}</div>}
     </div>
   );
 }

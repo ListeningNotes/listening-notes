@@ -1281,7 +1281,7 @@ that does not answer is asked half as often each time — one minute, two,
 four, eight, ten at most — and at the usual rate again on its first good
 answer, so a copy that is asleep is not asked every minute forever by every
 keeper who has it in their book. The timer asks the first thirty in the
-book's own order, pinned first; the rest are asked when the whole grid is
+book's own order; the rest are asked when the whole grid is
 opened and on a pull down, since a book of a hundred would otherwise be a
 hundred fetches a minute, the browser's mistake moved to the server. A pull
 does reach a journal in its quiet spell, once: a press is a person asking.
@@ -1301,6 +1301,10 @@ book's order; one line — small cover, name, what, when. A face pressed dims
 the rest, and the book's doors open under its line. A hairline, then the
 wall. Never a beacon drawn large, and never Add or See all as circles ("three
 friends"). No heading: *Quiet* read as a verdict on a person.
+
+**Pin is gone, 2026-10-26, her call ("Not needed").** Nobody in the book
+stands above anybody else; `pinned_at` stays, as every column does, and
+nothing reads it.
 
 **The directory, 2026-10-07, Miyel's call, and no longer ruled out.**
 listeningnotes.blog keeps a table of the journals on the Board — the address,
@@ -1378,14 +1382,15 @@ so two looks never ask one twice. Never a vercel.json cron (every copy's).
 wave carries a name and an address, never words — the route refuses any body
 with more. The
 recipient asks the journal its name and keeps that, not the one handed; a
-second wave replaces the first; Leave it deletes. **Nothing is reported
+second waits on the first (below); Leave it deletes. **Nothing is reported
 back:** a waver never learns what the other copy did.
 
-**One-way: you wave when you add somebody, and at no other time, 2026-09-22.**
-Adding stays silent; the wave is an extra press and Not now is not a lesser
-path. No Wave back (the brief had one; Miyel cut it): adding somebody from
-their wave brings up the same offer, which is the reply. A copy too old to
-take a wave says so and the add stands — it never waits on the wave.
+**Wave once added, and one at a time, 2026-10-26 (Miyel's Friends
+answers).** Adding stays silent; Wave sits on a friend's page. A wave from
+somebody not in the book is answered by adding them, one from somebody in it
+by Wave back. The receiving journal keeps one per sender until its keeper
+lets it go or waves back; a second is kept as nothing and answered the same,
+so re-adding grants nothing and the waver still learns nothing.
 **The inbox says "[name] waved" and never "added you"** (Miyel, 2026-09-23):
 the wave is the quiet codeword for "I added you, add me back", and spelling
 it out was offered and turned down.
@@ -1462,16 +1467,12 @@ credit on an entry keeps the address it was sent from. A journal keeps the
 addresses it lived at (`moved_from`, private), so its sends from there are
 still its own when they come back.
 
-**Compare is not a destination; it is your page about someone,
-2026-09-12; built 2026-09-13.** A face or a name in the feed, or a row in
-the book, opens `/dashboard/people/[id]`: records you both have, rated
-alike, what they sent you and your hit rate with it, then where you agree
-and disagree hardest, what they sent and how it landed, and what only they
-have heard. On your copy, owner-only, which is why it can hold what their
-journal never could. `/compare` is gone with it — a public page that
-compared this journal against a typed address, which the model has no
-place for (everything social is on the visitor's own copy); nobody had the
-URL, so no stub. A printer door on the page waits for the press.
+**A friend's page is their journal, drawn by yours, 2026-10-26 (Miyel's
+Friends answers).** Visit opens `/dashboard/people/[id]`: their face and
+name, Compare · Added · Wave, their beacon, the line and their wall — home's
+components handed their public feed and beacon. "The page is mine, the data
+is theirs": nothing framed, nothing stored, the writing opens on their
+journal. Compare is a view opened in place, no longer the page.
 
 **The page about a person stays on your copy; their journal gets no door
 to it, 2026-09-13.** Considered: their right pane offering "Compare with

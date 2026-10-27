@@ -64,8 +64,11 @@ publicly):
   the ways one gets in — a paste, a scanned code, a send that carried one —
   and Invite and Add in its header. On a phone People draws the same book in
   place (See all); this address is a page over the desk on a desk
-- `/dashboard/people/[id]` — your page about one person: what you both have,
-  where you agree and disagree hardest, what they sent you and how it landed
+- `/dashboard/people/[id]` — a friend's journal page, on your copy: their
+  face and name with Compare · Added · Wave, their beacon, the line and their
+  wall from their public feed, and under it what you sent them that is still
+  out and Remove; Compare opens in place (what you both have, where you agree
+  and disagree hardest, what they sent you and how it landed)
 - `/settings` — the machinery: address, the password, Back up your journal,
   keeping up to date, the home-screen step, and Sign out. Reached from the
   card's ··· and, on a desk, from the desk's Settings row. The card's own
@@ -222,7 +225,7 @@ The furniture — visual pieces
       About.js                 One face of the turning pane: the card, then the writing under it, in one scroll
       IdentityCard.js          The ID: the portrait full width and square — the same object an entry's album art is — then the name, four counts — albums, songs, and the two flags in their colours — and the pinned record or song. Send and Add left it on 2026-09-19, and left the beacon too on 2026-09-27; a visitor sees the keeper here and nowhere else. This is the About page
       IdentificationCardEditor.js  Editing the card in place
-      ListeningBeacon.js       The beacon — what is playing, or last played
+      ListeningBeacon.js       The beacon — what is playing, or last played; `BeaconCard` draws somebody else's from a row
       ListenBar.js             The way into a listen: a bar at the foot of home, the session closed — Start a listen at rest; with a listen lowered, its cover, the lit track and the live dot. Both raise /session as a sheet; the one thing shaped like a button
       Journal.js               The wall of covers, drawn fifty at a time as you scroll, with its search, filters and views (In order, A–Z, by month, era, genre, rating; then time of day, horizon, color, Shuffle; grouped views draw band headings that stick under the line and list the bands to jump to, By color reads each cover in the browser; the album size sits at the foot of the views menu). Draws People's wall too, handed somebody else's records, a tile and the scope for its line
       PeopleScreen.js          People, one screen (2026-10-23), your friends alone (2026-10-24): + Add · See all, every face in the book, one line of what one of them is logging or logged, and a pressed face's doors under it (the book's own); Add finds a name on the Board, takes an address or a code, and invites; See all opens the book in place (Friends, inPeople); a hairline, then the wall's line and a wall of their covers with their faces in the corner, yours first on a record you have too. The wall is read off the book's public feeds in the browser; only Add asks the Board. Hands what came back from a send to the inbox, as the feed did
@@ -254,7 +257,7 @@ The furniture — visual pieces
       JournalCopy.js           Back up your journal, in Settings: Make a copy fetches the export and holds it as a zip — journal.json, Read me.txt and a page per entry (library/carbon_copy.js) — then Save (the share sheet on a phone, Downloads on a computer)
       AlbumFinder.js           Type, see covers, pick one — the stranger's send form's search (/submit)
       MiniAddressBook.js       The address book as a strip of faces, for picking one person — the entry editor's Sent by, the inbox's send whose sender has since got a copy, and the send sheet's book, as a grid
-      SentList.js              The inbox's Sent page, behind the door at its top: what this journal sent that has not come back, each row opening on what was said with it, Visit and Remove
+      SentList.js              The inbox's Sent page, behind the door at its top: what this journal sent that has not come back, each row opening on what was said with it, Visit and Remove; `journal` narrows it to one friend, for the foot of their page
       SendSheet.js             The one send sheet: a thing, an arrow, a person, centred over the screen — from an entry's tools, a track row mid-listen, or a person in the book; the session's picker and the book as its shelf; and the letter it becomes when Send is pressed
       LayerEntry.js            The sheet a page arrives on over the journal — from the side for forms, expanding from the cover for an entry, with swipes to the neighbours; on a desk it is either the right page (an entry, a listen) or a sheet on the spine (the owner's rooms), with a back caret
       LayerWaiting.js          What stands in while that entry loads
@@ -335,14 +338,14 @@ The rooms — full pages assembled from furniture
     @layer/(.)session/page.js  The same listen, opened as a layer over the desk
     @layer/(.)dashboard/inbox/page.js  The inbox, opened as a sheet over the desk
     @layer/(.)dashboard/people/page.js  The address book, on the same sheet
-    @layer/(.)dashboard/people/[id]/page.js  The page about a person, on the same sheet
+    @layer/(.)dashboard/people/[id]/page.js  A friend's journal page, on the same sheet
     @layer/(.)dashboard/report/page.js  Report a problem, on the same sheet
     @layer/(.)printer/page.js  The printer, as a sheet over the entry or the card
     dashboard/
       page.js                  Redirect to / — the desk is a face of the cross's turning pane
       inbox/page.js            Everything that arrives, in one list: each row carries the mark of its kind and opens where it sits to its doors — plain, on the tokens, and a sheet over the desk; an LN. Admin letter pinned above it, the LN. mark for a face, Dismiss its only door
       people/page.js           The address book — the list, the field, the scanner
-      people/[id]/page.js      Your page about one person — the whole-journal compare, and what they sent you
+      people/[id]/page.js      A friend's journal page — their beacon and wall drawn by this copy, Compare opened in place
       report/page.js           Report a problem — one box, Send
 
 ---

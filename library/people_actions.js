@@ -11,14 +11,13 @@
 import database from './database_connection.js';
 import { tidyJournal, journalUrl } from './return_address.js';
 
-// Pinned first, in the order they were pinned, then everybody else by name.
-// `pinned_at IS NULL` sorts false before true, which puts the pinned ones at
-// the top without a second query or a sort in the page.
+// By name. Pinned people came first until Pin went, 2026-10-26 (Miyel:
+// "Drop Pin entirely. Not needed."); `pinned_at` stays, and nothing reads it.
 export async function pull_people() {
   return await database`
     SELECT id, address, name, added_at, pinned_at, private, moved_to
     FROM people
-    ORDER BY (pinned_at IS NULL), pinned_at, lower(coalesce(name, address)), added_at
+    ORDER BY lower(coalesce(name, address)), added_at
   `;
 }
 
@@ -91,7 +90,7 @@ export async function pull_public_people() {
   return await database`
     SELECT address, name FROM people
     WHERE NOT private
-    ORDER BY (pinned_at IS NULL), pinned_at, lower(coalesce(name, address)), added_at
+    ORDER BY lower(coalesce(name, address)), added_at
   `;
 }
 

@@ -27,19 +27,33 @@ export async function pull_waves() {
   `;
 }
 
-// A wave from a journal that has waved before replaces the first: a new
-// time, the name as it is now, and new again. Never a second row.
+// One wave from a journal at a time, 2026-10-26 (Miyel's Friends answers:
+// "One wave outstanding per person at a time"). A second, while the first is
+// still here, is kept as nothing: the first keeps its time and does not turn
+// new again, so adding and removing a hundred times is still one wave. It
+// replaced the first until this day. The sender is answered the same either
+// way, because a waver never learns what this copy did (DECISIONS, A wave).
+// What clears it is this keeper's press: let go, or waved back
+// (`waved_back`).
 export async function save_wave({ address, name }) {
   const host = tidyJournal(address);
   if (!host) throw new Error("That doesn't look like a journal address.");
   const [row] = await database`
     INSERT INTO waves (address, name)
     VALUES (${host}, ${String(name || '').trim().slice(0, 120) || null})
-    ON CONFLICT (address) DO UPDATE
-      SET name = COALESCE(EXCLUDED.name, waves.name), arrived_at = now(), seen_at = NULL
+    ON CONFLICT (address) DO NOTHING
     RETURNING id
   `;
-  return row;
+  return row || null;
+}
+
+// Waving at somebody who had waved here answers theirs: it goes, and their
+// next wave can arrive.
+export async function waved_back(address) {
+  const host = tidyJournal(address);
+  if (!host) return null;
+  const [row] = await database`DELETE FROM waves WHERE address = ${host} RETURNING id`;
+  return row || null;
 }
 
 // Opened, so no longer new.

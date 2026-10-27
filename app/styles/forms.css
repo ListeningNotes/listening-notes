@@ -2464,20 +2464,114 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 /* ── from app/printer/page.js ─────────────────────────────────────────── */
 
 /* ── from app/dashboard/people/[id]/page.js ──────────────────────────── */
-/* The page about a person: their face and name over a panel of the counted
-   facts and four short lists. The same sheet as the book it opens from. */
-.pn-body { max-width: 720px; padding: 18px 24px 40px; }
-.pn-head { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; padding: 6px 0 22px; }
-/* Their journal's portrait, the card's shape at a size that is a face. */
+/* A friend's journal page, 2026-10-26: a strip with their face and name and
+   what can be done, Compare opening in place under it, their beacon, and
+   their wall at the width home's is drawn. */
+.pn-body { max-width: 720px; padding: 18px 24px 8px; }
+/* The face beside two lines: the name with the doors at its right, and under
+   both the line about them, which on a phone needs the doors' width too. */
+.pn-strip {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas: "face name acts" "face sub sub";
+  align-items: center; column-gap: 12px; row-gap: 2px;
+  padding: 2px 0 16px;
+  border-bottom: 1px solid var(--border);
+}
+/* Their journal's portrait, a circle like every face in the book. */
 .pn-face {
-  position: relative; width: 108px; height: 108px; border-radius: 24px; overflow: hidden;
-  background: var(--panel); border: 1px solid var(--border); box-shadow: 0 14px 36px rgba(0,0,0,0.14);
+  grid-area: face; align-self: center;
+  position: relative; width: 52px; height: 52px; border-radius: 50%; overflow: hidden;
+  background: var(--panel); border: 1px solid var(--border);
   display: flex; align-items: center; justify-content: center; color: var(--ink-faint);
 }
 .pn-face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.pn-name { font-family: var(--font-display); font-weight: var(--font-display-weight, 700); font-size: 28px; line-height: 1.1; margin: 6px 0 0; color: var(--ink); overflow-wrap: anywhere; }
-.pn-panel { border-radius: 24px; }
-.pn-scroll { position: relative; z-index: 1; flex: 1; padding: 22px 26px 28px; }
+.pn-name {
+  grid-area: name;
+  font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
+  font-size: 20px; line-height: 1.15; margin: 0; color: var(--ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.pn-sub {
+  grid-area: sub;
+  font-family: var(--font-label); font-size: 9px; line-height: 1.6; letter-spacing: 0.11em; text-transform: uppercase;
+  color: var(--ink-faint);
+}
+/* A glyph over a word, in the line's small capitals. */
+.pn-acts { grid-area: acts; display: flex; align-items: flex-start; gap: 2px; }
+.pn-act {
+  display: inline-flex; flex-direction: column; align-items: center; gap: 6px;
+  min-width: 48px; border: 0; background: none; padding: 4px 4px; cursor: pointer;
+  font-family: var(--font-label); font-size: 9px; letter-spacing: 0.11em; text-transform: uppercase;
+  color: var(--ink-soft);
+  transition: color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.pn-act:hover { color: var(--ink); }
+.pn-act:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 2px; }
+.pn-act--on { color: var(--ink); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
+/* Added is a state, not a press. */
+.pn-act--still { cursor: default; color: var(--ink-faint); }
+.pn-act--still:hover { color: var(--ink-faint); }
+.pn-said { margin: 10px 2px 0; font-family: var(--font-label); font-size: 10px; letter-spacing: 0.06em; color: var(--ink-soft); }
+/* Compare opens under the strip and pushes the beacon down, as the drawer
+   and the ticket do; nothing appears or vanishes. */
+.pn-compare {
+  display: grid; grid-template-rows: 0fr;
+  transition: grid-template-rows 0.42s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.pn-compare--open { grid-template-rows: 1fr; }
+.pn-compare-in {
+  min-height: 0; overflow: hidden;
+  opacity: 0; transition: opacity 0.3s;
+}
+.pn-compare--open .pn-compare-in {
+  opacity: 1;
+  padding: 18px 0 22px;
+  border-bottom: 1px solid var(--border);
+}
+.pn-beacon { padding: 22px 0 6px; }
+/* Home's beacon outside home: in flow, as home's own pane sets it. */
+.pn-beacon .beacon-stage { height: auto; }
+.pn-beacon .beacon-card--main { position: static; transform: none; }
+.pn-live {
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  margin: 8px 0 0;
+  font-family: var(--font-label); font-size: 9px; letter-spacing: 0.11em; text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.pn-live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--live); }
+/* The wall, past the narrow column, and what sits under its last row. */
+.pn-wall { padding-bottom: 40px; }
+/* On a phone the wall's line leads the wall and sticks under the header as
+   you read down, as home's and People's do — the foot of the screen is the
+   Listen bar's. Over the journal the header scrolls away with the sheet, so
+   the line sticks to the sheet's top. */
+@media (max-width: 768px) {
+  .pn-wall .arc-bar-wrap {
+    order: -1;
+    top: max(var(--own-nav-bottom), var(--safe-top, 0px));
+    bottom: auto;
+    padding-top: 8px;
+    background: var(--bg);
+  }
+  .pn-wall .arc-bar { border-top: 0; }
+  /* Remove, the last thing, clears the Listen bar at the foot. */
+  .pn-wall { padding-bottom: 140px; }
+}
+.pn-foot { max-width: 720px; margin: 0 auto; padding: 28px 24px 0; display: flex; flex-direction: column; gap: 18px; }
+.pn-quiet { margin: 0; padding-top: 12px; border-top: 1px solid var(--border); }
+.pn-quiet-act {
+  border: 0; background: none; padding: 6px 0; cursor: pointer;
+  font-family: var(--font-label); font-size: 9px; letter-spacing: 0.11em; text-transform: uppercase;
+  color: var(--ink-faint);
+  transition: color 0.15s;
+}
+.pn-quiet-act:hover { color: var(--ink-soft); }
+.pn-quiet-act--sure, .pn-quiet-act--sure:hover { color: var(--fav, #f0484f); }
+@media (prefers-reduced-motion: reduce) {
+  .pn-compare, .pn-compare-in { transition: none; }
+}
 /* The counted facts, one table: the card's label-and-answer shape. */
 .pn-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 18px; margin: 0 0 8px; }
 .pn-fact { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 14px; background: var(--bg); }

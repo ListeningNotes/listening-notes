@@ -52,7 +52,18 @@ import { CAPTION, useListeningBeacon } from '../../hooks/useListeningBeacon';
 // 4). Everything else stays where it is, so nothing on the screen moves while
 // one thing falls across it.
 export default function ListeningBeacon({ emptied = false }) {
-  const { state, album, artist, art, track, isLive, rated } = useListeningBeacon();
+  const beacon = useListeningBeacon();
+  return <BeaconCard beacon={beacon} emptied={emptied} />;
+}
+
+// ── Somebody else's, 2026-10-26 ───────────────────────────────────────────
+// A friend's journal page draws their beacon with this (Miyel's Friends
+// brief: "my components, their rows"), handed the row their
+// /api/public/beacon answers in place of this journal's own. The same
+// record, the same grey and the same caption; nothing of theirs carries a
+// listen in progress, so `rated` is simply absent.
+export function BeaconCard({ beacon, emptied = false }) {
+  const { state, album, artist, art, track, isLive, rated } = beacon;
   // A song wherever there is one — including after a listen has been shut,
   // which keeps the track that was open up rather than dropping back to the
   // record's name. A whole record is what is left when the last thing logged

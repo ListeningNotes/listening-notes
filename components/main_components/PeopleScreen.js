@@ -24,7 +24,8 @@
 // what they are logging or logged, and when — for whoever is logging, or
 // else whoever logged last. A face pressed dims the rest, the line becomes
 // theirs, and their doors open under it, the address book's own (Visit,
-// Compare, Send, Pin, and Keep private and Remove on the quiet line);
+// their journal page on this copy, Send, and Keep private and Remove on
+// the quiet line; Compare moved into that page and Pin went, 2026-10-26);
 // pressed again, it closes. Add turns the line into the way in: one field
 // that finds a name on the Board or takes an address, the camera for a
 // code, Invite, and the way to the Board itself. See all opens the whole
@@ -60,9 +61,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ArrowRight, BookOpen, Camera, CaretDown, PaperPlaneTilt, Plus, PushPin, Shuffle, Ticket, User } from '@phosphor-icons/react';
+import { ArrowRight, BookOpen, Camera, CaretDown, PaperPlaneTilt, Plus, Ticket, User } from '@phosphor-icons/react';
 import Journal, { foldForSearch } from './Journal';
-import Friends, { shakeNo, since } from './Friends';
+import Friends, { since } from './Friends';
 import CodeScanner from './CodeScanner';
 import SendSheet from './SendSheet';
 import InviteSheet from './InviteSheet';
@@ -86,9 +87,6 @@ const ASK_AFTER_MS = 350;
 const FACES_MOST = 3;
 // What came back from a send goes to the inbox (below), the newest this many.
 const CAME_BACK_MOST = 30;
-// The most a book pins, as the book says (Friends.js); the write refuses a
-// seventh regardless.
-const PINS_MOST = 6;
 
 const releaseYear = entry => {
   const m = String(entry?.year || '').match(/\d{4}/);
@@ -448,7 +446,6 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
   const [sendingTo, setSendingTo] = useState(null);
   const [sure, setSure] = useState(false);
   useEffect(() => { setSure(false); }, [open]);
-  const pinnedCount = (people || []).filter(p => p.pinned_at).length;
   const change = useCallback(async (id, body) => {
     await fetch(`/api/people/${id}`, {
       method: 'PATCH',
@@ -631,32 +628,16 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
         {doorsWho && (
           <>
             <div className="fr-doors-row">
-              <a className="fr-door" href={there(doorsWho.address)} target="_blank" rel="noopener noreferrer">
+              {/* Visit is their journal page on this copy, 2026-10-26, where
+                  Compare now opens (Miyel's Friends answers); Pin went the
+                  same day, her call. */}
+              <Link className="fr-door" href={`/dashboard/people/${doorsWho.person.id}`}>
                 <BookOpen size={22} weight="regular" aria-hidden="true" />
                 Visit
-              </a>
-              <Link className="fr-door" href={`/dashboard/people/${doorsWho.person.id}`}>
-                <Shuffle size={22} weight="regular" aria-hidden="true" />
-                Compare
               </Link>
               <button type="button" className="fr-door" onClick={() => setSendingTo(doorsWho.person)}>
                 <PaperPlaneTilt size={22} weight="regular" aria-hidden="true" />
                 Send
-              </button>
-              <button
-                type="button"
-                className={'fr-door' + (doorsWho.person.pinned_at ? ' fr-door--on' : '')
-                  + (!doorsWho.person.pinned_at && pinnedCount >= PINS_MOST ? ' fr-door--full' : '')}
-                onClick={event => {
-                  if (!doorsWho.person.pinned_at && pinnedCount >= PINS_MOST) { shakeNo(event.currentTarget); return; }
-                  change(doorsWho.person.id, { pinned: !doorsWho.person.pinned_at });
-                }}
-                aria-pressed={Boolean(doorsWho.person.pinned_at)}
-                aria-disabled={(!doorsWho.person.pinned_at && pinnedCount >= PINS_MOST) || undefined}
-                title={!doorsWho.person.pinned_at && pinnedCount >= PINS_MOST ? 'Six is the most you can pin. Unpin somebody first.' : undefined}
-              >
-                <PushPin size={22} weight={doorsWho.person.pinned_at ? 'fill' : 'regular'} aria-hidden="true" />
-                {doorsWho.person.pinned_at ? 'Unpin' : 'Pin'}
               </button>
             </div>
             <div className="fr-quiets ps-quiets">

@@ -1187,3 +1187,37 @@ showed — the Board's keepers, strangers included, on her own records — and
 whether People should stay strictly for friends. It should; the Board is to
 have a place of its own, with the blog.
 
+## The network — Compare as a page, and the one-way wave, to 2026-10-26
+
+**Compare is not a destination; it is your page about someone,
+2026-09-12; built 2026-09-13.** A face or a name in the feed, or a row in
+the book, opens `/dashboard/people/[id]`: records you both have, rated
+alike, what they sent you and your hit rate with it, then where you agree
+and disagree hardest, what they sent and how it landed, and what only they
+have heard. On your copy, owner-only, which is why it can hold what their
+journal never could. `/compare` is gone with it — a public page that
+compared this journal against a typed address, which the model has no
+place for (everything social is on the visitor's own copy); nobody had the
+URL, so no stub. A printer door on the page waits for the press.
+
+Grown into the friend's journal page on 2026-10-26 (Miyel's Friends
+answers): the same route, now their beacon and wall drawn by this copy, with
+Compare a view opened from its strip.
+
+**One-way: you wave when you add somebody, and at no other time, 2026-09-22.**
+Adding stays silent; the wave is an extra press and Not now is not a lesser
+path. No Wave back (the brief had one; Miyel cut it): adding somebody from
+their wave brings up the same offer, which is the reply. A copy too old to
+take a wave says so and the add stands — it never waits on the wave. A
+second wave replaced the first.
+
+Reversed 2026-10-26 by her Friends answers, which reconcile it: Wave is only
+open once somebody is added, so a wave from a stranger is still answered by
+adding them, and one from a friend by Wave back; one wave per sender is kept
+until it is answered, so adding and removing cannot farm them.
+
+**Pin, 2026-09-20 to 2026-10-26.** Six friends at most pinned above the
+book, three across and larger, in the order they were pinned, and first on
+the timer's thirty. Dropped in her Friends answers: "Drop Pin entirely. Not
+needed."
+

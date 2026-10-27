@@ -32,6 +32,7 @@ import { pull_person } from '@/library/people_actions';
 import { send_record, send_wave, send_message } from '@/library/outbox';
 import { SAID_MOST, ANSWERING_MOST, pull_message, mark_replied } from '@/library/message_actions';
 import { save_sent } from '@/library/sent_actions';
+import { waved_back } from '@/library/wave_actions';
 
 export async function POST(request) {
   const blocked = await requireWristband(request);
@@ -51,6 +52,8 @@ export async function POST(request) {
       if (!person) return Response.json({ error: 'They are not in your address book.' }, { status: 404 });
       const result = await send_wave({ to: person.address });
       if (!result.ok) return Response.json({ ok: false, old: result.old === true, error: result.error });
+      // A wave of theirs waiting here is answered by this one (2026-10-26).
+      await waved_back(person.address).catch(() => null);
       return Response.json({ ok: true });
     } catch (error) {
       return Response.json({ ok: false, error: error.message }, { status: 500 });

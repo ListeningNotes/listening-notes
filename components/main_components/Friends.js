@@ -24,12 +24,10 @@
 // brief says under the pinned row and there is no pinned row yet, and a door
 // twelve faces away from the face that opened it is a door about nothing.
 //
-// ── No pinning yet ────────────────────────────────────────────────────────
-// The brief puts pinned people above everyone else, on a nullable timestamp
-// and a migration. Miyel, 2026-09-19: "let's not add pinning friends yet,
-// mostly just beta testers, we don't need it yet." So there is no column, no
-// migration and no PINNED row, and the grid is everyone. When it arrives it
-// is a second grid above this one and nothing here has to move.
+// ── No pinning ────────────────────────────────────────────────────────────
+// Pinned people had a row of their own above everyone from 2026-09-20, and
+// it went on 2026-10-26 with Pin (Miyel: "Drop Pin entirely. Not needed.").
+// The column stays, as every column does, and nothing reads it.
 //
 // ── The address is never printed ──────────────────────────────────────────
 // A person is a face and a name, which is the rule from 2026-09-12 and the
@@ -39,7 +37,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
-import { ArrowRight, BookOpen, Camera, MagnifyingGlass, PaperPlaneTilt, Plus, PushPin, Shuffle, Ticket, User } from '@phosphor-icons/react';
+import { ArrowRight, BookOpen, Camera, MagnifyingGlass, PaperPlaneTilt, Plus, Ticket, User } from '@phosphor-icons/react';
 import CodeScanner from './CodeScanner';
 import SendSheet from './SendSheet';
 import InviteSheet from './InviteSheet';
@@ -49,19 +47,15 @@ import { useBookplate } from './Bookplate';
 import { fillFriends, useFriendsBeacons } from '../../hooks/useFriendsBeacons';
 import { DIRECTORY_URL } from '../../library/version';
 
-// The order the server keeps: pinned first in the order they were pinned,
-// then by name, or by address for anyone without one. Said twice — here and
-// in pull_people — because the page re-sorts after a write rather than asking
-// again, and a page that sorted differently from the server would put
-// somebody in one place now and another on the next load.
+// The order the server keeps: by name, or by address for anyone without
+// one. Said twice — here and in pull_people — because the page re-sorts
+// after a write rather than asking again, and a page that sorted differently
+// from the server would put somebody in one place now and another on the
+// next load. Pinned people came first until 2026-10-26, when Pin went
+// (Miyel: "Drop Pin entirely. Not needed.").
 function inOrder(people) {
   const called = p => (p.name || p.address).toLowerCase();
-  const when = p => (p.pinned_at ? new Date(p.pinned_at).getTime() : 0);
-  return [...people].sort((a, b) => {
-    if (Boolean(a.pinned_at) !== Boolean(b.pinned_at)) return a.pinned_at ? -1 : 1;
-    if (a.pinned_at && b.pinned_at) return when(a) - when(b);
-    return called(a).localeCompare(called(b));
-  });
+  return [...people].sort((a, b) => called(a).localeCompare(called(b)));
 }
 
 // ── How many across ───────────────────────────────────────────────────────
@@ -97,14 +91,6 @@ const A_ROW = 123;
 // pressing a face and pressing the + cost the same.
 const DOORS_MS = 340;
 
-// How many faces the shelf above the book will hold. **The rule is in
-// library/people_actions.js, where the write is** — `PINS_MOST` there refuses
-// a seventh whatever this page does. This copy of the number is a courtesy,
-// so nobody presses a door that is going to say no; it is not imported from
-// there because that module opens the database and this one runs in a
-// browser. If the two ever disagree the write wins and the door is wrong,
-// which is the right way round for them to be wrong.
-const PINS_MOST = 6;
 
 // ── How long ago, in words ────────────────────────────────────────────────
 // For the quiet line ("logged Voodoo, 2 hours ago") and the caption inside
@@ -582,25 +568,6 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null, 
     setPeople(prev => prev.filter(p => p.id !== id));
   }
 
-  // ── Pinning ─────────────────────────────────────────────────────────────
-  // One field, two values, and nothing else about a person is editable from
-  // here. The page re-sorts off what came back rather than asking for the
-  // book again: the row it returns is the row the server now holds.
-  async function pin(id, on) {
-    const answer = await fetch(`/api/people/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pinned: on }),
-    }).then(r => (r.ok ? r.json() : null)).catch(() => null);
-    if (answer?.person) {
-      // Now, and not before the fetch: the page is free to have moved while
-      // the write was in the air, and what a face travels from is where it
-      // was on the last frame anybody saw.
-      flight.current = whereEveryoneIs(shelfRef.current);
-      setPeople(prev => inOrder(prev.map(q => (q.id === answer.person.id ? answer.person : q))));
-    }
-  }
-
   // ── Kept private, 2026-10-08 ────────────────────────────────────────────
   // Somebody kept private is never published: they stay off the Board's "a
   // friend away" for everyone but this keeper (Miyel's Board brief; the
@@ -767,12 +734,8 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null, 
   // Not while a search is narrowing the book: searching is one flat list of
   // whoever matches, and a pinned section that answered a search would be
   // telling you where somebody sits rather than that they are there.
-  const pinned = useMemo(() => people.filter(p => p.pinned_at), [people]);
-  const showPins = !narrowed && pinned.length > 0;
-  const loose = useMemo(
-    () => (showPins ? shown.filter(p => !p.pinned_at) : shown),
-    [showPins, shown]
-  );
+  // The pinned row stood here from 2026-09-20 until Pin went, 2026-10-26.
+  const loose = shown;
 
   const onShow = useMemo(
     () => (shelf && !narrowed && fits > 0 ? loose.slice(0, fits) : loose),
@@ -991,7 +954,6 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null, 
   // large faces under PINNED, or four or five small ones under EVERYONE. The
   // doors open under whichever row the face is in, either way.
   const rows = [];
-  if (showPins) rows.push({ key: 'pinned', people: pinned, across: 3, big: true });
   for (let i = 0; i < onShow.length; i += across) {
     rows.push({ key: `r${i}`, people: onShow.slice(i, i + across), across, big: false });
   }
@@ -1254,71 +1216,17 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null, 
                   })()}
                   {mine && (
                   <div className="fr-doors-row">
-                    <a
-                      className="fr-door"
-                      href={carrySender(journalUrl(mine.address), me, { known: true })}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <BookOpen size={22} weight="regular" aria-hidden="true" />
-                      {/* Visit, from 2026-09-21. It said Journal, which named
-                          the thing rather than what pressing it does — and
-                          every door in this row is a journal, so the word
-                          separated it from none of them. This is the one that
-                          leaves for their copy. */}
-                      Visit
-                    </a>
+                    {/* Visit is their journal page on this copy, 2026-10-26,
+                        and Compare opens there now (Miyel's Friends answers);
+                        it left for their own site until then. Compare's
+                        Shuffle went with it into that page's strip. */}
                     <Link className="fr-door" href={`/dashboard/people/${mine.id}`}>
-                      {/* Shuffle, settled 2026-09-20 (Miyel). It was
-                          ArrowsDownUp for a day — my stand-in for the two
-                          arrows her mock-up left hand-drawn — and two arrows
-                          running past each other is a sort order, which is
-                          the one thing this door is not.
-
-                          Shuffle is two paths that cross and come out the
-                          other side, which is what comparing two people's
-                          shelves looks like: the same records, taken in a
-                          different order, by somebody else. Still not
-                          ArrowsLeftRight — this site already uses that for
-                          turning the spine. */}
-                      <Shuffle size={22} weight="regular" aria-hidden="true" />
-                      Compare
+                      <BookOpen size={22} weight="regular" aria-hidden="true" />
+                      Visit
                     </Link>
                     <button type="button" className="fr-door" onClick={() => setSendingTo(who)}>
                       <PaperPlaneTilt size={22} weight="regular" aria-hidden="true" />
                       Send
-                    </button>
-                    {/* The fourth door, 2026-09-20. Pinning is a thing you do
-                        *with* somebody, like the three beside it, so it is one
-                        of them — where Remove is the end of there being a
-                        somebody and stays the quiet line underneath.
-
-                        The pin fills once they are on the shelf, which is the
-                        lit-not-filled shape this site uses for a mark that is
-                        on: the word under it says which way pressing goes. */}
-                    <button
-                      type="button"
-                      className={'fr-door' + (mine.pinned_at ? ' fr-door--on' : '')
-                        + (!mine.pinned_at && pinned.length >= PINS_MOST ? ' fr-door--full' : '')}
-                      onClick={event => {
-                        if (!mine.pinned_at && pinned.length >= PINS_MOST) {
-                          shakeNo(event.currentTarget);
-                          return;
-                        }
-                        pin(mine.id, !mine.pinned_at);
-                      }}
-                      aria-pressed={Boolean(mine.pinned_at)}
-                      /* `aria-disabled` and not `disabled`: it is refusing,
-                         not absent, and a disabled button cannot be pressed
-                         — which means it cannot shake its head either. The
-                         write refuses a seventh regardless. */
-                      aria-disabled={(!mine.pinned_at && pinned.length >= PINS_MOST) || undefined}
-                      title={!mine.pinned_at && pinned.length >= PINS_MOST
-                        ? `Six is the most you can pin. Unpin somebody first.`
-                        : undefined}
-                    >
-                      <PushPin size={22} weight={mine.pinned_at ? 'fill' : 'regular'} aria-hidden="true" />
-                      {mine.pinned_at ? 'Unpin' : 'Pin'}
                     </button>
                   </div>
                   )}
