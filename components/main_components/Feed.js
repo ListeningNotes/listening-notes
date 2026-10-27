@@ -267,6 +267,23 @@ function Face({ address }) {
 // reads here as no hearts rather than as an error.
 const heartsOf = entry => String(entry?.hearts || '');
 
+// One listen's horizon, read off the feed: a bar per track and a ♥ over each
+// one hearted. Both listens in a compare are drawn by this, and so are the
+// two columns of a person's page (app/dashboard/people/[id]), so the app
+// has one drawing of a horizon from a feed and not two.
+export function HorizonRow({ bars, hearts, className, label }) {
+  if (!bars.length) return null;
+  return (
+    <div className={className} aria-label={label}>
+      {bars.map((v, i) => (
+        <span key={i} className={hearts[i] === '1' ? 'fd-cmp-bar fd-cmp-bar--loved' : 'fd-cmp-bar'} style={{ '--tall': `${Math.max(9, v * 100)}%` }}>
+          {hearts[i] === '1' && <Heart size={11} weight="fill" aria-hidden="true" />}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 //
 // Exported for the inbox, 2026-09-29, where a message or a record that came
 // back offers the same comparison (the messages brief: the response this is
@@ -291,15 +308,7 @@ export function Compared({ mine, theirs, name, closing = false, theirStars = fal
           <StarRating rating={Number(theirs.rating_value)} size={17} />
         </div>
       )}
-      {hers.length > 0 && (
-        <div className="fd-cmp-bars fd-cmp-bars--theirs" aria-label={`How ${name} heard it, track by track`}>
-          {hers.map((v, i) => (
-            <span key={i} className={theirHearts[i] === '1' ? 'fd-cmp-bar fd-cmp-bar--loved' : 'fd-cmp-bar'} style={{ '--tall': `${Math.max(9, v * 100)}%` }}>
-              {theirHearts[i] === '1' && <Heart size={11} weight="fill" aria-hidden="true" />}
-            </span>
-          ))}
-        </div>
-      )}
+      <HorizonRow bars={hers} hearts={theirHearts} className="fd-cmp-bars fd-cmp-bars--theirs" label={`How ${name} heard it, track by track`} />
 
       {/* The one number, on the line between the two listens. A rule with a
           word sitting on it, which is the shape the beacon's slot already
@@ -310,15 +319,7 @@ export function Compared({ mine, theirs, name, closing = false, theirStars = fal
         </span>
       </p>
 
-      {yours.length > 0 && (
-        <div className="fd-cmp-bars fd-cmp-bars--yours" aria-label="How you heard it, track by track">
-          {yours.map((v, i) => (
-            <span key={i} className={yourHearts[i] === '1' ? 'fd-cmp-bar fd-cmp-bar--loved' : 'fd-cmp-bar'} style={{ '--tall': `${Math.max(9, v * 100)}%` }}>
-              {yourHearts[i] === '1' && <Heart size={11} weight="fill" aria-hidden="true" />}
-            </span>
-          ))}
-        </div>
-      )}
+      <HorizonRow bars={yours} hearts={yourHearts} className="fd-cmp-bars fd-cmp-bars--yours" label="How you heard it, track by track" />
 
       {/* Yours, and only yours. Theirs are on the entry above this. */}
       {rated && (

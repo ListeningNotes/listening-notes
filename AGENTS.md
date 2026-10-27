@@ -113,7 +113,12 @@ reasoning; these are inline so nobody has to go looking.
   keeper as a message and lives in the inbox; it is public only if the keeper
   quotes it in their own writing. The Board may quote a keeper's own words
   from their own public entry, linked to it: that is them on their journal,
-  not somebody writing on yours (Miyel, 2026-10-08).
+  not somebody writing on yours (Miyel, 2026-10-08). So may your page about
+  somebody — a friend, or a keeper off the Board — show their note on a
+  record you both logged, in full: read live
+  from their journal when the record is on screen, stored nowhere, with
+  their face on it and their entry one press away — you reading them, shown
+  only to you (Miyel, 2026-10-24).
 - **No phone-home.** Nothing in a copy reports to the canonical copy or
   anywhere else: no analytics, no pushed banners, and one kind of pushed
   message only — LN. Admin, a letter or the month's prompt, sealed with
@@ -142,8 +147,10 @@ reasoning; these are inline so nobody has to go looking.
   entry is its address and slug, never an id; a server-to-server send is
   counted against the journal it names, never the IP it arrived from.
 - **Public reads are allow-lists.** The feed (`PUBLIC_FIELDS`) and the wall
-  never carry the writing; a new column stays private until somebody decides
-  otherwise; the chain fields leave only through `withoutChain`, and only on a
+  never carry the writing; one entry's album note leaves only through
+  `/api/public/notes/[slug]`, one entry at a time, never for a track note or
+  an entry whose credit was kept quiet; a new column stays private until
+  somebody decides otherwise; the chain fields leave only through `withoutChain`, and only on a
   Submission entry that was not marked quiet. The address book leaves only
   through `/api/public/people`: a name and an address for each person who is
   on the Board themselves, never one added privately, and nothing at all

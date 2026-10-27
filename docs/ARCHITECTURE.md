@@ -62,8 +62,17 @@ publicly):
 - `/dashboard/people` — the address book as a grid of faces (Friends), with
   the ways one gets in — a paste, a scanned code, a send that carried one —
   and Invite and Add in its header. The Friends stop on the phone's band
-- `/dashboard/people/[id]` — your page about one person: what you both have,
-  where you agree and disagree hardest, what they sent you and how it landed
+- `/dashboard/people/[id]` — your page about one person, by their number in
+  your book or, for a keeper off the Board, by their address: the two of you, a
+  colour each; face to face, your share of your records against theirs by
+  genre, decade, artist, stars or how new (a menu like the wall's views); the
+  facts as cards swiped through (the two of you as listeners — top genre,
+  decade and artist, oldest record, latest Masterpiece and the like — and on
+  the records you share, stars, Masterpieces and hearts; a shared answer said
+  once, in the middle), three numbers for what you share, and a wall of
+  those records; a cover opens,
+  growing out of itself as an entry does, to the two of you on that record in
+  two columns — stars, marks, horizons, notes, the songs and words you share
 - `/settings` — the machinery: address, the password, Back up your journal,
   keeping up to date, the home-screen step, and Sign out. Reached from the
   card's ··· and, on a desk, from the desk's Settings row. The card's own
@@ -189,6 +198,7 @@ The front doors — receive requests, hand them off, send back responses
     update/route.js            Is there a newer Listening Notes — the latest public release against package.json, at most once an hour, owner-only
     public/beacon/route.js     What the keeper is listening to — anyone may ask; cached at the edge; with `moved_to` when the journal lives somewhere else now (Settings, or asked at the address it moved off)
     public/entries/route.js    The public feed another copy reads — PUBLIC_FIELDS only, with keeper_name beside them
+    public/notes/[slug]/route.js  One entry's album note, for a friend's page about this keeper — one at a time, never stored by the reader, 404 for a track note, a quiet entry or none
     public/stamps/route.js     The card's counted facts — records, songs, first entry, top genres, the two flag counts
     public/listing/route.js    The code the directory issued this journal, as plain text, or 404 — how the registry proves the address
     public/people/route.js     The people this journal's keeper added who are on the Board themselves — a name and an address each; never anybody kept private, nothing while the keeper is off the Board; checked against the directory with hashes; kept a minute. What makes "a friend away"
@@ -342,7 +352,7 @@ The rooms — full pages assembled from furniture
       inbox/page.js            Everything that arrives, in one list: each row carries the mark of its kind and opens where it sits to its doors — plain, on the tokens, and a sheet over the desk; an LN. Admin letter pinned above it, the LN. mark for a face, Dismiss its only door
       feed/page.js             What the journals in the address book have logged
       people/page.js           The address book — the list, the field, the scanner
-      people/[id]/page.js      Your page about one person — the whole-journal compare, and what they sent you
+      people/[id]/page.js      Your page about one person — the two of you as listeners, side by side, over a wall of the records you share, each opening to both of you on it
       report/page.js           Report a problem — one box, Send
 
 ---

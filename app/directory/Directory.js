@@ -29,8 +29,9 @@
 //
 // Drawn on the cross for the keeper and for anybody visiting, and again at
 // this page's own address for a stranger who was handed the link. For the
-// keeper a press on somebody opens their doors, Visit and Add, the way a face
-// in Friends opens its own, and somebody already in the book wears a check. A
+// keeper a press on somebody opens their doors, Visit, Compare and Add, the
+// way a face in Friends opens its own — Compare for a stranger too
+// (2026-10-24), and somebody already in the book wears a check. A
 // visitor gets the Board and nothing of the keeper's: no note, no checks,
 // nothing ordered around the keeper — a row is simply the way to a journal.
 //
@@ -42,7 +43,7 @@
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
-import { ArrowsClockwise, BookOpen, Check, MagnifyingGlass, Plus, User, X } from '@phosphor-icons/react';
+import { ArrowsClockwise, BookOpen, Check, MagnifyingGlass, Plus, Shuffle, User, X } from '@phosphor-icons/react';
 import SiteNav from '../../components/main_components/SiteNav';
 import WaveSheet from '../../components/main_components/WaveSheet';
 import StarRating from '../../components/main_components/StarRating';
@@ -185,7 +186,8 @@ function Line({ address, slug }) {
 
 // One keeper of a record: their name — lit when they are logging — a line of
 // what they wrote, their stars and their marks. For the keeper a press opens
-// the doors: Visit, which goes to their entry for this record, and Add; for
+// the doors: Visit, which goes to their entry for this record, Compare and
+// Add; for
 // anybody else the row is the way to that entry.
 function KeeperRow({ keeper, viewer }) {
   const [open, setOpen] = useState(false);
@@ -220,6 +222,10 @@ function KeeperRow({ keeper, viewer }) {
               <BookOpen size={22} weight="regular" aria-hidden="true" />
               Visit
             </a>
+            <Link className="fr-door" href={viewer.compare(keeper.address)}>
+              <Shuffle size={22} weight="regular" aria-hidden="true" />
+              Compare
+            </Link>
             {!inBook && (
               <button type="button" className="fr-door" onClick={() => viewer.add(keeper)} disabled={viewer.adding === keeper.address}>
                 <Plus size={22} weight="regular" aria-hidden="true" />
@@ -533,6 +539,15 @@ export function Everyone({ keeper = false, refreshRef = null }) {
     }
   }
 
+  // Your page about them (app/dashboard/people/[id]), for anybody on the
+  // Board and not only the people in your book (Miyel, 2026-10-24: "even if
+  // its a stranger"): by their number in the book when they are in it, by
+  // their address when they are not. Only the keeper has the door.
+  function compareWith(address) {
+    const known = book.get(address);
+    return `/dashboard/people/${known?.id ?? encodeURIComponent(address)}`;
+  }
+
   function row(journal, through = null) {
     // A visitor's row is the way to that journal and nothing else.
     if (!keeper) {
@@ -566,6 +581,10 @@ export function Everyone({ keeper = false, refreshRef = null }) {
                 <BookOpen size={22} weight="regular" aria-hidden="true" />
                 Visit
               </a>
+              <Link className="fr-door" href={compareWith(journal.address)}>
+                <Shuffle size={22} weight="regular" aria-hidden="true" />
+                Compare
+              </Link>
               {!inBook && (
                 <button type="button" className="fr-door" onClick={() => add(journal)} disabled={adding === journal.address}>
                   <Plus size={22} weight="regular" aria-hidden="true" />
@@ -617,6 +636,7 @@ export function Everyone({ keeper = false, refreshRef = null }) {
   const viewer = keeper ? {
     inBook: address => book.has(address),
     carry: (href, known) => carrySender(href, me, { known }),
+    compare: address => compareWith(address),
     add: journal => add(journal),
     adding,
   } : null;

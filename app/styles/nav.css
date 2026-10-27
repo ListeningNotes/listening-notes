@@ -2058,9 +2058,13 @@ span.hn-bar-word { cursor: default; }
      the bars start as it lands and take three quarters of a second over it,
      which is about the pace of the record falling into the slot on the
      beacon — this site's one speed for a thing settling into place. */
-  animation: fd-rise 0.72s cubic-bezier(0.22, 0.61, 0.36, 1) 0.34s both;
+  animation: fd-cmp-rise 0.72s cubic-bezier(0.22, 0.61, 0.36, 1) 0.34s both;
 }
-@keyframes fd-rise { from { height: 4px; } to { height: var(--tall); } }
+/* Its own name, 2026-10-24: it was fd-rise, which the front door's record
+   wall also names (get.css), and the one loaded last won — every compare's
+   bars rose by sliding up a third of their height instead of growing, and
+   stood that far off their baseline. */
+@keyframes fd-cmp-rise { from { height: 4px; } to { height: var(--tall); } }
 /* A hearted track carries its ♥ above the bar, which is where the horizon
    draws one everywhere else on this site (HorizonChart). Above, not on: a
    mark inside the bar is a mark inside somebody's rating. */
