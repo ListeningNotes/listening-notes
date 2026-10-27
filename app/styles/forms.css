@@ -2225,7 +2225,8 @@ textarea.st-field { resize: vertical; min-height: 96px; }
    line whoever wears it; somebody with something waiting is named in ink. */
 .ps-row-one .fr-live-name { margin-top: 11px; }
 .ps-row-one--new .fr-live-name { color: var(--ink); }
-.ps-row--open .ps-row-one { opacity: 0.32; }
+/* The others dim to about a quarter (the brief, 2026-10-27). */
+.ps-row--open .ps-row-one { opacity: 0.26; }
 .ps-row--open .ps-row-one--open { opacity: 1; }
 .ps-row-one--open .fr-ring { transform: scale(1.1); }
 .ps-row-one--open .fr-live-name { color: var(--ink); }
@@ -2279,8 +2280,67 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 }
 .ps-doors--open { grid-template-rows: 1fr; }
 .ps-doors-in { min-height: 0; overflow: hidden; }
-.ps-doors-in > .fr-doors-row { padding-top: 16px; }
-.ps-quiets { margin-top: 8px; }
+.ps-quiets { margin-top: 0; padding-top: 14px; border-top: 1px solid var(--border); }
+
+/* ── What waits on a face, 2026-10-27 ─────────────────────────────────────
+   Friend_panel.js, as her Friends brief draws it: a cover (or a hand, or a
+   signpost, in a circle), then New and what it is in the label face, the
+   record or the words, the small line, and its answers as words — the
+   first in ink. A hairline between each, and above the quiet line. */
+.fp { display: flex; flex-direction: column; padding-top: 10px; }
+.fp-one { display: flex; align-items: flex-start; gap: 14px; padding: 16px 0; border-top: 1px solid var(--border); }
+.fp-one:first-child { border-top: 0; padding-top: 8px; }
+.fp-art-link { flex: 0 0 auto; display: block; border-radius: 8px; -webkit-tap-highlight-color: transparent; }
+.fp-art {
+  flex: 0 0 auto; width: 60px; height: 60px; border-radius: 8px; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg-warm); color: var(--ink-faint); font-size: 18px;
+}
+.fp-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.fp-art--round { border-radius: 50%; background: var(--panel); }
+.fp-says { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.fp-kind {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--font-label); font-size: 9px; line-height: 1;
+  letter-spacing: 0.11em; text-transform: uppercase; color: var(--ink-faint);
+}
+.fp-title {
+  font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
+  font-size: 18px; line-height: 1.25; color: var(--ink); text-decoration: none;
+  overflow-wrap: anywhere;
+}
+/* What they wrote, large, as the brief sets it; four lines and the rest
+   waits for Words (step four). */
+.fp-said {
+  margin: 0; font-family: var(--font-display); font-size: 17px; line-height: 1.38; color: var(--ink);
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; overflow: hidden;
+  overflow-wrap: anywhere;
+}
+/* The note a send carried, in their words, smaller. */
+.fp-note {
+  margin: 0; font-size: 13.5px; line-height: 1.45; color: var(--ink-soft);
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden;
+  overflow-wrap: anywhere;
+}
+.fp-sub {
+  font-family: var(--font-label); font-size: 9px; line-height: 1.4;
+  letter-spacing: 0.11em; text-transform: uppercase; color: var(--ink-faint);
+}
+.fp-acts { display: flex; flex-wrap: wrap; gap: 2px 20px; margin-top: 2px; }
+.fp-act {
+  border: 0; background: none; padding: 6px 0; cursor: pointer;
+  font-family: var(--font-label); font-size: 9.5px; line-height: 1;
+  letter-spacing: 0.11em; text-transform: uppercase; color: var(--ink-faint);
+  -webkit-tap-highlight-color: transparent; transition: color 0.15s;
+}
+.fp-act--first { color: var(--ink); }
+.fp-act:hover:not(:disabled) { color: var(--ink); }
+.fp-act:disabled { opacity: 0.45; cursor: default; }
+.fp-act:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; border-radius: 4px; }
+.fp-holding { margin-top: 4px; }
+.fp-holding-said { margin: 0; font-size: 13.5px; line-height: 1.45; color: var(--ink-soft); }
+.fp-form { align-self: stretch; margin-top: 6px; }
+.fp-trouble { margin: 2px 0 0; font-family: var(--font-label); font-size: 11px; line-height: 1.4; color: var(--ink-faint); }
 
 /* Adding, in the line's place: the camera, one field, Invite, what the
    Board found, and the way to the Board itself. */

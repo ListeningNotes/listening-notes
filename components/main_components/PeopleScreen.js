@@ -74,11 +74,11 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ArrowRight, BookOpen, Camera, CaretDown, MagnifyingGlass, PaperPlaneTilt, Ticket, User, UserPlus } from '@phosphor-icons/react';
+import { ArrowRight, Camera, CaretDown, MagnifyingGlass, Ticket, User, UserPlus } from '@phosphor-icons/react';
 import Journal, { foldForSearch } from './Journal';
 import { since } from './Friends';
 import CodeScanner from './CodeScanner';
-import SendSheet from './SendSheet';
+import FriendPanel, { waitingFrom, seeAll } from './Friend_panel';
 import InviteSheet from './InviteSheet';
 import WaveSheet from './WaveSheet';
 import PullDown from './PullDown';
@@ -262,19 +262,34 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
     ]).then(([sends, messages, waves, back]) => setArrivals({ sends, messages, waves, back }));
   }, []);
   useEffect(() => { if (onScreen) readArrivals(); }, [onScreen, readArrivals]);
-  const fresh = useMemo(() => {
-    const out = new Set();
-    const note = (address, unseen) => {
-      const at = tidyJournal(address || '');
-      if (at && unseen) out.add(at);
-    };
-    for (const s of arrivals?.sends || []) note(s.sender_url, s.status === 'pending' && !s.seen_at);
-    for (const m of arrivals?.messages || []) if (!m.admin) note(m.from_journal, !m.seen_at);
-    for (const w of arrivals?.waves || []) note(w.address, !w.seen_at);
-    for (const c of arrivals?.back || []) note(c.journal, !c.seen_at);
-    for (const p of people || []) note(p.address, Boolean(p.moved_to));
-    return out;
-  }, [arrivals, people]);
+  // What was new as a face opened: marked seen on the server at once, and
+  // here only once the face shuts, so it keeps New and its place in the row
+  // while it is open (Friend_panel.js).
+  const [held, setHeld] = useState(null);
+  const settleHeld = () => {
+    if (!held) return;
+    const seen = held.keys;
+    const now = new Date().toISOString();
+    const mark = (list, prefix) => (list || []).map(row => (seen.has(`${prefix}${row.id}`) && !row.seen_at ? { ...row, seen_at: now } : row));
+    setArrivals(prev => prev && {
+      sends: mark(prev.sends, 's'),
+      messages: mark(prev.messages, 'm'),
+      waves: mark(prev.waves, 'w'),
+      back: mark(prev.back, 'c'),
+    });
+    setHeld(null);
+  };
+  // An answer given in the panel, written into the lists it came from: a
+  // change to the row, or the row gone.
+  const onAnswered = useCallback((kind, row, change) => {
+    const list = { wrote: 'messages', sent: 'sends', waved: 'waves', arrived: 'back' }[kind];
+    setArrivals(prev => prev && {
+      ...prev,
+      [list]: change
+        ? prev[list].map(r => (r.id === row.id ? { ...r, ...change } : r))
+        : prev[list].filter(r => r.id !== row.id),
+    });
+  }, []);
 
   const again = useCallback(() => {
     asked.current.clear();
@@ -460,7 +475,10 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
         name: j?.name || p.name || b?.name || '',
         beacon: b,
         live: b?.state === 'logging' && Boolean(b.album),
-        waiting: fresh.has(tidyJournal(p.address)),
+        ...(() => {
+          const items = waitingFrom(p, arrivals, held?.address === p.address ? held.keys : null);
+          return { items, waiting: items.length > 0, isNew: items.some(i => i.unseen) };
+        })(),
         newest,
         entries: j?.entries || [],
         at: Date.parse(b?.at || '') || Date.parse(newest?.posted_at || '') || 0,
@@ -468,7 +486,7 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
     });
     const group = f => (f.waiting ? 0 : f.live ? 1 : 2);
     return all.sort((a, b) => group(a) - group(b) || (shuffle[a.address] ?? 1) - (shuffle[b.address] ?? 1));
-  }, [people, beacons, journals, fresh, shuffle]);
+  }, [people, beacons, journals, arrivals, held, shuffle]);
   // Nobody pressed: the line is whoever is logging, or else whoever logged
   // last. A face pressed: the line is theirs, the rest of the row dims, and
   // their doors open under it; pressed again, it all closes.
@@ -515,11 +533,13 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
     </span>
   );
 
-  // ── Their doors, the address book's ─────────────────────────────────────
-  // The same four and the same quiet line as a face pressed in the book
-  // (Friends.js): Miyel, "where did our actual buttons go". The writes are
-  // the book's own routes; the row reads the book again after each.
-  const [sendingTo, setSendingTo] = useState(null);
+  // ── What opens under a face ─────────────────────────────────────────────
+  // What waits from them, with its answers (Friend_panel.js), and under a
+  // hairline the quiet line: Visit, Keep private, Remove — her Friends brief,
+  // 2026-10-27, which took the doors off the face: Compare lives on their
+  // page now and Send on the record, and the panel is only for dealing with
+  // what's waiting. The writes are the book's own routes; the row reads the
+  // book again after each.
   const [sure, setSure] = useState(false);
   useEffect(() => { setSure(false); }, [open]);
   const change = useCallback(async (id, body) => {
@@ -530,12 +550,13 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
     }).catch(() => null);
     readBook();
   }, [readBook]);
-  const cross = useCallback(async id => {
+  const cross = async id => {
     setSure(false);
     await fetch(`/api/people/${id}`, { method: 'DELETE' }).catch(() => null);
+    settleHeld();
     setOpen(null);
     readBook();
-  }, [readBook]);
+  };
   // A press anywhere else puts Remove back, as it does in the book.
   const binRef = useRef(null);
   useEffect(() => {
@@ -579,7 +600,7 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
   const stopAdding = () => { setAdding(false); setTyped(''); setSaid(''); setNamed({ term: '', journals: [] }); };
   // Files an address however it came — found, typed or scanned — as the
   // book does, opens them, and offers the wave to somebody new.
-  const file = useCallback(async value => {
+  const file = async value => {
     const address = tidyJournal(value);
     if (!address) { setSaid("That doesn't look like a web address."); return; }
     setFiling(true);
@@ -596,6 +617,7 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
       setTyped('');
       setNamed({ term: '', journals: [] });
       setSaid(d.reached ? '' : "Added, but that journal isn't answering just now, so there's no name yet.");
+      settleHeld();
       setOpen(d.person.address);
       readBook();
       if (d.fresh) setWavingTo(d.person);
@@ -604,7 +626,7 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
     } finally {
       setFiling(false);
     }
-  }, [readBook]);
+  };
   const typedNow = typed.trim();
   const namedNow = named.term === typedNow ? named.journals : [];
   const stillNaming = Boolean(DIRECTORY_URL) && typedNow.length >= 2 && !looksLikeAddress && named.term !== typedNow;
@@ -661,7 +683,14 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
 
   const pressFace = address => {
     if (adding) stopAdding();
-    setOpen(o => (o === address ? null : address));
+    settleHeld();
+    if (open === address) { setOpen(null); return; }
+    setOpen(address);
+    const f = lineup.find(x => x.address === address);
+    const fresh = (f?.items || []).filter(i => i.unseen && i.kind !== 'moved');
+    if (fresh.length === 0) return;
+    seeAll(fresh);
+    setHeld({ address, keys: new Set(fresh.map(i => i.key)) });
   };
 
   // ── Your friends, and three glyphs ──────────────────────────────────────
@@ -728,12 +757,12 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
             key={f.address}
             type="button"
             inert={!drawer && i >= ACROSS ? true : undefined}
-            className={'fr-live-one ps-row-one' + (f.live ? ' ps-row-one--live' : '') + (f.waiting ? ' ps-row-one--new' : '') + (isOpen ? ' ps-row-one--open' : '')}
+            className={'fr-live-one ps-row-one' + (f.live ? ' ps-row-one--live' : '') + (f.isNew ? ' ps-row-one--new' : '') + (isOpen ? ' ps-row-one--open' : '')}
             onClick={() => pressFace(f.address)}
             aria-expanded={isOpen}
-            aria-label={[f.name, f.live && 'logging', f.waiting && 'something new'].filter(Boolean).join(', ')}
+            aria-label={[f.name, f.live && 'logging', f.isNew && 'something new'].filter(Boolean).join(', ')}
           >
-            {faceOf(f.address, 20, f.waiting)}
+            {faceOf(f.address, 20, f.isNew)}
             <span className="fr-live-name">{f.name}</span>
           </button>
         );
@@ -804,20 +833,21 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
       <div className="ps-doors-in">
         {doorsWho && (
           <>
-            <div className="fr-doors-row">
-              {/* Visit is their journal page on this copy, 2026-10-26, where
-                  Compare now opens (Miyel's Friends answers); Pin went the
-                  same day, her call. */}
-              <Link className="fr-door" href={`/dashboard/people/${doorsWho.person.id}`}>
-                <BookOpen size={22} weight="regular" aria-hidden="true" />
-                Visit
-              </Link>
-              <button type="button" className="fr-door" onClick={() => setSendingTo(doorsWho.person)}>
-                <PaperPlaneTilt size={22} weight="regular" aria-hidden="true" />
-                Send
-              </button>
-            </div>
+            <FriendPanel
+              person={doorsWho.person}
+              name={doorsWho.name}
+              items={doorsWho.items}
+              newHere={held?.address === doorsWho.address ? held.keys : null}
+              entries={entries}
+              there={there}
+              onAnswered={onAnswered}
+              onMoved={() => { readBook(); refreshFriends(); }}
+            />
             <div className="fr-quiets ps-quiets">
+              {/* Visit is their journal page on this copy (2026-10-26),
+                  where Compare opens; it leads the quiet line where the
+                  brief's All words with them will stand (step four). */}
+              <Link className="fr-cut" href={`/dashboard/people/${doorsWho.person.id}`}>Visit</Link>
               {DIRECTORY_URL && (
                 <button
                   type="button"
@@ -840,7 +870,7 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
                   ? `Press again to take ${doorsWho.name || 'them'} out of your book`
                   : `Take ${doorsWho.name || 'them'} out of your book`}
               >
-                {sure ? 'Remove from journal?' : 'Remove from journal'}
+                {sure ? 'Remove?' : 'Remove'}
               </button>
             </div>
           </>
@@ -936,7 +966,6 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
       {said && <p className="ps-said" role="status">{said}</p>}
       {doors}
       {scanning && <CodeScanner onRead={text => { setScanning(false); file(text); }} onClose={() => setScanning(false)} />}
-      <SendSheet open={Boolean(sendingTo)} person={sendingTo} onClose={() => setSendingTo(null)} />
       <InviteSheet open={inviting} onClose={() => setInviting(false)} />
       <WaveSheet person={wavingTo} onClose={() => setWavingTo(null)} />
     </div>

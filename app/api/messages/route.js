@@ -48,7 +48,7 @@ import { ask_journal_name } from '@/library/people_actions';
 import { tidyJournal } from '@/library/return_address';
 import { pull_settings } from '@/library/settings_actions';
 import {
-  SAID_MOST, sameJournal, pull_messages, save_message, see_message, remove_message,
+  SAID_MOST, sameJournal, pull_messages, save_message, see_message, keep_message, remove_message,
 } from '@/library/message_actions';
 import { read_letter, keep_letter } from '@/library/letterhead';
 import { answerNoJournal } from '@/library/hosting_directory';
@@ -162,12 +162,20 @@ export async function GET(request) {
   }
 }
 
+// Opened, or with `kept`, kept without a reply (Keep only, on a friend's
+// face, 2026-10-27).
 export async function PATCH(request) {
   const blocked = await requireWristband(request);
   if (blocked) return blocked;
-  const id = Number((await request.json().catch(() => ({})))?.id);
+  const body = await request.json().catch(() => ({}));
+  const id = Number(body?.id);
   if (!Number.isInteger(id) || id < 1) return Response.json({ error: 'Which one?' }, { status: 400 });
   try {
+    if (body.kept === true) {
+      const kept = await keep_message(id);
+      if (!kept) return Response.json({ error: 'No such message.' }, { status: 404 });
+      return Response.json({ ok: true, kept_at: kept.kept_at });
+    }
     await see_message(id);
     return Response.json({ ok: true });
   } catch (error) {

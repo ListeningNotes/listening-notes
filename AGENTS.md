@@ -314,7 +314,8 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   a letter has, Make a copy; and the month's prompt, checked the same way
   under a seal of its own (`sealed_prompt`, `read_prompt`).
 - `message_actions.js` — the `messages` table: somebody's words to the
-  keeper, kept, listed for the inbox, opened, marked replied to, and
+  keeper, kept, listed for the inbox, opened, marked replied to, kept
+  without a reply (`keep_message`, Keep only on a friend's face), and
   dismissed — which deletes, and takes the comment a message was with it.
 - `migrator.js` — brings the database up to date from `migrations/` on start
   and at build, under a session-level advisory lock, on the direct (unpooled)

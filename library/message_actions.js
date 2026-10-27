@@ -82,7 +82,7 @@ export async function pull_messages() {
     SELECT m.id, m.from_name, m.from_journal, m.said,
            m.about_journal, m.about_slug, m.about_album, m.about_artist,
            m.about_art, m.about_song, m.answering, m.answering_name,
-           m.was_comment, m.written_at, m.arrived_at, m.seen_at, m.replied_at, m.admin, m.door,
+           m.was_comment, m.written_at, m.arrived_at, m.seen_at, m.replied_at, m.kept_at, m.admin, m.door,
            (e.id IS NOT NULL) AS entry_here
     FROM messages m
     LEFT JOIN entries e ON m.about_journal IS NULL AND e.slug = m.about_slug
@@ -174,6 +174,17 @@ export async function save_message({ from_name, from_journal, said, about, answe
 export async function mark_replied(id) {
   const [row] = await database`
     UPDATE messages SET replied_at = now() WHERE id = ${id} RETURNING id, replied_at
+  `;
+  return row || null;
+}
+
+// Kept without a reply (migrations/043): the face it waited on lets it go,
+// and the words stay. Seen as well, since it was read to be kept.
+export async function keep_message(id) {
+  const [row] = await database`
+    UPDATE messages SET kept_at = COALESCE(kept_at, now()), seen_at = COALESCE(seen_at, now())
+    WHERE id = ${id}
+    RETURNING id, kept_at
   `;
   return row || null;
 }

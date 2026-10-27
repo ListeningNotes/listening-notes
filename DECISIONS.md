@@ -1304,6 +1304,13 @@ caret under the words, or a drag down opens the rest in place. Waiting
 first, then logging, then shuffled — never by name. New under the chin,
 never a count. The stop's word is Friends.
 
+**A face opens onto what waits from them, 2026-10-27 (her Friends brief).**
+Wrote, Sent you, Waved, Arrived, Moved, each with only its own answers; no
+doors — Compare is on their page, Send on the record, Visit leads the quiet
+line. A message never has Let it go: Keep only (`kept_at`). Arrived passes
+once seen; Moved has no Let it go (the friends round writes it back). New
+clears when the face shuts, so it holds still while open.
+
 **Pin is gone, 2026-10-26, her call ("Not needed").** Nobody in the book
 stands above anybody else; `pinned_at` stays, as every column does, and
 nothing reads it.
