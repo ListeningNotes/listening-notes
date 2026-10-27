@@ -1386,11 +1386,11 @@ second waits on the first (below); Leave it deletes. **Nothing is reported
 back:** a waver never learns what the other copy did.
 
 **Wave once added, and one at a time, 2026-10-26 (Miyel's Friends
-answers).** Adding stays silent; Wave sits on a friend's page. A wave from
-somebody not in the book is answered by adding them, one from somebody in it
-by Wave back. The receiving journal keeps one per sender until its keeper
-lets it go or waves back; a second is kept as nothing and answered the same,
-so re-adding grants nothing and the waver still learns nothing.
+answers).** Adding stays silent, and a friend's page has no Wave (her
+call). A wave from somebody not in the book is answered by adding them,
+one from somebody in it by Wave back. The receiving journal keeps one per
+sender until its keeper lets it go or waves back; a second is kept as
+nothing and answered the same, so the waver still learns nothing.
 **The inbox says "[name] waved" and never "added you"** (Miyel, 2026-09-23):
 the wave is the quiet codeword for "I added you, add me back", and spelling
 it out was offered and turned down.
@@ -1468,11 +1468,11 @@ addresses it lived at (`moved_from`, private), so its sends from there are
 still its own when they come back.
 
 **A friend's page is their journal, drawn by yours, 2026-10-26 (Miyel's
-Friends answers).** Visit opens `/dashboard/people/[id]`: their face and
-name, Compare · Added · Wave, their beacon, the line and their wall — home's
-components handed their public feed and beacon. "The page is mine, the data
-is theirs": nothing framed, nothing stored, the writing opens on their
-journal. Compare is a view opened in place, no longer the page.
+Friends answers).** Visit opens `/dashboard/people/[id]`, laid out as home
+("just like an owners page"): home's row with their face and name, Compare ·
+Added for its rooms, their beacon, the line, their wall — home's components,
+their public rows. "The page is mine, the data is theirs": nothing framed,
+the writing opens on their journal. Compare is a view opened in place.
 
 **The page about a person stays on your copy; their journal gets no door
 to it, 2026-09-13.** Considered: their right pane offering "Compare with

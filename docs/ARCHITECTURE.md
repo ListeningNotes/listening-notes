@@ -64,11 +64,12 @@ publicly):
   the ways one gets in — a paste, a scanned code, a send that carried one —
   and Invite and Add in its header. On a phone People draws the same book in
   place (See all); this address is a page over the desk on a desk
-- `/dashboard/people/[id]` — a friend's journal page, on your copy: their
-  face and name with Compare · Added · Wave, their beacon, the line and their
-  wall from their public feed, and under it what you sent them that is still
-  out and Remove; Compare opens in place (what you both have, where you agree
-  and disagree hardest, what they sent you and how it landed)
+- `/dashboard/people/[id]` — a friend's journal page, on your copy, laid out
+  as home: home's top row with their face and name and Compare · Added, their
+  beacon with the three before it, the line and their wall from their public
+  feed, and under it what you sent them that is still out and Remove; Compare
+  opens in place (what you both have, where you agree and disagree hardest,
+  what they sent you and how it landed)
 - `/settings` — the machinery: address, the password, Back up your journal,
   keeping up to date, the home-screen step, and Sign out. Reached from the
   card's ··· and, on a desk, from the desk's Settings row. The card's own

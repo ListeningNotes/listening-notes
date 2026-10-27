@@ -7,18 +7,20 @@
 // ── Their journal, drawn by yours, 2026-10-26 ─────────────────────────────
 // Miyel's Friends answers: "the page is mine, the data is theirs." It was
 // your page about them, a report — Compare's numbers and lists — and it is
-// now their journal as your journal draws it: a strip with their face and
-// their name, then their beacon, the line and the wall, the same components
-// home uses handed their rows, so a web of sites reads as one app. Nothing
+// now their journal as your journal draws it, laid out as home is (Miyel:
+// "just like an owners page"): home's top row with their face and name,
+// then their beacon with the three before it, the line and the wall, the
+// same components home uses handed their rows, so a web of sites reads as
+// one app. Nothing
 // is framed and nothing of theirs is drawn by them; the records come from
 // their public feed and their beacon, the allow-listed reads every journal
 // already answers, and the writing stays on their journal, where every
 // record here opens.
 //
-// Read in the browser, as Compare and People always have been: their public
-// feed and beacon from their journal, your own records and the sends from
-// them from this copy. Nothing is stored and nobody learns they were looked
-// at.
+// Their public feed is read in the browser, as Compare and People always
+// have read it; their beacon comes through this copy's server, as People's
+// does (below); your own records and the sends from them come from this
+// copy. Nothing is stored and nobody learns they were looked at.
 //
 // ── Compare is a view here, not the page ──────────────────────────────────
 // What this page was, opened in place under the strip and rolled up again:
@@ -34,20 +36,21 @@
 // what you both have before the gap is measured. Three records in common
 // are the least that offset is trusted on.
 //
-// The strip carries Compare, Added and Wave (Miyel: "Wave once added"), and
-// the foot of the wall carries what you have sent them that is still out —
-// the inbox's Sent door, for one person — and Remove. Pin went, her call.
+// The row carries Compare and Added — no Wave for somebody already added,
+// her call — and the foot of the wall carries what you have sent them that
+// is still out (the inbox's Sent door, for one person) and Remove. Pin went,
+// her call.
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { CaretLeft, Check, HandWaving, Printer, Shuffle, User, UserCheck } from '@phosphor-icons/react';
-import SiteNav from '../../../../components/main_components/SiteNav';
+import { CaretLeft, Printer, Shuffle, User, UserCheck } from '@phosphor-icons/react';
 import StarRating from '../../../../components/main_components/StarRating';
 import Journal, { foldForSearch, gatherAlbums } from '../../../../components/main_components/Journal';
 import { BeaconCard } from '../../../../components/main_components/ListeningBeacon';
 import SentList from '../../../../components/main_components/SentList';
 import { albumKey } from '../../../../hooks/useListeningBeacon';
+import { fillFriends, useFriendsBeacons } from '../../../../hooks/useFriendsBeacons';
 import { carrySender, journalUrl, tidyJournal } from '../../../../library/return_address';
 import { useBookplate } from '../../../../components/main_components/Bookplate';
 import { arrivingBack } from '../../../../library/handoff';
@@ -61,8 +64,8 @@ const HIT = 4;
 const OFFSET_NEEDS = 3;
 const HARDEST = 3;
 const EACH_MS = 8000;
-// Their beacon is asked again on People's clock while the page is on screen.
-const BEACON_MS = 60000;
+// The covers beside their beacon, as home stands its own three.
+const RECENTS = 3;
 // Where the wall's view is remembered, apart from home's and People's.
 const VIEW_KEY = 'ln-person-view';
 
@@ -78,21 +81,6 @@ function latestPerKey(entries) {
   const latest = new Map();
   for (const e of newestFirst(entries)) if (e.album_key && !e.song && !latest.has(e.album_key)) latest.set(e.album_key, e);
   return latest;
-}
-
-// "Keeping since March", or "since March 2024" when it was not this year:
-// their oldest entry, which for a journal that brought an archive in is the
-// archive's start, and that is when they began keeping one.
-function keepingSince(entries) {
-  let first = null;
-  for (const e of entries) {
-    const at = new Date(e.posted_at);
-    if (!Number.isNaN(at.getTime()) && (!first || at < first)) first = at;
-  }
-  if (!first) return '';
-  return first.toLocaleDateString(undefined, first.getFullYear() === new Date().getFullYear()
-    ? { month: 'long' }
-    : { month: 'long', year: 'numeric' });
 }
 
 // The nearest box that scrolls: the layer's sheet when this arrives over the
@@ -167,8 +155,6 @@ export default function PersonPage({ layered = false }) {
   // Their feed: null until asked, { entries, name } when it answered,
   // { failed: true } when it did not.
   const [theirs, setTheirs] = useState(null);
-  // Their beacon as their journal answers it; null until it has.
-  const [beacon, setBeacon] = useState(null);
   const [mine, setMine] = useState([]);
   const [sent, setSent] = useState([]);
   // Which sent record is showing its name and its note. Miyel, 2026-09-19:
@@ -179,9 +165,6 @@ export default function PersonPage({ layered = false }) {
   // where a handful of squares is a shelf.
   const [openSend, setOpenSend] = useState(null);
   const [comparing, setComparing] = useState(false);
-  // 'idle' · 'waving' · 'waved' · 'failed', with what went wrong beside it.
-  const [wave, setWave] = useState('idle');
-  const [waveSaid, setWaveSaid] = useState('');
   const [sure, setSure] = useState(false);
   const [removing, setRemoving] = useState(false);
 
@@ -223,34 +206,39 @@ export default function PersonPage({ layered = false }) {
     return () => { gone = true; };
   }, [authed, id]);
 
-  // Their beacon: asked on arrival and again each minute while the tab is
-  // in view. A journal that does not answer keeps the last thing it said.
+  // ── Their beacon, through this copy, 2026-10-26 ─────────────────────────
+  // People's own round (useFriendsBeacons): this copy's server asks their
+  // journal and hands the answer over. A browser cannot read another
+  // journal's beacon itself — the route sends no leave to be read from
+  // another address, and an older copy never will — which is why the first
+  // version of this page showed none on the sandbox. A friend past the
+  // timer's first thirty is asked once when the page opens.
   const address = person ? person.address : '';
-  useEffect(() => {
-    if (!address) return undefined;
-    let gone = false;
-    const ask = () => {
-      if (document.hidden) return;
-      fetch(`${journalUrl(address)}/api/public/beacon`, { signal: AbortSignal.timeout(EACH_MS) })
-        .then(r => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
-        .then(b => {
-          if (gone) return;
-          setBeacon({
-            state: b.state || 'nothing', album: b.album || '', artist: b.artist || '', art: b.art || '',
-            track: b.track || '', isLive: b.state === 'logging',
-          });
-        })
-        .catch(() => {});
-    };
-    ask();
-    const timer = setInterval(ask, BEACON_MS);
-    document.addEventListener('visibilitychange', ask);
-    return () => { gone = true; clearInterval(timer); document.removeEventListener('visibilitychange', ask); };
-  }, [address]);
+  const { friends } = useFriendsBeacons();
+  const theirRow = address ? friends.find(f => tidyJournal(f.address) === tidyJournal(address)) : null;
+  const unheard = Boolean(address) && (!theirRow || theirRow.state === 'unknown');
+  useEffect(() => { if (unheard) fillFriends(); }, [unheard]);
+  const beacon = theirRow && (theirRow.state === 'logging' || theirRow.state === 'logged')
+    ? { state: theirRow.state, album: theirRow.album, artist: theirRow.artist, art: theirRow.art, track: theirRow.track, isLive: theirRow.state === 'logging' }
+    : theirRow?.state === 'nothing' ? { state: 'nothing', isLive: false } : null;
 
   const name = theirs?.name || person?.name || 'them';
-  const since = useMemo(() => keepingSince(theirs?.entries || []), [theirs]);
   const records = useMemo(() => gatherAlbums(theirs?.entries || []), [theirs]);
+  // The three beside the beacon, as home has its own: their newest records
+  // but the one the beacon is showing, each opening on their journal.
+  const recents = useMemo(() => {
+    const showing = albumKey(beacon?.album || '', beacon?.artist || '');
+    const seen = new Set([showing]);
+    const out = [];
+    for (const e of newestFirst(theirs?.entries || [])) {
+      const key = albumKey(e.album, e.artist);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(e);
+      if (out.length === RECENTS) break;
+    }
+    return out;
+  }, [theirs, beacon?.album, beacon?.artist]);
 
   const facts = useMemo(() => {
     const mineLatest = latestPerKey(mine);
@@ -350,25 +338,6 @@ export default function PersonPage({ layered = false }) {
       || album.notes.some(n => foldForSearch(n.song).includes(q))),
   }), [name]);
 
-  async function waveAt() {
-    if (wave === 'waving' || wave === 'waved' || !person) return;
-    setWave('waving');
-    try {
-      const r = await fetch('/api/outbox', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ wave: true, person_id: person.id }),
-      });
-      const d = await r.json().catch(() => ({}));
-      if (d.ok) { setWave('waved'); return; }
-      setWaveSaid(d.error || 'The wave did not go.');
-      setWave('failed');
-    } catch {
-      setWaveSaid('The wave did not go.');
-      setWave('failed');
-    }
-  }
-
   async function remove() {
     if (!sure) { setSure(true); return; }
     setRemoving(true);
@@ -419,71 +388,54 @@ export default function PersonPage({ layered = false }) {
   );
 
   return (
-    <div ref={rootRef} className={'own-screen' + (layered ? ' own-screen--layered' : '')}>
-      {/* The header's left slot, where the owner's tools live on every page:
-          the way back, and — while Compare is open — the printer's door, the
-          press that prints the shape of the agreement and withholds the
-          writing, naming both people (DECISIONS, The network). */}
-      <SiteNav tools={(
-        <>
-          <button type="button" className="kt-tool" onClick={goBack} aria-label="Back" title="Back">
-            <CaretLeft size={18} weight="regular" aria-hidden="true" />
-          </button>
-          {person && comparing && (
-            <Link href={`/printer?person=${encodeURIComponent(id)}`} className="kt-tool" aria-label="Print the shape of the agreement" title="Print the shape of the agreement">
-              <Printer size={18} weight="regular" aria-hidden="true" />
-            </Link>
-          )}
-        </>
-      )} />
+    <div ref={rootRef} className={'own-screen pn-screen' + (layered ? ' own-screen--layered' : '')}>
+      {/* ── The top row, as home's ─────────────────────────────────────
+          Miyel, 2026-10-26: "page should look just like an owners page just
+          with the three buttons instead of the home people and community".
+          Home's row is the keeper's face, the mark and the three rooms; this
+          is the way back, their face, their name where the mark stands, and
+          Compare and Added where the rooms are — a glyph each, its word
+          shown and underlined while it is lit, as a room's is. Added is
+          always lit: it is a state, not a press. No Wave: a friend already
+          added is not waved at from here (her call, the same day). */}
+      <header className="pn-hdr">
+        <button type="button" className="pn-hdr-back" onClick={goBack} aria-label="Back" title="Back">
+          <CaretLeft size={20} weight="regular" aria-hidden="true" />
+        </button>
+        {person && <Face address={person.address} />}
+        {/* Their name where home's mark stands, and the mark's dot beside
+            it while they are logging — home's one signal for live. */}
+        {person && (
+          <h1 className="pn-hdr-name">
+            <span className="pn-hdr-called">{name}</span>
+            {beacon?.isLive && <span className="pn-hdr-live" role="img" aria-label="logging" />}
+          </h1>
+        )}
+        {person && (
+          <nav className="pn-hdr-stops" aria-label={`You and ${name}`}>
+            <button
+              type="button"
+              className={'pn-hdr-stop' + (comparing ? ' pn-hdr-stop--lit' : '')}
+              onClick={() => setComparing(c => !c)}
+              aria-expanded={comparing}
+              aria-label="Compare"
+            >
+              <Shuffle size={19} weight="regular" aria-hidden="true" />
+              {comparing && <span className="pn-hdr-word" aria-hidden="true">Compare</span>}
+            </button>
+            <span className="pn-hdr-stop pn-hdr-stop--lit pn-hdr-stop--still" role="img" aria-label={`${name} is in your friends`}>
+              <UserCheck size={19} weight="regular" aria-hidden="true" />
+              <span className="pn-hdr-word" aria-hidden="true">Added</span>
+            </span>
+          </nav>
+        )}
+      </header>
 
       <div className="own-body pn-body">
         {person === false ? (
           <div className="own-empty">Nobody by that page. <Link href="/dashboard/people" className="own-link">Your friends</Link></div>
-        ) : person === null ? (
-          <div className="pn-strip"><div className="own-skeleton" style={{ width: 44, height: 44, borderRadius: '50%' }} /></div>
-        ) : (
+        ) : person === null ? null : (
           <>
-            {/* ── The strip ──────────────────────────────────────────────
-                Their face, their name, a line under it, and what you can
-                do from here, each a glyph over a word in the line's small
-                capitals (Miyel's Friends answers). */}
-            <header className="pn-strip">
-              <Face address={person.address} />
-              <h1 className="pn-name">{name}</h1>
-              {/* Under the name and the doors both, so it has the width it
-                  needs on a phone. */}
-              <div className="pn-sub">{since ? `Keeping since ${since} · ` : ''}In your friends</div>
-              <div className="pn-acts">
-                <button
-                  type="button"
-                  className={'pn-act' + (comparing ? ' pn-act--on' : '')}
-                  onClick={() => setComparing(c => !c)}
-                  aria-expanded={comparing}
-                >
-                  <Shuffle size={20} weight="regular" aria-hidden="true" />
-                  Compare
-                </button>
-                <span className="pn-act pn-act--still">
-                  <UserCheck size={20} weight="regular" aria-hidden="true" />
-                  Added
-                </span>
-                <button
-                  type="button"
-                  className={'pn-act' + (wave === 'waved' ? ' pn-act--on' : '')}
-                  onClick={waveAt}
-                  disabled={wave === 'waving'}
-                  aria-label={wave === 'waved' ? `You waved at ${name}` : `Wave at ${name}`}
-                >
-                  {wave === 'waved'
-                    ? <Check size={20} weight="regular" aria-hidden="true" />
-                    : <HandWaving size={20} weight="regular" aria-hidden="true" />}
-                  {wave === 'waved' ? 'Waved' : 'Wave'}
-                </button>
-              </div>
-            </header>
-            {wave === 'failed' && <p className="pn-said" role="status">{waveSaid}</p>}
-
             {/* ── Compare, opened in place ─────────────────────────────── */}
             <div className={'pn-compare' + (comparing ? ' pn-compare--open' : '')} aria-hidden={!comparing} inert={!comparing}>
               <div className="pn-compare-in">
@@ -597,18 +549,37 @@ export default function PersonPage({ layered = false }) {
                 >
                   {() => null}
                 </Section>
+                {/* The printer's door: the press that prints the shape of the
+                    agreement and withholds the writing, naming both people
+                    (DECISIONS, The network). At the foot of the comparison,
+                    since the header became home's row. */}
+                <Link href={`/printer?person=${encodeURIComponent(id)}`} className="kt-tool pn-print" aria-label="Print the shape of the agreement" title="Print the shape of the agreement">
+                  <Printer size={18} weight="regular" aria-hidden="true" />
+                </Link>
               </div>
             </div>
 
-            {/* ── Their beacon ─────────────────────────────────────────── */}
+            {/* ── Their beacon, as home draws the keeper's ──────────────────
+                The record, the three before it in a column beside it, and the
+                name under both — home's own pieces and home's measures. */}
             {beacon && (
               <section className="pn-beacon" aria-label={`What ${name} is logging`}>
                 <BeaconCard beacon={beacon} />
-                {/* Home's beacon says it is live with the dot on the mark;
-                    theirs has no mark here, so it says it under the record,
-                    as People's line does. */}
-                {beacon.isLive && (
-                  <p className="pn-live"><span className="pn-live-dot" aria-hidden="true" />Logging</p>
+                {beacon.state !== 'nothing' && recents.length > 0 && (
+                  <div className="hp-recent-set">
+                    <div className="hp-recent">
+                      {recents.map(e => {
+                        const label = `${e.album} — ${e.artist}`;
+                        return (
+                          <a key={e.slug} href={theirEntry(e)} target="_blank" rel="noopener noreferrer" className="hp-recent-tile" title={label} aria-label={label}>
+                            {e.album_art
+                              ? <img src={e.album_art} alt="" onError={ev => { ev.currentTarget.style.display = 'none'; }} />
+                              : <span className="hp-recent-none" aria-hidden="true">♪</span>}
+                          </a>
+                        );
+                      })}
+                    </div>
+                  </div>
                 )}
               </section>
             )}

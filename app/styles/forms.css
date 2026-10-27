@@ -2464,57 +2464,60 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 /* ── from app/printer/page.js ─────────────────────────────────────────── */
 
 /* ── from app/dashboard/people/[id]/page.js ──────────────────────────── */
-/* A friend's journal page, 2026-10-26: a strip with their face and name and
-   what can be done, Compare opening in place under it, their beacon, and
-   their wall at the width home's is drawn. */
-.pn-body { max-width: 720px; padding: 18px 24px 8px; }
-/* The face beside two lines: the name with the doors at its right, and under
-   both the line about them, which on a phone needs the doors' width too. */
-.pn-strip {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  grid-template-areas: "face name acts" "face sub sub";
-  align-items: center; column-gap: 12px; row-gap: 2px;
-  padding: 2px 0 16px;
-  border-bottom: 1px solid var(--border);
+/* A friend's journal page, 2026-10-26: home's top row with their face and
+   name and Compare and Added for its rooms, Compare opening in place under
+   it, their beacon as home draws the keeper's, and their wall at the width
+   home's is drawn. No fixed header to clear: the row is in the page. */
+.pn-screen { --own-nav-bottom: 0px; }
+.pn-body { max-width: 720px; padding: 0 24px; }
+/* Home's row (.hdr, nav.css): 18 from the sides, 22 under the notch, 58
+   tall, the face at 34. */
+.pn-hdr {
+  position: relative;
+  display: flex; align-items: center; gap: 10px;
+  height: 58px;
+  margin: calc(22px + var(--safe-top, 0px)) 18px 0;
 }
-/* Their journal's portrait, a circle like every face in the book. */
-.pn-face {
-  grid-area: face; align-self: center;
-  position: relative; width: 52px; height: 52px; border-radius: 50%; overflow: hidden;
-  background: var(--panel); border: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: center; color: var(--ink-faint);
-}
-.pn-face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.pn-name {
-  grid-area: name;
-  font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
-  font-size: 20px; line-height: 1.15; margin: 0; color: var(--ink);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.pn-sub {
-  grid-area: sub;
-  font-family: var(--font-label); font-size: 9px; line-height: 1.6; letter-spacing: 0.11em; text-transform: uppercase;
-  color: var(--ink-faint);
-}
-/* A glyph over a word, in the line's small capitals. */
-.pn-acts { grid-area: acts; display: flex; align-items: flex-start; gap: 2px; }
-.pn-act {
-  display: inline-flex; flex-direction: column; align-items: center; gap: 6px;
-  min-width: 48px; border: 0; background: none; padding: 4px 4px; cursor: pointer;
-  font-family: var(--font-label); font-size: 9px; letter-spacing: 0.11em; text-transform: uppercase;
-  color: var(--ink-soft);
-  transition: color 0.15s;
+.pn-hdr-back {
+  display: inline-flex; padding: 6px; margin: 0 -4px 0 -6px;
+  border: 0; background: none; color: var(--ink-soft); cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
-.pn-act:hover { color: var(--ink); }
-.pn-act:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 2px; }
-.pn-act--on { color: var(--ink); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
-/* Added is a state, not a press. */
-.pn-act--still { cursor: default; color: var(--ink-faint); }
-.pn-act--still:hover { color: var(--ink-faint); }
-.pn-said { margin: 10px 2px 0; font-family: var(--font-label); font-size: 10px; letter-spacing: 0.06em; color: var(--ink-soft); }
-/* Compare opens under the strip and pushes the beacon down, as the drawer
+.pn-hdr-back:hover { color: var(--ink); }
+.pn-face {
+  position: relative; flex: 0 0 auto; width: 34px; height: 34px; border-radius: 50%; overflow: hidden;
+  background: var(--panel-strong); box-shadow: 0 0 0 1px var(--border);
+  display: grid; place-items: center; color: var(--ink-faint);
+}
+.pn-face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+/* In the middle of the row, where home's mark is. */
+.pn-hdr-name {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  display: inline-flex; align-items: center; gap: 6px;
+  max-width: calc(100% - 200px); margin: 0;
+  font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
+  font-size: 19px; line-height: 1.15; color: var(--ink);
+}
+.pn-hdr-called { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pn-hdr-live { flex: 0 0 auto; width: 6px; height: 6px; border-radius: 50%; background: var(--live); }
+.pn-hdr-stops { margin-left: auto; display: flex; align-items: flex-start; gap: 20px; }
+.pn-hdr-stop {
+  display: inline-flex; flex-direction: column; align-items: center; gap: 4px;
+  min-width: 28px; padding: 6px 4px; margin: -6px -4px;
+  border: 0; background: none; color: var(--ink-faint);
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s;
+}
+.pn-hdr-stop--lit { color: var(--ink); }
+.pn-hdr-stop--still { cursor: default; }
+.pn-hdr-stop:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: -2px; border-radius: 8px; }
+.pn-hdr-word {
+  font-family: var(--font-label); font-size: 9px; line-height: 1;
+  letter-spacing: 0.09em; text-transform: uppercase;
+  text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1.5px;
+}
+.pn-print { display: flex; width: fit-content; margin: 18px -6px 0 auto; }
+/* Compare opens under the row and pushes the beacon down, as the drawer
    and the ticket do; nothing appears or vanishes. */
 .pn-compare {
   display: grid; grid-template-rows: 0fr;
@@ -2530,17 +2533,30 @@ textarea.st-field { resize: vertical; min-height: 96px; }
   padding: 18px 0 22px;
   border-bottom: 1px solid var(--border);
 }
-.pn-beacon { padding: 22px 0 6px; }
-/* Home's beacon outside home: in flow, as home's own pane sets it. */
-.pn-beacon .beacon-stage { height: auto; }
-.pn-beacon .beacon-card--main { position: static; transform: none; }
-.pn-live {
-  display: flex; align-items: center; justify-content: center; gap: 7px;
-  margin: 8px 0 0;
-  font-family: var(--font-label); font-size: 9px; letter-spacing: 0.11em; text-transform: uppercase;
-  color: var(--ink-soft);
+/* Home's beacon on a phone (nav.css, .hn-pane--home): the record and the
+   column of three beside it on one row, the name across both under them. */
+.pn-beacon {
+  display: grid; grid-template-columns: auto auto; justify-content: center;
+  column-gap: 16px; row-gap: 22px;
+  padding: 6px 0 4px;
 }
-.pn-live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--live); }
+.pn-beacon .beacon-stage, .pn-beacon .beacon-card { display: contents; }
+.pn-beacon .beacon-card--main { position: static; transform: none; }
+.pn-beacon .beacon-art-wrap {
+  grid-column: 1; grid-row: 1;
+  width: min(212px, calc(100vw - 150px)); height: auto; aspect-ratio: 1;
+}
+.pn-beacon .beacon-art-wrap,
+.pn-beacon .beacon-card:hover .beacon-art-wrap { box-shadow: 0 16px 30px -12px rgba(0, 0, 0, 0.3); }
+.pn-beacon .beacon-art-wrap--live { box-shadow: 0 20px 36px -14px rgba(0, 0, 0, 0.36); }
+.pn-beacon .beacon-meta { grid-column: 1 / -1; grid-row: 2; }
+.pn-beacon .beacon-track { font-size: 21px; }
+.pn-beacon .beacon-quiet { grid-column: 1 / -1; grid-row: 1; }
+.pn-beacon .hp-recent-set { grid-column: 2; grid-row: 1; align-self: center; align-items: flex-start; gap: 8px; }
+.pn-beacon .hp-recent { flex-direction: column; gap: 7px; opacity: 1; }
+.pn-beacon .hp-recent-tile { width: 50px; height: 50px; border-radius: 10px; }
+.pn-beacon .hp-recent-tile img { filter: grayscale(80%) brightness(0.7); transition: filter 0.3s cubic-bezier(0.22, 0.61, 0.36, 1); }
+.pn-beacon .hp-recent-tile:hover img, .pn-beacon .hp-recent-tile:focus-visible img { filter: none; }
 /* The wall, past the narrow column, and what sits under its last row. */
 .pn-wall { padding-bottom: 40px; }
 /* On a phone the wall's line leads the wall and sticks under the header as
