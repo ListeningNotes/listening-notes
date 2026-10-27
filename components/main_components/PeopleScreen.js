@@ -41,9 +41,10 @@
 // at the left and three glyphs over their words at the right: Add, Find
 // once the book is past twenty ("a small book never shows a search field it
 // doesn't need"), and Ticket, which hands out the invitation as Invite did
-// until the ticket's own brief. The row is the closed drawer: pulled down,
-// or opened by All under it, the same faces become every face, five across,
-// in place, and Close puts them back — See all's book under the line went.
+// until the ticket's own brief. The row is the closed drawer: five faces
+// that fit, never scrolling sideways; pulled down, or opened by See all
+// under it, the rows under them follow in place, and Close puts them back —
+// See all's book under the line went.
 // Whoever has something waiting comes first and wears New under the chin,
 // then whoever is logging, then everybody else shuffled, never by name.
 //
@@ -101,6 +102,8 @@ const FACES_MOST = 3;
 const CAME_BACK_MOST = 30;
 // Past this many in the book, Find stands beside Add.
 const FIND_PAST = 20;
+// Faces across the drawer, and so in the closed row.
+const ACROSS = 5;
 // The drawer's opening and closing: the page's own curve and the doors'
 // clock, a beat longer for the distance the faces travel.
 const DRAWER_MS = 400;
@@ -607,49 +610,42 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
   const stillNaming = Boolean(DIRECTORY_URL) && typedNow.length >= 2 && !looksLikeAddress && named.term !== typedNow;
 
   // ── The drawer, 2026-10-27 ──────────────────────────────────────────────
-  // The row is the drawer, closed (Miyel's Friends brief): All under it, or
-  // a finger dragged down it, opens the same faces into every face, five
-  // across, in place, and pushes the wall down; Close puts them back. The
-  // row's height and each face travel from where they were to where they
-  // land, so nothing appears or vanishes. Find opens it with a name field,
-  // and closing it puts the field away.
+  // The row is the drawer, closed (Miyel's Friends brief): one row of five,
+  // the first five of the book's order, and never scrolling on to the right
+  // (her pick the same day: "I don't like that it ... infinitely scrolls to
+  // the right"). See all under it, or a finger dragged down it, lets the
+  // rows under the first down in place and pushes the wall with them; Close
+  // folds them back up. The faces stand where they stand: only the drawer's
+  // height moves, so nothing appears or vanishes. Find opens it with a name
+  // field, and closing it puts the field away.
   const [drawer, setDrawer] = useState(false);
   const [finding, setFinding] = useState(false);
   const [sought, setSought] = useState('');
   const rowRef = useRef(null);
-  const wasLaid = useRef(null);
-  // Where the row and each face stood, read just before the drawer moves.
-  const markWhereTheyStand = () => {
-    const row = rowRef.current;
-    if (!row) return;
-    const faces = new Map();
-    for (const one of row.children) faces.set(one.dataset.address, one.getBoundingClientRect());
-    wasLaid.current = { height: row.offsetHeight, faces };
-  };
+  const wasHeight = useRef(null);
   const setDrawerTo = next => {
     if (next === drawer) return;
-    markWhereTheyStand();
+    wasHeight.current = rowRef.current ? rowRef.current.offsetHeight : null;
     setDrawer(next);
     if (!next) { setFinding(false); setSought(''); }
   };
+  // How tall the closed drawer is: its first face and the drawer's own
+  // padding, measured, so a longer name or a larger type cannot cut it.
   useLayoutEffect(() => {
     const row = rowRef.current;
-    const was = wasLaid.current;
-    wasLaid.current = null;
-    if (!row || !was || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const timing = { duration: DRAWER_MS, easing: DRAWER_EASE };
-    row.animate([{ height: `${was.height}px` }, { height: `${row.offsetHeight}px` }], timing);
-    for (const one of row.children) {
-      const from = was.faces.get(one.dataset.address);
-      if (!from) continue;
-      const to = one.getBoundingClientRect();
-      const dx = from.left - to.left;
-      const dy = from.top - to.top;
-      if (dx || dy) one.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'none' }], timing);
-    }
+    const first = row?.firstElementChild;
+    if (!first) return;
+    const pad = getComputedStyle(row);
+    row.style.setProperty('--ps-shut', `${first.offsetHeight + parseFloat(pad.paddingTop) + parseFloat(pad.paddingBottom)}px`);
+  });
+  useLayoutEffect(() => {
+    const row = rowRef.current;
+    const was = wasHeight.current;
+    wasHeight.current = null;
+    if (!row || was == null || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    row.animate([{ height: `${was}px` }, { height: `${row.offsetHeight}px` }], { duration: DRAWER_MS, easing: DRAWER_EASE });
   }, [drawer]);
-  // A finger dragged down the closed row opens it, as the brief's pull does;
-  // sideways, the row only scrolls.
+  // A finger dragged down the closed row opens it, as the brief's pull does.
   const pull = useRef(null);
   const onRowTouchStart = e => {
     pull.current = !drawer && e.touches.length === 1 ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : null;
@@ -725,13 +721,13 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
       onTouchStart={onRowTouchStart}
       onTouchMove={onRowTouchMove}
     >
-      {shown.map(f => {
+      {shown.map((f, i) => {
         const isOpen = Boolean(!adding && opened && f.address === opened.address);
         return (
           <button
             key={f.address}
-            data-address={f.address}
             type="button"
+            inert={!drawer && i >= ACROSS ? true : undefined}
             className={'fr-live-one ps-row-one' + (f.live ? ' ps-row-one--live' : '') + (f.waiting ? ' ps-row-one--new' : '') + (isOpen ? ' ps-row-one--open' : '')}
             onClick={() => pressFace(f.address)}
             aria-expanded={isOpen}
@@ -758,17 +754,18 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
       />
     </label>
   ) : null;
-  // All, under the closed row; Close, under the open one.
-  const drawerDoor = lineup.length > 0 ? (
+  // See all under the closed row, the caret under the words (her ask,
+  // 2026-10-27); Close under the open one. Not drawn while everybody fits.
+  const drawerDoor = lineup.length > ACROSS ? (
     <button
       type="button"
       className={'ps-pull' + (drawer ? ' ps-pull--open' : '')}
       onClick={() => setDrawerTo(!drawer)}
       aria-expanded={drawer}
-      aria-label={drawer ? 'Close your friends' : 'All your friends'}
+      aria-label={drawer ? 'Close your friends' : 'See all your friends'}
     >
+      {drawer ? 'Close' : 'See all'}
       <CaretDown size={10} weight="bold" aria-hidden="true" />
-      {drawer ? 'Close' : 'All'}
     </button>
   ) : null;
   const nobodyFound = finding && soughtNow && shown.length === 0;

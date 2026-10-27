@@ -2186,10 +2186,11 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 .ps-unroll--open .ps-unroll-in { padding-bottom: 4px; }
 /* Find's field, at the head of the open drawer. */
 .ps-find { margin: 16px 0 0; }
-/* All, under the closed row, and Close under the open one: a caret over
-   nothing, in the line's small capitals, turned over while it is open. */
+/* See all under the closed row and Close under the open one, in the line's
+   small capitals, with the caret under the words (Miyel, 2026-10-27),
+   turned over while it is open. */
 .ps-pull {
-  display: flex; align-items: center; gap: 6px;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
   margin: 2px auto 0; padding: 6px 8px;
   border: 0; background: none; cursor: pointer;
   font-family: var(--font-label); font-size: 9px; line-height: 1;
@@ -2203,34 +2204,27 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 .ps-pull--open svg { transform: rotate(180deg); }
 .ps-pull:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 2px; border-radius: 8px; }
 
-/* Every face in the book, scrolling sideways once there are more than fit,
-   bled to the gutters. One pressed: the rest dim and it grows — the book's
-   own way of saying this one (.fr-one--open). */
+/* Every face in the book, five across, as the drawer: shut, one row the
+   height of its first face (--ps-shut, measured in PeopleScreen.js) and the
+   rows under it clipped away, never scrolling sideways (Miyel, 2026-10-27);
+   open, every row. Only the height travels. One pressed: the rest dim and
+   it grows — the book's own way of saying this one (.fr-one--open). The
+   padding is room inside the clip for a face that grows and the mark under
+   it, and for the focus ring. */
 .ps-row {
-  display: flex; align-items: flex-start; gap: 12px;
-  margin: 0 -24px; padding: 6px 24px 8px;
-  overflow-x: auto; overscroll-behavior-x: contain;
-  scroll-padding-inline: 24px;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
+  display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
+  align-items: start; row-gap: 16px; column-gap: 4px;
+  box-sizing: border-box;
+  margin: 12px -8px 0; padding: 6px 8px 10px;
+  overflow: hidden;
 }
-.ps-row::-webkit-scrollbar { display: none; }
-.ps-row { margin-top: 12px; }
-.ps-row-one { flex: 0 0 60px; transition: opacity 0.25s ease; }
+.ps-row:not(.ps-row--drawer) { height: var(--ps-shut, auto); }
+.ps-row-one { min-width: 0; width: auto; transition: opacity 0.25s ease; }
 .ps-row-one .fr-ring { width: 54px; flex-shrink: 0; }
 /* Room for New under the chin, on every face, so the names stand on one
    line whoever wears it; somebody with something waiting is named in ink. */
 .ps-row-one .fr-live-name { margin-top: 11px; }
 .ps-row-one--new .fr-live-name { color: var(--ink); }
-/* The drawer open: the same faces, five across, in place. Clipped while it
-   travels, with room inside for a face that grows and the mark under it. */
-.ps-row--drawer {
-  display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
-  row-gap: 16px; column-gap: 4px;
-  overflow: hidden;
-  padding-bottom: 10px;
-}
-.ps-row--drawer .ps-row-one { flex: none; min-width: 0; width: auto; }
 .ps-row--open .ps-row-one { opacity: 0.32; }
 .ps-row--open .ps-row-one--open { opacity: 1; }
 .ps-row-one--open .fr-ring { transform: scale(1.1); }

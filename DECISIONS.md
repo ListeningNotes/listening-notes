@@ -1298,10 +1298,11 @@ band of cards, where both are drawn. The rest of the site's faces wait on her.
 
 **Friends' top: the line, Your friends, three glyphs and a drawer,
 2026-10-27 (her Friends brief, step two).** Add · Find (past twenty) ·
-Ticket, each a glyph over its word; the row of faces is the drawer, opened
-in place five across by All or a drag down. Waiting first, then logging,
-then shuffled — never by name. New under the chin, never a count; nothing
-of a person's ever drawn across their face. The stop's word is Friends.
+Ticket, each a glyph over its word (kept over words alone, her pick). The
+row is five faces that fit, never scrolling sideways; See all under it, the
+caret under the words, or a drag down opens the rest in place. Waiting
+first, then logging, then shuffled — never by name. New under the chin,
+never a count. The stop's word is Friends.
 
 **Pin is gone, 2026-10-26, her call ("Not needed").** Nobody in the book
 stands above anybody else; `pinned_at` stays, as every column does, and
