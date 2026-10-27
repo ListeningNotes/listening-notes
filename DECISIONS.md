@@ -1473,7 +1473,9 @@ Friends answers).** Visit opens `/dashboard/people/[id]`, laid out as home
 ("just like an owners page"): home's row with their face and name, Compare ·
 Added for its rooms, their beacon, the line, their wall — home's components,
 their public rows. "The page is mine, the data is theirs": nothing framed,
-the writing opens on their journal. Compare is a view opened in place.
+the writing opens on their journal. Compare is a view opened in place at the
+top of the page — her pick over a screen of its own, 2026-10-26, with main's
+versus screen still to join ("the way you have it designed now is great").
 
 **The page about a person stays on your copy; their journal gets no door
 to it, 2026-09-13.** Considered: their right pane offering "Compare with
