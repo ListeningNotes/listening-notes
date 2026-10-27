@@ -1353,6 +1353,13 @@ is not, so it is held to three things: one entry at a time through
 `/api/public/notes/[slug]`, never a list; read live and stored nowhere; their
 face on it and their entry one press away. A quiet entry gives nothing.
 
+**Compare may set your taste beside theirs in numbers, 2026-10-24.** Her
+words: see "at a quick easy glance how you two compare… even if it's a
+stranger." Each side's share of its records by genre, decade or stars, and
+the cards (top genre, Masterpieces on what you share), describe taste; the
+no-counts rule is about a score somebody could grow, and nothing here ranks
+anyone. It stays on that page, the keeper's alone; never a row or the Board.
+
 **The directory keeps each listed journal's records, 2026-10-08.** Titles,
 stars and marks, read from the public feed by the same job — never the
 writing. A quoted line is read from the keeper's own journal by the viewing
