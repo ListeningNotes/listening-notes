@@ -1651,10 +1651,11 @@ export default function HomeNav() {
 
   // ── The top row's stops, 2026-10-22 ─────────────────────────────────────
   // The keeper's three rooms, at the panes they are on the rail; a visitor
-  // has none — the row carries the mark instead (Header.js).
+  // has none — the row carries the mark instead (Header.js). People's word
+  // is Friends since 2026-10-27 (her Friends brief); the key stays.
   const stops = authed ? [
     { key: 'home', word: 'Home', at: HOME },
-    { key: 'people', word: 'People', at: BOOK },
+    { key: 'people', word: 'Friends', at: BOOK },
     { key: 'inbox', word: 'Inbox', at: INBOX },
   ] : [];
 
@@ -2140,7 +2141,7 @@ export default function HomeNav() {
           <section
             className="hn-pane hn-pane--friends"
             ref={friendsRef}
-            aria-label="People"
+            aria-label="Friends"
           >
             {visited[BOOK] && (
               <PeopleScreen

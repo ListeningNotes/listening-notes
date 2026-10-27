@@ -1221,3 +1221,15 @@ book, three across and larger, in the order they were pinned, and first on
 the timer's thirty. Dropped in her Friends answers: "Drop Pin entirely. Not
 needed."
 
+## The network — People's top as two words, 2026-10-24 to 2026-10-27
+
+**People's top is two words, the faces and one line, 2026-10-24, her
+calls.** + Add · See all in small capitals; every face, live first, then the
+book's order; one line — small cover, name, what, when. A face pressed dims
+the rest, and the book's doors open under its line. A hairline, then the
+wall. Never a beacon drawn large, and never Add or See all as circles ("three
+friends"). No heading: *Quiet* read as a verdict on a person.
+
+Replaced 2026-10-27 by her Friends brief's top: Your friends as a heading
+(not a verdict, so the old worry does not reach it), three glyphs over their
+words, and the row as a drawer in place of See all's book.

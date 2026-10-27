@@ -1834,6 +1834,15 @@ textarea.st-field { resize: vertical; min-height: 96px; }
   background: var(--live);
   border: 2.5px solid var(--bg);
 }
+/* New on a face (Miyel's Friends brief, 2026-10-27): the app's mark tucked
+   under the chin, over the circle's lower edge, ringed in the page's colour
+   so it reads against any photograph — never across the face. */
+.ln-new--face {
+  position: absolute; z-index: 2; left: 50%; bottom: -6px;
+  transform: translateX(-50%);
+  box-shadow: 0 0 0 2px var(--bg);
+  pointer-events: none;
+}
 .fr-name {
   font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
   font-size: 13px; line-height: 1.2; color: var(--ink);
@@ -2138,28 +2147,61 @@ textarea.st-field { resize: vertical; min-height: 96px; }
   margin: 0 24px; padding: 2px 0 16px;
   border-bottom: 1px solid var(--border);
 }
-/* Add and See all, at the right, in the small capitals of the wall's own
-   line (.arc-ctl), a shade darker than its faint so Add is found. */
-.ps-acts { display: flex; justify-content: flex-end; gap: 6px; margin-right: -6px; }
-.ps-act {
-  display: inline-flex; align-items: center; gap: 6px;
-  border: 0; background: none; padding: 7px 6px; cursor: pointer;
-  font-family: var(--font-label); font-size: 9px; letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--ink-soft);
-  transition: color 0.15s;
-  -webkit-tap-highlight-color: transparent;
+/* ── Your friends, 2026-10-27 ──────────────────────────────────────────────
+   Miyel's Friends brief: the line, then Your friends at the left in the
+   label face and three glyphs over their words at the right — Add, Find,
+   Ticket — in the top row's shape (.hdr-stop), the word always worn and
+   underlined while what it opens is open. */
+.ps-head {
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 12px;
+  margin-top: 22px;
 }
-.ps-act:hover { color: var(--ink); }
-.ps-act:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 2px; }
-.ps-act svg { transition: transform 0.34s cubic-bezier(0.22, 0.61, 0.36, 1); }
-/* Add turns into the way out while its field is open, as the book's + does;
-   See all is underlined while the book is open, as a filter that is on is,
-   and its caret turns over. */
-.ps-act--shut { color: var(--ink); }
-.ps-act--shut svg { transform: rotate(45deg); }
-.ps-act--on { color: var(--ink); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 5px; }
-.ps-act--on svg { transform: rotate(180deg); }
+.ps-head-said {
+  margin: 0; padding-bottom: 1px;
+  font-family: var(--font-label); font-weight: 400; font-size: 9px; line-height: 1;
+  letter-spacing: 0.11em; text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.ps-glyphs { display: flex; align-items: flex-start; gap: 20px; }
+.ps-glyph {
+  display: inline-flex; flex-direction: column; align-items: center; gap: 6px;
+  min-width: 30px; padding: 6px 4px; margin: -6px -4px;
+  border: 0; background: none; color: var(--ink-soft);
+  font-family: var(--font-label); font-size: 9px; line-height: 1;
+  letter-spacing: 0.11em; text-transform: uppercase;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s;
+}
+.ps-glyph:hover, .ps-glyph--on { color: var(--ink); }
+.ps-glyph--on .ps-glyph-word { text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 4px; }
+.ps-glyph:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: -2px; border-radius: 8px; }
+/* What a glyph unrolls under the head, pushing the page down rather than
+   appearing — Add's way in now, the ticket's strip once it is briefed. */
+.ps-unroll {
+  display: grid; grid-template-rows: 0fr;
+  transition: grid-template-rows 0.4s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.ps-unroll--open { grid-template-rows: 1fr; }
+.ps-unroll-in { min-height: 0; overflow: hidden; }
+.ps-unroll--open .ps-unroll-in { padding-bottom: 4px; }
+/* Find's field, at the head of the open drawer. */
+.ps-find { margin: 16px 0 0; }
+/* All, under the closed row, and Close under the open one: a caret over
+   nothing, in the line's small capitals, turned over while it is open. */
+.ps-pull {
+  display: flex; align-items: center; gap: 6px;
+  margin: 2px auto 0; padding: 6px 8px;
+  border: 0; background: none; cursor: pointer;
+  font-family: var(--font-label); font-size: 9px; line-height: 1;
+  letter-spacing: 0.11em; text-transform: uppercase;
+  color: var(--ink-faint);
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s;
+}
+.ps-pull:hover { color: var(--ink); }
+.ps-pull svg { transition: transform 0.4s cubic-bezier(0.22, 0.61, 0.36, 1); }
+.ps-pull--open svg { transform: rotate(180deg); }
+.ps-pull:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 2px; border-radius: 8px; }
 
 /* Every face in the book, scrolling sideways once there are more than fit,
    bled to the gutters. One pressed: the rest dim and it grows — the book's
@@ -2173,8 +2215,22 @@ textarea.st-field { resize: vertical; min-height: 96px; }
   -webkit-overflow-scrolling: touch;
 }
 .ps-row::-webkit-scrollbar { display: none; }
+.ps-row { margin-top: 12px; }
 .ps-row-one { flex: 0 0 60px; transition: opacity 0.25s ease; }
 .ps-row-one .fr-ring { width: 54px; flex-shrink: 0; }
+/* Room for New under the chin, on every face, so the names stand on one
+   line whoever wears it; somebody with something waiting is named in ink. */
+.ps-row-one .fr-live-name { margin-top: 11px; }
+.ps-row-one--new .fr-live-name { color: var(--ink); }
+/* The drawer open: the same faces, five across, in place. Clipped while it
+   travels, with room inside for a face that grows and the mark under it. */
+.ps-row--drawer {
+  display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
+  row-gap: 16px; column-gap: 4px;
+  overflow: hidden;
+  padding-bottom: 10px;
+}
+.ps-row--drawer .ps-row-one { flex: none; min-width: 0; width: auto; }
 .ps-row--open .ps-row-one { opacity: 0.32; }
 .ps-row--open .ps-row-one--open { opacity: 1; }
 .ps-row-one--open .fr-ring { transform: scale(1.1); }
@@ -2264,18 +2320,9 @@ textarea.st-field { resize: vertical; min-height: 96px; }
   font: inherit; color: var(--ink-soft); text-decoration: underline; cursor: pointer;
 }
 
-/* See all: the whole book under the line, opened downward and pushing the
-   wall with it rather than appearing. */
-.ps-all {
-  display: grid; grid-template-rows: 0fr;
-  transition: grid-template-rows 0.4s cubic-bezier(0.22, 0.61, 0.36, 1);
-}
-.ps-all--open { grid-template-rows: 1fr; }
-.ps-all-in { min-height: 0; overflow: hidden; }
-.ps-all--open .ps-all-in { padding-top: 18px; }
 @media (prefers-reduced-motion: reduce) {
   .ps-strip, .ps-add { animation: none; }
-  .ps-doors, .ps-all, .ps-act svg, .ps-row-one { transition: none; }
+  .ps-doors, .ps-unroll, .ps-pull svg, .ps-row-one { transition: none; }
 }
 /* A record on People's wall wears, over the cover, the faces of whoever
    logged it in the corner, overlapping — the keeper's own first when it is

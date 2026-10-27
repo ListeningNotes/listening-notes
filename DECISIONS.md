@@ -1296,12 +1296,12 @@ square on the grounds that a journal is a shelf of records. A person is a
 circle and a record a rounded square, which also tells the two apart in the
 band of cards, where both are drawn. The rest of the site's faces wait on her.
 
-**People's top is two words, the faces and one line, 2026-10-24, her
-calls.** + Add · See all in small capitals; every face, live first, then the
-book's order; one line — small cover, name, what, when. A face pressed dims
-the rest, and the book's doors open under its line. A hairline, then the
-wall. Never a beacon drawn large, and never Add or See all as circles ("three
-friends"). No heading: *Quiet* read as a verdict on a person.
+**Friends' top: the line, Your friends, three glyphs and a drawer,
+2026-10-27 (her Friends brief, step two).** Add · Find (past twenty) ·
+Ticket, each a glyph over its word; the row of faces is the drawer, opened
+in place five across by All or a drag down. Waiting first, then logging,
+then shuffled — never by name. New under the chin, never a count; nothing
+of a person's ever drawn across their face. The stop's word is Friends.
 
 **Pin is gone, 2026-10-26, her call ("Not needed").** Nobody in the book
 stands above anybody else; `pinned_at` stays, as every column does, and

@@ -35,6 +35,18 @@
 // friend's beacon drawn large, then on its side with Add and See all as
 // bubbles — "it's weird three friends", and the beacon was too much.
 //
+// ── Your friends, 2026-10-27 ──────────────────────────────────────────────
+// Miyel's Friends brief, step two of her build order. The line moved up,
+// to where Headlines will stand (step three), and under it *Your friends*
+// at the left and three glyphs over their words at the right: Add, Find
+// once the book is past twenty ("a small book never shows a search field it
+// doesn't need"), and Ticket, which hands out the invitation as Invite did
+// until the ticket's own brief. The row is the closed drawer: pulled down,
+// or opened by All under it, the same faces become every face, five across,
+// in place, and Close puts them back — See all's book under the line went.
+// Whoever has something waiting comes first and wears New under the chin,
+// then whoever is logging, then everybody else shuffled, never by name.
+//
 // The shelf line is the wall's own (Journal.js): the views at its left and
 // the search, as on home. Whose records — Your friends, Your records,
 // Everyone's — stood after the search for a day and went with the Board:
@@ -58,12 +70,12 @@
 // ordered by how much anybody logs: a record is placed by when it was last
 // logged, and the faces on it are newest first.
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ArrowRight, BookOpen, Camera, CaretDown, PaperPlaneTilt, Plus, Ticket, User } from '@phosphor-icons/react';
+import { ArrowRight, BookOpen, Camera, CaretDown, MagnifyingGlass, PaperPlaneTilt, Ticket, User, UserPlus } from '@phosphor-icons/react';
 import Journal, { foldForSearch } from './Journal';
-import Friends, { since } from './Friends';
+import { since } from './Friends';
 import CodeScanner from './CodeScanner';
 import SendSheet from './SendSheet';
 import InviteSheet from './InviteSheet';
@@ -87,6 +99,14 @@ const ASK_AFTER_MS = 350;
 const FACES_MOST = 3;
 // What came back from a send goes to the inbox (below), the newest this many.
 const CAME_BACK_MOST = 30;
+// Past this many in the book, Find stands beside Add.
+const FIND_PAST = 20;
+// The drawer's opening and closing: the page's own curve and the doors'
+// clock, a beat longer for the distance the faces travel.
+const DRAWER_MS = 400;
+const DRAWER_EASE = 'cubic-bezier(0.22, 0.61, 0.36, 1)';
+// How far a finger drags down the closed row before it opens.
+const PULL_OPENS = 28;
 
 const releaseYear = entry => {
   const m = String(entry?.year || '').match(/\d{4}/);
@@ -171,6 +191,10 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
   const [own, setOwn] = useState([]);
   // address → { entries, name, failed }, filled as each journal answers.
   const [journals, setJournals] = useState({});
+  // Where each face falls among the ones with nothing to say for themselves:
+  // drawn once a visit for each address, so the row is shuffled and then
+  // holds still while it is read.
+  const [shuffle, setShuffle] = useState({});
   const asked = useRef(new Set());
   const readBook = useCallback(() => {
     fetch('/api/people')
@@ -179,6 +203,11 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
         const had = d.people || [];
         setOwn(Array.isArray(d.own) ? d.own : []);
         setPeople(had);
+        setShuffle(prev => {
+          const next = { ...prev };
+          for (const p of had) if (!(p.address in next)) next[p.address] = Math.random();
+          return next;
+        });
         for (const p of had) {
           if (asked.current.has(p.address)) continue;
           asked.current.add(p.address);
@@ -207,11 +236,49 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
     if (wasPath.current === '/dashboard/people' && path !== '/dashboard/people') readBook();
     wasPath.current = path;
   }, [path, readBook]);
+  // ── What waits on a face, 2026-10-27 ────────────────────────────────────
+  // Miyel's Friends brief: anything from a person waits on that person's
+  // face, and the face says New, never how many. Read from the inbox's own
+  // routes, which the inbox goes on reading until it retires (the last step
+  // of her build order). New is what this journal has not opened yet —
+  // each row's seen_at, kept here and never sent anywhere ("New means I
+  // haven't seen it") — and a friend's journal that moved, until Update.
+  // Asked again each time the screen comes on show, since the inbox may
+  // have opened something meanwhile.
+  const [arrivals, setArrivals] = useState(null);
+  const readArrivals = useCallback(() => {
+    const list = (url, key) => fetch(url, { cache: 'no-store' })
+      .then(r => (r.ok ? r.json() : {}))
+      .then(d => (Array.isArray(d[key]) ? d[key] : []))
+      .catch(() => []);
+    return Promise.all([
+      list('/api/submissions', 'submissions'),
+      list('/api/messages', 'messages'),
+      list('/api/waves', 'waves'),
+      list('/api/came-back', 'cameBack'),
+    ]).then(([sends, messages, waves, back]) => setArrivals({ sends, messages, waves, back }));
+  }, []);
+  useEffect(() => { if (onScreen) readArrivals(); }, [onScreen, readArrivals]);
+  const fresh = useMemo(() => {
+    const out = new Set();
+    const note = (address, unseen) => {
+      const at = tidyJournal(address || '');
+      if (at && unseen) out.add(at);
+    };
+    for (const s of arrivals?.sends || []) note(s.sender_url, s.status === 'pending' && !s.seen_at);
+    for (const m of arrivals?.messages || []) if (!m.admin) note(m.from_journal, !m.seen_at);
+    for (const w of arrivals?.waves || []) note(w.address, !w.seen_at);
+    for (const c of arrivals?.back || []) note(c.journal, !c.seen_at);
+    for (const p of people || []) note(p.address, Boolean(p.moved_to));
+    return out;
+  }, [arrivals, people]);
+
   const again = useCallback(() => {
     asked.current.clear();
     readBook();
+    readArrivals();
     return refreshFriends();
-  }, [readBook]);
+  }, [readBook, readArrivals]);
 
   // Their beacons, through the one shared poll (useFriendsBeacons): only
   // while this screen is the one on show.
@@ -375,8 +442,9 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
   }, [there, myFace]);
 
   // ── The top: the faces, one line, and their doors ───────────────────────
-  // The row is the book, whoever is logging first and the rest in the
-  // book's own order — never by how much anybody logs.
+  // The row is the book: whoever has something waiting first, then whoever
+  // is logging, then everybody else shuffled (her brief, 2026-10-27: "Never
+  // alphabetical") — never by how much anybody logs.
   const lineup = useMemo(() => {
     const byBeacon = new Map((beacons || []).map(b => [b.address, b]));
     const all = (people || []).map(p => {
@@ -389,13 +457,15 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
         name: j?.name || p.name || b?.name || '',
         beacon: b,
         live: b?.state === 'logging' && Boolean(b.album),
+        waiting: fresh.has(tidyJournal(p.address)),
         newest,
         entries: j?.entries || [],
         at: Date.parse(b?.at || '') || Date.parse(newest?.posted_at || '') || 0,
       };
     });
-    return [...all.filter(f => f.live), ...all.filter(f => !f.live)];
-  }, [people, beacons, journals]);
+    const group = f => (f.waiting ? 0 : f.live ? 1 : 2);
+    return all.sort((a, b) => group(a) - group(b) || (shuffle[a.address] ?? 1) - (shuffle[b.address] ?? 1));
+  }, [people, beacons, journals, fresh, shuffle]);
   // Nobody pressed: the line is whoever is logging, or else whoever logged
   // last. A face pressed: the line is theirs, the rest of the row dims, and
   // their doors open under it; pressed again, it all closes.
@@ -425,7 +495,9 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
   if (open && open !== doorsFor) setDoorsFor(open);
   const doorsWho = doorsFor ? lineup.find(f => f.address === doorsFor) || null : null;
 
-  const faceOf = (address, size) => (
+  // New, when something of theirs waits: the app's one mark (the brief, "the
+  // word New on a pill"), tucked under the chin and never across the face.
+  const faceOf = (address, size, waiting = false) => (
     <span className="fr-ring" aria-hidden="true">
       <span className="fr-face">
         <User size={size} weight="regular" />
@@ -436,6 +508,7 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
           onError={e => { e.currentTarget.style.display = 'none'; }}
         />
       </span>
+      {waiting && <span className="ln-new ln-new--face">New</span>}
     </span>
   );
 
@@ -533,65 +606,172 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
   const namedNow = named.term === typedNow ? named.journals : [];
   const stillNaming = Boolean(DIRECTORY_URL) && typedNow.length >= 2 && !looksLikeAddress && named.term !== typedNow;
 
-  // ── See all ─────────────────────────────────────────────────────────────
-  // The whole book, searchable, opened under the line and pushing the wall
-  // down (Miyel, 2026-10-24). Drawn the first time it is asked for and kept,
-  // so it opens and closes rather than appearing.
-  const [allOpen, setAllOpen] = useState(false);
-  const [allSeen, setAllSeen] = useState(false);
-  const onBook = useCallback(() => readBook(), [readBook]);
+  // ── The drawer, 2026-10-27 ──────────────────────────────────────────────
+  // The row is the drawer, closed (Miyel's Friends brief): All under it, or
+  // a finger dragged down it, opens the same faces into every face, five
+  // across, in place, and pushes the wall down; Close puts them back. The
+  // row's height and each face travel from where they were to where they
+  // land, so nothing appears or vanishes. Find opens it with a name field,
+  // and closing it puts the field away.
+  const [drawer, setDrawer] = useState(false);
+  const [finding, setFinding] = useState(false);
+  const [sought, setSought] = useState('');
+  const rowRef = useRef(null);
+  const wasLaid = useRef(null);
+  // Where the row and each face stood, read just before the drawer moves.
+  const markWhereTheyStand = () => {
+    const row = rowRef.current;
+    if (!row) return;
+    const faces = new Map();
+    for (const one of row.children) faces.set(one.dataset.address, one.getBoundingClientRect());
+    wasLaid.current = { height: row.offsetHeight, faces };
+  };
+  const setDrawerTo = next => {
+    if (next === drawer) return;
+    markWhereTheyStand();
+    setDrawer(next);
+    if (!next) { setFinding(false); setSought(''); }
+  };
+  useLayoutEffect(() => {
+    const row = rowRef.current;
+    const was = wasLaid.current;
+    wasLaid.current = null;
+    if (!row || !was || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const timing = { duration: DRAWER_MS, easing: DRAWER_EASE };
+    row.animate([{ height: `${was.height}px` }, { height: `${row.offsetHeight}px` }], timing);
+    for (const one of row.children) {
+      const from = was.faces.get(one.dataset.address);
+      if (!from) continue;
+      const to = one.getBoundingClientRect();
+      const dx = from.left - to.left;
+      const dy = from.top - to.top;
+      if (dx || dy) one.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'none' }], timing);
+    }
+  }, [drawer]);
+  // A finger dragged down the closed row opens it, as the brief's pull does;
+  // sideways, the row only scrolls.
+  const pull = useRef(null);
+  const onRowTouchStart = e => {
+    pull.current = !drawer && e.touches.length === 1 ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : null;
+  };
+  const onRowTouchMove = e => {
+    const from = pull.current;
+    if (!from) return;
+    const dx = e.touches[0].clientX - from.x;
+    const dy = e.touches[0].clientY - from.y;
+    if (Math.abs(dx) > PULL_OPENS) { pull.current = null; return; }
+    if (dy > PULL_OPENS && dy > Math.abs(dx) * 1.5) { pull.current = null; setDrawerTo(true); }
+  };
 
   const pressFace = address => {
     if (adding) stopAdding();
     setOpen(o => (o === address ? null : address));
   };
 
-  const acts = (
-    <div className="ps-acts">
-      <button
-        type="button"
-        className={'ps-act ps-act--add' + (adding ? ' ps-act--shut' : '')}
-        onClick={() => { if (adding) stopAdding(); else { setAdding(true); setSaid(''); } }}
-        aria-expanded={adding}
-        aria-label={adding ? 'Never mind' : 'Add a journal'}
-      >
-        <Plus size={12} weight="bold" aria-hidden="true" />
-        Add
-      </button>
-      {people && people.length > 0 && (
+  // ── Your friends, and three glyphs ──────────────────────────────────────
+  // Each a glyph over its word, as the top row's stops are; underlined while
+  // what it opens is open. Find only past FIND_PAST, and Ticket hands out
+  // the invitation until the ticket's own brief says what it unrolls.
+  const canFind = (people?.length || 0) > FIND_PAST;
+  const head = (
+    <div className="ps-head">
+      <h2 className="ps-head-said">Your friends</h2>
+      <div className="ps-glyphs">
         <button
           type="button"
-          className={'ps-act ps-act--all' + (allOpen ? ' ps-act--on' : '')}
-          onClick={() => { setAllSeen(true); setAllOpen(o => !o); }}
-          aria-expanded={allOpen}
+          className={'ps-glyph' + (adding ? ' ps-glyph--on' : '')}
+          onClick={() => { if (adding) stopAdding(); else { setAdding(true); setSaid(''); } }}
+          aria-expanded={adding}
+          aria-label={adding ? 'Never mind' : 'Add a journal'}
         >
-          See all
-          <CaretDown size={10} weight="bold" aria-hidden="true" />
+          <UserPlus size={20} weight="regular" aria-hidden="true" />
+          <span className="ps-glyph-word">Add</span>
         </button>
-      )}
+        {canFind && (
+          <button
+            type="button"
+            className={'ps-glyph' + (finding ? ' ps-glyph--on' : '')}
+            onClick={() => {
+              if (finding) { setFinding(false); setSought(''); return; }
+              setFinding(true);
+              setDrawerTo(true);
+            }}
+            aria-expanded={finding}
+            aria-label="Find one of your friends"
+          >
+            <MagnifyingGlass size={20} weight="regular" aria-hidden="true" />
+            <span className="ps-glyph-word">Find</span>
+          </button>
+        )}
+        <button
+          type="button"
+          className="ps-glyph"
+          onClick={() => setInviting(true)}
+          aria-label="Invite someone"
+        >
+          <Ticket size={20} weight="regular" aria-hidden="true" />
+          <span className="ps-glyph-word">Ticket</span>
+        </button>
+      </div>
     </div>
   );
 
+  const soughtNow = foldForSearch(sought.trim());
+  const shown = finding && soughtNow ? lineup.filter(f => foldForSearch(f.name).includes(soughtNow)) : lineup;
   const row = lineup.length > 0 ? (
-    <div className={'ps-row' + (opened && !adding ? ' ps-row--open' : '')}>
-      {lineup.map(f => {
+    <div
+      ref={rowRef}
+      className={'ps-row' + (drawer ? ' ps-row--drawer' : '') + (opened && !adding ? ' ps-row--open' : '')}
+      onTouchStart={onRowTouchStart}
+      onTouchMove={onRowTouchMove}
+    >
+      {shown.map(f => {
         const isOpen = Boolean(!adding && opened && f.address === opened.address);
         return (
           <button
             key={f.address}
+            data-address={f.address}
             type="button"
-            className={'fr-live-one ps-row-one' + (f.live ? ' ps-row-one--live' : '') + (isOpen ? ' ps-row-one--open' : '')}
+            className={'fr-live-one ps-row-one' + (f.live ? ' ps-row-one--live' : '') + (f.waiting ? ' ps-row-one--new' : '') + (isOpen ? ' ps-row-one--open' : '')}
             onClick={() => pressFace(f.address)}
             aria-expanded={isOpen}
-            aria-label={f.live ? `${f.name}, logging` : f.name}
+            aria-label={[f.name, f.live && 'logging', f.waiting && 'something new'].filter(Boolean).join(', ')}
           >
-            {faceOf(f.address, 20)}
+            {faceOf(f.address, 20, f.waiting)}
             <span className="fr-live-name">{f.name}</span>
           </button>
         );
       })}
     </div>
   ) : null;
+  // Find's field, at the head of the open drawer.
+  const findHere = finding ? (
+    <label className="dir-search ps-find">
+      <MagnifyingGlass size={14} weight="regular" aria-hidden="true" />
+      <input
+        value={sought}
+        onChange={e => setSought(e.target.value)}
+        placeholder="Start typing a name"
+        aria-label="Find one of your friends by name"
+        autoComplete="off"
+        spellCheck={false}
+      />
+    </label>
+  ) : null;
+  // All, under the closed row; Close, under the open one.
+  const drawerDoor = lineup.length > 0 ? (
+    <button
+      type="button"
+      className={'ps-pull' + (drawer ? ' ps-pull--open' : '')}
+      onClick={() => setDrawerTo(!drawer)}
+      aria-expanded={drawer}
+      aria-label={drawer ? 'Close your friends' : 'All your friends'}
+    >
+      <CaretDown size={10} weight="bold" aria-hidden="true" />
+      {drawer ? 'Close' : 'All'}
+    </button>
+  ) : null;
+  const nobodyFound = finding && soughtNow && shown.length === 0;
 
   // The one line: a small cover, the name, what, and when. It opens the
   // entry their beacon names, or their journal.
@@ -707,15 +887,6 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
             </button>
           )}
         </label>
-        <button
-          type="button"
-          className="fr-give"
-          onClick={() => setInviting(true)}
-          aria-label="Invite someone"
-          title="Invite someone"
-        >
-          <Ticket size={18} weight="regular" aria-hidden="true" />
-        </button>
       </div>
       {namedNow.length > 0 && (
         <div className="ps-found ps-add-found">
@@ -751,22 +922,22 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
     </div>
   ) : null;
 
+  // The line, where Headlines will stand; Your friends and its glyphs; what
+  // Add unrolls under them; the drawer, with Find's field at its head; All or
+  // Close; and the doors of whoever is open.
   const top = people ? (
     <div className="ps-top">
-      {acts}
-      {row}
-      {said && <p className="ps-said" role="status">{said}</p>}
-      {adding ? addHere : (
-        <>
-          {strip}
-          {doors}
-        </>
-      )}
-      <div className={'ps-all' + (allOpen ? ' ps-all--open' : '')} inert={allOpen ? undefined : true}>
-        <div className="ps-all-in">
-          {allSeen && <Friends inPeople onBook={onBook} />}
-        </div>
+      {strip}
+      {head}
+      <div className={'ps-unroll' + (adding ? ' ps-unroll--open' : '')} inert={adding ? undefined : true}>
+        <div className="ps-unroll-in">{addHere}</div>
       </div>
+      {findHere}
+      {nobodyFound && <p className="ps-said">Nobody by that name.</p>}
+      {row}
+      {drawerDoor}
+      {said && <p className="ps-said" role="status">{said}</p>}
+      {doors}
       {scanning && <CodeScanner onRead={text => { setScanning(false); file(text); }} onClose={() => setScanning(false)} />}
       <SendSheet open={Boolean(sendingTo)} person={sendingTo} onClose={() => setSendingTo(null)} />
       <InviteSheet open={inviting} onClose={() => setInviting(false)} />

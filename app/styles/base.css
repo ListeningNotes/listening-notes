@@ -687,6 +687,19 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 .ln-word:disabled { opacity: 0.45; cursor: default; }
 .ln-word:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; }
 
+/* ── New, 2026-10-27 ─────────────────────────────────────────────────────────
+   The one mark for the whole app (Miyel's Friends brief): the word New on a
+   pill, and never a dot, a ring, a folded corner or a number. A label, not
+   a control — the one pill the site allows. Inverted here; each place it
+   stands (a face, a record, a stop) sets where and on what. */
+.ln-new {
+  display: inline-flex; align-items: center;
+  padding: 3px 6px 2px; border-radius: 999px;
+  font-family: var(--font-label); font-size: 8px; line-height: 1;
+  letter-spacing: 0.11em; text-transform: uppercase; white-space: nowrap;
+  background: var(--ink); color: var(--bg);
+}
+
 /* ── The brow ───────────────────────────────────────────────────────────────
    The phone's status bar, as a band of the page's colour that everything
    scrolls under (app/layout.js). Fixed over every sheet and bar the site
