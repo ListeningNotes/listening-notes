@@ -125,7 +125,8 @@ at the foot of the card.
 part of the frame, not of home ("follow each page"). Where a page has its own
 bar at the foot — a correction, the print bar, an open sheet — it steps down:
 one row at the foot at a time. Phone first; the desk keeps its two pages until
-she has seen the phone (her call).
+she has seen the phone (her call). Not on a friend's page, 2026-10-26: it is
+laid out as their home, and the bar read as a listen on their journal.
 
 **The cross is one route, not two.** A swipe that navigated would unmount the
 pane being left and lose its scroll. The gesture has to be continuous and

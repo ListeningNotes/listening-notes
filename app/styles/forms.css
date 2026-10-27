@@ -2560,9 +2560,8 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 /* The wall, past the narrow column, and what sits under its last row. */
 .pn-wall { padding-bottom: 40px; }
 /* On a phone the wall's line leads the wall and sticks under the header as
-   you read down, as home's and People's do — the foot of the screen is the
-   Listen bar's. Over the journal the header scrolls away with the sheet, so
-   the line sticks to the sheet's top. */
+   you read down, as home's and People's do. Over the journal the header
+   scrolls away with the sheet, so the line sticks to the sheet's top. */
 @media (max-width: 768px) {
   .pn-wall .arc-bar-wrap {
     order: -1;
@@ -2572,8 +2571,9 @@ textarea.st-field { resize: vertical; min-height: 96px; }
     background: var(--bg);
   }
   .pn-wall .arc-bar { border-top: 0; }
-  /* Remove, the last thing, clears the Listen bar at the foot. */
-  .pn-wall { padding-bottom: 140px; }
+  /* No Listen bar under a friend's page (ListenBar.js); Remove, the last
+     thing, clears the home indicator. */
+  .pn-wall { padding-bottom: calc(40px + env(safe-area-inset-bottom, 0px)); }
 }
 .pn-foot { max-width: 720px; margin: 0 auto; padding: 28px 24px 0; display: flex; flex-direction: column; gap: 18px; }
 .pn-quiet { margin: 0; padding-top: 12px; border-top: 1px solid var(--border); }
