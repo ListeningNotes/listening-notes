@@ -38,8 +38,8 @@
 //
 // The row carries Compare and Added — no Wave for somebody already added,
 // her call — and the foot of the wall carries what you have sent them that
-// is still out (the inbox's Sent door, for one person) and Remove. Pin went,
-// her call.
+// is still out (the inbox's Sent door, for one person), Keep private and
+// Remove. Pin went, her call.
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
@@ -54,6 +54,7 @@ import { fillFriends, useFriendsBeacons } from '../../../../hooks/useFriendsBeac
 import { carrySender, journalUrl, tidyJournal } from '../../../../library/return_address';
 import { useBookplate } from '../../../../components/main_components/Bookplate';
 import { arrivingBack } from '../../../../library/handoff';
+import { DIRECTORY_URL } from '../../../../library/version';
 
 // Half a star, after the offset, is the same opinion typed slightly
 // differently. Four stars or better is a hit: something they sent that you
@@ -338,6 +339,15 @@ export default function PersonPage({ layered = false }) {
       || album.notes.some(n => foldForSearch(n.song).includes(q))),
   }), [name]);
 
+  async function keepPrivate() {
+    const to = !person.private;
+    setPerson(p => ({ ...p, private: to }));
+    const r = await fetch(`/api/people/${person.id}`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ private: to }),
+    }).catch(() => null);
+    if (!r?.ok) setPerson(p => ({ ...p, private: !to }));
+  }
+
   async function remove() {
     if (!sure) { setSure(true); return; }
     setRemoving(true);
@@ -371,6 +381,21 @@ export default function PersonPage({ layered = false }) {
         <div className="pn-foot">
           <SentList journal={person.address} title={`Still out with ${name}`} />
           <p className="pn-quiet">
+            {/* Keep private moved here from under their face, 2026-10-27:
+                the face is for what they sent, this page for them. */}
+            {DIRECTORY_URL && (
+              <button
+                type="button"
+                className={'pn-quiet-act' + (person.private ? ' pn-quiet-act--on' : '')}
+                onClick={keepPrivate}
+                aria-pressed={Boolean(person.private)}
+                title={person.private
+                  ? `${name} stays off everyone's board but yours. Press to share them again.`
+                  : `Keep ${name} off everyone's board but yours`}
+              >
+                {person.private ? 'Kept private' : 'Keep private'}
+              </button>
+            )}
             <button
               type="button"
               className={'pn-quiet-act' + (sure ? ' pn-quiet-act--sure' : '')}

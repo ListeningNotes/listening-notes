@@ -22,8 +22,9 @@
 // ── The same presses the band had ─────────────────────────────────────────
 // A glyph moves the rail exactly as a swipe does (HomeNav, goTo). The one you
 // are already on goes back to the top of the floor you are on, and twice to
-// its first screen (goBack). Inbox wears one dot while something there is new
-// — never a number (DECISIONS).
+// its first screen (goBack). A stop wears New while something there is new
+// — the app's one mark since 2026-10-27, where Inbox wore a dot; never a
+// number (DECISIONS).
 //
 // ── A visitor's row ───────────────────────────────────────────────────────
 // Their face and the light switch, and the LN. mark where a keeper's words
@@ -46,7 +47,7 @@ import { Envelope, House, User, Users } from '@phosphor-icons/react';
 import { useBookplate } from './Bookplate';
 
 export default function Header({
-  pane, stops, goTo, onHere = null, onFace, cardOpen = false, fresh = false, lights = null, mark = null,
+  pane, stops, goTo, onHere = null, onFace, cardOpen = false, news = {}, lights = null, mark = null,
 }) {
   const { portrait_url: portrait, keeper_name, cover_name } = useBookplate();
   const whose = keeper_name || cover_name;
@@ -72,7 +73,7 @@ export default function Header({
           {stops.map(stop => {
             const here = pane === stop.at;
             const Icon = GLYPHS[stop.key];
-            const lit = stop.key === 'inbox' && fresh;
+            const lit = news[stop.key] === true;
             return (
               <button
                 key={stop.key}
@@ -84,7 +85,7 @@ export default function Header({
               >
                 <span className="hdr-glyph">
                   <Icon size={19} weight="regular" aria-hidden="true" />
-                  {lit && <span className="hdr-dot" aria-hidden="true" />}
+                  {lit && <span className="ln-new ln-new--stop" aria-hidden="true">New</span>}
                 </span>
                 {here && <span className="hdr-word" aria-hidden="true">{stop.word}</span>}
               </button>

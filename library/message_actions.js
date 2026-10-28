@@ -96,8 +96,16 @@ export async function pull_messages() {
 // where a reply goes (app/api/outbox/route.js).
 // Whether a message — a person's, or an LN. Admin letter — has not been
 // opened yet (app/api/waiting, 2026-10-20).
+// Somebody's words not opened yet — not a letter, which is pinned on home
+// and not anybody's to wait on a face (2026-10-27).
 export async function any_unseen_messages() {
-  const [row] = await database`SELECT EXISTS (SELECT 1 FROM messages WHERE seen_at IS NULL) AS any`;
+  const [row] = await database`SELECT EXISTS (SELECT 1 FROM messages WHERE seen_at IS NULL AND NOT admin) AS any`;
+  return row?.any === true;
+}
+
+// An LN. Admin letter not read yet.
+export async function any_unseen_letter() {
+  const [row] = await database`SELECT EXISTS (SELECT 1 FROM messages WHERE seen_at IS NULL AND admin) AS any`;
   return row?.any === true;
 }
 

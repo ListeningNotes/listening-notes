@@ -8,37 +8,40 @@
 // from a person waits on that person's face, and pressing the face opens it
 // in place. Each thing names itself — Wrote, Sent you, Waved, Arrived,
 // Moved — beside New while it has not been seen, and carries only its own
-// answers:
+// answers, each a glyph over its word, as every door on the site is:
 //
-//   Wrote      Write back · Keep only      (a message never has Let it go:
+//   Wrote      Reply · Words · Keep        (a message never has Dismiss:
 //                                           nothing a person typed is
-//                                           destroyed; Keep only closes it
+//                                           destroyed; Keep closes it
 //                                           without a reply, migrations/043)
-//   Sent you   Log it · Already have · Let it go
-//   Waved      Wave back · Let it go
+//   Sent you   Listen · Dismiss            (her call, 2026-10-27)
+//   Waved      Wave back · Dismiss         (the same)
 //   Arrived    nothing — it passes once it has been seen
-//   Moved      Update the address
+//   Moved      Update
 //
-// The brief's Open the chain is Words (step four); until then a message is
-// answered as the inbox answers it. Moved has no Let it go: their journal
-// goes on saying it moved, so the friends round would only write it back.
+// Moved has no Dismiss: their journal goes on saying it moved, so the
+// friends round would only write it back.
+//
+// Only what is waiting, and nothing about the person (her review of the
+// first version, 2026-10-27: two things that "don't overlap well"). Their
+// name at the head goes to their journal page, where Keep private and
+// Remove now live.
 //
 // Every answer is the inbox's own route, and does what the inbox does with
-// it, so the two agree until the inbox retires (the last step) — Log it
-// keeps a listen already open with writing in it, as the inbox's Listen
-// does, and Already have is offered only where this journal already holds
-// that record, which it points the send at.
+// it — Listen keeps a listen already open with writing in it, as the
+// inbox's Listen does.
 //
-// The faces hold what was sent you; what friends did is the line's, and will
-// be Headlines' (step three). The brief's rule, and what stops this page
-// becoming an inbox again.
+// The faces hold what was sent you; what friends did is Headlines'. The
+// brief's rule, and what stops this page becoming an inbox again.
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { HandWaving, Signpost } from '@phosphor-icons/react';
+import {
+  ArrowBendUpLeft, BookmarkSimple, CaretRight, ChatsCircle, HandWaving, Headphones, Signpost, X,
+} from '@phosphor-icons/react';
 import MessageForm from './Slug_Page/MessageForm';
 import { since } from './Friends';
-import { foldForSearch } from './Journal';
 import { lookup_key } from '../../library/entry_formatter';
 import { TRACK_NOTE_KEY } from '../../hooks/useListeningSession';
 import { tidyJournal } from '../../library/return_address';
@@ -46,7 +49,7 @@ import { tidyJournal } from '../../library/return_address';
 const KIND_WORD = { wrote: 'Wrote', sent: 'Sent you', waved: 'Waved', arrived: 'Arrived', moved: 'Moved' };
 
 // When, said short: the relative words while it is recent, the day after.
-function when(iso) {
+export function when(iso) {
   if (!iso) return '';
   const near = since(iso);
   if (near) return near;
@@ -157,13 +160,36 @@ async function keepOpenListen(held) {
   try { localStorage.removeItem('ln_session_draft'); } catch { /* storage off */ }
 }
 
+// One answer: a glyph over its word, as the site's doors are.
+function Door({ icon: Icon, word, onClick, href, disabled = false, open, label }) {
+  const inner = (
+    <>
+      <Icon size={20} weight="regular" aria-hidden="true" />
+      <span className="fp-door-word">{word}</span>
+    </>
+  );
+  if (href) return <Link className="fp-door" href={href} aria-label={label}>{inner}</Link>;
+  return (
+    <button
+      type="button"
+      className={'fp-door' + (open ? ' fp-door--on' : '')}
+      onClick={onClick}
+      disabled={disabled}
+      aria-expanded={open}
+      aria-label={label}
+    >
+      {inner}
+    </button>
+  );
+}
+
 // `person` is the book's row and `name` what they are called; `items` is
 // waitingFrom's list and `newHere` the keys that were new as the face
-// opened, which keep New while it is open. `entries` are this journal's own
-// records, for Already have; `there` builds a link onto their journal;
-// `onAnswered(kind, row, change)` tells the screen what to change in its
-// lists, and `onMoved` that the book needs reading again.
-export default function FriendPanel({ person, name, items, newHere, entries = [], there, onAnswered, onMoved }) {
+// opened, which keep New while it is open. `there` builds a link onto their
+// journal; `onAnswered(kind, row, change)` tells the screen what to change
+// in its lists, and `onMoved` that the book needs reading again. `face` is
+// their face as the row draws it.
+export default function FriendPanel({ person, name, items, newHere, there, onAnswered, onMoved, face = null }) {
   const router = useRouter();
   const who = name || 'They';
   // One thing at a time is being answered: its key, and what it says back.
@@ -253,26 +279,11 @@ export default function FriendPanel({ person, name, items, newHere, entries = []
     await logIt(item.row);
     setBusy('');
   };
-  // This journal's own record of what was sent, by its key or its name.
-  const alreadyHere = row => {
-    if (row.song) return null;
-    const key = foldForSearch(`${row.album}|${row.artist || ''}`);
-    return entries.find(e => !e.song && e.id && foldForSearch(`${e.album}|${e.artist || ''}`) === key) || null;
-  };
-  const alreadyHave = async (item, entry) => {
-    setBusy(item.key);
-    const r = await fetch(`/api/submissions/${item.row.id}`, {
-      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ entry_id: entry.id }),
-    }).catch(() => null);
-    setBusy('');
-    if (!r?.ok) { say(item.key, 'That could not be marked just now. Try again.'); return; }
-    onAnswered('sent', item.row, { status: 'logged' });
-  };
-  const letSendGo = async (item) => {
+  const dismissSend = async (item) => {
     setBusy(item.key);
     const ok = await status(item.row, 'dismissed');
     setBusy('');
-    if (!ok) { say(item.key, 'That could not be let go just now. Try again.'); return; }
+    if (!ok) { say(item.key, 'That could not be dismissed just now. Try again.'); return; }
     onAnswered('sent', item.row, { status: 'dismissed' });
   };
 
@@ -314,13 +325,13 @@ export default function FriendPanel({ person, name, items, newHere, entries = []
     if (!r?.ok || !d?.ok) { say(item.key, d?.error || 'The wave did not reach them. Try again.'); return; }
     onAnswered('waved', item.row, null);
   };
-  const letWaveGo = async (item) => {
+  const dismissWave = async (item) => {
     setBusy(item.key);
     const r = await fetch('/api/waves', {
       method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: item.row.id }),
     }).catch(() => null);
     setBusy('');
-    if (!r?.ok) { say(item.key, 'That could not be let go just now. Try again.'); return; }
+    if (!r?.ok) { say(item.key, 'That could not be dismissed just now. Try again.'); return; }
     onAnswered('waved', item.row, null);
   };
 
@@ -336,9 +347,17 @@ export default function FriendPanel({ person, name, items, newHere, entries = []
   };
 
   if (items.length === 0) return null;
+  const page = `/dashboard/people/${person.id}`;
 
   return (
     <div className="fp">
+      {/* Who it is from, going to their journal page: the brief's "pressing
+          the person's name or face inside this panel". */}
+      <Link className="fp-who" href={page} aria-label={`${who}’s journal`}>
+        {face}
+        <span className="fp-who-name">{who}</span>
+        <CaretRight size={12} weight="bold" aria-hidden="true" />
+      </Link>
       {items.map(item => {
         const { kind, row, key } = item;
         const isNew = item.unseen || newHere?.has(key);
@@ -373,7 +392,10 @@ export default function FriendPanel({ person, name, items, newHere, entries = []
           title = `${who} moved`;
           sub = 'Their journal lives somewhere new';
         }
-        const match = kind === 'sent' ? alreadyHere(row) : null;
+        // Words about a record they wrote on: the record's chain, with them.
+        const words = kind === 'wrote' && row.about_slug
+          ? `${page}/words#${encodeURIComponent(`${tidyJournal(row.about_journal) || ''}/${row.about_slug}`)}`
+          : '';
         return (
           <div key={key} className="fp-one">
             {link ? <a href={link} target="_blank" rel="noopener noreferrer" className="fp-art-link">{cover}</a> : cover}
@@ -389,27 +411,27 @@ export default function FriendPanel({ person, name, items, newHere, entries = []
               {sub && <span className="fp-sub">{sub}</span>}
 
               {kind === 'wrote' && (
-                <div className="fp-acts">
-                  <button type="button" className="fp-act fp-act--first" onClick={() => setWriting(w => (w === key ? '' : key))} aria-expanded={writing === key}>Write back</button>
-                  <button type="button" className="fp-act" onClick={() => keepOnly(item)} disabled={doing}>Keep only</button>
+                <div className="fp-doors">
+                  <Door icon={ArrowBendUpLeft} word="Reply" open={writing === key} onClick={() => setWriting(w => (w === key ? '' : key))} label={`Reply to ${who}`} />
+                  {words && <Door icon={ChatsCircle} word="Words" href={words} label={`All the words with ${who} about this record`} />}
+                  <Door icon={BookmarkSimple} word="Keep" onClick={() => keepOnly(item)} disabled={doing} label="Keep it without a reply" />
                 </div>
               )}
               {kind === 'sent' && (
-                <div className="fp-acts">
-                  <button type="button" className="fp-act fp-act--first" onClick={() => startLog(item)} disabled={doing}>Log it</button>
-                  {match && <button type="button" className="fp-act" onClick={() => alreadyHave(item, match)} disabled={doing}>Already have</button>}
-                  <button type="button" className="fp-act" onClick={() => letSendGo(item)} disabled={doing}>Let it go</button>
+                <div className="fp-doors">
+                  <Door icon={Headphones} word="Listen" onClick={() => startLog(item)} disabled={doing} label={`Listen to ${title}`} />
+                  <Door icon={X} word="Dismiss" onClick={() => dismissSend(item)} disabled={doing} />
                 </div>
               )}
               {kind === 'waved' && (
-                <div className="fp-acts">
-                  <button type="button" className="fp-act fp-act--first" onClick={() => waveBack(item)} disabled={doing}>Wave back</button>
-                  <button type="button" className="fp-act" onClick={() => letWaveGo(item)} disabled={doing}>Let it go</button>
+                <div className="fp-doors">
+                  <Door icon={HandWaving} word="Wave back" onClick={() => waveBack(item)} disabled={doing} />
+                  <Door icon={X} word="Dismiss" onClick={() => dismissWave(item)} disabled={doing} />
                 </div>
               )}
               {kind === 'moved' && (
-                <div className="fp-acts">
-                  <button type="button" className="fp-act fp-act--first" onClick={() => takeMove(item)} disabled={doing}>Update the address</button>
+                <div className="fp-doors">
+                  <Door icon={Signpost} word="Update" onClick={() => takeMove(item)} disabled={doing} label="Update their address" />
                 </div>
               )}
 
@@ -430,7 +452,7 @@ export default function FriendPanel({ person, name, items, newHere, entries = []
                     draftKey={`reply-${row.id}`}
                     label={`Your reply to ${who}`}
                     placeholder={`Reply to ${who}`}
-                    send={words => writeBack(row, words)}
+                    send={words2 => writeBack(row, words2)}
                     onSent={() => setWriting('')}
                     onLeave={() => setWriting('')}
                   />

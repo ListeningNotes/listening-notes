@@ -9,7 +9,7 @@
 // lives because they were out.
 
 import { requireWristband } from '@/library/wristband';
-import { pull_people, save_person, ask_journal_name } from '@/library/people_actions';
+import { pull_people, save_person, ask_journal_name, pull_seen_records, see_records } from '@/library/people_actions';
 import { tidyJournal } from '@/library/return_address';
 import { pull_own_addresses } from '@/library/settings_actions';
 
@@ -23,7 +23,10 @@ export async function GET(request) {
     // it lived (2026-10-21), for the feed to know this journal's own sends
     // when they come back — the keeper's to know, so here and not on a page.
     const own = await pull_own_addresses().catch(() => []);
-    return Response.json({ people, own });
+    // And the friends' records already seen, for New on the Friends wall
+    // (2026-10-27): a fortnight's worth, as `journal/slug`.
+    const seen = await pull_seen_records().catch(() => []);
+    return Response.json({ people, own, seen });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
@@ -53,6 +56,22 @@ export async function POST(request) {
     const name = await ask_journal_name(address);
     const person = await save_person({ address, name });
     return Response.json({ person, reached: name !== null, fresh });
+  } catch (error) {
+    return Response.json({ error: error.message }, { status: 500 });
+  }
+}
+
+// ── Seen, 2026-10-27 ────────────────────────────────────────────────────────
+// The Friends wall telling this copy which of the friends' records have
+// scrolled past, so they stop saying New: `{ seen: [{ journal, slug }] }`.
+// Kept here and sent nowhere (migrations/044_seen_records.sql).
+export async function PATCH(request) {
+  const blocked = await requireWristband(request);
+  if (blocked) return blocked;
+  try {
+    const body = await request.json().catch(() => ({}));
+    const marked = await see_records(body?.seen);
+    return Response.json({ ok: true, marked });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

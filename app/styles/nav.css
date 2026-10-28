@@ -3203,7 +3203,14 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .hdr-stop:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: -2px; border-radius: 8px; }
   .hdr-glyph { position: relative; display: inline-flex; }
   /* The inbox's dot, the band's own: never a number. */
-  .hdr-dot { position: absolute; top: -2px; right: -5px; width: 6px; height: 6px; border-radius: 999px; background: var(--ink); }
+  /* New on a stop, above and right of its glyph, smaller than anywhere
+     else (her Friends brief); it was a dot until 2026-10-27. */
+  .ln-new--stop {
+    position: absolute; top: -7px; left: calc(100% - 7px);
+    padding: 2px 4px 1px; font-size: 6.5px;
+    box-shadow: 0 0 0 1.5px var(--bg);
+    pointer-events: none;
+  }
   /* The lit word: the label face, underlined — .ln-word's on-state. */
   .hdr-word {
     font-family: var(--font-label); font-size: 9px; line-height: 1;

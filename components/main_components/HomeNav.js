@@ -742,7 +742,7 @@ export default function HomeNav() {
     wasHere.current = { pane, path };
     inInbox.current = pane === INBOX;
     if (!authed) return;
-    if ((was.pane === INBOX && pane !== INBOX) || (was.path !== path && path === '/')) askWaiting();
+    if ((was.pane === INBOX && pane !== INBOX) || (was.pane === BOOK && pane !== BOOK) || (was.path !== path && path === '/')) askWaiting();
   }, [pane, path, authed, askWaiting]);
   // ── A room is built the first time you walk into it ───────────────────────
   // The card and the beacon are always drawn: you land on one and the other is
@@ -1672,7 +1672,7 @@ export default function HomeNav() {
         goTo={goTo}
         onHere={goBack}
         onFace={() => setCardOpen(open => !open)}
-        fresh={Boolean(waiting?.fresh)}
+        news={{ people: waiting?.friends === true, inbox: waiting?.fresh === true }}
         lights={lights}
         mark={mark('hdr-mark-svg')}
       />

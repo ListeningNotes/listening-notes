@@ -217,3 +217,38 @@ export async function ask_journal_name(address, wait = 6000) {
     return null;
   }
 }
+
+// ── What has been seen on the Friends wall, 2026-10-27 ────────────────────
+// A friend's record says New for this long after it was logged, until it
+// scrolls past (migrations/044_seen_records.sql). Older than this it is not
+// new whether or not it was seen, so a row past it is no use and goes.
+export const NEW_FOR_DAYS = 14;
+
+// The entries seen within the window, as `journal/slug`.
+export async function pull_seen_records() {
+  const rows = await database`
+    SELECT journal, slug FROM seen_records
+    WHERE seen_at > now() - make_interval(days => ${NEW_FOR_DAYS})
+  `;
+  return rows.map(r => `${r.journal}/${r.slug}`);
+}
+
+// Marks some entries seen, each `{ journal, slug }`, and lets go of rows
+// too old to matter. A hundred at most a time: a wall scrolled past in one
+// go is still one press's worth.
+export async function see_records(list) {
+  const rows = (Array.isArray(list) ? list : [])
+    .map(r => ({ journal: tidyJournal(r?.journal), slug: String(r?.slug || '').trim().slice(0, 200) }))
+    .filter(r => r.journal && r.slug)
+    .slice(0, 100);
+  if (rows.length === 0) return 0;
+  await database.transaction(tx => [
+    tx`
+      INSERT INTO seen_records (journal, slug)
+      SELECT * FROM UNNEST(${rows.map(r => r.journal)}::text[], ${rows.map(r => r.slug)}::text[])
+      ON CONFLICT (journal, slug) DO NOTHING
+    `,
+    tx`DELETE FROM seen_records WHERE seen_at < now() - make_interval(days => ${NEW_FOR_DAYS})`,
+  ]);
+  return rows.length;
+}

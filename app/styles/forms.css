@@ -1837,6 +1837,13 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 /* New on a face (Miyel's Friends brief, 2026-10-27): the app's mark tucked
    under the chin, over the circle's lower edge, ringed in the page's colour
    so it reads against any photograph — never across the face. */
+/* New on a record: paper on the cover, bottom left, 6px in — bottom
+   because sleeves print their type at the top (the brief). */
+.ln-new--tile {
+  position: absolute; z-index: 1; left: 6px; bottom: 6px;
+  background: var(--bg); color: var(--ink);
+  pointer-events: none;
+}
 .ln-new--face {
   position: absolute; z-index: 2; left: 50%; bottom: -6px;
   transform: translateX(-50%);
@@ -2287,9 +2294,9 @@ textarea.st-field { resize: vertical; min-height: 96px; }
    signpost, in a circle), then New and what it is in the label face, the
    record or the words, the small line, and its answers as words — the
    first in ink. A hairline between each, and above the quiet line. */
-.fp { display: flex; flex-direction: column; padding-top: 10px; }
+.fp { display: flex; flex-direction: column; padding-top: 12px; border-top: 1px solid var(--border); margin-top: 6px; }
 .fp-one { display: flex; align-items: flex-start; gap: 14px; padding: 16px 0; border-top: 1px solid var(--border); }
-.fp-one:first-child { border-top: 0; padding-top: 8px; }
+.fp-who + .fp-one { border-top: 0; padding-top: 10px; }
 .fp-art-link { flex: 0 0 auto; display: block; border-radius: 8px; -webkit-tap-highlight-color: transparent; }
 .fp-art {
   flex: 0 0 auto; width: 60px; height: 60px; border-radius: 8px; overflow: hidden;
@@ -2326,6 +2333,37 @@ textarea.st-field { resize: vertical; min-height: 96px; }
   font-family: var(--font-label); font-size: 9px; line-height: 1.4;
   letter-spacing: 0.11em; text-transform: uppercase; color: var(--ink-faint);
 }
+/* Who it is from, at the head: their face small and their name, going to
+   their journal page. */
+.fp-who {
+  align-self: flex-start;
+  display: inline-flex; align-items: center; gap: 9px;
+  padding: 4px 0; color: var(--ink); text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.fp-who .fr-ring { width: 28px; flex-shrink: 0; }
+.fp-who-name {
+  font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
+  font-size: 15px; line-height: 1.2;
+}
+.fp-who svg { color: var(--ink-faint); }
+.fp-who:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; border-radius: 6px; }
+/* Its answers: a glyph over one word each, as the site's doors are (her
+   review, 2026-10-27: "i lost the icons"). */
+.fp-doors { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 6px; }
+.fp-door {
+  display: inline-flex; flex-direction: column; align-items: center; gap: 6px;
+  min-width: 34px; padding: 6px 4px; margin: -6px -4px;
+  border: 0; background: none; color: var(--ink-soft); text-decoration: none;
+  font-family: var(--font-label); font-size: 9px; line-height: 1;
+  letter-spacing: 0.11em; text-transform: uppercase; white-space: nowrap;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s;
+}
+.fp-door:hover:not(:disabled), .fp-door--on { color: var(--ink); }
+.fp-door--on .fp-door-word { text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 4px; }
+.fp-door:disabled { opacity: 0.45; cursor: default; }
+.fp-door:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: -2px; border-radius: 8px; }
 .fp-acts { display: flex; flex-wrap: wrap; gap: 2px 20px; margin-top: 2px; }
 .fp-act {
   border: 0; background: none; padding: 6px 0; cursor: pointer;
@@ -2677,7 +2715,7 @@ textarea.st-field { resize: vertical; min-height: 96px; }
   .pn-wall { padding-bottom: calc(40px + env(safe-area-inset-bottom, 0px)); }
 }
 .pn-foot { max-width: 720px; margin: 0 auto; padding: 28px 24px 0; display: flex; flex-direction: column; gap: 18px; }
-.pn-quiet { margin: 0; padding-top: 12px; border-top: 1px solid var(--border); }
+.pn-quiet { margin: 0; padding-top: 12px; border-top: 1px solid var(--border); display: flex; flex-wrap: wrap; gap: 0 22px; }
 .pn-quiet-act {
   border: 0; background: none; padding: 6px 0; cursor: pointer;
   font-family: var(--font-label); font-size: 9px; letter-spacing: 0.11em; text-transform: uppercase;
@@ -2686,6 +2724,7 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 }
 .pn-quiet-act:hover { color: var(--ink-soft); }
 .pn-quiet-act--sure, .pn-quiet-act--sure:hover { color: var(--fav, #f0484f); }
+.pn-quiet-act--on { color: var(--ink-soft); }
 @media (prefers-reduced-motion: reduce) {
   .pn-compare, .pn-compare-in { transition: none; }
 }
