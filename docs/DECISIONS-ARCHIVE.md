@@ -1233,3 +1233,19 @@ friends"). No heading: *Quiet* read as a verdict on a person.
 Replaced 2026-10-27 by her Friends brief's top: Your friends as a heading
 (not a verdict, so the old worry does not reach it), three glyphs over their
 words, and the row as a drawer in place of See all's book.
+
+## A face's first panel, 2026-10-27
+
+Built and rejected the same day. It read, in DECISIONS:
+
+**A face opens onto what waits from them, 2026-10-27 (her Friends brief).**
+Wrote, Sent you, Waved, Arrived, Moved, each with only its own answers; no
+doors — Compare is on their page, Send on the record, Visit leads the quiet
+line. A message never has Let it go: Keep only (`kept_at`). Arrived passes
+once seen; Moved has no Let it go (the friends round writes it back). New
+clears when the face shuts, so it holds still while open.
+
+Her review: pressing a face opened "two functions that dont overlap well" —
+what they sent beside Visit / Keep private / Remove — and the answers had lost
+their icons. Sends became Listen · Dismiss and waves Wave back · Dismiss; the
+person's own doors went to their page.

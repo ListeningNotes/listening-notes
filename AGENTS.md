@@ -314,9 +314,12 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   a letter has, Make a copy; and the month's prompt, checked the same way
   under a seal of its own (`sealed_prompt`, `read_prompt`).
 - `message_actions.js` — the `messages` table: somebody's words to the
-  keeper, kept, listed for the inbox, opened, marked replied to, kept
-  without a reply (`keep_message`, Keep only on a friend's face), and
-  dismissed — which deletes, and takes the comment a message was with it.
+  keeper, kept, listed, opened, marked replied to, kept without a reply
+  (`keep_message`, Keep on a friend's face), and dismissed — which deletes,
+  and takes the comment a message was with it; the LN. Admin letter alone
+  (`pull_letter`, for home); and Words: `said_back`, what the keeper wrote
+  back once it landed (`save_said_back`), both sides with one journal
+  (`pull_words`), and since when this copy kept its side.
 - `migrator.js` — brings the database up to date from `migrations/` on start
   and at build, under a session-level advisory lock, on the direct (unpooled)
   endpoint.
@@ -346,8 +349,12 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   `note_moves`, a friend's journal saying it lives somewhere new, written
   down by the friends round; `take_move`, the keeper's Update, the only
   thing that changes the address, which it changes everywhere the journal
-  names it but its entries, in one transaction; `any_moves`, for the dot on
-  Inbox.
+  names it but its entries, in one transaction; `any_moves`. And, since
+  2026-10-27: `seen_records` (`pull_seen_records`, `see_records`, what has
+  scrolled past on the Friends wall, a fortnight at most); and strangers —
+  `arrival_refused`, the doors' rule (one thing at a time from somebody not
+  in the book, none once let go; one unanswered send from a friend),
+  `close_if_stranger` and `open_door` (`closed_doors`).
 - `portrait_code.js` — the press: the portrait made into the journal's QR
   code with a dot of ink per module, proved by decoding with jsQR on both page
   colours; `CODE_BUILD` is bumped whenever the drawing changes.
@@ -487,7 +494,13 @@ do not say what they hold.
 - `Bookplate.js` — context holding the journal's own details (name, keeper,
   portrait), read once on the server and handed down.
 - `KeeperTools.js` — the owner's ··· menu on an entry or the card.
-- `Friends.js` — the address book as a grid of faces.
+- `Friends.js` — the address book as a grid of faces; drawn nowhere since
+  2026-10-27 (the address book's page draws Friends, PeopleScreen.js), and
+  only its `since` is still imported (Friend_panel.js).
+- `Headlines.js` — what friends did, one sentence at a time, at the top of
+  Friends.
+- `Words.js` — all the words with one friend, record by record.
+- `PinnedLetter.js` — the LN. Admin letter, pinned over the home wall.
 - `EditingBar.js` — the Save and Cancel band at the foot of anything being
   corrected.
 - `MarqueeTitle.js` — a title too long for the small beacon, scrolling one lap.

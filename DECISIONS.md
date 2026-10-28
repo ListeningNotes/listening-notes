@@ -1304,12 +1304,44 @@ caret under the words, or a drag down opens the rest in place. Waiting
 first, then logging, then shuffled — never by name. New under the chin,
 never a count. The stop's word is Friends.
 
-**A face opens onto what waits from them, 2026-10-27 (her Friends brief).**
-Wrote, Sent you, Waved, Arrived, Moved, each with only its own answers; no
-doors — Compare is on their page, Send on the record, Visit leads the quiet
-line. A message never has Let it go: Keep only (`kept_at`). Arrived passes
-once seen; Moved has no Let it go (the friends round writes it back). New
-clears when the face shuts, so it holds still while open.
+**A face opens onto what waits from them, and only that, 2026-10-27.**
+Sends Listen · Dismiss, waves Wave back · Dismiss (her words), words Reply ·
+Words · Keep, each a glyph over its word; a message is never deleted. Nothing
+about the person: its head goes to their page, where Keep private and Remove
+live, and a face with nothing waiting goes straight there (the first panel's
+two halves "don't overlap well"). New clears when the face shuts.
+
+**Headlines hold what friends did, from their public reads alone,
+2026-10-27.** One sentence per friend logging or logged in a fortnight,
+newest first; never what they sent you, which is the faces'. Nothing that
+never leaves their copy (unfinished listens, sides). A number inside a
+sentence about one evening is description, her answers: "twice before
+noon", never a tally or a ranking.
+
+**New on a friend's record lasts until it scrolls past, 2026-10-27.** A
+fortnight after it was logged at most; it clears when it leaves over the
+top, or — on screen whole — when Friends is left, or a short wall would say
+New for two weeks. A flag in `seen_records`, sent nowhere ("New means I
+haven't seen it").
+
+**Strangers: one thing at a time, thirty days, closed doors, 2026-10-27.**
+Held on the receiving journal's doors, in its database, by the sender's
+address (`arrival_refused`) — never the sender's client, never memory. Let go
+closes the door (`closed_doors`) until they are added; removing is not
+blocking. A friend gets one unanswered send at a time. A refusal says so in
+words, and the sender's copy keeps what they wrote.
+
+**Words: one conversation per record, never a list of them all,
+2026-10-27.** One friend's page holds theirs, record by record. Your side is
+`said_back`, kept from the day it shipped and never backfilled; the page says
+from when (her answers).
+
+**The Inbox is retired and Community is the third stop, 2026-10-27.** Every
+thing in it has a home: a person's things on their face, strangers in the
+row, what is still out under the friend's wall, the LN. Admin letter pinned
+on home, problem reports under Report a problem. `/dashboard/inbox` forwards
+to Friends, which `/dashboard/people` draws on a desk too. Community is the
+Board until its own brief.
 
 **Pin is gone, 2026-10-26, her call ("Not needed").** Nobody in the book
 stands above anybody else; `pinned_at` stays, as every column does, and
