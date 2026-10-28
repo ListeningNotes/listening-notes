@@ -2369,6 +2369,23 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 }
 .fp-who svg { color: var(--ink-faint); }
 .fp-who:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; border-radius: 6px; }
+/* A stranger's head (step five): their face larger, their name, Not one of
+   your friends under it, and Add on the right — a head and not a link, since
+   nothing of theirs opens until they are added. */
+.fp-who--stranger { align-self: stretch; gap: 14px; }
+.fp-who--stranger .fr-ring { width: 52px; }
+.fp-who-says { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.fp-who--stranger .fp-who-name { font-size: 24px; line-height: 1.1; }
+.fp-who-not {
+  font-family: var(--font-label); font-size: 9px; line-height: 1;
+  letter-spacing: 0.11em; text-transform: uppercase; color: var(--ink-faint);
+}
+.fp-who-add { flex: 0 0 auto; }
+.fp-closed {
+  margin: 0; padding: 14px 0 4px; border-top: 1px solid var(--border);
+  font-family: var(--font-label); font-size: 9px; letter-spacing: 0.11em; text-transform: uppercase;
+  color: var(--ink-faint);
+}
 /* Its answers: a glyph over one word each, as the site's doors are (her
    review, 2026-10-27: "i lost the icons"). */
 .fp-doors { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 6px; }

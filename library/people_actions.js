@@ -256,3 +256,66 @@ export async function see_records(list) {
   ]);
   return rows.length;
 }
+
+// ── Strangers, 2026-10-27 ─────────────────────────────────────────────────
+// Her Friends brief, step five, and her answers of 2026-10-26. Somebody not
+// in the book gets one thing at a time in the row, and once a thing of
+// theirs is let go, nothing more until they are added (closed_doors,
+// migrations/046). A friend gets one unanswered send at a time — "waves and
+// sends can't be farmed", kept here, in the database, by the sender's
+// address, never in a server's memory or the sender's browser. A wave was
+// one per address already (migrations/024).
+//
+// Written loosely by a visitor's form, an address is read the way
+// tidyJournal reads it, in Postgres, as carryAlong reads it above.
+
+export const STRANGER_WAITS = 'This journal hasn’t added you yet, so it takes one thing at a time — nothing was sent.';
+export const SEND_WAITS = 'The last record you sent is still waiting with them, so this one wasn’t sent. One at a time.';
+
+// Why a send, words or a wave from this address may not come in now, or
+// null when it may. `kind` is 'send', 'words' or 'wave'. Somebody with no
+// journal has no address to be held to, and is never refused here (the
+// doorman counts them).
+export async function arrival_refused(address, kind) {
+  const at = tidyJournal(address);
+  if (!at) return null;
+  const [row] = await database`
+    SELECT
+      EXISTS (SELECT 1 FROM people WHERE address = ${at}) AS friend,
+      EXISTS (SELECT 1 FROM closed_doors WHERE address = ${at}) AS closed,
+      EXISTS (SELECT 1 FROM submissions
+              WHERE status IN ('pending', 'reviewed')
+                AND lower(split_part(regexp_replace(btrim(coalesce(sender_url, '')), '^https?://', '', 'i'), '/', 1)) = ${at}) AS send_out,
+      EXISTS (SELECT 1 FROM messages
+              WHERE NOT admin AND replied_at IS NULL AND kept_at IS NULL
+                AND lower(split_part(regexp_replace(btrim(coalesce(from_journal, '')), '^https?://', '', 'i'), '/', 1)) = ${at}) AS words_out,
+      EXISTS (SELECT 1 FROM waves WHERE address = ${at}) AS wave_out
+  `;
+  if (row.friend) return kind === 'send' && row.send_out ? SEND_WAITS : null;
+  if (row.closed) return STRANGER_WAITS;
+  // A second wave from one address is already kept as nothing, answered the
+  // same as the first (migrations/024), so a wave is held only by the rest.
+  const waiting = row.send_out || row.words_out || (kind !== 'wave' && row.wave_out);
+  return waiting ? STRANGER_WAITS : null;
+}
+
+// A thing from this address was let go: if they are nobody in the book, the
+// door closes behind it.
+export async function close_if_stranger(address, name = null) {
+  const at = tidyJournal(address);
+  if (!at) return false;
+  const [friend] = await database`SELECT 1 FROM people WHERE address = ${at} LIMIT 1`;
+  if (friend) return false;
+  await database`
+    INSERT INTO closed_doors (address, name) VALUES (${at}, ${name ? String(name).slice(0, 120) : null})
+    ON CONFLICT (address) DO UPDATE SET closed_at = now()
+  `;
+  return true;
+}
+
+// Added: their door opens again.
+export async function open_door(address) {
+  const at = tidyJournal(address);
+  if (!at) return;
+  await database`DELETE FROM closed_doors WHERE address = ${at}`;
+}

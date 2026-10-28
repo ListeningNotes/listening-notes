@@ -38,7 +38,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
-  ArrowBendUpLeft, BookmarkSimple, CaretRight, ChatsCircle, HandWaving, Headphones, Signpost, X,
+  ArrowBendUpLeft, BookmarkSimple, CaretRight, ChatsCircle, HandWaving, Headphones, Signpost, UserPlus, X,
 } from '@phosphor-icons/react';
 import MessageForm from './Slug_Page/MessageForm';
 import { since } from './Friends';
@@ -90,6 +90,46 @@ export function waitingFrom(person, arrivals, held = null) {
   }
   if (person.moved_to) items.push({ kind: 'moved', key: `v${person.id}`, at: '', unseen: true, row: person });
   return items.sort((a, b) => new Date(b.at || 0) - new Date(a.at || 0));
+}
+
+// ── Strangers, 2026-10-27 ─────────────────────────────────────────────────
+// Her Friends brief, step five: somebody not in your friends who sends you
+// something stands in the row like anyone else, at the front, marked New —
+// no requests folder, no holding pen. What they sent, wrote, or their wave,
+// while it is unanswered and younger than thirty days ("Unhandled, it
+// leaves on its own"); the doors keep them to one thing at a time
+// (library/people_actions.js). Somebody with no journal still has a name:
+// each thing of theirs is a stranger of its own, with a plain face.
+export const STRANGER_DAYS = 30;
+export function strangersIn(arrivals, book) {
+  const from = Date.now() - STRANGER_DAYS * 24 * 60 * 60 * 1000;
+  const fresh = at => (Date.parse(at || '') || 0) >= from;
+  const by = new Map();
+  const add = (address, idKey, name, item) => {
+    const at = tidyJournal(address || '');
+    if (at && book.has(at)) return;
+    if (!fresh(item.at)) return;
+    const key = at || `nobody-${idKey}`;
+    let one = by.get(key);
+    if (!one) { one = { address: key, journal: at, name: '', items: [] }; by.set(key, one); }
+    if (!one.name && name) one.name = String(name).trim();
+    one.items.push(item);
+  };
+  for (const m of arrivals?.messages || []) {
+    if (m.admin || m.replied_at || m.kept_at) continue;
+    add(m.from_journal, `m${m.id}`, m.from_name, { kind: 'wrote', key: `m${m.id}`, at: m.arrived_at || m.written_at, unseen: !m.seen_at, row: m });
+  }
+  for (const s2 of arrivals?.sends || []) {
+    if (s2.status !== 'pending' && s2.status !== 'reviewed') continue;
+    add(s2.sender_url, `s${s2.id}`, s2.submitter_name, { kind: 'sent', key: `s${s2.id}`, at: s2.created_at, unseen: s2.status === 'pending' && !s2.seen_at, row: s2 });
+  }
+  for (const w of arrivals?.waves || []) {
+    add(w.address, `w${w.id}`, w.name, { kind: 'waved', key: `w${w.id}`, at: w.arrived_at, unseen: !w.seen_at, row: w });
+  }
+  return [...by.values()].map(one => ({
+    ...one,
+    items: one.items.sort((a, b) => new Date(b.at || 0) - new Date(a.at || 0)),
+  }));
 }
 
 // Told the server that each of these has been seen — the inbox's own marks,
@@ -189,7 +229,17 @@ function Door({ icon: Icon, word, onClick, href, disabled = false, open, label }
 // journal; `onAnswered(kind, row, change)` tells the screen what to change
 // in its lists, and `onMoved` that the book needs reading again. `face` is
 // their face as the row draws it.
-export default function FriendPanel({ person, name, items, newHere, there, onAnswered, onMoved, face = null }) {
+//
+// A stranger (step five) has no page and no book row: `person` is null,
+// `journal` their address when they keep one, and `onAdd` files it. Their
+// head says so — Not one of your friends, and Add — and their answers are
+// the closed doors' (the brief): read what they said without letting them
+// into anything. Dismiss is Let it go, and the server closes the door
+// behind it; a message let go is kept, never deleted.
+export default function FriendPanel({
+  person, name, items, newHere, there, onAnswered, onMoved, face = null,
+  stranger = false, journal = '', onAdd = null, adding = false,
+}) {
   const router = useRouter();
   const who = name || 'They';
   // One thing at a time is being answered: its key, and what it says back.
@@ -316,6 +366,7 @@ export default function FriendPanel({ person, name, items, newHere, there, onAns
   // Wave back leaves through the outbox, which lets their wave here go once
   // it has landed (waved_back); a copy too old to take one says so.
   const waveBack = async (item) => {
+    if (stranger) return;
     setBusy(item.key);
     const r = await fetch('/api/outbox', {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ wave: true, person_id: person.id }),
@@ -347,23 +398,39 @@ export default function FriendPanel({ person, name, items, newHere, there, onAns
   };
 
   if (items.length === 0) return null;
-  const page = `/dashboard/people/${person.id}`;
+  const page = person ? `/dashboard/people/${person.id}` : '';
 
   return (
     <div className="fp">
       {/* Who it is from, going to their journal page: the brief's "pressing
-          the person's name or face inside this panel". */}
-      <Link className="fp-who" href={page} aria-label={`${who}’s journal`}>
-        {face}
-        <span className="fp-who-name">{who}</span>
-        <CaretRight size={12} weight="bold" aria-hidden="true" />
-      </Link>
+          the person's name or face inside this panel". A stranger's goes
+          nowhere until they are added. */}
+      {stranger ? (
+        <div className="fp-who fp-who--stranger">
+          {face}
+          <span className="fp-who-says">
+            <span className="fp-who-name">{who}</span>
+            <span className="fp-who-not">Not one of your friends</span>
+          </span>
+          {journal && onAdd && (
+            <span className="fp-who-add">
+              <Door icon={UserPlus} word="Add" onClick={() => onAdd(journal)} disabled={adding} label={`Add ${who} to your friends`} />
+            </span>
+          )}
+        </div>
+      ) : (
+        <Link className="fp-who" href={page} aria-label={`${who}’s journal`}>
+          {face}
+          <span className="fp-who-name">{who}</span>
+          <CaretRight size={12} weight="bold" aria-hidden="true" />
+        </Link>
+      )}
       {items.map(item => {
         const { kind, row, key } = item;
         const isNew = item.unseen || newHere?.has(key);
         const doing = busy === key;
         const art = kind === 'sent' || kind === 'arrived' ? row.album_art : kind === 'wrote' ? row.about_art : '';
-        const link = kind === 'arrived' && row.slug ? there(person.address, `/entries/${encodeURIComponent(row.slug)}`) : '';
+        const link = kind === 'arrived' && row.slug && person ? there(person.address, `/entries/${encodeURIComponent(row.slug)}`) : '';
         const cover = (
           <span className={'fp-art' + (kind === 'waved' || kind === 'moved' ? ' fp-art--round' : '')} aria-hidden="true">
             {art ? <img src={art} alt="" loading="lazy" onError={e => { e.currentTarget.style.display = 'none'; }} />
@@ -393,7 +460,7 @@ export default function FriendPanel({ person, name, items, newHere, there, onAns
           sub = 'Their journal lives somewhere new';
         }
         // Words about a record they wrote on: the record's chain, with them.
-        const words = kind === 'wrote' && row.about_slug
+        const words = kind === 'wrote' && row.about_slug && page
           ? `${page}/words#${encodeURIComponent(`${tidyJournal(row.about_journal) || ''}/${row.about_slug}`)}`
           : '';
         return (
@@ -412,9 +479,13 @@ export default function FriendPanel({ person, name, items, newHere, there, onAns
 
               {kind === 'wrote' && (
                 <div className="fp-doors">
-                  <Door icon={ArrowBendUpLeft} word="Reply" open={writing === key} onClick={() => setWriting(w => (w === key ? '' : key))} label={`Reply to ${who}`} />
+                  {(!stranger || row.from_journal) && (
+                    <Door icon={ArrowBendUpLeft} word="Reply" open={writing === key} onClick={() => setWriting(w => (w === key ? '' : key))} label={`Reply to ${who}`} />
+                  )}
                   {words && <Door icon={ChatsCircle} word="Words" href={words} label={`All the words with ${who} about this record`} />}
-                  <Door icon={BookmarkSimple} word="Keep" onClick={() => keepOnly(item)} disabled={doing} label="Keep it without a reply" />
+                  {stranger
+                    ? <Door icon={X} word="Dismiss" onClick={() => keepOnly(item)} disabled={doing} label="Let it go — it is kept, and they can't write again until you add them" />
+                    : <Door icon={BookmarkSimple} word="Keep" onClick={() => keepOnly(item)} disabled={doing} label="Keep it without a reply" />}
                 </div>
               )}
               {kind === 'sent' && (
@@ -425,7 +496,11 @@ export default function FriendPanel({ person, name, items, newHere, there, onAns
               )}
               {kind === 'waved' && (
                 <div className="fp-doors">
-                  <Door icon={HandWaving} word="Wave back" onClick={() => waveBack(item)} disabled={doing} />
+                  {/* A wave from somebody not added is answered by adding
+                      them; Wave back once they are (her answers, 2026-10-26). */}
+                  {stranger
+                    ? journal && onAdd && <Door icon={UserPlus} word="Add" onClick={() => onAdd(journal)} disabled={adding || doing} label={`Add ${who} to your friends`} />
+                    : <Door icon={HandWaving} word="Wave back" onClick={() => waveBack(item)} disabled={doing} />}
                   <Door icon={X} word="Dismiss" onClick={() => dismissWave(item)} disabled={doing} />
                 </div>
               )}
@@ -463,6 +538,7 @@ export default function FriendPanel({ person, name, items, newHere, there, onAns
           </div>
         );
       })}
+      {stranger && journal && <p className="fp-closed">Add to see their journal</p>}
     </div>
   );
 }

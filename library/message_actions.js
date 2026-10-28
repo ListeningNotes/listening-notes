@@ -192,7 +192,7 @@ export async function keep_message(id) {
   const [row] = await database`
     UPDATE messages SET kept_at = COALESCE(kept_at, now()), seen_at = COALESCE(seen_at, now())
     WHERE id = ${id}
-    RETURNING id, kept_at
+    RETURNING id, kept_at, from_journal, from_name
   `;
   return row || null;
 }

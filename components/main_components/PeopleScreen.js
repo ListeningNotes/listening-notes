@@ -78,7 +78,7 @@ import { usePathname } from 'next/navigation';
 import { ArrowRight, Camera, CaretDown, MagnifyingGlass, Ticket, User, UserPlus } from '@phosphor-icons/react';
 import Journal, { foldForSearch } from './Journal';
 import CodeScanner from './CodeScanner';
-import FriendPanel, { waitingFrom, seeAll } from './Friend_panel';
+import FriendPanel, { waitingFrom, seeAll, strangersIn } from './Friend_panel';
 import Headlines from './Headlines';
 import InviteSheet from './InviteSheet';
 import WaveSheet from './WaveSheet';
@@ -547,8 +547,25 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
         at: Date.parse(b?.at || '') || Date.parse(newest?.posted_at || '') || 0,
       };
     });
-    const group = f => (f.waiting ? 0 : f.live ? 1 : 2);
-    return all.sort((a, b) => group(a) - group(b) || (shuffle[a.address] ?? 1) - (shuffle[b.address] ?? 1));
+    // Strangers first (step five): somebody not in your friends who sent
+    // something stands at the front of the row, marked New.
+    const book = new Set((people || []).map(p => tidyJournal(p.address)));
+    const strangers = people ? strangersIn(arrivals, book).map(one => ({
+      stranger: true,
+      person: null,
+      address: one.address,
+      journal: one.journal,
+      name: one.name,
+      beacon: null,
+      live: false,
+      items: one.items,
+      waiting: true,
+      isNew: one.items.some(i => i.unseen || held?.keys?.has(i.key)),
+      entries: [],
+      at: 0,
+    })) : [];
+    const group = f => (f.stranger ? -1 : f.waiting ? 0 : f.live ? 1 : 2);
+    return [...strangers, ...all].sort((a, b) => group(a) - group(b) || (shuffle[a.address] ?? 1) - (shuffle[b.address] ?? 1));
   }, [people, beacons, journals, arrivals, held, shuffle]);
   // A face pressed: the rest of the row dims, and what waits from them opens
   // under it; pressed again, it all closes.
@@ -562,16 +579,19 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
 
   // New, when something of theirs waits: the app's one mark (the brief, "the
   // word New on a pill"), tucked under the chin and never across the face.
+  // Somebody with no journal (a stranger's `nobody-` key) has the plain face.
   const faceOf = (address, size, waiting = false) => (
     <span className="fr-ring" aria-hidden="true">
       <span className="fr-face">
         <User size={size} weight="regular" />
-        <img
-          src={`${journalUrl(address)}/api/portrait`}
-          alt=""
-          loading="lazy"
-          onError={e => { e.currentTarget.style.display = 'none'; }}
-        />
+        {!String(address).startsWith('nobody-') && (
+          <img
+            src={`${journalUrl(address)}/api/portrait`}
+            alt=""
+            loading="lazy"
+            onError={e => { e.currentTarget.style.display = 'none'; }}
+          />
+        )}
       </span>
       {waiting && <span className="ln-new ln-new--face">New</span>}
     </span>
@@ -705,7 +725,7 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
     settleHeld();
     if (open === address) { setOpen(null); return; }
     const f = lineup.find(x => x.address === address);
-    if (f && !f.waiting) { setOpen(null); router.push(`/dashboard/people/${f.person.id}`); return; }
+    if (f && !f.waiting && f.person) { setOpen(null); router.push(`/dashboard/people/${f.person.id}`); return; }
     setOpen(address);
     const fresh = (f?.items || []).filter(i => i.unseen && i.kind !== 'moved');
     if (fresh.length === 0) return;
@@ -824,6 +844,7 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
       <div className="ps-doors-in">
         {doorsWho && (
           <FriendPanel
+            key={doorsWho.address}
             person={doorsWho.person}
             name={doorsWho.name}
             items={doorsWho.items}
@@ -832,6 +853,10 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
             face={faceOf(doorsWho.address, 14)}
             onAnswered={onAnswered}
             onMoved={() => { readBook(); refreshFriends(); }}
+            stranger={Boolean(doorsWho.stranger)}
+            journal={doorsWho.journal || ''}
+            onAdd={file}
+            adding={filing}
           />
         )}
       </div>

@@ -10,6 +10,7 @@ import {
 import database from '@/library/database_connection';
 import { requireWristband } from '@/library/wristband';
 import { tidyJournal } from '@/library/return_address';
+import { close_if_stranger } from '@/library/people_actions';
 
 // 'logged' joins the three that were already here, 2026-09-15. It is not a
 // fourth spelling of 'reviewed': that one is set when a listen is *started*
@@ -75,6 +76,11 @@ export async function PATCH(request, { params }) {
       return Response.json({ error: 'Invalid status' }, { status: 400 });
     }
     const submission = await update_submission_status(id, status);
+    // Let go from somebody not in the book: their door closes behind it
+    // (2026-10-27, her Friends brief's strangers).
+    if (status === 'dismissed' && submission?.sender_url) {
+      await close_if_stranger(submission.sender_url, submission.submitter_name).catch(() => null);
+    }
     return Response.json({ submission });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });

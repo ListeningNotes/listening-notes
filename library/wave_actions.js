@@ -67,6 +67,6 @@ export async function see_wave(id) {
 // Left: the row goes. Leaving a wave is not refusing anything — there was
 // nothing asked — so nothing is kept of it and nothing is sent back.
 export async function remove_wave(id) {
-  const [row] = await database`DELETE FROM waves WHERE id = ${id} RETURNING id`;
+  const [row] = await database`DELETE FROM waves WHERE id = ${id} RETURNING id, address, name`;
   return row || null;
 }

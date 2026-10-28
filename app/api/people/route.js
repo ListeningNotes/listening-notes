@@ -9,7 +9,7 @@
 // lives because they were out.
 
 import { requireWristband } from '@/library/wristband';
-import { pull_people, save_person, ask_journal_name, pull_seen_records, see_records } from '@/library/people_actions';
+import { pull_people, save_person, ask_journal_name, pull_seen_records, see_records, open_door } from '@/library/people_actions';
 import { tidyJournal } from '@/library/return_address';
 import { pull_own_addresses } from '@/library/settings_actions';
 
@@ -55,6 +55,8 @@ export async function POST(request) {
     const fresh = !(await pull_people()).some(p => p.address === address);
     const name = await ask_journal_name(address);
     const person = await save_person({ address, name });
+    // Added, so a door closed on them as a stranger opens (2026-10-27).
+    await open_door(address).catch(() => null);
     return Response.json({ person, reached: name !== null, fresh });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });

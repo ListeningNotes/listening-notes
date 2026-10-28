@@ -51,7 +51,7 @@ import {
   SAID_MOST, sameJournal, pull_messages, save_message, see_message, keep_message, remove_message,
   pull_words, said_back_since,
 } from '@/library/message_actions';
-import { pull_person } from '@/library/people_actions';
+import { pull_person, arrival_refused, close_if_stranger } from '@/library/people_actions';
 import { read_letter, keep_letter } from '@/library/letterhead';
 import { answerNoJournal } from '@/library/hosting_directory';
 
@@ -138,6 +138,11 @@ export async function POST(request) {
       if (!name) return Response.json({ error: 'A name is required.' }, { status: 400 });
     }
 
+    // Somebody not in the book: one thing at a time, none once let go
+    // (2026-10-27). A friend's words are never held back.
+    const refused = await arrival_refused(journal, 'words');
+    if (refused) return Response.json({ error: refused }, { status: 409 });
+
     await save_message({
       from_name: name,
       from_journal: journal,
@@ -185,6 +190,9 @@ export async function PATCH(request) {
     if (body.kept === true) {
       const kept = await keep_message(id);
       if (!kept) return Response.json({ error: 'No such message.' }, { status: 404 });
+      // Kept without a reply from somebody not in the book is let go, and
+      // their door closes behind it (2026-10-27).
+      await close_if_stranger(kept.from_journal, kept.from_name).catch(() => null);
       return Response.json({ ok: true, kept_at: kept.kept_at });
     }
     await see_message(id);
