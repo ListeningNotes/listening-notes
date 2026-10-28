@@ -2239,44 +2239,65 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 .ps-row-one--open .fr-live-name { color: var(--ink); }
 .ps-row-one:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 4px; border-radius: 10px; }
 
-/* The one line, as the band's last line was drawn: a small cover, the name,
-   what, and when — the record's name gives way before the time does. */
-.ps-strip {
-  display: flex; align-items: center; gap: 10px;
-  margin-top: 8px; min-width: 0;
-  color: inherit; text-decoration: none;
-  animation: ps-in 0.35s ease both;
+/* ── Headlines, 2026-10-27 ──────────────────────────────────────────────────
+   Headlines.js: one sentence at a time between two hairlines, rolling up
+   like a departures board, the pips on the right. The stack holds two lines
+   of the sentence whatever is showing, so the page never jumps as it turns. */
+.hl {
+  display: flex; align-items: stretch; gap: 14px;
+  margin-top: 6px; padding: 14px 0;
+  border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+}
+.hl-stack {
+  position: relative; flex: 1; min-width: 0;
+  height: 66px; overflow: hidden;
+}
+.hl-one {
+  position: absolute; inset: 0;
+  display: flex; align-items: flex-start; gap: 14px;
+  color: var(--ink); text-decoration: none;
   -webkit-tap-highlight-color: transparent;
 }
-@keyframes ps-in {
-  from { opacity: 0; transform: translateY(4px); }
-  to   { opacity: 1; transform: none; }
+.hl-one--in { animation: hl-in 0.56s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
+.hl-one--out { animation: hl-out 0.56s cubic-bezier(0.22, 0.61, 0.36, 1) both; pointer-events: none; }
+@keyframes hl-in {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: none; opacity: 1; }
 }
-.ps-strip-art {
-  flex: 0 0 34px; height: 34px;
-  display: flex; align-items: center; justify-content: center;
-  border-radius: 6px; overflow: hidden;
-  background: var(--bg-warm); color: var(--ink-faint); font-size: 14px;
+@keyframes hl-out {
+  from { transform: none; opacity: 1; }
+  to   { transform: translateY(-100%); opacity: 0; }
 }
-.ps-strip-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.ps-strip-name {
-  flex: 0 0 auto; max-width: 40%;
+.hl-one:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: -2px; border-radius: 8px; }
+.hl-art {
+  flex: 0 0 50px; height: 50px; border-radius: 6px; overflow: hidden;
+  background: var(--bg-warm);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+.hl-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.hl-words { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.hl-when {
+  font-family: var(--font-label); font-size: 9px; line-height: 1;
+  letter-spacing: 0.11em; text-transform: uppercase; color: var(--ink-faint);
+}
+.hl-said {
   font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
-  font-size: 14px; color: var(--ink);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-size: 19px; line-height: 1.2; color: var(--ink);
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
+  overflow-wrap: anywhere;
 }
-.ps-strip-what, .ps-strip-when {
-  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.02em;
-  color: var(--ink-faint); white-space: nowrap;
+.hl-title { font-style: italic; font-weight: 400; }
+.hl-mark--formative { color: var(--formative); }
+.hl-mark--fav { color: var(--fav); }
+.hl-mark--mp { color: var(--mp); }
+.hl-pips { flex: 0 0 auto; display: flex; flex-direction: column; justify-content: center; gap: 4px; }
+.hl-pip { width: 4px; height: 4px; border-radius: 50%; background: var(--ink-faint); opacity: 0.45; transition: opacity 0.3s, background 0.3s; }
+.hl-pip--on { background: var(--ink); opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .hl-one--in { animation: hl-fade 0.3s ease both; }
+  .hl-one--out { animation: none; opacity: 0; }
+  @keyframes hl-fade { from { opacity: 0; } to { opacity: 1; } }
 }
-.ps-strip-what { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-.ps-strip-when { flex: 0 0 auto; margin-left: -4px; }
-.ps-strip-dot {
-  display: inline-block; vertical-align: 1px;
-  width: 6px; height: 6px; margin-right: 6px; border-radius: 50%;
-  background: var(--live);
-}
-.ps-strip:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 4px; border-radius: 8px; }
 
 /* Their doors, the book's own, opening under the line and folding shut
    rather than appearing. No hairlines round them here: the one under the

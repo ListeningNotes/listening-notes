@@ -77,9 +77,9 @@ import { useRouter } from 'next/navigation';
 import { usePathname } from 'next/navigation';
 import { ArrowRight, Camera, CaretDown, MagnifyingGlass, Ticket, User, UserPlus } from '@phosphor-icons/react';
 import Journal, { foldForSearch } from './Journal';
-import { since } from './Friends';
 import CodeScanner from './CodeScanner';
 import FriendPanel, { waitingFrom, seeAll } from './Friend_panel';
+import Headlines from './Headlines';
 import InviteSheet from './InviteSheet';
 import WaveSheet from './WaveSheet';
 import PullDown from './PullDown';
@@ -159,50 +159,17 @@ function gatherTheirs(rows, mine) {
 // The friends' entries on one record that still say New: logged within
 // NEW_FOR_DAYS and not yet seen, as `journal/slug`.
 function unseenIn(album, seen) {
-  const since = Date.now() - NEW_FOR_DAYS * 24 * 60 * 60 * 1000;
+  const from = Date.now() - NEW_FOR_DAYS * 24 * 60 * 60 * 1000;
   const out = [];
   for (const e of album.all) {
     const at = Date.parse(e.posted_at || '');
-    if (!at || at < since || !e.slug) continue;
+    if (!at || at < from || !e.slug) continue;
     const key = `${tidyJournal(e.by.address)}/${e.slug}`;
     if (!seen.has(key)) out.push(key);
   }
   return out;
 }
 
-// ── What a friend is logging, or logged ──────────────────────────────────
-// What their own beacon says, as their home draws it, with the entry it
-// names where their feed holds it, so the line opens on what they wrote; a
-// journal whose beacon has not answered yet stands on the newest entry in
-// its feed. Null for somebody with nothing logged.
-function recordOf(friend) {
-  const b = friend.beacon;
-  if (b && b.album && (b.state === 'logging' || b.state === 'logged')) {
-    const named = friend.live ? null : friend.entries.find(e => byName(e.album, e.artist) === byName(b.album, b.artist));
-    return {
-      live: friend.live,
-      title: b.track || b.album,
-      artist: b.artist || '',
-      art: b.art || named?.album_art || '',
-      path: named?.slug ? `/entries/${encodeURIComponent(named.slug)}` : '',
-      at: friend.live ? '' : (b.at || named?.posted_at || ''),
-    };
-  }
-  if (friend.newest) {
-    return {
-      live: false,
-      title: friend.newest.song || friend.newest.album,
-      artist: friend.newest.artist || '',
-      art: friend.newest.album_art || '',
-      path: `/entries/${encodeURIComponent(friend.newest.slug)}`,
-      at: friend.newest.posted_at || '',
-    };
-  }
-  return null;
-}
-
-// `scroller` is the pane that scrolls; `pullMark` is the mark the pull down
-// draws in the gap it opens (PullDown.js).
 export default function PeopleScreen({ scroller, onScreen = true, entries = [], pullMark = null }) {
   const { keeper_name, site_address, portrait_url: myFace } = useBookplate();
   const me = useMemo(() => ({ name: keeper_name, address: site_address }), [keeper_name, site_address]);
@@ -583,29 +550,10 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
     const group = f => (f.waiting ? 0 : f.live ? 1 : 2);
     return all.sort((a, b) => group(a) - group(b) || (shuffle[a.address] ?? 1) - (shuffle[b.address] ?? 1));
   }, [people, beacons, journals, arrivals, held, shuffle]);
-  // Nobody pressed: the line is whoever is logging, or else whoever logged
-  // last. A face pressed: the line is theirs, the rest of the row dims, and
-  // their doors open under it; pressed again, it all closes.
+  // A face pressed: the rest of the row dims, and what waits from them opens
+  // under it; pressed again, it all closes.
   const [open, setOpen] = useState(null);
-  const latest = lineup.find(f => f.live)
-    || lineup.reduce((best, f) => (f.at && (!best || f.at > best.at) ? f : best), null);
   const opened = open ? lineup.find(f => f.address === open) || null : null;
-  const lead = opened || latest;
-  const record = useMemo(() => (lead ? recordOf(lead) : null), [lead]);
-  // A cover that fails is remembered, as home's beacon does, so the browser's
-  // broken picture is never drawn.
-  const [badArt, setBadArt] = useState('');
-  const art = record?.art && record.art !== badArt ? record.art : '';
-  // "2 hours ago" is read off the clock as the line draws, so while it says
-  // one it is drawn again once a minute.
-  const [, tick] = useState(0);
-  const saysWhen = Boolean(record && !record.live && record.at);
-  useEffect(() => {
-    if (!saysWhen) return undefined;
-    const clock = setInterval(() => tick(n => n + 1), 60 * 1000);
-    return () => clearInterval(clock);
-  }, [saysWhen]);
-  const when = saysWhen ? since(record.at) : '';
   // The doors keep whoever they were for while they fold shut, so they
   // close rather than empty first.
   const [doorsFor, setDoorsFor] = useState(null);
@@ -871,35 +819,6 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
   ) : null;
   const nobodyFound = finding && soughtNow && shown.length === 0;
 
-  // The one line: a small cover, the name, what, and when. It opens the
-  // entry their beacon names, or their journal.
-  const strip = lead ? (
-    <a
-      key={lead.address}
-      className="ps-strip"
-      href={there(lead.address, record?.path || '')}
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label={record
-        ? `${lead.name} ${record.live ? 'is logging' : 'logged'} ${record.title}${record.artist ? ` by ${record.artist}` : ''}${when ? `, ${when}` : ''}`
-        : `${lead.name}’s journal`}
-    >
-      <span className="ps-strip-art" aria-hidden="true">
-        {art ? <img src={art} alt="" loading="lazy" onError={() => setBadArt(art)} /> : <span>&#9834;</span>}
-      </span>
-      <span className="ps-strip-name">{lead.name}</span>
-      <span className="ps-strip-what">
-        {record ? (
-          <>
-            {record.live && <span className="ps-strip-dot" aria-hidden="true" />}
-            {record.live ? 'logging' : 'logged'} {record.title}
-          </>
-        ) : 'Nothing logged yet.'}
-      </span>
-      {when && <span className="ps-strip-when">&middot; {when}</span>}
-    </a>
-  ) : null;
-
   const doors = (
     <div className={'ps-doors' + (opened && !adding ? ' ps-doors--open' : '')} inert={opened && !adding ? undefined : true}>
       <div className="ps-doors-in">
@@ -994,7 +913,7 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
   // Close; and the doors of whoever is open.
   const top = people ? (
     <div className="ps-top">
-      {strip}
+      <Headlines friends={lineup} there={there} onScreen={onScreen} />
       {head}
       <div className={'ps-unroll' + (adding ? ' ps-unroll--open' : '')} inert={adding ? undefined : true}>
         <div className="ps-unroll-in">{addHere}</div>
