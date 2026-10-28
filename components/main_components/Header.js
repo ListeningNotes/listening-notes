@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // components/main_components/Header.js
 // The top row of the phone's cross: the keeper's face, the light switch, and
-// Home · People · Inbox, with only the one you are on wearing its word.
+// Home · Friends · Community, with only the one you are on wearing its word.
 //
 // ── It replaced the band at the foot, 2026-10-22 ──────────────────────────
 // Miyel's answers to the frame questions (the home-and-session brief, stage
@@ -16,8 +16,8 @@
 // `.ln-word` logic, the People brief's rule, her pick over three glyphs with
 // words and over words alone. Three bare glyphs is one guess too many; three
 // glyphs and one word is none. The glyphs are the band's: a house, two
-// people, the envelope the whole site already puts on what arrived (her
-// pick over a tray).
+// people, and a globe for Community since 2026-10-27 — the envelope went
+// with the inbox it stood for.
 //
 // ── The same presses the band had ─────────────────────────────────────────
 // A glyph moves the rail exactly as a swipe does (HomeNav, goTo). The one you
@@ -43,7 +43,7 @@
 // call, 2026-10-22), and draws none of it (nav.css).
 'use client';
 
-import { Envelope, House, User, Users } from '@phosphor-icons/react';
+import { Globe, House, User, Users } from '@phosphor-icons/react';
 import { useBookplate } from './Bookplate';
 
 export default function Header({
@@ -99,4 +99,4 @@ export default function Header({
   );
 }
 
-const GLYPHS = { home: House, people: Users, inbox: Envelope };
+const GLYPHS = { home: House, people: Users, community: Globe };

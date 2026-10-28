@@ -49,7 +49,7 @@ import { tidyJournal } from '@/library/return_address';
 import { pull_settings } from '@/library/settings_actions';
 import {
   SAID_MOST, sameJournal, pull_messages, save_message, see_message, keep_message, remove_message,
-  pull_words, said_back_since,
+  pull_words, said_back_since, pull_letter,
 } from '@/library/message_actions';
 import { pull_person, arrival_refused, close_if_stranger } from '@/library/people_actions';
 import { read_letter, keep_letter } from '@/library/letterhead';
@@ -163,6 +163,10 @@ export async function GET(request) {
   const blocked = await requireWristband(request);
   if (blocked) return blocked;
   try {
+    // The letter alone, for home (`?letter=1`, 2026-10-27).
+    if (new URL(request.url).searchParams.get('letter')) {
+      return Response.json({ letter: await pull_letter() });
+    }
     // Words with one person, 2026-10-27: `?person=<id>` from the book —
     // both sides, oldest first, and when this copy began keeping its own.
     const id = Number(new URL(request.url).searchParams.get('person'));

@@ -80,6 +80,7 @@ import ListenBar from './ListenBar';
 import Journal from './Journal';
 import Header from './Header';
 import MonthPrompt from './MonthPrompt';
+import PinnedLetter from './PinnedLetter';
 import About from './About';
 import Dashboard, { heldNow, subscribeHeld } from './Dashboard';
 // The two rooms that used to be behind the desk and are stops of their own
@@ -88,10 +89,9 @@ import Dashboard, { heldNow, subscribeHeld } from './Dashboard';
 // asking whether anybody is answering while you are looking at the card.
 // The inbox is the page itself, drawn without its own bar; People is one
 // screen of its own, the band, the scope and the wall (2026-10-23).
-import Inbox from '../../app/dashboard/inbox/page';
 import PeopleScreen from './PeopleScreen';
 // The Board's first screen, read when People opens (below).
-import { readEveryone, useEveryone } from '../../app/directory/Directory';
+import { Everyone, readEveryone, useEveryone } from '../../app/directory/Directory';
 import { DIRECTORY_URL } from '../../library/version';
 import { readArtColor } from '../../library/music_data_api';
 // The same two the desk already reaches for, from the same module, so the
@@ -424,22 +424,10 @@ export default function HomeNav() {
   // Only asked once the wristband is confirmed — the endpoint answers 401 to
   // anyone else, and a failed request on every public visit is noise in the
   // log for no reason.
-  //
-  // In the inbox with something new, the inbox is read again, 2026-10-20 —
-  // the pane is built once a visit and holds what was there then, so what
-  // the dot is for would otherwise not be in it: a letter the journal wrote
-  // while it sat in the background, for one. `inInbox` is kept by the pane
-  // effect further down; `inboxAgain` is what the pane is handed.
-  const inInbox = useRef(false);
-  const [inboxAgain, setInboxAgain] = useState(0);
   const askWaiting = useCallback(() => {
     fetch('/api/waiting')
       .then(r => (r.ok ? r.json() : null))
-      .then(w => {
-        if (!w) return;
-        setWaiting(w);
-        if (w.fresh && inInbox.current) setInboxAgain(n => n + 1);
-      })
+      .then(w => { if (w) setWaiting(w); })
       .catch(() => {});
   }, []);
   useEffect(() => {
@@ -740,9 +728,8 @@ export default function HomeNav() {
   useEffect(() => {
     const was = wasHere.current;
     wasHere.current = { pane, path };
-    inInbox.current = pane === INBOX;
     if (!authed) return;
-    if ((was.pane === INBOX && pane !== INBOX) || (was.pane === BOOK && pane !== BOOK) || (was.path !== path && path === '/')) askWaiting();
+    if ((was.pane === BOOK && pane !== BOOK) || (was.path !== path && path === '/')) askWaiting();
   }, [pane, path, authed, askWaiting]);
   // ── A room is built the first time you walk into it ───────────────────────
   // The card and the beacon are always drawn: you land on one and the other is
@@ -763,18 +750,6 @@ export default function HomeNav() {
   useEffect(() => {
     setVisited(seen => (seen[pane] ? seen : { ...seen, [pane]: true }));
   }, [pane]);
-  // Walking back into an inbox already built, while its door wears the dot,
-  // reads it again (askWaiting has why). The first walk in builds it, and
-  // building it reads it.
-  const fresh = waiting?.fresh === true;
-  const wasPane = useRef(pane);
-  useEffect(() => {
-    const before = wasPane.current;
-    wasPane.current = pane;
-    if (authed && fresh && pane === INBOX && before !== INBOX && visited[INBOX]) {
-      Promise.resolve().then(() => setInboxAgain(n => n + 1));
-    }
-  }, [pane, authed, fresh, visited]);
   // Whether anything is moving right now. The controls sit over the page
   // rather than beside it, so while a wall of covers is going past underneath
   // they are three marks on top of somebody's album art. They fade out on the
@@ -1052,12 +1027,6 @@ export default function HomeNav() {
     };
   }, [paneRefs, authed]);
 
-  // ── Inbox · Outbox, 2026-10-17 ──────────────────────────────────────────
-  // The inbox's two words, in this bar, the shape People had for Friends and
-  // Board until it became one screen — the Sent door that stood over the
-  // list "looks terrible" (Miyel). Which one is showing is kept here and
-  // handed to the inbox (Inbox, `sent`).
-  const [inboxSent, setInboxSent] = useState(false);
   // ── The Board, read as People opens ─────────────────────────────────────
   // Its first screen, once a visit. Nothing on People draws it — People is
   // the keeper's friends alone since 2026-10-24 (PeopleScreen.js) — and it is
@@ -1068,7 +1037,7 @@ export default function HomeNav() {
   // front door's covers would go stale.
   const { page: everyonePage } = useEveryone();
   useEffect(() => {
-    if (pane === BOOK && DIRECTORY_URL && !everyonePage) readEveryone();
+    if ((pane === BOOK || pane === INBOX) && DIRECTORY_URL && !everyonePage) readEveryone();
   }, [pane, everyonePage]);
   // ── On the Board by default, 2026-10-08 ─────────────────────────────────
   // Once the lock says the keeper is here, the journal asks its own listing
@@ -1618,13 +1587,6 @@ export default function HomeNav() {
     </svg>
   );
 
-  const onInbox = pane === INBOX && authed;
-  // A word pressed: the other room, starting at its top.
-  function chooseInboxRoom(sent) {
-    setInboxSent(sent);
-    const el = paneRefs[INBOX]?.current;
-    if (el) el.scrollTop = 0;
-  }
 
   // The light switch is back in this row and only on the beacon (Miyel,
   // 2026-09-15). It left for Settings on the argument that it is a preference
@@ -1652,11 +1614,13 @@ export default function HomeNav() {
   // ── The top row's stops, 2026-10-22 ─────────────────────────────────────
   // The keeper's three rooms, at the panes they are on the rail; a visitor
   // has none — the row carries the mark instead (Header.js). People's word
-  // is Friends since 2026-10-27 (her Friends brief); the key stays.
+  // is Friends since 2026-10-27 (her Friends brief); the key stays. Inbox
+  // retired the same day, and its pane is Community — the Board for now,
+  // until Community's own brief — on a copy that has a Board at all.
   const stops = authed ? [
     { key: 'home', word: 'Home', at: HOME },
     { key: 'people', word: 'Friends', at: BOOK },
-    { key: 'inbox', word: 'Inbox', at: INBOX },
+    ...(DIRECTORY_URL ? [{ key: 'community', word: 'Community', at: INBOX }] : []),
   ] : [];
 
   const header = (
@@ -1672,7 +1636,7 @@ export default function HomeNav() {
         goTo={goTo}
         onHere={goBack}
         onFace={() => setCardOpen(open => !open)}
-        news={{ people: waiting?.friends === true, inbox: waiting?.fresh === true }}
+        news={{ people: waiting?.friends === true }}
         lights={lights}
         mark={mark('hdr-mark-svg')}
       />
@@ -1709,30 +1673,6 @@ export default function HomeNav() {
           cross is already centred here; .hn-totop is the tap across this
           row and it goes to the top, which is the only thing left to want. */}
       <div className="hn-bar-crown" aria-hidden="true">{mark('hn-crown-svg')}</div>
-      {/* Inbox · Outbox, on the inbox pane — no count beside Inbox: what is
-          new says so with its own dot, here and, since 2026-10-20, as one
-          dot on the Inbox stop of the footer; a number would be the unread
-          badge this site does not have. */}
-      {onInbox && (
-        <span className="hn-bar-words">
-          <button
-            type="button"
-            className={'hn-bar-word' + (inboxSent ? '' : ' hn-bar-word--on')}
-            onClick={() => chooseInboxRoom(false)}
-            aria-pressed={!inboxSent}
-          >
-            Inbox
-          </button>
-          <button
-            type="button"
-            className={'hn-bar-word' + (inboxSent ? ' hn-bar-word--on' : '')}
-            onClick={() => chooseInboxRoom(true)}
-            aria-pressed={inboxSent}
-          >
-            Outbox
-          </button>
-        </span>
-      )}
       {down[pane] && (
         <button
           type="button"
@@ -2097,6 +2037,7 @@ export default function HomeNav() {
               <div className="hn-under">
                 {/* The month's prompt, pinned over the keeper's wall while it
                     is open (MonthPrompt.js); nothing for a visitor. */}
+                {authed && <PinnedLetter authed={authed} again={waiting} />}
                 {authed && <MonthPrompt authed={authed} />}
                 <Journal
                   entries={entries}
@@ -2126,8 +2067,14 @@ export default function HomeNav() {
             Neither is a copy of anything: the address still works, and what
             is at the address is what is here. */}
         {authed && (
-          <section className="hn-pane hn-pane--inbox" ref={inboxRef} aria-label="What has arrived">
-            {visited[INBOX] && <Inbox inPane sent={inboxSent} again={inboxAgain} />}
+          <section className="hn-pane hn-pane--inbox" ref={inboxRef} aria-label="Community">
+            {/* Community, 2026-10-27: where the inbox was (her Friends brief
+                retires it; anything from a person waits on their face now).
+                The Board, as /directory draws it, until Community's own
+                brief says what else it holds. */}
+            {visited[INBOX] && DIRECTORY_URL && (
+              <div className="hn-community"><Everyone keeper /></div>
+            )}
           </section>
         )}
 

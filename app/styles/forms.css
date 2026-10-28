@@ -2918,6 +2918,13 @@ a.pn-item-album:hover { text-decoration: underline; text-underline-offset: 3px; 
 
 /* ── from app/dashboard/report/page.js ───────────────────────────────── */
 /* Report a problem: one box and Send, on the owner's sheet. */
+/* Problems keepers wrote in, under the box, on the copy that receives them
+   (2026-10-27; they were at the foot of the inbox). */
+.rp-received { margin-top: 28px; display: flex; flex-direction: column; gap: 4px; }
+.rp-received-title {
+  margin: 0 0 6px; font-family: var(--font-label); font-weight: 400; font-size: 10px;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-faint);
+}
 .rp-body { max-width: 640px; padding: 18px 24px 40px; }
 .rp-panel { border-radius: 24px; }
 .rp-form { display: flex; flex-direction: column; gap: 14px; padding: 26px 26px 28px; }

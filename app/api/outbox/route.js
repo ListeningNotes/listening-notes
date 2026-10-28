@@ -82,7 +82,7 @@ export async function POST(request) {
       const id = Number(body.reply_to);
       if (!body.reply_to) return Response.json({ ok: false, error: 'Nobody was chosen.' }, { status: 400 });
       const row = Number.isInteger(id) && id > 0 ? await pull_message(id) : null;
-      if (!row) return Response.json({ ok: false, error: 'That message is no longer in your inbox.' }, { status: 404 });
+      if (!row) return Response.json({ ok: false, error: 'That message is no longer here.' }, { status: 404 });
       if (!row.from_journal) return Response.json({ ok: false, error: 'They left no journal to reply to.' });
       const about = row.about_slug
         ? {

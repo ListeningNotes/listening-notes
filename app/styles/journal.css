@@ -677,6 +677,11 @@
   text-align: left;
 }
 @media (min-width: 769px) { .mp-note { order: -1; margin-top: 12px; } }
+/* An LN. Admin letter pinned over the wall beside it (PinnedLetter.js,
+   2026-10-27), at the prompt's own inset; its card is the inbox's. */
+.ib-letter-room.pl-room { margin: 6px 16px 14px; }
+.ib-letter-room.pl-room.ib-letter-room--up { margin: 0 16px; }
+@media (min-width: 769px) { .ib-letter-room.pl-room { order: -1; margin-top: 12px; } }
 .mp-when, .mp-label, .mp-how {
   margin: 0; font-family: var(--font-label); font-size: 10px; letter-spacing: 0.12em;
   text-transform: uppercase; color: var(--ink-faint);

@@ -293,3 +293,15 @@ export async function said_back_since() {
   const [row] = await database`SELECT min(sent_at) AS since FROM said_back`;
   return row?.since || null;
 }
+
+// The LN. Admin letter, the one there is, for its place on home
+// (PinnedLetter.js, 2026-10-27): the inbox read it out of everything.
+export async function pull_letter() {
+  const [row] = await database`
+    SELECT id, said, door, arrived_at, seen_at
+    FROM messages WHERE admin
+    ORDER BY arrived_at DESC, id DESC
+    LIMIT 1
+  `;
+  return row || null;
+}

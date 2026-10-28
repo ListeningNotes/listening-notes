@@ -2467,6 +2467,8 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
     --own-nav-bottom: 0px;
     min-height: 0;
   }
+  /* Community, 2026-10-27: the Board as /directory draws it, at its width. */
+  .hn-community { max-width: 720px; margin: 0 auto; padding: 8px 24px 0; }
   /* Nothing is hidden and nothing is turning. Both of those belong to a spine
      that shows one page at a time; here all three are panes and all three are
      always there, a swipe away. */
@@ -3251,7 +3253,9 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
     top: calc(22px + var(--safe-top) + 58px); height: var(--hn-line2);
   }
   .hn-face { padding-top: calc(var(--hn-bar-h) + var(--hn-line2)); }
-  .hn-pane--inbox { padding-top: calc(var(--hn-bar-h) + var(--hn-line2)); }
+  /* Community has no second line of words under the bar (the inbox had
+     Inbox · Outbox there until 2026-10-27). */
+  .hn-pane--inbox { padding-top: var(--hn-bar-h); }
 }
 
 /* ── The card, over the page, 2026-10-22 ───────────────────────────────────

@@ -72,6 +72,9 @@ const nextConfig = {
       // Temporary (307), so a browser never learns it for good and the
       // address stays free.
       { source: '/dashboard/feed', destination: '/dashboard/people', permanent: false },
+      // The inbox, retired 2026-10-27 with Miyel's Friends brief: what a
+      // person sends waits on their face in Friends now. The same promise.
+      { source: '/dashboard/inbox', destination: '/dashboard/people', permanent: false },
     ];
   },
   // Who is allowed to ask the dev server for dev-only things. Next blocks
