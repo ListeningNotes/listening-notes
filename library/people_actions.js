@@ -141,7 +141,8 @@ export async function note_moves(people, heard) {
 // fix"): everything here that names the friend's old address names the new
 // one — what was sent them and is still out (`sent`), what of theirs came
 // back (`came_back`), their wave, their messages and what they are about,
-// and what they sent here (`submissions`) — so the Outbox clears when a
+// and what they sent here (`submissions`), and what was written back to
+// them (`said_back`, 2026-10-27) — so the Outbox clears when a
 // record comes back from the new address, the feed does not bring back as
 // new what already came back, and a reply goes where they live now. Where a
 // row for the new address is already here, the old one is the one that
@@ -180,6 +181,9 @@ function carryAlong(sql, from, to) {
           WHERE lower(split_part(regexp_replace(btrim(about_journal), '^https?://', '', 'i'), '/', 1)) = ${from}`,
     sql`UPDATE submissions SET sender_url = ${to}
           WHERE lower(split_part(regexp_replace(btrim(sender_url), '^https?://', '', 'i'), '/', 1)) = ${from}`,
+    // What was written back to them, and about their records (Words).
+    sql`UPDATE said_back SET to_journal = ${to} WHERE to_journal = ${from}`,
+    sql`UPDATE said_back SET about_journal = ${to} WHERE about_journal = ${from}`,
   ];
 }
 

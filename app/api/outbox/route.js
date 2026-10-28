@@ -30,7 +30,7 @@
 import { requireWristband } from '@/library/wristband';
 import { pull_person } from '@/library/people_actions';
 import { send_record, send_wave, send_message } from '@/library/outbox';
-import { SAID_MOST, ANSWERING_MOST, pull_message, mark_replied } from '@/library/message_actions';
+import { SAID_MOST, ANSWERING_MOST, pull_message, mark_replied, save_said_back } from '@/library/message_actions';
 import { save_sent } from '@/library/sent_actions';
 import { waved_back } from '@/library/wave_actions';
 
@@ -104,7 +104,17 @@ export async function POST(request) {
       // It landed, so the message says it was answered. A reply that has
       // gone is not undone by this failing: the row simply does not say so.
       const marked = await mark_replied(row.id).catch(() => null);
-      return Response.json({ ok: true, to: row.from_name || null, replied_at: marked?.replied_at || null });
+      // And the words themselves, kept on this side for Words (2026-10-27,
+      // migrations/045): what was said back, to whom, about what. After the
+      // reply and never in its way — a failure costs Words a bubble.
+      const kept = await save_said_back({
+        to_journal: row.from_journal,
+        to_name: row.from_name,
+        said,
+        about: row.about_slug ? { ...about, journal: row.about_journal || '' } : null,
+        reply_to: row.id,
+      }).catch(() => null);
+      return Response.json({ ok: true, to: row.from_name || null, replied_at: marked?.replied_at || null, said_at: kept?.sent_at || null });
     } catch (error) {
       return Response.json({ ok: false, error: error.message }, { status: 500 });
     }

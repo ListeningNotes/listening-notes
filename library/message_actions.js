@@ -225,3 +225,71 @@ export async function remove_message(id) {
   }
   return { id: row.id };
 }
+
+// ── Words, 2026-10-27 ─────────────────────────────────────────────────────
+// Your side, written once a reply has landed (migrations/045_said_back.sql;
+// app/api/outbox/route.js). `about` is the message's own subject as this
+// copy keeps it: its journal empty when the record is one of this
+// journal's own.
+export async function save_said_back({ to_journal, to_name, said, about = null, reply_to = null }) {
+  const words = String(said ?? '').trim();
+  const to = tidyJournal(to_journal);
+  if (!words || !to) return null;
+  const [row] = await database`
+    INSERT INTO said_back (
+      to_journal, to_name, said,
+      about_journal, about_slug, about_album, about_artist, about_art, about_song,
+      reply_to
+    )
+    VALUES (
+      ${to}, ${text(to_name, 120)}, ${words.slice(0, SAID_MOST)},
+      ${tidyJournal(about?.journal) || null}, ${about?.slug || null},
+      ${text(about?.album, 300)}, ${text(about?.artist, 300)},
+      ${text(about?.art, 1000)}, ${text(about?.song, 300)},
+      ${Number.isInteger(reply_to) ? reply_to : null}
+    )
+    RETURNING id, sent_at
+  `;
+  return row;
+}
+
+// Everything said between this keeper and one journal, both sides, oldest
+// first: their messages (never a letter) and what was written back to them.
+// `side` is 'theirs' or 'mine'. A thousand at most each way.
+export async function pull_words(address) {
+  const at = tidyJournal(address);
+  if (!at) return [];
+  const [theirs, mine] = await Promise.all([
+    database`
+      SELECT id, from_name AS name, said,
+             about_journal, about_slug, about_album, about_artist, about_art, about_song,
+             coalesce(written_at, arrived_at) AS at, seen_at, replied_at, kept_at
+      FROM messages
+      WHERE NOT admin
+        AND lower(split_part(regexp_replace(btrim(coalesce(from_journal, '')), '^https?://', '', 'i'), '/', 1)) = ${at}
+      ORDER BY coalesce(written_at, arrived_at) DESC, id DESC
+      LIMIT 1000
+    `,
+    database`
+      SELECT id, said,
+             about_journal, about_slug, about_album, about_artist, about_art, about_song,
+             sent_at AS at, reply_to
+      FROM said_back
+      WHERE to_journal = ${at}
+      ORDER BY sent_at DESC, id DESC
+      LIMIT 1000
+    `,
+  ]);
+  return [
+    ...theirs.map(r => ({ ...r, side: 'theirs' })),
+    ...mine.map(r => ({ ...r, side: 'mine' })),
+  ].sort((a, b) => new Date(a.at) - new Date(b.at));
+}
+
+// When this copy began keeping what its keeper writes back: its first
+// reply kept, or null before there is one. Words says so, since nothing
+// earlier was kept (her answers, 2026-10-26).
+export async function said_back_since() {
+  const [row] = await database`SELECT min(sent_at) AS since FROM said_back`;
+  return row?.since || null;
+}

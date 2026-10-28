@@ -381,6 +381,9 @@ export default function PersonPage({ layered = false }) {
         <div className="pn-foot">
           <SentList journal={person.address} title={`Still out with ${name}`} />
           <p className="pn-quiet">
+            {/* All the words between you, record by record (Words.js) —
+                the brief's quiet line under their wall. */}
+            <Link className="pn-quiet-act" href={`/dashboard/people/${person.id}/words`}>All words with {name}</Link>
             {/* Keep private moved here from under their face, 2026-10-27:
                 the face is for what they sent, this page for them. */}
             {DIRECTORY_URL && (

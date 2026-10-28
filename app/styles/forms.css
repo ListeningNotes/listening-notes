@@ -2744,11 +2744,69 @@ textarea.st-field { resize: vertical; min-height: 96px; }
   transition: color 0.15s;
 }
 .pn-quiet-act:hover { color: var(--ink-soft); }
+a.pn-quiet-act { text-decoration: none; display: inline-block; }
 .pn-quiet-act--sure, .pn-quiet-act--sure:hover { color: var(--fav, #f0484f); }
 .pn-quiet-act--on { color: var(--ink-soft); }
 @media (prefers-reduced-motion: reduce) {
   .pn-compare, .pn-compare-in { transition: none; }
 }
+
+/* ── from components/main_components/Words.js ────────────────────────── */
+/* Words, 2026-10-27: one friend's conversations, each under the record it
+   is about. Theirs left and filled, yours right and outlined, no colour; a
+   hairline spine behind them, seen in the gaps; when, at 9px, under each. */
+.wd-name {
+  margin: 0; min-width: 0;
+  font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
+  font-size: 19px; line-height: 1.15; color: var(--ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.wd-body { padding-top: 10px; padding-bottom: calc(40px + env(safe-area-inset-bottom, 0px)); }
+.wd-chain { padding: 16px 0 26px; border-top: 1px solid var(--border); scroll-margin-top: 12px; }
+.wd-chain:first-child { border-top: 0; }
+.wd-about {
+  position: relative; z-index: 1;
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px; border-radius: 14px; background: var(--bg-warm);
+}
+.wd-about-art { flex: 0 0 52px; height: 52px; border-radius: 6px; overflow: hidden; background: var(--panel); }
+.wd-about-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.wd-about-says { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.wd-about-count, .wd-about-artist, .wd-when, .wd-kept {
+  font-family: var(--font-label); font-size: 9px; line-height: 1.3;
+  letter-spacing: 0.11em; text-transform: uppercase; color: var(--ink-faint);
+}
+.wd-about-title {
+  font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
+  font-size: 18px; line-height: 1.2; color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.wd-thread { position: relative; display: flex; flex-direction: column; gap: 14px; padding-top: 16px; }
+.wd-thread::before {
+  content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 1px;
+  background: var(--border); transform: translateX(-0.5px);
+}
+.wd-one { position: relative; display: flex; flex-direction: column; gap: 5px; max-width: 78%; }
+.wd-one--theirs { align-self: flex-start; align-items: flex-start; }
+.wd-one--mine { align-self: flex-end; align-items: flex-end; }
+.wd-bubble {
+  margin: 0; padding: 12px 15px; border-radius: 16px;
+  font-family: var(--font-display); font-size: 16px; line-height: 1.42; color: var(--ink);
+  white-space: pre-wrap; overflow-wrap: anywhere;
+}
+.wd-one--theirs .wd-bubble { background: var(--bg-warm); }
+.wd-one--mine .wd-bubble { background: var(--bg); border: 1px solid var(--ink-faint); }
+.wd-when { padding: 0 4px; background: var(--bg); }
+.wd-write {
+  display: inline-flex; align-items: center; gap: 8px;
+  margin-top: 18px; padding: 6px 0; border: 0; background: none; cursor: pointer;
+  font-family: var(--font-label); font-size: 9.5px; letter-spacing: 0.11em; text-transform: uppercase;
+  color: var(--ink-soft); -webkit-tap-highlight-color: transparent;
+}
+.wd-write:hover { color: var(--ink); }
+.wd-form { margin-top: 14px; }
+.wd-said { margin: 24px 0; font-size: 15px; line-height: 1.5; color: var(--ink-soft); }
+.wd-kept { margin: 18px 0 0; padding-top: 14px; border-top: 1px solid var(--border); }
 /* The counted facts, one table: the card's label-and-answer shape. */
 .pn-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 18px; margin: 0 0 8px; }
 .pn-fact { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 14px; background: var(--bg); }

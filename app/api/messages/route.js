@@ -49,7 +49,9 @@ import { tidyJournal } from '@/library/return_address';
 import { pull_settings } from '@/library/settings_actions';
 import {
   SAID_MOST, sameJournal, pull_messages, save_message, see_message, keep_message, remove_message,
+  pull_words, said_back_since,
 } from '@/library/message_actions';
+import { pull_person } from '@/library/people_actions';
 import { read_letter, keep_letter } from '@/library/letterhead';
 import { answerNoJournal } from '@/library/hosting_directory';
 
@@ -156,6 +158,15 @@ export async function GET(request) {
   const blocked = await requireWristband(request);
   if (blocked) return blocked;
   try {
+    // Words with one person, 2026-10-27: `?person=<id>` from the book —
+    // both sides, oldest first, and when this copy began keeping its own.
+    const id = Number(new URL(request.url).searchParams.get('person'));
+    if (Number.isInteger(id) && id > 0) {
+      const person = await pull_person(id);
+      if (!person) return Response.json({ error: 'They are not in your address book.' }, { status: 404 });
+      const [words, since] = await Promise.all([pull_words(person.address), said_back_since()]);
+      return Response.json({ person, words, since });
+    }
     return Response.json({ messages: await pull_messages() });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
