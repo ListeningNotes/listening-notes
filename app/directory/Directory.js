@@ -417,8 +417,9 @@ function BoardNote() {
 // strip at the head of an entry draws the three flags this way (MiniCard),
 // and a row is a glance (Miyel, 2026-09-13: the icon, not the tag's name).
 // Sent gets an envelope in faint ink, the inbox's own mark. The feed's until
-// it was retired (2026-10-23); the Board's rows are what draw it now.
-function Marks({ entry, size = 12 }) {
+// it was retired (2026-10-23); the Board's rows are what draw it now, and
+// home's List (AlbumTile.js, 2026-10-29).
+export function Marks({ entry, size = 12 }) {
   const fav = entry.favorite === true || entry.favorite === 'true';
   const mp = entry.masterpiece === true || entry.masterpiece === 'true';
   const formative = entry.formative === true || entry.formative === 'true';

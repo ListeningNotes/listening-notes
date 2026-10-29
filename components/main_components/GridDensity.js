@@ -13,25 +13,39 @@
 
 'use client';
 
+import { Rows } from '@phosphor-icons/react';
+
 export const DENSITIES = ['large', 'medium', 'small'];
+// ── And on the Friends wall, two more, 2026-10-29 ─────────────────────────
+// The retired feed's two looks come back as sizes of the wall: Feed, one
+// record at a time at the wall's full width, first; List, the feed's rows,
+// last, on the feed's old Rows glyph (Miyel: "feed is one square, (first in
+// list) list button can be old button. that goes last"). Only that wall
+// draws them (PeopleScreen.js), so home's control keeps its three.
+export const FRIENDS_DENSITIES = ['feed', ...DENSITIES, 'list'];
+// And home's own wall has List too (2026-10-29, her ask), last, with the
+// record's stars and marks where the Friends wall has faces (AlbumTile.js).
+export const HOME_DENSITIES = [...DENSITIES, 'list'];
 export const DEFAULT_DENSITY = 'medium';
 const STORAGE_KEY = 'ln-archive-density';
 
 // The choice is remembered between visits: someone who prefers to see the
-// whole archive at a glance shouldn't have to re-pick it every time.
-export function readStoredDensity() {
+// whole archive at a glance shouldn't have to re-pick it every time. A wall
+// with its own list keeps it under its own key, so a Feed picked on Friends
+// never reaches home's three.
+export function readStoredDensity(key = STORAGE_KEY, allowed = DENSITIES) {
   if (typeof window === 'undefined') return DEFAULT_DENSITY;
   try {
-    const saved = window.localStorage.getItem(STORAGE_KEY);
-    return DENSITIES.includes(saved) ? saved : DEFAULT_DENSITY;
+    const saved = window.localStorage.getItem(key);
+    return allowed.includes(saved) ? saved : DEFAULT_DENSITY;
   } catch {
     return DEFAULT_DENSITY;
   }
 }
 
-export function storeDensity(value) {
+export function storeDensity(value, key = STORAGE_KEY) {
   try {
-    window.localStorage.setItem(STORAGE_KEY, value);
+    window.localStorage.setItem(key, value);
   } catch {
     /* private browsing / storage disabled — the control still works, it
        just won't be remembered next visit */
@@ -65,13 +79,13 @@ function GridGlyph({ n }) {
   );
 }
 
-const LABELS = { large: 'Large albums', medium: 'Medium albums', small: 'Small albums' };
-const SIDES  = { large: 2, medium: 3, small: 4 };
+const LABELS = { feed: 'Feed', large: 'Large albums', medium: 'Medium albums', small: 'Small albums', list: 'List' };
+const SIDES  = { feed: 1, large: 2, medium: 3, small: 4 };
 
-export default function GridDensity({ value, onChange }) {
+export default function GridDensity({ value, onChange, options = DENSITIES }) {
   return (
     <div className="gd" role="group" aria-label="Album size">
-      {DENSITIES.map(d => (
+      {options.map(d => (
         <button
           key={d}
           type="button"
@@ -81,7 +95,7 @@ export default function GridDensity({ value, onChange }) {
           aria-pressed={value === d}
           title={LABELS[d]}
         >
-          <GridGlyph n={SIDES[d]} />
+          {d === 'list' ? <Rows size={16} weight="regular" aria-hidden="true" /> : <GridGlyph n={SIDES[d]} />}
         </button>
       ))}
     </div>

@@ -205,7 +205,8 @@ The front doors — receive requests, hand them off, send back responses
     public/beacon/route.js     What the keeper is listening to — anyone may ask; cached at the edge; with `moved_to` when the journal lives somewhere else now (Settings, or asked at the address it moved off)
     public/entries/route.js    The public feed another copy reads — PUBLIC_FIELDS only, with keeper_name beside them
     public/notes/[slug]/route.js  One entry's album note, for a friend's page about this keeper — one at a time, never stored by the reader, 404 for a track note, a quiet entry or none
-    public/stamps/route.js     The card's counted facts — records, songs, first entry, top genres, the two flag counts
+    public/stamps/route.js     The card's counted facts — records, songs, first entry, top genres, the two flag counts; readable from another journal's pages since 2026-10-29, for a friend's card
+    public/card/route.js       The card as a visitor sees it, for a friend's page on another copy to draw from their face — the card's part of BOOKPLATE_FIELDS (name, portrait path, founded, links, answers, rig) and the pinned record as itself; nothing a visitor's page does not already carry
     public/listing/route.js    The code the directory issued this journal, as plain text, or 404 — how the registry proves the address
     public/people/route.js     The people this journal's keeper added who are on the Board themselves — a name and an address each; never anybody kept private, nothing while the keeper is off the Board; checked against the directory with hashes; kept a minute. What makes "a friend away"
     tickets/route.js           POST, the keeper's own: a ticket to start a journal at the front door, for Invite — one journal, once, within two weeks, naming the journal the press came from; `hosted: false` on a copy of its own (2026-10-22)

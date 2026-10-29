@@ -77,8 +77,10 @@ import { useRouter } from 'next/navigation';
 import { usePathname } from 'next/navigation';
 import { ArrowRight, Camera, CaretDown, MagnifyingGlass, Ticket, User, UserPlus } from '@phosphor-icons/react';
 import Journal, { foldForSearch } from './Journal';
+import { FRIENDS_DENSITIES } from './GridDensity';
 import CodeScanner from './CodeScanner';
-import FriendPanel, { waitingFrom, seeAll, strangersIn } from './Friend_panel';
+import FriendPanel, { waitingFrom, seeAll, strangersIn, when } from './Friend_panel';
+import StarRating from './StarRating';
 import Headlines from './Headlines';
 import InviteSheet from './InviteSheet';
 import WaveSheet from './WaveSheet';
@@ -91,6 +93,8 @@ import { BOARD_OPEN, DIRECTORY_URL } from '../../library/version';
 
 // The wall's view remembers itself between visits, apart from home's.
 const VIEW_KEY = 'ln-people-view';
+// And its size, apart from home's: Friends has Feed and List (GridDensity.js).
+const DENSITY_KEY = 'ln-people-density';
 
 // How long one journal gets to answer before its records are simply absent
 // (the feed's number).
@@ -417,7 +421,14 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
       return { ...e, path: `/dashboard/people/${id}/${encodeURIComponent(last.slug)}` };
     }).filter(Boolean);
   }, [idOf]);
-  const tile = useCallback(album => {
+  // ── Feed and List, 2026-10-29 ───────────────────────────────────────────
+  // Two more sizes of the same tile (GridDensity.js): Feed is the record at
+  // the wall's width with what the old feed said under it — the record, its
+  // artist, the stars, and who logged it when; List is the feed's rows, a
+  // small cover and one line of each. Either way the press, the grow, New and
+  // the faces are the grid's; only the cover grows, so the entry opens out
+  // of the art rather than the row.
+  const tile = useCallback((album, density) => {
     const face = album.face;
     const last = album.loggers[0];
     const folded = album.listens.length === 0;
@@ -436,11 +447,86 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
     const opens = album.all.find(e => e.slug === last.slug && e.by?.address === last.address) || face;
     const inAppAt = inApp ? `/dashboard/people/${inApp}/${encodeURIComponent(last.slug)}` : '';
     const way = inApp
-      ? { href: inAppAt, 'data-grows': inAppAt, onClick: () => { handOffOrder(order.current); handOff(opens); } }
+      ? { href: inAppAt, onClick: () => { handOffOrder(order.current); handOff(opens); } }
       : { href: there(last.address, `/entries/${encodeURIComponent(last.slug)}`), target: '_blank', rel: 'noopener noreferrer' };
+    const grows = inApp ? inAppAt : undefined;
+    const faces = (
+      <>
+        {album.mine && (
+          <span className="ps-who-face">
+            <User size={10} weight="regular" />
+            {myFace && <img src={myFace} alt="" loading="lazy" onError={e => { e.currentTarget.style.display = 'none'; }} />}
+          </span>
+        )}
+        {album.loggers.slice(0, FACES_MOST).map(l => (
+          <span key={l.address} className="ps-who-face">
+            <User size={10} weight="regular" />
+            <img
+              src={`${journalUrl(l.address)}/api/portrait`}
+              alt=""
+              loading="lazy"
+              onError={e => { e.currentTarget.style.display = 'none'; }}
+            />
+          </span>
+        ))}
+      </>
+    );
+    if (density === 'feed' || density === 'list') {
+      const asList = density === 'list';
+      const song = folded && face.song;
+      const title = song ? face.song : face.album;
+      const under = song ? `${face.album} · ${face.artist}` : asList ? face.artist : [face.artist, face.year].filter(Boolean).join(' · ');
+      const rated = Number(opens.rating_value) > 0;
+      const who = `${last.name || 'Someone'} · ${when(opens.posted_at)}`;
+      const art = (
+        <span className={(asList ? 'ps-list-art' : 'ps-feed-art') + (folded ? ' ln-fold' : '')} data-grows={grows}>
+          {face.album_art
+            ? <img src={face.album_art} alt="" loading="lazy" draggable={false} />
+            : <span className="ft-placeholder">{(face.album || '?')[0]}</span>}
+          {folded && (
+            <span className="ln-fold-flap" aria-hidden="true">
+              {face.album_art && <img src={face.album_art} alt="" loading="lazy" draggable={false} />}
+            </span>
+          )}
+          {fresh.length > 0 && !asList && <span className="ln-new ln-new--tile" aria-hidden="true">New</span>}
+        </span>
+      );
+      return (
+        <Door
+          {...way}
+          className={asList ? 'ps-list' : 'ps-feed'}
+          data-tile-key={album.key}
+          data-unseen={fresh.length ? fresh.join(' ') : undefined}
+          aria-label={fresh.length ? `New: ${said}` : said}
+        >
+          {art}
+          {asList ? (
+            <>
+              <span className="ps-list-words">
+                <span className="ps-list-title">{title}</span>
+                <span className="ps-list-meta">{under} · {who}</span>
+              </span>
+              {fresh.length > 0 && <span className="ln-new" aria-hidden="true">New</span>}
+              <span className="ps-who ps-who--line" aria-hidden="true">{faces}</span>
+            </>
+          ) : (
+            <span className="ps-feed-words">
+              <span className="ps-feed-title">{title}</span>
+              <span className="ps-feed-under">{under}</span>
+              {rated && <StarRating rating={Number(opens.rating_value)} size={16} />}
+              <span className="ps-feed-who">
+                <span className="ps-who ps-who--line" aria-hidden="true">{faces}</span>
+                {who}
+              </span>
+            </span>
+          )}
+        </Door>
+      );
+    }
     return (
       <Door
         {...way}
+        data-grows={grows}
         className={'ft ps-tile' + (folded ? ' ft--page' : '')}
         data-tile-key={album.key}
         data-unseen={fresh.length ? fresh.join(' ') : undefined}
@@ -463,25 +549,7 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
           </div>
         </div>
         {fresh.length > 0 && <span className="ln-new ln-new--tile" aria-hidden="true">New</span>}
-        <span className="ps-who" aria-hidden="true">
-          {album.mine && (
-            <span className="ps-who-face">
-              <User size={10} weight="regular" />
-              {myFace && <img src={myFace} alt="" loading="lazy" onError={e => { e.currentTarget.style.display = 'none'; }} />}
-            </span>
-          )}
-          {album.loggers.slice(0, FACES_MOST).map(l => (
-            <span key={l.address} className="ps-who-face">
-              <User size={10} weight="regular" />
-              <img
-                src={`${journalUrl(l.address)}/api/portrait`}
-                alt=""
-                loading="lazy"
-                onError={e => { e.currentTarget.style.display = 'none'; }}
-              />
-            </span>
-          ))}
-        </span>
+        <span className="ps-who" aria-hidden="true">{faces}</span>
       </Door>
     );
   }, [there, myFace, seen, idOf]);
@@ -1015,6 +1083,8 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
           scroller={scroller}
           tile={tile}
           viewKey={VIEW_KEY}
+          densities={FRIENDS_DENSITIES}
+          densityKey={DENSITY_KEY}
           empty={empty}
           seek={seek}
           onOrder={onOrder}

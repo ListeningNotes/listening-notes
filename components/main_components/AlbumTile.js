@@ -49,8 +49,10 @@
 'use client';
 import Link from 'next/link';
 import { handOff } from '../../library/handoff';
+import StarRating from './StarRating';
+import { Marks } from '../../app/directory/Directory';
 
-export default function AlbumTile({ album, going = false }) {
+export default function AlbumTile({ album, going = false, density = null }) {
   const face = album.face;
   const alone = album.all.length === 1;
   // A page is a record known only by its songs, however many; anything with
@@ -59,6 +61,48 @@ export default function AlbumTile({ album, going = false }) {
   // The entry the tile opens: its only one, or a folder's earliest.
   const opens = album.all[album.all.length - 1];
   const href = `/entries/${opens.slug}`;
+
+  // ── List, 2026-10-29 ──────────────────────────────────────────────────
+  // Miyel: "list view might be nice on personal album wall. it could have
+  // art on left but instead of friend on right stars and tags." The Friends
+  // wall's rows (PeopleScreen.js), with the record's own stars and its marks
+  // — her tags, the icons and not their names — where a friend's faces are.
+  // The same press, the same hand-off, and the entry grows out of the cover
+  // (data-tile-slug on the art), not the row.
+  if (density === 'list') {
+    const song = folded && face.song;
+    const title = song ? face.song : face.album;
+    const under = song ? `${face.album} · ${face.artist}` : [face.artist, face.year].filter(Boolean).join(' · ');
+    return (
+      <Link
+        href={href}
+        className={'ps-list ft-list' + (going ? ' ft--going' : '')}
+        aria-label={title + (face.artist ? ' by ' + face.artist : '')}
+        data-tile-key={album.key}
+        data-tile-slugs={album.all.map(e => e.slug).join(' ')}
+        onClick={() => handOff(opens)}
+      >
+        <span className={'ps-list-art' + (folded ? ' ln-fold' : '')} data-tile-slug={opens.slug}>
+          {face.album_art
+            ? <img src={face.album_art} alt="" loading="lazy" draggable={false} />
+            : <span className="ft-placeholder">{(face.album || '?')[0]}</span>}
+          {folded && (
+            <span className="ln-fold-flap" aria-hidden="true">
+              {face.album_art && <img src={face.album_art} alt="" loading="lazy" draggable={false} />}
+            </span>
+          )}
+        </span>
+        <span className="ps-list-words">
+          <span className="ps-list-title">{title}</span>
+          <span className="ps-list-meta">{under}</span>
+        </span>
+        <span className="ft-list-marks">
+          {Number(face.rating_value) > 0 && <StarRating rating={Number(face.rating_value)} size={11} />}
+          <Marks entry={face} size={13} />
+        </span>
+      </Link>
+    );
+  }
 
   return (
     <Link

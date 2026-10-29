@@ -29,7 +29,7 @@ import { Eye, EyeSlash, UploadSimple, User, X } from '@phosphor-icons/react';
 import { useRouter } from 'next/navigation';
 import { useTheme } from './Lightswitch';
 import { useListeningBeacon } from '../../hooks/useListeningBeacon';
-import { useBookplate } from './Bookplate';
+import { useBookplate, useVisiting } from './Bookplate';
 import CodeSlot from './CodeSlot';
 import KeeperTools from './KeeperTools';
 
@@ -78,7 +78,11 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
     portrait_code_url,
     portrait_code_stale,
   } = settings;
-  const { isLive } = useListeningBeacon();
+  const { isLive: ownLive } = useListeningBeacon();
+  // A friend's card, drawn here from their face (About.js): their beacon, and
+  // their records open as their posts inside this journal.
+  const visiting = useVisiting();
+  const isLive = visiting ? Boolean(visiting.live) : ownLive;
   // The code's dots are the page's ink, so the card asks for the file that
   // matches the page. The server renders light; a dark-page reader gets the
   // right one a moment after hydration.
@@ -380,6 +384,8 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
   // standing on another.
   const [barSlot, setBarSlot] = useState(null);
   useEffect(() => {
+    // Not for a friend's card: home's bar is not its header, and it has no ···.
+    if (visiting) return undefined;
     const narrow = window.matchMedia('(max-width: 768px)');
     let slot = null;
     const fit = () => {
@@ -402,26 +408,16 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
       if (slot) slot.remove();
       setBarSlot(null);
     };
-  }, []);
+  }, [visiting]);
 
-  // Whether this card's own header has gone under the bar. Measured against
-  // the bar's own bottom edge rather than a number, so the notch is in it.
-  const headRef = useRef(null);
-  const [headGone, setHeadGone] = useState(false);
-  useEffect(() => {
-    const head = headRef.current;
-    const bar = document.querySelector('.hn-bar');
-    const scroller = head?.closest('.hn-pane');
-    if (!head || !bar || !scroller) return undefined;
-    const look = () => {
-      setHeadGone(head.getBoundingClientRect().bottom <= bar.getBoundingClientRect().bottom);
-    };
-    look();
-    scroller.addEventListener('scroll', look, { passive: true });
-    return () => scroller.removeEventListener('scroll', look);
-  }, []);
-
-  const inBar = Boolean(barSlot && headGone);
+  // ── And always there on a phone, 2026-10-29 ───────────────────────────
+  // It moved into the bar only once this row had scrolled under it, so the
+  // card opened with two headers, the top row and this one. Miyel: "not two
+  // headers. the three dots replace nav bar. header logo stays." So on a
+  // phone the ··· is in the top row from the start, where Home · Friends ·
+  // Community stand while the card is shut (nav.css), and this row is not
+  // drawn there. A desk keeps its row; it has no slot.
+  const inBar = Boolean(barSlot);
 
   // Nothing up here while a correction is open. Save and Cancel were a tick
   // and a cross in this corner until 2026-09-20; they are at the foot now, in
@@ -498,7 +494,7 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
             whatever is drawn. */}
         {inBar && createPortal(<div className="idc-tools">{toolsRow}</div>, barSlot)}
 
-        <div className="idc-head" ref={headRef}>
+        <div className="idc-head">
           <svg
             viewBox={`${MARK_BOX.x} ${MARK_BOX.y} ${MARK_BOX.w} ${MARK_BOX.h}`}
             className="idc-mark"
@@ -692,7 +688,7 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
                where it is actually needed, in the row's own label, for
                anybody who cannot see the card. */
             <Link
-              href={`/entries/${pinned.slug}`}
+              href={visiting ? `${visiting.page}/${encodeURIComponent(pinned.slug)}` : `/entries/${pinned.slug}`}
               className="idc-pinned"
               aria-label={`Pinned: ${pinSaid(pinned).label}`}
               /* One record, and no wall behind it. This pane is a snapshot of

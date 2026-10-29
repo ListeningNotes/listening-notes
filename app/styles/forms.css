@@ -2475,6 +2475,65 @@ textarea.st-field { resize: vertical; min-height: 96px; }
   position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
   -webkit-touch-callout: none; user-select: none;
 }
+/* ── Feed and List, 2026-10-29 ─────────────────────────────────────────────
+   The Friends wall's two more sizes (PeopleScreen.js, GridDensity.js), the
+   retired feed's two looks: the record at a reading width with what the feed
+   said under it, and the feed's rows. The faces sit in the line, not on the
+   cover. */
+.ps-who--line { position: static; }
+.ps-feed, .ps-list {
+  color: inherit; text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.ps-feed { display: block; }
+.ps-feed-art {
+  position: relative; display: block;
+  aspect-ratio: 1 / 1; border-radius: 14px; overflow: hidden;
+  background: var(--bg-warm);
+  box-shadow: 0 12px 32px -16px rgba(0, 0, 0, 0.4);
+}
+.ps-feed-art > img, .ps-list-art > img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.ps-feed-words {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 14px 6px 0; text-align: center;
+}
+.ps-feed-title {
+  font-family: var(--font-display); font-weight: var(--font-display-weight);
+  font-size: 19px; line-height: 1.2; color: var(--ink);
+}
+.ps-feed-under { font-size: 14px; color: var(--ink-soft); }
+.ps-feed-who {
+  display: inline-flex; align-items: center; gap: 8px; margin-top: 2px;
+  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--ink-faint);
+}
+.ps-list {
+  display: flex; align-items: center; gap: 12px;
+  padding: 9px 0; border-bottom: 1px solid var(--border);
+}
+.ps-list-art {
+  position: relative; flex: 0 0 auto;
+  width: 52px; height: 52px; border-radius: 7px; overflow: hidden;
+  background: var(--bg-warm);
+}
+.ps-list-art .ft-placeholder { font-size: 20px; }
+.ps-list-words { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.ps-list-title, .ps-list-meta { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ps-list-title { font-weight: 700; font-size: 15px; color: var(--ink); }
+.ps-list-meta { font-size: 12.5px; color: var(--ink-faint); }
+.ps-list .ln-new { flex: 0 0 auto; }
+/* Home's List draws the same row (AlbumTile.js), its stars and marks where
+   a friend's faces are. */
+/* Two rows, both to the right edge: the stars on top, so they make one
+   column down the list whatever a record wears, and the marks under them
+   (Miyel, 2026-10-29: "stars be one row and then the other tags be a row
+   underneath … so it's all aligned"). */
+.ft-list-marks {
+  flex: 0 0 auto;
+  display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 6px;
+}
+.ft-list-marks .ln-mini-flags { display: inline-flex; gap: 6px; }
+
 /* A search's faces, over the wall: the band's faces, in a row that scrolls
    sideways once it overflows. */
 .ps-found {
@@ -2667,6 +2726,57 @@ textarea.st-field { resize: vertical; min-height: 96px; }
   display: grid; place-items: center; color: var(--ink-faint);
 }
 .pn-face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+/* ── Their face opens their card, 2026-10-29 ───────────────────────────────
+   As home's face opens the keeper's (nav.css, Grown from the face): the
+   card is the whole screen, a circle growing out of the face, which is its X
+   while it is open; the name stays in the middle of the row and Compare and
+   Added step aside. Nothing fades. The circle's centre is the face's, measured as it is
+   pressed (app/dashboard/people/[id], openCard). */
+.pn-face-press {
+  position: relative; flex: 0 0 auto; display: grid;
+  padding: 0; border: 0; border-radius: 50%; background: none;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.pn-face-press:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 2px; }
+/* Over the wall's sticking bar (101, journal.css), which would otherwise
+   show through it, and the row over the card. */
+.pn-screen--card .pn-hdr { z-index: 111; }
+.pn-screen--card .pn-hdr-stops { visibility: hidden; }
+.pn-idcard {
+  --from: 35px 51px;
+  /* Under the row rather than behind it: the row has no ground of its own,
+     so a card scrolled up under it ran behind their name. The circle still
+     starts at the face, above this box (openCard measures it). */
+  position: fixed; inset: calc(80px + var(--safe-top, 0px)) 0 0; z-index: 110;
+  overflow-y: auto; overscroll-behavior: contain;
+  /* The card's gutter, as home's card pane gives it (.hn-face and
+     --hn-gutter, nav.css): 34 on a desk, 18 on a phone, below. */
+  --page-gutter: 34px;
+  background: var(--bg);
+  -webkit-clip-path: circle(17px at var(--from));
+  clip-path: circle(17px at var(--from));
+  visibility: hidden;
+  transition:
+    clip-path 0.36s cubic-bezier(0.4, 0, 0.7, 0.2),
+    -webkit-clip-path 0.36s cubic-bezier(0.4, 0, 0.7, 0.2),
+    visibility 0s linear 0.36s;
+}
+.pn-idcard--open {
+  -webkit-clip-path: circle(150vmax at var(--from));
+  clip-path: circle(150vmax at var(--from));
+  visibility: visible;
+  transition:
+    clip-path 0.5s cubic-bezier(0.22, 0.61, 0.36, 1),
+    -webkit-clip-path 0.5s cubic-bezier(0.22, 0.61, 0.36, 1),
+    visibility 0s;
+}
+@media (max-width: 768px) { .pn-idcard { --page-gutter: 18px; } }
+/* Their card has no head of its own: the row above is it. Three classes deep,
+   since idcard.css is loaded after this sheet. */
+.pn-idcard .ab-card .idc-head { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .pn-idcard, .pn-idcard--open { transition: none; }
+}
 /* In the middle of the row, where home's mark is. */
 .pn-hdr-name {
   position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
