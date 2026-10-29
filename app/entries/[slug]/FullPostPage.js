@@ -26,7 +26,7 @@ import { usePress } from '../../../hooks/usePress';
 import { FRAMES, FRAME_ORDER } from '../../../components/main_components/SharePrinter';
 import HorizonBar from '../../../components/main_components/Slug_Page/HorizonBar';
 import TrackThread from '../../../components/main_components/Slug_Page/TrackThread';
-import { MessageWayIn, useWritingTo } from '../../../components/main_components/Slug_Page/MessageForm';
+import { MessageWayIn } from '../../../components/main_components/Slug_Page/MessageForm';
 import MetadataLabel from '../../../components/main_components/Slug_Page/MetadataLabel';
 import Chip from '../../../components/main_components/Slug_Page/Chip';
 import SentBy, { creditOn, useTrail } from '../../../components/main_components/Slug_Page/SentBy';
@@ -39,7 +39,7 @@ import MiniCard from '../../../components/main_components/Slug_Page/MiniCard';
 import MarqueeTitle from '../../../components/main_components/MarqueeTitle';
 import { handedOver, cameReadingOn } from '../../../library/handoff';
 import { tidyAddress } from '../../../library/return_address';
-import { useBookplate } from '../../../components/main_components/Bookplate';
+import { useBookplate, useVisiting } from '../../../components/main_components/Bookplate';
 import { useTheme } from '../../../components/main_components/Lightswitch';
 import CodeSlot from '../../../components/main_components/CodeSlot';
 import StarRating from '../../../components/main_components/StarRating';
@@ -223,7 +223,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   // it. The art's mark rides along so a corrected cover is never a day stale.
   // A friend's entry read inside this journal (app/dashboard/people/[id]/
   // [slug], 2026-10-28) asks their journal for its code, which only it has.
-  const elsewhere = useWritingTo() && entryUrl ? `https://${host}` : '';
+  const elsewhere = useVisiting() && entryUrl ? `https://${host}` : '';
   const codeSrc = `${elsewhere}/api/entries/${encodeURIComponent(entry.slug)}/code?theme=${theme === 'dark' ? 'dark' : 'light'}`
     + `&v=${artMark(entry.album_art_source || entry.album_art || '')}`;
   const coverSlot = {

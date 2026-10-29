@@ -22,9 +22,10 @@
 //
 // `children` stands above the field: who the message is signed by, for a
 // form that has to ask.
-import { createContext, useContext, useLayoutEffect, useRef, useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { User } from '@phosphor-icons/react';
 import { recallSender, keepSender, journalUrl } from '../../../library/return_address';
+import { useVisiting } from '../Bookplate';
 
 const DRAFTS = 'ln-message-draft:';
 
@@ -154,20 +155,9 @@ export default function MessageForm({
 // on their site. Drawn there, this page is theirs and the reader is you, a
 // keeper writing from your own copy: nobody to ask a name of, and the words
 // go through your outbox to them, about this entry (app/api/outbox), so
-// your side is kept for Words. `WritingTo` says so — who, by the book's id,
-// and the entry — around the page that draws it.
-const WritingToContext = createContext(null);
-export function WritingTo({ to, children }) {
-  return <WritingToContext.Provider value={to}>{children}</WritingToContext.Provider>;
-}
-// Whether the entry being drawn is a friend's, read inside this journal —
-// so what it asks of a journal (its cover's code) goes to theirs.
-export function useWritingTo() {
-  return useContext(WritingToContext);
-}
-
+// your side is kept for Words. The page says so (Visiting, Bookplate.js).
 export function MessageWayIn({ slug, keeper = '' }) {
-  const writingTo = useContext(WritingToContext);
+  const writingTo = useVisiting();
   const [writing, setWriting] = useState(false);
   const [gone, setGone] = useState(false);
   const [name, setName] = useState('');

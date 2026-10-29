@@ -3,7 +3,7 @@
 import database from './database_connection.js';
 import { tidyJournal } from './return_address.js';
 import { create_slug } from './slug_generator.js';
-import { serializeTracks, lookup_key, flawless } from './entry_formatter.js';
+import { serializeTracks, lookup_key, flawless, splitNotes } from './entry_formatter.js';
 import { sizedAlbumArt } from './music_data_api.js';
 import { keep_sat_with } from './needle.js';
 
@@ -350,6 +350,26 @@ export async function pull_entry_by_slug(slug, { includeChain = false } = {}) {
   if (!row) return null;
   const sized = withSizedArt(row, ENTRY_ART_PX);
   return includeChain ? sized : withoutChain(sized);
+}
+
+// ── One note, for a friend's copy, 2026-10-24 ─────────────────────────────
+// The album note of one entry, for a person's page on another copy to show
+// beside its own keeper's (app/api/public/notes/[slug]). One at a time and
+// never a list — a list of records never carries the writing (DECISIONS,
+// What a read costs) — and only what the entry's own page already shows to
+// anybody. Its own narrow read, two columns, so nothing else about the row
+// can ride out with it. Not a track note, which is a song's and not the
+// record's; and nothing for an entry whose credit was kept quiet (the
+// compare brief: a quiet entry "shows nothing at all"), which a reader is
+// given exactly as it is given an entry that is not there.
+export async function pull_public_note(slug) {
+  const result = await database.query(
+    'SELECT slug, notes FROM entries WHERE slug = $1 AND song IS NULL AND credit_private IS NOT TRUE LIMIT 1',
+    [slug]
+  );
+  const row = result[0];
+  if (!row) return null;
+  return { slug: row.slug, note: splitNotes(row.notes).albumNotes };
 }
 
 // Everything here belongs to one person until there are accounts to tell them

@@ -24,18 +24,20 @@
 // copy. Nothing is stored and nobody learns they were looked at.
 //
 // ── Compare is a view here, not the page ──────────────────────────────────
-// What this page was, opened in place under the strip and rolled up again:
-// how many records you both have, where you agree and disagree hardest, what
-// they have sent you and how it landed. It is still cumulative and still
-// only yours, which is why it can hold what their journal never could.
-// (What only they have heard was a list here too, and came off on Miyel's
-// call, 2026-09-13: their journal is a tap away and says it better.)
+// Opened in place at the top and rolled up again (her pick, 2026-10-26). It
+// is main's versus screen (2026-10-24, brought in 2026-10-28): the two of
+// you, a colour each and nobody's side bigger; face to face, your share of
+// your records against theirs by genre, decade, artist, stars or how new;
+// the facts as cards swiped through (kept above the records, her call
+// 2026-10-28); and a wall of the records you share. A shared record opens
+// their post with your listen beside theirs (ListenCompare.js) — "comparing
+// a listen vs comparing with a full person", her split the same day: this
+// is the person, the post is the listen. **Nobody wins**: no points, no
+// score, nothing ranked (AGENTS, Never).
 //
-// Rated alike allows for how each of you rates: a generous rater and a
-// harsh one with the same taste should come out alike (DECISIONS, The
-// journal), so their ratings are shifted by the average difference across
-// what you both have before the gap is measured. Three records in common
-// are the least that offset is trusted on.
+// By their number in your book, or — main's, for a keeper off the Board's
+// Compare — by their address, when the top row says Add instead of Added
+// and nothing of theirs opens inside this journal.
 //
 // The row carries Compare and Added — no Wave for somebody already added,
 // her call — and the foot of the wall carries what you have sent them that
@@ -45,25 +47,19 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { CaretLeft, Printer, Shuffle, User, UserCheck } from '@phosphor-icons/react';
+import { CaretDown, CaretLeft, CaretRight, Heart, Printer, Shuffle, SketchLogo, Sparkle, User, UserCheck, UserPlus } from '@phosphor-icons/react';
 import StarRating from '../../../../components/main_components/StarRating';
 import Journal, { foldForSearch, gatherAlbums } from '../../../../components/main_components/Journal';
 import { BeaconCard } from '../../../../components/main_components/ListeningBeacon';
 import SentList from '../../../../components/main_components/SentList';
+import { countHearts, lineUp } from '../../../../components/main_components/ListenCompare';
 import { albumKey } from '../../../../hooks/useListeningBeacon';
 import { fillFriends, useFriendsBeacons } from '../../../../hooks/useFriendsBeacons';
 import { journalUrl, tidyJournal } from '../../../../library/return_address';
-import { arrivingBack, handOff } from '../../../../library/handoff';
+import { arrivingBack, handOff, handOffCompare, handOffOrder } from '../../../../library/handoff';
+import { foldGenre } from '../../../../library/music_data_api';
 import { DIRECTORY_URL } from '../../../../library/version';
 
-// Half a star, after the offset, is the same opinion typed slightly
-// differently. Four stars or better is a hit: something they sent that you
-// went on to log and rate well. Three records is the least the offset is
-// trusted on; fewer, and raw stars are compared.
-const ALIKE = 0.5;
-const HIT = 4;
-const OFFSET_NEEDS = 3;
-const HARDEST = 3;
 const EACH_MS = 8000;
 // The covers beside their beacon, as home stands its own three.
 const RECENTS = 3;
@@ -72,6 +68,139 @@ const VIEW_KEY = 'ln-person-view';
 
 const num = v => (v === null || v === undefined || v === '' ? null : Number(v));
 const newestFirst = rows => [...rows].sort((a, b) => new Date(b.posted_at) - new Date(a.posted_at));
+
+// ── Compare's own pieces, from main (2026-10-24) ──────────────────────────
+// Masterpieces drawn one mark each up to this many; past it, one mark and
+// the number.
+const MARKS_DRAWN = 5;
+
+const said = v => { const n = num(v); return n === null ? '' : String(Math.round(n * 100) / 100); };
+const some = (n, one, many) => (n === 1 ? one : many.replace('#', n));
+const isOn = v => v === true || v === 'true';
+// A genre as the wall folds it (foldGenre), and Rap with Hip-Hop/Rap, which
+// Apple files records under both ways: two journals are only compared fairly
+// when one genre is not two rows. A genre typed by hand as a list is its
+// first.
+const genreOf = entry => {
+  const g = foldGenre(String(entry?.genre || '').split(/[,;]/)[0]);
+  return (g.toLowerCase() === 'rap' ? 'Hip-Hop/Rap' : g) || null;
+};
+const yearOf = entry => String(entry?.year || '').match(/[0-9]{4}/)?.[0] || null;
+const decadeOf = entry => { const y = yearOf(entry); return y ? `${y.slice(0, 3)}0s` : null; };
+// The answer given most often, the first to reach it on a tie; none when
+// nothing was given at least `least` times. Compared folded, so two
+// spellings of one artist are one answer.
+function mostOf(values, least = 1) {
+  const seen = new Map();
+  let top = null;
+  for (const v of values) {
+    if (!v) continue;
+    const k = v.toLowerCase();
+    const n = (seen.get(k)?.n || 0) + 1;
+    seen.set(k, { v: seen.get(k)?.v || v, n });
+    if (top === null || n > seen.get(top).n) top = k;
+  }
+  return top !== null && seen.get(top).n >= least ? seen.get(top).v : null;
+}
+const monthOf = when => {
+  const d = new Date(when);
+  return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString(undefined, { month: 'short', year: 'numeric' });
+};
+
+// One journal as a listener, from its entries: album listens only, one per
+// record where a record is meant, every listen where listens are counted.
+// A record is { entry, says }, `says` the small line under its title.
+function tasteOf(entries) {
+  const records = [...latestPerKey(entries).values()];
+  const listens = newestFirst(entries.filter(e => e.album_key && !e.song));
+  let oldest = null;
+  for (const e of records) if (yearOf(e) && (!oldest || yearOf(e) < yearOf(oldest))) oldest = e;
+  // How many times a record was listened to is the journal's own count, on
+  // every listen, and not a count of entries by title and artist: two albums
+  // by one artist can share a name (Miyel, 2026-10-24, two of them, years
+  // apart), and the journal tells them apart where a title cannot.
+  let returned = null;
+  for (const e of listens) if ((num(e.listen_total) || 0) > 1 && (!returned || num(e.listen_total) > num(returned.listen_total))) returned = e;
+  const masterpiece = listens.find(e => isOn(e.masterpiece)) || null;
+  const first = listens[listens.length - 1] || null;
+  return {
+    genre: mostOf(records.map(genreOf)),
+    decade: mostOf(records.map(decadeOf)),
+    // An artist is only "top" with two records or more; with one each, the
+    // pick would be a coin toss.
+    artist: mostOf(records.map(e => String(e.artist || '').trim()), 2),
+    oldest: oldest && { entry: oldest, says: yearOf(oldest) },
+    masterpiece: masterpiece && { entry: masterpiece, says: masterpiece.artist },
+    returned: returned && { entry: returned, says: `${num(returned.listen_total)} listens` },
+    first: first && { entry: first, says: monthOf(first.posted_at) },
+  };
+}
+
+// ── Face to face ──────────────────────────────────────────────────────────
+// How each of you spreads over one question's answers — which genres, which
+// decades — as the share of your own records, so a journal of three hundred
+// and one of thirty are set side by side fairly. Records are album listens,
+// one per record, as everywhere on this page.
+function spread(mine, theirs, answerOf) {
+  const tally = records => {
+    const m = new Map();
+    let total = 0;
+    for (const e of records) {
+      const a = answerOf(e);
+      if (!a) continue;
+      total += 1;
+      const id = a.toLowerCase();
+      m.set(id, { label: m.get(id)?.label || a, n: (m.get(id)?.n || 0) + 1 });
+    }
+    return { m, total };
+  };
+  const a = tally(mine);
+  const b = tally(theirs);
+  if (!a.total && !b.total) return [];
+  return [...new Set([...a.m.keys(), ...b.m.keys()])].map(id => ({
+    id,
+    label: (a.m.get(id) || b.m.get(id)).label,
+    you: a.total ? (a.m.get(id)?.n || 0) / a.total : 0,
+    them: b.total ? (b.m.get(id)?.n || 0) / b.total : 0,
+  }));
+}
+
+const starsOf = e => {
+  const v = num(e.rating_value);
+  if (v === null) return null;
+  const half = Math.round(v * 2) / 2;
+  if (half < 3) return 'Under 3';
+  return `${String(Math.floor(half))}${half % 1 ? '½' : ''} ${half === 1 ? 'star' : 'stars'}`;
+};
+const STAR_ORDER = ['5 stars', '4½ stars', '4 stars', '3½ stars', '3 stars', 'Under 3'];
+// How old a record was when it was logged: the year it was logged less the
+// year it came out.
+const AGES = ['That year', '1–2 years old', '3–9 years old', '10–29 years old', '30+ years old'];
+const ageOf = e => {
+  const made = Number(yearOf(e));
+  const heard = new Date(e.posted_at).getFullYear();
+  if (!made || !heard) return null;
+  const gap = heard - made;
+  return gap <= 0 ? AGES[0] : gap <= 2 ? AGES[1] : gap <= 9 ? AGES[2] : gap <= 29 ? AGES[3] : AGES[4];
+};
+const both = r => r.you + r.them;
+const inOrder = order => (x, y) => order.indexOf(x.label) - order.indexOf(y.label);
+// The views, in the menu's order. `most` keeps the longest lists to the
+// answers that say the most; `together` is when a row counts as one you
+// share, and is lit.
+const LENSES = [
+  { key: 'genres', label: 'Genres', answerOf: genreOf, sort: (x, y) => both(y) - both(x), most: 8 },
+  { key: 'decades', label: 'Decades', answerOf: decadeOf, sort: (x, y) => x.label.localeCompare(y.label) },
+  {
+    key: 'artists', label: 'Artists', answerOf: e => String(e.artist || '').trim() || null, most: 8,
+    // The artists you both logged first, then each of yours and theirs.
+    sort: (x, y) => (Math.min(y.you, y.them) > 0) - (Math.min(x.you, x.them) > 0) || both(y) - both(x),
+    together: r => r.you > 0 && r.them > 0,
+  },
+  { key: 'stars', label: 'Stars', answerOf: starsOf, sort: inOrder(STAR_ORDER) },
+  { key: 'age', label: 'How new', answerOf: ageOf, sort: inOrder(AGES) },
+];
+const TOGETHER_LEAST = 0.1;
 
 // One entry per record, the most recent (DECISIONS: never average across
 // listens). Album listens only, 2026-09-24: a track note rates one song, and
@@ -94,42 +223,240 @@ function scrollingBox(el) {
   return null;
 }
 
-function Face({ address }) {
+function Face({ address = '', src = '' }) {
   return (
     <span className="pn-face" aria-hidden="true">
       <User size={22} weight="regular" />
-      <img src={`${journalUrl(address)}/api/portrait`} alt="" onError={e => { e.currentTarget.style.display = 'none'; }} />
+      <img src={src || `${journalUrl(address)}/api/portrait`} alt="" onError={e => { e.currentTarget.style.display = 'none'; }} />
     </span>
   );
 }
 
-// `all` is for a section that is not a list of rows — the sends, which are a
-// grid of covers and have to be laid out as a whole. Everything else still
-// hands over a row renderer.
-function Section({ title, note, rows, empty, children, all = null }) {
+
+// The two of you face to face over one question (Miyel, 2026-10-24: "i
+// like the bars with different views"): the answers down the middle, your
+// share of your records growing to the left in your colour and theirs to the
+// right in theirs. An even shape is taste that matches; a lopsided one sways,
+// and shows which way. An answer you both give a tenth of your records or
+// more is lit. The menu over it changes the question, as the wall's views
+// menu changes its order, and is drawn the same.
+function FaceToFace({ lenses, name }) {
+  const [key, setKey] = useState(lenses[0]?.key);
+  const [open, setOpen] = useState(false);
+  const lens = lenses.find(l => l.key === key) || lenses[0];
+  useEffect(() => {
+    if (!open) return undefined;
+    const onKey = e => { if (e.key === 'Escape') { e.stopPropagation(); setOpen(false); } };
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
+  }, [open]);
+  if (!lens) return null;
+  const top = Math.max(...lens.rows.map(r => Math.max(r.you, r.them)), 0.0001);
+  const pct = v => `${Math.round(v * 100)}%`;
   return (
-    <section className="pn-section">
-      <div className="pn-section-head">
-        <span className="pn-section-title">{title}</span>
-        {note && <span className="pn-section-note">{note}</span>}
+    <section className="pn-ftf" aria-label={`${lens.label}: you and ${name}`}>
+      <div className="pn-ftf-head">
+        <span className="pn-ftf-who pn-ftf-who--you">You</span>
+        <span className="pn-ftf-lens">
+          {open && <div className="arc-views-scrim" onClick={() => setOpen(false)} />}
+          <button type="button" className="arc-ctl pn-ftf-now" onClick={() => setOpen(o => !o)} aria-expanded={open} aria-haspopup="menu">
+            {lens.label}<CaretDown size={11} weight="bold" aria-hidden="true" />
+          </button>
+          {open && (
+            <span className="arc-views pn-ftf-menu" role="menu" aria-label="Compare by">
+              {lenses.map(l => (
+                <button
+                  key={l.key}
+                  type="button"
+                  role="menuitemradio"
+                  aria-checked={l.key === lens.key}
+                  className={'ln-word arc-views-word' + (l.key === lens.key ? ' ln-word--on' : '')}
+                  onClick={() => { setKey(l.key); setOpen(false); }}
+                >
+                  {l.label}
+                </button>
+              ))}
+            </span>
+          )}
+        </span>
+        <span className="pn-ftf-who pn-ftf-who--them">{name}</span>
       </div>
-      {rows.length === 0 ? <div className="pn-empty">{empty}</div> : (all || rows.map(children))}
+      <div className="pn-ftf-rows" key={lens.key}>
+        {lens.rows.map((r, i) => (
+          <div
+            key={r.id}
+            className={'pn-ftf-row' + (r.together ? ' pn-ftf-row--both' : '')}
+            style={{ '--i': i }}
+            aria-label={`${r.label}: you ${pct(r.you)}, ${name} ${pct(r.them)}`}
+          >
+            <span className="pn-ftf-side pn-ftf-side--you" aria-hidden="true">
+              {r.you > 0 && <span className="pn-ftf-pct">{pct(r.you)}</span>}
+              <i style={{ width: `${(r.you / top) * 100}%` }} />
+            </span>
+            <span className="pn-ftf-label" aria-hidden="true">{r.label}</span>
+            <span className="pn-ftf-side pn-ftf-side--them" aria-hidden="true">
+              <i style={{ width: `${(r.them / top) * 100}%` }} />
+              {r.them > 0 && <span className="pn-ftf-pct">{pct(r.them)}</span>}
+            </span>
+          </div>
+        ))}
+      </div>
     </section>
   );
 }
 
-// How many covers across in what they have sent you. Four, like the faces in
-// the book — this page and that pane are the same two objects at two sizes,
-// and a record is drawn the same square as a person here.
-const SENT_ACROSS = 4;
+// ── The facts ─────────────────────────────────────────────────────────────
+// A card each, swiped through sideways (Miyel, 2026-10-24: "maybe they are
+// a big screen swiped through" — a list of them ran too long down the
+// page). On a card, the question, then your answer on your side and theirs
+// on theirs, each in its owner's colour, as the faces above stand. When the two of you give the
+// same answer it is said once, in the middle, with a sparkle either side —
+// the fun of it is finding out ("this is fun to do. it should feel that
+// way"). The marks wear their own emblems, as the entry wears them: stars
+// as stars, Masterpieces as the Masterpiece mark, favourite songs as hearts;
+// the questions wear none ("we went overboard with icons"). Nothing adds up
+// to a score: no card has a winner drawn on it.
+function sameAnswer(f) {
+  const { you, them } = f;
+  if (you === null || you === undefined || them === null || them === undefined) return false;
+  if (f.kind === 'record') return you.entry.album_key === them.entry.album_key;
+  if (f.kind === 'word') return you.toLowerCase() === them.toLowerCase();
+  if (f.kind === 'stars') return you.toFixed(1) === them.toFixed(1);
+  return you > 0 && you === them;
+}
 
-// A flat list into rows. CSS grid has no way to say "after whichever row
-// that item landed in", so the rows are real and the detail is a sibling of
-// the one it belongs under.
-function chunk(list, per) {
-  const out = [];
-  for (let i = 0; i < list.length; i += per) out.push(list.slice(i, i + per));
-  return out;
+// One side's answer, in the shape the question asks for.
+function Answer({ f, side }) {
+  const v = f[side];
+  if (v === null || v === undefined) return <span className="pn-fact-none">—</span>;
+  if (f.kind === 'word') return <span className="pn-fact-word">{v}</span>;
+  if (f.kind === 'record') {
+    return (
+      <span className="pn-fact-record">
+        <span className="pn-fact-cover">{v.entry.album_art ? <img src={v.entry.album_art} alt="" loading="lazy" /> : null}</span>
+        <span className="pn-fact-album">{v.entry.album}</span>
+        {v.says && <span className="pn-fact-says">{v.says}</span>}
+      </span>
+    );
+  }
+  if (f.kind === 'stars') {
+    return (
+      <span className="pn-fact-stars">
+        <StarRating rating={Math.round(v * 2) / 2} size={22} />
+        <span className="pn-fact-says">{v.toFixed(1)}</span>
+      </span>
+    );
+  }
+  if (f.kind === 'marks') {
+    if (!v) return <span className="pn-fact-none">—</span>;
+    return (
+      <span className="pn-fact-marks">
+        {v <= MARKS_DRAWN
+          ? Array.from({ length: v }, (_, i) => <SketchLogo key={i} size={24} weight="fill" />)
+          : <><SketchLogo size={24} weight="fill" /><span className="pn-fact-word">×{v}</span></>}
+      </span>
+    );
+  }
+  return <span className="pn-fact-hearts"><Heart size={22} weight="fill" /><span className="pn-fact-word">{v}</span></span>;
+}
+
+function FactCard({ f, name }) {
+  const same = sameAnswer(f);
+  const said = v => (v === null || v === undefined ? 'none' : typeof v === 'object' ? v.entry.album : f.kind === 'stars' ? v.toFixed(1) : v);
+  return (
+    <article
+      className={'pn-card' + (same ? ' pn-card--same' : '')}
+      aria-label={same ? `${f.label}: both of you, ${said(f.you)}` : `${f.label}: you, ${said(f.you)}; ${name}, ${said(f.them)}`}
+    >
+      <div className="pn-card-face" aria-hidden="true">
+        <div className="pn-card-q">{f.label}</div>
+        {f.sub && <div className="pn-card-sub">{f.sub}</div>}
+        {same ? (
+          <div className="pn-card-both">
+            <Sparkle size={14} weight="fill" className="pn-sparkle" />
+            <Answer f={f} side="you" />
+            <Sparkle size={14} weight="fill" className="pn-sparkle" />
+          </div>
+        ) : (
+          <div className="pn-card-vs">
+            <div className="pn-card-side"><Answer f={f} side="you" /></div>
+            <div className="pn-card-side pn-card-side--them"><Answer f={f} side="them" /></div>
+          </div>
+        )}
+      </div>
+    </article>
+  );
+}
+
+function Facts({ facts, name }) {
+  const strip = useRef(null);
+  const [on, setOn] = useState(0);
+  const cards = [...facts.taste, ...facts.each];
+  const go = i => {
+    const el = strip.current;
+    if (!el) return;
+    const to = Math.max(0, Math.min(cards.length - 1, i));
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    el.scrollTo({ left: to * el.clientWidth, behavior: reduced ? 'auto' : 'smooth' });
+  };
+  const onScroll = () => {
+    const el = strip.current;
+    if (el && el.clientWidth) setOn(Math.round(el.scrollLeft / el.clientWidth));
+  };
+  return (
+    <section className="pn-facts">
+      {cards.length > 0 && (
+        <>
+          {/* data-slide: a drag across the cards is theirs, never the sheet's
+              (LayerEntry). */}
+          <div className="pn-cards" ref={strip} onScroll={onScroll} data-slide>
+            {cards.map(f => <FactCard key={f.label} f={f} name={name} />)}
+          </div>
+          {cards.length > 1 && (
+            <div className="pn-dots">
+              <button type="button" className="pn-dots-step" onClick={() => go(on - 1)} disabled={on === 0} aria-label="The fact before">
+                <CaretLeft size={14} weight="regular" aria-hidden="true" />
+              </button>
+              {cards.map((f, i) => (
+                <button key={f.label} type="button" className={'pn-dot' + (i === on ? ' pn-dot--on' : '')} onClick={() => go(i)} aria-label={f.label} aria-current={i === on} />
+              ))}
+              <button type="button" className="pn-dots-step" onClick={() => go(on + 1)} disabled={on === cards.length - 1} aria-label="The next fact">
+                <CaretRight size={14} weight="regular" aria-hidden="true" />
+              </button>
+            </div>
+          )}
+        </>
+      )}
+      <div className="pn-facts-together">
+        {facts.together.map(f => (
+          <div key={f.label} className="pn-fact">
+            <span className="pn-fact-n">{f.value}</span>
+            <span className="pn-fact-label">{f.label}</span>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+// Who the page is about: somebody in the address book, by their number in
+// it, or any journal at all, by its address — a keeper off the Board you
+// have never added (Miyel, 2026-10-24: "i want to look here at a glance and
+// know how our taste compares even if its a stranger"). A journal that is in
+// the book after all is read as the book has them. Nobody is told they were
+// looked at: everything about them is read from their public feed.
+async function whoIs(id) {
+  const said = decodeURIComponent(String(id || ''));
+  if (/^[0-9]+$/.test(said)) {
+    const r = await fetch(`/api/people/${said}`);
+    const d = r.ok ? await r.json() : {};
+    return d.person || false;
+  }
+  const address = tidyJournal(said);
+  if (!address || !address.includes('.')) return false;
+  const r = await fetch('/api/people');
+  const d = r.ok ? await r.json() : {};
+  return (d.people || []).find(p => tidyJournal(p.address) === address) || { address, name: '' };
 }
 
 export default function PersonPage({ layered = false }) {
@@ -152,15 +479,15 @@ export default function PersonPage({ layered = false }) {
   // Their feed: null until asked, { entries, name } when it answered,
   // { failed: true } when it did not.
   const [theirs, setTheirs] = useState(null);
-  const [mine, setMine] = useState([]);
+  // Your own records: null until they have been read, so Compare does not
+  // say there is nothing in common while they are on their way.
+  const [mine, setMine] = useState(null);
   const [sent, setSent] = useState([]);
-  // Which sent record is showing its name and its note. Miyel, 2026-09-19:
-  // "in the what ___ has sent you, show them as just album covers; when
-  // clicked the actual name and note can open." Covers first because that is
-  // how a shelf is read — you know the record by its face long before you
-  // read its name — and because a column of rows for four sends was a table
-  // where a handful of squares is a shelf.
-  const [openSend, setOpenSend] = useState(null);
+  // What you put them onto: what came back and what is still out, so a
+  // shared record can say who put whom onto it.
+  const [cameBack, setCameBack] = useState([]);
+  const [out, setOut] = useState([]);
+  const [adding, setAdding] = useState(false);
   const [comparing, setComparing] = useState(false);
   const [sure, setSure] = useState(false);
   const [removing, setRemoving] = useState(false);
@@ -179,24 +506,29 @@ export default function PersonPage({ layered = false }) {
   useEffect(() => {
     if (!authed || !id) return undefined;
     let gone = false;
-    fetch(`/api/people/${id}`)
-      .then(r => (r.ok ? r.json() : { person: false }))
-      .then(d => {
+    whoIs(id)
+      .then(p => {
         if (gone) return;
-        const p = d.person || false;
         setPerson(p);
         if (!p) return;
+        const theirAddress = tidyJournal(p.address);
         fetch(`${journalUrl(p.address)}/api/public/entries`, { signal: AbortSignal.timeout(EACH_MS) })
           .then(r => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
           .then(j => { if (!gone) setTheirs({ entries: j.entries || [], name: String(j.keeper_name || '').trim() || p.name || '' }); })
           .catch(() => { if (!gone) setTheirs({ failed: true, entries: [], name: p.name || '' }); });
-        fetch('/api/entries').then(r => r.json()).then(d2 => { if (!gone) setMine(d2.entries || []); }).catch(() => {});
+        fetch('/api/entries').then(r => r.json()).then(d2 => { if (!gone) setMine(d2.entries || []); }).catch(() => { if (!gone) setMine([]); });
         // Every send this copy has, narrowed to theirs by the address the
         // send carried — the same spelling the book keeps.
         fetch('/api/submissions').then(r => r.json()).then(d3 => {
           if (gone) return;
-          const theirsOnly = (d3.submissions || []).filter(s => tidyJournal(s.sender_url) === tidyJournal(p.address));
+          const theirsOnly = (d3.submissions || []).filter(s => tidyJournal(s.sender_url) === theirAddress);
           setSent(theirsOnly);
+        }).catch(() => {});
+        fetch('/api/came-back').then(r => (r.ok ? r.json() : { cameBack: [] })).then(d4 => {
+          if (!gone) setCameBack((d4.cameBack || []).filter(c => tidyJournal(c.journal) === theirAddress));
+        }).catch(() => {});
+        fetch('/api/sent').then(r => (r.ok ? r.json() : { sent: [] })).then(d5 => {
+          if (!gone) setOut((d5.sent || []).filter(x => tidyJournal(x.journal) === theirAddress));
         }).catch(() => {});
       })
       .catch(() => { if (!gone) setPerson(false); });
@@ -237,64 +569,96 @@ export default function PersonPage({ layered = false }) {
     return out;
   }, [theirs, beacon?.album, beacon?.artist]);
 
-  const facts = useMemo(() => {
-    const mineLatest = latestPerKey(mine);
-    const theirLatest = latestPerKey(theirs?.entries || []);
+  const decks = useMemo(() => {
+    const mineLatest = latestPerKey(mine || []);
+    const theirEntries = theirs?.entries || [];
+    const theirLatest = latestPerKey(theirEntries);
+    const later = item => Math.max(new Date(item.mine?.posted_at || 0), new Date(item.theirs?.posted_at || 0));
 
-    const pairs = [];
+    // Which of the records one of you put the other onto, so an opened record
+    // can say so: their sends and the records credited to them by hand, which
+    // have no send row, only the name and journal on the entry (2026-09-14);
+    // yours, what came back and what is still out. The lists themselves are
+    // the inbox's (Miyel, 2026-10-24: "isn't that accessible in inbox?").
+    const address = tidyJournal(person?.address);
+    const keyOf = r => albumKey(r.album, r.artist);
+    const fromThem = new Set([
+      ...sent.filter(s => !s.song).map(keyOf),
+      ...(address ? (mine || []).filter(e => !e.song && tidyJournal(e.received_from_url) === address).map(e => e.album_key) : []),
+    ]);
+    const fromYou = new Set([...cameBack, ...out].filter(r => !r.song).map(keyOf));
+
+    // Every record you have both logged, newest first by whichever of you
+    // logged it last.
+    const shared = [];
     for (const [key, m] of mineLatest) {
       const t = theirLatest.get(key);
-      if (t) pairs.push({ mine: m, theirs: t });
+      if (t) shared.push({ key, mine: m, theirs: t, from: fromThem.has(key) ? 'them' : fromYou.has(key) ? 'you' : null });
     }
-    const rated = pairs.filter(p => num(p.mine.rating_value) !== null && num(p.theirs.rating_value) !== null);
-    const offset = rated.length >= OFFSET_NEEDS
-      ? rated.reduce((sum, p) => sum + (num(p.theirs.rating_value) - num(p.mine.rating_value)), 0) / rated.length
-      : 0;
-    for (const p of rated) p.gap = Math.abs((num(p.theirs.rating_value) - offset) - num(p.mine.rating_value));
-    const alike = rated.filter(p => p.gap <= ALIKE);
-    const warmth = p => num(p.mine.rating_value) + num(p.theirs.rating_value);
-    const agree = [...alike].sort((a, b) => a.gap - b.gap || warmth(b) - warmth(a)).slice(0, HARDEST);
-    const disagree = rated.filter(p => p.gap > ALIKE).sort((a, b) => b.gap - a.gap).slice(0, HARDEST);
+    shared.sort((a, b) => later(b) - later(a));
 
-    const sends = sent.map(s => {
-      const logged = mineLatest.get(albumKey(s.album, s.artist)) || null;
-      const rating = logged ? num(logged.rating_value) : null;
-      return { ...s, logged, rating, hit: rating !== null && rating >= HIT };
-    });
-    // What they are credited on, 2026-09-14: entries whose sender resolves
-    // to this address — a record logged from the old Tumblr and credited to
-    // them later has no send row, only the name and journal on the entry.
-    // One per record, and never a second copy of a send already counted. It
-    // carries no send date on purpose (the brief: the entry's own date is
-    // the ceiling), so it falls in with the others by the day it was logged.
-    const theirAddress = tidyJournal(person?.address);
-    const counted = new Set(sends.map(s => albumKey(s.album, s.artist)));
-    if (theirAddress) {
-      for (const e of newestFirst(mine)) {
-        if (tidyJournal(e.received_from_url) !== theirAddress || counted.has(e.album_key)) continue;
-        counted.add(e.album_key);
-        const logged = mineLatest.get(e.album_key) || e;
-        const rating = num(logged.rating_value);
-        sends.push({
-          id: `credited-${e.id}`, album: e.album, artist: e.artist, year: e.year, album_art: e.album_art,
-          created_at: null, note: null, logged, rating, hit: rating !== null && rating >= HIT,
-        });
-      }
-    }
-    const when = s => new Date(s.created_at || s.logged?.posted_at || 0);
-    sends.sort((a, b) => when(b) - when(a));
-    const loggedCount = sends.filter(s => s.logged).length;
-    const hits = sends.filter(s => s.hit).length;
+    // ── The facts (Miyel, 2026-10-24) ──
+    // First the two of you as listeners, across everything each of you has
+    // logged ("the best things are fun comparing our favorite genre, decade,
+    // i want more like that"); then the records you share, counted for the
+    // two of you, and the same three questions asked of each.
+    const you = tasteOf(mine || []);
+    const them = tasteOf(theirEntries);
+    const taste = [
+      { kind: 'word', label: 'Top genre', you: you.genre, them: them.genre },
+      { kind: 'word', label: 'Top decade', you: you.decade, them: them.decade },
+      { kind: 'word', label: 'Top artist', you: you.artist, them: them.artist },
+      { kind: 'record', label: 'Oldest record', you: you.oldest, them: them.oldest },
+      { kind: 'record', label: 'Latest Masterpiece', you: you.masterpiece, them: them.masterpiece },
+      { kind: 'record', label: 'Most returned to', you: you.returned, them: them.returned },
+      { kind: 'record', label: 'First logged', you: you.first, them: them.first },
+    ].filter(f => f.you || f.them);
 
-    return { pairs, rated, offset, alike, agree, disagree, sends, loggedCount, hits };
-  }, [mine, theirs, sent, person]);
+    const both = shared.map(x => lineUp(x.mine, x.theirs));
+    const rated = side => shared.map(x => num(x[side].rating_value)).filter(v => v !== null);
+    const average = list => (list.length ? list.reduce((a, b) => a + b, 0) / list.length : null);
+    const hearts = side => both.reduce((n, shape) => n + countHearts(side === 'mine' ? shape.yourHearts : shape.theirHearts), 0);
+    const together = [
+      { label: shared.length === 1 ? 'Record' : 'Records', value: shared.length },
+      { label: 'Same stars', value: shared.filter(x => num(x.mine.rating_value) !== null && num(x.mine.rating_value) === num(x.theirs.rating_value)).length },
+      { label: 'Same favorite song', value: both.filter(shape => shape.both.length > 0).length },
+    ];
+    const onShared = shared.length === 1 ? 'On the record you share' : `On the ${shared.length} records you share`;
+    const each = shared.length ? [
+      { kind: 'stars', label: 'Average stars', sub: onShared, you: average(rated('mine')), them: average(rated('theirs')) },
+      { kind: 'marks', label: 'Masterpieces', sub: onShared, you: shared.filter(x => isOn(x.mine.masterpiece)).length, them: shared.filter(x => isOn(x.theirs.masterpiece)).length },
+      { kind: 'hearts', label: 'Favorite songs', sub: onShared, you: hearts('mine'), them: hearts('theirs') },
+    ] : [];
 
+    const mineRecords = [...mineLatest.values()];
+    const theirRecords = [...theirLatest.values()];
+    const lenses = LENSES.map(l => {
+      const rows = spread(mineRecords, theirRecords, l.answerOf).sort(l.sort).slice(0, l.most || undefined)
+        .map(r => ({ ...r, together: l.together ? l.together(r) : Math.min(r.you, r.them) >= TOGETHER_LEAST }));
+      return { key: l.key, label: l.label, rows };
+    }).filter(l => l.rows.length > 0);
+
+    return { shared, lenses, facts: { taste, together, each } };
+  }, [mine, theirs, sent, cameBack, out, person]);
+
+  const compareReady = Boolean(theirs) && mine !== null;
   const there = address ? journalUrl(address) : '';
   // Their entry, read inside this journal (2026-10-28, Miyel: "the actual
   // entries open in app the same way as profile") — app/dashboard/people/
   // [id]/[slug] reads it from their journal as it opens.
-  const personId = person ? person.id : '';
-  const theirEntry = useCallback(e => `/dashboard/people/${personId}/${encodeURIComponent(e.slug)}`, [personId]);
+  // Only somebody in your book has their entries opened here; a keeper off
+  // the Board, opened by address, still opens on their own journal.
+  const personId = person?.id || '';
+  const theirEntry = useCallback(e => (personId
+    ? `/dashboard/people/${personId}/${encodeURIComponent(e.slug)}`
+    : `${journalUrl(address)}/entries/${encodeURIComponent(e.slug)}`), [personId, address]);
+
+  // Their wall's order as it stands, handed over when a record is pressed,
+  // so a swipe on their post goes to the record beside it (2026-10-28).
+  const order = useRef([]);
+  const onOrder = useCallback(albums => {
+    order.current = personId ? albums.map(a => ({ ...a.face, path: theirEntry(a.face) })) : [];
+  }, [personId, theirEntry]);
 
   // Their record, drawn the way People draws a friend's: the cover, opening
   // their entry over this page out of the cover pressed, its first screen
@@ -305,8 +669,9 @@ export default function PersonPage({ layered = false }) {
     return (
       <Link
         href={theirEntry(face)}
-        data-grows={theirEntry(face)}
-        onClick={() => handOff(face)}
+        data-grows={personId ? theirEntry(face) : undefined}
+        onClick={personId ? () => { handOffOrder(order.current); handOff(face); } : undefined}
+        target={personId ? undefined : '_blank'}
         className={'ft' + (folded ? ' ft--page' : '')}
         data-tile-key={album.key}
         aria-label={face.album + (face.artist ? ` by ${face.artist}` : '')}
@@ -329,7 +694,7 @@ export default function PersonPage({ layered = false }) {
         </div>
       </Link>
     );
-  }, [theirEntry]);
+  }, [theirEntry, personId]);
 
   const seek = useMemo(() => ({
     placeholder: 'Albums, artists or songs',
@@ -338,6 +703,19 @@ export default function PersonPage({ layered = false }) {
       || foldForSearch(album.face.artist).includes(q)
       || album.notes.some(n => foldForSearch(n.song).includes(q))),
   }), [name]);
+
+  // Add, for a keeper opened by address: filed as Friends files one, and
+  // the page is theirs as a friend's from then on.
+  async function add() {
+    if (adding || !person?.address) return;
+    setAdding(true);
+    const r = await fetch('/api/people', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ address: person.address }),
+    }).catch(() => null);
+    const d = await r?.json().catch(() => null);
+    setAdding(false);
+    if (r?.ok && d?.person) setPerson(d.person);
+  }
 
   async function keepPrivate() {
     const to = !person.private;
@@ -370,6 +748,7 @@ export default function PersonPage({ layered = false }) {
       filters={false}
       viewKey={VIEW_KEY}
       seek={seek}
+      onOrder={onOrder}
       empty={(
         <div className="arc-empty">
           {theirs?.failed
@@ -377,7 +756,7 @@ export default function PersonPage({ layered = false }) {
             : <span className="arc-empty-said">Nothing logged yet.</span>}
         </div>
       )}
-      foot={(
+      foot={person.id ? (
         <div className="pn-foot">
           <SentList journal={person.address} title={`Still out with ${name}`} />
           <p className="pn-quiet">
@@ -411,7 +790,7 @@ export default function PersonPage({ layered = false }) {
             </button>
           </p>
         </div>
-      )}
+      ) : null}
     />
   );
 
@@ -451,10 +830,17 @@ export default function PersonPage({ layered = false }) {
               <Shuffle size={19} weight="regular" aria-hidden="true" />
               {comparing && <span className="pn-hdr-word" aria-hidden="true">Compare</span>}
             </button>
-            <span className="pn-hdr-stop pn-hdr-stop--lit pn-hdr-stop--still" role="img" aria-label={`${name} is in your friends`}>
-              <UserCheck size={19} weight="regular" aria-hidden="true" />
-              <span className="pn-hdr-word" aria-hidden="true">Added</span>
-            </span>
+            {person.id ? (
+              <span className="pn-hdr-stop pn-hdr-stop--lit pn-hdr-stop--still" role="img" aria-label={`${name} is in your friends`}>
+                <UserCheck size={19} weight="regular" aria-hidden="true" />
+                <span className="pn-hdr-word" aria-hidden="true">Added</span>
+              </span>
+            ) : (
+              <button type="button" className="pn-hdr-stop" onClick={add} disabled={adding} aria-label={`Add ${name} to your friends`}>
+                <UserPlus size={19} weight="regular" aria-hidden="true" />
+                <span className="pn-hdr-word" aria-hidden="true">Add</span>
+              </button>
+            )}
           </nav>
         )}
       </header>
@@ -467,123 +853,74 @@ export default function PersonPage({ layered = false }) {
             {/* ── Compare, opened in place ─────────────────────────────── */}
             <div className={'pn-compare' + (comparing ? ' pn-compare--open' : '')} aria-hidden={!comparing} inert={!comparing}>
               <div className="pn-compare-in">
+                {/* The two of you, face to face, a colour each. */}
+                <header className="pn-head">
+                  <div className="pn-who">
+                    <Face src="/api/portrait" />
+                    <span className="pn-who-name">You</span>
+                  </div>
+                  <span className="pn-between" aria-hidden="true"><Shuffle size={26} weight="regular" /></span>
+                  <div className="pn-who">
+                    <Face address={person.address} />
+                    <span className="pn-who-name">{name}</span>
+                  </div>
+                </header>
                 {theirs?.failed && (
-                  <p className="pn-note">{name}&rsquo;s journal isn&rsquo;t answering just now, so only what they&rsquo;ve put you onto is here.</p>
+                  <p className="pn-note">{name}&rsquo;s journal isn&rsquo;t answering just now.</p>
                 )}
-
-                <dl className="pn-facts">
-                  <div className="pn-fact"><dt>Records you both have</dt><dd>{theirs?.entries ? facts.pairs.length : '—'}</dd></div>
-                  <div className="pn-fact"><dt>Rated alike</dt><dd>{facts.rated.length ? <>{facts.alike.length}<small>of {facts.rated.length}</small></> : '—'}</dd></div>
-                  <div className="pn-fact"><dt>Sent you</dt><dd>{facts.sends.length}{facts.sends.length > 0 && <small>{facts.loggedCount} logged</small>}</dd></div>
-                  <div className="pn-fact"><dt>Hit rate with you</dt><dd>{facts.sends.length ? <>{facts.hits}<small>of {facts.sends.length}</small></> : '—'}</dd></div>
-                </dl>
-                {facts.offset !== 0 && (
-                  <p className="pn-note">
-                    {name} rates about {Math.abs(facts.offset).toFixed(1)} {facts.offset > 0 ? 'higher' : 'lower'} than you across what you both have. That is allowed for before anything above is counted.
-                  </p>
-                )}
-
-                <Section title="Where you agree hardest" rows={facts.agree} empty={facts.rated.length ? 'Nowhere yet, allowing for how each of you rates.' : 'Nothing you both have yet.'}>
-                  {p => (
-                    <div key={p.mine.slug} className="pn-item">
-                      <Link href={`/entries/${p.mine.slug}`} className="pn-item-art">{p.mine.album_art && <img src={p.mine.album_art} alt="" loading="lazy" />}</Link>
-                      <div className="pn-item-said">
-                        <Link href={`/entries/${p.mine.slug}`} className="pn-item-album">{p.mine.album}</Link>
-                        <div className="pn-item-artist">{p.mine.artist}</div>
-                      </div>
-                      <div className="pn-item-tail">
-                        <span>You <b>{p.mine.rating_value}</b> &middot; {name} <b>{p.theirs.rating_value}</b></span>
-                        <Link href={theirEntry(p.theirs)} onClick={() => handOff(p.theirs)}>theirs</Link>
-                      </div>
-                    </div>
-                  )}
-                </Section>
-
-                <Section title="Where you disagree hardest" rows={facts.disagree} empty={facts.rated.length ? 'Nowhere, allowing for how each of you rates.' : 'Nothing you both have yet.'}>
-                  {p => (
-                    <div key={p.mine.slug} className="pn-item">
-                      <Link href={`/entries/${p.mine.slug}`} className="pn-item-art">{p.mine.album_art && <img src={p.mine.album_art} alt="" loading="lazy" />}</Link>
-                      <div className="pn-item-said">
-                        <Link href={`/entries/${p.mine.slug}`} className="pn-item-album">{p.mine.album}</Link>
-                        <div className="pn-item-artist">{p.mine.artist}</div>
-                      </div>
-                      <div className="pn-item-tail">
-                        <span>You <b>{p.mine.rating_value}</b> &middot; {name} <b>{p.theirs.rating_value}</b> <span className="pn-gap">&middot; {p.gap.toFixed(1)} apart</span></span>
-                        <Link href={theirEntry(p.theirs)} onClick={() => handOff(p.theirs)}>theirs</Link>
-                      </div>
-                    </div>
-                  )}
-                </Section>
-
-                {/* ── What they have sent you ─────────────────────────────
-                    Covers, and the name and the note behind a press. The
-                    grid is chunked into rows so a record's detail can open
-                    directly under the row it is in, which is the same thing
-                    the friends pane does with a face and for the same
-                    reason: a panel a row away from the thing that opened it
-                    is a panel about nothing.
-
-                    A cover that has not been logged is greyed, which is the
-                    site's one way of saying a record is not in hand — the
-                    beacon's idle art and the past listens beside it wear the
-                    same filter. So the shelf answers "what did they send me
-                    and what have I got to" before anything is pressed. */}
-                <Section
-                  title={`What ${name} has put you onto`}
-                  rows={facts.sends}
-                  empty={`${name} hasn't put you onto anything yet.`}
-                  all={chunk(facts.sends, SENT_ACROSS).map((row, i) => {
-                    const here = row.find(x => x.id === openSend) || null;
-                    return (
-                      <div key={i} className={'pn-sent-row' + (here ? ' pn-sent-row--open' : '')}>
-                        <div className="pn-sent-grid">
-                          {row.map(x => (
-                            <button
-                              key={x.id}
-                              type="button"
-                              className={'pn-sent' + (here?.id === x.id ? ' pn-sent--open' : '')}
-                              onClick={() => setOpenSend(o => (o === x.id ? null : x.id))}
-                              aria-expanded={here?.id === x.id}
-                              title={`${x.album} — ${x.artist}`}
-                            >
-                              <span className={'pn-sent-art' + (x.logged ? '' : ' pn-sent-art--unlogged')}>
-                                {x.album_art
-                                  ? <img src={x.album_art} alt="" loading="lazy" />
-                                  : <span className="pn-sent-none" aria-hidden="true">♪</span>}
-                              </span>
-                            </button>
-                          ))}
-                        </div>
-                        {here && (
-                          <div className="pn-sent-said">
-                            {here.logged
-                              ? <Link href={`/entries/${here.logged.slug}`} className="pn-item-album">{here.album}</Link>
-                              : <span className="pn-item-album">{here.album}</span>}
-                            <div className="pn-item-artist">
-                              {here.artist}{here.year ? ` · ${here.year}` : ''}
-                              {here.created_at && <> &middot; {new Date(here.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</>}
-                            </div>
-                            {here.note && <p className="pn-item-note">{here.note}</p>}
-                            <div className="pn-sent-tail">
-                              {here.logged
-                                ? (here.rating !== null ? <StarRating rating={here.rating} size={12} /> : <span className="pn-gap">Logged</span>)
-                                : <span className="pn-gap">Not logged yet</span>}
+                {!compareReady ? <div className="own-skeleton pn-waiting" /> : (
+                  <>
+                    <FaceToFace lenses={decks.lenses} name={name} />
+                    <Facts facts={decks.facts} name={name} />
+                    {decks.shared.length === 0 && <p className="pn-note">You and {name} haven&rsquo;t logged any of the same records yet.</p>}
+                    {/* The records you share, covers alone. One opens their
+                        post with your listen beside theirs (ListenCompare.js)
+                        — straight into it, "basically like skipping a
+                        button" (2026-10-28). */}
+                    <div className="arc-grid pn-grid" data-density="medium">
+                      {decks.shared.map(x => {
+                        const f = x.theirs || x.mine;
+                        const at = personId ? theirEntry(x.theirs) : '';
+                        const art = (
+                          <div className="ft-inner">
+                            <div className="ft-face ft-face--front">
+                              {f.album_art
+                                ? <img src={f.album_art} alt="" className="ft-art" loading="lazy" draggable={false} />
+                                : <div className="ft-placeholder">{(f.album || '?')[0]}</div>}
+                              <div className="ft-hover">
+                                <div className="ft-hover-album">{f.album}</div>
+                                <div className="ft-hover-artist">{f.artist}</div>
+                              </div>
                             </div>
                           </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                >
-                  {() => null}
-                </Section>
+                        );
+                        return at ? (
+                          <Link
+                            key={x.key}
+                            href={at}
+                            data-grows={at}
+                            onClick={() => { handOff(x.theirs); handOffCompare(x.theirs.slug); }}
+                            className="ft pn-tile"
+                            aria-label={`${f.album}${f.artist ? ` by ${f.artist}` : ''}, you and ${name}`}
+                          >
+                            {art}
+                          </Link>
+                        ) : (
+                          <a key={x.key} href={theirEntry(x.theirs)} target="_blank" rel="noopener noreferrer" className="ft pn-tile" aria-label={f.album}>{art}</a>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
                 {/* The printer's door: the press that prints the shape of the
                     agreement and withholds the writing, naming both people
                     (DECISIONS, The network). At the foot of the comparison,
                     since the header became home's row. */}
-                <Link href={`/printer?person=${encodeURIComponent(id)}`} className="kt-tool pn-print" aria-label="Print the shape of the agreement" title="Print the shape of the agreement">
-                  <Printer size={18} weight="regular" aria-hidden="true" />
-                </Link>
+                {person.id && (
+                  <Link href={`/printer?person=${encodeURIComponent(person.id)}`} className="kt-tool pn-print" aria-label="Print the shape of the agreement" title="Print the shape of the agreement">
+                    <Printer size={18} weight="regular" aria-hidden="true" />
+                  </Link>
+                )}
               </div>
             </div>
 

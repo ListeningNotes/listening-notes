@@ -63,15 +63,22 @@ publicly):
   wall now
 - `/dashboard/people` — the address book as a grid of faces (Friends), with
   the ways one gets in — a paste, a scanned code, a send that carried one —
-  and Invite and Add in its header. On a phone Friends draws its own faces
-  as a drawer instead (PeopleScreen.js); this address is a page over the
-  desk on a desk
+  and Invite and Add in its header. Since 2026-10-27 the address draws the
+  Friends screen (PeopleScreen.js) wherever it is opened
 - `/dashboard/people/[id]` — a friend's journal page, on your copy, laid out
   as home: home's top row with their face and name and Compare · Added, their
   beacon with the three before it, the line and their wall from their public
-  feed, and under it what you sent them that is still out and Remove; Compare
-  opens in place (what you both have, where you agree and disagree hardest,
-  what they sent you and how it landed)
+  feed, and under it what you sent them that is still out, All words with
+  them, Keep private and Remove. By their number in your book or, for a
+  keeper off the Board, by their address (main's Compare, 2026-10-24).
+  Compare opens in place at its top: the two of you, a colour each; face to
+  face, your share of your records against theirs by genre, decade, artist,
+  stars or how new; the facts as cards swiped through; and a wall of the
+  records you share, each opening their post side by side with yours
+  (ListenCompare.js)
+- `/dashboard/people/[id]/[slug]` — a friend's post read inside your journal;
+  where you have the record too, Compare in its top right sets your listen
+  beside theirs
 - `/settings` — the machinery: address, the password, Back up your journal,
   keeping up to date, the home-screen step, and Sign out. Reached from the
   card's ··· and, on a desk, from the desk's Settings row. The card's own
@@ -197,6 +204,7 @@ The front doors — receive requests, hand them off, send back responses
     update/route.js            Is there a newer Listening Notes — the latest public release against package.json, at most once an hour, owner-only
     public/beacon/route.js     What the keeper is listening to — anyone may ask; cached at the edge; with `moved_to` when the journal lives somewhere else now (Settings, or asked at the address it moved off)
     public/entries/route.js    The public feed another copy reads — PUBLIC_FIELDS only, with keeper_name beside them
+    public/notes/[slug]/route.js  One entry's album note, for a friend's page about this keeper — one at a time, never stored by the reader, 404 for a track note, a quiet entry or none
     public/stamps/route.js     The card's counted facts — records, songs, first entry, top genres, the two flag counts
     public/listing/route.js    The code the directory issued this journal, as plain text, or 404 — how the registry proves the address
     public/people/route.js     The people this journal's keeper added who are on the Board themselves — a name and an address each; never anybody kept private, nothing while the keeper is off the Board; checked against the directory with hashes; kept a minute. What makes "a friend away"
@@ -243,6 +251,7 @@ The furniture — visual pieces
       WaveSheet.js             Just added somebody: "[name] is in your address book", Wave to [name] or Not now — the one moment a wave is offered
       Dashboard.js             The desk, for the owner — Start a listen as a band, then Friends and Settings as rows; the header holds the mark alone. On a desk only since 2026-09-19, as the spine's second page
       Friend_panel.js          What waits on a face, opened under the row on Friends (2026-10-27): what they wrote, sent, waved, logged of yours, or that they moved, newest first, New until seen, each with its own answers as glyph doors — Reply · Words · Keep, Listen · Dismiss, Wave back · Dismiss, Update — through the inbox's old routes; its head goes to their page. A stranger's head says Not one of your friends, with Add. Exports `waitingFrom`, `strangersIn` (thirty days), `seeAll` and `when`
+      ListenCompare.js         Your listen of a record and a friend's side by side (main's versus record, 2026-10-24), drawn in their post's place by Compare in its header; `FriendsPost`, the post's wrapper (their Bookplate, Visiting, the compare toggle); `lineUp`, `countHearts` and `HorizonRow`, which Compare on a person's page counts with
       Headlines.js             Friends' top: one sentence per friend logging or logged in a fortnight, from their beacon and public feed alone, rolling up every seven seconds between hairlines with pips; still while it cannot be read; a press goes to the entry, or their page while they are logging
       Words.js                 All the words with one friend, each conversation under the record it is about — theirs left, yours right, a spine behind, Write back at the foot; opened at one record by its hash
       PinnedLetter.js          The LN. Admin letter pinned over the home wall (from the inbox, 2026-10-27): its X, and Make a copy on the letter asking for one
@@ -352,9 +361,9 @@ The rooms — full pages assembled from furniture
     dashboard/
       page.js                  Redirect to / — the desk is a face of the cross's turning pane
       people/page.js           Friends on a page of its own (PeopleScreen.js), so a desk can answer what waits from a person
-      people/[id]/page.js      A friend's journal page — their beacon and wall drawn by this copy, Compare opened in place; under the wall, what is still out with them, All words with them, Keep private, Remove
+      people/[id]/page.js      A friend's journal page — their beacon and wall drawn by this copy, Compare opened in place (the two of you as listeners, the facts, the records you share); under the wall, what is still out with them, All words with them, Keep private, Remove
       people/[id]/words/page.js  Words with one friend (Words.js)
-      people/[id]/[slug]/page.js  A friend's entry, read inside this journal: their public /api/entries/<slug>, fetched on this copy's server as it opens, drawn by FullPostPage or TrackNotePage in a Bookplate of theirs, Message [name] through the outbox (WritingTo); kept nowhere
+      people/[id]/[slug]/page.js  A friend's entry, read inside this journal: their public /api/entries/<slug>, fetched on this copy's server as it opens, drawn by FullPostPage or TrackNotePage in a Bookplate of theirs, Message [name] through the outbox; with your own listen of the record when there is one, for Compare (ListenCompare.js); kept nowhere
       report/page.js           Report a problem — one box, Send
 
 ---

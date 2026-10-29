@@ -24,7 +24,11 @@
 // face — so the page says whose it is. You are a reader here: no keeper's
 // tools, no linking of names into your own archive, no folder tabs (they
 // would walk your journal, not theirs). Message [name] goes through your
-// outbox to them, about this entry, and is kept for Words (WritingTo).
+// outbox to them, about this entry, and is kept for Words (Visiting).
+//
+// Where you have the record too, Compare in its top right sets your listen
+// beside theirs (ListenCompare.js, 2026-10-28): yours read from this
+// journal, the latest listen of the same record.
 //
 // Only somebody in your book: the id is the book's row.
 import { redirect } from 'next/navigation';
@@ -32,8 +36,9 @@ import Link from 'next/link';
 import { wristbandOnHand } from '@/library/wristband';
 import { pull_person } from '@/library/people_actions';
 import { journalUrl } from '@/library/return_address';
-import { Bookplate } from '@/components/main_components/Bookplate';
-import { WritingTo } from '@/components/main_components/Slug_Page/MessageForm';
+import database from '@/library/database_connection';
+import { pull_entry_by_slug } from '@/library/database_actions';
+import { FriendsPost } from '@/components/main_components/ListenCompare';
 import PostClient from '../../../../entries/[slug]/FullPostPage';
 import TrackNotePage from '../../../../entries/[slug]/TrackNotePage';
 
@@ -81,18 +86,34 @@ export default async function FriendEntryPage({ params, layered = false }) {
     );
   }
 
+  // Your own listen of the record, the latest, for Compare (ListenCompare.js)
+  // — matched on the record's key, which every copy folds the same way —
+  // and who put whom onto it: a credit of yours naming them, or a record of
+  // yours they logged (came_back).
+  let mine = null;
+  let from = null;
+  if (!entry.song && entry.album_key) {
+    const [row] = await database`
+      SELECT slug FROM entries
+      WHERE album_key = ${entry.album_key} AND song IS NULL
+      ORDER BY posted_at DESC LIMIT 1
+    `.catch(() => []);
+    mine = row ? await pull_entry_by_slug(row.slug).catch(() => null) : null;
+    if (mine) {
+      const fromThem = String(mine.received_from_url || '').replace(/^https?:\/\//, '').split('/')[0].toLowerCase() === person.address;
+      const [back] = fromThem ? [] : await database`
+        SELECT 1 FROM came_back WHERE journal = ${person.address} AND slug = ${entry.slug} LIMIT 1
+      `.catch(() => []);
+      from = fromThem ? 'them' : back ? 'you' : null;
+    }
+  }
+
   const theirs = { keeper_name: name, site_address: person.address, portrait_url: `${there}/api/portrait` };
-  const to = {
-    person_id: person.id,
-    about: { slug: entry.slug, album: entry.album, artist: entry.artist, art: entry.album_art || '', song: entry.song || '' },
-  };
   return (
-    <Bookplate settings={theirs}>
-      <WritingTo to={to}>
-        {entry.song
-          ? <TrackNotePage entry={entry} authed={false} layered={layered} folder={null} />
-          : <PostClient entry={entry} references={[]} authed={false} layered={layered} folder={null} />}
-      </WritingTo>
-    </Bookplate>
+    <FriendsPost settings={theirs} person={{ id: person.id, name, address: person.address }} entry={entry} mine={mine} from={from}>
+      {entry.song
+        ? <TrackNotePage entry={entry} authed={false} layered={layered} folder={null} />
+        : <PostClient entry={entry} references={[]} authed={false} layered={layered} folder={null} />}
+    </FriendsPost>
   );
 }

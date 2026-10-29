@@ -328,7 +328,12 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
   // so a folder flips through itself and carries on to the next record.
   // From anywhere else, or where the wall does not hold this entry, the
   // folder alone — its ends are the ends.
-  const walled = slug && !arrival.alone ? neighboursOf(slug) : { prev: null, next: null };
+  // A friend's post read inside this journal browses too, through the wall
+  // it was opened from, by its address (2026-10-28, Miyel: "make the
+  // friends wall scrollable left to right … just like my personal one").
+  const friendsPost = /^\/dashboard\/people\/[^/]+\/[^/]+$/.test(pathname) && !pathname.endsWith('/words');
+  const here = slug || (friendsPost ? pathname : '');
+  const walled = here && !arrival.alone ? neighboursOf(here) : { prev: null, next: null };
   const inFolder = folder && slug ? folder.findIndex(e => e.slug === slug) : -1;
   const neighbours = walled.prev || walled.next ? walled
     : inFolder >= 0 ? { prev: folder[inFolder - 1] || null, next: folder[inFolder + 1] || null }
@@ -566,7 +571,7 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
     setShift(-dir * (sheetRef.current?.offsetWidth || window.innerWidth));
     pendingTurn.current = window.setTimeout(() => {
       pendingTurn.current = null;
-      router.replace(`/entries/${target.slug}`);
+      router.replace(target.path || `/entries/${target.slug}`);
     }, TURN_MS);
   }, [neighbours.prev, neighbours.next, router, arrival.alone, folder]);
   useEffect(() => () => window.clearTimeout(pendingTurn.current), []);
@@ -583,8 +588,8 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
   }, [folder, slug, go]);
 
   useEffect(() => {
-    if (neighbours.prev) router.prefetch(`/entries/${neighbours.prev.slug}`);
-    if (neighbours.next) router.prefetch(`/entries/${neighbours.next.slug}`);
+    if (neighbours.prev) router.prefetch(neighbours.prev.path || `/entries/${neighbours.prev.slug}`);
+    if (neighbours.next) router.prefetch(neighbours.next.path || `/entries/${neighbours.next.slug}`);
   }, [neighbours.prev, neighbours.next, router]);
 
   // The browser's own back — a swipe from the edge, the toolbar — closes

@@ -86,7 +86,7 @@ import PullDown from './PullDown';
 import { useBookplate } from './Bookplate';
 import { useFriendsBeacons, refreshFriends } from '../../hooks/useFriendsBeacons';
 import { carrySender, journalUrl, tidyJournal } from '../../library/return_address';
-import { handOff } from '../../library/handoff';
+import { handOff, handOffOrder } from '../../library/handoff';
 import { DIRECTORY_URL } from '../../library/version';
 
 // The wall's view remembers itself between visits, apart from home's.
@@ -400,6 +400,23 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
     `${journalUrl(address)}${path}`, me, { known: inBook.has(tidyJournal(address)) },
   ), [me, inBook]);
   const idOf = useMemo(() => new Map((people || []).map(p => [p.address, p.id])), [people]);
+  // The wall's order as it stands, each record as the post it opens — the
+  // newest listen of whoever logged it last, at its address here — handed
+  // over when one is pressed, so a swipe on the post goes to the next
+  // record on this wall (2026-10-28).
+  // Shared, in the wall's filters: a record that is on your wall too, the
+  // one that wears your face in its corner (2026-10-28).
+  const isShared = useCallback(album => Boolean(album.mine), []);
+  const order = useRef([]);
+  const onOrder = useCallback(albums => {
+    order.current = albums.map(album => {
+      const last = album.loggers[0];
+      const id = last && idOf.get(last.address);
+      if (!id) return null;
+      const e = album.all.find(x => x.slug === last.slug && x.by?.address === last.address) || album.face;
+      return { ...e, path: `/dashboard/people/${id}/${encodeURIComponent(last.slug)}` };
+    }).filter(Boolean);
+  }, [idOf]);
   const tile = useCallback(album => {
     const face = album.face;
     const last = album.loggers[0];
@@ -419,7 +436,7 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
     const opens = album.all.find(e => e.slug === last.slug && e.by?.address === last.address) || face;
     const inAppAt = inApp ? `/dashboard/people/${inApp}/${encodeURIComponent(last.slug)}` : '';
     const way = inApp
-      ? { href: inAppAt, 'data-grows': inAppAt, onClick: () => handOff(opens) }
+      ? { href: inAppAt, 'data-grows': inAppAt, onClick: () => { handOffOrder(order.current); handOff(opens); } }
       : { href: there(last.address, `/entries/${encodeURIComponent(last.slug)}`), target: '_blank', rel: 'noopener noreferrer' };
     return (
       <Door
@@ -505,6 +522,8 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
       for (const f of found) {
         if (f.intersectionRatio > 0.98) { for (const k of keysOf(f.target)) looked.current.set(k, true); continue; }
         if (f.isIntersecting) continue;
+        // A cover a filter took off the wall has not been scrolled past.
+        if (!f.target.isConnected || f.boundingClientRect.height === 0) { watch.unobserve(f.target); continue; }
         const top = f.rootBounds ? f.rootBounds.top : 0;
         const keys = keysOf(f.target);
         if (f.boundingClientRect.bottom > top || !keys.some(k => looked.current.has(k))) continue;
@@ -994,10 +1013,11 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
           loading={loading}
           scroller={scroller}
           tile={tile}
-          filters={false}
           viewKey={VIEW_KEY}
           empty={empty}
           seek={seek}
+          onOrder={onOrder}
+          shared={isShared}
         />
       </div>
     </div>

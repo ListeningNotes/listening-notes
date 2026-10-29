@@ -74,7 +74,7 @@ import FolderFooter from '../../../components/main_components/FolderFooter';
 import KeeperTools from '../../../components/main_components/KeeperTools';
 import EditingBar from '../../../components/main_components/EditingBar';
 import CodeSlot from '../../../components/main_components/CodeSlot';
-import { MessageWayIn, useWritingTo } from '../../../components/main_components/Slug_Page/MessageForm';
+import { MessageWayIn } from '../../../components/main_components/Slug_Page/MessageForm';
 import SentBy, { creditOn, useTrail } from '../../../components/main_components/Slug_Page/SentBy';
 import SenderTool from '../../../components/main_components/Slug_Page/SenderTool';
 import SendSheet from '../../../components/main_components/SendSheet';
@@ -82,7 +82,7 @@ import { PromptSheet, useMonthPrompt } from '../../../components/main_components
 import StarRating from '../../../components/main_components/StarRating';
 import StarPicker from '../../../components/session_components/StarRating';
 import Chip from '../../../components/main_components/Slug_Page/Chip';
-import { useBookplate } from '../../../components/main_components/Bookplate';
+import { useBookplate, useVisiting } from '../../../components/main_components/Bookplate';
 import { useTheme } from '../../../components/main_components/Lightswitch';
 import { useEntryEditor } from '../../../hooks/useEntryEditor';
 import { useSnippet } from '../../../hooks/useSnippet';
@@ -115,7 +115,7 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
   const { site_address, keeper_name } = useBookplate();
   // A friend's entry read inside this journal asks their journal for its
   // cover's code (2026-10-28).
-  const elsewhere = useWritingTo() && site_address ? `https://${tidyAddress(site_address)}` : '';
+  const elsewhere = useVisiting() && site_address ? `https://${tidyAddress(site_address)}` : '';
   const { theme } = useTheme();
 
   // ── A new one: what has been written, kept per song ─────────────────────

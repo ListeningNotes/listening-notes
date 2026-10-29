@@ -133,6 +133,27 @@
 }
 
 .sitenav-side { display: flex; align-items: center; gap: 2px; min-width: 0; }
+/* A friend's post, read inside this journal (2026-10-28): their face on the
+   left, a circle as every face is, to their page; Compare on the right, a
+   glyph with its word worn while it is on. */
+.sitenav-who {
+  position: relative; flex: 0 0 auto;
+  display: grid; place-items: center;
+  width: 34px; height: 34px; border-radius: 50%; overflow: hidden;
+  background: var(--panel-strong); box-shadow: 0 0 0 1px var(--border);
+  color: var(--ink-faint);
+  -webkit-tap-highlight-color: transparent;
+}
+.sitenav-who img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.sitenav-compare {
+  display: inline-flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 6px 4px; margin: -6px 0; border: 0; background: none; cursor: pointer;
+  color: var(--ink-soft); -webkit-tap-highlight-color: transparent;
+  font-family: var(--font-label); font-size: 9px; line-height: 1; letter-spacing: 0.11em; text-transform: uppercase;
+}
+.sitenav-compare--on { color: var(--ink); }
+.sitenav-compare--on .sitenav-compare-word { text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 4px; }
+.sitenav-compare:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: -2px; border-radius: 8px; }
 /* Nothing in it. It is a spacer that keeps the mark on the middle of the row
    now that the tools have gone to the other end. */
 /* ── Each side in its own column, 2026-09-20 ──────────────────────────────
@@ -1838,9 +1859,13 @@ span.hn-bar-word { cursor: default; }
      the bars start as it lands and take three quarters of a second over it,
      which is about the pace of the record falling into the slot on the
      beacon — this site's one speed for a thing settling into place. */
-  animation: fd-rise 0.72s cubic-bezier(0.22, 0.61, 0.36, 1) 0.34s both;
+  animation: fd-cmp-rise 0.72s cubic-bezier(0.22, 0.61, 0.36, 1) 0.34s both;
 }
-@keyframes fd-rise { from { height: 4px; } to { height: var(--tall); } }
+/* Its own name, 2026-10-24: it was fd-rise, which the front door's record
+   wall also names (get.css), and the one loaded last won — every compare's
+   bars rose by sliding up a third of their height instead of growing, and
+   stood that far off their baseline. */
+@keyframes fd-cmp-rise { from { height: 4px; } to { height: var(--tall); } }
 /* A hearted track carries its ♥ above the bar, which is where the horizon
    draws one everywhere else on this site (HorizonChart). Above, not on: a
    mark inside the bar is a mark inside somebody's rating. */

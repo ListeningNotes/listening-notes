@@ -475,10 +475,14 @@ const COVERS_AT_A_TIME = 50;
 //   empty     what stands where there are no records at all
 //   seek      { placeholder, label, matches(album, folded), onChange(term) }
 //   before    over the wall, under the line — People's faces from a search
+//   onOrder   with `records`: told the wall's order, in records, as it
+//             changes — for a friend's wall to hand over on a press
+//   shared    with `records`: whether a record is on your wall too, which
+//             adds Shared to the filters
 function Journal({
   entries: given, loading: givenLoading, scroller, foot = null,
   records = null, tile = null, tail = null, filters = true, viewKey = VIEW_KEY,
-  empty = null, seek = null, before = null,
+  empty = null, seek = null, before = null, onOrder = null, shared = null,
 }) {
   const [ownEntries, setOwnEntries] = useState([]);
   const [ownLoading, setOwnLoading] = useState(true);
@@ -562,6 +566,8 @@ function Journal({
   // A record somebody sent: the envelope the wall's tiles wear (Feed.js,
   // Marks) — a Submission, not a credit written in by hand.
   const [sentOnly, setSentOnly] = useState(false);
+  // Shared, on somebody else's wall: only the records on yours too.
+  const [sharedOnly, setSharedOnly] = useState(false);
   // What the reader has set the handles to, or null for "every year" — which
   // is the full span once the entries have landed and nothing before that.
   const [yearPicked, setYearPicked] = useState(null);
@@ -633,11 +639,14 @@ function Journal({
   // The full span the collection covers, which is what the year slider's
   // ends are pinned to. Recomputed from the entries rather than hardcoded so
   // it widens by itself as older or newer records get added.
+  // Somebody else's wall reads its records' own entries (2026-10-28, when
+  // the Friends wall took the filters).
+  const filterRows = useMemo(() => (foreign ? records.flatMap(r => r.all || []) : entries), [foreign, records, entries]);
   const yearBounds = useMemo(() => {
-    const years = entries.map(releaseYear).filter(y => y !== null);
+    const years = filterRows.map(releaseYear).filter(y => y !== null);
     if (!years.length) return null;
     return { min: Math.min(...years), max: Math.max(...years) };
-  }, [entries]);
+  }, [filterRows]);
 
   // Genre is an open vocabulary coming from Apple, so the options are whatever
   // the archive actually contains rather than a list held here that would drift
@@ -648,7 +657,7 @@ function Journal({
   // genres is what would eventually turn this row into a wall.
   const genres = useMemo(() => {
     const seen = new Map();
-    for (const e of entries) {
+    for (const e of filterRows) {
       const g = (e.genre || '').trim();
       if (!g) continue;
       const key = g.toLowerCase();
@@ -657,7 +666,7 @@ function Journal({
       else seen.set(key, { name: g, count: 1 });
     }
     return [...seen.values()].sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
-  }, [entries]);
+  }, [filterRows]);
 
   // The ones carrying more than a single record lead, up to a dozen. Everything
   // else waits behind the toggle — reachable, just not in the way.
@@ -911,6 +920,7 @@ function Journal({
         // onto it before that column was dropped.
         if (formativeOnly && !marked(album.listens, x => x.formative === true || x.formative === 'true')) return false;
         if (sentOnly && !marked(album.all, x => x.entry_type === 'Submission' && x.credit_by_hand !== true)) return false;
+        if (sharedOnly && shared && !shared(album)) return false;
         if (yearActive) {
           const y = releaseYear(e);
           // An entry with no year can't be shown to fall inside a range, so
@@ -920,7 +930,7 @@ function Journal({
         return true;
       });
   // eslint-disable-next-line react-hooks/exhaustive-deps -- seek.matches is read, not watched: a new one comes with new records
-  }, [albums, search, kind, genre, favoritesOnly, masterpiecesOnly, formativeOnly, sentOnly, yearActive, yearRange]);
+  }, [albums, search, kind, genre, favoritesOnly, masterpiecesOnly, formativeOnly, sentOnly, sharedOnly, yearActive, yearRange]);
 
   // In the view's order, and with each record's band. In order is by the day
   // a record came into the journal, which never changes: the wall never
@@ -981,9 +991,14 @@ function Journal({
   // through its folder and carries on to the record beside it.
   // Never for somebody else's records: those open on their own journals, and
   // the order left here is home's.
+  // Somebody else's records are told to whoever drew them instead
+  // (`onOrder`, 2026-10-28): a friend's wall hands its own order over when a
+  // record is pressed, so a swipe on their post goes to the record beside it
+  // here, and home's wall, mounted under it, cannot write over that order.
   useEffect(() => {
     if (!foreign) handOffOrder(arranged.flatMap(({ album }) => [...album.all].reverse()));
-  }, [arranged, foreign]);
+    else if (onOrder) onOrder(arranged.map(({ album }) => album));
+  }, [arranged, foreign, onOrder]);
 
   const shown = arranged.slice(0, drawn);
   const more = arranged.length > drawn;
@@ -1231,7 +1246,7 @@ function Journal({
   function clearFilters() {
     glideNext();
     setSearch(''); setKind(''); setGenre(''); setGenresOpen(false);
-    setFavoritesOnly(false); setMasterpiecesOnly(false); setFormativeOnly(false); setSentOnly(false);
+    setFavoritesOnly(false); setMasterpiecesOnly(false); setFormativeOnly(false); setSentOnly(false); setSharedOnly(false);
     setYearPicked(null);
   }
 
@@ -1241,7 +1256,7 @@ function Journal({
   // number in a filled badge until 2026-10-22 (the wall's filters brief): the
   // underline already says something is on, and the badge was the shape that
   // change took out.
-  const narrowed = Boolean(kind) || Boolean(genre) || favoritesOnly || masterpiecesOnly || formativeOnly || sentOnly || yearActive;
+  const narrowed = Boolean(kind) || Boolean(genre) || favoritesOnly || masterpiecesOnly || formativeOnly || sentOnly || sharedOnly || yearActive;
   const hasActiveFilters = Boolean(search) || narrowed;
 
   return (
@@ -1479,6 +1494,7 @@ function Journal({
           masterpiecesOnly={masterpiecesOnly} setMasterpiecesOnly={gliding(setMasterpiecesOnly)}
           formativeOnly={formativeOnly} setFormativeOnly={gliding(setFormativeOnly)}
           sentOnly={sentOnly} setSentOnly={gliding(setSentOnly)}
+          canShare={Boolean(shared)} sharedOnly={sharedOnly} setSharedOnly={gliding(setSharedOnly)}
           hasActiveFilters={hasActiveFilters} clearFilters={clearFilters}
           shownCount={filtered.length}
           leaving={filtersLeaving}

@@ -1393,6 +1393,24 @@ rule was "about people writing on other people's journals... nobody's words
 about albums or comments, not this." A line from a keeper's own public entry,
 linked to it, may stand on the Board; a visitor's words never do.
 
+**Their note may sit beside yours on your page about them, 2026-10-24** —
+(on their post since 2026-10-28, read with the post; the route stays for
+older copies that ask it) —
+a friend's, or a stranger's off the Board, whose page opens by their address
+(her words the same day: "even if its a stranger").
+Her compare brief: reading what they actually said "is the entire point". It
+is their writing shown in full outside their journal, which the Board's quote
+is not, so it is held to three things: one entry at a time through
+`/api/public/notes/[slug]`, never a list; read live and stored nowhere; their
+face on it and their entry one press away. A quiet entry gives nothing.
+
+**Compare may set your taste beside theirs in numbers, 2026-10-24.** Her
+words: see "at a quick easy glance how you two compare… even if it's a
+stranger." Each side's share of its records by genre, decade or stars, and
+the cards (top genre, Masterpieces on what you share), describe taste; the
+no-counts rule is about a score somebody could grow, and nothing here ranks
+anyone. It stays on that page, the keeper's alone; never a row or the Board.
+
 **The directory keeps each listed journal's records, 2026-10-08.** Titles,
 stars and marks, read from the public feed by the same job — never the
 writing. A quoted line is read from the keeper's own journal by the viewing
@@ -1514,8 +1532,16 @@ Friends answers).** Visit opens `/dashboard/people/[id]`, laid out as home
 Added for its rooms, their beacon, the line, their wall — home's components,
 their public rows. "The page is mine, the data is theirs": nothing framed,
 and (since 2026-10-28) their entries open here too. Compare is a view opened in place at the
-top of the page — her pick over a screen of its own, 2026-10-26, with main's
-versus screen still to join ("the way you have it designed now is great").
+top of the page — her pick over a screen of its own, 2026-10-26 ("the way
+you have it designed now is great"); main's versus screen joined it
+2026-10-28, its faces and facts kept above the shared records (her call).
+
+**Compare is two, 2026-10-28, her split: "comparing a listen vs comparing
+with a full person".** The person is Compare on their page: the two of you,
+face to face, the facts, a wall of the records you share. The listen is
+their post (ListenCompare.js): Compare in its top right, where you have the
+record too, sets your listen beside theirs, and a shared record pressed on
+their page opens the post that way — "skipping a button".
 
 **A friend's entry opens inside your journal, 2026-10-28, her ask ("not a
 separate page overlay").** `/dashboard/people/[id]/[slug]` (her name) reads
