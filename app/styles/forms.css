@@ -2744,9 +2744,11 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 .pn-screen--card .pn-hdr-stops { visibility: hidden; }
 .pn-idcard {
   --from: 35px 51px;
-  position: fixed; inset: 0; z-index: 110;
+  /* Under the row rather than behind it: the row has no ground of its own,
+     so a card scrolled up under it ran behind their name. The circle still
+     starts at the face, above this box (openCard measures it). */
+  position: fixed; inset: calc(80px + var(--safe-top, 0px)) 0 0; z-index: 110;
   overflow-y: auto; overscroll-behavior: contain;
-  padding-top: calc(80px + var(--safe-top, 0px));
   /* The card's gutter, as home's card pane gives it (.hn-face and
      --hn-gutter, nav.css): 34 on a desk, 18 on a phone, below. */
   --page-gutter: 34px;

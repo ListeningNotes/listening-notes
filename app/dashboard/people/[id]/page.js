@@ -600,6 +600,9 @@ export default function PersonPage({ layered = false }) {
   const cardRef = useRef(null);
   const faceRef = useRef(null);
   const openCard = () => {
+    // The row the card opens under is at the top of the page, so the page
+    // goes back there first.
+    if (scroller.current && scroller.current.scrollTop > 0) scroller.current.scrollTop = 0;
     const sheet = cardRef.current;
     const face = faceRef.current?.getBoundingClientRect();
     if (sheet && face) {
@@ -657,7 +660,9 @@ export default function PersonPage({ layered = false }) {
     address: person.address,
     page: person.id ? `/dashboard/people/${person.id}` : `${journalUrl(person.address)}/entries`,
     live,
-  } : null), [person, name, live]);
+    // The version their copy runs, for the foot of their card (About.js).
+    version: card?.version ? String(card.version) : null,
+  } : null), [person, name, live, card]);
   // The three beside the beacon, as home has its own: their newest records
   // but the one the beacon is showing, each opening on their journal.
   const recents = useMemo(() => {

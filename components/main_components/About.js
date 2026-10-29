@@ -100,7 +100,7 @@ export default function About({ stamps, authed = false, pinned = null, entries =
   // ── Somebody else's card, 2026-10-29 ────────────────────────────────────
   // A friend's card opened from their face on their page here (app/dashboard/
   // people/[id]): their records open as their posts inside this journal, and
-  // the foot — this copy's lock, source and version — is not theirs to carry.
+  // the foot carries their version rather than this copy's, with no lock.
   const visiting = useVisiting();
   const entryAt = slug => (visiting ? `${visiting.page}/${encodeURIComponent(slug)}` : `/entries/${slug}`);
   const { bioanswers, keeper_name, rig: rigRows, social_links } = settings;
@@ -1125,16 +1125,20 @@ export default function About({ stamps, authed = false, pinned = null, entries =
           keeper's half above. The version beside it says at a glance which copy
           a friend is running. The lock is the keeper's way in on their own
           phone; a visitor sees a lock and nothing happens (WritingAccess.js). */}
-      {!authed && !visiting && (
+      {/* A friend's card read here carries their version, not this copy's
+          (Miyel, 2026-10-29: "having it at the foot of their card, what
+          version they're running, is good") — and no lock, which would be
+          this journal's. A journal too old to say its version has no foot. */}
+      {!authed && (!visiting || visiting.version) && (
         <section className="ab-keep ab-keep--visitor" aria-label="This software">
-          <WritingAccess onSignedIn={onSignedIn} />
+          {!visiting && <WritingAccess onSignedIn={onSignedIn} />}
           <p className="db-colophon">
             <a className="pt-source" href={SOURCE_URL} target="_blank" rel="noopener noreferrer">
               Source
             </a>
             <span className="pt-colophon-dot" aria-hidden="true">&middot;</span>
             <a className="pt-source" href={RELEASE_URL} target="_blank" rel="noopener noreferrer" title="What this version contains">
-              {VERSION}
+              {visiting ? visiting.version : VERSION}
             </a>
           </p>
         </section>

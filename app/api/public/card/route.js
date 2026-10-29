@@ -17,6 +17,10 @@
 // journal's address in front of. The pinned record goes as the record itself,
 // its slug, names and cover, because an entry's id never crosses between
 // copies (AGENTS, Never). The counts are /api/public/stamps', asked beside it.
+// And the version this copy runs, which the foot of its card prints for any
+// visitor (About.js), so the reader can print it at the foot of theirs
+// (Miyel, 2026-10-29: "I need to sometimes see what version other people are
+// on").
 //
 // A copy older than this answers 404 here, and the reader draws what it can
 // from the records it has already read (app/dashboard/people/[id]).
@@ -24,6 +28,7 @@
 import database from '@/library/database_connection';
 import { answerNoJournal } from '@/library/hosting_directory';
 import { coverName, pull_settings } from '@/library/settings_actions';
+import { VERSION } from '@/library/version';
 
 const HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -41,6 +46,7 @@ export async function GET() {
     const all = await pull_settings();
     const card = Object.fromEntries(CARD_FIELDS.filter(key => key in all).map(key => [key, all[key]]));
     card.cover_name = coverName(all);
+    card.version = VERSION;
     card.pinned = null;
     if (all.pinned_entry_id) {
       const [row] = await database`
