@@ -951,7 +951,6 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
             items={doorsWho.items}
             newHere={held?.address === doorsWho.address ? held.keys : null}
             there={there}
-            face={faceOf(doorsWho.address, 14)}
             onAnswered={onAnswered}
             onMoved={() => { readBook(); refreshFriends(); }}
             stranger={Boolean(doorsWho.stranger)}

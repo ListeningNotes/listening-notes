@@ -12,8 +12,16 @@
 // and Sends unroll under the row, what waits first with its answers, the
 // door wearing New while something behind it has not been seen. The door
 // with something waiting is open as the face opens. A wave is not a door:
-// it is a hand beside their name, and pressing it lets it go (her answer,
-// the same day: "a wave just shows up as a dismissible icon").
+// it is a hand after Sends, and pressing it lets it go (her answer, the same
+// day: "Visit message sends then a wave just shows up as a dismissible
+// icon").
+//
+// No head, and centred (her review, the same day: "this needs to be centered
+// and we don't need a repeat of the person's profile photo and name because
+// we already know who we're opening"). The face pressed is lit in the row
+// above it; that says whose this is. A stranger keeps the one line that says
+// what the row cannot — Not one of your friends — and Add stands where
+// Visit would.
 //
 //   Messages   what they wrote: Reply · Keep (a message never has Dismiss:
 //              nothing a person typed is destroyed; Keep closes it without
@@ -232,17 +240,16 @@ function Door({ icon: Icon, word, onClick, href, disabled = false, open, label, 
 // waitingFrom's list and `newHere` the keys that were new as the face
 // opened, which keep New while it is open. `there` builds a link onto their
 // journal; `onAnswered(kind, row, change)` tells the screen what to change
-// in its lists, and `onMoved` that the book needs reading again. `face` is
-// their face as the row draws it.
+// in its lists, and `onMoved` that the book needs reading again.
 //
 // A stranger (step five) has no page and no book row: `person` is null,
-// `journal` their address when they keep one, and `onAdd` files it. Their
-// head says so — Not one of your friends, and Add — and their answers are
+// `journal` their address when they keep one, and `onAdd` files it. A line
+// says so — Not one of your friends — Add is a door, and their answers are
 // the closed doors' (the brief): read what they said without letting them
 // into anything. Dismiss is Let it go, and the server closes the door
 // behind it; a message let go is kept, never deleted.
 export default function FriendPanel({
-  person, name, items, newHere, there, onAnswered, onMoved, face = null,
+  person, name, items, newHere, there, onAnswered, onMoved,
   stranger = false, journal = '', onAdd = null, adding = false,
 }) {
   const router = useRouter();
@@ -370,7 +377,7 @@ export default function FriendPanel({
   };
 
   // ── Waved ───────────────────────────────────────────────────────────────
-  // A hand beside their name, and pressing it lets the wave go.
+  // A hand after the doors, and pressing it lets the wave go.
   const dismissWave = async (item) => {
     setBusy(item.key);
     const r = await fetch('/api/waves', {
@@ -514,37 +521,21 @@ export default function FriendPanel({
 
   return (
     <div className="fp">
-      {/* Who it is, and their wave if they waved. A stranger's head says
-          they are not one of your friends, with Add (step five). */}
-      {stranger ? (
-        <div className="fp-who fp-who--stranger">
-          {face}
-          <span className="fp-who-says">
-            <span className="fp-who-name">{who}</span>
-            <span className="fp-who-not">Not one of your friends</span>
-          </span>
-          {waveMark}
-          {journal && onAdd && (
-            <span className="fp-who-add">
-              <Door icon={UserPlus} word="Add" onClick={() => onAdd(journal)} disabled={adding} label={`Add ${who} to your friends`} />
-            </span>
-          )}
-        </div>
-      ) : (
-        <div className="fp-who fp-who--plain">
-          {face}
-          <span className="fp-who-name">{who}</span>
-          {waveMark}
-        </div>
-      )}
-      {wave && trouble[wave.key] && <p className="fp-trouble" role="status">{trouble[wave.key]}</p>}
+      {/* Nobody's face or name: the face pressed is lit in the row above. A
+          stranger has the one line the row cannot say (step five). */}
+      {stranger && <p className="fp-not">Not one of your friends</p>}
       {moved.map(one)}
 
       <div className="fp-doors fp-doors--three" role="group" aria-label={`You and ${who}`}>
         {page && <Door icon={House} word="Visit" href={page} label={`${who}’s journal`} />}
+        {stranger && journal && onAdd && (
+          <Door icon={UserPlus} word="Add" onClick={() => onAdd(journal)} disabled={adding} label={`Add ${who} to your friends`} />
+        )}
         <Door icon={ChatsCircle} word="Messages" open={showing === 'messages'} onClick={() => pick('messages')} isNew={fresh(messages)} label={`Messages from ${who}`} />
         <Door icon={VinylRecord} word="Sends" open={showing === 'sends'} onClick={() => pick('sends')} isNew={fresh(sends)} label={`Sends from ${who}`} />
+        {waveMark}
       </div>
+      {wave && trouble[wave.key] && <p className="fp-trouble fp-trouble--wave" role="status">{trouble[wave.key]}</p>}
 
       {showing === 'messages' && (
         <div className="fp-under">

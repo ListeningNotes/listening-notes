@@ -2317,7 +2317,7 @@ textarea.st-field { resize: vertical; min-height: 96px; }
    first in ink. A hairline between each, and above the quiet line. */
 .fp { display: flex; flex-direction: column; padding-top: 12px; border-top: 1px solid var(--border); margin-top: 6px; }
 .fp-one { display: flex; align-items: flex-start; gap: 14px; padding: 16px 0; border-top: 1px solid var(--border); }
-.fp-who + .fp-one { border-top: 0; padding-top: 10px; }
+.fp > .fp-one:first-child { border-top: 0; padding-top: 6px; }
 .fp-art-link { flex: 0 0 auto; display: block; border-radius: 8px; -webkit-tap-highlight-color: transparent; }
 .fp-art {
   flex: 0 0 auto; width: 60px; height: 60px; border-radius: 8px; overflow: hidden;
@@ -2354,46 +2354,24 @@ textarea.st-field { resize: vertical; min-height: 96px; }
   font-family: var(--font-label); font-size: 9px; line-height: 1.4;
   letter-spacing: 0.11em; text-transform: uppercase; color: var(--ink-faint);
 }
-/* Who it is from, at the head: their face small and their name, going to
-   their journal page. */
-.fp-who {
-  align-self: flex-start;
-  display: inline-flex; align-items: center; gap: 9px;
-  padding: 4px 0; color: var(--ink); text-decoration: none;
-  -webkit-tap-highlight-color: transparent;
-}
-.fp-who .fr-ring { width: 28px; flex-shrink: 0; }
-.fp-who-name {
-  font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
-  font-size: 15px; line-height: 1.2;
-}
-.fp-who svg { color: var(--ink-faint); }
-.fp-who:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; border-radius: 6px; }
-/* A stranger's head (step five): their face larger, their name, Not one of
-   your friends under it, and Add on the right — a head and not a link, since
-   nothing of theirs opens until they are added. */
-.fp-who--stranger { align-self: stretch; gap: 14px; }
-.fp-who--stranger .fr-ring { width: 52px; }
-.fp-who-says { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
-.fp-who--stranger .fp-who-name { font-size: 24px; line-height: 1.1; }
-.fp-who-not {
+/* No head (her review, 2026-10-29: "we already know who we're opening"):
+   a stranger has the one line the lit face in the row cannot say, centred
+   over the doors (step five). */
+.fp-not {
+  margin: 0 0 14px; text-align: center;
   font-family: var(--font-label); font-size: 9px; line-height: 1;
   letter-spacing: 0.11em; text-transform: uppercase; color: var(--ink-faint);
 }
-.fp-who-add { flex: 0 0 auto; }
 .fp-closed {
-  margin: 0; padding: 14px 0 4px; border-top: 1px solid var(--border);
+  margin: 0; padding: 14px 0 4px; border-top: 1px solid var(--border); text-align: center;
   font-family: var(--font-label); font-size: 9px; letter-spacing: 0.11em; text-transform: uppercase;
   color: var(--ink-faint);
 }
-/* The head, when it is one of your friends: their face and name, and the
-   hand of a wave at the far end (2026-10-29). Not a link any more — Visit
-   is the way to their page. */
-.fp-who--plain { align-self: stretch; }
-.fp-who--plain .fp-who-name { flex: 1; min-width: 0; }
+/* A wave: the hand after Sends, its glyph level with the doors' glyphs and
+   no word under it, since it is not a door (2026-10-29). */
 .fp-wave {
-  position: relative; flex: 0 0 auto; display: inline-flex;
-  padding: 6px; margin: -6px 0 -6px auto;
+  position: relative; flex: 0 0 auto; display: inline-flex; align-self: flex-start;
+  padding: 6px; margin: -6px;
   border: 0; background: none; color: var(--ink); cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
@@ -2407,10 +2385,12 @@ textarea.st-field { resize: vertical; min-height: 96px; }
   background: var(--ink); color: var(--bg);
   box-shadow: 0 0 0 1.5px var(--bg);
 }
-.fp-who--stranger .fp-wave { margin-left: 0; }
-/* Visit · Messages · Sends, the same three on every face (2026-10-29), on a
-   rule of their own; what Messages or Sends opens unrolls under them. */
-.fp-doors--three { gap: 8px 30px; margin-top: 2px; padding-top: 14px; border-top: 1px solid var(--border); }
+/* Visit · Messages · Sends, the same three on every face (2026-10-29),
+   centred under the row (her review, the same day); what Messages or Sends
+   opens unrolls under them. A move above them gets a rule between. */
+.fp-doors--three { justify-content: center; gap: 8px 34px; margin-top: 8px; }
+.fp-one + .fp-doors--three { margin-top: 0; padding-top: 14px; border-top: 1px solid var(--border); }
+.fp-trouble--wave { margin-top: 10px; text-align: center; }
 .fp-door-glyph { position: relative; display: inline-flex; }
 /* New on a door, above and right of its glyph, as on the top row's stops. */
 .fp-door-new {
@@ -2421,9 +2401,9 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 }
 .fp-under { display: flex; flex-direction: column; padding-top: 4px; }
 .fp-under > .fp-none, .fp-under > .fp-all { margin-top: 12px; }
-.fp-none { margin: 0; font-size: 13.5px; line-height: 1.45; color: var(--ink-faint); }
+.fp-none { margin: 0; font-size: 13.5px; line-height: 1.45; color: var(--ink-faint); text-align: center; }
 .fp-all {
-  align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; padding: 4px 0;
+  align-self: center; display: inline-flex; align-items: center; gap: 6px; padding: 4px 0;
   font-family: var(--font-label); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
   color: var(--ink-soft); text-decoration: none;
 }
