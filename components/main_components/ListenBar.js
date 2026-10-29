@@ -53,8 +53,8 @@ import { TrackLength } from '../../library/session_timers';
 
 // What owns the foot when it is on screen. A folder's tabs that have stepped
 // aside for a keyboard (ff--away) do not. A friend's page (.pn-screen) owns
-// the whole screen, and so does the card's window over a dimmed page
-// (.hn--card, 2026-10-29).
+// the whole screen, and so does the card opened from the face (.hn--card,
+// 2026-10-29).
 const FOOT_ROWS = '.ln-editing-bar, .ff:not(.ff--away), .ln-print-bar, .sn-room, .sn-sheet, .lay--sheet, .lay.ses-preview, .pn-screen, .pn-post, .hn--card';
 
 // Whether the foot is taken. Asked of the page whenever anything is added,

@@ -29,6 +29,14 @@
 import database from '@/library/database_connection';
 import { answerNoJournal } from '@/library/hosting_directory';
 
+// Readable from another journal's pages too, 2026-10-29: a friend's card is
+// drawn by the reader's copy (app/api/public/card), and these are its counts.
+// It answers anyone already; this lets a browser on another address read it.
+const HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, OPTIONS',
+};
+
 export async function GET() {
   try {
     // The album counts count albums, 2026-09-24: a track note is about one
@@ -77,14 +85,18 @@ export async function GET() {
       formative: row?.formative ?? 0,
       first_listen: row?.first_listen ?? null,
       genres: genres.map(g => g.name),
-    });
+    }, { headers: HEADERS });
   } catch (error) {
     // No journal at this address is not a card with no numbers.
-    const nowhere = answerNoJournal(error);
+    const nowhere = answerNoJournal(error, HEADERS);
     if (nowhere) return nowhere;
     // A card with no numbers on it is a card. A card that fails to load is a
     // broken page, so the counts come back as zeros and the component leaves
     // those rows off rather than printing "0 records".
-    return Response.json({ records: 0, songs: 0, masterpieces: 0, formative: 0, first_listen: null, genres: [] }, { status: 200 });
+    return Response.json({ records: 0, songs: 0, masterpieces: 0, formative: 0, first_listen: null, genres: [] }, { status: 200, headers: HEADERS });
   }
+}
+
+export function OPTIONS() {
+  return new Response(null, { status: 204, headers: HEADERS });
 }

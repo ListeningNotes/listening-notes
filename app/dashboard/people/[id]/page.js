@@ -47,11 +47,13 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { CaretDown, CaretLeft, CaretRight, Heart, Printer, Shuffle, SketchLogo, Sparkle, User, UserCheck, UserPlus } from '@phosphor-icons/react';
+import { CaretDown, CaretLeft, CaretRight, Heart, Printer, Shuffle, SketchLogo, Sparkle, User, UserCheck, UserPlus, X } from '@phosphor-icons/react';
 import StarRating from '../../../../components/main_components/StarRating';
 import Journal, { foldForSearch, gatherAlbums } from '../../../../components/main_components/Journal';
 import { BeaconCard } from '../../../../components/main_components/ListeningBeacon';
 import SentList from '../../../../components/main_components/SentList';
+import About from '../../../../components/main_components/About';
+import { Bookplate, Visiting } from '../../../../components/main_components/Bookplate';
 import { countHearts, lineUp } from '../../../../components/main_components/ListenCompare';
 import { albumKey } from '../../../../hooks/useListeningBeacon';
 import { fillFriends, useFriendsBeacons } from '../../../../hooks/useFriendsBeacons';
@@ -65,6 +67,33 @@ const EACH_MS = 8000;
 const RECENTS = 3;
 // Where the wall's view is remembered, apart from home's and People's.
 const VIEW_KEY = 'ln-person-view';
+
+// ── Their card's counts, from their records, 2026-10-29 ──────────────────
+// What /api/public/stamps counts, worked out from the feed this page has
+// already read, for a journal too old to let another address read its own
+// (app/api/public/card): albums, songs, the two marks a card prints, the
+// first listen, and the three genres it leans on.
+function stampsFrom(rows = []) {
+  const albums = rows.filter(e => !e.song);
+  const marked = (e, key) => e[key] === true || e[key] === 'true';
+  const genres = new Map();
+  for (const e of rows) {
+    const g = String(e.genre || '').trim();
+    if (!g) continue;
+    const had = genres.get(g.toLowerCase()) || { name: g, n: 0 };
+    had.n += 1;
+    genres.set(g.toLowerCase(), had);
+  }
+  const first = rows.reduce((at, e) => (e.posted_at && (!at || e.posted_at < at) ? e.posted_at : at), null);
+  return {
+    records: albums.length,
+    songs: rows.length - albums.length,
+    masterpieces: albums.filter(e => marked(e, 'masterpiece')).length,
+    formative: albums.filter(e => marked(e, 'formative')).length,
+    first_listen: first,
+    genres: [...genres.values()].sort((a, b) => b.n - a.n || a.name.localeCompare(b.name)).slice(0, 3).map(g => g.name),
+  };
+}
 
 const num = v => (v === null || v === undefined || v === '' ? null : Number(v));
 const newestFirst = rows => [...rows].sort((a, b) => new Date(b.posted_at) - new Date(a.posted_at));
@@ -553,6 +582,82 @@ export default function PersonPage({ layered = false }) {
 
   const name = theirs?.name || person?.name || 'them';
   const records = useMemo(() => gatherAlbums(theirs?.entries || []), [theirs]);
+
+  // ── Their card, from their face, 2026-10-29 ────────────────────────────
+  // Miyel: "on a friends page clicking their pfp needs to also open their
+  // card" — the whole card, her pick, opened the way home's is (nav.css,
+  // Grown from the face): full bleed, a circle growing out of the face, the
+  // face its X, their name staying in the middle of the row. Read from their
+  // journal the first time it opens (app/api/public/card) and kept nowhere;
+  // drawn by this copy's own card inside their Bookplate, with Visiting
+  // saying whose it is so its records open as their posts here (About.js).
+  // A journal older than that address gets a card of what this page already
+  // knows — their face, their name, and counts from their records.
+  const [cardOpen, setCardOpen] = useState(false);
+  const [cardMade, setCardMade] = useState(false);
+  const [card, setCard] = useState(null);
+  const [cardStamps, setCardStamps] = useState(null);
+  const cardRef = useRef(null);
+  const faceRef = useRef(null);
+  const openCard = () => {
+    const sheet = cardRef.current;
+    const face = faceRef.current?.getBoundingClientRect();
+    if (sheet && face) {
+      const box = sheet.getBoundingClientRect();
+      sheet.style.setProperty('--from', `${face.left + face.width / 2 - box.left}px ${face.top + face.height / 2 - box.top}px`);
+    }
+    setCardMade(true);
+    setCardOpen(true);
+    if (card !== null || !person) return;
+    const there = journalUrl(person.address);
+    fetch(`${there}/api/public/card`, { signal: AbortSignal.timeout(EACH_MS) })
+      .then(r => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+      .then(setCard)
+      .catch(() => setCard(false));
+    fetch(`${there}/api/public/stamps`, { signal: AbortSignal.timeout(EACH_MS) })
+      .then(r => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+      .then(setCardStamps)
+      .catch(() => setCardStamps(false));
+  };
+  useEffect(() => {
+    if (!cardOpen) return undefined;
+    const shut = event => { if (event.key === 'Escape') setCardOpen(false); };
+    window.addEventListener('keydown', shut);
+    return () => window.removeEventListener('keydown', shut);
+  }, [cardOpen]);
+  const theirSettings = useMemo(() => {
+    if (!person) return null;
+    const there = journalUrl(person.address);
+    const at = path => (typeof path === 'string' && path.startsWith('/') ? `${there}${path}` : path || '');
+    const got = card || {};
+    return {
+      keeper_name: got.keeper_name || name,
+      display_name: got.display_name || null,
+      cover_name: got.cover_name || name,
+      portrait_url: card ? at(got.portrait_url) : `${there}/api/portrait`,
+      portrait_code_url: card ? at(got.portrait_code_url) : '',
+      portrait_position: got.portrait_position || null,
+      site_address: person.address,
+      founded_at: got.founded_at || null,
+      social_links: got.social_links || null,
+      hidden_fields: got.hidden_fields || null,
+      bioanswers: got.bioanswers || null,
+      rig_icon: got.rig_icon || null,
+      rig: got.rig || null,
+    };
+  }, [person, card, name]);
+  const theirStamps = useMemo(
+    () => (cardStamps || (theirs ? stampsFrom(theirs.entries) : null)),
+    [cardStamps, theirs],
+  );
+  const live = Boolean(beacon?.isLive);
+  const whose = useMemo(() => (person ? {
+    person_id: person.id || null,
+    name,
+    address: person.address,
+    page: person.id ? `/dashboard/people/${person.id}` : `${journalUrl(person.address)}/entries`,
+    live,
+  } : null), [person, name, live]);
   // The three beside the beacon, as home has its own: their newest records
   // but the one the beacon is showing, each opening on their journal.
   const recents = useMemo(() => {
@@ -795,7 +900,7 @@ export default function PersonPage({ layered = false }) {
   );
 
   return (
-    <div ref={rootRef} className={'own-screen pn-screen' + (layered ? ' own-screen--layered' : '')}>
+    <div ref={rootRef} className={'own-screen pn-screen' + (layered ? ' own-screen--layered' : '') + (cardOpen ? ' pn-screen--card' : '')}>
       {/* ── The top row, as home's ─────────────────────────────────────
           Miyel, 2026-10-26: "page should look just like an owners page just
           with the three buttons instead of the home people and community".
@@ -809,7 +914,20 @@ export default function PersonPage({ layered = false }) {
         <button type="button" className="pn-hdr-back" onClick={goBack} aria-label="Back" title="Back">
           <CaretLeft size={20} weight="regular" aria-hidden="true" />
         </button>
-        {person && <Face address={person.address} />}
+        {person && (
+          <button
+            type="button"
+            ref={faceRef}
+            className={'pn-face-press' + (cardOpen ? ' pn-face-press--open' : '')}
+            onClick={() => (cardOpen ? setCardOpen(false) : openCard())}
+            aria-expanded={cardOpen}
+            aria-label={cardOpen ? 'Close' : `${name}’s card`}
+            title={cardOpen ? 'Close' : name}
+          >
+            <Face address={person.address} />
+            <span className="hdr-face-x" aria-hidden="true"><X size={16} weight="bold" /></span>
+          </button>
+        )}
         {/* Their name where home's mark stands, and the mark's dot beside
             it while they are logging — home's one signal for live. */}
         {person && (
@@ -844,6 +962,23 @@ export default function PersonPage({ layered = false }) {
           </nav>
         )}
       </header>
+
+      {person && (
+        <div
+          ref={cardRef}
+          className={'pn-idcard' + (cardOpen ? ' pn-idcard--open' : '')}
+          aria-hidden={!cardOpen}
+          inert={cardOpen ? undefined : true}
+        >
+          {cardMade && (
+            <Bookplate settings={theirSettings}>
+              <Visiting value={whose}>
+                <About stamps={theirStamps} pinned={card?.pinned || null} entries={theirs?.entries || []} />
+              </Visiting>
+            </Bookplate>
+          )}
+        </div>
+      )}
 
       <div className="own-body pn-body">
         {person === false ? (

@@ -53,7 +53,7 @@ import { useIdentificationCardEditor } from './IdentificationCardEditor';
 import EditingBar from './EditingBar';
 import WritingAccess from './WritingAccess';
 import { KeeperFoot } from './Keyring';
-import { useBookplate } from './Bookplate';
+import { useBookplate, useVisiting } from './Bookplate';
 import { BIO_PROMPTS, readBioAnswers } from '../../library/bioprompt';
 import { VERSION, RELEASE_URL, SOURCE_URL } from '../../library/version';
 
@@ -97,6 +97,12 @@ const PIN_RESULTS = 40;
 // should be solved together.
 export default function About({ stamps, authed = false, pinned = null, entries = [], onSignedIn = null }) {
   const settings = useBookplate();
+  // ── Somebody else's card, 2026-10-29 ────────────────────────────────────
+  // A friend's card opened from their face on their page here (app/dashboard/
+  // people/[id]): their records open as their posts inside this journal, and
+  // the foot — this copy's lock, source and version — is not theirs to carry.
+  const visiting = useVisiting();
+  const entryAt = slug => (visiting ? `${visiting.page}/${encodeURIComponent(slug)}` : `/entries/${slug}`);
   const { bioanswers, keeper_name, rig: rigRows, social_links } = settings;
 
   // Whose voice the answers are in, and what the journal actually listens to.
@@ -567,8 +573,8 @@ export default function About({ stamps, authed = false, pinned = null, entries =
               <div className="ab-count-grid">
                 {inWindow.map(row => (
                   <Link
-                    key={row.id}
-                    href={`/entries/${row.slug}`}
+                    key={row.id ?? row.slug}
+                    href={entryAt(row.slug)}
                     className="ab-count-cover"
                     title={`${row.album} — ${row.artist}`}
                     aria-label={`${row.album} — ${row.artist}`}
@@ -1119,7 +1125,7 @@ export default function About({ stamps, authed = false, pinned = null, entries =
           keeper's half above. The version beside it says at a glance which copy
           a friend is running. The lock is the keeper's way in on their own
           phone; a visitor sees a lock and nothing happens (WritingAccess.js). */}
-      {!authed && (
+      {!authed && !visiting && (
         <section className="ab-keep ab-keep--visitor" aria-label="This software">
           <WritingAccess onSignedIn={onSignedIn} />
           <p className="db-colophon">

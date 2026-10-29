@@ -2715,6 +2715,59 @@ textarea.st-field { resize: vertical; min-height: 96px; }
   display: grid; place-items: center; color: var(--ink-faint);
 }
 .pn-face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+/* ── Their face opens their card, 2026-10-29 ───────────────────────────────
+   As home's face opens the keeper's (nav.css, Grown from the face): the
+   card is the whole screen, a circle growing out of the face, which is its X
+   while it is open; the name stays in the middle of the row and Compare and
+   Added step aside. The circle's centre is the face's, measured as it is
+   pressed (app/dashboard/people/[id], openCard). */
+.pn-face-press {
+  position: relative; flex: 0 0 auto; display: grid;
+  padding: 0; border: 0; border-radius: 50%; background: none;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.pn-face-press:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 2px; }
+/* Over the wall's sticking bar (101, journal.css), which would otherwise
+   show through it, and the row over the card. */
+.pn-screen--card .pn-hdr { z-index: 111; }
+.pn-hdr-stops { transition: opacity 0.18s ease, visibility 0s; }
+.pn-screen--card .pn-hdr-stops { opacity: 0; visibility: hidden; transition: opacity 0.12s ease, visibility 0s linear 0.12s; }
+.pn-idcard {
+  --from: 35px 51px;
+  position: fixed; inset: 0; z-index: 110;
+  overflow-y: auto; overscroll-behavior: contain;
+  padding-top: calc(80px + var(--safe-top, 0px));
+  /* The card's gutter, as home's card pane gives it (.hn-face and
+     --hn-gutter, nav.css): 34 on a desk, 18 on a phone, below. */
+  --page-gutter: 34px;
+  background: var(--bg);
+  -webkit-clip-path: circle(17px at var(--from));
+  clip-path: circle(17px at var(--from));
+  transform-origin: var(--from);
+  transform: scale(0.92);
+  opacity: 0; visibility: hidden;
+  transition:
+    clip-path 0.34s cubic-bezier(0.4, 0, 0.7, 0.2),
+    transform 0.34s cubic-bezier(0.4, 0, 0.7, 0.2),
+    opacity 0.1s ease 0.24s,
+    visibility 0s linear 0.34s;
+}
+.pn-idcard--open {
+  -webkit-clip-path: circle(150vmax at var(--from));
+  clip-path: circle(150vmax at var(--from));
+  transform: none; opacity: 1; visibility: visible;
+  transition:
+    clip-path 0.5s cubic-bezier(0.22, 0.61, 0.36, 1),
+    transform 0.5s cubic-bezier(0.22, 0.61, 0.36, 1),
+    opacity 0s, visibility 0s;
+}
+@media (max-width: 768px) { .pn-idcard { --page-gutter: 18px; } }
+/* Their card has no head of its own: the row above is it. Three classes deep,
+   since idcard.css is loaded after this sheet. */
+.pn-idcard .ab-card .idc-head { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .pn-idcard, .pn-idcard--open, .pn-hdr-stops, .pn-screen--card .pn-hdr-stops { transition: none; }
+}
 /* In the middle of the row, where home's mark is. */
 .pn-hdr-name {
   position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);

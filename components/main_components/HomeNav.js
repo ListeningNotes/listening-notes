@@ -1907,10 +1907,6 @@ export default function HomeNav() {
             page keep where it was scrolled to while the other one is up. */}
         <div className="hn-pane hn-pane--turn">
           <div className="hn-leaf">
-          {/* The dim behind the card's window on a phone, 2026-10-29: a press
-              on it puts the card away, as the X and Escape do (nav.css,
-              .hn-card-dim). Drawn on a phone only. */}
-          <div className="hn-card-dim" onClick={() => setCardOpen(false)} aria-hidden="true" />
           <section className="hn-pane hn-face hn-face--card" ref={cardRef} aria-label="About this journal">
             <About stamps={stamps} authed={authed} pinned={pinned} entries={entries} onSignedIn={letIn} />
           </section>
