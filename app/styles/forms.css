@@ -2391,6 +2391,8 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 .fp-doors--three { justify-content: center; gap: 8px 34px; margin-top: 8px; }
 .fp-one + .fp-doors--three { margin-top: 0; padding-top: 14px; border-top: 1px solid var(--border); }
 .fp-trouble--wave { margin-top: 10px; text-align: center; }
+/* A send's Listen · Dismiss, on the right of it (2026-10-29). */
+.fp-doors--side { flex: 0 0 auto; flex-wrap: nowrap; align-self: center; gap: 0 16px; margin-top: 0; }
 .fp-door-glyph { position: relative; display: inline-flex; }
 /* New on a door, above and right of its glyph, as on the top row's stops. */
 .fp-door-new {
@@ -2920,7 +2922,8 @@ a.pn-quiet-act { text-decoration: none; display: inline-block; }
 }
 .wd-about-art { flex: 0 0 52px; height: 52px; border-radius: 6px; overflow: hidden; background: var(--panel); }
 .wd-about-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.wd-about-says { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.wd-about-says { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.wd-about-count { display: inline-flex; align-items: center; gap: 8px; }
 .wd-about-count, .wd-about-artist, .wd-when, .wd-kept {
   font-family: var(--font-label); font-size: 9px; line-height: 1.3;
   letter-spacing: 0.11em; text-transform: uppercase; color: var(--ink-faint);
@@ -2953,7 +2956,15 @@ a.pn-quiet-act { text-decoration: none; display: inline-block; }
   color: var(--ink-soft); -webkit-tap-highlight-color: transparent;
 }
 .wd-write:hover { color: var(--ink); }
+.wd-write:disabled { opacity: 0.45; cursor: default; }
+/* Write back, and on a friend's face Keep beside it. */
+.wd-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 0 26px; margin-top: 18px; }
+.wd-foot .wd-write { margin-top: 0; }
 .wd-form { margin-top: 14px; }
+/* The same conversations under Messages on a friend's face (Friend_panel.js,
+   2026-10-29): a rule between each, tighter than on their own page. */
+.fp-talks .wd-chain { padding: 14px 0 18px; }
+.fp-talk + .fp-talk .wd-chain { border-top: 1px solid var(--border); }
 .wd-said { margin: 24px 0; font-size: 15px; line-height: 1.5; color: var(--ink-soft); }
 .wd-kept { margin: 18px 0 0; padding-top: 14px; border-top: 1px solid var(--border); }
 /* The counted facts, one table: the card's label-and-answer shape. */

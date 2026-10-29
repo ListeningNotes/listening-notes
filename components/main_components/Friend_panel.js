@@ -23,11 +23,20 @@
 // what the row cannot — Not one of your friends — and Add stands where
 // Visit would.
 //
-//   Messages   what they wrote: Reply · Keep (a message never has Dismiss:
-//              nothing a person typed is destroyed; Keep closes it without
-//              a reply, migrations/043), then All messages, their Words
-//   Sends      what they sent you: Listen · Dismiss (her call, 2026-10-27);
-//              and a record of yours they logged, which passes once seen
+//   Messages   everything said between you, old as well as waiting, each
+//              conversation under the record it is about, as Words draws
+//              it (her review, the same day: "Why do the messages say no
+//              messages between us … They should look like conversations
+//              under the album that was sent"). The three that moved last;
+//              All messages for the rest. Write back · Keep on one with
+//              something unanswered (a message never has Dismiss: nothing
+//              a person typed is destroyed; Keep closes it without a reply,
+//              migrations/043). A stranger has no conversation to read, so
+//              what they wrote stands alone: Reply · Dismiss
+//   Sends      what they sent you, its cover and words on the left and
+//              Listen · Dismiss on the right (her call, 2026-10-27; the
+//              sides, 2026-10-29); and a record of yours they logged, which
+//              passes once seen
 //   Moved      over the doors, with Update — it is about them, not a
 //              message; no Dismiss, since their journal goes on saying it
 //              moved and the friends round would only write it back
@@ -43,13 +52,14 @@
 // The faces hold what was sent you; what friends did is Headlines'. The
 // brief's rule, and what stops this page becoming an inbox again.
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   ArrowBendUpLeft, BookmarkSimple, CaretRight, ChatsCircle, HandWaving, Headphones, House, Signpost, UserPlus, VinylRecord, X,
 } from '@phosphor-icons/react';
 import MessageForm from './Slug_Page/MessageForm';
+import { Conversation, chainsOf, withReply } from './Words';
 import { since } from './Friends';
 import { lookup_key } from '../../library/entry_formatter';
 import { TRACK_NOTE_KEY } from '../../hooks/useListeningSession';
@@ -210,6 +220,9 @@ async function keepOpenListen(held) {
   try { localStorage.removeItem('ln_session_draft'); } catch { /* storage off */ }
 }
 
+// How many conversations Messages shows before All messages.
+const TALKS_SHOWN = 3;
+
 // One answer: a glyph over its word, as the site's doors are.
 function Door({ icon: Icon, word, onClick, href, disabled = false, open, label, isNew = false }) {
   const inner = (
@@ -261,7 +274,12 @@ export default function FriendPanel({
   const [holding, setHolding] = useState(null);
   // Messages or Sends, pressed; 'none' once the open one is pressed shut.
   const [door, setDoor] = useState(null);
-  const say = (key, words) => setTrouble(t => ({ ...t, [key]: words }));
+  // Everything said between you, read when Messages first opens: null until
+  // then, false when it could not be read. And the conversation whose Write
+  // back is open, by its record.
+  const [words, setWords] = useState(null);
+  const [talking, setTalking] = useState(null);
+  const say = (key, words2) => setTrouble(t => ({ ...t, [key]: words2 }));
 
   // ── Sent you ────────────────────────────────────────────────────────────
   const status = async (row, value) => {
@@ -376,6 +394,40 @@ export default function FriendPanel({
     onAnswered('wrote', item.row, { kept_at: d.kept_at || new Date().toISOString() });
   };
 
+  // ── A conversation ──────────────────────────────────────────────────────
+  // Write back answers the newest thing they said on that record, as Words'
+  // does, and the reply joins the conversation at once.
+  const talkBack = async (chain, said) => {
+    const r = await fetch('/api/outbox', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: true, reply_to: chain.answer.id, said }),
+    }).catch(() => null);
+    const d = await r?.json().catch(() => null);
+    if (!r?.ok || !d?.ok) {
+      return { ok: false, error: d?.error || 'Something went wrong. Nothing was sent, and your words are still here.' };
+    }
+    const at = d.said_at || new Date().toISOString();
+    const replied = d.replied_at || at;
+    setWords(prev => withReply(prev.map(w => (w.side === 'theirs' && w.id === chain.answer.id ? { ...w, replied_at: replied } : w)), chain, said, at));
+    onAnswered('wrote', chain.answer, { replied_at: replied });
+    return { ok: true };
+  };
+  // Keep, on a conversation: everything of theirs on it still unanswered is
+  // kept without a reply, so their face stops waiting on it.
+  const keepTalk = async (chain, open) => {
+    setBusy(chain.key || 'none');
+    const kept = await Promise.all(open.map(w => fetch('/api/messages', {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: w.id, kept: true }),
+    }).then(r => (r.ok ? r.json().catch(() => ({})) : null)).catch(() => null)));
+    setBusy('');
+    const at = new Date().toISOString();
+    const done = new Set(open.filter((w, i) => kept[i]).map(w => w.id));
+    setWords(prev => prev.map(w => (w.side === 'theirs' && done.has(w.id) ? { ...w, kept_at: at } : w)));
+    for (const w of open) if (done.has(w.id)) onAnswered('wrote', w, { kept_at: at });
+    if (done.size < open.length) say(`talk-${chain.key}`, 'That could not be kept just now. Try again.');
+  };
+
   // ── Waved ───────────────────────────────────────────────────────────────
   // A hand after the doors, and pressing it lets the wave go.
   const dismissWave = async (item) => {
@@ -408,6 +460,28 @@ export default function FriendPanel({
   // The open door: the one pressed, or else whichever has something waiting.
   const showing = door === 'none' ? null : door || (messages.length ? 'messages' : sends.length ? 'sends' : null);
   const pick = which => setDoor(showing === which ? 'none' : which);
+
+  // Somebody in the book has conversations to read; a stranger has only
+  // what they wrote.
+  const talks = Boolean(person) && !stranger;
+  const personId = person?.id;
+  useEffect(() => {
+    if (!talks || showing !== 'messages' || words !== null) return undefined;
+    let gone = false;
+    fetch(`/api/messages?person=${encodeURIComponent(personId)}`, { cache: 'no-store' })
+      .then(r => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+      .then(d => { if (!gone) setWords(d.words || []); })
+      .catch(() => { if (!gone) setWords(false); });
+    return () => { gone = true; };
+  }, [talks, showing, words, personId]);
+  // What waits first, so nothing unanswered falls past the three; then as
+  // Words orders them, the one that moved last at the top.
+  const unanswered = chain => chain.words.filter(w => w.side === 'theirs' && !w.replied_at && !w.kept_at);
+  const chains = useMemo(() => {
+    const all = Array.isArray(words) ? chainsOf(words) : [];
+    const waits = c => c.words.some(w => w.side === 'theirs' && !w.replied_at && !w.kept_at);
+    return [...all.filter(waits), ...all.filter(c => !waits(c))];
+  }, [words]);
 
   const waveMark = wave && (
     <button
@@ -478,12 +552,6 @@ export default function FriendPanel({
                 : <Door icon={BookmarkSimple} word="Keep" onClick={() => keepOnly(item)} disabled={doing} label="Keep it without a reply" />}
             </div>
           )}
-          {kind === 'sent' && (
-            <div className="fp-doors">
-              <Door icon={Headphones} word="Listen" onClick={() => startLog(item)} disabled={doing} label={`Listen to ${title}`} />
-              <Door icon={X} word="Dismiss" onClick={() => dismissSend(item)} disabled={doing} />
-            </div>
-          )}
           {kind === 'moved' && (
             <div className="fp-doors">
               <Door icon={Signpost} word="Update" onClick={() => takeMove(item)} disabled={doing} label="Update their address" />
@@ -515,6 +583,14 @@ export default function FriendPanel({
           )}
           {trouble[key] && <p className="fp-trouble" role="status">{trouble[key]}</p>}
         </div>
+        {/* A send's answers stand on the right of it, the record and its
+            words on the left (her ask, 2026-10-29). */}
+        {kind === 'sent' && (
+          <div className="fp-doors fp-doors--side">
+            <Door icon={Headphones} word="Listen" onClick={() => startLog(item)} disabled={doing} label={`Listen to ${title}`} />
+            <Door icon={X} word="Dismiss" onClick={() => dismissSend(item)} disabled={doing} />
+          </div>
+        )}
       </div>
     );
   };
@@ -537,11 +613,52 @@ export default function FriendPanel({
       </div>
       {wave && trouble[wave.key] && <p className="fp-trouble fp-trouble--wave" role="status">{trouble[wave.key]}</p>}
 
-      {showing === 'messages' && (
+      {showing === 'messages' && !talks && (
         <div className="fp-under">
           {messages.map(one)}
           {messages.length === 0 && <p className="fp-none">Nothing from {who} waiting.</p>}
-          {page && (
+        </div>
+      )}
+      {showing === 'messages' && talks && (
+        <div className="fp-under fp-talks">
+          {/* Not read yet: nothing, for the moment it takes. Not readable:
+              what waits still stands, with its answers, and says why the
+              rest is missing. */}
+          {words === false && (
+            <>
+              {messages.map(one)}
+              <p className="fp-none">These words could not be read just now.</p>
+            </>
+          )}
+          {Array.isArray(words) && chains.length === 0 && (
+            <p className="fp-none">Nothing between you yet. Words start on a record — write from one of {who}&rsquo;s entries.</p>
+          )}
+          {chains.slice(0, TALKS_SHOWN).map(chain => {
+            const open = unanswered(chain);
+            const fresh2 = chain.words.some(w => w.side === 'theirs' && (!w.seen_at || newHere?.has(`m${w.id}`)));
+            const at = chain.key || 'none';
+            return (
+              <div key={at} className="fp-talk">
+                <Conversation
+                  chain={chain}
+                  name={who}
+                  draftKey={`words-${personId}-${chain.key}`}
+                  writing={talking === at}
+                  onWriting={on => setTalking(on ? at : null)}
+                  send={said => talkBack(chain, said)}
+                  isNew={fresh2}
+                  extra={open.length > 0 && (
+                    <button type="button" className="wd-write" onClick={() => keepTalk(chain, open)} disabled={busy === at}>
+                      <BookmarkSimple size={16} weight="regular" aria-hidden="true" />
+                      Keep
+                    </button>
+                  )}
+                />
+                {trouble[`talk-${chain.key}`] && <p className="fp-trouble" role="status">{trouble[`talk-${chain.key}`]}</p>}
+              </div>
+            );
+          })}
+          {page && chains.length > TALKS_SHOWN && (
             <Link className="fp-all" href={`${page}/words`}>
               All messages with {who}
               <CaretRight size={10} weight="bold" aria-hidden="true" />
