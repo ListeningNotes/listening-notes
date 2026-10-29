@@ -595,6 +595,10 @@
 .arc-grid[data-density="large"]  { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
 .arc-grid[data-density="medium"] { grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); }
 .arc-grid[data-density="small"]  { grid-template-columns: repeat(auto-fill, minmax(94px,  1fr)); gap: 10px; }
+/* Feed and List, the Friends wall's two more (GridDensity.js): one record a
+   row, the feed's at a reading width, the list's at the wall's. */
+.arc-grid[data-density="feed"] { grid-template-columns: minmax(0, 1fr); gap: 34px; max-width: 460px; margin: 0 auto; }
+.arc-grid[data-density="list"] { grid-template-columns: minmax(0, 1fr); gap: 0; }
 
 .arc-skel { aspect-ratio: 1 / 1; border-radius: 10px; background: var(--bg-warm); animation: arcPulse 1.4s ease-in-out infinite; }
 @keyframes arcPulse { 0%,100% { opacity: 0.6; } 50% { opacity: 0.3; } }

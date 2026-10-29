@@ -2475,6 +2475,54 @@ textarea.st-field { resize: vertical; min-height: 96px; }
   position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
   -webkit-touch-callout: none; user-select: none;
 }
+/* ── Feed and List, 2026-10-29 ─────────────────────────────────────────────
+   The Friends wall's two more sizes (PeopleScreen.js, GridDensity.js), the
+   retired feed's two looks: the record at a reading width with what the feed
+   said under it, and the feed's rows. The faces sit in the line, not on the
+   cover. */
+.ps-who--line { position: static; }
+.ps-feed, .ps-list {
+  color: inherit; text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.ps-feed { display: block; }
+.ps-feed-art {
+  position: relative; display: block;
+  aspect-ratio: 1 / 1; border-radius: 14px; overflow: hidden;
+  background: var(--bg-warm);
+  box-shadow: 0 12px 32px -16px rgba(0, 0, 0, 0.4);
+}
+.ps-feed-art > img, .ps-list-art > img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.ps-feed-words {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 14px 6px 0; text-align: center;
+}
+.ps-feed-title {
+  font-family: var(--font-display); font-weight: var(--font-display-weight);
+  font-size: 19px; line-height: 1.2; color: var(--ink);
+}
+.ps-feed-under { font-size: 14px; color: var(--ink-soft); }
+.ps-feed-who {
+  display: inline-flex; align-items: center; gap: 8px; margin-top: 2px;
+  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--ink-faint);
+}
+.ps-list {
+  display: flex; align-items: center; gap: 12px;
+  padding: 9px 0; border-bottom: 1px solid var(--border);
+}
+.ps-list-art {
+  position: relative; flex: 0 0 auto;
+  width: 52px; height: 52px; border-radius: 7px; overflow: hidden;
+  background: var(--bg-warm);
+}
+.ps-list-art .ft-placeholder { font-size: 20px; }
+.ps-list-words { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.ps-list-title, .ps-list-meta { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ps-list-title { font-weight: 700; font-size: 15px; color: var(--ink); }
+.ps-list-meta { font-size: 12.5px; color: var(--ink-faint); }
+.ps-list .ln-new { flex: 0 0 auto; }
+
 /* A search's faces, over the wall: the band's faces, in a row that scrolls
    sideways once it overflows. */
 .ps-found {

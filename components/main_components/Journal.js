@@ -34,7 +34,7 @@ import { readArtColor } from '../../library/music_data_api';
 import AlbumTile from './AlbumTile';
 import StarRating from './StarRating';
 import { handOffOrder } from '../../library/handoff';
-import GridDensity, { DEFAULT_DENSITY, readStoredDensity, storeDensity } from './GridDensity';
+import GridDensity, { DENSITIES, DEFAULT_DENSITY, readStoredDensity, storeDensity } from './GridDensity';
 import JournalFilters, { roomFloor } from './JournalFilters';
 import { DELETE_ENTRY } from '../../hooks/useEntryEditor';
 import { SAVED_EVENT } from '../../hooks/useListeningSession';
@@ -479,10 +479,14 @@ const COVERS_AT_A_TIME = 50;
 //             changes — for a friend's wall to hand over on a press
 //   shared    with `records`: whether a record is on your wall too, which
 //             adds Shared to the filters
+//   densities the sizes this wall offers, and densityKey where its pick is
+//             remembered — Friends adds Feed and List (GridDensity.js); the
+//             size is handed to `tile` beside the record
 function Journal({
   entries: given, loading: givenLoading, scroller, foot = null,
   records = null, tile = null, tail = null, filters = true, viewKey = VIEW_KEY,
   empty = null, seek = null, before = null, onOrder = null, shared = null,
+  densities = DENSITIES, densityKey = undefined,
 }) {
   const [ownEntries, setOwnEntries] = useState([]);
   const [ownLoading, setOwnLoading] = useState(true);
@@ -606,7 +610,7 @@ function Journal({
   // not have; the default is what it renders and the browser corrects it on
   // hydration. Once the reader picks one, theirs wins for the rest of the
   // visit — null means they have not.
-  const storedDensity = useSyncExternalStore(() => () => {}, readStoredDensity, () => DEFAULT_DENSITY);
+  const storedDensity = useSyncExternalStore(() => () => {}, () => readStoredDensity(densityKey, densities), () => DEFAULT_DENSITY);
   const [pickedDensity, setDensity] = useState(null);
   const density = pickedDensity ?? storedDensity;
   // Rendered on the server with no idea which it is; resolved on hydration,
@@ -633,8 +637,8 @@ function Journal({
 
   const changeDensity = useCallback(value => {
     setDensity(value);
-    storeDensity(value);
-  }, []);
+    storeDensity(value, densityKey);
+  }, [densityKey]);
 
   // The full span the collection covers, which is what the year slider's
   // ends are pinned to. Recomputed from the entries rather than hardcoded so
@@ -1329,7 +1333,7 @@ function Journal({
                     )}
                   </div>
                 )}
-                {tile ? tile(album) : (
+                {tile ? tile(album, density) : (
                   <AlbumTile
                     album={album}
                     density={density}
@@ -1399,7 +1403,7 @@ function Journal({
                     is shown, as the order is. The menu stays open for it, so
                     the sizes can be tried one after another. */}
                 <span className="arc-views-rule" aria-hidden="true" />
-                <GridDensity value={density} onChange={changeDensity} />
+                <GridDensity value={density} onChange={changeDensity} options={densities} />
               </span>
             )}
           </span>
