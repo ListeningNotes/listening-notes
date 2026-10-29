@@ -2524,8 +2524,15 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 .ps-list .ln-new { flex: 0 0 auto; }
 /* Home's List draws the same row (AlbumTile.js), its stars and marks where
    a friend's faces are. */
-.ft-list-marks { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 8px; }
-.ft-list-marks .ln-mini-flags { display: inline-flex; gap: 5px; }
+/* Two rows, both to the right edge: the stars on top, so they make one
+   column down the list whatever a record wears, and the marks under them
+   (Miyel, 2026-10-29: "stars be one row and then the other tags be a row
+   underneath … so it's all aligned"). */
+.ft-list-marks {
+  flex: 0 0 auto;
+  display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 6px;
+}
+.ft-list-marks .ln-mini-flags { display: inline-flex; gap: 6px; }
 
 /* A search's faces, over the wall: the band's faces, in a row that scrolls
    sideways once it overflows. */
@@ -2723,7 +2730,7 @@ textarea.st-field { resize: vertical; min-height: 96px; }
    As home's face opens the keeper's (nav.css, Grown from the face): the
    card is the whole screen, a circle growing out of the face, which is its X
    while it is open; the name stays in the middle of the row and Compare and
-   Added step aside. The circle's centre is the face's, measured as it is
+   Added step aside. Nothing fades. The circle's centre is the face's, measured as it is
    pressed (app/dashboard/people/[id], openCard). */
 .pn-face-press {
   position: relative; flex: 0 0 auto; display: grid;
@@ -2734,8 +2741,7 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 /* Over the wall's sticking bar (101, journal.css), which would otherwise
    show through it, and the row over the card. */
 .pn-screen--card .pn-hdr { z-index: 111; }
-.pn-hdr-stops { transition: opacity 0.18s ease, visibility 0s; }
-.pn-screen--card .pn-hdr-stops { opacity: 0; visibility: hidden; transition: opacity 0.12s ease, visibility 0s linear 0.12s; }
+.pn-screen--card .pn-hdr-stops { visibility: hidden; }
 .pn-idcard {
   --from: 35px 51px;
   position: fixed; inset: 0; z-index: 110;
@@ -2747,30 +2753,27 @@ textarea.st-field { resize: vertical; min-height: 96px; }
   background: var(--bg);
   -webkit-clip-path: circle(17px at var(--from));
   clip-path: circle(17px at var(--from));
-  transform-origin: var(--from);
-  transform: scale(0.92);
-  opacity: 0; visibility: hidden;
+  visibility: hidden;
   transition:
-    clip-path 0.34s cubic-bezier(0.4, 0, 0.7, 0.2),
-    transform 0.34s cubic-bezier(0.4, 0, 0.7, 0.2),
-    opacity 0.1s ease 0.24s,
-    visibility 0s linear 0.34s;
+    clip-path 0.36s cubic-bezier(0.4, 0, 0.7, 0.2),
+    -webkit-clip-path 0.36s cubic-bezier(0.4, 0, 0.7, 0.2),
+    visibility 0s linear 0.36s;
 }
 .pn-idcard--open {
   -webkit-clip-path: circle(150vmax at var(--from));
   clip-path: circle(150vmax at var(--from));
-  transform: none; opacity: 1; visibility: visible;
+  visibility: visible;
   transition:
     clip-path 0.5s cubic-bezier(0.22, 0.61, 0.36, 1),
-    transform 0.5s cubic-bezier(0.22, 0.61, 0.36, 1),
-    opacity 0s, visibility 0s;
+    -webkit-clip-path 0.5s cubic-bezier(0.22, 0.61, 0.36, 1),
+    visibility 0s;
 }
 @media (max-width: 768px) { .pn-idcard { --page-gutter: 18px; } }
 /* Their card has no head of its own: the row above is it. Three classes deep,
    since idcard.css is loaded after this sheet. */
 .pn-idcard .ab-card .idc-head { display: none; }
 @media (prefers-reduced-motion: reduce) {
-  .pn-idcard, .pn-idcard--open, .pn-hdr-stops, .pn-screen--card .pn-hdr-stops { transition: none; }
+  .pn-idcard, .pn-idcard--open { transition: none; }
 }
 /* In the middle of the row, where home's mark is. */
 .pn-hdr-name {
