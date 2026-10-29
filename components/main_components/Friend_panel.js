@@ -45,6 +45,7 @@ import { since } from './Friends';
 import { lookup_key } from '../../library/entry_formatter';
 import { TRACK_NOTE_KEY } from '../../hooks/useListeningSession';
 import { tidyJournal } from '../../library/return_address';
+import { handOff } from '../../library/handoff';
 
 const KIND_WORD = { wrote: 'Wrote', sent: 'Sent you', waved: 'Waved', arrived: 'Arrived', moved: 'Moved' };
 
@@ -466,14 +467,14 @@ export default function FriendPanel({
           : '';
         return (
           <div key={key} className="fp-one">
-            {link ? <Link href={link} className="fp-art-link">{cover}</Link> : cover}
+            {link ? <Link href={link} data-grows={link} onClick={() => handOff(row)} className="fp-art-link">{cover}</Link> : cover}
             <div className="fp-says">
               <span className="fp-kind">
                 {isNew && <span className="ln-new">New</span>}
                 {KIND_WORD[kind]}
               </span>
               {title && (link
-                ? <Link href={link} className="fp-title">{title}</Link>
+                ? <Link href={link} onClick={() => handOff(row)} className="fp-title">{title}</Link>
                 : <span className="fp-title">{title}</span>)}
               {kind === 'wrote' ? <p className="fp-said">{said}</p> : said ? <p className="fp-note">{said}</p> : null}
               {sub && <span className="fp-sub">{sub}</span>}

@@ -41,6 +41,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { when } from './Friend_panel';
+import { handOff } from '../../library/handoff';
 
 const EACH_MS = 7000;
 const ROLL_MS = 560;
@@ -111,6 +112,9 @@ function headlineFor(friend, there) {
     // Their entry read inside this journal (2026-10-28), or on their site
     // for a row with no slug.
     page: e.slug ? `/dashboard/people/${friend.person.id}/${encodeURIComponent(e.slug)}` : '',
+    // What the entry's first screen is drawn from while their journal
+    // answers, as home's records hand theirs over (2026-10-28).
+    entry: e,
     href: e.slug ? '' : there(friend.address, ''),
   };
 }
@@ -190,9 +194,12 @@ export default function Headlines({ friends, there, onScreen = true }) {
   if (!current) return null;
 
   const one = (h, how) => {
+    // An entry grows out of the headline's cover, as home's grow out of
+    // theirs (2026-10-28); a person's page rises, and ignores it.
+    const grows = how !== 'out' && h.entry && h.page ? h.page : undefined;
     const inner = (
       <>
-        <span className="hl-art" aria-hidden="true">
+        <span className="hl-art" aria-hidden="true" data-grows={grows}>
           {h.art ? <img src={h.art} alt="" loading="lazy" onError={e => { e.currentTarget.style.visibility = 'hidden'; }} /> : null}
         </span>
         <span className="hl-words">
@@ -203,7 +210,13 @@ export default function Headlines({ friends, there, onScreen = true }) {
     );
     const cls = `hl-one hl-one--${how}`;
     if (how === 'out') return <span key={`out-${h.key}`} className={cls} aria-hidden="true">{inner}</span>;
-    if (h.page) return <Link key={h.key} className={cls} href={h.page}>{inner}</Link>;
+    if (h.page) {
+      return (
+        <Link key={h.key} className={cls} href={h.page} onClick={h.entry ? () => handOff(h.entry) : undefined}>
+          {inner}
+        </Link>
+      );
+    }
     if (h.href) return <a key={h.key} className={cls} href={h.href} target="_blank" rel="noopener noreferrer">{inner}</a>;
     return <span key={h.key} className={cls}>{inner}</span>;
   };

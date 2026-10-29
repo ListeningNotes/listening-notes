@@ -429,7 +429,10 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
     window.setTimeout(() => { if (alive.current) router.replace('/'); }, GROW_MS + 500);
     const sheet = sheetRef.current;
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const box = slug && !reduced ? tileBoxOf(slug) : null;
+    // Back into its tile — or, for a friend's entry read here (2026-10-28),
+    // into whatever declared its address, the record pressed on Friends or
+    // on their page.
+    const box = reduced ? null : slug ? tileBoxOf(slug) : growBoxOf(pathname);
     const onScreen = box && box.y > -box.h && box.y < window.innerHeight;
     if (!sheet) { goBack(); return; }
     // A spine page on a desk is a sheet over the left page, and leaves the
@@ -504,7 +507,7 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
     run.oncancel = done;
     // The flying copy must not outlive the sheet, animation or not.
     window.setTimeout(() => flyer.remove(), GROW_MS + 100);
-  }, [goBack, slug, rises, over, router]);
+  }, [goBack, slug, pathname, rises, over, router]);
 
   // ── What the page wants done first ───────────────────────────────────────
   // Every way out goes through here — the pull, Escape, the back caret — so a

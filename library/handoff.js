@@ -99,13 +99,19 @@ export function handedOver(slug) {
 // the feed. The entry keeps its own lookup above; this is the general one
 // (2026-09-13, so a person's page opens from the row you pressed the way an
 // entry opens from its cover).
+//
+// The last one drawn, 2026-10-28: a friend's record can be on the Friends
+// wall and on their page over it at once, both declaring the same address,
+// and the one pressed is the one on top — later in the page than the pane
+// under it.
 export function growBoxOf(path) {
   if (typeof document === 'undefined' || !path) return null;
-  const from = document.querySelector(`[data-grows="${CSS.escape(path)}"]`);
-  if (!from) return null;
-  const box = from.getBoundingClientRect();
-  if (box.width === 0 || box.height === 0) return null;
-  return { x: box.left, y: box.top, w: box.width, h: box.height };
+  const all = [...document.querySelectorAll(`[data-grows="${CSS.escape(path)}"]`)].reverse();
+  for (const from of all) {
+    const box = from.getBoundingClientRect();
+    if (box.width > 0 && box.height > 0) return { x: box.left, y: box.top, w: box.width, h: box.height };
+  }
+  return null;
 }
 
 export function tileBoxOf(slug) {

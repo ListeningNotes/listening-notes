@@ -86,6 +86,7 @@ import PullDown from './PullDown';
 import { useBookplate } from './Bookplate';
 import { useFriendsBeacons, refreshFriends } from '../../hooks/useFriendsBeacons';
 import { carrySender, journalUrl, tidyJournal } from '../../library/return_address';
+import { handOff } from '../../library/handoff';
 import { DIRECTORY_URL } from '../../library/version';
 
 // The wall's view remembers itself between visits, apart from home's.
@@ -412,8 +413,13 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
     // on their own site only for somebody no longer in the book.
     const inApp = idOf.get(last.address);
     const Door = inApp ? Link : 'a';
+    // And it opens as home's records do (2026-10-28, her ask): the entry
+    // grows out of this cover (data-grows) with its first screen already
+    // drawn from what the wall knows (handOff), while their journal answers.
+    const opens = album.all.find(e => e.slug === last.slug && e.by?.address === last.address) || face;
+    const inAppAt = inApp ? `/dashboard/people/${inApp}/${encodeURIComponent(last.slug)}` : '';
     const way = inApp
-      ? { href: `/dashboard/people/${inApp}/${encodeURIComponent(last.slug)}` }
+      ? { href: inAppAt, 'data-grows': inAppAt, onClick: () => handOff(opens) }
       : { href: there(last.address, `/entries/${encodeURIComponent(last.slug)}`), target: '_blank', rel: 'noopener noreferrer' };
     return (
       <Door

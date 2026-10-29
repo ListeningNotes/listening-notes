@@ -53,7 +53,7 @@ import SentList from '../../../../components/main_components/SentList';
 import { albumKey } from '../../../../hooks/useListeningBeacon';
 import { fillFriends, useFriendsBeacons } from '../../../../hooks/useFriendsBeacons';
 import { journalUrl, tidyJournal } from '../../../../library/return_address';
-import { arrivingBack } from '../../../../library/handoff';
+import { arrivingBack, handOff } from '../../../../library/handoff';
 import { DIRECTORY_URL } from '../../../../library/version';
 
 // Half a star, after the offset, is the same opinion typed slightly
@@ -297,13 +297,16 @@ export default function PersonPage({ layered = false }) {
   const theirEntry = useCallback(e => `/dashboard/people/${personId}/${encodeURIComponent(e.slug)}`, [personId]);
 
   // Their record, drawn the way People draws a friend's: the cover, opening
-  // their entry over this page.
+  // their entry over this page out of the cover pressed, its first screen
+  // handed over as home's records do (2026-10-28).
   const tile = useCallback(album => {
     const face = album.face;
     const folded = album.listens.length === 0;
     return (
       <Link
         href={theirEntry(face)}
+        data-grows={theirEntry(face)}
+        onClick={() => handOff(face)}
         className={'ft' + (folded ? ' ft--page' : '')}
         data-tile-key={album.key}
         aria-label={face.album + (face.artist ? ` by ${face.artist}` : '')}
@@ -490,7 +493,7 @@ export default function PersonPage({ layered = false }) {
                       </div>
                       <div className="pn-item-tail">
                         <span>You <b>{p.mine.rating_value}</b> &middot; {name} <b>{p.theirs.rating_value}</b></span>
-                        <Link href={theirEntry(p.theirs)}>theirs</Link>
+                        <Link href={theirEntry(p.theirs)} onClick={() => handOff(p.theirs)}>theirs</Link>
                       </div>
                     </div>
                   )}
@@ -506,7 +509,7 @@ export default function PersonPage({ layered = false }) {
                       </div>
                       <div className="pn-item-tail">
                         <span>You <b>{p.mine.rating_value}</b> &middot; {name} <b>{p.theirs.rating_value}</b> <span className="pn-gap">&middot; {p.gap.toFixed(1)} apart</span></span>
-                        <Link href={theirEntry(p.theirs)}>theirs</Link>
+                        <Link href={theirEntry(p.theirs)} onClick={() => handOff(p.theirs)}>theirs</Link>
                       </div>
                     </div>
                   )}
@@ -596,7 +599,7 @@ export default function PersonPage({ layered = false }) {
                       {recents.map(e => {
                         const label = `${e.album} — ${e.artist}`;
                         return (
-                          <Link key={e.slug} href={theirEntry(e)} className="hp-recent-tile" title={label} aria-label={label}>
+                          <Link key={e.slug} href={theirEntry(e)} data-grows={theirEntry(e)} onClick={() => handOff(e)} className="hp-recent-tile" title={label} aria-label={label}>
                             {e.album_art
                               ? <img src={e.album_art} alt="" onError={ev => { ev.currentTarget.style.display = 'none'; }} />
                               : <span className="hp-recent-none" aria-hidden="true">♪</span>}
