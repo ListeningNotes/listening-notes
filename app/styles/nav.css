@@ -2494,6 +2494,13 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   }
   /* Community, 2026-10-27: the Board as /directory draws it, at its width. */
   .hn-community { max-width: 720px; margin: 0 auto; padding: 8px 24px 0; }
+  /* And while the Board is closed (BOARD_OPEN), the glyph over two words in
+     the middle of the pane. */
+  .hn-soon {
+    min-height: 60dvh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+    font-family: var(--font-label); font-size: 11px; letter-spacing: 0.04em; color: var(--ink-faint);
+  }
   /* Nothing is hidden and nothing is turning. Both of those belong to a spine
      that shows one page at a time; here all three are panes and all three are
      always there, a swipe away. */

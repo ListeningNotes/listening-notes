@@ -87,7 +87,7 @@ import { useBookplate } from './Bookplate';
 import { useFriendsBeacons, refreshFriends } from '../../hooks/useFriendsBeacons';
 import { carrySender, journalUrl, tidyJournal } from '../../library/return_address';
 import { handOff, handOffOrder } from '../../library/handoff';
-import { DIRECTORY_URL } from '../../library/version';
+import { BOARD_OPEN, DIRECTORY_URL } from '../../library/version';
 
 // The wall's view remembers itself between visits, apart from home's.
 const VIEW_KEY = 'ln-people-view';
@@ -956,7 +956,8 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
       {!looksLikeAddress && typedNow.length >= 2 && !stillNaming && namedNow.length === 0 && (
         <p className="ps-add-said">Nothing by that name.</p>
       )}
-      {DIRECTORY_URL && (
+      {/* Not while the Board is closed (BOARD_OPEN, library/version.js). */}
+      {DIRECTORY_URL && BOARD_OPEN && (
         <Link href="/directory" className="ps-add-board">
           Find people on the Board
           <ArrowRight size={11} weight="bold" aria-hidden="true" />

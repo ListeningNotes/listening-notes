@@ -70,7 +70,7 @@
 import { startTransition, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { ArrowsLeftRight, CaretDown } from '@phosphor-icons/react';
+import { ArrowsLeftRight, CaretDown, Globe } from '@phosphor-icons/react';
 import { announce, useListeningBeacon } from '../../hooks/useListeningBeacon';
 import { useSpineWidth } from '../../hooks/useSpineWidth';
 import { useTheme } from './Lightswitch';
@@ -92,7 +92,7 @@ import Dashboard, { heldNow, subscribeHeld } from './Dashboard';
 import PeopleScreen from './PeopleScreen';
 // The Board's first screen, read when People opens (below).
 import { Everyone, readEveryone, useEveryone } from '../../app/directory/Directory';
-import { DIRECTORY_URL } from '../../library/version';
+import { BOARD_OPEN, DIRECTORY_URL } from '../../library/version';
 import { readArtColor } from '../../library/music_data_api';
 // The same two the desk already reaches for, from the same module, so the
 // pane and the desk agree about what "a listen is open" means and say so the
@@ -2071,10 +2071,16 @@ export default function HomeNav() {
             {/* Community, 2026-10-27: where the inbox was (her Friends brief
                 retires it; anything from a person waits on their face now).
                 The Board, as /directory draws it, until Community's own
-                brief says what else it holds. */}
-            {visited[INBOX] && DIRECTORY_URL && (
+                brief says what else it holds. Coming soon while the Board
+                is being worked on (BOARD_OPEN, library/version.js). */}
+            {visited[INBOX] && DIRECTORY_URL && (BOARD_OPEN ? (
               <div className="hn-community"><Everyone keeper /></div>
-            )}
+            ) : (
+              <div className="hn-soon">
+                <Globe size={22} weight="regular" aria-hidden="true" />
+                <span>Coming soon</span>
+              </div>
+            ))}
           </section>
         )}
 
