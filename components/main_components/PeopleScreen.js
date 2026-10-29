@@ -398,6 +398,7 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
   const there = useCallback((address, path = '') => carrySender(
     `${journalUrl(address)}${path}`, me, { known: inBook.has(tidyJournal(address)) },
   ), [me, inBook]);
+  const idOf = useMemo(() => new Map((people || []).map(p => [p.address, p.id])), [people]);
   const tile = useCallback(album => {
     const face = album.face;
     const last = album.loggers[0];
@@ -406,11 +407,17 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
     const names = [...(album.mine ? ['you'] : []), ...album.loggers.map(l => l.name).filter(Boolean)];
     const said = face.album + (face.artist ? ` by ${face.artist}` : '')
       + (names.length ? `, logged by ${names.join(', ')}` : '');
+    // Read inside this journal, over Friends, as their page opens (2026-10-28,
+    // Miyel: "the actual entries open in app the same way as profile");
+    // on their own site only for somebody no longer in the book.
+    const inApp = idOf.get(last.address);
+    const Door = inApp ? Link : 'a';
+    const way = inApp
+      ? { href: `/dashboard/people/${inApp}/${encodeURIComponent(last.slug)}` }
+      : { href: there(last.address, `/entries/${encodeURIComponent(last.slug)}`), target: '_blank', rel: 'noopener noreferrer' };
     return (
-      <a
-        href={there(last.address, `/entries/${encodeURIComponent(last.slug)}`)}
-        target="_blank"
-        rel="noopener noreferrer"
+      <Door
+        {...way}
         className={'ft ps-tile' + (folded ? ' ft--page' : '')}
         data-tile-key={album.key}
         data-unseen={fresh.length ? fresh.join(' ') : undefined}
@@ -452,9 +459,9 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
             </span>
           ))}
         </span>
-      </a>
+      </Door>
     );
-  }, [there, myFace, seen]);
+  }, [there, myFace, seen, idOf]);
 
   // ── New on a record, 2026-10-27 ─────────────────────────────────────────
   // Her Friends answers: a record says New until it has been seen, and it

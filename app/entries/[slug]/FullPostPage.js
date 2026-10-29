@@ -26,7 +26,7 @@ import { usePress } from '../../../hooks/usePress';
 import { FRAMES, FRAME_ORDER } from '../../../components/main_components/SharePrinter';
 import HorizonBar from '../../../components/main_components/Slug_Page/HorizonBar';
 import TrackThread from '../../../components/main_components/Slug_Page/TrackThread';
-import { MessageWayIn } from '../../../components/main_components/Slug_Page/MessageForm';
+import { MessageWayIn, useWritingTo } from '../../../components/main_components/Slug_Page/MessageForm';
 import MetadataLabel from '../../../components/main_components/Slug_Page/MetadataLabel';
 import Chip from '../../../components/main_components/Slug_Page/Chip';
 import SentBy, { creditOn, useTrail } from '../../../components/main_components/Slug_Page/SentBy';
@@ -221,7 +221,10 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   }
   // The dots are the page's ink, so the page asks for the file that matches
   // it. The art's mark rides along so a corrected cover is never a day stale.
-  const codeSrc = `/api/entries/${encodeURIComponent(entry.slug)}/code?theme=${theme === 'dark' ? 'dark' : 'light'}`
+  // A friend's entry read inside this journal (app/dashboard/people/[id]/
+  // [slug], 2026-10-28) asks their journal for its code, which only it has.
+  const elsewhere = useWritingTo() && entryUrl ? `https://${host}` : '';
+  const codeSrc = `${elsewhere}/api/entries/${encodeURIComponent(entry.slug)}/code?theme=${theme === 'dark' ? 'dark' : 'light'}`
     + `&v=${artMark(entry.album_art_source || entry.album_art || '')}`;
   const coverSlot = {
     address: entryUrl,

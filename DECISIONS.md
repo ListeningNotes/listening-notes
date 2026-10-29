@@ -1513,9 +1513,16 @@ Friends answers).** Visit opens `/dashboard/people/[id]`, laid out as home
 ("just like an owners page"): home's row with their face and name, Compare ·
 Added for its rooms, their beacon, the line, their wall — home's components,
 their public rows. "The page is mine, the data is theirs": nothing framed,
-the writing opens on their journal. Compare is a view opened in place at the
+and (since 2026-10-28) their entries open here too. Compare is a view opened in place at the
 top of the page — her pick over a screen of its own, 2026-10-26, with main's
 versus screen still to join ("the way you have it designed now is great").
+
+**A friend's entry opens inside your journal, 2026-10-28, her ask ("not a
+separate page overlay").** `/dashboard/people/[id]/[slug]` (her name) reads
+it as it opens, on this copy's server, from the public `/api/entries/<slug>`
+any visitor reads, and your entry page draws it in a Bookplate of theirs: no
+keeper's tools, no links into your archive, nothing stored or listed. Words
+written there go through your outbox, kept for Words.
 
 **The page about a person stays on your copy; their journal gets no door
 to it, 2026-09-13.** Considered: their right pane offering "Compare with

@@ -61,10 +61,10 @@ export async function POST(request) {
   }
 
   // ── A message, 2026-09-29 ───────────────────────────────────────────────
-  // Words, to another keeper, and from here only ever a reply: `reply_to`
-  // names a message in this inbox, and who it goes to, what it is about and
-  // what it answers are all read off that row here, so a page says only
-  // which message and what to say. There is no writing to somebody out of
+  // Words, to another keeper: a reply, where `reply_to` names a message
+  // here, and who it goes to, what it is about and what it answers are all
+  // read off that row, so a page says only which message and what to say;
+  // or, since 2026-10-28, words started on a friend's entry (below). There is no writing to somebody out of
   // the address book — a message starts on an entry (Miyel, 2026-09-29:
   // "messaging happens only on posts"), which is on the other journal's own
   // page, and this is the way back. The same answer shape as a send and a
@@ -77,6 +77,35 @@ export async function POST(request) {
         { ok: false, error: `That is longer than a message can be. It holds about ${SAID_MOST} characters, and nothing was sent.` },
         { status: 400 },
       );
+    }
+    // ── Words on a friend's entry, 2026-10-28 ───────────────────────────
+    // A friend's entry read inside this journal (app/dashboard/people/[id]/
+    // [slug]) is where a message to them starts now, as their own page was:
+    // messaging still happens only on posts. Who it goes to is the book's
+    // row, by id, and what it is about is their entry, named by their
+    // journal and its slug — the page says which, the book says where.
+    if (!body.reply_to && body.person_id && body.about && typeof body.about === 'object') {
+      try {
+        const person = await pull_person(body.person_id);
+        if (!person) return Response.json({ ok: false, error: 'They are not in your address book.' }, { status: 404 });
+        const slug = String(body.about.slug || '').trim().toLowerCase();
+        if (!/^[a-z0-9-]{1,200}$/.test(slug)) return Response.json({ ok: false, error: 'Which entry?' }, { status: 400 });
+        const text = (v, most) => String(v ?? '').trim().slice(0, most);
+        const about = {
+          journal: person.address,
+          slug,
+          album: text(body.about.album, 300),
+          artist: text(body.about.artist, 300),
+          art: text(body.about.art, 1000),
+          song: text(body.about.song, 300),
+        };
+        const result = await send_message({ to: person.address, said, about });
+        if (!result.ok) return Response.json({ ok: false, old: result.old === true, error: result.error });
+        const kept = await save_said_back({ to_journal: person.address, to_name: person.name, said, about }).catch(() => null);
+        return Response.json({ ok: true, to: person.name || null, said_at: kept?.sent_at || null });
+      } catch (error) {
+        return Response.json({ ok: false, error: error.message }, { status: 500 });
+      }
     }
     try {
       const id = Number(body.reply_to);

@@ -74,7 +74,7 @@ import FolderFooter from '../../../components/main_components/FolderFooter';
 import KeeperTools from '../../../components/main_components/KeeperTools';
 import EditingBar from '../../../components/main_components/EditingBar';
 import CodeSlot from '../../../components/main_components/CodeSlot';
-import { MessageWayIn } from '../../../components/main_components/Slug_Page/MessageForm';
+import { MessageWayIn, useWritingTo } from '../../../components/main_components/Slug_Page/MessageForm';
 import SentBy, { creditOn, useTrail } from '../../../components/main_components/Slug_Page/SentBy';
 import SenderTool from '../../../components/main_components/Slug_Page/SenderTool';
 import SendSheet from '../../../components/main_components/SendSheet';
@@ -113,6 +113,9 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
   const correcting = edit.editing;
   const headerSlot = useLayerHeaderSlot();
   const { site_address, keeper_name } = useBookplate();
+  // A friend's entry read inside this journal asks their journal for its
+  // cover's code (2026-10-28).
+  const elsewhere = useWritingTo() && site_address ? `https://${tidyAddress(site_address)}` : '';
   const { theme } = useTheme();
 
   // ── A new one: what has been written, kept per song ─────────────────────
@@ -331,7 +334,7 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
                 className={'tn-cover' + (coverCode ? ' tn-cover--code' : ' ln-fold')}
                 picture={<img src={entry.album_art} alt={entry.album} decoding="sync" />}
                 address={entryUrl}
-                codeSrc={`/api/entries/${encodeURIComponent(entry.slug)}/code?theme=${theme === 'dark' ? 'dark' : 'light'}`}
+                codeSrc={`${elsewhere}/api/entries/${encodeURIComponent(entry.slug)}/code?theme=${theme === 'dark' ? 'dark' : 'light'}`}
                 turned={coverCode}
                 onTurn={setCoverCode}
                 backGlyph={<VinylRecord size={12} weight="bold" />}

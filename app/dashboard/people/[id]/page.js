@@ -14,8 +14,9 @@
 // one app. Nothing
 // is framed and nothing of theirs is drawn by them; the records come from
 // their public feed and their beacon, the allow-listed reads every journal
-// already answers, and the writing stays on their journal, where every
-// record here opens.
+// already answers. A record opens their entry inside this journal since
+// 2026-10-28 (app/dashboard/people/[id]/[slug]), read from their journal as
+// it opens and kept nowhere.
 //
 // Their public feed is read in the browser, as Compare and People always
 // have read it; their beacon comes through this copy's server, as People's
@@ -51,8 +52,7 @@ import { BeaconCard } from '../../../../components/main_components/ListeningBeac
 import SentList from '../../../../components/main_components/SentList';
 import { albumKey } from '../../../../hooks/useListeningBeacon';
 import { fillFriends, useFriendsBeacons } from '../../../../hooks/useFriendsBeacons';
-import { carrySender, journalUrl, tidyJournal } from '../../../../library/return_address';
-import { useBookplate } from '../../../../components/main_components/Bookplate';
+import { journalUrl, tidyJournal } from '../../../../library/return_address';
 import { arrivingBack } from '../../../../library/handoff';
 import { DIRECTORY_URL } from '../../../../library/version';
 
@@ -135,10 +135,6 @@ function chunk(list, per) {
 export default function PersonPage({ layered = false }) {
   const { id } = useParams();
   const router = useRouter();
-  // Who this copy belongs to, carried on every link out to another journal
-  // so the form there knows who is sending. See carrySender.
-  const { keeper_name: myName, site_address: myAddress } = useBookplate();
-  const me = useMemo(() => ({ name: myName, address: myAddress }), [myName, myAddress]);
   // The way back, in the header's left slot: to the book or the feed this
   // opened from, or to the book when there is nothing behind it. The pull
   // down and Escape still work; this is the one that can be seen.
@@ -294,19 +290,20 @@ export default function PersonPage({ layered = false }) {
   }, [mine, theirs, sent, person]);
 
   const there = address ? journalUrl(address) : '';
-  // Every link to their journal carries who this copy belongs to.
-  const theirEntry = useCallback(e => carrySender(`${there}/entries/${e.slug}`, me, { known: true }), [there, me]);
+  // Their entry, read inside this journal (2026-10-28, Miyel: "the actual
+  // entries open in app the same way as profile") — app/dashboard/people/
+  // [id]/[slug] reads it from their journal as it opens.
+  const personId = person ? person.id : '';
+  const theirEntry = useCallback(e => `/dashboard/people/${personId}/${encodeURIComponent(e.slug)}`, [personId]);
 
   // Their record, drawn the way People draws a friend's: the cover, opening
-  // their entry on their journal, where the writing is.
+  // their entry over this page.
   const tile = useCallback(album => {
     const face = album.face;
     const folded = album.listens.length === 0;
     return (
-      <a
+      <Link
         href={theirEntry(face)}
-        target="_blank"
-        rel="noopener noreferrer"
         className={'ft' + (folded ? ' ft--page' : '')}
         data-tile-key={album.key}
         aria-label={face.album + (face.artist ? ` by ${face.artist}` : '')}
@@ -327,7 +324,7 @@ export default function PersonPage({ layered = false }) {
             </div>
           </div>
         </div>
-      </a>
+      </Link>
     );
   }, [theirEntry]);
 
@@ -493,7 +490,7 @@ export default function PersonPage({ layered = false }) {
                       </div>
                       <div className="pn-item-tail">
                         <span>You <b>{p.mine.rating_value}</b> &middot; {name} <b>{p.theirs.rating_value}</b></span>
-                        <a href={theirEntry(p.theirs)} target="_blank" rel="noopener noreferrer">theirs &#8599;</a>
+                        <Link href={theirEntry(p.theirs)}>theirs</Link>
                       </div>
                     </div>
                   )}
@@ -509,7 +506,7 @@ export default function PersonPage({ layered = false }) {
                       </div>
                       <div className="pn-item-tail">
                         <span>You <b>{p.mine.rating_value}</b> &middot; {name} <b>{p.theirs.rating_value}</b> <span className="pn-gap">&middot; {p.gap.toFixed(1)} apart</span></span>
-                        <a href={theirEntry(p.theirs)} target="_blank" rel="noopener noreferrer">theirs &#8599;</a>
+                        <Link href={theirEntry(p.theirs)}>theirs</Link>
                       </div>
                     </div>
                   )}
@@ -599,11 +596,11 @@ export default function PersonPage({ layered = false }) {
                       {recents.map(e => {
                         const label = `${e.album} — ${e.artist}`;
                         return (
-                          <a key={e.slug} href={theirEntry(e)} target="_blank" rel="noopener noreferrer" className="hp-recent-tile" title={label} aria-label={label}>
+                          <Link key={e.slug} href={theirEntry(e)} className="hp-recent-tile" title={label} aria-label={label}>
                             {e.album_art
                               ? <img src={e.album_art} alt="" onError={ev => { ev.currentTarget.style.display = 'none'; }} />
                               : <span className="hp-recent-none" aria-hidden="true">♪</span>}
-                          </a>
+                          </Link>
                         );
                       })}
                     </div>

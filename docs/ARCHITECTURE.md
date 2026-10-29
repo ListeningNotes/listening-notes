@@ -174,7 +174,7 @@ The front doors — receive requests, hand them off, send back responses
     submissions/[id]/route.js  One send: settling it, saying it was already logged, naming who it came from; owner-only
     settings/route.js          The settings row — public to read, owner-only to write; `moved_to` is kept tidy and is never this journal's own address
     people/route.js            The address book — owner-only: the list, with every address this journal answers to (where it lives and where it lived), and filing an address; GET also carries the friends' records already seen, PATCH marks more (2026-10-27); filing an address opens a door closed on it
-    outbox/route.js            Where a send leaves from — owner-only: the person resolved out of the address book, the record (or the song) handed to library/outbox.js, which posts to their copy's /api/submissions, and a send that landed written to `sent`; a wave goes the same road, and so does a reply, whose recipient is read off the message it answers A reply that lands is kept in `said_back` (2026-10-27).
+    outbox/route.js            Where a send leaves from — owner-only: the person resolved out of the address book, the record (or the song) handed to library/outbox.js, which posts to their copy's /api/submissions, and a send that landed written to `sent`; a wave goes the same road, and so does a reply, whose recipient is read off the message it answers A reply that lands is kept in `said_back` (2026-10-27). Words may also start on a friend's entry read here: `person_id` and the entry, kept the same way (2026-10-28).
     came-back/route.js         What came back — owner-only: the inbox's list, what People noticed, a row opened, and a row dismissed
     sent/route.js              What this journal sent that has not come back — owner-only: the inbox's Sent list, and a row removed; written only by outbox/route.js
     waves/route.js             Waves — POST is public, from another copy's server: a journal and a name, nothing else, checked and counted; GET, PATCH and DELETE are the keeper's A stranger's wave waits at a closed door; one let go closes it (2026-10-27).
@@ -346,6 +346,7 @@ The rooms — full pages assembled from furniture
     @layer/(.)dashboard/people/page.js  Friends, on a sheet over the desk
     @layer/(.)dashboard/people/[id]/page.js  A friend's journal page, on the same sheet
     @layer/(.)dashboard/people/[id]/words/page.js  Words with one friend, on the same sheet
+    @layer/(.)dashboard/people/[id]/[slug]/page.js  A friend's entry, over the journal as your own entries open
     @layer/(.)dashboard/report/page.js  Report a problem, on the same sheet
     @layer/(.)printer/page.js  The printer, as a sheet over the entry or the card
     dashboard/
@@ -353,6 +354,7 @@ The rooms — full pages assembled from furniture
       people/page.js           Friends on a page of its own (PeopleScreen.js), so a desk can answer what waits from a person
       people/[id]/page.js      A friend's journal page — their beacon and wall drawn by this copy, Compare opened in place; under the wall, what is still out with them, All words with them, Keep private, Remove
       people/[id]/words/page.js  Words with one friend (Words.js)
+      people/[id]/[slug]/page.js  A friend's entry, read inside this journal: their public /api/entries/<slug>, fetched on this copy's server as it opens, drawn by FullPostPage or TrackNotePage in a Bookplate of theirs, Message [name] through the outbox (WritingTo); kept nowhere
       report/page.js           Report a problem — one box, Send
 
 ---

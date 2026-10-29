@@ -7,8 +7,8 @@
 // Miyel's Friends brief, step three: a rotating headline, one at a time,
 // about every seven seconds, rolling up like a departures board — not a
 // ticker, not a stack — between two hairlines, with pips on the right for
-// how many are in rotation. Pressing one goes to that record, or to that
-// person while they are logging.
+// how many are in rotation. Pressing one goes to that record — read inside
+// this journal since 2026-10-28 — or to that person while they are logging.
 //
 // ── Sentences with a verb ─────────────────────────────────────────────────
 // "Moonlit sat with Metro Station twice before noon", not "Moonlit · 2
@@ -108,7 +108,10 @@ function headlineFor(friend, there) {
     label: when(e.posted_at),
     art: e.album_art || '',
     said,
-    href: e.slug ? there(friend.address, `/entries/${encodeURIComponent(e.slug)}`) : '',
+    // Their entry read inside this journal (2026-10-28), or on their site
+    // for a row with no slug.
+    page: e.slug ? `/dashboard/people/${friend.person.id}/${encodeURIComponent(e.slug)}` : '',
+    href: e.slug ? '' : there(friend.address, ''),
   };
 }
 

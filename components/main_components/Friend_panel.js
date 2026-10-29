@@ -430,7 +430,8 @@ export default function FriendPanel({
         const isNew = item.unseen || newHere?.has(key);
         const doing = busy === key;
         const art = kind === 'sent' || kind === 'arrived' ? row.album_art : kind === 'wrote' ? row.about_art : '';
-        const link = kind === 'arrived' && row.slug && person ? there(person.address, `/entries/${encodeURIComponent(row.slug)}`) : '';
+        // Their entry, read inside this journal (2026-10-28).
+        const link = kind === 'arrived' && row.slug && person ? `/dashboard/people/${person.id}/${encodeURIComponent(row.slug)}` : '';
         const cover = (
           <span className={'fp-art' + (kind === 'waved' || kind === 'moved' ? ' fp-art--round' : '')} aria-hidden="true">
             {art ? <img src={art} alt="" loading="lazy" onError={e => { e.currentTarget.style.display = 'none'; }} />
@@ -465,14 +466,14 @@ export default function FriendPanel({
           : '';
         return (
           <div key={key} className="fp-one">
-            {link ? <a href={link} target="_blank" rel="noopener noreferrer" className="fp-art-link">{cover}</a> : cover}
+            {link ? <Link href={link} className="fp-art-link">{cover}</Link> : cover}
             <div className="fp-says">
               <span className="fp-kind">
                 {isNew && <span className="ln-new">New</span>}
                 {KIND_WORD[kind]}
               </span>
               {title && (link
-                ? <a href={link} target="_blank" rel="noopener noreferrer" className="fp-title">{title}</a>
+                ? <Link href={link} className="fp-title">{title}</Link>
                 : <span className="fp-title">{title}</span>)}
               {kind === 'wrote' ? <p className="fp-said">{said}</p> : said ? <p className="fp-note">{said}</p> : null}
               {sub && <span className="fp-sub">{sub}</span>}

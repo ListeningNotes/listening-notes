@@ -22,7 +22,7 @@
 //
 // `children` stands above the field: who the message is signed by, for a
 // form that has to ask.
-import { useLayoutEffect, useRef, useState } from 'react';
+import { createContext, useContext, useLayoutEffect, useRef, useState } from 'react';
 import { User } from '@phosphor-icons/react';
 import { recallSender, keepSender, journalUrl } from '../../../library/return_address';
 
@@ -148,7 +148,26 @@ export default function MessageForm({
 //
 // Left out of the page altogether for the keeper on their own journal, by
 // whoever draws it: there is nobody for them to write to.
+//
+// ── A friend's entry, read inside your own journal, 2026-10-28 ───────────
+// Miyel: a friend's entries open in the app, the way their page does, not
+// on their site. Drawn there, this page is theirs and the reader is you, a
+// keeper writing from your own copy: nobody to ask a name of, and the words
+// go through your outbox to them, about this entry (app/api/outbox), so
+// your side is kept for Words. `WritingTo` says so — who, by the book's id,
+// and the entry — around the page that draws it.
+const WritingToContext = createContext(null);
+export function WritingTo({ to, children }) {
+  return <WritingToContext.Provider value={to}>{children}</WritingToContext.Provider>;
+}
+// Whether the entry being drawn is a friend's, read inside this journal —
+// so what it asks of a journal (its cover's code) goes to theirs.
+export function useWritingTo() {
+  return useContext(WritingToContext);
+}
+
 export function MessageWayIn({ slug, keeper = '' }) {
+  const writingTo = useContext(WritingToContext);
   const [writing, setWriting] = useState(false);
   const [gone, setGone] = useState(false);
   const [name, setName] = useState('');
@@ -180,6 +199,18 @@ export function MessageWayIn({ slug, keeper = '' }) {
   }
 
   async function send(said) {
+    if (writingTo) {
+      const sent = await fetch('/api/outbox', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: true, person_id: writingTo.person_id, about: writingTo.about, said }),
+      }).catch(() => null);
+      const told = await sent?.json().catch(() => null);
+      if (!sent?.ok || !told?.ok) {
+        return { ok: false, error: told?.error || 'Something went wrong. Nothing was sent, and your words are still here.' };
+      }
+      return { ok: true };
+    }
     if (!name.trim()) return { ok: false, error: 'Add your name, so they know who is writing.' };
     const answer = await fetch('/api/messages', {
       method: 'POST',
@@ -224,7 +255,7 @@ export function MessageWayIn({ slug, keeper = '' }) {
             }}
             onLeave={() => setWriting(false)}
           >
-            {knowMe ? (
+            {writingTo ? null : knowMe ? (
               // Who this is going to be signed by. Not a field and not a
               // label over one: it is a statement, and the only thing to do
               // with it is disagree.
