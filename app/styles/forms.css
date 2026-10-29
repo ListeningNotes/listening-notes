@@ -1795,7 +1795,7 @@ textarea.st-field { resize: vertical; min-height: 96px; }
    guard and not a fix, and it is the half of the problem this copy can close
    today. The keeper's own portrait on the card keeps its long press: it is
    their picture, on their card, and saving it is a thing they might mean. */
-.fr-face img, .fd-face img {
+.fr-face img {
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
@@ -1824,8 +1824,8 @@ textarea.st-field { resize: vertical; min-height: 96px; }
    face and a pinned one. Still, not breathing: the band's dot is the one
    that pulses. It is what still tells you who is on once the band above
    the grid has scrolled away. */
-.fr-one--live .fr-face { box-shadow: 0 0 0 1.5px var(--live-deep); }
-.fr-one--live .fr-ring::after {
+.fr-one--live .fr-face, .fr-live .fr-live-one .fr-face, .ps-row-one--live .fr-face { box-shadow: 0 0 0 1.5px var(--live-deep); }
+.fr-one--live .fr-ring::after, .fr-live .fr-live-one .fr-ring::after, .ps-row-one--live .fr-ring::after {
   content: '';
   position: absolute; z-index: 1;
   right: calc(14.64% - 6px); bottom: calc(14.64% - 6px);
@@ -1833,6 +1833,22 @@ textarea.st-field { resize: vertical; min-height: 96px; }
   border-radius: 50%;
   background: var(--live);
   border: 2.5px solid var(--bg);
+}
+/* New on a face (Miyel's Friends brief, 2026-10-27): the app's mark tucked
+   under the chin, over the circle's lower edge, ringed in the page's colour
+   so it reads against any photograph — never across the face. */
+/* New on a record: paper on the cover, bottom left, 6px in — bottom
+   because sleeves print their type at the top (the brief). */
+.ln-new--tile {
+  position: absolute; z-index: 1; left: 6px; bottom: 6px;
+  background: var(--bg); color: var(--ink);
+  pointer-events: none;
+}
+.ln-new--face {
+  position: absolute; z-index: 2; left: 50%; bottom: -6px;
+  transform: translateX(-50%);
+  box-shadow: 0 0 0 2px var(--bg);
+  pointer-events: none;
 }
 .fr-name {
   font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
@@ -1960,13 +1976,13 @@ textarea.st-field { resize: vertical; min-height: 96px; }
   .fr-on, .fr-ring { transition: none; }
 }
 
-/* ── Who is logging right now, and the quiet line, 2026-10-06 ─────────────
+/* ── Who is logging right now, 2026-10-06 ──────────────────────────────────
    To the brief's mock-up (friends-room.html), measure for measure: a dot
    that pulses outward and LOGGING RIGHT NOW in the label face, then a row
    of cards that scrolls sideways and settles on a card, bled to the
    gutters; a card is the record's art, the friend with a live dot, the
-   record and the artist. When nobody is on, the quiet line stands where the
-   band would. Either one ends on a hairline above the grid. */
+   record and the artist. The Board's band since People's top band became
+   faces (2026-10-23, below). */
 .fr-now {
   padding: 0 0 22px;
   border-bottom: 1px solid var(--border);
@@ -2046,20 +2062,428 @@ textarea.st-field { resize: vertical; min-height: 96px; }
   font-size: 12px; color: var(--ink-soft);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.fr-quiet {
-  display: flex; align-items: center; gap: 10px;
-  margin: 0; padding: 14px 2px 22px;
+/* ── The top band of People, 2026-10-23 ───────────────────────────────────
+   Miyel's People brief and its mockup: one slot of one height holding
+   either the strip of who is logging right now or the line of who was here
+   last, so nothing under it moves when somebody starts or stops. Both end
+   on the hairline the old band ended on. */
+.fr-band {
+  display: flex; align-items: center;
+  height: 104px; box-sizing: border-box;
   border-bottom: 1px solid var(--border);
-  font-size: 13.5px; line-height: 1.5; color: var(--ink-soft);
 }
-.fr-quiet-word {
-  font-family: var(--font-label);
-  font-size: 9.5px; letter-spacing: 0.22em; text-transform: uppercase;
+/* The strip: faces bled to the gutters, scrolling sideways once there are
+   more than fit, and only then (see the note in Friends.js). */
+.fr-live {
+  flex: 1; min-width: 0;
+  display: flex; align-items: flex-start; gap: 12px;
+  /* Room above and below, or the scroller clips the live ring. */
+  margin: 0 -24px; padding: 4px 24px;
+  overflow-x: auto; overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scroll-padding-inline: 24px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.fr-live::-webkit-scrollbar { display: none; }
+.fr-live-one {
+  flex: 0 0 64px; min-width: 0;
+  display: flex; flex-direction: column; align-items: center;
+  border: 0; background: none; padding: 0;
+  color: inherit; font: inherit; text-decoration: none;
+  cursor: pointer;
+  scroll-snap-align: start;
+  -webkit-tap-highlight-color: transparent;
+}
+.fr-live-one .fr-ring, .fr-last .fr-ring { width: 54px; flex-shrink: 0; }
+/* The name in the label face and the record fainter under it, as drawn. */
+.fr-live-name, .fr-live-rec {
+  max-width: 100%;
+  font-family: var(--font-label); letter-spacing: 0.02em; line-height: 1.3;
+  text-align: center;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.fr-live-name { margin-top: 8px; font-size: 10.5px; color: var(--ink-soft); }
+.fr-live-rec { margin-top: 1px; font-size: 9.5px; color: var(--ink-faint); }
+/* The line: their face, their name over what they logged and when, and the
+   record at the end. */
+.fr-last {
+  flex: 1; min-width: 0;
+  display: flex; align-items: center; gap: 12px;
+  border: 0; background: none; padding: 0;
+  color: inherit; font: inherit; text-align: left; text-decoration: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.fr-last-says { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.fr-last-name {
+  font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
+  font-size: 16px; line-height: 1.2; color: var(--ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+/* Two lines at most: a long record's name wraps rather than losing the
+   time off the end. */
+.fr-last-what {
+  font-family: var(--font-label); font-size: 10px; line-height: 1.45;
   color: var(--ink-faint);
-  flex-shrink: 0;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+  overflow: hidden;
 }
-.fr-quiet-said { min-width: 0; }
-.fr-quiet b { color: var(--ink); font-weight: var(--font-display-weight, 700); }
+.fr-last-when { white-space: nowrap; }
+.fr-last-art {
+  flex: 0 0 46px; height: 46px;
+  border-radius: 8px; overflow: hidden;
+  background: var(--bg-warm);
+}
+.fr-last-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.fr-live-one:focus-visible, .fr-last:focus-visible {
+  outline: 2px solid var(--ink-faint); outline-offset: 4px; border-radius: 10px;
+}
+
+/* ── People, one screen, 2026-10-23 ───────────────────────────────────────
+   The top in the page's gutter — two words, the faces, one line and the
+   doors of whoever is open — a hairline, then the wall as home draws it,
+   with its line (PeopleScreen.js). */
+.ps { display: flex; flex-direction: column; }
+/* ── The top, calmer, 2026-10-24 ──────────────────────────────────────────
+   Miyel: the beacon was too much, Add and See all as bubbles read as "three
+   friends", nobody could tell who was open, and the wall wanted its
+   hairline back. So only friends are circles; the two acts are words; the
+   record is one line; the one pressed is the one not dimmed. */
+.ps-top {
+  margin: 0 24px; padding: 2px 0 16px;
+  border-bottom: 1px solid var(--border);
+}
+/* ── Your friends, 2026-10-27 ──────────────────────────────────────────────
+   Miyel's Friends brief: the line, then Your friends at the left in the
+   label face and three glyphs over their words at the right — Add, Find,
+   Ticket — in the top row's shape (.hdr-stop), the word always worn and
+   underlined while what it opens is open. */
+.ps-head {
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 12px;
+  margin-top: 22px;
+}
+.ps-head-said {
+  margin: 0; padding-bottom: 1px;
+  font-family: var(--font-label); font-weight: 400; font-size: 9px; line-height: 1;
+  letter-spacing: 0.11em; text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.ps-glyphs { display: flex; align-items: flex-start; gap: 20px; }
+.ps-glyph {
+  display: inline-flex; flex-direction: column; align-items: center; gap: 6px;
+  min-width: 30px; padding: 6px 4px; margin: -6px -4px;
+  border: 0; background: none; color: var(--ink-soft);
+  font-family: var(--font-label); font-size: 9px; line-height: 1;
+  letter-spacing: 0.11em; text-transform: uppercase;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s;
+}
+.ps-glyph:hover, .ps-glyph--on { color: var(--ink); }
+.ps-glyph--on .ps-glyph-word { text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 4px; }
+.ps-glyph:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: -2px; border-radius: 8px; }
+/* What a glyph unrolls under the head, pushing the page down rather than
+   appearing — Add's way in now, the ticket's strip once it is briefed. */
+.ps-unroll {
+  display: grid; grid-template-rows: 0fr;
+  transition: grid-template-rows 0.4s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.ps-unroll--open { grid-template-rows: 1fr; }
+.ps-unroll-in { min-height: 0; overflow: hidden; }
+.ps-unroll--open .ps-unroll-in { padding-bottom: 4px; }
+/* Find's field, at the head of the open drawer. */
+.ps-find { margin: 16px 0 0; }
+/* See all under the closed row and Close under the open one, in the line's
+   small capitals, with the caret under the words (Miyel, 2026-10-27),
+   turned over while it is open. */
+.ps-pull {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  margin: 2px auto 0; padding: 6px 8px;
+  border: 0; background: none; cursor: pointer;
+  font-family: var(--font-label); font-size: 9px; line-height: 1;
+  letter-spacing: 0.11em; text-transform: uppercase;
+  color: var(--ink-faint);
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s;
+}
+.ps-pull:hover { color: var(--ink); }
+.ps-pull svg { transition: transform 0.4s cubic-bezier(0.22, 0.61, 0.36, 1); }
+.ps-pull--open svg { transform: rotate(180deg); }
+.ps-pull:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 2px; border-radius: 8px; }
+
+/* Every face in the book, five across, as the drawer: shut, one row the
+   height of its first face (--ps-shut, measured in PeopleScreen.js) and the
+   rows under it clipped away, never scrolling sideways (Miyel, 2026-10-27);
+   open, every row. Only the height travels. One pressed: the rest dim and
+   it grows — the book's own way of saying this one (.fr-one--open). The
+   padding is room inside the clip for a face that grows and the mark under
+   it, and for the focus ring. */
+.ps-row {
+  display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
+  align-items: start; row-gap: 16px; column-gap: 4px;
+  box-sizing: border-box;
+  margin: 12px -8px 0; padding: 6px 8px 10px;
+  overflow: hidden;
+}
+.ps-row:not(.ps-row--drawer) { height: var(--ps-shut, auto); }
+.ps-row-one { min-width: 0; width: auto; transition: opacity 0.25s ease; }
+.ps-row-one .fr-ring { width: 54px; flex-shrink: 0; }
+/* Room for New under the chin, on every face, so the names stand on one
+   line whoever wears it; somebody with something waiting is named in ink. */
+.ps-row-one .fr-live-name { margin-top: 11px; }
+.ps-row-one--new .fr-live-name { color: var(--ink); }
+/* The others dim to about a quarter (the brief, 2026-10-27). */
+.ps-row--open .ps-row-one { opacity: 0.26; }
+.ps-row--open .ps-row-one--open { opacity: 1; }
+.ps-row-one--open .fr-ring { transform: scale(1.1); }
+.ps-row-one--open .fr-live-name { color: var(--ink); }
+.ps-row-one:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 4px; border-radius: 10px; }
+
+/* ── Headlines, 2026-10-27 ──────────────────────────────────────────────────
+   Headlines.js: one sentence at a time between two hairlines, rolling up
+   like a departures board, the pips on the right. The stack holds two lines
+   of the sentence whatever is showing, so the page never jumps as it turns. */
+.hl {
+  display: flex; align-items: stretch; gap: 14px;
+  margin-top: 6px; padding: 14px 0;
+  border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+}
+.hl-stack {
+  position: relative; flex: 1; min-width: 0;
+  height: 66px; overflow: hidden;
+}
+.hl-one {
+  position: absolute; inset: 0;
+  display: flex; align-items: flex-start; gap: 14px;
+  color: var(--ink); text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.hl-one--in { animation: hl-in 0.56s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
+.hl-one--out { animation: hl-out 0.56s cubic-bezier(0.22, 0.61, 0.36, 1) both; pointer-events: none; }
+@keyframes hl-in {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: none; opacity: 1; }
+}
+@keyframes hl-out {
+  from { transform: none; opacity: 1; }
+  to   { transform: translateY(-100%); opacity: 0; }
+}
+.hl-one:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: -2px; border-radius: 8px; }
+.hl-art {
+  flex: 0 0 50px; height: 50px; border-radius: 6px; overflow: hidden;
+  background: var(--bg-warm);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+.hl-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.hl-words { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.hl-when {
+  font-family: var(--font-label); font-size: 9px; line-height: 1;
+  letter-spacing: 0.11em; text-transform: uppercase; color: var(--ink-faint);
+}
+.hl-said {
+  font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
+  font-size: 19px; line-height: 1.2; color: var(--ink);
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
+  overflow-wrap: anywhere;
+}
+.hl-title { font-style: italic; font-weight: 400; }
+.hl-mark--formative { color: var(--formative); }
+.hl-mark--fav { color: var(--fav); }
+.hl-mark--mp { color: var(--mp); }
+.hl-pips { flex: 0 0 auto; display: flex; flex-direction: column; justify-content: center; gap: 4px; }
+.hl-pip { width: 4px; height: 4px; border-radius: 50%; background: var(--ink-faint); opacity: 0.45; transition: opacity 0.3s, background 0.3s; }
+.hl-pip--on { background: var(--ink); opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .hl-one--in { animation: hl-fade 0.3s ease both; }
+  .hl-one--out { animation: none; opacity: 0; }
+  @keyframes hl-fade { from { opacity: 0; } to { opacity: 1; } }
+}
+
+/* Their doors, the book's own, opening under the line and folding shut
+   rather than appearing. No hairlines round them here: the one under the
+   top is enough. */
+.ps-doors {
+  display: grid; grid-template-rows: 0fr;
+  transition: grid-template-rows 0.34s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.ps-doors--open { grid-template-rows: 1fr; }
+.ps-doors-in { min-height: 0; overflow: hidden; }
+.ps-quiets { margin-top: 0; padding-top: 14px; border-top: 1px solid var(--border); }
+
+/* ── What waits on a face, 2026-10-27 ─────────────────────────────────────
+   Friend_panel.js, as her Friends brief draws it: a cover (or a hand, or a
+   signpost, in a circle), then New and what it is in the label face, the
+   record or the words, the small line, and its answers as words — the
+   first in ink. A hairline between each, and above the quiet line. */
+.fp { display: flex; flex-direction: column; padding-top: 12px; border-top: 1px solid var(--border); margin-top: 6px; }
+.fp-one { display: flex; align-items: flex-start; gap: 14px; padding: 16px 0; border-top: 1px solid var(--border); }
+.fp-who + .fp-one { border-top: 0; padding-top: 10px; }
+.fp-art-link { flex: 0 0 auto; display: block; border-radius: 8px; -webkit-tap-highlight-color: transparent; }
+.fp-art {
+  flex: 0 0 auto; width: 60px; height: 60px; border-radius: 8px; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg-warm); color: var(--ink-faint); font-size: 18px;
+}
+.fp-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.fp-art--round { border-radius: 50%; background: var(--panel); }
+.fp-says { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.fp-kind {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--font-label); font-size: 9px; line-height: 1;
+  letter-spacing: 0.11em; text-transform: uppercase; color: var(--ink-faint);
+}
+.fp-title {
+  font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
+  font-size: 18px; line-height: 1.25; color: var(--ink); text-decoration: none;
+  overflow-wrap: anywhere;
+}
+/* What they wrote, large, as the brief sets it; four lines and the rest
+   waits for Words (step four). */
+.fp-said {
+  margin: 0; font-family: var(--font-display); font-size: 17px; line-height: 1.38; color: var(--ink);
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; overflow: hidden;
+  overflow-wrap: anywhere;
+}
+/* The note a send carried, in their words, smaller. */
+.fp-note {
+  margin: 0; font-size: 13.5px; line-height: 1.45; color: var(--ink-soft);
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden;
+  overflow-wrap: anywhere;
+}
+.fp-sub {
+  font-family: var(--font-label); font-size: 9px; line-height: 1.4;
+  letter-spacing: 0.11em; text-transform: uppercase; color: var(--ink-faint);
+}
+/* Who it is from, at the head: their face small and their name, going to
+   their journal page. */
+.fp-who {
+  align-self: flex-start;
+  display: inline-flex; align-items: center; gap: 9px;
+  padding: 4px 0; color: var(--ink); text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.fp-who .fr-ring { width: 28px; flex-shrink: 0; }
+.fp-who-name {
+  font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
+  font-size: 15px; line-height: 1.2;
+}
+.fp-who svg { color: var(--ink-faint); }
+.fp-who:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; border-radius: 6px; }
+/* A stranger's head (step five): their face larger, their name, Not one of
+   your friends under it, and Add on the right — a head and not a link, since
+   nothing of theirs opens until they are added. */
+.fp-who--stranger { align-self: stretch; gap: 14px; }
+.fp-who--stranger .fr-ring { width: 52px; }
+.fp-who-says { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.fp-who--stranger .fp-who-name { font-size: 24px; line-height: 1.1; }
+.fp-who-not {
+  font-family: var(--font-label); font-size: 9px; line-height: 1;
+  letter-spacing: 0.11em; text-transform: uppercase; color: var(--ink-faint);
+}
+.fp-who-add { flex: 0 0 auto; }
+.fp-closed {
+  margin: 0; padding: 14px 0 4px; border-top: 1px solid var(--border);
+  font-family: var(--font-label); font-size: 9px; letter-spacing: 0.11em; text-transform: uppercase;
+  color: var(--ink-faint);
+}
+/* Its answers: a glyph over one word each, as the site's doors are (her
+   review, 2026-10-27: "i lost the icons"). */
+.fp-doors { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 6px; }
+.fp-door {
+  display: inline-flex; flex-direction: column; align-items: center; gap: 6px;
+  min-width: 34px; padding: 6px 4px; margin: -6px -4px;
+  border: 0; background: none; color: var(--ink-soft); text-decoration: none;
+  font-family: var(--font-label); font-size: 9px; line-height: 1;
+  letter-spacing: 0.11em; text-transform: uppercase; white-space: nowrap;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s;
+}
+.fp-door:hover:not(:disabled), .fp-door--on { color: var(--ink); }
+.fp-door--on .fp-door-word { text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 4px; }
+.fp-door:disabled { opacity: 0.45; cursor: default; }
+.fp-door:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: -2px; border-radius: 8px; }
+.fp-acts { display: flex; flex-wrap: wrap; gap: 2px 20px; margin-top: 2px; }
+.fp-act {
+  border: 0; background: none; padding: 6px 0; cursor: pointer;
+  font-family: var(--font-label); font-size: 9.5px; line-height: 1;
+  letter-spacing: 0.11em; text-transform: uppercase; color: var(--ink-faint);
+  -webkit-tap-highlight-color: transparent; transition: color 0.15s;
+}
+.fp-act--first { color: var(--ink); }
+.fp-act:hover:not(:disabled) { color: var(--ink); }
+.fp-act:disabled { opacity: 0.45; cursor: default; }
+.fp-act:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; border-radius: 4px; }
+.fp-holding { margin-top: 4px; }
+.fp-holding-said { margin: 0; font-size: 13.5px; line-height: 1.45; color: var(--ink-soft); }
+.fp-form { align-self: stretch; margin-top: 6px; }
+.fp-trouble { margin: 2px 0 0; font-family: var(--font-label); font-size: 11px; line-height: 1.4; color: var(--ink-faint); }
+
+/* Adding, in the line's place: the camera, one field, Invite, what the
+   Board found, and the way to the Board itself. */
+.ps-add { padding-top: 10px; animation: ps-in 0.35s ease both; }
+.ps-add-line { display: flex; align-items: center; gap: 8px; }
+.ps-add-field { flex: 1; min-width: 0; margin: 0; }
+.ps-add-found { margin: 14px -24px 0; padding: 4px 24px 2px; }
+.ps-add-one { position: relative; }
+.ps-add-mark {
+  position: absolute; top: 34px; left: 50%; margin-left: 12px;
+  display: flex; align-items: center; justify-content: center;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--ink); color: var(--bg);
+  font-family: var(--font-label); font-size: 12px; line-height: 1;
+  box-shadow: 0 0 0 2px var(--bg);
+}
+.ps-add-one--known .ps-add-mark { background: var(--panel-strong); color: var(--ink-soft); }
+.ps-add-board {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: 14px; padding: 4px 0;
+  font-family: var(--font-label); font-size: 9px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--ink-soft); text-decoration: none;
+}
+.ps-add-board:hover { color: var(--ink); }
+.ps-add-said, .ps-said {
+  margin: 10px 0 0;
+  font-family: var(--font-label); font-size: 11px; color: var(--ink-faint);
+}
+.ps-empty-add {
+  border: 0; background: none; padding: 0;
+  font: inherit; color: var(--ink-soft); text-decoration: underline; cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ps-strip, .ps-add { animation: none; }
+  .ps-doors, .ps-unroll, .ps-pull svg, .ps-row-one { transition: none; }
+}
+/* A record on People's wall wears, over the cover, the faces of whoever
+   logged it in the corner, overlapping — the keeper's own first when it is
+   on their wall too (it was a gold dot for an afternoon, 2026-10-23). */
+.ps-who {
+  position: absolute; right: 5px; bottom: 5px; z-index: 1;
+  display: flex;
+  pointer-events: none;
+}
+.ps-who-face {
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+  width: 20px; height: 20px; border-radius: 50%; overflow: hidden;
+  margin-left: -7px;
+  background: var(--panel-solid); color: var(--ink-faint);
+  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.92);
+}
+.ps-who-face:first-child { margin-left: 0; }
+.ps-who-face img {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+  -webkit-touch-callout: none; user-select: none;
+}
+/* A search's faces, over the wall: the band's faces, in a row that scrolls
+   sideways once it overflows. */
+.ps-found {
+  display: flex; gap: 12px;
+  margin: 0 -14px 14px; padding: 4px 14px 2px;
+  overflow-x: auto; overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+.ps-found::-webkit-scrollbar { display: none; }
 
 /* Their beacon inside the doors, as the mock-up draws it: the record small
    in a hairline square, a tracked caption, the record and the artist, above
@@ -2217,18 +2641,219 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 /* ── from app/printer/page.js ─────────────────────────────────────────── */
 
 /* ── from app/dashboard/people/[id]/page.js ──────────────────────────── */
+/* A friend's journal page, 2026-10-26: home's top row with their face and
+   name and Compare and Added for its rooms, Compare opening in place under
+   it, their beacon as home draws the keeper's, and their wall at the width
+   home's is drawn. No fixed header to clear: the row is in the page. */
+.pn-screen { --own-nav-bottom: 0px; }
+.pn-body { max-width: 720px; padding: 0 24px; }
+/* Home's row (.hdr, nav.css): 18 from the sides, 22 under the notch, 58
+   tall, the face at 34. */
+.pn-hdr {
+  position: relative;
+  display: flex; align-items: center; gap: 10px;
+  height: 58px;
+  margin: calc(22px + var(--safe-top, 0px)) 18px 0;
+}
+.pn-hdr-back {
+  display: inline-flex; padding: 6px; margin: 0 -4px 0 -6px;
+  border: 0; background: none; color: var(--ink-soft); cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.pn-hdr-back:hover { color: var(--ink); }
+.pn-face {
+  position: relative; flex: 0 0 auto; width: 34px; height: 34px; border-radius: 50%; overflow: hidden;
+  background: var(--panel-strong); box-shadow: 0 0 0 1px var(--border);
+  display: grid; place-items: center; color: var(--ink-faint);
+}
+.pn-face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+/* In the middle of the row, where home's mark is. */
+.pn-hdr-name {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  display: inline-flex; align-items: center; gap: 6px;
+  max-width: calc(100% - 200px); margin: 0;
+  font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
+  font-size: 19px; line-height: 1.15; color: var(--ink);
+}
+.pn-hdr-called { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pn-hdr-live { flex: 0 0 auto; width: 6px; height: 6px; border-radius: 50%; background: var(--live); }
+.pn-hdr-stops { margin-left: auto; display: flex; align-items: flex-start; gap: 20px; }
+.pn-hdr-stop {
+  display: inline-flex; flex-direction: column; align-items: center; gap: 4px;
+  min-width: 28px; padding: 6px 4px; margin: -6px -4px;
+  border: 0; background: none; color: var(--ink-faint);
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s;
+}
+.pn-hdr-stop--lit { color: var(--ink); }
+.pn-hdr-stop--still { cursor: default; }
+.pn-hdr-stop:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: -2px; border-radius: 8px; }
+.pn-hdr-word {
+  font-family: var(--font-label); font-size: 9px; line-height: 1;
+  letter-spacing: 0.09em; text-transform: uppercase;
+  text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1.5px;
+}
+.pn-print { display: flex; width: fit-content; margin: 18px -6px 0 auto; }
+/* Compare opens under the row and pushes the beacon down, as the drawer
+   and the ticket do; nothing appears or vanishes. */
+.pn-compare {
+  display: grid; grid-template-rows: 0fr;
+  transition: grid-template-rows 0.42s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.pn-compare--open { grid-template-rows: 1fr; }
+.pn-compare-in {
+  min-height: 0; overflow: hidden;
+  opacity: 0; transition: opacity 0.3s;
+}
+.pn-compare--open .pn-compare-in {
+  opacity: 1;
+  padding: 18px 0 22px;
+  border-bottom: 1px solid var(--border);
+}
+/* Home's beacon on a phone (nav.css, .hn-pane--home): the record and the
+   column of three beside it on one row, the name across both under them. */
+.pn-beacon {
+  display: grid; grid-template-columns: auto auto; justify-content: center;
+  column-gap: 16px; row-gap: 22px;
+  padding: 6px 0 4px;
+}
+.pn-beacon .beacon-stage, .pn-beacon .beacon-card { display: contents; }
+.pn-beacon .beacon-card--main { position: static; transform: none; }
+.pn-beacon .beacon-art-wrap {
+  grid-column: 1; grid-row: 1;
+  width: min(212px, calc(100vw - 150px)); height: auto; aspect-ratio: 1;
+}
+.pn-beacon .beacon-art-wrap,
+.pn-beacon .beacon-card:hover .beacon-art-wrap { box-shadow: 0 16px 30px -12px rgba(0, 0, 0, 0.3); }
+.pn-beacon .beacon-art-wrap--live { box-shadow: 0 20px 36px -14px rgba(0, 0, 0, 0.36); }
+.pn-beacon .beacon-meta { grid-column: 1 / -1; grid-row: 2; }
+.pn-beacon .beacon-track { font-size: 21px; }
+.pn-beacon .beacon-quiet { grid-column: 1 / -1; grid-row: 1; }
+.pn-beacon .hp-recent-set { grid-column: 2; grid-row: 1; align-self: center; align-items: flex-start; gap: 8px; }
+.pn-beacon .hp-recent { flex-direction: column; gap: 7px; opacity: 1; }
+.pn-beacon .hp-recent-tile { width: 50px; height: 50px; border-radius: 10px; }
+.pn-beacon .hp-recent-tile img { filter: grayscale(80%) brightness(0.7); transition: filter 0.3s cubic-bezier(0.22, 0.61, 0.36, 1); }
+.pn-beacon .hp-recent-tile:hover img, .pn-beacon .hp-recent-tile:focus-visible img { filter: none; }
+/* The wall, past the narrow column, and what sits under its last row. */
+.pn-wall { padding-bottom: 40px; }
+/* On a phone the wall's line leads the wall and sticks under the header as
+   you read down, as home's and People's do. Over the journal the header
+   scrolls away with the sheet, so the line sticks to the sheet's top. */
+@media (max-width: 768px) {
+  .pn-wall .arc-bar-wrap {
+    order: -1;
+    top: max(var(--own-nav-bottom), var(--safe-top, 0px));
+    bottom: auto;
+    padding-top: 8px;
+    background: var(--bg);
+  }
+  .pn-wall .arc-bar { border-top: 0; }
+  /* No Listen bar under a friend's page (ListenBar.js); Remove, the last
+     thing, clears the home indicator. */
+  .pn-wall { padding-bottom: calc(40px + env(safe-area-inset-bottom, 0px)); }
+}
+.pn-foot { max-width: 720px; margin: 0 auto; padding: 28px 24px 0; display: flex; flex-direction: column; gap: 18px; }
+.pn-quiet { margin: 0; padding-top: 12px; border-top: 1px solid var(--border); display: flex; flex-wrap: wrap; gap: 0 22px; }
+.pn-quiet-act {
+  border: 0; background: none; padding: 6px 0; cursor: pointer;
+  font-family: var(--font-label); font-size: 9px; letter-spacing: 0.11em; text-transform: uppercase;
+  color: var(--ink-faint);
+  transition: color 0.15s;
+}
+.pn-quiet-act:hover { color: var(--ink-soft); }
+a.pn-quiet-act { text-decoration: none; display: inline-block; }
+.pn-quiet-act--sure, .pn-quiet-act--sure:hover { color: var(--fav, #f0484f); }
+.pn-quiet-act--on { color: var(--ink-soft); }
+@media (prefers-reduced-motion: reduce) {
+  .pn-compare, .pn-compare-in { transition: none; }
+}
+
+/* ── from components/main_components/Words.js ────────────────────────── */
+/* Words, 2026-10-27: one friend's conversations, each under the record it
+   is about. Theirs left and filled, yours right and outlined, no colour; a
+   hairline spine behind them, seen in the gaps; when, at 9px, under each. */
+.wd-name {
+  margin: 0; min-width: 0;
+  font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
+  font-size: 19px; line-height: 1.15; color: var(--ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.wd-body { padding-top: 10px; padding-bottom: calc(40px + env(safe-area-inset-bottom, 0px)); }
+.wd-chain { padding: 16px 0 26px; border-top: 1px solid var(--border); scroll-margin-top: 12px; }
+.wd-chain:first-child { border-top: 0; }
+.wd-about {
+  position: relative; z-index: 1;
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px; border-radius: 14px; background: var(--bg-warm);
+}
+.wd-about-art { flex: 0 0 52px; height: 52px; border-radius: 6px; overflow: hidden; background: var(--panel); }
+.wd-about-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.wd-about-says { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.wd-about-count, .wd-about-artist, .wd-when, .wd-kept {
+  font-family: var(--font-label); font-size: 9px; line-height: 1.3;
+  letter-spacing: 0.11em; text-transform: uppercase; color: var(--ink-faint);
+}
+.wd-about-title {
+  font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
+  font-size: 18px; line-height: 1.2; color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.wd-thread { position: relative; display: flex; flex-direction: column; gap: 14px; padding-top: 16px; }
+.wd-thread::before {
+  content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 1px;
+  background: var(--border); transform: translateX(-0.5px);
+}
+.wd-one { position: relative; display: flex; flex-direction: column; gap: 5px; max-width: 78%; }
+.wd-one--theirs { align-self: flex-start; align-items: flex-start; }
+.wd-one--mine { align-self: flex-end; align-items: flex-end; }
+.wd-bubble {
+  margin: 0; padding: 12px 15px; border-radius: 16px;
+  font-family: var(--font-display); font-size: 16px; line-height: 1.42; color: var(--ink);
+  white-space: pre-wrap; overflow-wrap: anywhere;
+}
+.wd-one--theirs .wd-bubble { background: var(--bg-warm); }
+.wd-one--mine .wd-bubble { background: var(--bg); border: 1px solid var(--ink-faint); }
+.wd-when { padding: 0 4px; background: var(--bg); }
+.wd-write {
+  display: inline-flex; align-items: center; gap: 8px;
+  margin-top: 18px; padding: 6px 0; border: 0; background: none; cursor: pointer;
+  font-family: var(--font-label); font-size: 9.5px; letter-spacing: 0.11em; text-transform: uppercase;
+  color: var(--ink-soft); -webkit-tap-highlight-color: transparent;
+}
+.wd-write:hover { color: var(--ink); }
+.wd-form { margin-top: 14px; }
+.wd-said { margin: 24px 0; font-size: 15px; line-height: 1.5; color: var(--ink-soft); }
+.wd-kept { margin: 18px 0 0; padding-top: 14px; border-top: 1px solid var(--border); }
+/* The counted facts, one table: the card's label-and-answer shape. */
+.pn-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 18px; margin: 0 0 8px; }
+.pn-fact { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 14px; background: var(--bg); }
+.pn-fact dt { font-family: var(--font-label); font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-faint); }
+.pn-fact dd { margin: 0; font-family: var(--font-display); font-weight: var(--font-display-weight, 700); font-size: 22px; line-height: 1.1; color: var(--ink); }
+.pn-fact dd small { font-family: var(--font-label); font-size: 10px; font-weight: 400; letter-spacing: 0.08em; color: var(--ink-soft); margin-left: 6px; }
+.pn-note { font-size: 13px; line-height: 1.6; color: var(--ink-soft); margin: 10px 2px 0; }
+.pn-section { margin-top: 26px; }
+.pn-section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+.pn-section-title { font-family: var(--font-display); font-weight: var(--font-display-weight, 700); font-size: 17px; color: var(--ink); }
+.pn-section-note { font-family: var(--font-label); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); white-space: nowrap; }
+.pn-empty { padding: 18px 2px; font-family: var(--font-label); font-size: 11px; color: var(--ink-faint); }
+/* ── What they have sent you: a shelf ──────────────────────────────────────
+   Covers, four across, with the name and the note behind a press. Miyel,
+   2026-09-19. The same square and the same 10% as a record everywhere else
+   on this site, and the same grid-of-squares the friends pane draws — this
+   page and that pane are the same two objects at two sizes.
+/* ── Compare, from main's versus screen (2026-10-24), opened in place at
+   the top of a friend's page since the merge of 2026-10-28. */
 /* The page about a person, as a versus screen (Miyel, 2026-10-24: "one
    person one side one person the other… almost like a vs screen in a video
    game"): the two faces, a sentence, the filters, then one record at a
    time with both of you on it. Nobody's side is bigger and nobody scores. */
-.pn-body { max-width: 560px; padding: 18px 24px 40px; }
 /* A colour each, 2026-10-24: the ghost that told their side from yours is
    gone (Miyel: "we don't need the other person to be a ghost anymore"), and
    each of you wears a colour instead — round your face, on your bars, on
    your answers. Here and on a record opened over the page, which is drawn
    outside it. */
-.pn-body, .pn-open { --pn-you: #e0603f; --pn-them: #2f8f8a; }
-[data-theme='dark'] .pn-body, [data-theme='dark'] .pn-open { --pn-you: #f08262; --pn-them: #4fb5ae; }
+.pn-body, .pn-open, .lc { --pn-you: #e0603f; --pn-them: #2f8f8a; }
+[data-theme='dark'] .pn-body, [data-theme='dark'] .pn-open, [data-theme='dark'] .lc { --pn-you: #f08262; --pn-them: #4fb5ae; }
 .pn-head .pn-who:first-child .pn-face { box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--pn-you); }
 .pn-head .pn-who:last-child .pn-face { box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--pn-them); }
 .pn-head { display: flex; align-items: flex-start; justify-content: center; gap: 22px; padding: 6px 2px 4px; }
@@ -2243,13 +2868,12 @@ textarea.st-field { resize: vertical; min-height: 96px; }
   align-self: flex-start; margin-top: 19px;
   display: inline-flex; color: var(--ink-faint);
 }
-/* A journal's portrait, a circle as every face on the site is. */
-.pn-face {
-  position: relative; flex-shrink: 0; width: 64px; height: 64px; border-radius: 50%; overflow: hidden;
+/* A journal's portrait, a circle as every face on the site is — at the
+   head of Compare larger than the friend's page's top row draws it. */
+.pn-head .pn-face {
+  width: 64px; height: 64px;
   background: var(--panel); border: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: center; color: var(--ink-faint);
 }
-.pn-face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .pn-note { font-size: 13px; line-height: 1.6; color: var(--ink-soft); margin: 14px 2px 0; text-align: center; }
 .pn-waiting { margin-top: 18px; height: 520px; border-radius: 22px; }
 
@@ -2518,6 +3142,13 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 
 /* ── from app/dashboard/report/page.js ───────────────────────────────── */
 /* Report a problem: one box and Send, on the owner's sheet. */
+/* Problems keepers wrote in, under the box, on the copy that receives them
+   (2026-10-27; they were at the foot of the inbox). */
+.rp-received { margin-top: 28px; display: flex; flex-direction: column; gap: 4px; }
+.rp-received-title {
+  margin: 0 0 6px; font-family: var(--font-label); font-weight: 400; font-size: 10px;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-faint);
+}
 .rp-body { max-width: 640px; padding: 18px 24px 40px; }
 .rp-panel { border-radius: 24px; }
 .rp-form { display: flex; flex-direction: column; gap: 14px; padding: 26px 26px 28px; }
@@ -3225,3 +3856,19 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 .mp-done { border-bottom: 0; cursor: default; }
 .mp-trouble { margin: 10px 0 0; font-size: 13px; line-height: 1.5; color: var(--ink-soft); }
 .mp-sheet .mp-foot { margin-top: 14px; }
+
+/* ── from components/main_components/ListenCompare.js ─────────────────── */
+/* Your listen beside a friend's, in their post's place (2026-10-28): the
+   versus record main drew over the person page, now the post's own, under
+   the entry's header and at the person page's width. */
+/* Its own scroller: an entry's sheet holds still and the entry scrolls
+   inside itself, so the side by side does the same. */
+.lc-page {
+  height: 100dvh; overflow-y: auto; overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch; box-sizing: border-box;
+  padding: calc(80px + var(--safe-top, 0px)) 24px calc(48px + env(safe-area-inset-bottom, 0px));
+  animation: lc-in 0.32s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+.lc-page > .lc { max-width: 560px; margin: 0 auto; }
+@keyframes lc-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .lc-page { animation: none; } }

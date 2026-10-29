@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // components/main_components/Header.js
 // The top row of the phone's cross: the keeper's face, the light switch, and
-// Home · People · Inbox, with only the one you are on wearing its word.
+// Home · Friends · Community, with only the one you are on wearing its word.
 //
 // ── It replaced the band at the foot, 2026-10-22 ──────────────────────────
 // Miyel's answers to the frame questions (the home-and-session brief, stage
@@ -16,14 +16,15 @@
 // `.ln-word` logic, the People brief's rule, her pick over three glyphs with
 // words and over words alone. Three bare glyphs is one guess too many; three
 // glyphs and one word is none. The glyphs are the band's: a house, two
-// people, the envelope the whole site already puts on what arrived (her
-// pick over a tray).
+// people, and a globe for Community since 2026-10-27 — the envelope went
+// with the inbox it stood for.
 //
 // ── The same presses the band had ─────────────────────────────────────────
 // A glyph moves the rail exactly as a swipe does (HomeNav, goTo). The one you
 // are already on goes back to the top of the floor you are on, and twice to
-// its first screen (goBack). Inbox wears one dot while something there is new
-// — never a number (DECISIONS).
+// its first screen (goBack). A stop wears New while something there is new
+// — the app's one mark since 2026-10-27, where Inbox wore a dot; never a
+// number (DECISIONS).
 //
 // ── A visitor's row ───────────────────────────────────────────────────────
 // Their face and the light switch, and the LN. mark where a keeper's words
@@ -42,11 +43,11 @@
 // call, 2026-10-22), and draws none of it (nav.css).
 'use client';
 
-import { Envelope, House, User, Users } from '@phosphor-icons/react';
+import { Globe, House, User, Users } from '@phosphor-icons/react';
 import { useBookplate } from './Bookplate';
 
 export default function Header({
-  pane, stops, goTo, onHere = null, onFace, cardOpen = false, fresh = false, lights = null, mark = null,
+  pane, stops, goTo, onHere = null, onFace, cardOpen = false, news = {}, lights = null, mark = null,
 }) {
   const { portrait_url: portrait, keeper_name, cover_name } = useBookplate();
   const whose = keeper_name || cover_name;
@@ -72,7 +73,7 @@ export default function Header({
           {stops.map(stop => {
             const here = pane === stop.at;
             const Icon = GLYPHS[stop.key];
-            const lit = stop.key === 'inbox' && fresh;
+            const lit = news[stop.key] === true;
             return (
               <button
                 key={stop.key}
@@ -84,7 +85,7 @@ export default function Header({
               >
                 <span className="hdr-glyph">
                   <Icon size={19} weight="regular" aria-hidden="true" />
-                  {lit && <span className="hdr-dot" aria-hidden="true" />}
+                  {lit && <span className="ln-new ln-new--stop" aria-hidden="true">New</span>}
                 </span>
                 {here && <span className="hdr-word" aria-hidden="true">{stop.word}</span>}
               </button>
@@ -98,4 +99,4 @@ export default function Header({
   );
 }
 
-const GLYPHS = { home: House, people: Users, inbox: Envelope };
+const GLYPHS = { home: House, people: Users, community: Globe };

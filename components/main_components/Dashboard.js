@@ -31,7 +31,7 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Broadcast, Envelope, AddressBook, Cards, GearSix } from '@phosphor-icons/react';
+import { Broadcast, AddressBook, GearSix } from '@phosphor-icons/react';
 import { useListeningBeacon } from '../../hooks/useListeningBeacon';
 import { PENDING_EVENT } from '../../hooks/useListeningSession';
 import { VERSION, RELEASE_URL } from '../../library/version';
@@ -55,21 +55,18 @@ import { VERSION, RELEASE_URL } from '../../library/version';
 // journal; a second one that only its owner could see was a CMS grown beside a
 // site that did not need one.
 const DOORS = [
-  { href: '/dashboard/inbox',   label: 'Inbox',   note: 'Records sent to you, waiting on you', Icon: Envelope, count: w => w?.total, fresh: w => w?.fresh },
-  // What the people in the address book logged. It ran on down this pane's own
-  // scroll until 2026-09-15, under the rows; the desk is a hero and its rows
-  // and stops there now, so the feed is a door like the others (Miyel's
-  // brief). Above the address book because it is the thing you come here to
-  // read — the book is how you change what is in it.
-  // Cards and not a stack of lines: the band at the foot took the stack for
-  // the desk itself, and two rows of this pane cannot wear the same mark as
-  // the pane. Cards is also the truer picture — the feed is records going
-  // past, one album-shaped thing after another, which is what it draws.
-  { href: '/dashboard/feed', label: 'Feed', note: 'What the journals you read have logged', Icon: Cards },
+  // The Inbox had the first row here until it retired with Miyel's Friends
+  // brief, 2026-10-27: what a person sends waits on their face in Friends,
+  // the row below, and /dashboard/inbox forwards there (next.config.mjs).
+  // The Feed had a row here from 2026-09-15 until it was retired with
+  // Miyel's People brief, 2026-10-23: what the people in the book logged is
+  // People's wall now, on a phone. /dashboard/feed forwards to the address
+  // book (next.config.mjs).
   // The journals this keeper reads, by address. A place, not a filter
   // inside the feed: it is what the feed and comparing are built from, and
   // it exists before either does (2026-09-12).
-  { href: '/dashboard/people',  label: 'Address book', note: 'The journals you read', Icon: AddressBook },
+  // Friends since 2026-10-27, and the Friends screen behind it.
+  { href: '/dashboard/people',  label: 'Friends', note: 'What your friends logged, and what waits from them', Icon: AddressBook, fresh: w => w?.friends },
   // Drafts had a row here for a day. The picker is already where they live —
   // it lists them with a Resume and a discard the moment you start a listen —
   // so the row was a signpost to a place you pass through anyway (Miyel,

@@ -39,7 +39,7 @@ import MiniCard from '../../../components/main_components/Slug_Page/MiniCard';
 import MarqueeTitle from '../../../components/main_components/MarqueeTitle';
 import { handedOver, cameReadingOn } from '../../../library/handoff';
 import { tidyAddress } from '../../../library/return_address';
-import { useBookplate } from '../../../components/main_components/Bookplate';
+import { useBookplate, useVisiting } from '../../../components/main_components/Bookplate';
 import { useTheme } from '../../../components/main_components/Lightswitch';
 import CodeSlot from '../../../components/main_components/CodeSlot';
 import StarRating from '../../../components/main_components/StarRating';
@@ -221,7 +221,10 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   }
   // The dots are the page's ink, so the page asks for the file that matches
   // it. The art's mark rides along so a corrected cover is never a day stale.
-  const codeSrc = `/api/entries/${encodeURIComponent(entry.slug)}/code?theme=${theme === 'dark' ? 'dark' : 'light'}`
+  // A friend's entry read inside this journal (app/dashboard/people/[id]/
+  // [slug], 2026-10-28) asks their journal for its code, which only it has.
+  const elsewhere = useVisiting() && entryUrl ? `https://${host}` : '';
+  const codeSrc = `${elsewhere}/api/entries/${encodeURIComponent(entry.slug)}/code?theme=${theme === 'dark' ? 'dark' : 'light'}`
     + `&v=${artMark(entry.album_art_source || entry.album_art || '')}`;
   const coverSlot = {
     address: entryUrl,

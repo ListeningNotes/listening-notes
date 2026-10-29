@@ -137,12 +137,23 @@ async function theLines(request, asked) {
 async function theAlike() {
   const keys = await pull_record_keys();
   const mine = {};
-  for (const k of keys) mine[boardHash(k.album_key)] = k.posted_at ? new Date(k.posted_at).toISOString() : null;
+  // Which of the keeper's own records each hash is, so People can put a
+  // match beside the keeper's own listen of it (its year, its genre). The
+  // key never leaves this journal: it goes to the keeper's own page, and the
+  // directory is asked by hash alone.
+  const keyOf = {};
+  for (const k of keys) {
+    const hash = boardHash(k.album_key);
+    mine[hash] = k.posted_at ? new Date(k.posted_at).toISOString() : null;
+    keyOf[hash] = k.album_key;
+  }
   const hashes = Object.keys(mine);
   if (hashes.length === 0) return Response.json({ records: [], mine }, { headers: { 'Cache-Control': PRIVATE } });
   const said = await ask_directory_read(`alike=${hashes.join(',')}`);
   if (!said) return Response.json({ error: 'The board could not be read just now.' }, { status: 503 });
-  return Response.json({ records: Array.isArray(said.records) ? said.records : [], mine }, { headers: { 'Cache-Control': PRIVATE } });
+  const records = (Array.isArray(said.records) ? said.records : [])
+    .map(r => ({ ...r, album_key: keyOf[r?.key_hash] || '' }));
+  return Response.json({ records, mine }, { headers: { 'Cache-Control': PRIVATE } });
 }
 
 export async function GET(request) {

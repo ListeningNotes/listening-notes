@@ -20,7 +20,7 @@
 // opened, and a wave left — which deletes it.
 import { requireWristband } from '@/library/wristband';
 import { mayKnock, tooSoon, whoIsKnocking } from '@/library/doorman';
-import { ask_journal_name } from '@/library/people_actions';
+import { ask_journal_name, arrival_refused, close_if_stranger } from '@/library/people_actions';
 import { tidyJournal } from '@/library/return_address';
 import { pull_settings } from '@/library/settings_actions';
 import { pull_waves, save_wave, see_wave, remove_wave } from '@/library/wave_actions';
@@ -51,6 +51,11 @@ export async function POST(request) {
     if (!relayed.allowed) return tooSoon(relayed.retryAfter);
 
     // Real, and called what it says it is called — or not kept at all.
+    // Somebody not in the book with something already waiting here, or
+    // whose thing was let go, waves at a closed door (2026-10-27).
+    const refused = await arrival_refused(journal, 'wave');
+    if (refused) return Response.json({ error: refused }, { status: 409 });
+
     const name = await ask_journal_name(journal);
     if (!name) {
       return Response.json({ error: 'That journal did not answer, so the wave was not kept.' }, { status: 422 });
@@ -93,7 +98,9 @@ export async function DELETE(request) {
   const id = Number((await request.json().catch(() => ({})))?.id);
   if (!Number.isInteger(id) || id < 1) return Response.json({ error: 'Which one?' }, { status: 400 });
   try {
-    await remove_wave(id);
+    const gone = await remove_wave(id);
+    // Let go from somebody not in the book: their door closes (2026-10-27).
+    if (gone) await close_if_stranger(gone.address, gone.name).catch(() => null);
     return Response.json({ ok: true });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });

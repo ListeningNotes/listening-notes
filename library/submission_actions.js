@@ -88,7 +88,7 @@ export async function update_submission_status(id, status) {
   const result = await database`
     UPDATE submissions SET status = ${status}
     WHERE id = ${id}
-    RETURNING id, status
+    RETURNING id, status, sender_url, submitter_name
   `;
   return result[0] || null;
 }

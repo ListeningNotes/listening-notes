@@ -328,7 +328,12 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
   // so a folder flips through itself and carries on to the next record.
   // From anywhere else, or where the wall does not hold this entry, the
   // folder alone — its ends are the ends.
-  const walled = slug && !arrival.alone ? neighboursOf(slug) : { prev: null, next: null };
+  // A friend's post read inside this journal browses too, through the wall
+  // it was opened from, by its address (2026-10-28, Miyel: "make the
+  // friends wall scrollable left to right … just like my personal one").
+  const friendsPost = /^\/dashboard\/people\/[^/]+\/[^/]+$/.test(pathname) && !pathname.endsWith('/words');
+  const here = slug || (friendsPost ? pathname : '');
+  const walled = here && !arrival.alone ? neighboursOf(here) : { prev: null, next: null };
   const inFolder = folder && slug ? folder.findIndex(e => e.slug === slug) : -1;
   const neighbours = walled.prev || walled.next ? walled
     : inFolder >= 0 ? { prev: folder[inFolder - 1] || null, next: folder[inFolder + 1] || null }
@@ -429,7 +434,10 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
     window.setTimeout(() => { if (alive.current) router.replace('/'); }, GROW_MS + 500);
     const sheet = sheetRef.current;
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const box = slug && !reduced ? tileBoxOf(slug) : null;
+    // Back into its tile — or, for a friend's entry read here (2026-10-28),
+    // into whatever declared its address, the record pressed on Friends or
+    // on their page.
+    const box = reduced ? null : slug ? tileBoxOf(slug) : growBoxOf(pathname);
     const onScreen = box && box.y > -box.h && box.y < window.innerHeight;
     if (!sheet) { goBack(); return; }
     // A spine page on a desk is a sheet over the left page, and leaves the
@@ -504,7 +512,7 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
     run.oncancel = done;
     // The flying copy must not outlive the sheet, animation or not.
     window.setTimeout(() => flyer.remove(), GROW_MS + 100);
-  }, [goBack, slug, rises, over, router]);
+  }, [goBack, slug, pathname, rises, over, router]);
 
   // ── What the page wants done first ───────────────────────────────────────
   // Every way out goes through here — the pull, Escape, the back caret — so a
@@ -563,7 +571,7 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
     setShift(-dir * (sheetRef.current?.offsetWidth || window.innerWidth));
     pendingTurn.current = window.setTimeout(() => {
       pendingTurn.current = null;
-      router.replace(`/entries/${target.slug}`);
+      router.replace(target.path || `/entries/${target.slug}`);
     }, TURN_MS);
   }, [neighbours.prev, neighbours.next, router, arrival.alone, folder]);
   useEffect(() => () => window.clearTimeout(pendingTurn.current), []);
@@ -580,8 +588,8 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
   }, [folder, slug, go]);
 
   useEffect(() => {
-    if (neighbours.prev) router.prefetch(`/entries/${neighbours.prev.slug}`);
-    if (neighbours.next) router.prefetch(`/entries/${neighbours.next.slug}`);
+    if (neighbours.prev) router.prefetch(neighbours.prev.path || `/entries/${neighbours.prev.slug}`);
+    if (neighbours.next) router.prefetch(neighbours.next.path || `/entries/${neighbours.next.slug}`);
   }, [neighbours.prev, neighbours.next, router]);
 
   // The browser's own back — a swipe from the edge, the toolbar — closes

@@ -1,0 +1,14 @@
+-- Copyright (C) 2026 Miyel Brown
+-- SPDX-License-Identifier: AGPL-3.0-or-later
+-- A message kept without a reply, 2026-10-27.
+--
+-- Miyel's Friends brief: what somebody wrote waits on their face until it is
+-- answered, and a message is answered one of two ways — Write back, or Keep
+-- only, which closes it without replying. A message never has Let it go:
+-- nothing a person typed is destroyed. Writing back already leaves its mark
+-- (replied_at, 029); keeping it needs one of its own, so the face stops
+-- holding it while the words stay where they are.
+--
+-- Null is not kept. Nothing fills it for messages already here: the inbox,
+-- which goes on drawing every message until it retires, does not read it.
+ALTER TABLE messages ADD COLUMN IF NOT EXISTS kept_at timestamptz;

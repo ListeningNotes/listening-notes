@@ -37,6 +37,14 @@
 // of 2026-09-20 — whenever something else owns the foot: a correction's
 // Save and Cancel, a folder's tabs, the print bar, a sheet, the session it
 // raises, or a keyboard.
+//
+// ── Not on a friend's page, 2026-10-26 ────────────────────────────────────
+// A friend's page is laid out as their home (app/dashboard/people/[id]), so
+// the bar under it read as starting a listen on their journal (Miyel: "why
+// do i see start a listen on her page?"). And on their post read inside
+// this journal, for the same reason (.pn-post, 2026-10-28). It steps down
+// while one is open,
+// the way it does for a sheet; the back arrow is the way home to it.
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -44,8 +52,9 @@ import Link from 'next/link';
 import { TrackLength } from '../../library/session_timers';
 
 // What owns the foot when it is on screen. A folder's tabs that have stepped
-// aside for a keyboard (ff--away) do not.
-const FOOT_ROWS = '.ln-editing-bar, .ff:not(.ff--away), .ln-print-bar, .sn-room, .sn-sheet, .lay--sheet, .lay.ses-preview';
+// aside for a keyboard (ff--away) do not. A friend's page (.pn-screen) owns
+// the whole screen.
+const FOOT_ROWS = '.ln-editing-bar, .ff:not(.ff--away), .ln-print-bar, .sn-room, .sn-sheet, .lay--sheet, .lay.ses-preview, .pn-screen, .pn-post';
 
 // Whether the foot is taken. Asked of the page whenever anything is added,
 // taken away or re-classed, a beat late so a burst of changes is asked once;

@@ -4,7 +4,7 @@ import { save_submission, pull_submissions } from '@/library/submission_actions'
 import { mayKnock, tooSoon, whoIsKnocking } from '@/library/doorman';
 import { requireWristband } from '@/library/wristband';
 import { tidyAddress, tidyJournal } from '@/library/return_address';
-import { ask_journal_name } from '@/library/people_actions';
+import { ask_journal_name, arrival_refused } from '@/library/people_actions';
 import { answerNoJournal } from '@/library/hosting_directory';
 import { takesPrompts, mark_prompt_record } from '@/library/month_prompt';
 
@@ -110,6 +110,16 @@ export async function POST(request) {
 
     if (!submitter_name?.trim()) {
       return Response.json({ error: 'A name is required.' }, { status: 400 });
+    }
+
+    // One at a time, 2026-10-27 (her Friends brief and answers): a friend
+    // has one unanswered send here at once; somebody not in the book, one
+    // thing of any kind, and nothing after it was let go until they are
+    // added. Kept in this database, by the address the send names. Not the
+    // month's prompt, which the publication's journal takes from anyone.
+    if (!forPrompt) {
+      const refused = await arrival_refused(sender_url, 'send');
+      if (refused) return Response.json({ error: refused }, { status: 409 });
     }
 
     // Tidied here as well as in the browser, and this is the copy that

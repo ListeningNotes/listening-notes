@@ -82,7 +82,7 @@ import { PromptSheet, useMonthPrompt } from '../../../components/main_components
 import StarRating from '../../../components/main_components/StarRating';
 import StarPicker from '../../../components/session_components/StarRating';
 import Chip from '../../../components/main_components/Slug_Page/Chip';
-import { useBookplate } from '../../../components/main_components/Bookplate';
+import { useBookplate, useVisiting } from '../../../components/main_components/Bookplate';
 import { useTheme } from '../../../components/main_components/Lightswitch';
 import { useEntryEditor } from '../../../hooks/useEntryEditor';
 import { useSnippet } from '../../../hooks/useSnippet';
@@ -113,6 +113,9 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
   const correcting = edit.editing;
   const headerSlot = useLayerHeaderSlot();
   const { site_address, keeper_name } = useBookplate();
+  // A friend's entry read inside this journal asks their journal for its
+  // cover's code (2026-10-28).
+  const elsewhere = useVisiting() && site_address ? `https://${tidyAddress(site_address)}` : '';
   const { theme } = useTheme();
 
   // ── A new one: what has been written, kept per song ─────────────────────
@@ -331,7 +334,7 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
                 className={'tn-cover' + (coverCode ? ' tn-cover--code' : ' ln-fold')}
                 picture={<img src={entry.album_art} alt={entry.album} decoding="sync" />}
                 address={entryUrl}
-                codeSrc={`/api/entries/${encodeURIComponent(entry.slug)}/code?theme=${theme === 'dark' ? 'dark' : 'light'}`}
+                codeSrc={`${elsewhere}/api/entries/${encodeURIComponent(entry.slug)}/code?theme=${theme === 'dark' ? 'dark' : 'light'}`}
                 turned={coverCode}
                 onTurn={setCoverCode}
                 backGlyph={<VinylRecord size={12} weight="bold" />}

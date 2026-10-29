@@ -70,7 +70,7 @@
 import { startTransition, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { ArrowsLeftRight, CaretDown } from '@phosphor-icons/react';
+import { ArrowsLeftRight, CaretDown, Globe } from '@phosphor-icons/react';
 import { announce, useListeningBeacon } from '../../hooks/useListeningBeacon';
 import { useSpineWidth } from '../../hooks/useSpineWidth';
 import { useTheme } from './Lightswitch';
@@ -80,28 +80,20 @@ import ListenBar from './ListenBar';
 import Journal from './Journal';
 import Header from './Header';
 import MonthPrompt from './MonthPrompt';
+import PinnedLetter from './PinnedLetter';
 import About from './About';
 import Dashboard, { heldNow, subscribeHeld } from './Dashboard';
 // The two rooms that used to be behind the desk and are stops of their own
 // from 2026-09-19. Both mount with the cross and stay mounted, which is the
-// rail's whole bargain: the inbox goes on counting and the book goes on
+// rail's whole bargain: the inbox goes on counting and People goes on
 // asking whether anybody is answering while you are looking at the card.
-// The inbox is the page itself, drawn without its own bar; the book is the
-// component the page is a frame around, which is why Friends.js exists.
-import Inbox from '../../app/dashboard/inbox/page';
-import Friends from './Friends';
-import PullDown from './PullDown';
-import { refreshFriends } from '../../hooks/useFriendsBeacons';
-// Everyone, the second word of the People tab: the journals that chose to be
-// findable, drawn here and again at its own address (2026-10-07).
+// The inbox is the page itself, drawn without its own bar; People is one
+// screen of its own, the band, the scope and the wall (2026-10-23).
+import PeopleScreen from './PeopleScreen';
+// The Board's first screen, read when People opens (below).
 import { Everyone, readEveryone, useEveryone } from '../../app/directory/Directory';
-import { DIRECTORY_URL } from '../../library/version';
+import { BOARD_OPEN, DIRECTORY_URL } from '../../library/version';
 import { readArtColor } from '../../library/music_data_api';
-// The feed sits under the book as that pane's second floor. It is handed the
-// journal's own records — the same list the wall draws — because the one
-// thing it asks of them is whether a row is a record you also have, and
-// therefore whether Compare is worth offering.
-import Feed, { DensityToggle, useFeedDensity } from './Feed';
 // The same two the desk already reaches for, from the same module, so the
 // pane and the desk agree about what "a listen is open" means and say so the
 // same way. The hook itself is not called here.
@@ -432,22 +424,10 @@ export default function HomeNav() {
   // Only asked once the wristband is confirmed — the endpoint answers 401 to
   // anyone else, and a failed request on every public visit is noise in the
   // log for no reason.
-  //
-  // In the inbox with something new, the inbox is read again, 2026-10-20 —
-  // the pane is built once a visit and holds what was there then, so what
-  // the dot is for would otherwise not be in it: a letter the journal wrote
-  // while it sat in the background, for one. `inInbox` is kept by the pane
-  // effect further down; `inboxAgain` is what the pane is handed.
-  const inInbox = useRef(false);
-  const [inboxAgain, setInboxAgain] = useState(0);
   const askWaiting = useCallback(() => {
     fetch('/api/waiting')
       .then(r => (r.ok ? r.json() : null))
-      .then(w => {
-        if (!w) return;
-        setWaiting(w);
-        if (w.fresh && inInbox.current) setInboxAgain(n => n + 1);
-      })
+      .then(w => { if (w) setWaiting(w); })
       .catch(() => {});
   }, []);
   useEffect(() => {
@@ -748,9 +728,8 @@ export default function HomeNav() {
   useEffect(() => {
     const was = wasHere.current;
     wasHere.current = { pane, path };
-    inInbox.current = pane === INBOX;
     if (!authed) return;
-    if ((was.pane === INBOX && pane !== INBOX) || (was.path !== path && path === '/')) askWaiting();
+    if ((was.pane === BOOK && pane !== BOOK) || (was.path !== path && path === '/')) askWaiting();
   }, [pane, path, authed, askWaiting]);
   // ── A room is built the first time you walk into it ───────────────────────
   // The card and the beacon are always drawn: you land on one and the other is
@@ -768,25 +747,9 @@ export default function HomeNav() {
   // cheap. Passing through the inbox on the way to the book counts as
   // arriving, which is right: you went past it and it is now behind you.
   const [visited, setVisited] = useState(() => ({ [HOME]: true }));
-  // How many people are in the book, as the book itself reports it. null until
-  // it has been asked, which is why the second floor is drawn on `> 0` rather
-  // than on `!== 0`: an unanswered question is not an empty book.
-  const [bookSize, setBookSize] = useState(null);
   useEffect(() => {
     setVisited(seen => (seen[pane] ? seen : { ...seen, [pane]: true }));
   }, [pane]);
-  // Walking back into an inbox already built, while its door wears the dot,
-  // reads it again (askWaiting has why). The first walk in builds it, and
-  // building it reads it.
-  const fresh = waiting?.fresh === true;
-  const wasPane = useRef(pane);
-  useEffect(() => {
-    const before = wasPane.current;
-    wasPane.current = pane;
-    if (authed && fresh && pane === INBOX && before !== INBOX && visited[INBOX]) {
-      Promise.resolve().then(() => setInboxAgain(n => n + 1));
-    }
-  }, [pane, authed, fresh, visited]);
   // Whether anything is moving right now. The controls sit over the page
   // rather than beside it, so while a wall of covers is going past underneath
   // they are three marks on top of somebody's album art. They fade out on the
@@ -1064,40 +1027,17 @@ export default function HomeNav() {
     };
   }, [paneRefs, authed]);
 
-  // ── Whether the feed has reached the header ─────────────────────────────
-  // Not the same question as `down`, which is true eight pixels into any
-  // pane. The word and the toggle belong to the feed, and the book is a whole
-  // screen above it: a header that said FEED while you were looking at the
-  // faces would be naming the wrong floor. See the scroll effect below.
-  const [atFeed, setAtFeed] = useState(false);
-  // ── Friends · Board, 2026-10-07/08 ───────────────────────────────────────
-  // The two words at the top of the People tab, and which one is showing.
-  // The second word is Board on the screen (Miyel's Board brief, 2026-10-08,
-  // after Everyone, Commons, All Users, Hub and Keepers); in the code it is
-  // still `everyone`, as the beacon is still the needle.
-  // The keeper starts on Friends; a visitor has only Everyone. Everyone is
-  // drawn while it shows and taken down when it does not, so coming back to
-  // it reads the list again; the book stays mounted under it either way, so
-  // Friends comes back exactly as it was left. `everyoneAgain` is the way the
-  // list hands up for the pull to ask it again.
-  const [room, setRoom] = useState('friends');
-  const onEveryone = Boolean(DIRECTORY_URL) && (!authed || room === 'everyone');
-  // ── Inbox · Outbox, 2026-10-17 ──────────────────────────────────────────
-  // The inbox's two words, in this bar the way Friends and Board are on
-  // People — the Sent door that stood over the list "looks terrible" (Miyel),
-  // and People already has the shape for two rooms in one tab. Which one is
-  // showing is kept here and handed to the inbox (Inbox, `sent`).
-  const [inboxSent, setInboxSent] = useState(false);
-  const everyoneAgain = useRef(null);
-  const askEveryoneAgain = useCallback(() => everyoneAgain.current?.(), []);
-  // How many journals are listed, beside the word Everyone the way the
-  // book's count stands beside Friends (Miyel: "can count be next to
-  // everyone?"). The same reading the list draws from, asked for as soon as
-  // People is on screen, so the number is there before the list is opened.
+  // ── The Board, read as People opens ─────────────────────────────────────
+  // Its first screen, once a visit. Nothing on People draws it — People is
+  // the keeper's friends alone since 2026-10-24 (PeopleScreen.js) — and it is
+  // still asked for: a look at the Board is what sets off the directory's
+  // refresh (DECISIONS, The Board refreshes itself when it is looked at), and
+  // keepers opening People are most of the looking until the Board has a
+  // place of its own on the phone. Taken out, the Board's lists and the
+  // front door's covers would go stale.
   const { page: everyonePage } = useEveryone();
-  const listedCount = everyonePage?.listed || 0;
   useEffect(() => {
-    if (pane === BOOK && DIRECTORY_URL && !everyonePage) readEveryone();
+    if ((pane === BOOK || pane === INBOX) && DIRECTORY_URL && !everyonePage) readEveryone();
   }, [pane, everyonePage]);
   // ── On the Board by default, 2026-10-08 ─────────────────────────────────
   // Once the lock says the keeper is here, the journal asks its own listing
@@ -1109,10 +1049,6 @@ export default function HomeNav() {
   useEffect(() => {
     if (authed && DIRECTORY_URL) fetch('/api/listing').catch(() => {});
   }, [authed]);
-  // Whether the book has a field open in the bar's row. The name is drawn
-  // absolutely on the middle of that row and a field opening there has to
-  // have it — see the relay note on barSays.
-  const [bookBusy, setBookBusy] = useState(false);
 
   // ── The bar, against the keyboard ─────────────────────────────────────────
   // The row at the top is `position: fixed`, which on iOS means fixed to the
@@ -1446,21 +1382,6 @@ export default function HomeNav() {
       const onScroll = () => {
         stir();
         const moved = el.scrollTop > 8;
-        // ── The feed's name arrives in the header ───────────────────────
-        // Once the way down has gone under the bar, which is the moment the
-        // floor above is behind you. There is nothing to hand over from any
-        // more: the word that stood at the foot of the faces went on
-        // 2026-09-20 and what is there is a chevron, so the name is not
-        // travelling, it is arriving. It fades in for that reason — see
-        // .hn-bar-say in nav.css.
-        if (i === BOOK) {
-          const way = el.querySelector('.hn-down');
-          // `offsetParent` is null while the floors are hidden under
-          // Everyone, whose rectangle would otherwise read as already past
-          // the bar.
-          if (!way || !bar || !way.offsetParent) setAtFeed(false);
-          else setAtFeed(way.getBoundingClientRect().bottom <= bar.getBoundingClientRect().bottom);
-        }
         setDown(prev => {
           if (prev[i] === moved) return prev;
           const next = [...prev];
@@ -1615,101 +1536,23 @@ export default function HomeNav() {
   // parseFloat reads as 80 on a phone with no notch and 80 on one with —
   // where scrollMarginTop comes back in pixels with the safe area already in
   // it. The one number, asked for in the one place it is true.
-  // Where a pane's second floor comes to rest — the wall under the beacon,
-  // the feed under the book. The press lands here and so does the settle
-  // below, which is the point: one number, so a thumb and a press cannot
-  // disagree about where the next floor sits.
+  // Where a pane's second floor comes to rest — the wall under the beacon.
+  // Nothing on a pane of one floor (People, the inbox), so a press there goes
+  // to the top rather than a screen down a page with nothing there.
   function floorTwo(el) {
     if (!el) return 0;
-    // Everyone is one long list, not two floors: nothing to settle between,
-    // and a list that slid back to its top whenever a thumb rested would be
-    // unreadable.
-    if (el.querySelector(':scope > .hn-everyone')) return 0;
     const floors = el.querySelectorAll(':scope > .hn-floor, :scope > * > .hn-floor');
-    const clear = floors.length > 1 ? parseFloat(getComputedStyle(floors[1]).scrollMarginTop) || 0 : 0;
+    if (floors.length < 2) return 0;
+    const clear = parseFloat(getComputedStyle(floors[1]).scrollMarginTop) || 0;
     return Math.max(0, secondFloorTop(el) - clear);
   }
-  function goDown(index) {
-    const el = paneRefs[index].current;
-    if (!el) return;
-    el.scrollTo({ top: floorTwo(el), behavior: ease() });
-  }
 
-  // A word at the top of People, pressed. The one you are on takes you back
-  // to its top, as the band's own stop does; the other turns the tab over to
-  // it, starting at its top.
-  function chooseRoom(next) {
-    if ((next === 'everyone') === onEveryone) { goUp(BOOK); return; }
-    setRoom(next);
-    setAtFeed(false);
-    const el = paneRefs[BOOK]?.current;
-    if (el) el.scrollTop = 0;
-  }
-
-  // ── Two floors, two stops, 2026-09-20 ─────────────────────────────────
-  // The entry got this first and Miyel asked for it here: move down at all
-  // and take your hand off and the pane finishes the journey to its second
-  // floor; move up and it puts the first one back whole. It stops mattering
-  // once you are past the second floor, which on the book is the whole of
-  // the feed.
-  //
-  // Not a snap — see DECISIONS, and the note in FullPostPage this is the
-  // twin of. A snap owns a scroller and pulls back on every throw; this
-  // acts between two places and is silent outside them.
-  //
-  // A finger leaving is the signal rather than the scrolling stopping,
-  // because momentum is a stream of scroll events and each one would push
-  // the answer further away. A hand still on the glass holds whatever is
-  // half way, which is how the mark can be held half in the header.
-  useEffect(() => {
-    const wire = el => {
-      if (!el) return () => {};
-      let held = false;
-      let idle = null;
-      let lift = null;
-      let ours = false;
-      let down = true;
-      let was = 0;
-      const rest = () => {
-        if (held || ours) return;
-        const to = floorTwo(el);
-        if (to < 80) return;
-        const at = el.scrollTop;
-        if (at <= 8 || at >= to - 8) return;
-        ours = true;
-        clearTimeout(idle);
-        clearTimeout(lift);
-        el.scrollTo({ top: down ? to : 0, behavior: 'smooth' });
-        setTimeout(() => { ours = false; }, 500);
-      };
-      const hold = () => { held = true; clearTimeout(idle); clearTimeout(lift); };
-      const letGo = () => { held = false; clearTimeout(lift); lift = setTimeout(rest, 40); };
-      const moved = () => {
-        const at = el.scrollTop;
-        if (at !== was) down = at > was;
-        was = at;
-        clearTimeout(idle);
-        idle = setTimeout(rest, 140);
-      };
-      el.addEventListener('touchstart', hold, { passive: true });
-      el.addEventListener('touchend', letGo, { passive: true });
-      el.addEventListener('touchcancel', letGo, { passive: true });
-      el.addEventListener('scroll', moved, { passive: true });
-      return () => {
-        el.removeEventListener('touchstart', hold);
-        el.removeEventListener('touchend', letGo);
-        el.removeEventListener('touchcancel', letGo);
-        el.removeEventListener('scroll', moved);
-        clearTimeout(idle);
-        clearTimeout(lift);
-      };
-    };
-    // The book, the one pane with a second floor left. Home was the other
-    // until 2026-10-22, when it became one page under the top row; the card
-    // and the inbox are one screen each and have nothing to be carried to.
-    const offs = [paneRefs[BOOK]?.current].map(wire);
-    return () => offs.forEach(off => off());
-  }, [paneRefs, authed]);
+  // ── Two floors, two stops, retired 2026-10-23 ─────────────────────────
+  // Let go part way down the book and the pane finished the journey to its
+  // second floor, the feed. People is one screen now, info at the top and a
+  // wall under it, as home is, and the carry took a thumb a whole screen
+  // down a page with no floor there (Miyel: "there is no top and bottom to
+  // this page anymore"). The entry keeps its own (FullPostPage).
 
   // ── The one row that sits over all three panes ────────────────────────────
   // The lights, and nothing else. There was a small mark in the corner here
@@ -1744,6 +1587,7 @@ export default function HomeNav() {
     </svg>
   );
 
+
   // The light switch is back in this row and only on the beacon (Miyel,
   // 2026-09-15). It left for Settings on the argument that it is a preference
   // and not an action, which is true and cost a visitor any way of changing
@@ -1751,47 +1595,6 @@ export default function HomeNav() {
   // and on the one pane where it is not sitting over somebody's reading. The
   // stylesheet hides it on the turning pane; on a desk this row is over the
   // journal, which is the beacon, so it simply stays.
-  // ── The feed's one control, in the row that is already a header ────────
-  // Miyel, 2026-09-20: "there's already a header up there with a hairline,
-  // just put it above that hairline — I think the LN. used to live there."
-  // It had a bare row of its own under this bar, which read as a second
-  // header belonging to nothing. This is the header, so it goes in this.
-  //
-  // Only while the feed is what is under it. The bar belongs to every pane
-  // and a control for a list four swipes away is furniture; it arrives with
-  // the floor and leaves with it.
-  const { density, flip: flipDensity } = useFeedDensity();
-  const onTheFeed = authed && pane === BOOK && atFeed && !onEveryone;
-  // What the bar is called while you are on the friends pane. Nothing on the
-  // others: the beacon has a mark of its own and the card's tools are the only
-  // thing it puts up here.
-  // ── The keeper's, and only the keeper's ─────────────────────────────────
-  // `pane` is where the rail has scrolled to, counted in panes — and a
-  // visitor's rail has fewer of them, so the index that is the book when
-  // somebody is signed in is a different pane when nobody is. Miyel,
-  // 2026-09-20: "address book header shows on about page when signed out."
-  // The name of a room a visitor cannot enter should never be drawn for
-  // them, whatever the arithmetic says, so it is gated on the wristband as
-  // well as on the position.
-  //
-  // ── People, 2026-10-07 ──────────────────────────────────────────────────
-  // Upstairs the middle of the row holds the tab's two words rather than the
-  // book's name: Friends, with the count the name carried ("friends i like
-  // having a count"), and Everyone. A floor down the feed's name takes the
-  // middle as it always did. A visitor's bar holds the one word they have.
-  const onBook = pane === BOOK && (authed || Boolean(DIRECTORY_URL));
-  const barSays = onBook && authed && !onEveryone && atFeed ? 'Recent listens' : null;
-  // The words step aside for the field the + opens, which arrives in this
-  // same row: "it needs to open and replace address book text."
-  const barWords = onBook && !(authed && !onEveryone && (atFeed || bookBusy));
-  const onInbox = pane === INBOX && authed;
-  // A word pressed: the other room, or the top of this one, as on People.
-  function chooseInboxRoom(sent) {
-    setInboxSent(sent);
-    const el = paneRefs[INBOX]?.current;
-    if (el) el.scrollTop = 0;
-  }
-
   // The sun and the moon. Drawn as a switch on a wall for an hour, on the
   // grounds that the component is called Lightswitch; the file name was the
   // whole argument and it was not enough (Miyel, 2026-09-15). Drawn once and
@@ -1810,11 +1613,14 @@ export default function HomeNav() {
 
   // ── The top row's stops, 2026-10-22 ─────────────────────────────────────
   // The keeper's three rooms, at the panes they are on the rail; a visitor
-  // has none — the row carries the mark instead (Header.js).
+  // has none — the row carries the mark instead (Header.js). People's word
+  // is Friends since 2026-10-27 (her Friends brief); the key stays. Inbox
+  // retired the same day, and its pane is Community — the Board for now,
+  // until Community's own brief — on a copy that has a Board at all.
   const stops = authed ? [
     { key: 'home', word: 'Home', at: HOME },
-    { key: 'people', word: 'People', at: BOOK },
-    { key: 'inbox', word: 'Inbox', at: INBOX },
+    { key: 'people', word: 'Friends', at: BOOK },
+    ...(DIRECTORY_URL ? [{ key: 'community', word: 'Community', at: INBOX }] : []),
   ] : [];
 
   const header = (
@@ -1830,7 +1636,7 @@ export default function HomeNav() {
         goTo={goTo}
         onHere={goBack}
         onFace={() => setCardOpen(open => !open)}
-        fresh={Boolean(waiting?.fresh)}
+        news={{ people: waiting?.friends === true }}
         lights={lights}
         mark={mark('hdr-mark-svg')}
       />
@@ -1867,83 +1673,6 @@ export default function HomeNav() {
           cross is already centred here; .hn-totop is the tap across this
           row and it goes to the top, which is the only thing left to want. */}
       <div className="hn-bar-crown" aria-hidden="true">{mark('hn-crown-svg')}</div>
-      {/* The feed's name, once the feed is what you are on. It is the same
-          word that stands at the foot of the floor above with the chevron
-          under it — that one labels the way down, which is a thing you are
-          deciding whether to do, and this one names the floor you took it to.
-          No chevron on this one: there is nowhere further down.
-
-          In the middle of the row, where the mark stands on the pane that
-          draws one — so on this pane the middle is free and a name in it
-          reads as a header's name rather than as a label at one end. */}
-      {/* ── One header, two names, 2026-09-20 ───────────────────────────
-          The friends pane has two floors and the bar says which one you are
-          on: the book and how many are in it upstairs, what they have been
-          listening to downstairs. Miyel: "center address book · #, so
-          basically that gets replaced by recent listens once you hit the
-          feed." The book's name was a line on its own floor ten pixels below
-          this one, which is a title and a title rather than a header.
-
-          Recent listens rather than Feed because there is room for it here —
-          "it was short before because of the chevron and how it lived, now
-          it's different" — and whose listens is the pane's own business: the
-          faces are directly above and the band says FRIENDS.
-
-          Keyed on the word so React builds a new one when it changes, which
-          is what makes the swap fade rather than cut. */}
-      {barSays && <span key={barSays} className="hn-bar-say">{barSays}</span>}
-      {barWords && (
-        <span className="hn-bar-words">
-          {authed && (
-            <button
-              type="button"
-              className={'hn-bar-word' + (onEveryone ? '' : ' hn-bar-word--on')}
-              onClick={() => chooseRoom('friends')}
-              aria-pressed={!onEveryone}
-            >
-              Friends{bookSize > 0 ? ` \u00b7 ${bookSize}` : ''}
-            </button>
-          )}
-          {DIRECTORY_URL && (authed ? (
-            <button
-              type="button"
-              className={'hn-bar-word' + (onEveryone ? ' hn-bar-word--on' : '')}
-              onClick={() => chooseRoom('everyone')}
-              aria-pressed={onEveryone}
-            >
-              Board{listedCount > 0 ? ` \u00b7 ${listedCount}` : ''}
-            </button>
-          ) : (
-            <span className="hn-bar-word hn-bar-word--on">
-              Board{listedCount > 0 ? ` \u00b7 ${listedCount}` : ''}
-            </span>
-          ))}
-        </span>
-      )}
-      {/* Inbox · Outbox, on the inbox pane — no count beside Inbox: what is
-          new says so with its own dot, here and, since 2026-10-20, as one
-          dot on the Inbox stop of the footer; a number would be the unread
-          badge this site does not have. */}
-      {onInbox && (
-        <span className="hn-bar-words">
-          <button
-            type="button"
-            className={'hn-bar-word' + (inboxSent ? '' : ' hn-bar-word--on')}
-            onClick={() => chooseInboxRoom(false)}
-            aria-pressed={!inboxSent}
-          >
-            Inbox
-          </button>
-          <button
-            type="button"
-            className={'hn-bar-word' + (inboxSent ? ' hn-bar-word--on' : '')}
-            onClick={() => chooseInboxRoom(true)}
-            aria-pressed={inboxSent}
-          >
-            Outbox
-          </button>
-        </span>
-      )}
       {down[pane] && (
         <button
           type="button"
@@ -1962,7 +1691,6 @@ export default function HomeNav() {
       <button type="button" className="hn-bar-mark" onClick={() => goUp(pane)} aria-label="Back to the top">
         {mark('hn-bar-svg')}
       </button>
-      {onTheFeed && <DensityToggle density={density} onFlip={flipDensity} />}
       {lights}
     </div>
   );
@@ -2148,10 +1876,6 @@ export default function HomeNav() {
         /* The card open over the page, on a phone (nav.css, .hn--card). */
         + (cardOpen ? ' hn--card' : '')
         + (filing ? ' hn--filing' : '')
-        /* Which floor of the friends pane you are on, so the corner of the
-           bar can be handed from the book's + to the feed's toggle without
-           either of them knowing about the other. See .hn-bar-add. */
-        + (atFeed ? ' hn--at-feed' : '')
         /* The crown is travelling into the bar on this screen, so the bar's
            own small mark stays out of its way. See the morph effect. */
         + (morphing ? ' hn--morph' : '')
@@ -2313,6 +2037,7 @@ export default function HomeNav() {
               <div className="hn-under">
                 {/* The month's prompt, pinned over the keeper's wall while it
                     is open (MonthPrompt.js); nothing for a visitor. */}
+                {authed && <PinnedLetter authed={authed} again={waiting} />}
                 {authed && <MonthPrompt authed={authed} />}
                 <Journal
                   entries={entries}
@@ -2342,109 +2067,42 @@ export default function HomeNav() {
             Neither is a copy of anything: the address still works, and what
             is at the address is what is here. */}
         {authed && (
-          <section className="hn-pane hn-pane--inbox" ref={inboxRef} aria-label="What has arrived">
-            {visited[INBOX] && <Inbox inPane sent={inboxSent} again={inboxAgain} />}
+          <section className="hn-pane hn-pane--inbox" ref={inboxRef} aria-label="Community">
+            {/* Community, 2026-10-27: where the inbox was (her Friends brief
+                retires it; anything from a person waits on their face now).
+                The Board, as /directory draws it, until Community's own
+                brief says what else it holds. Coming soon while the Board
+                is being worked on (BOARD_OPEN, library/version.js). */}
+            {visited[INBOX] && DIRECTORY_URL && (BOARD_OPEN ? (
+              <div className="hn-community"><Everyone keeper /></div>
+            ) : (
+              <div className="hn-soon">
+                <Globe size={22} weight="regular" aria-hidden="true" />
+                <span>Coming soon</span>
+              </div>
+            ))}
           </section>
         )}
 
-        {/* ── Two floors, and it snaps, 2026-09-19 ─────────────────────
-            People on the first, what they logged on the second, exactly the
-            way the journal sits under the beacon — the same snap, the same
-            inner scroller, the same rule that down means cover-then-contents.
-
-            It could not snap while the first floor was as tall as there were
-            people in the book, which is the whole reason the floor is a shelf
-            now (Miyel's brief): as many faces as fit and a line out to the
-            rest. One screen whether the book holds six people or a hundred,
-            so the feed is always exactly one scroll away.
-
-            The first floor stops short of the screen by --hn-peek, so the top
-            of the second shows under it: the feed's own heading and the first
-            covers beginning. That sliver is the invitation — a caret on its
-            own says there is more, and a caret over the top of a record says
-            what.
-
-            **No second floor at all when nobody is filed.** Her rule, and the
-            right one: a caret pointing down at a feed of nobody's records is
-            a promise the page cannot keep. The cross learns the size of the
-            book from the book — see onCount — and until it has, there is one
-            floor. */}
+        {/* ── People, one screen, 2026-10-23 ─────────────────────────
+            Miyel's People brief: other people's beacons, a shelf line and a
+            wall of their records, in one scroll, the way home is one page
+            (PeopleScreen.js). It replaced two floors that snapped — a shelf
+            of the book's faces, and the feed under it — and the Board as the
+            bar's second word. The keeper's alone. */}
         {authed && (
           <section
             className="hn-pane hn-pane--friends"
             ref={friendsRef}
-            aria-label={authed ? 'Your friends, and everyone listed' : 'Everyone who is listed'}
+            aria-label="Friends"
           >
             {visited[BOOK] && (
-              <>
-                {/* Pulling down at the top of the book asks everyone's beacon
-                    again, past the route's minute (PullDown.js). The first
-                    scroller to carry it; the rest follow once this one is
-                    seen (AGENTS: the shared piece first). */}
-                <PullDown
-                  scroller={friendsRef}
-                  onPull={onEveryone ? askEveryoneAgain : refreshFriends}
-                  asking={onEveryone ? 'Asking everyone\u2026' : 'Asking your friends\u2026'}
-                  mark={mark('ln-pull-svg')}
-                />
-                {/* The book's two floors are the keeper's, and hidden rather
-                    than taken down while Everyone shows (see `room`). */}
-                {authed && (
-                <div className={'hn-floor hn-floor--book' + (onEveryone ? ' hn-floor--away' : '')}>
-                  <Friends shelf onCount={setBookSize} onBusy={setBookBusy} onScreen={pane === BOOK && !onEveryone} away={onEveryone} />
-                  {/* The feed's name lives here rather than at the top of
-                      the feed (Miyel, 2026-09-19: "can i see feed living
-                      above the down caret?"). It is the right place for it:
-                      down here it labels the way down, which is a thing you
-                      are deciding whether to do — at the top of the list it
-                      would be naming a place you had already arrived at. Her
-                      own mock-up drew it exactly this way, the word and the
-                      chevron under it, and the site took a week to get back
-                      to what she drew. */}
-                  {bookSize > 0 && (
-                    <button
-                      type="button"
-                      /* Out of sight the moment the bar has the word, so the
-                         two are never both on the screen. Hidden and not
-                         removed: the scroll listener goes on measuring it to
-                         know when to hand the word back on the way up. */
-                      className="hn-down"
-                      onClick={() => goDown(BOOK)}
-                      aria-label="Recent listens"
-                    >
-                      {/* The chevron drawn here rather than through EdgeCaret,
-                          which is a button of its own and cannot go inside
-                          one. Same glyph at the same weight and size the
-                          beacon's caret uses, so the two read as one mark.
-                          The word over it went on 2026-09-20 — see the note on
-                          the beacon's copy, above. */}
-                      <CaretDown size={18} weight="bold" aria-hidden="true" />
-                    </button>
-                  )}
-                </div>
-                )}
-                {/* No inner scroller, unlike the journal under the beacon.
-                    That floor is never visible until you arrive at it; this
-                    one shows a sliver of itself at rest, and a scroller you
-                    can reach before you have arrived is one you scroll by
-                    accident — the feed slid up inside its own box while the
-                    pane sat still on the faces. The floor is a snap area
-                    taller than the screen instead, which the snap allows to
-                    rest anywhere once it covers the screen: it catches you on
-                    the way in and then gets out of the way. */}
-                {authed && bookSize > 0 && (
-                  <div className={'hn-floor hn-floor--feed' + (onEveryone ? ' hn-floor--away' : '')}>
-                    <Feed entries={entries} density={density} />
-                  </div>
-                )}
-                {/* Everyone: one floor, the whole list. Not an .hn-floor, so
-                    nothing measures it as a second floor to settle on. */}
-                {onEveryone && (
-                  <div className="hn-everyone">
-                    <Everyone keeper={authed} refreshRef={everyoneAgain} />
-                  </div>
-                )}
-              </>
+              <PeopleScreen
+                scroller={friendsRef}
+                onScreen={pane === BOOK}
+                entries={entries}
+                pullMark={mark('ln-pull-svg')}
+              />
             )}
           </section>
         )}

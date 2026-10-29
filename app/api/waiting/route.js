@@ -27,7 +27,7 @@ import { requireWristband } from '@/library/wristband';
 import { ask_for_copy } from '@/library/letterhead';
 import { count_pending_submissions, any_unseen_sends } from '@/library/submission_actions';
 import { count_pending_reports } from '@/library/report_actions';
-import { any_unseen_messages } from '@/library/message_actions';
+import { any_unseen_messages, any_unseen_letter } from '@/library/message_actions';
 import { any_unseen_waves } from '@/library/wave_actions';
 import { any_unseen_came_back } from '@/library/came_back_actions';
 import { any_moves } from '@/library/people_actions';
@@ -37,10 +37,11 @@ export async function GET(request) {
   if (blocked) return blocked;
 
   try {
-    const [submissions, reports, asked, ...unseen] = await Promise.all([
+    const [submissions, reports, asked, letter, ...unseen] = await Promise.all([
       count_pending_submissions(),
       count_pending_reports(),
       ask_for_copy().catch(() => false),
+      any_unseen_letter(),
       any_unseen_sends(),
       any_unseen_messages(),
       any_unseen_waves(),
@@ -52,7 +53,12 @@ export async function GET(request) {
     // on its door (Miyel's pick: letters, messages, sends, waves). Never a
     // number, and never anybody's but the keeper's. A letter asked for just
     // now counts, though the read beside it may have missed the row.
-    return Response.json({ submissions, reports, total: submissions + reports, fresh: asked || unseen.some(Boolean) });
+    //
+    // `friends`, 2026-10-27: whether anything from a person is new, which is
+    // New on the Friends stop (her Friends brief) — everything above but a
+    // letter, which is pinned on home.
+    const friends = unseen.some(Boolean);
+    return Response.json({ submissions, reports, total: submissions + reports, friends, fresh: asked || letter || friends });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

@@ -28,7 +28,7 @@
 // Escape, or on Show, and folds away as it goes (`leaving`).
 'use client';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { CaretDown, Envelope, Fingerprint, Heart, SketchLogo } from '@phosphor-icons/react';
+import { CaretDown, Envelope, Fingerprint, Heart, SketchLogo, UserCircle } from '@phosphor-icons/react';
 import { useHoldStill } from '../../hooks/useHoldStill';
 
 // The lowest a panel dropped from the wall's line may reach: a little above
@@ -51,7 +51,7 @@ export default function JournalFilters({
   genre, setGenre, genres, genresShown, genresRest, genresOpen, setGenresOpen,
   yearBounds, yearRange, setYearPicked,
   favoritesOnly, setFavoritesOnly, masterpiecesOnly, setMasterpiecesOnly, formativeOnly, setFormativeOnly,
-  sentOnly, setSentOnly,
+  sentOnly, setSentOnly, canShare = false, sharedOnly = false, setSharedOnly = null,
   hasActiveFilters, clearFilters, shownCount, leaving = false,
 }) {
   const sheetRef = useRef(null);
@@ -131,6 +131,19 @@ export default function JournalFilters({
                 pressed is both; pressing the one that is on lets it go.
                 Album is every record with a listen; Track every record with
                 a track note, whether or not it also has a listen. */}
+            {/* Shared, on somebody else's wall (2026-10-28, Miyel: "so I can
+                see on my friends view very quickly which ones I have in
+                common"): the records on your wall too, under the face a
+                shared record already wears in its corner. */}
+            {canShare && (
+              <>
+                <div className="arc-picks">
+                  <Pick on={sharedOnly} onClick={() => setSharedOnly(v => !v)}
+                    glyph={<UserCircle size={18} weight={sharedOnly ? 'fill' : 'regular'} aria-hidden="true" />} word="Shared" />
+                </div>
+                <span className="arc-sheet-rule" aria-hidden="true" />
+              </>
+            )}
             <div className="arc-picks">
               <Pick on={kind === 'albums'} onClick={() => setKind(kind === 'albums' ? '' : 'albums')}
                 glyph={<KindGlyph folded={false} on={kind === 'albums'} />} word="Album" />

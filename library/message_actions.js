@@ -82,7 +82,7 @@ export async function pull_messages() {
     SELECT m.id, m.from_name, m.from_journal, m.said,
            m.about_journal, m.about_slug, m.about_album, m.about_artist,
            m.about_art, m.about_song, m.answering, m.answering_name,
-           m.was_comment, m.written_at, m.arrived_at, m.seen_at, m.replied_at, m.admin, m.door,
+           m.was_comment, m.written_at, m.arrived_at, m.seen_at, m.replied_at, m.kept_at, m.admin, m.door,
            (e.id IS NOT NULL) AS entry_here
     FROM messages m
     LEFT JOIN entries e ON m.about_journal IS NULL AND e.slug = m.about_slug
@@ -96,8 +96,16 @@ export async function pull_messages() {
 // where a reply goes (app/api/outbox/route.js).
 // Whether a message — a person's, or an LN. Admin letter — has not been
 // opened yet (app/api/waiting, 2026-10-20).
+// Somebody's words not opened yet — not a letter, which is pinned on home
+// and not anybody's to wait on a face (2026-10-27).
 export async function any_unseen_messages() {
-  const [row] = await database`SELECT EXISTS (SELECT 1 FROM messages WHERE seen_at IS NULL) AS any`;
+  const [row] = await database`SELECT EXISTS (SELECT 1 FROM messages WHERE seen_at IS NULL AND NOT admin) AS any`;
+  return row?.any === true;
+}
+
+// An LN. Admin letter not read yet.
+export async function any_unseen_letter() {
+  const [row] = await database`SELECT EXISTS (SELECT 1 FROM messages WHERE seen_at IS NULL AND admin) AS any`;
   return row?.any === true;
 }
 
@@ -178,6 +186,17 @@ export async function mark_replied(id) {
   return row || null;
 }
 
+// Kept without a reply (migrations/043): the face it waited on lets it go,
+// and the words stay. Seen as well, since it was read to be kept.
+export async function keep_message(id) {
+  const [row] = await database`
+    UPDATE messages SET kept_at = COALESCE(kept_at, now()), seen_at = COALESCE(seen_at, now())
+    WHERE id = ${id}
+    RETURNING id, kept_at, from_journal, from_name
+  `;
+  return row || null;
+}
+
 // Opened, so no longer new. Only the first opening is kept.
 export async function see_message(id) {
   const [row] = await database`
@@ -205,4 +224,84 @@ export async function remove_message(id) {
     await database`DELETE FROM comments WHERE id = ${row.comment_id}`;
   }
   return { id: row.id };
+}
+
+// ── Words, 2026-10-27 ─────────────────────────────────────────────────────
+// Your side, written once a reply has landed (migrations/045_said_back.sql;
+// app/api/outbox/route.js). `about` is the message's own subject as this
+// copy keeps it: its journal empty when the record is one of this
+// journal's own.
+export async function save_said_back({ to_journal, to_name, said, about = null, reply_to = null }) {
+  const words = String(said ?? '').trim();
+  const to = tidyJournal(to_journal);
+  if (!words || !to) return null;
+  const [row] = await database`
+    INSERT INTO said_back (
+      to_journal, to_name, said,
+      about_journal, about_slug, about_album, about_artist, about_art, about_song,
+      reply_to
+    )
+    VALUES (
+      ${to}, ${text(to_name, 120)}, ${words.slice(0, SAID_MOST)},
+      ${tidyJournal(about?.journal) || null}, ${about?.slug || null},
+      ${text(about?.album, 300)}, ${text(about?.artist, 300)},
+      ${text(about?.art, 1000)}, ${text(about?.song, 300)},
+      ${Number.isInteger(reply_to) ? reply_to : null}
+    )
+    RETURNING id, sent_at
+  `;
+  return row;
+}
+
+// Everything said between this keeper and one journal, both sides, oldest
+// first: their messages (never a letter) and what was written back to them.
+// `side` is 'theirs' or 'mine'. A thousand at most each way.
+export async function pull_words(address) {
+  const at = tidyJournal(address);
+  if (!at) return [];
+  const [theirs, mine] = await Promise.all([
+    database`
+      SELECT id, from_name AS name, said,
+             about_journal, about_slug, about_album, about_artist, about_art, about_song,
+             coalesce(written_at, arrived_at) AS at, seen_at, replied_at, kept_at
+      FROM messages
+      WHERE NOT admin
+        AND lower(split_part(regexp_replace(btrim(coalesce(from_journal, '')), '^https?://', '', 'i'), '/', 1)) = ${at}
+      ORDER BY coalesce(written_at, arrived_at) DESC, id DESC
+      LIMIT 1000
+    `,
+    database`
+      SELECT id, said,
+             about_journal, about_slug, about_album, about_artist, about_art, about_song,
+             sent_at AS at, reply_to
+      FROM said_back
+      WHERE to_journal = ${at}
+      ORDER BY sent_at DESC, id DESC
+      LIMIT 1000
+    `,
+  ]);
+  return [
+    ...theirs.map(r => ({ ...r, side: 'theirs' })),
+    ...mine.map(r => ({ ...r, side: 'mine' })),
+  ].sort((a, b) => new Date(a.at) - new Date(b.at));
+}
+
+// When this copy began keeping what its keeper writes back: its first
+// reply kept, or null before there is one. Words says so, since nothing
+// earlier was kept (her answers, 2026-10-26).
+export async function said_back_since() {
+  const [row] = await database`SELECT min(sent_at) AS since FROM said_back`;
+  return row?.since || null;
+}
+
+// The LN. Admin letter, the one there is, for its place on home
+// (PinnedLetter.js, 2026-10-27): the inbox read it out of everything.
+export async function pull_letter() {
+  const [row] = await database`
+    SELECT id, said, door, arrived_at, seen_at
+    FROM messages WHERE admin
+    ORDER BY arrived_at DESC, id DESC
+    LIMIT 1
+  `;
+  return row || null;
 }

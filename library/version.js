@@ -55,6 +55,15 @@ export const INSTAGRAM_URL =
 export const DIRECTORY_URL =
   process.env.NEXT_PUBLIC_DIRECTORY_URL ?? 'https://www.listeningnotes.blog/api/directory';
 
+// Whether the Board is drawn yet, 2026-10-29: off while Miyel works on it
+// ("is it possible to release an update but just have community tab say
+// coming soon"). Off, Community says Coming soon and Find people on the
+// Board is not offered. Everything under it still runs: journals are listed,
+// the Board is still read as People opens so the directory keeps itself
+// fresh, and /directory still answers anybody who has the address. A
+// constant, not a setting; the Board's own branch turns it back on.
+export const BOARD_OPEN = false;
+
 // Where keepers send Listening Notes, the publication, a record for the
 // month's prompt (2026-10-22, Miyel: "listeningnotes.blog is the magazine.
 // It is the publication. It is where people send"): the magazine's own

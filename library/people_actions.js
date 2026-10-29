@@ -11,14 +11,13 @@
 import database from './database_connection.js';
 import { tidyJournal, journalUrl } from './return_address.js';
 
-// Pinned first, in the order they were pinned, then everybody else by name.
-// `pinned_at IS NULL` sorts false before true, which puts the pinned ones at
-// the top without a second query or a sort in the page.
+// By name. Pinned people came first until Pin went, 2026-10-26 (Miyel:
+// "Drop Pin entirely. Not needed."); `pinned_at` stays, and nothing reads it.
 export async function pull_people() {
   return await database`
     SELECT id, address, name, added_at, pinned_at, private, moved_to
     FROM people
-    ORDER BY (pinned_at IS NULL), pinned_at, lower(coalesce(name, address)), added_at
+    ORDER BY lower(coalesce(name, address)), added_at
   `;
 }
 
@@ -91,7 +90,7 @@ export async function pull_public_people() {
   return await database`
     SELECT address, name FROM people
     WHERE NOT private
-    ORDER BY (pinned_at IS NULL), pinned_at, lower(coalesce(name, address)), added_at
+    ORDER BY lower(coalesce(name, address)), added_at
   `;
 }
 
@@ -142,7 +141,8 @@ export async function note_moves(people, heard) {
 // fix"): everything here that names the friend's old address names the new
 // one — what was sent them and is still out (`sent`), what of theirs came
 // back (`came_back`), their wave, their messages and what they are about,
-// and what they sent here (`submissions`) — so the Outbox clears when a
+// and what they sent here (`submissions`), and what was written back to
+// them (`said_back`, 2026-10-27) — so the Outbox clears when a
 // record comes back from the new address, the feed does not bring back as
 // new what already came back, and a reply goes where they live now. Where a
 // row for the new address is already here, the old one is the one that
@@ -181,6 +181,9 @@ function carryAlong(sql, from, to) {
           WHERE lower(split_part(regexp_replace(btrim(about_journal), '^https?://', '', 'i'), '/', 1)) = ${from}`,
     sql`UPDATE submissions SET sender_url = ${to}
           WHERE lower(split_part(regexp_replace(btrim(sender_url), '^https?://', '', 'i'), '/', 1)) = ${from}`,
+    // What was written back to them, and about their records (Words).
+    sql`UPDATE said_back SET to_journal = ${to} WHERE to_journal = ${from}`,
+    sql`UPDATE said_back SET about_journal = ${to} WHERE about_journal = ${from}`,
   ];
 }
 
@@ -217,4 +220,102 @@ export async function ask_journal_name(address, wait = 6000) {
   } catch {
     return null;
   }
+}
+
+// ── What has been seen on the Friends wall, 2026-10-27 ────────────────────
+// A friend's record says New for this long after it was logged, until it
+// scrolls past (migrations/044_seen_records.sql). Older than this it is not
+// new whether or not it was seen, so a row past it is no use and goes.
+export const NEW_FOR_DAYS = 14;
+
+// The entries seen within the window, as `journal/slug`.
+export async function pull_seen_records() {
+  const rows = await database`
+    SELECT journal, slug FROM seen_records
+    WHERE seen_at > now() - make_interval(days => ${NEW_FOR_DAYS})
+  `;
+  return rows.map(r => `${r.journal}/${r.slug}`);
+}
+
+// Marks some entries seen, each `{ journal, slug }`, and lets go of rows
+// too old to matter. A hundred at most a time: a wall scrolled past in one
+// go is still one press's worth.
+export async function see_records(list) {
+  const rows = (Array.isArray(list) ? list : [])
+    .map(r => ({ journal: tidyJournal(r?.journal), slug: String(r?.slug || '').trim().slice(0, 200) }))
+    .filter(r => r.journal && r.slug)
+    .slice(0, 100);
+  if (rows.length === 0) return 0;
+  await database.transaction(tx => [
+    tx`
+      INSERT INTO seen_records (journal, slug)
+      SELECT * FROM UNNEST(${rows.map(r => r.journal)}::text[], ${rows.map(r => r.slug)}::text[])
+      ON CONFLICT (journal, slug) DO NOTHING
+    `,
+    tx`DELETE FROM seen_records WHERE seen_at < now() - make_interval(days => ${NEW_FOR_DAYS})`,
+  ]);
+  return rows.length;
+}
+
+// ── Strangers, 2026-10-27 ─────────────────────────────────────────────────
+// Her Friends brief, step five, and her answers of 2026-10-26. Somebody not
+// in the book gets one thing at a time in the row, and once a thing of
+// theirs is let go, nothing more until they are added (closed_doors,
+// migrations/046). A friend gets one unanswered send at a time — "waves and
+// sends can't be farmed", kept here, in the database, by the sender's
+// address, never in a server's memory or the sender's browser. A wave was
+// one per address already (migrations/024).
+//
+// Written loosely by a visitor's form, an address is read the way
+// tidyJournal reads it, in Postgres, as carryAlong reads it above.
+
+export const STRANGER_WAITS = 'This journal hasn’t added you yet, so it takes one thing at a time — nothing was sent.';
+export const SEND_WAITS = 'The last record you sent is still waiting with them, so this one wasn’t sent. One at a time.';
+
+// Why a send, words or a wave from this address may not come in now, or
+// null when it may. `kind` is 'send', 'words' or 'wave'. Somebody with no
+// journal has no address to be held to, and is never refused here (the
+// doorman counts them).
+export async function arrival_refused(address, kind) {
+  const at = tidyJournal(address);
+  if (!at) return null;
+  const [row] = await database`
+    SELECT
+      EXISTS (SELECT 1 FROM people WHERE address = ${at}) AS friend,
+      EXISTS (SELECT 1 FROM closed_doors WHERE address = ${at}) AS closed,
+      EXISTS (SELECT 1 FROM submissions
+              WHERE status IN ('pending', 'reviewed')
+                AND lower(split_part(regexp_replace(btrim(coalesce(sender_url, '')), '^https?://', '', 'i'), '/', 1)) = ${at}) AS send_out,
+      EXISTS (SELECT 1 FROM messages
+              WHERE NOT admin AND replied_at IS NULL AND kept_at IS NULL
+                AND lower(split_part(regexp_replace(btrim(coalesce(from_journal, '')), '^https?://', '', 'i'), '/', 1)) = ${at}) AS words_out,
+      EXISTS (SELECT 1 FROM waves WHERE address = ${at}) AS wave_out
+  `;
+  if (row.friend) return kind === 'send' && row.send_out ? SEND_WAITS : null;
+  if (row.closed) return STRANGER_WAITS;
+  // A second wave from one address is already kept as nothing, answered the
+  // same as the first (migrations/024), so a wave is held only by the rest.
+  const waiting = row.send_out || row.words_out || (kind !== 'wave' && row.wave_out);
+  return waiting ? STRANGER_WAITS : null;
+}
+
+// A thing from this address was let go: if they are nobody in the book, the
+// door closes behind it.
+export async function close_if_stranger(address, name = null) {
+  const at = tidyJournal(address);
+  if (!at) return false;
+  const [friend] = await database`SELECT 1 FROM people WHERE address = ${at} LIMIT 1`;
+  if (friend) return false;
+  await database`
+    INSERT INTO closed_doors (address, name) VALUES (${at}, ${name ? String(name).slice(0, 120) : null})
+    ON CONFLICT (address) DO UPDATE SET closed_at = now()
+  `;
+  return true;
+}
+
+// Added: their door opens again.
+export async function open_door(address) {
+  const at = tidyJournal(address);
+  if (!at) return;
+  await database`DELETE FROM closed_doors WHERE address = ${at}`;
 }

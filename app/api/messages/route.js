@@ -48,8 +48,10 @@ import { ask_journal_name } from '@/library/people_actions';
 import { tidyJournal } from '@/library/return_address';
 import { pull_settings } from '@/library/settings_actions';
 import {
-  SAID_MOST, sameJournal, pull_messages, save_message, see_message, remove_message,
+  SAID_MOST, sameJournal, pull_messages, save_message, see_message, keep_message, remove_message,
+  pull_words, said_back_since, pull_letter,
 } from '@/library/message_actions';
+import { pull_person, arrival_refused, close_if_stranger } from '@/library/people_actions';
 import { read_letter, keep_letter } from '@/library/letterhead';
 import { answerNoJournal } from '@/library/hosting_directory';
 
@@ -136,6 +138,11 @@ export async function POST(request) {
       if (!name) return Response.json({ error: 'A name is required.' }, { status: 400 });
     }
 
+    // Somebody not in the book: one thing at a time, none once let go
+    // (2026-10-27). A friend's words are never held back.
+    const refused = await arrival_refused(journal, 'words');
+    if (refused) return Response.json({ error: refused }, { status: 409 });
+
     await save_message({
       from_name: name,
       from_journal: journal,
@@ -156,18 +163,42 @@ export async function GET(request) {
   const blocked = await requireWristband(request);
   if (blocked) return blocked;
   try {
+    // The letter alone, for home (`?letter=1`, 2026-10-27).
+    if (new URL(request.url).searchParams.get('letter')) {
+      return Response.json({ letter: await pull_letter() });
+    }
+    // Words with one person, 2026-10-27: `?person=<id>` from the book —
+    // both sides, oldest first, and when this copy began keeping its own.
+    const id = Number(new URL(request.url).searchParams.get('person'));
+    if (Number.isInteger(id) && id > 0) {
+      const person = await pull_person(id);
+      if (!person) return Response.json({ error: 'They are not in your address book.' }, { status: 404 });
+      const [words, since] = await Promise.all([pull_words(person.address), said_back_since()]);
+      return Response.json({ person, words, since });
+    }
     return Response.json({ messages: await pull_messages() });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
 }
 
+// Opened, or with `kept`, kept without a reply (Keep only, on a friend's
+// face, 2026-10-27).
 export async function PATCH(request) {
   const blocked = await requireWristband(request);
   if (blocked) return blocked;
-  const id = Number((await request.json().catch(() => ({})))?.id);
+  const body = await request.json().catch(() => ({}));
+  const id = Number(body?.id);
   if (!Number.isInteger(id) || id < 1) return Response.json({ error: 'Which one?' }, { status: 400 });
   try {
+    if (body.kept === true) {
+      const kept = await keep_message(id);
+      if (!kept) return Response.json({ error: 'No such message.' }, { status: 404 });
+      // Kept without a reply from somebody not in the book is let go, and
+      // their door closes behind it (2026-10-27).
+      await close_if_stranger(kept.from_journal, kept.from_name).catch(() => null);
+      return Response.json({ ok: true, kept_at: kept.kept_at });
+    }
     await see_message(id);
     return Response.json({ ok: true });
   } catch (error) {

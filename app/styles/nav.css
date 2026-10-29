@@ -133,6 +133,27 @@
 }
 
 .sitenav-side { display: flex; align-items: center; gap: 2px; min-width: 0; }
+/* A friend's post, read inside this journal (2026-10-28): their face on the
+   left, a circle as every face is, to their page; Compare on the right, a
+   glyph with its word worn while it is on. */
+.sitenav-who {
+  position: relative; flex: 0 0 auto;
+  display: grid; place-items: center;
+  width: 34px; height: 34px; border-radius: 50%; overflow: hidden;
+  background: var(--panel-strong); box-shadow: 0 0 0 1px var(--border);
+  color: var(--ink-faint);
+  -webkit-tap-highlight-color: transparent;
+}
+.sitenav-who img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.sitenav-compare {
+  display: inline-flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 6px 4px; margin: -6px 0; border: 0; background: none; cursor: pointer;
+  color: var(--ink-soft); -webkit-tap-highlight-color: transparent;
+  font-family: var(--font-label); font-size: 9px; line-height: 1; letter-spacing: 0.11em; text-transform: uppercase;
+}
+.sitenav-compare--on { color: var(--ink); }
+.sitenav-compare--on .sitenav-compare-word { text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 4px; }
+.sitenav-compare:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: -2px; border-radius: 8px; }
 /* Nothing in it. It is a spacer that keeps the mark on the middle of the row
    now that the tools have gone to the other end. */
 /* ── Each side in its own column, 2026-09-20 ──────────────────────────────
@@ -827,7 +848,6 @@
    one you will not see go — and it did go, straight behind the floor, the
    same way the moon did. Anything put in this row from now on goes here. */
 .hn-lights,
-.fd-dense,
 .hn-bar-tools { position: relative; z-index: 1; }
 
 /* The big mark, drawn by the header rather than by the pane — see the note
@@ -1068,7 +1088,7 @@
      One number for both panes that have one, because they are the same
      idea: the top of the thing below, under a word saying what it is. Not
      the bar's height on top of it — that is scroll-margin's job now, or the
-     peek would be mostly dead air. See .hn-floor--wall and .hn-floor--feed. */
+     peek would be mostly dead air. See .hn-floor--wall. */
   .hn { --hn-peek: 140px; }
   /* And the wall's bar is not drawn while you are upstairs. It sticks to the
      bottom of the scrollport, which is exactly where the sliver of covers is,
@@ -1132,7 +1152,8 @@
   }
   /* The snap stops a bar's-worth short, so the wall lands under the mark
      rather than behind it — and at rest the peek is all wall and no gap. */
-  /* Same, and read by the same press. See the note on .hn-floor--feed. */
+  /* Same, and read by the same press: the way down reads scroll-margin off
+     the floor to know where to stop. */
   .hn-floor--wall { scroll-margin-top: var(--hn-bar-h); }
   /* And the wall stops being a scroller of its own on a phone. It was one so
      the pane had only two stops; with a sliver of it showing at rest that
@@ -1715,83 +1736,11 @@
   font-size: 9px;
 }
 
-/* ── The feed — the desk's second floor ──────────────────────────────────
-   What the people in the address book logged, as entry-shaped rows with a
-   small face and a name. Two views switched by a word, no counts. A row's
-   Compare opens a panel under it: two verdicts and two horizons. */
-/* The page's measure, like everything else on this face — it had 480px and
-   the cross's 34px gutter, which put the feed twelve pixels further in than
-   the doors above it on the same scroll. */
-/* The fallback matters and did not exist: --page-gutter is set on the cross's
-   own faces and nowhere else, so on the feed's standalone address the whole
-   shorthand was invalid and the wrap had no padding at all. Nothing showed it
-   while the row at the top was two centred tabs — a heading that reaches for
-   both edges shows it at once. 24px is .fr-body's number, and it leaves the
-   320px cover exactly where it already sat. */
-.fd-wrap { width: 100%; max-width: none; margin: 0; padding: 24px var(--page-gutter, 24px) 40px; box-sizing: border-box; }
-/* On a phone the floor starts under the bar, the way the writing under the
-   card does. */
-.hn-floor-scroll .fd-wrap { padding-top: calc(var(--hn-bar-h) + 24px); }
-/* ── The density toggle ────────────────────────────────────────────────────
-   One control, and it lives in whatever header the screen already has: the
-   cross's bar on a phone, SiteNav's right-hand slot at the feed's own
-   address. It had a row of its own under the bar until 2026-09-20 — the
-   feed's name on the left, this on the right, on a rule — and Miyel took it
-   off: "it's also giving a false header, it's outside true header." A second
-   bar a little way below the first is a page claiming a heading it has not
-   got, and there was already a header up there with a hairline under it.
-
-   No ground and no border of its own: it is sitting in a row that has both.
-   The colour is the lights' colour beside it, because the two are now the
-   same kind of thing — one small control in a corner. */
-.fd-dense {
-  display: inline-flex; align-items: center; justify-content: center;
-  padding: 4px; border: 0; background: none; cursor: pointer;
-  color: var(--ink-faint);
-  transition: color 0.18s;
-}
-.fd-dense:hover { color: var(--ink-soft); }
-.fd-dense:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 2px; border-radius: 7px; }
-/* ── The floor's name in the bar ──────────────────────────────────────────
-   The caption face at the size and tracking the address book's own title
-   carries, because the two are the same object one floor apart.
-
-   In the middle (Miyel, 2026-09-20: "it can stick right in the middle"), by
-   the same geometry the small mark uses — absolute, half across, centred on
-   the 58px row rather than on the band, which is taller by the notch
-   allowance. Out of the flex flow entirely, so it cannot move the toggle at
-   the end of the row whatever length the word is, and it takes the middle on
-   the one pane where the mark is not drawn.
-
-   Nothing to press: the invisible strip that takes you back to the top of a
-   pane fills this row, and a word sitting on the middle of it would be a dead
-   spot in the one place a thumb lands. */
-@keyframes hn-say-in { from { opacity: 0; } to { opacity: 1; } }
-.hn-bar-say {
-  position: absolute;
-  left: 50%;
-  /* The middle of the 58px row inside the band. It followed a word climbing
-     up from the floor above for an hour; that word is a chevron now, so this
-     is not the same object arriving, it is a name appearing once you are
-     somewhere — which is what the fade is for. */
-  top: calc(22px + var(--safe-top) + 29px);
-  animation: hn-say-in 0.22s ease both;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-  font-family: var(--font-label);
-  font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
-  /* The quiet end of the ink, like the toggle at the other end of the row. */
-  color: var(--ink-faint);
-  line-height: 1;
-  white-space: nowrap;
-}
-
-/* ── Friends · Keepers, 2026-10-07 ─────────────────────────────────────────
-   The People tab's two words, in the middle of the row where the book's name
-   stood and in its face: the label face, small and spaced, the word you are
-   on in ink with a rule under it, the other in the quiet end of the ink.
-   Above the book's own header (.hn-bar-add), whose middle is an empty slot
-   that lets taps through anyway, and gone whenever a field opens in it. */
+/* ── Two words in the bar, 2026-10-07 ──────────────────────────────────────
+   The inbox's Inbox · Outbox — People's Friends · Board first, until People
+   became one screen (2026-10-23) — in the middle of the row: the label
+   face, small and spaced, the word you are on in ink with a rule under it,
+   the other in the quiet end of the ink. */
 .hn-bar-words {
   position: absolute;
   left: 50%;
@@ -1817,161 +1766,13 @@
 span.hn-bar-word { cursor: default; }
 .hn-bar-word--on { color: var(--ink); border-bottom-color: var(--ink); }
 @media (hover: hover) { button.hn-bar-word:not(.hn-bar-word--on):hover { color: var(--ink-soft); } }
-/* The book's floors while Everyone shows: still there, not drawn. */
-.hn-floor--away { display: none !important; }
 
-/* Room between it and the sun, when both are there. On the pane it actually
-   appears on the lights are hidden, so the gap goes on the lights rather than
-   on this — put it here and the glyph sits ten pixels short of the edge every
-   other thing in this row lines up with. */
-.hn-bar .fd-dense + .hn-lights { margin-left: 10px; }
-
-/* ── A record you both have ────────────────────────────────────────────────
-   A thin gold rule round the art, in both densities. It is the one thing in a
-   feed you can act on that is worth spotting without reading — and reading is
-   what scrolling past six rows a screen does not leave time for. `outline`
-   rather than a border so it does not take a pixel off the art or move
-   anything beside it; `outline-offset: -1px` keeps it inside the corner
-   radius instead of drawing a square round a rounded picture. */
-.fd-art--shared {
-  outline: 1.5px solid var(--gold);
-  outline-offset: -1px;
-}
-
-/* ── Rows ──────────────────────────────────────────────────────────────────
-   Six to a screen: the art at 56, the name over its line of meta, and the
-   stars and marks at the right. Her brief, 2026-09-20. */
-.fd-rowwrap { border-bottom: 1px solid var(--border); }
-/* ── Back to the ring on the art, 2026-09-20 ───────────────────────────────
-   Three treatments were tried in an evening — the ring on the art, a ring
-   round the whole row, the row lifted onto a ground — and Miyel took the
-   first: "it was simple and works."
-   
-   Which settles the argument the other two were about. The objection to gold
-   was that it is the star colour and so says *rating* — true of a rule
-   running the length of a row beside five stars, and not true of a ring round
-   a picture, where it is plainly about the picture and the record in it. A
-   ring is also the one of the three that is the same idea in both densities:
-   56px of art or 300px of it, the mark is the same mark. */
-.fd-rowwrap:last-child { border-bottom: 0; }
-.fd-row {
-  display: flex; align-items: center; gap: 12px;
-  /* No side padding: the ring is round the art now and needs no room of its
-     own, and those twenty pixels are twenty the meta line does not have to
-     give to an ellipsis. */
-  padding: 11px 0;
-  text-align: left;
-}
-.fd-row-art {
-  flex: 0 0 auto; width: 56px; height: 56px;
-  /* A friend's track note, in the compact feed: a small flap, a small blur
-     (base.css). */
-  --fold-blur: 3px;
-  border-radius: 8px; overflow: hidden;
-  background: var(--panel); display: block;
-}
-.fd-row-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
-/* min-width: 0 the whole way down, or the meta refuses to shrink and pushes
-   the stars off the end — the rule this stylesheet has learned twice. */
-.fd-row-words { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-.fd-row-album {
-  font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
-  /* 14, down from 16, Miyel 2026-09-20: "quite large". It was the full view's
-     size brought over unchanged, and the full view gives a record most of a
-     screen — at six rows to a screen the name is a label rather than a title,
-     and 16px bold beside a 10.5px meta line was a heading with a caption
-     under it. It still leads: bold display face against a mono caption four
-     steps smaller says which is which without needing the size to say it
-     twice. */
-  font-size: 14px; line-height: 1.25; color: var(--ink); text-decoration: none;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.fd-row-album:hover { text-decoration: underline; text-underline-offset: 3px; }
-.fd-row-meta {
-  font-family: var(--font-label);
-  /* No tracking. The caption face carries 0.14em almost everywhere on this
-     site and it is worth 20px of a line that is already being cut short. */
-  font-size: 10.5px; letter-spacing: 0;
-  color: var(--ink-faint);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.fd-row-marks { flex: 0 0 auto; display: flex; align-items: center; gap: 5px; }
-/* Kept as a name even though it is now the only shape the control has: every
-   place that draws it says which it means, and the day one of them wants
-   something else this is the hook that is already there. */
-.fd-compare--mark { padding: 2px; }
-
-.fd-list { display: flex; flex-direction: column; gap: 52px; }
-/* Rows carry their own rule and sit against each other, so the gap between
-   records is the tall version's alone. Written here rather than up with the
-   other row rules because it has to come after the line above, which has the
-   same weight — a habit this stylesheet is on its third lesson about. */
-.fd-list--rows { gap: 0; }
-/* The record, large and centred, the words under it: the shape an entry's
-   first screen has. No box — the art is the tile, with the square's own
-   shadow, and everything under it is simply large, because a feed item
-   holds little and can afford to be. */
-.fd-item { display: flex; flex-direction: column; align-items: center; text-align: center; width: 100%; }
-.fd-art {
-  width: min(100%, 320px); aspect-ratio: 1; border-radius: 16px; overflow: hidden; flex-shrink: 0;
-  background: var(--panel); box-shadow: 0 18px 44px rgba(0,0,0,0.16); display: block; margin-bottom: 20px;
-}
-.fd-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.fd-album {
-  font-family: var(--font-display); font-weight: var(--font-display-weight, 700); font-size: 24px;
-  color: var(--ink); text-decoration: none; line-height: 1.15; display: block; overflow-wrap: anywhere;
-  max-width: 100%;
-}
-.fd-album:hover { text-decoration: underline; text-underline-offset: 4px; }
-.fd-artist { font-family: var(--font-label); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-soft); margin-top: 6px; }
-/* ── A friend's track note, 2026-09-24 ─────────────────────────────────────
-   Read as a song: the song as the large line and the record under it
-   (Feed.js), and no word saying it is a track — the page's shape says so.
-   The cover carries the fold and its flap (.ln-fold, base.css) in both
-   densities. And the compare for a song is a sentence rather than a panel —
-   what you gave the same song yourself. */
-.fd-yours {
-  display: flex; align-items: center; justify-content: center; gap: 10px;
-  margin-top: 16px;
-  font-family: var(--font-label); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
-  color: var(--ink-soft);
-}
-.fd-stars { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 16px; color: var(--ink); }
-/* The marks beside the stars — the strip's own marks, MiniCard's classes. */
+/* ── The marks, and the compare ────────────────────────────────────────────
+   The feed's until it was retired, 2026-10-23: the Board's rows draw the
+   marks (app/directory/Directory.js, Marks) and the inbox the compare
+   (app/dashboard/inbox/page.js, Compared). The marks beside the stars — the
+   strip's own marks, MiniCard's classes. */
 .fd-marks { display: inline-flex; align-items: center; gap: 10px; }
-.fd-who { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 10px; margin-top: 18px; font-family: var(--font-label); font-size: 13px; letter-spacing: 0.06em; color: var(--ink-soft); }
-.fd-who a { display: inline-flex; align-items: center; gap: 10px; color: var(--ink); text-decoration: none; }
-.fd-who a:hover { text-decoration: underline; text-underline-offset: 3px; }
-/* A rounded square, the card's shape, with the plain mark behind the picture
-   for a journal without one. Large enough to be a face and not a dot. */
-.fd-face {
-  position: relative; width: 38px; height: 38px; border-radius: 10px; overflow: hidden; flex-shrink: 0;
-  background: var(--panel); border: 1px solid var(--border);
-  display: inline-flex; align-items: center; justify-content: center; color: var(--ink-faint);
-}
-.fd-face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.fd-when { color: var(--ink-faint); }
-/* ── The compare mark ──────────────────────────────────────────────────────
-   A glyph and nothing else, 2026-09-20. It is only ever drawn on a record you
-   also have, so its being there is the announcement — the word under it was
-   saying the same thing a second time. Quiet at rest and in ink while the
-   comparison is open, which is the only state it has. */
-.fd-compare {
-  display: inline-flex; align-items: center; justify-content: center;
-  padding: 2px;
-  border: 0; background: none; cursor: pointer;
-  color: var(--ink-faint);
-  transition: color 0.18s;
-}
-.fd-compare:hover { color: var(--ink-soft); }
-.fd-compare svg { transition: transform 0.32s cubic-bezier(0.22, 0.61, 0.36, 1); }
-/* A quarter turn, so the arrows point down at the thing that has opened
-   (Miyel, 2026-09-20: "should point down towards horizons not left"). Half a
-   turn only sent them the other way along the same line, which says nothing.
-   The glyph turns; the word under it does not, because it is leaving. */
-.fd-compare.fd-compare--open { color: var(--ink); }
-.fd-compare.fd-compare--open svg { transform: rotate(90deg); }
-.fd-compare:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 2px; border-radius: 8px; }
 /* ── The compare, opened ───────────────────────────────────────────────────
    Theirs, the distance, yours, your stars, and the way to both entries. No
    panel round it: it opens underneath a record on a page with no boxes on it,
@@ -2101,8 +1902,6 @@ span.hn-bar-word { cursor: default; }
 }
 .fd-cmp-stars { display: flex; justify-content: center; margin-top: 10px; }
 
-.fd-empty { padding: 40px 0; text-align: center; font-family: var(--font-label); font-size: 11px; color: var(--ink-faint); line-height: 1.9; }
-.fd-empty a { color: var(--ink-soft); }
 
 /* The writing row that used to sit under the beacon — "+ Start a listen" and
    "Messages" — is gone with its rules. The desk is one swipe right and carries
@@ -2319,38 +2118,6 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
    .fd-page-label is gone with the title it drew — see app/dashboard/feed. */
 .fd-page { padding: 8px 0 64px; }
 
-/* ── The feed's head holds still ────────────────────────────────────────────
-   Everything passes under the mark and under RECENT · SUBMISSIONS (Miyel,
-   2026-09-16). Two stacked sticky bands rather than one, because the mark and
-   the tabs belong to different components and always have.
-
-   At the page's own address the row is already fixed and only the tabs need
-   doing. Inside a layer the row is in the flow — see .lay--scrolls
-   .sitenav-row — so it is stuck here instead, and takes the notch as padding
-   rather than margin so that the whole 80px band stays put and the mark is not
-   left sitting under a dynamic island once it has stuck. That is the same
-   geometry the fixed version has: a band of 80px plus the allowance, with the
-   58px row at the bottom of it.
-
-   The tabs then stick at exactly the height of that band, --hn-bar-h, which is
-   the right number in both shapes — which is most of why it was worth putting
-   on :root. */
-.lay--scrolls .fd-screen .sitenav-row {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  margin-top: 0;
-  min-height: var(--hn-bar-h);
-  padding-top: calc(22px + var(--safe-top));
-  background: var(--bg);
-}
-
-/* And neither is the way down. It belongs to a floor that is one screen tall
-   with another under it, and above 769px there are no floors — the beacon and
-   the wall are one column that scrolls, the way a page does. Its styling
-   lives in the phone block, so without this it would draw here as a bare
-   button between the record and the covers. */
-.hn-down { display: none; }
 @media (max-width: 768px) {
   /* Stated on the cross so the panes can read it: every scroller inside has
      to end above the band rather than under it. */
@@ -2621,8 +2388,7 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .hn-bar-add .fr-field--waiting { opacity: 0; }
   /* The book's, and only while you are on the book. Pane 2 is the friends
      pane; see the constants in HomeNav.js. */
-  .hn:not([data-pane="2"]) .hn-bar-add,
-  .hn--at-feed .hn-bar-add { display: none; }
+  .hn:not([data-pane="2"]) .hn-bar-add { display: none; }
   /* The card's, and only while you are on the card. The slot belongs to a
      pane that stays mounted while you swipe away from it, and a door to
      somebody's card sitting over the beacon is a door to the wrong page.
@@ -2708,13 +2474,10 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
     padding: var(--hn-bar-h) 0 calc(var(--hn-foot-h) + 20px);
     box-sizing: border-box;
   }
-  /* ── The book's two floors ─────────────────────────────────────────
-     The same machinery the beacon uses, and for the same reason: this is the
-     other pane where down means cover-then-contents — the people, and then
-     what they have been playing.
-
-     The pane keeps none of the padding the inbox does, because a floor is a
-     screen and has to measure one; the padding belongs inside each floor. */
+  /* ── People, one screen, 2026-10-23 ───────────────────────────────
+     None of the inbox's padding: the screen clears the bar itself (.ps),
+     so its line can stick under the top row the way home's does. It was two
+     floors, the book's faces and the feed under them, until then. */
   .hn-pane--friends {
     padding: 0;
     /* The pull-down line's box, so it travels with this pane and not with
@@ -2722,116 +2485,21 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
     position: relative;
     /* None, for the reason written against .hn-pane--home above. */
     scroll-snap-type: none;
-    /* Inherited from .hn now — the beacon wants the same number. */
-
-    /* The feed takes its gutter from the floor rather than adding a second
-       one. Stated rather than left undefined: an undefined var in a
-       shorthand throws the whole declaration away, which happens to give
-       the right answer here and would stop doing so the day somebody wrote
-       a fallback into .fd-wrap. */
-    --page-gutter: 0px;
   }
-  /* Short of a screen by the peek, so the feed shows under it. 24px of
-     gutter, .fr-body's own number, so the book is the same width whichever
-     way you reach it. */
-  /* height, not min-height, and this is the one floor on the site where that
-     is right. Everywhere else a floor grows rather than clip what is on it —
-     the beacon's would cut the Send button off the card. Here the thing that
-     would overflow is the shelf, and the shelf is a scroller: it takes the
-     room it is given and the faces that do not fit are behind See all. A
-     floor that grew would push the sliver off the screen, which is the one
-     thing this floor exists to hold in place. */
-  .hn-floor--book {
-    height: calc(var(--hn-h) - var(--hn-peek));
-    min-height: 0;
-    /* Clear of the bar, 2026-09-20. It used to be 36 and the book's own
-       header stood in the rest of it; the header is in the bar now, so what
-       was holding this floor off the band is not on this floor any more. The
-       shelf measures whatever room is left and fits what it can, so the only
-       thing this number has to get right is where the faces start. */
-    padding: calc(var(--hn-bar-h) + 8px) 24px 0;
-  }
-  /* Everyone, the People tab's other word: one floor as long as the list,
-     clear of the bar above and the band below. */
-  .hn-everyone {
-    padding: calc(var(--hn-bar-h) + 8px) 24px calc(var(--hn-foot-h) + 28px);
-  }
-  /* The book fills the floor, which is what makes "as many faces as fit" a
-     question with an answer: the shelf inside it measures the room it is
-     given, and a book at its content's height would be measuring itself. */
-  .hn-floor--book > .fr { flex: 1; min-height: 0; }
-  /* The caret at the foot of the floor, in the flow rather than fixed over
-     it — the cross's own caret lives above the band, which is exactly where
-     the sliver of covers is, and a chevron drawn over somebody's album art
-     is the thing this site takes carets off pages to avoid. */
-  .hn-down {
-    display: flex; flex-direction: column; align-items: center; gap: 6px;
-    /* Tight, because on the beacon this row is the last twelve pixels of a
-       floor that is already full. The book has slack and does not care. */
-    padding: 12px 0 12px;
-    border: 0; background: none; cursor: pointer;
-    color: var(--ink-faint);
-    transition: color 0.15s;
-  }
-  /* ── And it goes once you are going, 2026-09-20 ──────────────────────
-     The caret says there is something below. The moment you have started
-     towards it that is a sentence nobody needs, and it is in the way of the
-     thing it was pointing at. It comes back at the top, where it is an
-     offer again. Faded rather than removed, so the row under it does not
-     jump, and not tappable while it is gone. */
-  .hn-down { transition: opacity 0.18s linear; }
-  .hn--moved .hn-down { opacity: 0; pointer-events: none; }
-
-  .hn-down:hover { color: var(--ink-soft); }
-  .hn-down:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; border-radius: 6px; }
-  /* ── The chevron, larger, and breathing, 2026-09-20 ──────────────────
-     Miyel: "those down carets on feed and journal can just be larger and bob
-     up and down to show there's more vs having more text." `.hn-down-say` is
-     gone with the words. Eighteen rather than eleven, and four pixels of
-     travel on a slow loop: a mark that moves says there is more that way in a
-     language a word has to spell out, and it was the third line of small caps
-     on a screen that is mostly type. */
-  .hn-down > svg { animation: hn-bob 1.9s ease-in-out infinite; }
-  @keyframes hn-bob {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(4px); }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .hn-down > svg { animation: none; }
-  }
-  /* The book's way down was drawn over the bar for an hour, so the word
-     climbing into the header was not eaten on the way in. There is no word on
-     it now and nothing to carry over, so it goes under the bar like
-     everything else on that floor. */
-  .hn-floor--feed { padding: 0 24px; }
-  /* ── The snap stops a bar's-worth short, 2026-09-19 ───────────────────
-     The first cover has to clear the mark when this floor is snapped to the
-     top, and it used to do that with padding — which meant the same gap sat
-     in the peek at rest, between the caret and the record it points at.
-     `scroll-margin-top` moves the snap position instead of the content: the
-     floor lands with its top a bar's-worth down the screen, and at rest its
-     first cover begins immediately under the caret. The floor above rides up
-     behind the bar's own ground, which is what that ground is for. */
-  /* ── scroll-margin is load-bearing and not dead, 2026-09-20 ───────────
-     It was here for the snap, to stop this floor a bar's-worth short so the
-     first record lands under the mark rather than behind it. There is no snap
-     any more and the property still matters: `goDown` reads it off this
-     element to work out where the press should stop. Delete it and the way
-     down puts a record behind the logo. */
-  .hn-floor--feed {
-    scroll-margin-top: var(--hn-bar-h);
-    /* A breath, so the cover is not welded to the caret in the peek. */
-    padding-top: 12px;
-  }
-  /* Clear of the band, which has a ground of its own and would otherwise
-     cover the last record rather than letting it show through. */
-  .hn-floor--feed .fd-wrap { padding-bottom: calc(var(--hn-foot-h) + 20px); }
   /* A page drawn inside a pane has no bar of its own to clear and no screen
      of its own to fill. */
-  .hn-pane--inbox .own-screen--pane,
-  .hn-pane--friends .own-screen {
+  .hn-pane--inbox .own-screen--pane {
     --own-nav-bottom: 0px;
     min-height: 0;
+  }
+  /* Community, 2026-10-27: the Board as /directory draws it, at its width. */
+  .hn-community { max-width: 720px; margin: 0 auto; padding: 8px 24px 0; }
+  /* And while the Board is closed (BOARD_OPEN), the glyph over two words in
+     the middle of the pane. */
+  .hn-soon {
+    min-height: 60dvh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+    font-family: var(--font-label); font-size: 11px; letter-spacing: 0.04em; color: var(--ink-faint);
   }
   /* Nothing is hidden and nothing is turning. Both of those belong to a spine
      that shows one page at a time; here all three are panes and all three are
@@ -3081,20 +2749,7 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .db-door-label { justify-content: flex-start; }
   .db-colophon { margin-top: 10px; justify-content: flex-start; text-align: left; }
 
-  /* ── The feed on the spine ── the same rows, at the spine's measure: the
-     cover fills the width, the words under it ranged left. */
-  .fd-wrap { padding: 6px var(--hn-gutter) 40px; }
-  .hn-floor-scroll .fd-wrap { padding-top: 6px; }
-
-  .fd-list { gap: 30px; }
-  .fd-item { align-items: flex-start; text-align: left; }
-  .fd-art { width: 100%; border-radius: 10px; margin-bottom: 10px; box-shadow: 0 8px 22px rgba(0, 0, 0, 0.14); }
-  .fd-album { font-size: 15px; }
-  .fd-artist { font-size: 9.5px; margin-top: 3px; }
-  .fd-stars { justify-content: flex-start; gap: 8px; margin-top: 8px; }
-  .fd-who { justify-content: flex-start; font-size: 11px; margin-top: 10px; gap: 6px; }
-  .fd-face { width: 24px; height: 24px; border-radius: 7px; }
-  .fd-compare { margin-top: 10px; }
+  /* The compare at the spine's measure (the inbox's, since the feed went). */
   .fd-cmp-bars { height: 52px; }
 }
 
@@ -3530,13 +3185,12 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
 .ln-pull-svg .hn-mark-dot--live { fill: var(--live); }
 .ln-pull--asking .ln-pull-mark { animation: ln-pull-turn 1.1s linear infinite; }
 @keyframes ln-pull-turn { to { transform: rotate(360deg); } }
-.hn-pane--friends > .hn-floor--book,
-.hn-pane--friends > .hn-everyone {
+.hn-pane--friends .ps {
   margin-top: var(--pull-room, 0px);
   transition: margin-top var(--pull-ease, 0.22s) ease;
 }
 @media (prefers-reduced-motion: reduce) {
-  .ln-pull, .hn-pane--friends > .hn-floor--book, .hn-pane--friends > .hn-everyone { transition: none; }
+  .ln-pull, .hn-pane--friends .ps { transition: none; }
   .ln-pull--asking .ln-pull-mark { animation: none; }
 }
 
@@ -3583,7 +3237,14 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .hdr-stop:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: -2px; border-radius: 8px; }
   .hdr-glyph { position: relative; display: inline-flex; }
   /* The inbox's dot, the band's own: never a number. */
-  .hdr-dot { position: absolute; top: -2px; right: -5px; width: 6px; height: 6px; border-radius: 999px; background: var(--ink); }
+  /* New on a stop, above and right of its glyph, smaller than anywhere
+     else (her Friends brief); it was a dot until 2026-10-27. */
+  .ln-new--stop {
+    position: absolute; top: -7px; left: calc(100% - 7px);
+    padding: 2px 4px 1px; font-size: 6.5px;
+    box-shadow: 0 0 0 1.5px var(--bg);
+    pointer-events: none;
+  }
   /* The lit word: the label face, underlined — .ln-word's on-state. */
   .hdr-word {
     font-family: var(--font-label); font-size: 9px; line-height: 1;
@@ -3613,9 +3274,9 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   /* So home's record starts under the row rather than under the mark. */
   .hn-pane--home .hn-floor--beacon { padding-top: var(--hn-bar-h); }
 
-  /* ── The second line, on the card, People and Inbox ── */
+  /* ── The second line, on the card and the inbox (People had it for its
+     two words until it became one screen, 2026-10-23) ── */
   .hn--card .hn-bar,
-  .hn[data-pane="2"] .hn-bar,
   .hn[data-pane="3"] .hn-bar { height: calc(var(--hn-bar-h) + var(--hn-line2)); }
   .hn-bar-words { top: calc(22px + var(--safe-top) + 58px + var(--hn-line2) / 2); }
   .hn-bar-add { top: calc(22px + var(--safe-top) + 58px); height: var(--hn-line2); }
@@ -3624,9 +3285,9 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
     top: calc(22px + var(--safe-top) + 58px); height: var(--hn-line2);
   }
   .hn-face { padding-top: calc(var(--hn-bar-h) + var(--hn-line2)); }
-  .hn-pane--inbox { padding-top: calc(var(--hn-bar-h) + var(--hn-line2)); }
-  .hn-floor--book,
-  .hn-everyone { padding-top: calc(var(--hn-bar-h) + var(--hn-line2) + 8px); }
+  /* Community has no second line of words under the bar (the inbox had
+     Inbox · Outbox there until 2026-10-27). */
+  .hn-pane--inbox { padding-top: var(--hn-bar-h); }
 }
 
 /* ── The card, over the page, 2026-10-22 ───────────────────────────────────
@@ -3737,6 +3398,26 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
      (journal.css, .mp-note): both lead the wall now, and the prompt is first
      in the source. */
   .hn .hn-pane--home .mp-note { order: -1; }
+}
+
+/* ── People is one screen, 2026-10-23 ──────────────────────────────────────
+   Miyel's People brief: other people's beacons, a shelf line and a wall of
+   their records, in one scroll, as home is (PeopleScreen.js). The band
+   starts under the top row; the wall's line sticks there as you read down,
+   exactly as home's does. */
+@media (max-width: 768px) {
+  .hn-pane--friends .ps { padding-top: var(--hn-bar-h); }
+  .hn .hn-pane--friends .arc-bar-wrap {
+    order: -1;
+    top: var(--hn-bar-h);
+    bottom: auto;
+    opacity: 1;
+    pointer-events: auto;
+    padding-top: 8px;
+    background: var(--bg);
+  }
+  .hn--typing .hn-pane--friends .arc-bar-wrap { bottom: auto; }
+  .hn .hn-pane--friends .arc-bar { border-top: 0; }
 }
 
 /* ── The cover wears its listen, 2026-10-23 ────────────────────────────────

@@ -2,95 +2,79 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 'use client';
 // app/dashboard/people/[id]/page.js
-// Your page about one person in the address book.
+// A friend's journal page, on your own copy.
 //
-// Compare is not a destination; it is what this page is. Everything
-// cumulative about a person lives here, and it lives on your copy, which is
-// why it can hold what their journal never could: what they sent you, how it
-// landed, which songs you both picked.
+// ── Their journal, drawn by yours, 2026-10-26 ─────────────────────────────
+// Miyel's Friends answers: "the page is mine, the data is theirs." It was
+// your page about them, a report — Compare's numbers and lists — and it is
+// now their journal as your journal draws it, laid out as home is (Miyel:
+// "just like an owners page"): home's top row with their face and name,
+// then their beacon with the three before it, the line and the wall, the
+// same components home uses handed their rows, so a web of sites reads as
+// one app. Nothing
+// is framed and nothing of theirs is drawn by them; the records come from
+// their public feed and their beacon, the allow-listed reads every journal
+// already answers. A record opens their entry inside this journal since
+// 2026-10-28 (app/dashboard/people/[id]/[slug]), read from their journal as
+// it opens and kept nowhere.
 //
-// ── You versus them, 2026-10-24 ───────────────────────────────────────────
-// Her brief, "compare becomes a shape", opened the page on a picture of who
-// agrees; the run of cards after it said the same thing in sentences. Both
-// were still a report, and she did not like *argument* and *agree* at all:
-// "i was thinking one person one side one person the other you click
-// through shared albums… almost like a vs screen in a video game. then other
-// fun cool metrics that are exciting that only my app could know." So the
-// page is a versus screen: you on the left, them on the right. Under the
-// faces, the facts (her word, the same day, for what had been a sentence:
-// "more comparative overall metadata as facts"); then the filters — what
-// you share, what you sent, what you received — and the records they choose
-// as a wall of covers, as your own
-// is (her next word, the same day: "a grid of shared albums then opening it
-// opens just like a regular wall entry would but compared"). A record opens
-// to the two of you on it: both of your stars, marks, horizons and notes,
-// and one line only this journal could write — the songs you both hearted
-// above all, which no other site can know. That is what this page has and
-// their wall does not: their wall is them alone. Between the two faces, the compare mark and not "vs" — her word,
-// the same day: friendly, "like an & or something else… i meant the
-// compare sign" — the same Shuffle every door that opens this page wears
-// (Friends, the inbox, the feed).
+// Their public feed is read in the browser, as Compare and People always
+// have read it; their beacon comes through this copy's server, as People's
+// does (below); your own records and the sends from them come from this
+// copy. Nothing is stored and nobody learns they were looked at.
 //
-// **Nobody wins.** A game's versus screen has a score; this one has none —
-// no points, no "you beat them". AGENTS' Never keeps counts and rankings off
-// people so that a friendship never becomes something to grow, and that
-// still holds: the numbers here are about records the two of you share, on
-// the one page that is about the two of you.
+// ── Compare is a view here, not the page ──────────────────────────────────
+// Opened in place at the top and rolled up again (her pick, 2026-10-26). It
+// is main's versus screen (2026-10-24, brought in 2026-10-28): the two of
+// you, a colour each and nobody's side bigger; face to face, your share of
+// your records against theirs by genre, decade, artist, stars or how new;
+// the facts as cards swiped through (kept above the records, her call
+// 2026-10-28); and a wall of the records you share. A shared record opens
+// their post with your listen beside theirs (ListenCompare.js) — "comparing
+// a listen vs comparing with a full person", her split the same day: this
+// is the person, the post is the listen. **Nobody wins**: no points, no
+// score, nothing ranked (AGENTS, Never).
 //
-// **Every rating is the stars as each of you gave them.** The offset that
-// decided who "agreed" went with agreeing; nothing on the page needs it.
+// By their number in your book, or — main's, for a keeper off the Board's
+// Compare — by their address, when the top row says Add instead of Added
+// and nothing of theirs opens inside this journal.
 //
-// Read in the browser: their public feed from their journal; your records,
-// what they sent you and what you sent them from this copy. Nothing is
-// stored and nobody learns they were looked at. Their writing stays on their
-// journal, where every one of their records here can take you.
+// The row carries Compare and Added — no Wave for somebody already added,
+// her call — and the foot of the wall carries what you have sent them that
+// is still out (the inbox's Sent door, for one person), Keep private and
+// Remove. Pin went, her call.
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { CaretDown, CaretLeft, CaretRight, Heart, Printer, Shuffle, SketchLogo, Sparkle, User } from '@phosphor-icons/react';
-import SiteNav from '../../../../components/main_components/SiteNav';
+import { CaretDown, CaretLeft, CaretRight, Heart, Printer, Shuffle, SketchLogo, Sparkle, User, UserCheck, UserPlus } from '@phosphor-icons/react';
 import StarRating from '../../../../components/main_components/StarRating';
-import { HorizonRow } from '../../../../components/main_components/Feed';
-import Chip from '../../../../components/main_components/Slug_Page/Chip';
-import { useBookplate } from '../../../../components/main_components/Bookplate';
+import Journal, { foldForSearch, gatherAlbums } from '../../../../components/main_components/Journal';
+import { BeaconCard } from '../../../../components/main_components/ListeningBeacon';
+import SentList from '../../../../components/main_components/SentList';
+import { countHearts, lineUp } from '../../../../components/main_components/ListenCompare';
 import { albumKey } from '../../../../hooks/useListeningBeacon';
-import { parseHorizon, splitNotes } from '../../../../library/entry_formatter';
+import { fillFriends, useFriendsBeacons } from '../../../../hooks/useFriendsBeacons';
+import { journalUrl, tidyJournal } from '../../../../library/return_address';
+import { arrivingBack, handOff, handOffCompare, handOffOrder } from '../../../../library/handoff';
 import { foldGenre } from '../../../../library/music_data_api';
-import { carrySender, journalUrl, tidyJournal } from '../../../../library/return_address';
-import { arrivingBack } from '../../../../library/handoff';
+import { DIRECTORY_URL } from '../../../../library/version';
 
 const EACH_MS = 8000;
-// A record whose every song the keeper gave full marks says so, once it has
-// enough songs for that to mean something.
-const ALL_TOP_LEAST = 3;
-// How far a finger has to travel across the record to turn to the next one.
-const SWIPE_PX = 40;
-// How long an opened record takes to grow out of its cover, on the curve
-// the entry layer grows on (LayerEntry.js).
-const GROW_MS = 420;
-const GROW_EASE = 'cubic-bezier(0.22, 0.61, 0.36, 1)';
-// A note longer than this opens folded, twelve lines of it showing and Read all
-// under it. Most notes are shorter and never fold.
-const FOLD_AT = 450;
-// The most of somebody else's note this page will draw. Their journal's
-// answer is read as text and never as markup, and this is only a ceiling on
-// a reply nobody's note would reach.
-const NOTE_MOST = 20000;
-// The words you both used: at most three, each at least four letters.
-const WORDS_MOST = 3;
-const WORD_LEAST = 4;
+// The covers beside their beacon, as home stands its own three.
+const RECENTS = 3;
+// Where the wall's view is remembered, apart from home's and People's.
+const VIEW_KEY = 'ln-person-view';
+
+const num = v => (v === null || v === undefined || v === '' ? null : Number(v));
+const newestFirst = rows => [...rows].sort((a, b) => new Date(b.posted_at) - new Date(a.posted_at));
+
+// ── Compare's own pieces, from main (2026-10-24) ──────────────────────────
 // Masterpieces drawn one mark each up to this many; past it, one mark and
 // the number.
 const MARKS_DRAWN = 5;
 
-const num = v => (v === null || v === undefined || v === '' ? null : Number(v));
-const newestFirst = rows => [...rows].sort((a, b) => new Date(b.posted_at) - new Date(a.posted_at));
 const said = v => { const n = num(v); return n === null ? '' : String(Math.round(n * 100) / 100); };
-const stars = v => `${said(v)} ${num(v) === 1 ? 'star' : 'stars'}`;
-const heartsOf = entry => String(entry?.hearts || '');
-const countHearts = h => [...h].filter(c => c === '1').length;
 const some = (n, one, many) => (n === 1 ? one : many.replace('#', n));
 const isOn = v => v === true || v === 'true';
 // A genre as the wall folds it (foldGenre), and Rap with Hip-Hop/Rap, which
@@ -221,439 +205,33 @@ const TOGETHER_LEAST = 0.1;
 // One entry per record, the most recent (DECISIONS: never average across
 // listens). Album listens only, 2026-09-24: a track note rates one song, and
 // set against somebody's whole-record score it would be a comparison of two
-// different things.
+// different things. An older copy sends no `song`, and its notes cannot be
+// told apart — which only happens once they have one.
 function latestPerKey(entries) {
   const latest = new Map();
   for (const e of newestFirst(entries)) if (e.album_key && !e.song && !latest.has(e.album_key)) latest.set(e.album_key, e);
   return latest;
 }
 
-function Face({ src, small = false }) {
+// The nearest box that scrolls: the layer's sheet when this arrives over the
+// journal, nothing (the page itself) when it is opened on its own.
+function scrollingBox(el) {
+  for (let at = el?.parentElement; at; at = at.parentElement) {
+    const y = getComputedStyle(at).overflowY;
+    if (y === 'auto' || y === 'scroll') return at;
+  }
+  return null;
+}
+
+function Face({ address = '', src = '' }) {
   return (
-    <span className={'pn-face' + (small ? ' pn-face--small' : '')} aria-hidden="true">
-      <User size={small ? 12 : 26} weight="regular" />
-      <img src={src} alt="" onError={e => { e.currentTarget.style.display = 'none'; }} />
+    <span className="pn-face" aria-hidden="true">
+      <User size={22} weight="regular" />
+      <img src={src || `${journalUrl(address)}/api/portrait`} alt="" onError={e => { e.currentTarget.style.display = 'none'; }} />
     </span>
   );
 }
 
-// ── What the two listens share ────────────────────────────────────────────
-// The two horizons can be laid track against track only when they are the
-// same length — the same edition of the record. Otherwise each is drawn on
-// its own and nothing is said about songs, because the fifth song on one
-// tracklist is not the fifth on the other.
-function lineUp(mine, theirs) {
-  const yours = parseHorizon(mine?.horizon);
-  const hers = parseHorizon(theirs?.horizon);
-  const yourHearts = heartsOf(mine);
-  const theirHearts = heartsOf(theirs);
-  const comparable = yours.length > 0 && yours.length === hers.length
-    && yourHearts.length === yours.length && theirHearts.length === hers.length;
-  const both = [];
-  if (comparable) for (let i = 0; i < yours.length; i++) if (yourHearts[i] === '1' && theirHearts[i] === '1') both.push(i);
-  return { yours, hers, yourHearts, theirHearts, comparable, both };
-}
-
-const allTop = bars => bars.length >= ALL_TOP_LEAST && bars.every(v => v >= 1);
-
-// ── The one line ──────────────────────────────────────────────────────────
-// What only this journal knows about a record the two of you have, said the
-// way a person would say it, the most surprising thing first: the songs you
-// both picked, then a Masterpiece you share, then every song given full
-// marks, then favourites that never meet. The stars come last, since they
-// are drawn right above it. A record one of them put the other onto says so
-// first, as its own short sentence.
-function oneLine({ mine, theirs, from, shape, songs, name }) {
-  const lead = from === 'them' ? `${name} put you onto this.` : from === 'you' ? `You put ${name} onto this.` : null;
-  const say = rest => (lead ? <>{lead} {rest}</> : rest);
-  if (!mine) return say(<>You haven&rsquo;t logged it yet.</>);
-  if (!theirs) return say(<>{name} hasn&rsquo;t logged it yet.</>);
-
-  const m = num(mine.rating_value);
-  const t = num(theirs.rating_value);
-  const n = shape.both.length;
-  if (n > 0) {
-    const named = songs && n <= 2 && songs.length === n;
-    const what = named
-      ? <>{songs.map((s, i) => <span key={i}>{i > 0 && ' and '}<b>{s}</b></span>)}</>
-      : <>the same <b>{n}</b> {n === 1 ? 'song' : 'songs'}</>;
-    if (t === m && m !== null) return say(<>You both gave it {stars(m)} and picked {what}.</>);
-    // Half a star is the same opinion typed slightly differently; a "but"
-    // over it makes an argument out of nothing.
-    if (lead || m === null || t === null || Math.abs(t - m) <= 0.5) return say(<>You both picked {what}.</>);
-    if (t < m) return <>{name} gave it {stars(t)}, but you both picked {what}.</>;
-    return <>{name} liked it more than you did, but you both picked {what}.</>;
-  }
-  const mp = e => e.masterpiece === true || e.masterpiece === 'true';
-  if (mp(mine) && mp(theirs)) return say(<>You both called it a Masterpiece.</>);
-  if (allTop(shape.hers) && !allTop(shape.yours)) return say(<>{name} gave every song full marks.</>);
-  if (allTop(shape.yours) && !allTop(shape.hers)) return say(<>You gave every song full marks.</>);
-  if (shape.comparable) {
-    const yh = countHearts(shape.yourHearts);
-    const th = countHearts(shape.theirHearts);
-    if (yh && th) return say(<>You each picked different favorite songs.</>);
-    if (yh && !th) return say(<>You picked {some(yh, 'one favorite song', '# favorite songs')}. {name} picked none.</>);
-    if (th && !yh) return say(<>{name} picked {some(th, 'one favorite song', '# favorite songs')}. You picked none.</>);
-  }
-  if (m !== null && t !== null) return say(m === t ? <>You both gave it {stars(m)}.</> : <>You gave it {stars(m)}. {name} gave it {stars(t)}.</>);
-  return lead || <>You&rsquo;ve both logged it.</>;
-}
-
-// ── The words you both used ───────────────────────────────────────────────
-// Her idea, 2026-10-23: "You both used the word ____ to describe this." The
-// two notes are folded to their words; the ones in both, minus the words
-// everybody uses and the record's own names — its title, its artist, its
-// songs and your two names would match every time and say nothing — are
-// what you both reached for. The longest first, since a long shared word is
-// rarer than a short one, then in the order they come in your note.
-const PLAIN_WORDS = new Set(`
-  about above after again album albums almost also always another anything around away back
-  because been before being best better between both bring came come comes could didn does
-  doing done down each even ever every everything feel feels felt first from gets give going
-  gonna good great have having here into just keep kind know last like little listen listened
-  listening long look lots made make many maybe more most much music must never next nothing
-  only other over part pretty quite really record records right said same says should since
-  some something song songs sound sounds still such sure take than that their them then there
-  these they thing things think this those though thought through time track tracks very want
-  well went were what when where which while whole will with would year years your actually
-  definitely probably especially without yeah also
-`.split(/\s+/).filter(Boolean));
-
-const fold = text => String(text || '').toLowerCase().replace(/[‘’]/g, "'");
-function wordsOf(text) {
-  return (fold(text).match(/\p{L}[\p{L}']*/gu) || [])
-    .map(w => w.replace(/'s$/, '').replace(/'+$/, ''))
-    .filter(w => w.length >= WORD_LEAST && !w.includes("'") && !PLAIN_WORDS.has(w));
-}
-
-// A note as it reads, not as it was typed: a [[link]] is its words, and a
-// written link is its text.
-const plainNote = text => String(text || '')
-  .replace(/\[\[([^\]|]*)\|([^\]]*)\]\]/g, '$2')
-  .replace(/\[\[([^\]]*)\]\]/g, '$1')
-  .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
-  .trim();
-
-function sharedWords(yours, theirs, names) {
-  const skip = new Set(names.flatMap(n => wordsOf(n)));
-  const order = [...new Set(wordsOf(yours))].filter(w => !skip.has(w));
-  const theirSet = new Set(wordsOf(theirs));
-  const both = order.filter(w => theirSet.has(w));
-  const kept = new Set([...both].sort((a, b) => b.length - a.length).slice(0, WORDS_MOST));
-  return both.filter(w => kept.has(w));
-}
-
-// The note's words, the shared ones marked wherever they stand.
-function Marked({ text, words }) {
-  const find = words.length
-    ? new RegExp(`(?<![\\p{L}\\p{N}])(${words.join('|')})(?![\\p{L}\\p{N}])`, 'giu')
-    : null;
-  return text.split(/\n\s*\n/).map((para, i) => (
-    <p key={i}>
-      {find ? para.split(find).map((piece, j) => (j % 2 ? <mark key={j} className="pn-word">{piece}</mark> : piece)) : para}
-    </p>
-  ));
-}
-
-// One person's note, in their column: their own words in full, folded when
-// long, with Read all under it.
-function Note({ text, words }) {
-  const [open, setOpen] = useState(false);
-  const long = text.length > FOLD_AT;
-  return (
-    <>
-      <div className={'pn-said-text' + (long && !open ? ' pn-said-text--folded' : '')}>
-        <Marked text={text} words={words} />
-      </div>
-      {long && !open && <button type="button" className="pn-said-door" onClick={() => setOpen(true)}>Read all</button>}
-    </>
-  );
-}
-
-// The marks an entry wears, as the entry page wears them: a chip each.
-function Chips({ entry }) {
-  if (!entry) return null;
-  const on = v => v === true || v === 'true';
-  return (
-    <>
-      {on(entry.favorite) && <Chip tone="fav">Favorite</Chip>}
-      {on(entry.masterpiece) && <Chip tone="mp">Masterpiece</Chip>}
-      {on(entry.formative) && <Chip tone="formative">Formative</Chip>}
-    </>
-  );
-}
-
-// ── The record on screen ──────────────────────────────────────────────────
-// Drawn as an entry is drawn (Miyel, 2026-10-24: "more like you're looking at
-// an actual entry, but one ghosted"): the cover, the title, the artist and
-// the year, then the two of you in two columns, the way the faces stand at
-// the top of the page — "left me right ghost", her word the same day. Each
-// column is one listen: the face, the stars, the marks, the horizon with its
-// hearts, the note. Each column wears its owner's colour, as the faces at
-// the top of the page do; theirs was a ghost of yours until the same day
-// ("we don't need the other person to be a ghost anymore"). The
-// columns keep row with each other, so the two sets of stars, the two
-// horizons and the two notes each start level.
-//
-// Their note is read from their journal when the record is on screen and
-// kept only while this page is open (AGENTS, Never). Most entries have no
-// writing, so the plain case is said plainly, and a journal that cannot give
-// a note — an older copy, a quiet entry — shows only the way there, with
-// nothing said about why.
-function Versus({ item, name, address, songs, myNote, theirNote, titles, turn, at, count }) {
-  const { mine, theirs } = item;
-  const theirHome = theirs ? carrySender(`${journalUrl(address.theirs)}/entries/${theirs.slug}`, address.me, { known: true }) : null;
-  const theirFace = `${journalUrl(address.theirs)}/api/portrait`;
-  const shape = lineUp(mine, theirs);
-  const face = mine || theirs || item;
-  const year = String(face.year || '').match(/[0-9]{4}/)?.[0] || '';
-  const myRating = num(mine?.rating_value);
-  const theirRating = num(theirs?.rating_value);
-  // The cover goes to your own entry, as every record on this page always
-  // has; to theirs, on their journal, when you have not logged it.
-  const cover = face.album_art
-    ? <img src={face.album_art} alt="" />
-    : <span className="pn-vs-none" aria-hidden="true">♪</span>;
-
-  // The notes: undefined while they are being read, false where their
-  // journal cannot give one.
-  const yours = mine && typeof myNote === 'string' ? plainNote(myNote) : '';
-  const hers = theirs && typeof theirNote === 'string' ? plainNote(theirNote) : '';
-  const cannot = Boolean(theirs) && theirNote === false;
-  const heard = (!mine || myNote !== undefined) && (!theirs || theirNote !== undefined);
-  const words = yours && hers ? sharedWords(yours, hers, [face.album, face.artist, ...(titles || []), name]) : [];
-  const neither = heard && mine && theirs && !yours && !hers && !cannot;
-  const way = theirs ? <a href={theirHome} className="pn-said-door">On their journal</a> : null;
-  const anyChips = [mine, theirs].some(e => e && ['favorite', 'masterpiece', 'formative'].some(k => e[k] === true || e[k] === 'true'));
-  const anyBars = shape.yours.length > 0 || shape.hers.length > 0;
-
-  // A row is two cells, yours and theirs, so the grid keeps them level.
-  const row = (what, left, right) => [
-    <div key={`${what}-you`} className={`pn-cell pn-cell--you pn-cell--${what}`}><div className="pn-side">{left}</div></div>,
-    <div key={`${what}-them`} className={`pn-cell pn-cell--them pn-cell--${what}`}><div className="pn-side">{right}</div></div>,
-  ];
-  const unlogged = <p className="pn-unlogged">Not logged yet.</p>;
-  const noNote = <p className="pn-said-none">Didn&rsquo;t write about it.</p>;
-
-  return (
-    <div className="pn-vs">
-      <div className="pn-vs-top">
-        {count > 1
-          ? <button type="button" className="pn-turn-btn" onClick={() => turn(-1)} aria-label="The record before"><CaretLeft size={20} weight="regular" aria-hidden="true" /></button>
-          : <span />}
-        {mine
-          ? <Link href={`/entries/${mine.slug}`} className="pn-vs-art" aria-label={`${face.album}, your entry`}>{cover}</Link>
-          : theirs
-            ? <a href={theirHome} className="pn-vs-art" aria-label={`${face.album}, on ${name}'s journal`}>{cover}</a>
-            : <span className="pn-vs-art">{cover}</span>}
-        {count > 1
-          ? <button type="button" className="pn-turn-btn" onClick={() => turn(1)} aria-label="The next record"><CaretRight size={20} weight="regular" aria-hidden="true" /></button>
-          : <span />}
-      </div>
-      {count > 1 && <div className="pn-turn-at">{at + 1} of {count}</div>}
-      <h2 className="pn-vs-album">{face.album}</h2>
-      <div className="pn-vs-artist">{face.artist}{year ? ` · ${year}` : ''}</div>
-
-      <p className="pn-vs-line">{oneLine({ ...item, shape, songs, name })}</p>
-
-      <div className="pn-sides">
-        {row('who',
-          <><Face src="/api/portrait" small />You</>,
-          <><Face src={theirFace} small />{name}</>)}
-        {row('stars',
-          mine ? (myRating !== null && <div className="pn-stars-of"><StarRating rating={myRating} size={20} /></div>) : unlogged,
-          theirs ? (theirRating !== null && <div className="pn-stars-of" aria-label={`${name}: ${stars(theirRating)}`}><StarRating rating={theirRating} size={20} /></div>) : unlogged)}
-        {anyChips && row('chips', <Chips entry={mine} />, <Chips entry={theirs} />)}
-        {anyBars && row('bars',
-          <HorizonRow bars={shape.yours} hearts={shape.yourHearts} className="fd-cmp-bars pn-bars" label="How you heard it, track by track" />,
-          <HorizonRow bars={shape.hers} hearts={shape.theirHearts} className="fd-cmp-bars pn-bars" label={`How ${name} heard it, track by track`} />)}
-
-        {words.length > 0 && (
-          <p className="pn-cell--wide pn-words">
-            You both used the {words.length === 1 ? 'word' : 'words'}{' '}
-            {words.map((w, i) => <span key={w}>{i > 0 && (i === words.length - 1 ? ' and ' : ', ')}<mark className="pn-word">{w}</mark></span>)}.
-          </p>
-        )}
-        {heard && (neither
-          ? <p className="pn-cell--wide pn-notes-none">Neither of you wrote about it.{way}</p>
-          : row('note',
-            mine && (yours ? <Note text={yours} words={words} /> : noNote),
-            theirs && (
-              <>
-                {hers ? <Note text={hers} words={words} /> : !cannot && noNote}
-                {way}
-              </>
-            )))}
-      </div>
-    </div>
-  );
-}
-
-// ── A record, opened ──────────────────────────────────────────────────────
-// The page is a wall of the records the two of you share, and a record
-// opens off it the way an entry opens off your own wall (Miyel, 2026-10-24:
-// "a grid of shared albums then opening it opens just like a regular wall
-// entry would but compared"): it grows out of the cover that was pressed to
-// fill the screen, and goes back into it — a copy of the cover flying home
-// while the rest fades — on a pull down from the top, Escape, or the caret.
-// Sideways is the neighbours on the wall, in its order, by swipe, by the
-// arrows either side of the cover, or by ← and →. It is the entry layer's
-// way of opening (LayerEntry.js) without its route: this page may already
-// be on a sheet of its own, and a record here is not an address.
-//
-// Drawn over everything, outside the page, so the sheet this page may sit on
-// never sees its touches; and its keys are taken before the sheet's, so
-// Escape puts the record down rather than the whole page.
-function Opened({ from, tile, turn, count, onGone, children }) {
-  const sheet = useRef(null);
-  const going = useRef(false);
-
-  useLayoutEffect(() => {
-    const el = sheet.current;
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (!el || !from || reduced) {
-      const run = el?.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 240, easing: 'ease-out' });
-      return () => run?.cancel();
-    }
-    const W = el.offsetWidth || window.innerWidth;
-    const H = el.offsetHeight || window.innerHeight;
-    const run = el.animate([
-      { transformOrigin: '0 0', transform: `translate(${from.x}px, ${from.y}px) scale(${from.w / W}, ${from.h / H})`, borderRadius: '14px' },
-      { transformOrigin: '0 0', transform: 'none', borderRadius: '0px' },
-    ], { duration: GROW_MS, easing: GROW_EASE });
-    return () => run.cancel();
-  }, [from]);
-
-  // The page under it holds still while it is open. Only a lock this put on
-  // comes off with it: on a sheet, the sheet's own is left where it was.
-  useEffect(() => {
-    const root = document.documentElement;
-    if (root.classList.contains('ln-locked')) return undefined;
-    root.classList.add('ln-locked');
-    return () => root.classList.remove('ln-locked');
-  }, []);
-
-  const leave = useCallback((pulled = 0) => {
-    if (going.current) return;
-    going.current = true;
-    const el = sheet.current;
-    let gone = false;
-    const done = () => { if (gone) return; gone = true; onGone(); };
-    window.setTimeout(done, GROW_MS + 100);
-    if (!el) { done(); return; }
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const fade = el.animate([
-      { opacity: 1, transform: `translateY(${pulled}px)` },
-      { opacity: 0, transform: `translateY(${pulled}px)` },
-    ], { duration: 200, easing: 'ease-out', fill: 'forwards' });
-    const box = reduced ? null : tile()?.getBoundingClientRect();
-    const cover = el.querySelector('.pn-vs-art img');
-    if (!box || !cover || box.bottom < 0 || box.top > window.innerHeight) {
-      fade.onfinish = done;
-      return;
-    }
-    const at = cover.getBoundingClientRect();
-    cover.style.visibility = 'hidden';
-    const flyer = document.createElement('img');
-    flyer.src = cover.currentSrc || cover.src;
-    flyer.alt = '';
-    Object.assign(flyer.style, {
-      position: 'fixed', zIndex: 341, left: `${at.left}px`, top: `${at.top}px`,
-      width: `${at.width}px`, height: `${at.height}px`, objectFit: 'cover',
-      borderRadius: '16px', transformOrigin: '0 0', pointerEvents: 'none',
-    });
-    document.body.appendChild(flyer);
-    const run = flyer.animate([
-      { transform: 'none' },
-      { transform: `translate(${box.left - at.left}px, ${box.top - at.top}px) scale(${box.width / at.width}, ${box.height / at.height})`, borderRadius: '10px' },
-    ], { duration: GROW_MS * 0.75, easing: GROW_EASE, fill: 'forwards' });
-    const land = () => { flyer.remove(); done(); };
-    run.onfinish = land;
-    run.oncancel = land;
-    window.setTimeout(() => flyer.remove(), GROW_MS + 100);
-  }, [tile, onGone]);
-
-  // Before the sheet's keys, and instead of them.
-  useEffect(() => {
-    const onKey = e => {
-      if (e.key === 'Escape') { e.stopPropagation(); leave(); }
-      else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-        e.stopPropagation();
-        if (count > 1) turn(e.key === 'ArrowLeft' ? -1 : 1);
-      }
-    };
-    window.addEventListener('keydown', onKey, true);
-    return () => window.removeEventListener('keydown', onKey, true);
-  }, [leave, turn, count]);
-
-  // The finger, decided on its first move as the entry layer decides it:
-  // mostly down from the top is the pull, which the sheet follows and which
-  // puts the record down past a fifth of the screen or on a flick; mostly
-  // sideways is the neighbour. Native listeners, so the first move can be
-  // kept from the browser.
-  useEffect(() => {
-    const el = sheet.current;
-    if (!el) return undefined;
-    let pull = null;
-    const begin = e => {
-      if (e.touches.length !== 1) { pull = null; return; }
-      const t = e.touches[0];
-      pull = { x: t.clientX, y: t.clientY, at: e.timeStamp, dx: 0, dy: 0, axis: null, top: el.scrollTop <= 0 };
-    };
-    const move = e => {
-      if (!pull || e.touches.length !== 1) return;
-      const t = e.touches[0];
-      pull.dx = t.clientX - pull.x;
-      pull.dy = t.clientY - pull.y;
-      pull.last = e.timeStamp;
-      if (!pull.axis) {
-        if (Math.abs(pull.dx) < 6 && Math.abs(pull.dy) < 6) return;
-        if (Math.abs(pull.dx) > Math.abs(pull.dy)) pull.axis = 'x';
-        else if (pull.top && pull.dy > 0) pull.axis = 'y';
-        else { pull = null; return; }
-      }
-      if (e.cancelable) e.preventDefault();
-      if (pull.axis === 'y') {
-        el.style.transition = 'none';
-        el.style.transform = `translateY(${Math.max(0, pull.dy)}px)`;
-      }
-    };
-    const end = () => {
-      const done = pull;
-      pull = null;
-      if (!done || !done.axis) return;
-      if (done.axis === 'x') {
-        if (count > 1 && Math.abs(done.dx) > SWIPE_PX) turn(done.dx < 0 ? 1 : -1);
-        return;
-      }
-      const dy = Math.max(0, done.dy);
-      const fast = dy / Math.max(1, (done.last || done.at) - done.at) > 0.3;
-      if (dy > el.offsetHeight * 0.2 || fast) { el.style.transform = ''; leave(dy); return; }
-      el.style.transition = `transform 0.28s ${GROW_EASE}`;
-      el.style.transform = '';
-    };
-    el.addEventListener('touchstart', begin, { passive: true });
-    el.addEventListener('touchmove', move, { passive: false });
-    el.addEventListener('touchend', end);
-    el.addEventListener('touchcancel', end);
-    return () => {
-      el.removeEventListener('touchstart', begin);
-      el.removeEventListener('touchmove', move);
-      el.removeEventListener('touchend', end);
-      el.removeEventListener('touchcancel', end);
-    };
-  }, [leave, turn, count]);
-
-  return createPortal(
-    <div ref={sheet} className="pn-open" role="dialog" aria-modal="true">
-      <button type="button" className="pn-open-back" onClick={() => leave()} aria-label="Close" title="Close">
-        <CaretLeft size={18} weight="regular" aria-hidden="true" />
-      </button>
-      <div className="pn-open-page">{children}</div>
-    </div>,
-    document.body,
-  );
-}
 
 // The two of you face to face over one question (Miyel, 2026-10-24: "i
 // like the bars with different views"): the answers down the middle, your
@@ -884,7 +462,6 @@ async function whoIs(id) {
 export default function PersonPage({ layered = false }) {
   const { id } = useParams();
   const router = useRouter();
-  const { keeper_name, site_address } = useBookplate();
   // The way back, in the header's left slot: to the book or the feed this
   // opened from, or to the book when there is nothing behind it. The pull
   // down and Escape still work; this is the one that can be seen.
@@ -902,30 +479,25 @@ export default function PersonPage({ layered = false }) {
   // Their feed: null until asked, { entries, name } when it answered,
   // { failed: true } when it did not.
   const [theirs, setTheirs] = useState(null);
-  // Your own records: null until they have been read, so the page does not
+  // Your own records: null until they have been read, so Compare does not
   // say there is nothing in common while they are on their way.
   const [mine, setMine] = useState(null);
   const [sent, setSent] = useState([]);
-  // What you put them onto: what came back (they logged it, and their
-  // journal credits yours) and what is still out (the inbox's Sent list,
-  // library/sent_actions.js — no age and no reminder on it, as there is
-  // none there).
+  // What you put them onto: what came back and what is still out, so a
+  // shared record can say who put whom onto it.
   const [cameBack, setCameBack] = useState([]);
   const [out, setOut] = useState([]);
-  const [at, setAt] = useState(0);
-  // The record open over the wall, if one is: where its cover was when it
-  // was pressed, for it to grow out of.
-  const [opened, setOpened] = useState(null);
-  // Your own entry for each record, read the first time the record is on
-  // screen: the names of its songs (the list carries the hearts but not the
-  // titles) and your note. slug → { titles, note }.
-  const [full, setFull] = useState({});
-  const asked = useRef(new Set());
-  // Their note on each record, read from their journal the first time the
-  // record is on screen and held only while this page is open: slug →
-  // { note }, or false when their journal could not give one.
-  const [theirNotes, setTheirNotes] = useState({});
-  const heard = useRef(new Set());
+  const [adding, setAdding] = useState(false);
+  const [comparing, setComparing] = useState(false);
+  const [sure, setSure] = useState(false);
+  const [removing, setRemoving] = useState(false);
+
+  const rootRef = useRef(null);
+  // Handed to the wall, which draws more as its foot nears the edge of this.
+  // Set in a layout effect so it is in place before the wall's own effects
+  // first look at it.
+  const scroller = useRef(null);
+  useLayoutEffect(() => { scroller.current = scrollingBox(rootRef.current); });
 
   useEffect(() => {
     fetch('/api/auth/check').then(r => r.json()).then(d => setAuthed(!!d.authed)).catch(() => {}).finally(() => setChecking(false));
@@ -948,20 +520,54 @@ export default function PersonPage({ layered = false }) {
         // Every send this copy has, narrowed to theirs by the address the
         // send carried — the same spelling the book keeps.
         fetch('/api/submissions').then(r => r.json()).then(d3 => {
-          if (!gone) setSent((d3.submissions || []).filter(s => tidyJournal(s.sender_url) === theirAddress));
+          if (gone) return;
+          const theirsOnly = (d3.submissions || []).filter(s => tidyJournal(s.sender_url) === theirAddress);
+          setSent(theirsOnly);
         }).catch(() => {});
         fetch('/api/came-back').then(r => (r.ok ? r.json() : { cameBack: [] })).then(d4 => {
           if (!gone) setCameBack((d4.cameBack || []).filter(c => tidyJournal(c.journal) === theirAddress));
         }).catch(() => {});
         fetch('/api/sent').then(r => (r.ok ? r.json() : { sent: [] })).then(d5 => {
-          if (!gone) setOut((d5.sent || []).filter(s => tidyJournal(s.journal) === theirAddress));
+          if (!gone) setOut((d5.sent || []).filter(x => tidyJournal(x.journal) === theirAddress));
         }).catch(() => {});
       })
       .catch(() => { if (!gone) setPerson(false); });
     return () => { gone = true; };
   }, [authed, id]);
 
+  // ── Their beacon, through this copy, 2026-10-26 ─────────────────────────
+  // People's own round (useFriendsBeacons): this copy's server asks their
+  // journal and hands the answer over. A browser cannot read another
+  // journal's beacon itself — the route sends no leave to be read from
+  // another address, and an older copy never will — which is why the first
+  // version of this page showed none on the sandbox. A friend past the
+  // timer's first thirty is asked once when the page opens.
+  const address = person ? person.address : '';
+  const { friends } = useFriendsBeacons();
+  const theirRow = address ? friends.find(f => tidyJournal(f.address) === tidyJournal(address)) : null;
+  const unheard = Boolean(address) && (!theirRow || theirRow.state === 'unknown');
+  useEffect(() => { if (unheard) fillFriends(); }, [unheard]);
+  const beacon = theirRow && (theirRow.state === 'logging' || theirRow.state === 'logged')
+    ? { state: theirRow.state, album: theirRow.album, artist: theirRow.artist, art: theirRow.art, track: theirRow.track, isLive: theirRow.state === 'logging' }
+    : theirRow?.state === 'nothing' ? { state: 'nothing', isLive: false } : null;
+
   const name = theirs?.name || person?.name || 'them';
+  const records = useMemo(() => gatherAlbums(theirs?.entries || []), [theirs]);
+  // The three beside the beacon, as home has its own: their newest records
+  // but the one the beacon is showing, each opening on their journal.
+  const recents = useMemo(() => {
+    const showing = albumKey(beacon?.album || '', beacon?.artist || '');
+    const seen = new Set([showing]);
+    const out = [];
+    for (const e of newestFirst(theirs?.entries || [])) {
+      const key = albumKey(e.album, e.artist);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(e);
+      if (out.length === RECENTS) break;
+    }
+    return out;
+  }, [theirs, beacon?.album, beacon?.artist]);
 
   const decks = useMemo(() => {
     const mineLatest = latestPerKey(mine || []);
@@ -1035,161 +641,320 @@ export default function PersonPage({ layered = false }) {
     return { shared, lenses, facts: { taste, together, each } };
   }, [mine, theirs, sent, cameBack, out, person]);
 
-  const deck = decks.shared;
-  const item = deck.length ? deck[Math.min(at, deck.length - 1)] : null;
-  // Only an opened record is read for: the wall is covers alone.
-  const shown = opened ? item : null;
-  const count = deck.length;
-  const turn = useCallback(step => setAt(i => (count ? (Math.min(i, count - 1) + step + count) % count : 0)), [count]);
-  const open = (i, tile) => {
-    const box = tile.getBoundingClientRect();
-    setAt(i);
-    setOpened({ from: { x: box.left, y: box.top, w: box.width, h: box.height } });
-  };
-  // The cover on the wall for the record open now, which it goes back into.
-  const tileOfOpen = useCallback(() => document.querySelector(`[data-pn-tile="${Math.min(at, count - 1)}"]`), [at, count]);
-  const putDown = useCallback(() => setOpened(null), []);
+  const compareReady = Boolean(theirs) && mine !== null;
+  const there = address ? journalUrl(address) : '';
+  // Their entry, read inside this journal (2026-10-28, Miyel: "the actual
+  // entries open in app the same way as profile") — app/dashboard/people/
+  // [id]/[slug] reads it from their journal as it opens.
+  // Only somebody in your book has their entries opened here; a keeper off
+  // the Board, opened by address, still opens on their own journal.
+  const personId = person?.id || '';
+  const theirEntry = useCallback(e => (personId
+    ? `/dashboard/people/${personId}/${encodeURIComponent(e.slug)}`
+    : `${journalUrl(address)}/entries/${encodeURIComponent(e.slug)}`), [personId, address]);
 
-  // Your entry for the record open, once.
-  const slug = shown?.mine?.slug;
-  useEffect(() => {
-    if (!slug || asked.current.has(slug)) return;
-    asked.current.add(slug);
-    fetch(`/api/entries/${encodeURIComponent(slug)}`)
-      .then(r => (r.ok ? r.json() : null))
-      .then(d => {
-        const tracks = Array.isArray(d?.entry?.tracks) ? d.entry.tracks : [];
-        setFull(was => ({ ...was, [slug]: { titles: tracks.map(t => String(t?.title || '').trim()), note: splitNotes(d?.entry?.notes).albumNotes } }));
-      })
-      .catch(() => setFull(was => ({ ...was, [slug]: { titles: [], note: '' } })));
-  }, [slug]);
-  // Their note for the record open, once, from their journal.
-  const theirSlug = shown?.theirs?.slug;
-  const theirJournal = person?.address;
-  useEffect(() => {
-    if (!theirSlug || !theirJournal || heard.current.has(theirSlug)) return;
-    heard.current.add(theirSlug);
-    fetch(`${journalUrl(theirJournal)}/api/public/notes/${encodeURIComponent(theirSlug)}`, { signal: AbortSignal.timeout(EACH_MS), cache: 'no-store' })
-      .then(r => (r.ok ? r.json() : null))
-      .then(d => {
-        const note = typeof d?.note === 'string' ? d.note.slice(0, NOTE_MOST) : null;
-        setTheirNotes(was => ({ ...was, [theirSlug]: note === null ? false : { note } }));
-      })
-      .catch(() => setTheirNotes(was => ({ ...was, [theirSlug]: false })));
-  }, [theirSlug, theirJournal]);
-  const songsOf = shown => {
-    if (!shown?.mine || !shown?.theirs) return null;
-    const list = full[shown.mine.slug]?.titles;
-    const shape = lineUp(shown.mine, shown.theirs);
-    if (!list || list.length !== shape.yours.length) return null;
-    const named = shape.both.map(i => list[i]).filter(Boolean);
-    return named.length === shape.both.length ? named : null;
-  };
-  const songs = songsOf(item);
+  // Their wall's order as it stands, handed over when a record is pressed,
+  // so a swipe on their post goes to the record beside it (2026-10-28).
+  const order = useRef([]);
+  const onOrder = useCallback(albums => {
+    order.current = personId ? albums.map(a => ({ ...a.face, path: theirEntry(a.face) })) : [];
+  }, [personId, theirEntry]);
+
+  // Their record, drawn the way People draws a friend's: the cover, opening
+  // their entry over this page out of the cover pressed, its first screen
+  // handed over as home's records do (2026-10-28).
+  const tile = useCallback(album => {
+    const face = album.face;
+    const folded = album.listens.length === 0;
+    return (
+      <Link
+        href={theirEntry(face)}
+        data-grows={personId ? theirEntry(face) : undefined}
+        onClick={personId ? () => { handOffOrder(order.current); handOff(face); } : undefined}
+        target={personId ? undefined : '_blank'}
+        className={'ft' + (folded ? ' ft--page' : '')}
+        data-tile-key={album.key}
+        aria-label={face.album + (face.artist ? ` by ${face.artist}` : '')}
+      >
+        <div className="ft-inner">
+          <div className={'ft-face ft-face--front' + (folded ? ' ln-fold' : '')}>
+            {face.album_art
+              ? <img src={face.album_art} alt="" className="ft-art" loading="lazy" draggable={false} />
+              : <div className="ft-placeholder">{(face.album || '?')[0]}</div>}
+            {folded && (
+              <span className="ln-fold-flap" aria-hidden="true">
+                {face.album_art && <img src={face.album_art} alt="" loading="lazy" draggable={false} />}
+              </span>
+            )}
+            <div className="ft-hover">
+              <div className="ft-hover-album">{face.album}</div>
+              <div className="ft-hover-artist">{face.artist}</div>
+            </div>
+          </div>
+        </div>
+      </Link>
+    );
+  }, [theirEntry, personId]);
+
+  const seek = useMemo(() => ({
+    placeholder: 'Albums, artists or songs',
+    label: `Search ${name}’s records`,
+    matches: (album, q) => (foldForSearch(album.face.album).includes(q)
+      || foldForSearch(album.face.artist).includes(q)
+      || album.notes.some(n => foldForSearch(n.song).includes(q))),
+  }), [name]);
+
+  // Add, for a keeper opened by address: filed as Friends files one, and
+  // the page is theirs as a friend's from then on.
+  async function add() {
+    if (adding || !person?.address) return;
+    setAdding(true);
+    const r = await fetch('/api/people', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ address: person.address }),
+    }).catch(() => null);
+    const d = await r?.json().catch(() => null);
+    setAdding(false);
+    if (r?.ok && d?.person) setPerson(d.person);
+  }
+
+  async function keepPrivate() {
+    const to = !person.private;
+    setPerson(p => ({ ...p, private: to }));
+    const r = await fetch(`/api/people/${person.id}`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ private: to }),
+    }).catch(() => null);
+    if (!r?.ok) setPerson(p => ({ ...p, private: !to }));
+  }
+
+  async function remove() {
+    if (!sure) { setSure(true); return; }
+    setRemoving(true);
+    const r = await fetch(`/api/people/${person.id}`, { method: 'DELETE' }).catch(() => null);
+    if (r?.ok) { arrivingBack(); router.push('/dashboard/people'); return; }
+    setRemoving(false);
+    setSure(false);
+  }
 
   if (checking) return <div style={{ minHeight: '100vh', background: 'var(--bg)' }} />;
   if (!authed) { if (typeof window !== 'undefined') window.location.replace('/login'); return null; }
 
-  const ready = !!theirs && mine !== null;
-  const me = { name: keeper_name, address: site_address };
+  const loading = person === null || (person && theirs === null);
+  const wall = person && (
+    <Journal
+      records={records}
+      loading={loading}
+      scroller={scroller}
+      tile={tile}
+      filters={false}
+      viewKey={VIEW_KEY}
+      seek={seek}
+      onOrder={onOrder}
+      empty={(
+        <div className="arc-empty">
+          {theirs?.failed
+            ? <span className="arc-empty-said">{name}&rsquo;s journal isn&rsquo;t answering just now.</span>
+            : <span className="arc-empty-said">Nothing logged yet.</span>}
+        </div>
+      )}
+      foot={person.id ? (
+        <div className="pn-foot">
+          <SentList journal={person.address} title={`Still out with ${name}`} />
+          <p className="pn-quiet">
+            {/* All the words between you, record by record (Words.js) —
+                the brief's quiet line under their wall. */}
+            <Link className="pn-quiet-act" href={`/dashboard/people/${person.id}/words`}>All words with {name}</Link>
+            {/* Keep private moved here from under their face, 2026-10-27:
+                the face is for what they sent, this page for them. */}
+            {DIRECTORY_URL && (
+              <button
+                type="button"
+                className={'pn-quiet-act' + (person.private ? ' pn-quiet-act--on' : '')}
+                onClick={keepPrivate}
+                aria-pressed={Boolean(person.private)}
+                title={person.private
+                  ? `${name} stays off everyone's board but yours. Press to share them again.`
+                  : `Keep ${name} off everyone's board but yours`}
+              >
+                {person.private ? 'Kept private' : 'Keep private'}
+              </button>
+            )}
+            <button
+              type="button"
+              className={'pn-quiet-act' + (sure ? ' pn-quiet-act--sure' : '')}
+              onClick={remove}
+              onBlur={() => setSure(false)}
+              disabled={removing}
+              aria-label={sure ? `Press again to take ${name} out of your book` : undefined}
+            >
+              {sure ? 'Remove?' : 'Remove'}
+            </button>
+          </p>
+        </div>
+      ) : null}
+    />
+  );
 
   return (
-    <div className={'own-screen' + (layered ? ' own-screen--layered' : '')}>
-      {/* The header's left slot, where the owner's tools live on every page:
-          the way back, and the printer's door — the press that prints the
-          two of you and withholds the writing, naming both people
-          (DECISIONS, The network) — the same glyph at the same size the
-          entry and the card wear it. */}
-      <SiteNav tools={(
-        <>
-          <button type="button" className="kt-tool" onClick={goBack} aria-label="Back" title="Back">
-            <CaretLeft size={18} weight="regular" aria-hidden="true" />
-          </button>
-          {person?.id && (
-            <Link href={`/printer?person=${encodeURIComponent(person.id)}`} className="kt-tool" aria-label="Print the shape of the agreement" title="Print the shape of the agreement">
-              <Printer size={18} weight="regular" aria-hidden="true" />
-            </Link>
-          )}
-        </>
-      )} />
+    <div ref={rootRef} className={'own-screen pn-screen' + (layered ? ' own-screen--layered' : '')}>
+      {/* ── The top row, as home's ─────────────────────────────────────
+          Miyel, 2026-10-26: "page should look just like an owners page just
+          with the three buttons instead of the home people and community".
+          Home's row is the keeper's face, the mark and the three rooms; this
+          is the way back, their face, their name where the mark stands, and
+          Compare and Added where the rooms are — a glyph each, its word
+          shown and underlined while it is lit, as a room's is. Added is
+          always lit: it is a state, not a press. No Wave: a friend already
+          added is not waved at from here (her call, the same day). */}
+      <header className="pn-hdr">
+        <button type="button" className="pn-hdr-back" onClick={goBack} aria-label="Back" title="Back">
+          <CaretLeft size={20} weight="regular" aria-hidden="true" />
+        </button>
+        {person && <Face address={person.address} />}
+        {/* Their name where home's mark stands, and the mark's dot beside
+            it while they are logging — home's one signal for live. */}
+        {person && (
+          <h1 className="pn-hdr-name">
+            <span className="pn-hdr-called">{name}</span>
+            {beacon?.isLive && <span className="pn-hdr-live" role="img" aria-label="logging" />}
+          </h1>
+        )}
+        {person && (
+          <nav className="pn-hdr-stops" aria-label={`You and ${name}`}>
+            <button
+              type="button"
+              className={'pn-hdr-stop' + (comparing ? ' pn-hdr-stop--lit' : '')}
+              onClick={() => setComparing(c => !c)}
+              aria-expanded={comparing}
+              aria-label="Compare"
+            >
+              <Shuffle size={19} weight="regular" aria-hidden="true" />
+              {comparing && <span className="pn-hdr-word" aria-hidden="true">Compare</span>}
+            </button>
+            {person.id ? (
+              <span className="pn-hdr-stop pn-hdr-stop--lit pn-hdr-stop--still" role="img" aria-label={`${name} is in your friends`}>
+                <UserCheck size={19} weight="regular" aria-hidden="true" />
+                <span className="pn-hdr-word" aria-hidden="true">Added</span>
+              </span>
+            ) : (
+              <button type="button" className="pn-hdr-stop" onClick={add} disabled={adding} aria-label={`Add ${name} to your friends`}>
+                <UserPlus size={19} weight="regular" aria-hidden="true" />
+                <span className="pn-hdr-word" aria-hidden="true">Add</span>
+              </button>
+            )}
+          </nav>
+        )}
+      </header>
 
       <div className="own-body pn-body">
         {person === false ? (
-          <div className="own-empty">Nobody by that page. <Link href="/dashboard/people" className="own-link">The address book</Link></div>
-        ) : person === null ? (
-          <div className="pn-head"><div className="own-skeleton" style={{ width: 56, height: 56, borderRadius: '50%' }} /></div>
-        ) : (
+          <div className="own-empty">Nobody by that page. <Link href="/dashboard/people" className="own-link">Your friends</Link></div>
+        ) : person === null ? null : (
           <>
-            {/* The two of you, face to face. "Visit their journal" stood here
-                until 2026-09-22 (Miyel: you can go to their journal from the
-                friends page); every record of theirs below still links to
-                it. */}
-            <header className="pn-head">
-              <div className="pn-who">
-                <Face src="/api/portrait" />
-                <span className="pn-who-name">You</span>
-              </div>
-              <span className="pn-between" aria-hidden="true"><Shuffle size={26} weight="regular" /></span>
-              <div className="pn-who">
-                <Face src={`${journalUrl(person.address)}/api/portrait`} />
-                <h1 className="pn-who-name">{name}</h1>
-              </div>
-            </header>
-
-            {theirs?.failed && (
-              <p className="pn-note">{name}&rsquo;s journal isn&rsquo;t answering just now, so only what you&rsquo;ve sent each other is here.</p>
-            )}
-
-            {!ready ? <div className="own-skeleton pn-waiting" /> : (
-              <>
-                <FaceToFace lenses={decks.lenses} name={name} />
-                <Facts facts={decks.facts} name={name} />
-                {deck.length === 0 && <p className="pn-note">You and {name} haven&rsquo;t logged any of the same records yet.</p>}
-
-                {/* The records, as your wall draws them: covers alone. */}
-                <div className="arc-grid pn-grid" data-density="medium">
-                  {deck.map((x, i) => {
-                    const f = x.mine || x.theirs || x;
-                    return (
-                      <button key={x.key} type="button" className="ft pn-tile" data-pn-tile={i} onClick={e => open(i, e.currentTarget)} aria-label={f.album + (f.artist ? ` by ${f.artist}` : '')}>
-                        <div className="ft-inner">
-                          <div className="ft-face ft-face--front">
-                            {f.album_art
-                              ? <img src={f.album_art} alt="" className="ft-art" loading="lazy" draggable={false} />
-                              : <div className="ft-placeholder">{(f.album || '?')[0]}</div>}
-                            <div className="ft-hover">
-                              <div className="ft-hover-album">{f.album}</div>
-                              <div className="ft-hover-artist">{f.artist}</div>
+            {/* ── Compare, opened in place ─────────────────────────────── */}
+            <div className={'pn-compare' + (comparing ? ' pn-compare--open' : '')} aria-hidden={!comparing} inert={!comparing}>
+              <div className="pn-compare-in">
+                {/* The two of you, face to face, a colour each. */}
+                <header className="pn-head">
+                  <div className="pn-who">
+                    <Face src="/api/portrait" />
+                    <span className="pn-who-name">You</span>
+                  </div>
+                  <span className="pn-between" aria-hidden="true"><Shuffle size={26} weight="regular" /></span>
+                  <div className="pn-who">
+                    <Face address={person.address} />
+                    <span className="pn-who-name">{name}</span>
+                  </div>
+                </header>
+                {theirs?.failed && (
+                  <p className="pn-note">{name}&rsquo;s journal isn&rsquo;t answering just now.</p>
+                )}
+                {!compareReady ? <div className="own-skeleton pn-waiting" /> : (
+                  <>
+                    <FaceToFace lenses={decks.lenses} name={name} />
+                    <Facts facts={decks.facts} name={name} />
+                    {decks.shared.length === 0 && <p className="pn-note">You and {name} haven&rsquo;t logged any of the same records yet.</p>}
+                    {/* The records you share, covers alone. One opens their
+                        post with your listen beside theirs (ListenCompare.js)
+                        — straight into it, "basically like skipping a
+                        button" (2026-10-28). */}
+                    <div className="arc-grid pn-grid" data-density="medium">
+                      {decks.shared.map(x => {
+                        const f = x.theirs || x.mine;
+                        const at = personId ? theirEntry(x.theirs) : '';
+                        const art = (
+                          <div className="ft-inner">
+                            <div className="ft-face ft-face--front">
+                              {f.album_art
+                                ? <img src={f.album_art} alt="" className="ft-art" loading="lazy" draggable={false} />
+                                : <div className="ft-placeholder">{(f.album || '?')[0]}</div>}
+                              <div className="ft-hover">
+                                <div className="ft-hover-album">{f.album}</div>
+                                <div className="ft-hover-artist">{f.artist}</div>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {opened && item && (
-                  <Opened from={opened.from} tile={tileOfOpen} turn={turn} count={count} onGone={putDown}>
-                    <Versus
-                      key={item.key}
-                      item={item}
-                      name={name}
-                      songs={songs}
-                      titles={item.mine ? full[item.mine.slug]?.titles : null}
-                      myNote={item.mine ? full[item.mine.slug]?.note : null}
-                      theirNote={item.theirs ? (theirNotes[item.theirs.slug] === false ? false : theirNotes[item.theirs.slug]?.note) : null}
-                      address={{ theirs: person.address, me }}
-                      turn={turn}
-                      at={Math.min(at, count - 1)}
-                      count={count}
-                    />
-                  </Opened>
+                        );
+                        return at ? (
+                          <Link
+                            key={x.key}
+                            href={at}
+                            data-grows={at}
+                            onClick={() => { handOff(x.theirs); handOffCompare(x.theirs.slug); }}
+                            className="ft pn-tile"
+                            aria-label={`${f.album}${f.artist ? ` by ${f.artist}` : ''}, you and ${name}`}
+                          >
+                            {art}
+                          </Link>
+                        ) : (
+                          <a key={x.key} href={theirEntry(x.theirs)} target="_blank" rel="noopener noreferrer" className="ft pn-tile" aria-label={f.album}>{art}</a>
+                        );
+                      })}
+                    </div>
+                  </>
                 )}
-              </>
+                {/* The printer's door: the press that prints the shape of the
+                    agreement and withholds the writing, naming both people
+                    (DECISIONS, The network). At the foot of the comparison,
+                    since the header became home's row. */}
+                {person.id && (
+                  <Link href={`/printer?person=${encodeURIComponent(person.id)}`} className="kt-tool pn-print" aria-label="Print the shape of the agreement" title="Print the shape of the agreement">
+                    <Printer size={18} weight="regular" aria-hidden="true" />
+                  </Link>
+                )}
+              </div>
+            </div>
+
+            {/* ── Their beacon, as home draws the keeper's ──────────────────
+                The record, the three before it in a column beside it, and the
+                name under both — home's own pieces and home's measures. */}
+            {beacon && (
+              <section className="pn-beacon" aria-label={`What ${name} is logging`}>
+                <BeaconCard beacon={beacon} />
+                {beacon.state !== 'nothing' && recents.length > 0 && (
+                  <div className="hp-recent-set">
+                    <div className="hp-recent">
+                      {recents.map(e => {
+                        const label = `${e.album} — ${e.artist}`;
+                        return (
+                          <Link key={e.slug} href={theirEntry(e)} data-grows={theirEntry(e)} onClick={() => handOff(e)} className="hp-recent-tile" title={label} aria-label={label}>
+                            {e.album_art
+                              ? <img src={e.album_art} alt="" onError={ev => { ev.currentTarget.style.display = 'none'; }} />
+                              : <span className="hp-recent-none" aria-hidden="true">♪</span>}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </section>
             )}
           </>
         )}
       </div>
+
+      {/* ── Their wall ─────────────────────────────────────────────────
+          Outside the narrow column, at the width home's wall is drawn. */}
+      {wall && <div className="pn-wall hn-under">{wall}</div>}
     </div>
   );
 }

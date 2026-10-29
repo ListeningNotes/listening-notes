@@ -24,12 +24,10 @@
 // brief says under the pinned row and there is no pinned row yet, and a door
 // twelve faces away from the face that opened it is a door about nothing.
 //
-// ── No pinning yet ────────────────────────────────────────────────────────
-// The brief puts pinned people above everyone else, on a nullable timestamp
-// and a migration. Miyel, 2026-09-19: "let's not add pinning friends yet,
-// mostly just beta testers, we don't need it yet." So there is no column, no
-// migration and no PINNED row, and the grid is everyone. When it arrives it
-// is a second grid above this one and nothing here has to move.
+// ── No pinning ────────────────────────────────────────────────────────────
+// Pinned people had a row of their own above everyone from 2026-09-20, and
+// it went on 2026-10-26 with Pin (Miyel: "Drop Pin entirely. Not needed.").
+// The column stays, as every column does, and nothing reads it.
 //
 // ── The address is never printed ──────────────────────────────────────────
 // A person is a face and a name, which is the rule from 2026-09-12 and the
@@ -39,7 +37,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
-import { ArrowRight, BookOpen, Camera, MagnifyingGlass, PaperPlaneTilt, Plus, PushPin, Shuffle, Ticket, User } from '@phosphor-icons/react';
+import { ArrowRight, BookOpen, Camera, MagnifyingGlass, PaperPlaneTilt, Plus, Ticket, User } from '@phosphor-icons/react';
 import CodeScanner from './CodeScanner';
 import SendSheet from './SendSheet';
 import InviteSheet from './InviteSheet';
@@ -49,19 +47,15 @@ import { useBookplate } from './Bookplate';
 import { fillFriends, useFriendsBeacons } from '../../hooks/useFriendsBeacons';
 import { DIRECTORY_URL } from '../../library/version';
 
-// The order the server keeps: pinned first in the order they were pinned,
-// then by name, or by address for anyone without one. Said twice — here and
-// in pull_people — because the page re-sorts after a write rather than asking
-// again, and a page that sorted differently from the server would put
-// somebody in one place now and another on the next load.
+// The order the server keeps: by name, or by address for anyone without
+// one. Said twice — here and in pull_people — because the page re-sorts
+// after a write rather than asking again, and a page that sorted differently
+// from the server would put somebody in one place now and another on the
+// next load. Pinned people came first until 2026-10-26, when Pin went
+// (Miyel: "Drop Pin entirely. Not needed.").
 function inOrder(people) {
   const called = p => (p.name || p.address).toLowerCase();
-  const when = p => (p.pinned_at ? new Date(p.pinned_at).getTime() : 0);
-  return [...people].sort((a, b) => {
-    if (Boolean(a.pinned_at) !== Boolean(b.pinned_at)) return a.pinned_at ? -1 : 1;
-    if (a.pinned_at && b.pinned_at) return when(a) - when(b);
-    return called(a).localeCompare(called(b));
-  });
+  return [...people].sort((a, b) => called(a).localeCompare(called(b)));
 }
 
 // ── How many across ───────────────────────────────────────────────────────
@@ -97,14 +91,6 @@ const A_ROW = 123;
 // pressing a face and pressing the + cost the same.
 const DOORS_MS = 340;
 
-// How many faces the shelf above the book will hold. **The rule is in
-// library/people_actions.js, where the write is** — `PINS_MOST` there refuses
-// a seventh whatever this page does. This copy of the number is a courtesy,
-// so nobody presses a door that is going to say no; it is not imported from
-// there because that module opens the database and this one runs in a
-// browser. If the two ever disagree the write wins and the door is wrong,
-// which is the right way round for them to be wrong.
-const PINS_MOST = 6;
 
 // ── How long ago, in words ────────────────────────────────────────────────
 // For the quiet line ("logged Voodoo, 2 hours ago") and the caption inside
@@ -113,7 +99,7 @@ const PINS_MOST = 6;
 // absence is read, not measured. And nothing past a week: "43 days ago" is
 // the absence counted, which is the guilt meter the brief rules out, so the
 // line then names the record and leaves the time off.
-function since(iso) {
+export function since(iso) {
   const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
   if (!Number.isFinite(mins) || mins < 0) return '';
   if (mins < 2) return 'just now';
@@ -124,6 +110,122 @@ function since(iso) {
   const days = Math.floor(hours / 24);
   if (days === 1) return 'yesterday';
   return days < 7 ? `${days} days ago` : '';
+}
+
+// ── The top band, 2026-10-23 ──────────────────────────────────────────────
+// Miyel's People brief: one slot, two states, never both. While anybody in
+// the book is logging, a strip of their faces, each with its name and the
+// record under it — only the live, which is why it is three and not a
+// hundred. While nobody is, one line in the same slot at the same height:
+// the last thing that happened, the most recent "logged" among the friends
+// whose copy says when. No heading and no empty state. It replaced a row of
+// cards under LOGGING RIGHT NOW (2026-10-06); the Board still draws those
+// cards.
+//
+// Only people still in the book, so somebody just removed does not linger
+// for the length of a round; and only those the book has a name for, since
+// the band says who and an address is never printed in a name's place (the
+// name usually arrives within seconds — the book asks again for anybody
+// filed without one). In the book's own order. No count anywhere: four
+// faces is a feeling, "4 listening" is a score.
+//
+// Drawn on People (PeopleScreen.js), where a face opens their journal, and
+// over the address book, where it opens their doors: `open` makes the
+// pressable thing, given the person, their beacon, its class, what it says
+// and what is inside it. The strip scrolls sideways only once it overflows:
+// a swipe that begins on it then browses the faces, and the rail's swipe is
+// everywhere else.
+export function TopBand({ people, beacons, open }) {
+  const byAddress = useMemo(() => new Map(people.map(p => [p.address, p])), [people]);
+  const live = useMemo(
+    () => beacons.filter(b => b.state === 'logging' && byAddress.get(b.address)?.name),
+    [beacons, byAddress]
+  );
+  const last = useMemo(() => {
+    if (live.length > 0) return null;
+    let best = null;
+    for (const b of beacons) {
+      if (b.state !== 'logged' || !b.at || !byAddress.get(b.address)?.name) continue;
+      if (!best || Date.parse(b.at) > Date.parse(best.at)) best = b;
+    }
+    return best;
+  }, [live.length, beacons, byAddress]);
+  // "an hour ago" is read off the clock when the band draws, and nothing
+  // else would redraw it, so while the line is up it is redrawn once a
+  // minute.
+  const [, tick] = useState(0);
+  useEffect(() => {
+    if (!last) return undefined;
+    const clock = setInterval(() => tick(n => n + 1), 60 * 1000);
+    return () => clearInterval(clock);
+  }, [last]);
+
+  // Their journal's own portrait, as the book's grid draws it.
+  const faceOf = address => (
+    <span className="fr-ring" aria-hidden="true">
+      <span className="fr-face">
+        <User size={20} weight="regular" />
+        <img
+          src={`${journalUrl(address)}/api/portrait`}
+          alt=""
+          loading="lazy"
+          onError={e => { e.currentTarget.style.display = 'none'; }}
+        />
+      </span>
+    </span>
+  );
+
+  if (live.length > 0) {
+    return (
+      <div className="fr-band">
+        <div className="fr-live">
+          {live.map(b => {
+            const person = byAddress.get(b.address);
+            const name = person?.name || b.name;
+            const title = b.track || b.album;
+            const by = b.track ? `${b.album} \u00b7 ${b.artist}` : b.artist;
+            return open(person, b, 'fr-live-one', `${name} is logging ${title}${by ? ` \u00b7 ${by}` : ''}`, (
+              <>
+                {faceOf(b.address)}
+                <span className="fr-live-name">{name}</span>
+                <span className="fr-live-rec">{title}</span>
+              </>
+            ));
+          })}
+        </div>
+      </div>
+    );
+  }
+  // Who was here last. Only when a friend's copy says when — until theirs is
+  // new enough to, there is no honest "last" to name and nothing is drawn.
+  if (!last) return null;
+  const person = byAddress.get(last.address);
+  const name = person?.name || last.name;
+  const when = since(last.at);
+  const said = `logged ${last.album}`;
+  return (
+    <div className="fr-band">
+      {open(person, last, 'fr-last', `${name} ${said}${when ? `, ${when}` : ''}`, (
+        <>
+          {faceOf(last.address)}
+          <span className="fr-last-says">
+            <span className="fr-last-name">{name}</span>
+            {/* The time travels as one piece, so a line that has to wrap
+                never leaves "ago" alone on the next. */}
+            <span className="fr-last-what">
+              {said}
+              {when && <span className="fr-last-when">{` \u00b7 ${when}`}</span>}
+            </span>
+          </span>
+          {last.art && (
+            <span className="fr-last-art" aria-hidden="true">
+              <img src={last.art} alt="" loading="lazy" onError={e => { e.currentTarget.style.display = 'none'; }} />
+            </span>
+          )}
+        </>
+      ))}
+    </div>
+  );
 }
 
 // ── Saying no ─────────────────────────────────────────────────────────────
@@ -141,7 +243,7 @@ function since(iso) {
 //
 // Small and quick. It is a refusal, not an alarm: four pixels each way and
 // gone in a third of a second, which is a head shake rather than a shout.
-function shakeNo(el) {
+export function shakeNo(el) {
   if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
   // Press it twice quickly and there is one head shake, not two on top of
   // each other. Only this one is cancelled by name — the door has colour
@@ -240,7 +342,12 @@ function travel(box, was) {
 // while somebody could be looking at it. `away` is whether the People tab is
 // showing Everyone instead (2026-10-07): the book stays mounted underneath,
 // keeping what it has read, but its header leaves the bar to the two words.
-export default function Friends({ shelf = false, onCount = null, onBusy = null, onScreen = true, away = false }) {
+//
+// `inPeople` is the whole book opened on People by See all (2026-10-24):
+// the search and the faces with their doors, and no header or band, because
+// People has its own add, invite and row of faces above it. `onBook` is told
+// the book whenever it changes here — a pin, a removal — so that row keeps up.
+export default function Friends({ shelf = false, onCount = null, onBusy = null, onScreen = true, away = false, inPeople = false, onBook = null }) {
   // Who this copy belongs to, carried on every link out to another journal so
   // the form there knows who is sending. See carrySender.
   const { keeper_name: myName, site_address: myAddress } = useBookplate();
@@ -266,44 +373,16 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null, 
   const beaconOf = useMemo(() => new Map(beacons.map(b => [b.address, b])), [beacons]);
   useEffect(() => { if (!shelf) fillFriends(); }, [shelf]);
 
-  // ── The band above the grid, and the quiet line ─────────────────────────
-  // Who is logging right now, in the book's own order, as a row of cards —
-  // only people still in the book, so somebody just removed does not linger
-  // for the length of a round. When nobody is on, the room says who was
-  // here last instead of leaving a hole: the most recent "logged" among the
-  // friends whose copy says when. An empty room that says nothing reads as
-  // abandoned; one that tells you who just left reads as a room (the
-  // brief). No count anywhere: four cards is a feeling, "4 listening" is a
-  // score.
-  const byAddress = useMemo(() => new Map(people.map(p => [p.address, p])), [people]);
-  // A journal the book has no name for yet is left out of both: the band
-  // and the line say who, and an address is never printed in a name's place.
-  // Its face still lights; the name usually arrives within seconds, since the
-  // page asks again for anybody filed without one (above).
-  const onNow = useMemo(
-    () => beacons.filter(b => b.state === 'logging' && byAddress.get(b.address)?.name),
-    [beacons, byAddress]
-  );
-  const lastIn = useMemo(() => {
-    if (onNow.length > 0) return null;
-    let best = null;
-    for (const b of beacons) {
-      if (b.state !== 'logged' || !b.at || !byAddress.get(b.address)?.name) continue;
-      if (!best || Date.parse(b.at) > Date.parse(best.at)) best = b;
-    }
-    return best;
-  }, [onNow.length, beacons, byAddress]);
-
-  // "2 hours ago" is read off the clock when the room draws, and nothing
-  // else would redraw it: a round that says the same thing publishes nothing.
-  // So while a time is on screen — the quiet line, or a pressed face's
-  // doors — the room is redrawn once a minute, and the words keep up.
+  // "Last logged · yesterday" is read off the clock when the doors draw, and
+  // nothing else would redraw it: a round that says the same thing publishes
+  // nothing. So while a pressed face's doors are open the room is redrawn
+  // once a minute, and the words keep up. The band keeps its own clock.
   const [, tick] = useState(0);
   useEffect(() => {
-    if (!lastIn && open === null) return undefined;
+    if (open === null) return undefined;
     const clock = setInterval(() => tick(n => n + 1), 60 * 1000);
     return () => clearInterval(clock);
-  }, [lastIn, open]);
+  }, [open]);
   // ── And the one on its way out ──────────────────────────────────────────
   // The doors have to be in the DOM to collapse, and the person they belong
   // to has to still be known while they do it, or the panel empties halfway
@@ -372,6 +451,7 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null, 
 
   // Up to whoever is drawing this, once it is known and whenever it changes.
   useEffect(() => { if (!loading) onCount?.(people.length); }, [loading, people.length, onCount]);
+  useEffect(() => { if (!loading) onBook?.(people); }, [loading, people, onBook]);
 
   useEffect(() => {
     fetch('/api/people').then(r => r.json()).then(d => {
@@ -488,25 +568,6 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null, 
     setPeople(prev => prev.filter(p => p.id !== id));
   }
 
-  // ── Pinning ─────────────────────────────────────────────────────────────
-  // One field, two values, and nothing else about a person is editable from
-  // here. The page re-sorts off what came back rather than asking for the
-  // book again: the row it returns is the row the server now holds.
-  async function pin(id, on) {
-    const answer = await fetch(`/api/people/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pinned: on }),
-    }).then(r => (r.ok ? r.json() : null)).catch(() => null);
-    if (answer?.person) {
-      // Now, and not before the fetch: the page is free to have moved while
-      // the write was in the air, and what a face travels from is where it
-      // was on the last frame anybody saw.
-      flight.current = whereEveryoneIs(shelfRef.current);
-      setPeople(prev => inOrder(prev.map(q => (q.id === answer.person.id ? answer.person : q))));
-    }
-  }
-
   // ── Kept private, 2026-10-08 ────────────────────────────────────────────
   // Somebody kept private is never published: they stay off the Board's "a
   // friend away" for everyone but this keeper (Miyel's Board brief; the
@@ -590,7 +651,7 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null, 
   useEffect(() => {
     if (open === null) return undefined;
     const away = event => {
-      if (event.target.closest?.('.fr-one, .fr-doors, .fr-now')) return;
+      if (event.target.closest?.('.fr-one, .fr-doors, .fr-band')) return;
       choose(open);
     };
     document.addEventListener('pointerdown', away, true);
@@ -673,12 +734,8 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null, 
   // Not while a search is narrowing the book: searching is one flat list of
   // whoever matches, and a pinned section that answered a search would be
   // telling you where somebody sits rather than that they are there.
-  const pinned = useMemo(() => people.filter(p => p.pinned_at), [people]);
-  const showPins = !narrowed && pinned.length > 0;
-  const loose = useMemo(
-    () => (showPins ? shown.filter(p => !p.pinned_at) : shown),
-    [showPins, shown]
-  );
+  // The pinned row stood here from 2026-09-20 until Pin went, 2026-10-26.
+  const loose = shown;
 
   const onShow = useMemo(
     () => (shelf && !narrowed && fits > 0 ? loose.slice(0, fits) : loose),
@@ -897,7 +954,6 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null, 
   // large faces under PINNED, or four or five small ones under EVERYONE. The
   // doors open under whichever row the face is in, either way.
   const rows = [];
-  if (showPins) rows.push({ key: 'pinned', people: pinned, across: 3, big: true });
   for (let i = 0; i < onShow.length; i += across) {
     rows.push({ key: `r${i}`, people: onShow.slice(i, i + across), across, big: false });
   }
@@ -939,7 +995,7 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null, 
 
             `inert` on whichever one is away, so the keyboard and a screen
             reader only ever meet the field that is actually there. */}
-        {barSlot ? (away ? null : createPortal(head, barSlot)) : head}
+        {inPeople ? null : barSlot ? (away ? null : createPortal(head, barSlot)) : head}
 
         {/* The Add / Scan row that stood here is gone, 2026-09-20. Both of
             them are in the header now — Add as a mark at the end of the
@@ -968,22 +1024,16 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null, 
 
         <p className="bk-said" role="status">{said}</p>
 
-        {/* ── Who is logging right now, 2026-10-06 ─────────────────────────
-            A row of cards that scrolls sideways: the record, the friend
-            with a live dot, the record's name and the artist. Pressing one
-            opens that friend's doors in the grid below, which the shelf
-            then scrolls to show; a friend past what the shelf holds opens
-            the whole book instead. Above the shelf rather than in it, so
-            the shelf's own count of what fits (reckon) stays true — it is
-            given less room and says so. The row is a sideways scroller only
-            once it overflows, from three cards on a phone: a swipe that
-            begins on it then browses the cards, and the rail's swipe is
-            everywhere else. With one or two cards there is nothing to
-            browse and the swipe is the rail's, as it should be. */}
+        {/* ── The top band (TopBand, above) ─────────────────────────────
+            Here, pressing a face or the line opens that friend's doors in
+            the grid below, which the shelf then scrolls to show; a friend
+            past what the shelf holds opens the whole book instead. Above the
+            shelf rather than in it, so the shelf's own count of what fits
+            (reckon) stays true. */}
         {/* The book's search on the cross, 2026-10-08: at the top of the
             floor, in the Board's own field, once the book passes a dozen —
             the bar's middle is the two words now (see onBusy, above). */}
-        {shelf && searchable && (
+        {(shelf || inPeople) && searchable && (
           <label className="dir-search fr-floor-find">
             <MagnifyingGlass size={16} weight="regular" aria-hidden="true" />
             <input
@@ -997,69 +1047,31 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null, 
             />
           </label>
         )}
-        {onNow.length > 0 ? (
-          <div className="fr-now">
-            <p className="fr-now-head">
-              <span className="fr-now-pulse" aria-hidden="true" />
-              Logging right now
-            </p>
-            <div className="fr-now-row">
-              {onNow.map(b => {
-                const person = byAddress.get(b.address);
-                const name = person?.name || b.name;
-                const title = b.track || b.album;
-                const by = b.track ? `${b.album} · ${b.artist}` : b.artist;
-                // Only a face that is actually drawn can open its doors —
-                // a search can hide the pinned row and narrow the rest.
-                const onShelf = rows.some(r => r.people.some(p => p.id === person?.id));
-                const inside = (
-                  <>
-                    <span className="fr-on-art" aria-hidden="true">
-                      {b.art
-                        ? <img src={b.art} alt="" loading="lazy" onError={e => { e.currentTarget.style.display = 'none'; }} />
-                        : <span>&#9834;</span>}
-                    </span>
-                    <span className="fr-on-who">
-                      <span className="fr-on-dot" aria-hidden="true" />
-                      {name}
-                    </span>
-                    <span className="fr-on-rec">{title}</span>
-                    <span className="fr-on-by">{by}</span>
-                  </>
-                );
-                const label = `${name} is logging ${title}${by ? ` · ${by}` : ''}`;
-                return onShelf ? (
-                  <button
-                    key={b.address}
-                    type="button"
-                    className="fr-on"
-                    onClick={() => { if (person && open !== person.id) choose(person.id); }}
-                    aria-label={label}
-                    title={label}
-                  >
-                    {inside}
-                  </button>
-                ) : (
-                  <Link key={b.address} href="/dashboard/people" className="fr-on" aria-label={label} title={label}>
-                    {inside}
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-        ) : lastIn && (
-          /* QUIET, and who was here last. Only when a friend's copy says
-             when — until theirs is new enough to, there is no honest
-             "last" to name and the grid simply begins. */
-          <p className="fr-quiet">
-            <span className="fr-quiet-word">Quiet</span>
-            <span className="fr-quiet-said">
-              <b>{byAddress.get(lastIn.address)?.name || lastIn.name}</b>
-              {' logged '}{lastIn.album}
-              {since(lastIn.at) ? ` \u00b7 ${since(lastIn.at)}` : ''}
-            </span>
-          </p>
-        )}
+        {/* A face in the band, or the line, opens that friend's doors —
+            but only a face that is actually drawn on the shelf can: a
+            search can hide the pinned row and narrow the rest. */}
+        {!inPeople && <TopBand
+          people={people}
+          beacons={beacons}
+          open={(person, b, className, label, inside) => (
+            rows.some(r => r.people.some(p => p.id === person?.id)) ? (
+              <button
+                key={b.address}
+                type="button"
+                className={className}
+                onClick={() => { if (person && open !== person.id) choose(person.id); }}
+                aria-label={label}
+                title={label}
+              >
+                {inside}
+              </button>
+            ) : (
+              <Link key={b.address} href="/dashboard/people" className={className} aria-label={label} title={label}>
+                {inside}
+              </Link>
+            )
+          )}
+        />}
 
         {/* ── The shelf ───────────────────────────────────────────────────
             A box of settled height with the faces clipped inside it, which is
@@ -1204,71 +1216,17 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null, 
                   })()}
                   {mine && (
                   <div className="fr-doors-row">
-                    <a
-                      className="fr-door"
-                      href={carrySender(journalUrl(mine.address), me, { known: true })}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <BookOpen size={22} weight="regular" aria-hidden="true" />
-                      {/* Visit, from 2026-09-21. It said Journal, which named
-                          the thing rather than what pressing it does — and
-                          every door in this row is a journal, so the word
-                          separated it from none of them. This is the one that
-                          leaves for their copy. */}
-                      Visit
-                    </a>
+                    {/* Visit is their journal page on this copy, 2026-10-26,
+                        and Compare opens there now (Miyel's Friends answers);
+                        it left for their own site until then. Compare's
+                        Shuffle went with it into that page's strip. */}
                     <Link className="fr-door" href={`/dashboard/people/${mine.id}`}>
-                      {/* Shuffle, settled 2026-09-20 (Miyel). It was
-                          ArrowsDownUp for a day — my stand-in for the two
-                          arrows her mock-up left hand-drawn — and two arrows
-                          running past each other is a sort order, which is
-                          the one thing this door is not.
-
-                          Shuffle is two paths that cross and come out the
-                          other side, which is what comparing two people's
-                          shelves looks like: the same records, taken in a
-                          different order, by somebody else. Still not
-                          ArrowsLeftRight — this site already uses that for
-                          turning the spine. */}
-                      <Shuffle size={22} weight="regular" aria-hidden="true" />
-                      Compare
+                      <BookOpen size={22} weight="regular" aria-hidden="true" />
+                      Visit
                     </Link>
                     <button type="button" className="fr-door" onClick={() => setSendingTo(who)}>
                       <PaperPlaneTilt size={22} weight="regular" aria-hidden="true" />
                       Send
-                    </button>
-                    {/* The fourth door, 2026-09-20. Pinning is a thing you do
-                        *with* somebody, like the three beside it, so it is one
-                        of them — where Remove is the end of there being a
-                        somebody and stays the quiet line underneath.
-
-                        The pin fills once they are on the shelf, which is the
-                        lit-not-filled shape this site uses for a mark that is
-                        on: the word under it says which way pressing goes. */}
-                    <button
-                      type="button"
-                      className={'fr-door' + (mine.pinned_at ? ' fr-door--on' : '')
-                        + (!mine.pinned_at && pinned.length >= PINS_MOST ? ' fr-door--full' : '')}
-                      onClick={event => {
-                        if (!mine.pinned_at && pinned.length >= PINS_MOST) {
-                          shakeNo(event.currentTarget);
-                          return;
-                        }
-                        pin(mine.id, !mine.pinned_at);
-                      }}
-                      aria-pressed={Boolean(mine.pinned_at)}
-                      /* `aria-disabled` and not `disabled`: it is refusing,
-                         not absent, and a disabled button cannot be pressed
-                         — which means it cannot shake its head either. The
-                         write refuses a seventh regardless. */
-                      aria-disabled={(!mine.pinned_at && pinned.length >= PINS_MOST) || undefined}
-                      title={!mine.pinned_at && pinned.length >= PINS_MOST
-                        ? `Six is the most you can pin. Unpin somebody first.`
-                        : undefined}
-                    >
-                      <PushPin size={22} weight={mine.pinned_at ? 'fill' : 'regular'} aria-hidden="true" />
-                      {mine.pinned_at ? 'Unpin' : 'Pin'}
                     </button>
                   </div>
                   )}

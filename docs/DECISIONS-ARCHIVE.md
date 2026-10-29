@@ -1094,3 +1094,158 @@ a Neon account, so the door opened only for developers. The reasons above
 still hold — a hosted journal reads feeds, compares and keeps its address book
 exactly as a self-hosted one does; what changed is who runs the server, for
 the people who could not run one.
+
+---
+
+## The network — People as two words, Friends · Board, 2026-10-08 to 2026-10-23
+
+Lives now in DECISIONS.md, The network: *People is one screen*.
+
+**People is one tab: Friends · Board, Miyel's call.** Two words in the bar,
+each with its count: Friends (the book, unchanged) and Board — her word on
+2026-10-08, after Everyone, Commons, All Users, Hub and Keepers. The Board is
+ordered by distance from the viewer: logging right now, a friend away, also
+on your records, being logged everywhere, further out (shuffled). Adding is
+a door on a press; somebody already in the book wears a check.
+
+Her People brief of 2026-10-23 retired it: the two words were the wrong
+question ("whose records is a setting, not a place"), the grid of every face
+had nothing to do with the moment you looked at it, and the Board became the
+search on the wall's line. /directory still draws the Board at its own
+address.
+
+---
+
+## The network — the feed, 2026-09-12 to 2026-10-23
+
+Lives now in DECISIONS.md, The network: *The feed is retired* and *People is
+one screen*.
+
+**The feed is entries, not people, 2026-09-12; built 2026-09-13.** The
+Friends pane's second floor: entry-shaped rows with a small face and a name —
+what the people in the address book logged, not a list of who exists — read
+from each journal's public feed in the browser, never stored. Everyone in the
+book, newest first, forty at most; what came back from a send is an arrival
+in the inbox now, not a view of the feed (2026-09-22). A row offers Compare
+only when it is a record you also have — this album, their rating against
+yours and the two horizons; the track notes stay on the journals until an
+entry can be read across origins. Compare arrives because something
+happened; it is not a place you navigate to.
+
+Retired by her People brief, 2026-10-23: "The feed is homework" — the same
+information as one line saying who logged what, in the opposite posture.
+Its records became People's wall; its match for what came back moved to
+PeopleScreen.js; its compare moved to the inbox.
+
+---
+
+## The network — People's top band, 2026-10-23 to 2026-10-24
+
+Lives now in DECISIONS.md, The network: *People's top is a friend's beacon*.
+
+**People's top band is who is live, or the last thing that happened,
+2026-10-23, her People brief.** One slot of one height: the faces logging
+right now, each with its name and the record under it; when nobody is, one
+line — face, name, what they logged, how long ago. No heading and no word for
+the room: *Quiet* read as a verdict on the person named. A face is there
+because they are live, never for how much they log.
+
+Replaced the next day, Miyel: People "should resemble more of a beacon and
+that is where your friends are", with the faces out from under the scope's
+menu (Who you've added sat at its foot) — info top, wall bottom, the way home
+is. TopBand still draws over the address book's own grid.
+
+---
+
+## The network — People's top and scope, 2026-10-23 to 2026-10-24
+
+Lives now in DECISIONS.md, The network: *People's top is two words, the faces
+and one line* and *People is your friends alone*.
+
+**People's top is a row of faces over a friend's beacon, 2026-10-24, her
+calls.** Info top, wall bottom, as home is, no carry, no hairline. The row:
+Add, every face (live first, then the book's order), See all. A face pressed
+brings their record in, cover left, with the book's doors under it. Add finds
+a name on the Board, takes an address or a code, and invites; See all opens
+the whole book in place. No heading: *Quiet* read as a verdict on a person.
+
+Built and shown the same day. Miyel, on the sandbox: the beacon was more
+than a line needed ("one short line with a very small album thumbnail and
+when it happened"), Add and See all as bubbles read as "three friends", the
+whole thing was busy, and nobody could tell who was open. The doors stayed.
+
+**People is one screen: a friend's beacon, a line with a scope, and a wall,
+2026-10-23, her People brief.** Whose records — Your friends · Your
+records · Everyone's (built, off until the Board is big enough: her call) —
+sits after the search, remembered as the view is; the address book opens
+in place from See all, at the row's end. The wall is home's, so views
+compose with the scope; covers wear their loggers' faces, yours first when
+you have it too (not a gold dot); the search is the Board's (her calls).
+
+Retired the next day with the Board: Miyel asked what Your records even
+showed — the Board's keepers, strangers included, on her own records — and
+whether People should stay strictly for friends. It should; the Board is to
+have a place of its own, with the blog.
+
+## The network — Compare as a page, and the one-way wave, to 2026-10-26
+
+**Compare is not a destination; it is your page about someone,
+2026-09-12; built 2026-09-13.** A face or a name in the feed, or a row in
+the book, opens `/dashboard/people/[id]`: records you both have, rated
+alike, what they sent you and your hit rate with it, then where you agree
+and disagree hardest, what they sent and how it landed, and what only they
+have heard. On your copy, owner-only, which is why it can hold what their
+journal never could. `/compare` is gone with it — a public page that
+compared this journal against a typed address, which the model has no
+place for (everything social is on the visitor's own copy); nobody had the
+URL, so no stub. A printer door on the page waits for the press.
+
+Grown into the friend's journal page on 2026-10-26 (Miyel's Friends
+answers): the same route, now their beacon and wall drawn by this copy, with
+Compare a view opened from its strip.
+
+**One-way: you wave when you add somebody, and at no other time, 2026-09-22.**
+Adding stays silent; the wave is an extra press and Not now is not a lesser
+path. No Wave back (the brief had one; Miyel cut it): adding somebody from
+their wave brings up the same offer, which is the reply. A copy too old to
+take a wave says so and the add stands — it never waits on the wave. A
+second wave replaced the first.
+
+Reversed 2026-10-26 by her Friends answers, which reconcile it: Wave is only
+open once somebody is added, so a wave from a stranger is still answered by
+adding them, and one from a friend by Wave back; one wave per sender is kept
+until it is answered, so adding and removing cannot farm them.
+
+**Pin, 2026-09-20 to 2026-10-26.** Six friends at most pinned above the
+book, three across and larger, in the order they were pinned, and first on
+the timer's thirty. Dropped in her Friends answers: "Drop Pin entirely. Not
+needed."
+
+## The network — People's top as two words, 2026-10-24 to 2026-10-27
+
+**People's top is two words, the faces and one line, 2026-10-24, her
+calls.** + Add · See all in small capitals; every face, live first, then the
+book's order; one line — small cover, name, what, when. A face pressed dims
+the rest, and the book's doors open under its line. A hairline, then the
+wall. Never a beacon drawn large, and never Add or See all as circles ("three
+friends"). No heading: *Quiet* read as a verdict on a person.
+
+Replaced 2026-10-27 by her Friends brief's top: Your friends as a heading
+(not a verdict, so the old worry does not reach it), three glyphs over their
+words, and the row as a drawer in place of See all's book.
+
+## A face's first panel, 2026-10-27
+
+Built and rejected the same day. It read, in DECISIONS:
+
+**A face opens onto what waits from them, 2026-10-27 (her Friends brief).**
+Wrote, Sent you, Waved, Arrived, Moved, each with only its own answers; no
+doors — Compare is on their page, Send on the record, Visit leads the quiet
+line. A message never has Let it go: Keep only (`kept_at`). Arrived passes
+once seen; Moved has no Let it go (the friends round writes it back). New
+clears when the face shuts, so it holds still while open.
+
+Her review: pressing a face opened "two functions that dont overlap well" —
+what they sent beside Visit / Keep private / Remove — and the answers had lost
+their icons. Sends became Listen · Dismiss and waves Wave back · Dismiss; the
+person's own doors went to their page.

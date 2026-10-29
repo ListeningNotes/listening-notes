@@ -229,13 +229,21 @@ export async function finish_adding(request, response, device) {
 }
 
 // ── Opening the door ──────────────────────────────────────────────────────
-// The options for a sign-in, and whether this journal has any keys at all —
-// the panel offers Unlock only where there is something to unlock with. No
-// list of keys goes out: the device offers whichever of its own keys belong
-// to this address, which is what a key made with residentKey allows.
+// The options for a sign-in, and whether this journal has any keys at this
+// address — the panel offers Unlock only where there is something to unlock
+// with. No list of keys goes out: the device offers whichever of its own
+// keys belong to this address, which is what a key made with residentKey
+// allows.
+//
+// Keys made at another address do not count, 2026-10-27: a key opens only
+// the address it was made at, so they were an Unlock that could not work —
+// on the dev copy, which reads the sandbox's database, Unlock came first and
+// the spare key under it (Miyel: "it prompts for spare key before
+// password"). A key whose address was never written down still counts.
 export async function begin_unlocking(request) {
   const { rpID } = addressOf(request);
-  const [{ n }] = await database`SELECT count(*)::int AS n FROM keyring`;
+  const [{ n }] = await database`
+    SELECT count(*)::int AS n FROM keyring WHERE made_for = ${rpID} OR made_for IS NULL`;
   const options = await generateAuthenticationOptions({ rpID, userVerification: 'required' });
   return { options, any: n > 0, cookie: await seal('unlock', options.challenge, rpID) };
 }

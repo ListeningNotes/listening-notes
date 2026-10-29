@@ -44,10 +44,11 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { CaretLeft } from '@phosphor-icons/react';
+import { CaretLeft, Shuffle, User } from '@phosphor-icons/react';
 import { usePathname } from 'next/navigation';
 import { useListeningBeacon } from '../../hooks/useListeningBeacon';
-import { useBookplate } from './Bookplate';
+import { useBookplate, useVisiting } from './Bookplate';
+import { journalUrl } from '../../library/return_address';
 
 // `tools` is whatever the page wants in the left slot — in practice the
 // owner's, on the pages that have any. It arrives as an element rather than as
@@ -77,7 +78,12 @@ export default function SiteNav({ tools = null, mark = null, lede = true }) {
   const { cover_name } = useBookplate();
   const { isLive } = useListeningBeacon();
   const here = usePathname();
-  const onAnEntry = Boolean(here && here.startsWith('/entries/'));
+  // A friend's post read inside this journal is an entry too, and wears the
+  // header an entry does (Miyel, 2026-10-28: "It should still have the
+  // listening notes logo header"), with whose journal it is on the left and
+  // Compare on the right while you have the record as well.
+  const visiting = useVisiting();
+  const onAnEntry = Boolean(here && here.startsWith('/entries/')) || Boolean(visiting);
   // And on /get, 2026-09-22. It is the page about the software, like the
   // About pane, and keeps the mark for the reason that pane does: a
   // colophon without it is a paragraph (Miyel's brief, About, /get and Give).
@@ -137,6 +143,14 @@ export default function SiteNav({ tools = null, mark = null, lede = true }) {
         <Link href="/" className="sitenav-back" aria-label="Back to the journal" title="Back to the journal">
           <CaretLeft size={18} weight="bold" aria-hidden="true" />
         </Link>
+        {/* Whose post this is: their face, to their page here (2026-10-28,
+            her ask: "it needs the person on the left"). */}
+        {visiting && (
+          <Link href={visiting.page} className="sitenav-who" aria-label={`${visiting.name || 'Their'} journal`} title={visiting.name || ''}>
+            <User size={16} weight="regular" aria-hidden="true" />
+            <img src={`${journalUrl(visiting.address)}/api/portrait`} alt="" onError={e => { e.currentTarget.style.display = 'none'; }} />
+          </Link>
+        )}
       </div>
 
       {(onAnEntry || onGet || onDirectory) && lede && (
@@ -150,7 +164,24 @@ export default function SiteNav({ tools = null, mark = null, lede = true }) {
 
       {/* The right slot: the owner's ···, on the pages that have one, in the
           corner the card keeps its own in. */}
-      <div className="sitenav-side sitenav-side--right">{tools}</div>
+      <div className="sitenav-side sitenav-side--right">
+        {/* Compare, on a friend's post you have too: your listen beside
+            theirs (ListenCompare.js), its word worn while it is on, as the
+            rooms of a friend's page wear theirs. */}
+        {visiting?.compare && (
+          <button
+            type="button"
+            className={'sitenav-compare' + (visiting.compare.on ? ' sitenav-compare--on' : '')}
+            onClick={visiting.compare.toggle}
+            aria-pressed={visiting.compare.on}
+            aria-label={visiting.compare.on ? 'Back to their post' : `Compare your listen with ${visiting.name || 'theirs'}`}
+          >
+            <Shuffle size={19} weight="regular" aria-hidden="true" />
+            {visiting.compare.on && <span className="sitenav-compare-word" aria-hidden="true">Compare</span>}
+          </button>
+        )}
+        {tools}
+      </div>
     </div>
   );
 }

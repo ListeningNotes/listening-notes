@@ -99,13 +99,19 @@ export function handedOver(slug) {
 // the feed. The entry keeps its own lookup above; this is the general one
 // (2026-09-13, so a person's page opens from the row you pressed the way an
 // entry opens from its cover).
+//
+// The last one drawn, 2026-10-28: a friend's record can be on the Friends
+// wall and on their page over it at once, both declaring the same address,
+// and the one pressed is the one on top — later in the page than the pane
+// under it.
 export function growBoxOf(path) {
   if (typeof document === 'undefined' || !path) return null;
-  const from = document.querySelector(`[data-grows="${CSS.escape(path)}"]`);
-  if (!from) return null;
-  const box = from.getBoundingClientRect();
-  if (box.width === 0 || box.height === 0) return null;
-  return { x: box.left, y: box.top, w: box.width, h: box.height };
+  const all = [...document.querySelectorAll(`[data-grows="${CSS.escape(path)}"]`)].reverse();
+  for (const from of all) {
+    const box = from.getBoundingClientRect();
+    if (box.width > 0 && box.height > 0) return { x: box.left, y: box.top, w: box.width, h: box.height };
+  }
+  return null;
 }
 
 export function tileBoxOf(slug) {
@@ -145,6 +151,10 @@ function firstScreen(entry) {
     // And the folder it is a page of, when a page of a folder is being
     // turned to, so the wait can keep the tabs up (LayerWaiting).
     folder: entry.folder || null,
+    // Where it opens, for a record that is not one of this journal's own —
+    // a friend's post, read inside this journal (2026-10-28) — and so is
+    // not at /entries/<slug>.
+    path: entry.path || null,
   };
 }
 
@@ -155,8 +165,10 @@ export function handOffOrder(entries) {
 
 // The records either side of this one on the wall, or null at either end —
 // and null both ways when the wall never said.
-export function neighboursOf(slug) {
-  const at = order.findIndex(e => e.slug === slug);
+// `key` is a slug for this journal's own records, or the address a
+// friend's post opens at — two friends can each have a "blue".
+export function neighboursOf(key) {
+  const at = order.findIndex(e => (e.path || e.slug) === key);
   if (at < 0) return { prev: null, next: null };
   return {
     prev: at > 0 ? order[at - 1] : null,
@@ -283,4 +295,18 @@ export function cameBack() {
   const recent = wentBack && Date.now() - wentBack < 1500;
   wentBack = 0;
   return recent;
+}
+
+// ── Opening a friend's post compared, 2026-10-28 ──────────────────────────
+// A record pressed in Compare on a friend's page opens their post with your
+// listen already beside theirs (ListenCompare.js) — Miyel: "basically like
+// skipping a button". Stamped rather than spent, as `wentBack` is, so the
+// post can ask more than once on its way in; a few seconds old, it is
+// forgotten, and the same post opened any other way opens as itself.
+let comparing = null;
+export function handOffCompare(slug) {
+  comparing = slug ? { slug, at: Date.now() } : null;
+}
+export function cameToCompare(slug) {
+  return Boolean(comparing && comparing.slug === slug && Date.now() - comparing.at < 4000);
 }

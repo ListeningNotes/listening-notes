@@ -125,7 +125,8 @@ at the foot of the card.
 part of the frame, not of home ("follow each page"). Where a page has its own
 bar at the foot — a correction, the print bar, an open sheet — it steps down:
 one row at the foot at a time. Phone first; the desk keeps its two pages until
-she has seen the phone (her call).
+she has seen the phone (her call). Not on a friend's page, 2026-10-26: it is
+laid out as their home, and the bar read as a listen on their journal.
 
 **The cross is one route, not two.** A swipe that navigated would unmount the
 pane being left and lose its scroll. The gesture has to be continuous and
@@ -264,7 +265,8 @@ doesn't really need it anymore"). On a phone the wall's bar sits at the top of
 the wall, stuck under the row, as on a desk: the foot is the Listen bar's.
 
 **A two-floor screen is two stops, and that is not a snap, 2026-09-20.**
-The entry and the book have it (the beacon did, until home became one page). The record
+The entry has it (the beacon did, until home became one page; the book, until
+People became one screen, 2026-10-23: "there is no top and bottom"). The record
 is one thing to look at and what is under it is the next; move at all and
 let go and it finishes the journey, the way you were already going. It acts
 only between those two, never past the second floor, and only with a hand
@@ -1255,16 +1257,12 @@ and checks. Nobody learns they were read. **One feed** — the two views of
 2026-09-12 retired with the friends brief. **A shelf, not a river:** no
 counts, no badges, no unread state.
 
-**The feed is entries, not people, 2026-09-12; built 2026-09-13.** The
-Friends pane's second floor: entry-shaped rows with a small face and a name —
-what the people in the address book logged, not a list of who exists — read
-from each journal's public feed in the browser, never stored. Everyone in the
-book, newest first, forty at most; what came back from a send is an arrival
-in the inbox now, not a view of the feed (2026-09-22). A row offers Compare
-only when it is a record you also have — this album, their rating against
-yours and the two horizons; the track notes stay on the journals until an
-entry can be read across origins. Compare arrives because something
-happened; it is not a place you navigate to.
+**The feed is retired, 2026-10-23, her People brief.** What the people in
+the book logged is People's wall, read from the same public feeds; the feed
+was "a stack of other people's writing to get through". `/dashboard/feed`
+forwards to the address book, a bookmark being a promise. Compare lives on
+in the inbox, and the Board keeps the marks. The feed's own entry is in the
+archive.
 
 **Friends shows everyone's beacon, fetched through one route rather than ten
 from the browser, 2026-10-06.** `/api/friends/beacons` fans out to the people
@@ -1284,7 +1282,7 @@ that does not answer is asked half as often each time — one minute, two,
 four, eight, ten at most — and at the usual rate again on its first good
 answer, so a copy that is asleep is not asked every minute forever by every
 keeper who has it in their book. The timer asks the first thirty in the
-book's own order, pinned first; the rest are asked when the whole grid is
+book's own order; the rest are asked when the whole grid is
 opened and on a pull down, since a book of a hundred would otherwise be a
 hundred fetches a minute, the browser's mistake moved to the server. A pull
 does reach a journal in its quiet spell, once: a press is a person asking.
@@ -1297,6 +1295,57 @@ circles." It reverses 2026-09-19, when the faces became the record's rounded
 square on the grounds that a journal is a shelf of records. A person is a
 circle and a record a rounded square, which also tells the two apart in the
 band of cards, where both are drawn. The rest of the site's faces wait on her.
+
+**Friends' top: the line, Your friends, three glyphs and a drawer,
+2026-10-27 (her Friends brief, step two).** Add · Find (past twenty) ·
+Ticket, each a glyph over its word (kept over words alone, her pick). The
+row is five faces that fit, never scrolling sideways; See all under it, the
+caret under the words, or a drag down opens the rest in place. Waiting
+first, then logging, then shuffled — never by name. New under the chin,
+never a count. The stop's word is Friends.
+
+**A face opens onto what waits from them, and only that, 2026-10-27.**
+Sends Listen · Dismiss, waves Wave back · Dismiss (her words), words Reply ·
+Words · Keep, each a glyph over its word; a message is never deleted. Nothing
+about the person: its head goes to their page, where Keep private and Remove
+live, and a face with nothing waiting goes straight there (the first panel's
+two halves "don't overlap well"). New clears when the face shuts.
+
+**Headlines hold what friends did, from their public reads alone,
+2026-10-27.** One sentence per friend logging or logged in a fortnight,
+newest first; never what they sent you, which is the faces'. Nothing that
+never leaves their copy (unfinished listens, sides). A number inside a
+sentence about one evening is description, her answers: "twice before
+noon", never a tally or a ranking.
+
+**New on a friend's record lasts until it scrolls past, 2026-10-27.** A
+fortnight after it was logged at most; it clears when it leaves over the
+top, or — on screen whole — when Friends is left, or a short wall would say
+New for two weeks. A flag in `seen_records`, sent nowhere ("New means I
+haven't seen it").
+
+**Strangers: one thing at a time, thirty days, closed doors, 2026-10-27.**
+Held on the receiving journal's doors, in its database, by the sender's
+address (`arrival_refused`) — never the sender's client, never memory. Let go
+closes the door (`closed_doors`) until they are added; removing is not
+blocking. A friend gets one unanswered send at a time. A refusal says so in
+words, and the sender's copy keeps what they wrote.
+
+**Words: one conversation per record, never a list of them all,
+2026-10-27.** One friend's page holds theirs, record by record. Your side is
+`said_back`, kept from the day it shipped and never backfilled; the page says
+from when (her answers).
+
+**The Inbox is retired and Community is the third stop, 2026-10-27.** Every
+thing in it has a home: a person's things on their face, strangers in the
+row, what is still out under the friend's wall, the LN. Admin letter pinned
+on home, problem reports under Report a problem. `/dashboard/inbox` forwards
+to Friends, which `/dashboard/people` draws on a desk too. Community is the
+Board until its own brief.
+
+**Pin is gone, 2026-10-26, her call ("Not needed").** Nobody in the book
+stands above anybody else; `pinned_at` stays, as every column does, and
+nothing reads it.
 
 **The directory, 2026-10-07, Miyel's call, and no longer ruled out.**
 listeningnotes.blog keeps a table of the journals on the Board — the address,
@@ -1320,12 +1369,12 @@ dismissed. The proof is unchanged: a code from the registry's secret, served
 back at /api/public/listing; delisting needs the code and the journal to have
 forgotten it. (Off by default and a press, 2026-10-07, is what this replaced.)
 
-**People is one tab: Friends · Board, Miyel's call.** Two words in the bar,
-each with its count: Friends (the book, unchanged) and Board — her word on
-2026-10-08, after Everyone, Commons, All Users, Hub and Keepers. The Board is
-ordered by distance from the viewer: logging right now, a friend away, also
-on your records, being logged everywhere, further out (shuffled). Adding is
-a door on a press; somebody already in the book wears a check.
+**People is your friends alone, 2026-10-24, her call.** It reads the
+book's feeds, never the Board's list; finding people is the Board's (Add's
+name search and its way there aside). Whose records — Your friends · Your
+records · Everyone's — stood for a day and went: Your records was strangers
+on your own records, which the Board shows itself. The wall is home's; covers
+wear their loggers' faces, yours first when you have it too (not a gold dot).
 
 **A visitor's People holds the Board's public parts, 2026-10-07/08.** Miyel:
 "strangers and visitors can see this page." No Friends, no switch, no checks,
@@ -1345,6 +1394,8 @@ about albums or comments, not this." A line from a keeper's own public entry,
 linked to it, may stand on the Board; a visitor's words never do.
 
 **Their note may sit beside yours on your page about them, 2026-10-24** —
+(on their post since 2026-10-28, read with the post; the route stays for
+older copies that ask it) —
 a friend's, or a stranger's off the Board, whose page opens by their address
 (her words the same day: "even if its a stranger").
 Her compare brief: reading what they actually said "is the entire point". It
@@ -1390,14 +1441,15 @@ so two looks never ask one twice. Never a vercel.json cron (every copy's).
 wave carries a name and an address, never words — the route refuses any body
 with more. The
 recipient asks the journal its name and keeps that, not the one handed; a
-second wave replaces the first; Leave it deletes. **Nothing is reported
+second waits on the first (below); Leave it deletes. **Nothing is reported
 back:** a waver never learns what the other copy did.
 
-**One-way: you wave when you add somebody, and at no other time, 2026-09-22.**
-Adding stays silent; the wave is an extra press and Not now is not a lesser
-path. No Wave back (the brief had one; Miyel cut it): adding somebody from
-their wave brings up the same offer, which is the reply. A copy too old to
-take a wave says so and the add stands — it never waits on the wave.
+**Wave once added, and one at a time, 2026-10-26 (Miyel's Friends
+answers).** Adding stays silent, and a friend's page has no Wave (her
+call). A wave from somebody not in the book is answered by adding them,
+one from somebody in it by Wave back. The receiving journal keeps one per
+sender until its keeper lets it go or waves back; a second is kept as
+nothing and answered the same, so the waver still learns nothing.
 **The inbox says "[name] waved" and never "added you"** (Miyel, 2026-09-23):
 the wave is the quiet codeword for "I added you, add me back", and spelling
 it out was offered and turned down.
@@ -1420,8 +1472,8 @@ until then a failed add held the screen. The giver's wave back is what
 teaches the new inbox. Both hellos are chosen; skipping is never mentioned.
 
 **A returned send is an arrival, and this copy keeps it, 2026-09-22.** When
-somebody in the book logs a record this journal put them onto, the feed's
-match hands it to this copy's server and the inbox shows it among the sends —
+somebody in the book logs a record this journal put them onto, the match
+(the feed's, People's since 2026-10-23) hands it to this copy's server and the inbox shows it among the sends —
 "Came back", the dot until opened, no count. A table of its own (`came_back`),
 because a copy kept no record of what it sent (it does from 2026-10-15, below). **The first write of its
 kind:** the browser telling its own server what it read on somebody else's
@@ -1474,16 +1526,29 @@ credit on an entry keeps the address it was sent from. A journal keeps the
 addresses it lived at (`moved_from`, private), so its sends from there are
 still its own when they come back.
 
-**Compare is not a destination; it is your page about someone,
-2026-09-12; built 2026-09-13.** A face or a name in the feed, or a row in
-the book, opens `/dashboard/people/[id]`: records you both have, rated
-alike, what they sent you and your hit rate with it, then where you agree
-and disagree hardest, what they sent and how it landed, and what only they
-have heard. On your copy, owner-only, which is why it can hold what their
-journal never could. `/compare` is gone with it — a public page that
-compared this journal against a typed address, which the model has no
-place for (everything social is on the visitor's own copy); nobody had the
-URL, so no stub. A printer door on the page waits for the press.
+**A friend's page is their journal, drawn by yours, 2026-10-26 (Miyel's
+Friends answers).** Visit opens `/dashboard/people/[id]`, laid out as home
+("just like an owners page"): home's row with their face and name, Compare ·
+Added for its rooms, their beacon, the line, their wall — home's components,
+their public rows. "The page is mine, the data is theirs": nothing framed,
+and (since 2026-10-28) their entries open here too. Compare is a view opened in place at the
+top of the page — her pick over a screen of its own, 2026-10-26 ("the way
+you have it designed now is great"); main's versus screen joined it
+2026-10-28, its faces and facts kept above the shared records (her call).
+
+**Compare is two, 2026-10-28, her split: "comparing a listen vs comparing
+with a full person".** The person is Compare on their page: the two of you,
+face to face, the facts, a wall of the records you share. The listen is
+their post (ListenCompare.js): Compare in its top right, where you have the
+record too, sets your listen beside theirs, and a shared record pressed on
+their page opens the post that way — "skipping a button".
+
+**A friend's entry opens inside your journal, 2026-10-28, her ask ("not a
+separate page overlay").** `/dashboard/people/[id]/[slug]` (her name) reads
+it as it opens, on this copy's server, from the public `/api/entries/<slug>`
+any visitor reads, and your entry page draws it in a Bookplate of theirs: no
+keeper's tools, no links into your archive, nothing stored or listed. Words
+written there go through your outbox, kept for Words.
 
 **The page about a person stays on your copy; their journal gets no door
 to it, 2026-09-13.** Considered: their right pane offering "Compare with

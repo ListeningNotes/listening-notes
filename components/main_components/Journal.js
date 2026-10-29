@@ -76,7 +76,7 @@ const VIEWS_OUT_MS = 160;
 // one, so they come off both the query and the name before comparing. This
 // only started mattering when the search stopped covering the notes, which
 // had been quietly catching the unaccented spellings all along.
-const foldForSearch = value => String(value || '')
+export const foldForSearch = value => String(value || '')
   .normalize('NFD')
   .replace(/\p{Diacritic}/gu, '')
   .toLowerCase()
@@ -129,20 +129,23 @@ export const VIEWS = [
   { value: 'shuffle', label: 'Shuffle',        fun: true },
 ];
 const VIEW_KEY = 'ln-wall-view';
+// A wall of somebody else's records holds none of the keeper's entries, and
+// one empty list for it, so nothing that watches the entries wakes for it.
+const NO_ENTRIES = Object.freeze([]);
 const DEFAULT_VIEW = 'order';
 
-function readStoredView() {
+function readStoredView(key = VIEW_KEY) {
   try {
-    const saved = window.localStorage.getItem(VIEW_KEY);
+    const saved = window.localStorage.getItem(key);
     return VIEWS.some(v => v.value === saved) ? saved : DEFAULT_VIEW;
   } catch {
     return DEFAULT_VIEW;
   }
 }
 
-function storeView(value) {
+function storeView(value, key = VIEW_KEY) {
   try {
-    window.localStorage.setItem(VIEW_KEY, value);
+    window.localStorage.setItem(key, value);
   } catch {
     /* storage refused — the view still changes, it just is not remembered */
   }
@@ -406,7 +409,7 @@ function arrange(albums, view, seed) {
 // A record whose name is written wholly in a script the key folds away has
 // an empty key, and two of those are not the same record — so an entry with
 // no key is a record of its own.
-function gatherAlbums(entries) {
+export function gatherAlbums(entries) {
   const byKey = new Map();
   for (const e of entries) {
     // The record's year beside its key, 2026-10-13: two records with one name
@@ -452,11 +455,40 @@ const COVERS_AT_A_TIME = 50;
 // recent row and its counts, so on the homepage the wall is handed what has
 // already arrived rather than fetching the same list a second time; at
 // /archive nothing has asked yet, so it asks.
-function Journal({ entries: given, loading: givenLoading, scroller, foot = null }) {
+//
+// ── Somebody else's records, 2026-10-23 ───────────────────────────────────
+// People is home's anatomy pointed outward (Miyel's People brief), and its
+// wall is this one: the same line, the same views, the same bands and the
+// same endless drawing, so the two cannot drift. What People hands in
+// instead of entries:
+//
+//   records   the wall already gathered, in gatherAlbums' shape — nothing
+//             here fetches, deletes, arrives or hands an order to the layer
+//             for them, and no ?q= or ?mark= in the address narrows them
+//   tile      draws one record (the default is the journal's own AlbumTile);
+//             whatever it draws carries data-tile-key, which the glides read
+//   tail      on the line after the search, where home has its filters —
+//             People's scope (Miyel, 2026-10-23: "to the right after search
+//             similar to main screen")
+//   filters   false leaves the Filters button and its sheet off
+//   viewKey   where this wall's view is remembered, apart from home's
+//   empty     what stands where there are no records at all
+//   seek      { placeholder, label, matches(album, folded), onChange(term) }
+//   before    over the wall, under the line — People's faces from a search
+//   onOrder   with `records`: told the wall's order, in records, as it
+//             changes — for a friend's wall to hand over on a press
+//   shared    with `records`: whether a record is on your wall too, which
+//             adds Shared to the filters
+function Journal({
+  entries: given, loading: givenLoading, scroller, foot = null,
+  records = null, tile = null, tail = null, filters = true, viewKey = VIEW_KEY,
+  empty = null, seek = null, before = null, onOrder = null, shared = null,
+}) {
   const [ownEntries, setOwnEntries] = useState([]);
   const [ownLoading, setOwnLoading] = useState(true);
-  const supplied = Array.isArray(given);
-  const entries = supplied ? given : ownEntries;
+  const foreign = Array.isArray(records);
+  const supplied = foreign || Array.isArray(given);
+  const entries = foreign ? NO_ENTRIES : supplied ? given : ownEntries;
   const loading = supplied ? Boolean(givenLoading) : ownLoading;
   // Neither a flipped tile nor an open modal is state this holds any more.
   // A cover is a link to its entry, and the entry arrives as a layer over this
@@ -480,9 +512,13 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
     () => '',
   );
   const [typedSearch, setSearch] = useState(null);
-  const search = typedSearch ?? linkedQuery;
+  const search = typedSearch ?? (foreign ? '' : linkedQuery);
   const [searchOpened, setSearchOpen] = useState(null);
-  const searchOpen = searchOpened ?? Boolean(linkedQuery);
+  const searchOpen = searchOpened ?? Boolean(!foreign && linkedQuery);
+  // Told whenever the words change, for a wall that asks elsewhere too
+  // (People asks the Board).
+  const onSeek = seek?.onChange;
+  useEffect(() => { onSeek?.(search); }, [search, onSeek]);
   // The field is a magnifier until it is pressed (Miyel, 2026-10-22: "an icon
   // by the filter that then opens the search bar but not a constant field").
   // The field is always there, folded to nothing behind the magnifier, so it
@@ -520,16 +556,18 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
     () => '',
   );
   const [favoritesTyped, setFavoritesOnly] = useState(null);
-  const favoritesOnly = favoritesTyped ?? (linkedMark === 'favorite');
+  const favoritesOnly = favoritesTyped ?? (!foreign && linkedMark === 'favorite');
   const [masterpiecesTyped, setMasterpiecesOnly] = useState(null);
-  const masterpiecesOnly = masterpiecesTyped ?? (linkedMark === 'masterpiece');
+  const masterpiecesOnly = masterpiecesTyped ?? (!foreign && linkedMark === 'masterpiece');
   // Highlights had two of the three flags in it. The third was decided at the
   // same time as the other two and never given a way in here.
   const [formativeTyped, setFormativeOnly] = useState(null);
-  const formativeOnly = formativeTyped ?? (linkedMark === 'formative');
+  const formativeOnly = formativeTyped ?? (!foreign && linkedMark === 'formative');
   // A record somebody sent: the envelope the wall's tiles wear (Feed.js,
   // Marks) — a Submission, not a credit written in by hand.
   const [sentOnly, setSentOnly] = useState(false);
+  // Shared, on somebody else's wall: only the records on yours too.
+  const [sharedOnly, setSharedOnly] = useState(false);
   // What the reader has set the handles to, or null for "every year" — which
   // is the full span once the entries have landed and nothing before that.
   const [yearPicked, setYearPicked] = useState(null);
@@ -556,7 +594,7 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
   // The view: remembered in this browser, read the way the density is below,
   // and the reader's pick wins for the rest of the visit. The shuffle's seed
   // is made when Shuffle is pressed, so a remembered Shuffle opens shuffled.
-  const storedView = useSyncExternalStore(() => () => {}, readStoredView, () => DEFAULT_VIEW);
+  const storedView = useSyncExternalStore(() => () => {}, () => readStoredView(viewKey), () => DEFAULT_VIEW);
   const [pickedView, setView] = useState(null);
   const view = pickedView ?? storedView;
   const [seed, setSeed] = useState(freshSeed);
@@ -601,11 +639,14 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
   // The full span the collection covers, which is what the year slider's
   // ends are pinned to. Recomputed from the entries rather than hardcoded so
   // it widens by itself as older or newer records get added.
+  // Somebody else's wall reads its records' own entries (2026-10-28, when
+  // the Friends wall took the filters).
+  const filterRows = useMemo(() => (foreign ? records.flatMap(r => r.all || []) : entries), [foreign, records, entries]);
   const yearBounds = useMemo(() => {
-    const years = entries.map(releaseYear).filter(y => y !== null);
+    const years = filterRows.map(releaseYear).filter(y => y !== null);
     if (!years.length) return null;
     return { min: Math.min(...years), max: Math.max(...years) };
-  }, [entries]);
+  }, [filterRows]);
 
   // Genre is an open vocabulary coming from Apple, so the options are whatever
   // the archive actually contains rather than a list held here that would drift
@@ -616,7 +657,7 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
   // genres is what would eventually turn this row into a wall.
   const genres = useMemo(() => {
     const seen = new Map();
-    for (const e of entries) {
+    for (const e of filterRows) {
       const g = (e.genre || '').trim();
       if (!g) continue;
       const key = g.toLowerCase();
@@ -625,7 +666,7 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
       else seen.set(key, { name: g, count: 1 });
     }
     return [...seen.values()].sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
-  }, [entries]);
+  }, [filterRows]);
 
   // The ones carrying more than a single record lead, up to a dozen. Everything
   // else waits behind the toggle — reachable, just not in the way.
@@ -834,7 +875,10 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
   // Every record on the wall, before a filter is asked anything. Gathered
   // after the deleted are taken out, so a record that loses its last entry
   // goes with it and one that loses a listen simply changes its face.
-  const albums = useMemo(() => gatherAlbums(entries.filter(e => !gone.has(e.slug))), [entries, gone]);
+  const albums = useMemo(
+    () => (foreign ? records : gatherAlbums(entries.filter(e => !gone.has(e.slug)))),
+    [foreign, records, entries, gone],
+  );
 
   const filtered = useMemo(() => {
     const q = foldForSearch(search);
@@ -861,11 +905,11 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
         // mentions her, and an archive that hands you a record by an artist
         // it doesn't have reads as broken rather than clever. Genre came out
         // with it — there is a genre filter for that, sitting right there.
-        if (q && !(
+        if (q && !(seek?.matches ? seek.matches(album, q) : (
           foldForSearch(e.album).includes(q) ||
           foldForSearch(e.artist).includes(q) ||
           album.notes.some(n => foldForSearch(n.song).includes(q))
-        )) return false;
+        ))) return false;
         if (kind === 'albums' && !album.listens.length) return false;
         if (kind === 'tracks' && !album.notes.length) return false;
         if (genre && (e.genre || '') !== genre) return false;
@@ -876,6 +920,7 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
         // onto it before that column was dropped.
         if (formativeOnly && !marked(album.listens, x => x.formative === true || x.formative === 'true')) return false;
         if (sentOnly && !marked(album.all, x => x.entry_type === 'Submission' && x.credit_by_hand !== true)) return false;
+        if (sharedOnly && shared && !shared(album)) return false;
         if (yearActive) {
           const y = releaseYear(e);
           // An entry with no year can't be shown to fall inside a range, so
@@ -884,7 +929,8 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
         }
         return true;
       });
-  }, [albums, search, kind, genre, favoritesOnly, masterpiecesOnly, formativeOnly, sentOnly, yearActive, yearRange]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- seek.matches is read, not watched: a new one comes with new records
+  }, [albums, search, kind, genre, favoritesOnly, masterpiecesOnly, formativeOnly, sentOnly, sharedOnly, yearActive, yearRange]);
 
   // In the view's order, and with each record's band. In order is by the day
   // a record came into the journal, which never changes: the wall never
@@ -900,7 +946,8 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
     if (!unread.size) return undefined;
     let here = true;
     Promise.all([...unread].map(([address, slug]) => readCoverColor(address)
-      .then(c => c || askServerForColor(slug, address))
+      // This journal's server reads only this journal's covers.
+      .then(c => c || (foreign ? null : askServerForColor(slug, address)))
       .then(c => coverColors.set(address, c || UNREAD))))
       .then(() => {
         if (!here) return;
@@ -908,7 +955,7 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
         setColorsRead(n => n + 1);
       });
     return () => { here = false; };
-  }, [view, filtered]);
+  }, [view, filtered, foreign]);
   // eslint-disable-next-line react-hooks/exhaustive-deps -- colorsRead says the covers' colors (a module map) have changed
   const arranged = useMemo(() => arrange(filtered, view, seed), [filtered, view, seed, colorsRead]);
   // How many records each band holds, all of it and not just what is drawn
@@ -942,7 +989,16 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
   // entries in a row, oldest first — a folder flips through itself — and
   // then the next record's. So a swipe on an entry opened from here moves
   // through its folder and carries on to the record beside it.
-  useEffect(() => { handOffOrder(arranged.flatMap(({ album }) => [...album.all].reverse())); }, [arranged]);
+  // Never for somebody else's records: those open on their own journals, and
+  // the order left here is home's.
+  // Somebody else's records are told to whoever drew them instead
+  // (`onOrder`, 2026-10-28): a friend's wall hands its own order over when a
+  // record is pressed, so a swipe on their post goes to the record beside it
+  // here, and home's wall, mounted under it, cannot write over that order.
+  useEffect(() => {
+    if (!foreign) handOffOrder(arranged.flatMap(({ album }) => [...album.all].reverse()));
+    else if (onOrder) onOrder(arranged.map(({ album }) => album));
+  }, [arranged, foreign, onOrder]);
 
   const shown = arranged.slice(0, drawn);
   const more = arranged.length > drawn;
@@ -979,7 +1035,7 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
     glideFrom.current = under > 1 ? null : positions();
     if (value === 'shuffle') setSeed(freshSeed());
     setView(value);
-    storeView(value);
+    storeView(value, viewKey);
     setDrawn(COVERS_AT_A_TIME);
     if (under > 1) (scroller?.current || document.scrollingElement)?.scrollBy({ top: -under });
     closeViews();
@@ -1170,9 +1226,27 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
     clocks.current.push(setTimeout(show, 120));
   }, [arranged, closeTheGap]);
 
+  // ── A filter glides as a view does, 2026-10-28 ──────────────────────────
+  // Miyel: the wall "doesn't do moving animations that the sort does for
+  // filters". A view took where every cover stood before it changed
+  // (chooseView); a filter did not, so the covers that stayed jumped to
+  // their new places. Now a filter takes them too, and the effect above
+  // moves what stayed and fades in what came back. Not while the wall is
+  // scrolled under its line, where covers would fly in from far away — the
+  // same exception chooseView makes. Not the year's slider either, which
+  // changes with every step of a drag.
+  function glideNext() {
+    const wall = grid.current;
+    const wrap = lineWrap.current;
+    const under = wall && wrap ? wrap.getBoundingClientRect().bottom - wall.getBoundingClientRect().top : 0;
+    glideFrom.current = under > 1 ? null : positions();
+  }
+  const gliding = set => value => { glideNext(); set(value); };
+
   function clearFilters() {
+    glideNext();
     setSearch(''); setKind(''); setGenre(''); setGenresOpen(false);
-    setFavoritesOnly(false); setMasterpiecesOnly(false); setFormativeOnly(false); setSentOnly(false);
+    setFavoritesOnly(false); setMasterpiecesOnly(false); setFormativeOnly(false); setSentOnly(false); setSharedOnly(false);
     setYearPicked(null);
   }
 
@@ -1182,7 +1256,7 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
   // number in a filled badge until 2026-10-22 (the wall's filters brief): the
   // underline already says something is on, and the badge was the shape that
   // change took out.
-  const narrowed = Boolean(kind) || Boolean(genre) || favoritesOnly || masterpiecesOnly || formativeOnly || sentOnly || yearActive;
+  const narrowed = Boolean(kind) || Boolean(genre) || favoritesOnly || masterpiecesOnly || formativeOnly || sentOnly || sharedOnly || yearActive;
   const hasActiveFilters = Boolean(search) || narrowed;
 
   return (
@@ -1193,11 +1267,14 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
           of carets, so on a phone it is left alone and the top comes off
           instead — the wall starts where the pane starts. */}
       <main className="arc-main" ref={wallMain} style={{ maxWidth: 1100, margin: '0 auto' }}>
+        {before}
         {loading ? (
           <div className="arc-grid" data-density={density}>
             {[...Array(18)].map((_, i) => <div key={i} className="arc-skel" style={{ animationDelay: (i * 0.04) + 's' }} />)}
           </div>
-        ) : entries.length === 0 ? (
+        ) : foreign && albums.length === 0 ? (
+          empty
+        ) : !foreign && entries.length === 0 ? (
           /* Zero entries is a different fact from zero matches, and on a new
              copy it is the first thing anybody sees. "No entries match these
              filters" told a new owner their filters were wrong. */
@@ -1206,7 +1283,7 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
             <span className="arc-empty-how">The first listen goes in from the desk.</span>
           </div>
         ) : filtered.length === 0 ? (
-          <div className="arc-empty">No entries match these filters.</div>
+          foreign ? empty : <div className="arc-empty">No entries match these filters.</div>
         ) : (
           <div className="arc-grid" data-density={density} ref={grid}>
             {shown.map(({ album, band }, i) => (
@@ -1252,14 +1329,16 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
                     )}
                   </div>
                 )}
-                <AlbumTile
-                  album={album}
-                  density={density}
-                  /* Only a record with nothing else behind it leaves the wall;
-                     deleting one listen of three changes the tile, not the
-                     wall. */
-                  going={album.all.length === 1 && going === album.face.slug}
-                />
+                {tile ? tile(album) : (
+                  <AlbumTile
+                    album={album}
+                    density={density}
+                    /* Only a record with nothing else behind it leaves the
+                       wall; deleting one listen of three changes the tile,
+                       not the wall. */
+                    going={album.all.length === 1 && going === album.face.slug}
+                  />
+                )}
               </Fragment>
             ))}
           </div>
@@ -1346,8 +1425,8 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
               onFocus={() => setSearchOpen(true)}
               onBlur={() => { if (!search) setSearchOpen(false); }}
               onKeyDown={e => { if (e.key === 'Escape') closeSearch(); }}
-              placeholder="Albums or artists"
-              aria-label="Search albums, artists and notes"
+              placeholder={seek?.placeholder || 'Albums or artists'}
+              aria-label={seek?.label || 'Search albums, artists and notes'}
             />
             {/* Held on the press while open, so the field keeps the focus: an
                 empty field left to blur first would fold before the press
@@ -1357,7 +1436,7 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
               className="arc-seek-mark"
               onPointerDown={e => { if (searchOpen) e.preventDefault(); }}
               onClick={searchOpen ? closeSearch : openSearch}
-              aria-label={searchOpen ? 'Close the search' : 'Search albums, artists and notes'}
+              aria-label={searchOpen ? 'Close the search' : (seek?.label || 'Search albums, artists and notes')}
               aria-expanded={searchOpen}
             >
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
@@ -1368,6 +1447,8 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
             </button>
           </span>
 
+          {tail}
+          {filters && (
           <button
             type="button"
             ref={filterBtnRef}
@@ -1385,6 +1466,7 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
             </svg>
             <span className="arc-ctl-text">Filters</span>
           </button>
+          )}
 
 
           {/* Keyed off whether anything is actually hidden, not off whether a
@@ -1404,14 +1486,15 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
           isPhone={isPhone}
           scroller={scroller}
           anchorRef={filterBtnRef}
-          kind={kind} setKind={setKind}
-          genre={genre} setGenre={setGenre} genres={genres} genresShown={genresShown} genresRest={genresRest}
+          kind={kind} setKind={gliding(setKind)}
+          genre={genre} setGenre={gliding(setGenre)} genres={genres} genresShown={genresShown} genresRest={genresRest}
           genresOpen={genresOpen} setGenresOpen={setGenresOpen}
           yearBounds={yearBounds} yearRange={yearRange} setYearPicked={setYearPicked}
-          favoritesOnly={favoritesOnly} setFavoritesOnly={setFavoritesOnly}
-          masterpiecesOnly={masterpiecesOnly} setMasterpiecesOnly={setMasterpiecesOnly}
-          formativeOnly={formativeOnly} setFormativeOnly={setFormativeOnly}
-          sentOnly={sentOnly} setSentOnly={setSentOnly}
+          favoritesOnly={favoritesOnly} setFavoritesOnly={gliding(setFavoritesOnly)}
+          masterpiecesOnly={masterpiecesOnly} setMasterpiecesOnly={gliding(setMasterpiecesOnly)}
+          formativeOnly={formativeOnly} setFormativeOnly={gliding(setFormativeOnly)}
+          sentOnly={sentOnly} setSentOnly={gliding(setSentOnly)}
+          canShare={Boolean(shared)} sharedOnly={sharedOnly} setSharedOnly={gliding(setSharedOnly)}
           hasActiveFilters={hasActiveFilters} clearFilters={clearFilters}
           shownCount={filtered.length}
           leaving={filtersLeaving}

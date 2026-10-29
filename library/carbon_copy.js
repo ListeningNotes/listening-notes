@@ -64,7 +64,7 @@ function read_me(journal, count, made) {
   return [
     `${whose}, copied ${day(made)}.`,
     `The entries folder holds a page for ${many}, written out as plain text. Each one opens in Notes, TextEdit, Files or anything else that reads text, and needs nothing else to make sense.`,
-    'journal.json is the whole journal the way its database holds it: the entries and the drafts, the card, the address book and the inbox. It is what puts the journal back into a copy of Listening Notes. Your password, and the key that signs you in, are never in it.',
+    'journal.json is the whole journal the way its database holds it: the entries and the drafts, the card, your friends and what they sent you. It is what puts the journal back into a copy of Listening Notes. Your password, and the key that signs you in, are never in it.',
   ].join('\n\n') + '\n';
 }
 
