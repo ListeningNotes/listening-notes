@@ -23,6 +23,9 @@ export const DENSITIES = ['large', 'medium', 'small'];
 // list) list button can be old button. that goes last"). Only that wall
 // draws them (PeopleScreen.js), so home's control keeps its three.
 export const FRIENDS_DENSITIES = ['feed', ...DENSITIES, 'list'];
+// And home's own wall has List too (2026-10-29, her ask), last, with the
+// record's stars and marks where the Friends wall has faces (AlbumTile.js).
+export const HOME_DENSITIES = [...DENSITIES, 'list'];
 export const DEFAULT_DENSITY = 'medium';
 const STORAGE_KEY = 'ln-archive-density';
 

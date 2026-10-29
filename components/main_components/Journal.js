@@ -34,7 +34,7 @@ import { readArtColor } from '../../library/music_data_api';
 import AlbumTile from './AlbumTile';
 import StarRating from './StarRating';
 import { handOffOrder } from '../../library/handoff';
-import GridDensity, { DENSITIES, DEFAULT_DENSITY, readStoredDensity, storeDensity } from './GridDensity';
+import GridDensity, { DENSITIES, HOME_DENSITIES, DEFAULT_DENSITY, readStoredDensity, storeDensity } from './GridDensity';
 import JournalFilters, { roomFloor } from './JournalFilters';
 import { DELETE_ENTRY } from '../../hooks/useEntryEditor';
 import { SAVED_EVENT } from '../../hooks/useListeningSession';
@@ -481,16 +481,18 @@ const COVERS_AT_A_TIME = 50;
 //             adds Shared to the filters
 //   densities the sizes this wall offers, and densityKey where its pick is
 //             remembered — Friends adds Feed and List (GridDensity.js); the
-//             size is handed to `tile` beside the record
+//             size is handed to `tile` beside the record. Unsaid, the
+//             journal's own wall has List and somebody else's the grid alone
 function Journal({
   entries: given, loading: givenLoading, scroller, foot = null,
   records = null, tile = null, tail = null, filters = true, viewKey = VIEW_KEY,
   empty = null, seek = null, before = null, onOrder = null, shared = null,
-  densities = DENSITIES, densityKey = undefined,
+  densities: offered = null, densityKey = undefined,
 }) {
   const [ownEntries, setOwnEntries] = useState([]);
   const [ownLoading, setOwnLoading] = useState(true);
   const foreign = Array.isArray(records);
+  const densities = offered || (foreign ? DENSITIES : HOME_DENSITIES);
   const supplied = foreign || Array.isArray(given);
   const entries = foreign ? NO_ENTRIES : supplied ? given : ownEntries;
   const loading = supplied ? Boolean(givenLoading) : ownLoading;

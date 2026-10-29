@@ -2522,6 +2522,10 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 .ps-list-title { font-weight: 700; font-size: 15px; color: var(--ink); }
 .ps-list-meta { font-size: 12.5px; color: var(--ink-faint); }
 .ps-list .ln-new { flex: 0 0 auto; }
+/* Home's List draws the same row (AlbumTile.js), its stars and marks where
+   a friend's faces are. */
+.ft-list-marks { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 8px; }
+.ft-list-marks .ln-mini-flags { display: inline-flex; gap: 5px; }
 
 /* A search's faces, over the wall: the band's faces, in a row that scrolls
    sideways once it overflows. */
