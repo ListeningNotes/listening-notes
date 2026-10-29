@@ -43,7 +43,7 @@
 // call, 2026-10-22), and draws none of it (nav.css).
 'use client';
 
-import { Globe, House, User, Users } from '@phosphor-icons/react';
+import { Globe, House, User, Users, X } from '@phosphor-icons/react';
 import { useBookplate } from './Bookplate';
 
 export default function Header({
@@ -54,17 +54,19 @@ export default function Header({
   return (
     <div className="hdr">
       {/* The way in to the person: it opens the card over the page, and
-          closes it again (HomeNav). */}
+          closes it again (HomeNav). While the card is open it is an X, the
+          window's close, in the place the window grew from (2026-10-29). */}
       <button
         type="button"
         className={'hdr-face' + (cardOpen ? ' hdr-face--open' : '')}
         onClick={onFace}
         aria-expanded={cardOpen}
-        aria-label={`About ${whose}`}
-        title={whose}
+        aria-label={cardOpen ? 'Close' : `About ${whose}`}
+        title={cardOpen ? 'Close' : whose}
       >
         <User size={16} weight="regular" aria-hidden="true" />
         {portrait && <img src={portrait} alt="" />}
+        <span className="hdr-face-x" aria-hidden="true"><X size={16} weight="bold" /></span>
       </button>
       {lights}
       {stops.length > 0 && <span className="hdr-mark hdr-mark--middle" aria-hidden="true">{mark}</span>}

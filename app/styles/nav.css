@@ -3298,29 +3298,113 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
    ··· sits on the row's second line, where the pane's own words step aside.
    (Miyel: "the profile should only open if you click it and not be a swipe
    left".) */
+/* ── A window, grown from the face, 2026-10-29 ──────────────────────────────
+   Miyel: "make the ID card open more like a window or overlay on the page
+   (not full bleed) and the spot where the pfp was turns into an x to close"
+   — "the box should open from the pfp". So the card is inset under the top
+   row over a dimmed page, and it grows out of the face and back into it:
+   scaled from the face's centre, written in the window's own coordinates
+   (the face is 18px in and 34 round, its centre 29 down the row; the window
+   is 10px in and 62 down it). The row keeps its ground, so it stays the
+   page's colour above the dim, and its face is an X while the card is open
+   (Header.js). A press on the dim puts the card away, as the X, Escape and
+   any of the three rooms do; the Listen bar steps down for it (ListenBar.js).
+
+   Above the wall's sticking bar (101, journal.css), which the full-bleed
+   card at 94 let show through it; the row goes above both while the card is
+   open, so the X and the ··· stay on top. */
+.hn-card-dim { display: none; }
 @media (max-width: 768px) {
   .hn-face--card {
     position: fixed;
-    inset: 0;
-    z-index: 94;
+    top: calc(22px + var(--safe-top) + 62px);
+    left: 10px;
+    right: 10px;
+    bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    z-index: 125;
+    width: auto;
     height: auto;
+    padding-top: 0;
     scroll-snap-align: none;
     background: var(--bg);
-    transform: translateX(-100%);
+    border-radius: 22px;
+    box-shadow: 0 0 0 1px var(--border), 0 24px 60px -16px rgba(0, 0, 0, 0.4);
+    transform-origin: 25px -33px;
+    transform: scale(0.06);
+    opacity: 0;
     visibility: hidden;
-    transition: transform 0.4s cubic-bezier(0.22, 0.61, 0.36, 1), visibility 0s linear 0.4s;
+    transition:
+      transform 0.28s cubic-bezier(0.4, 0, 0.7, 0.2),
+      opacity 0.18s ease 0.1s,
+      visibility 0s linear 0.28s;
   }
   .hn--card .hn-face--card {
     transform: none;
+    opacity: 1;
     visibility: visible;
-    transition: transform 0.4s cubic-bezier(0.22, 0.61, 0.36, 1), visibility 0s;
+    transition:
+      transform 0.4s cubic-bezier(0.22, 0.61, 0.36, 1),
+      opacity 0.14s ease,
+      visibility 0s;
   }
+  /* The window's own head, where the card's ··· sits: it stays put while the
+     card scrolls under it. */
+  .hn-face--card::before {
+    content: '';
+    display: block;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    height: var(--hn-line2);
+    background: var(--bg);
+  }
+  .hn--card .hn-bar {
+    z-index: 126;
+    height: var(--hn-bar-h);
+    background: none;
+  }
+  .hn--card .hn-bar-tools { top: calc(22px + var(--safe-top) + 62px); right: 20px; }
   .hn--card .hn-bar-words,
   .hn--card .hn-bar-add { display: none; }
-  .hdr-face--open { box-shadow: 0 0 0 2px var(--ink); }
+
+  .hn-card-dim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 124;
+    background: rgba(18, 16, 14, 0.3);
+    opacity: 0;
+    visibility: hidden;
+    touch-action: none;
+    transition: opacity 0.28s ease, visibility 0s linear 0.28s;
+  }
+  [data-theme='dark'] .hn-card-dim { background: rgba(0, 0, 0, 0.55); }
+  .hn--card .hn-card-dim {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.28s ease, visibility 0s;
+  }
+
+  /* The face, an X while the card is open: it turns in over the portrait. */
+  .hdr-face-x {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--bg);
+    color: var(--ink);
+    opacity: 0;
+    transform: rotate(-90deg) scale(0.6);
+    transition: opacity 0.18s ease, transform 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+  .hdr-face--open .hdr-face-x { opacity: 1; transform: none; }
 }
 @media (max-width: 768px) and (prefers-reduced-motion: reduce) {
-  .hn-face--card, .hn--card .hn-face--card { transition: none; }
+  .hn-face--card, .hn--card .hn-face--card,
+  .hn-card-dim, .hn--card .hn-card-dim,
+  .hdr-face-x { transition: none; }
 }
 
 /* ── The Listen bar is the frame's, 2026-10-22 ─────────────────────────────
