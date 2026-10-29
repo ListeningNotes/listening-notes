@@ -2386,6 +2386,48 @@ textarea.st-field { resize: vertical; min-height: 96px; }
   font-family: var(--font-label); font-size: 9px; letter-spacing: 0.11em; text-transform: uppercase;
   color: var(--ink-faint);
 }
+/* The head, when it is one of your friends: their face and name, and the
+   hand of a wave at the far end (2026-10-29). Not a link any more — Visit
+   is the way to their page. */
+.fp-who--plain { align-self: stretch; }
+.fp-who--plain .fp-who-name { flex: 1; min-width: 0; }
+.fp-wave {
+  position: relative; flex: 0 0 auto; display: inline-flex;
+  padding: 6px; margin: -6px 0 -6px auto;
+  border: 0; background: none; color: var(--ink); cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.fp-wave:disabled { opacity: 0.45; cursor: default; }
+.fp-wave:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: -2px; border-radius: 8px; }
+/* The × that says pressing it lets the wave go. */
+.fp-wave-x {
+  position: absolute; right: 2px; bottom: 3px;
+  display: grid; place-items: center;
+  width: 12px; height: 12px; border-radius: 50%;
+  background: var(--ink); color: var(--bg);
+  box-shadow: 0 0 0 1.5px var(--bg);
+}
+.fp-who--stranger .fp-wave { margin-left: 0; }
+/* Visit · Messages · Sends, the same three on every face (2026-10-29), on a
+   rule of their own; what Messages or Sends opens unrolls under them. */
+.fp-doors--three { gap: 8px 30px; margin-top: 2px; padding-top: 14px; border-top: 1px solid var(--border); }
+.fp-door-glyph { position: relative; display: inline-flex; }
+/* New on a door, above and right of its glyph, as on the top row's stops. */
+.fp-door-new {
+  position: absolute; top: -7px; left: calc(100% - 7px);
+  padding: 2px 4px 1px; font-size: 6.5px;
+  box-shadow: 0 0 0 1.5px var(--bg);
+  pointer-events: none;
+}
+.fp-under { display: flex; flex-direction: column; padding-top: 4px; }
+.fp-under > .fp-none, .fp-under > .fp-all { margin-top: 12px; }
+.fp-none { margin: 0; font-size: 13.5px; line-height: 1.45; color: var(--ink-faint); }
+.fp-all {
+  align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; padding: 4px 0;
+  font-family: var(--font-label); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--ink-soft); text-decoration: none;
+}
+.fp-all:hover { color: var(--ink); }
 /* Its answers: a glyph over one word each, as the site's doors are (her
    review, 2026-10-27: "i lost the icons"). */
 .fp-doors { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 6px; }

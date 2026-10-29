@@ -667,8 +667,8 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
     const group = f => (f.stranger ? -1 : f.waiting ? 0 : f.live ? 1 : 2);
     return [...strangers, ...all].sort((a, b) => group(a) - group(b) || (shuffle[a.address] ?? 1) - (shuffle[b.address] ?? 1));
   }, [people, beacons, journals, arrivals, held, shuffle]);
-  // A face pressed: the rest of the row dims, and what waits from them opens
-  // under it; pressed again, it all closes.
+  // A face pressed: the rest of the row dims, and their three doors open
+  // under it, with what waits behind them; pressed again, it all closes.
   const [open, setOpen] = useState(null);
   const opened = open ? lineup.find(f => f.address === open) || null : null;
   // The doors keep whoever they were for while they fold shut, so they
@@ -825,7 +825,8 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
     settleHeld();
     if (open === address) { setOpen(null); return; }
     const f = lineup.find(x => x.address === address);
-    if (f && !f.waiting && f.person) { setOpen(null); router.push(`/dashboard/people/${f.person.id}`); return; }
+    // Every face opens its three doors now, waiting or not (Friend_panel.js,
+    // 2026-10-29); Visit is the way to their page.
     setOpen(address);
     const fresh = (f?.items || []).filter(i => i.unseen && i.kind !== 'moved');
     if (fresh.length === 0) return;

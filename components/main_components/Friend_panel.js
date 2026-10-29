@@ -4,28 +4,29 @@
 // components/main_components/Friend_panel.js
 // What waits on a friend's face, opened under the row on Friends.
 //
-// Miyel's Friends brief, 2026-10-27 (step two of her build order): anything
-// from a person waits on that person's face, and pressing the face opens it
-// in place. Each thing names itself — Wrote, Sent you, Waved, Arrived,
-// Moved — beside New while it has not been seen, and carries only its own
-// answers, each a glyph over its word, as every door on the site is:
+// ── Three doors, 2026-10-29 ───────────────────────────────────────────────
+// Miyel: "when you click on a friend, you still get options: visit,
+// messages, sends … Because it's all just hodgepodge together." So every
+// face opens the same three doors, a glyph over each word, whether or not
+// anything waits — Visit, their page here; Messages; Sends — and Messages
+// and Sends unroll under the row, what waits first with its answers, the
+// door wearing New while something behind it has not been seen. The door
+// with something waiting is open as the face opens. A wave is not a door:
+// it is a hand beside their name, and pressing it lets it go (her answer,
+// the same day: "a wave just shows up as a dismissible icon").
 //
-//   Wrote      Reply · Words · Keep        (a message never has Dismiss:
-//                                           nothing a person typed is
-//                                           destroyed; Keep closes it
-//                                           without a reply, migrations/043)
-//   Sent you   Listen · Dismiss            (her call, 2026-10-27)
-//   Waved      Wave back · Dismiss         (the same)
-//   Arrived    nothing — it passes once it has been seen
-//   Moved      Update
+//   Messages   what they wrote: Reply · Keep (a message never has Dismiss:
+//              nothing a person typed is destroyed; Keep closes it without
+//              a reply, migrations/043), then All messages, their Words
+//   Sends      what they sent you: Listen · Dismiss (her call, 2026-10-27);
+//              and a record of yours they logged, which passes once seen
+//   Moved      over the doors, with Update — it is about them, not a
+//              message; no Dismiss, since their journal goes on saying it
+//              moved and the friends round would only write it back
 //
-// Moved has no Dismiss: their journal goes on saying it moved, so the
-// friends round would only write it back.
-//
-// Only what is waiting, and nothing about the person (her review of the
-// first version, 2026-10-27: two things that "don't overlap well"). Their
-// name at the head goes to their journal page, where Keep private and
-// Remove now live.
+// It was a list of whatever was waiting from 2026-10-27, each thing naming
+// itself — Wrote, Sent you, Waved, Arrived, Moved — and a face with nothing
+// waiting went straight to their page.
 //
 // Every answer is the inbox's own route, and does what the inbox does with
 // it — Listen keeps a listen already open with writing in it, as the
@@ -38,7 +39,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
-  ArrowBendUpLeft, BookmarkSimple, CaretRight, ChatsCircle, HandWaving, Headphones, Signpost, UserPlus, X,
+  ArrowBendUpLeft, BookmarkSimple, CaretRight, ChatsCircle, HandWaving, Headphones, House, Signpost, UserPlus, VinylRecord, X,
 } from '@phosphor-icons/react';
 import MessageForm from './Slug_Page/MessageForm';
 import { since } from './Friends';
@@ -202,10 +203,13 @@ async function keepOpenListen(held) {
 }
 
 // One answer: a glyph over its word, as the site's doors are.
-function Door({ icon: Icon, word, onClick, href, disabled = false, open, label }) {
+function Door({ icon: Icon, word, onClick, href, disabled = false, open, label, isNew = false }) {
   const inner = (
     <>
-      <Icon size={20} weight="regular" aria-hidden="true" />
+      <span className="fp-door-glyph">
+        <Icon size={20} weight="regular" aria-hidden="true" />
+        {isNew && <span className="ln-new fp-door-new" aria-hidden="true">New</span>}
+      </span>
       <span className="fp-door-word">{word}</span>
     </>
   );
@@ -248,6 +252,8 @@ export default function FriendPanel({
   const [trouble, setTrouble] = useState({});
   const [writing, setWriting] = useState('');
   const [holding, setHolding] = useState(null);
+  // Messages or Sends, pressed; 'none' once the open one is pressed shut.
+  const [door, setDoor] = useState(null);
   const say = (key, words) => setTrouble(t => ({ ...t, [key]: words }));
 
   // ── Sent you ────────────────────────────────────────────────────────────
@@ -364,19 +370,7 @@ export default function FriendPanel({
   };
 
   // ── Waved ───────────────────────────────────────────────────────────────
-  // Wave back leaves through the outbox, which lets their wave here go once
-  // it has landed (waved_back); a copy too old to take one says so.
-  const waveBack = async (item) => {
-    if (stranger) return;
-    setBusy(item.key);
-    const r = await fetch('/api/outbox', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ wave: true, person_id: person.id }),
-    }).catch(() => null);
-    const d = await r?.json().catch(() => null);
-    setBusy('');
-    if (!r?.ok || !d?.ok) { say(item.key, d?.error || 'The wave did not reach them. Try again.'); return; }
-    onAnswered('waved', item.row, null);
-  };
+  // A hand beside their name, and pressing it lets the wave go.
   const dismissWave = async (item) => {
     setBusy(item.key);
     const r = await fetch('/api/waves', {
@@ -398,14 +392,130 @@ export default function FriendPanel({
     onMoved();
   };
 
-  if (items.length === 0) return null;
   const page = person ? `/dashboard/people/${person.id}` : '';
+  const wave = items.find(i => i.kind === 'waved') || null;
+  const moved = items.filter(i => i.kind === 'moved');
+  const messages = items.filter(i => i.kind === 'wrote');
+  const sends = items.filter(i => i.kind === 'sent' || i.kind === 'arrived');
+  const fresh = list => list.some(i => i.unseen || newHere?.has(i.key));
+  // The open door: the one pressed, or else whichever has something waiting.
+  const showing = door === 'none' ? null : door || (messages.length ? 'messages' : sends.length ? 'sends' : null);
+  const pick = which => setDoor(showing === which ? 'none' : which);
+
+  const waveMark = wave && (
+    <button
+      type="button"
+      className="fp-wave"
+      onClick={() => dismissWave(wave)}
+      disabled={busy === wave.key}
+      aria-label={`${who} waved. Let it go`}
+      title={`${who} waved`}
+    >
+      <HandWaving size={20} weight="regular" aria-hidden="true" />
+      <span className="fp-wave-x" aria-hidden="true"><X size={8} weight="bold" /></span>
+    </button>
+  );
+
+  const one = item => {
+    const { kind, row, key } = item;
+    const isNew = item.unseen || newHere?.has(key);
+    const doing = busy === key;
+    const art = kind === 'sent' || kind === 'arrived' ? row.album_art : kind === 'wrote' ? row.about_art : '';
+    // Their entry, read inside this journal (2026-10-28).
+    const link = kind === 'arrived' && row.slug && person ? `/dashboard/people/${person.id}/${encodeURIComponent(row.slug)}` : '';
+    const cover = (
+      <span className={'fp-art' + (kind === 'moved' ? ' fp-art--round' : '')} aria-hidden="true">
+        {art ? <img src={art} alt="" loading="lazy" onError={e => { e.currentTarget.style.display = 'none'; }} />
+          : kind === 'moved' ? <Signpost size={24} weight="regular" />
+            : <span>&#9834;</span>}
+      </span>
+    );
+    let title;
+    let sub = '';
+    let said = '';
+    if (kind === 'wrote') {
+      said = row.said;
+      sub = [row.about_album && `About ${row.about_song || row.about_album}`, when(row.arrived_at || row.written_at)].filter(Boolean).join(' · ');
+    } else if (kind === 'sent') {
+      title = row.song || row.album;
+      sub = [row.song ? row.album : row.artist, row.song ? '' : row.year, row.status === 'reviewed' ? 'Started' : when(row.created_at)].filter(Boolean).join(' · ');
+      said = row.note || '';
+    } else if (kind === 'arrived') {
+      title = row.song || row.album;
+      sub = [`${who} logged it`, when(row.posted_at || row.noticed_at)].filter(Boolean).join(' · ');
+    } else {
+      title = `${who} moved`;
+      sub = 'Their journal lives somewhere new';
+    }
+    return (
+      <div key={key} className="fp-one">
+        {link ? <Link href={link} data-grows={link} onClick={() => handOff(row)} className="fp-art-link">{cover}</Link> : cover}
+        <div className="fp-says">
+          <span className="fp-kind">
+            {isNew && <span className="ln-new">New</span>}
+            {KIND_WORD[kind]}
+          </span>
+          {title && (link
+            ? <Link href={link} onClick={() => handOff(row)} className="fp-title">{title}</Link>
+            : <span className="fp-title">{title}</span>)}
+          {kind === 'wrote' ? <p className="fp-said">{said}</p> : said ? <p className="fp-note">{said}</p> : null}
+          {sub && <span className="fp-sub">{sub}</span>}
+
+          {kind === 'wrote' && (
+            <div className="fp-doors">
+              {(!stranger || row.from_journal) && (
+                <Door icon={ArrowBendUpLeft} word="Reply" open={writing === key} onClick={() => setWriting(w => (w === key ? '' : key))} label={`Reply to ${who}`} />
+              )}
+              {stranger
+                ? <Door icon={X} word="Dismiss" onClick={() => keepOnly(item)} disabled={doing} label="Let it go — it is kept, and they can't write again until you add them" />
+                : <Door icon={BookmarkSimple} word="Keep" onClick={() => keepOnly(item)} disabled={doing} label="Keep it without a reply" />}
+            </div>
+          )}
+          {kind === 'sent' && (
+            <div className="fp-doors">
+              <Door icon={Headphones} word="Listen" onClick={() => startLog(item)} disabled={doing} label={`Listen to ${title}`} />
+              <Door icon={X} word="Dismiss" onClick={() => dismissSend(item)} disabled={doing} />
+            </div>
+          )}
+          {kind === 'moved' && (
+            <div className="fp-doors">
+              <Door icon={Signpost} word="Update" onClick={() => takeMove(item)} disabled={doing} label="Update their address" />
+            </div>
+          )}
+
+          {holding?.key === key && (
+            <div className="fp-holding">
+              <p className="fp-holding-said">You have <strong>{holding.held.album}</strong> open, with writing in it.</p>
+              <div className="fp-acts">
+                <button type="button" className="fp-act fp-act--first" onClick={() => keepThenLog(item)} disabled={doing}>
+                  {doing ? 'Saving the draft…' : 'Save it as a draft, then start'}
+                </button>
+                <button type="button" className="fp-act" onClick={() => setHolding(null)}>Never mind</button>
+              </div>
+            </div>
+          )}
+          {writing === key && (
+            <div className="fp-form">
+              <MessageForm
+                draftKey={`reply-${row.id}`}
+                label={`Your reply to ${who}`}
+                placeholder={`Reply to ${who}`}
+                send={words2 => writeBack(row, words2)}
+                onSent={() => setWriting('')}
+                onLeave={() => setWriting('')}
+              />
+            </div>
+          )}
+          {trouble[key] && <p className="fp-trouble" role="status">{trouble[key]}</p>}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="fp">
-      {/* Who it is from, going to their journal page: the brief's "pressing
-          the person's name or face inside this panel". A stranger's goes
-          nowhere until they are added. */}
+      {/* Who it is, and their wave if they waved. A stranger's head says
+          they are not one of your friends, with Add (step five). */}
       {stranger ? (
         <div className="fp-who fp-who--stranger">
           {face}
@@ -413,6 +523,7 @@ export default function FriendPanel({
             <span className="fp-who-name">{who}</span>
             <span className="fp-who-not">Not one of your friends</span>
           </span>
+          {waveMark}
           {journal && onAdd && (
             <span className="fp-who-add">
               <Door icon={UserPlus} word="Add" onClick={() => onAdd(journal)} disabled={adding} label={`Add ${who} to your friends`} />
@@ -420,126 +531,39 @@ export default function FriendPanel({
           )}
         </div>
       ) : (
-        <Link className="fp-who" href={page} aria-label={`${who}’s journal`}>
+        <div className="fp-who fp-who--plain">
           {face}
           <span className="fp-who-name">{who}</span>
-          <CaretRight size={12} weight="bold" aria-hidden="true" />
-        </Link>
+          {waveMark}
+        </div>
       )}
-      {items.map(item => {
-        const { kind, row, key } = item;
-        const isNew = item.unseen || newHere?.has(key);
-        const doing = busy === key;
-        const art = kind === 'sent' || kind === 'arrived' ? row.album_art : kind === 'wrote' ? row.about_art : '';
-        // Their entry, read inside this journal (2026-10-28).
-        const link = kind === 'arrived' && row.slug && person ? `/dashboard/people/${person.id}/${encodeURIComponent(row.slug)}` : '';
-        const cover = (
-          <span className={'fp-art' + (kind === 'waved' || kind === 'moved' ? ' fp-art--round' : '')} aria-hidden="true">
-            {art ? <img src={art} alt="" loading="lazy" onError={e => { e.currentTarget.style.display = 'none'; }} />
-              : kind === 'waved' ? <HandWaving size={24} weight="regular" />
-                : kind === 'moved' ? <Signpost size={24} weight="regular" />
-                  : <span>&#9834;</span>}
-          </span>
-        );
-        let title;
-        let sub = '';
-        let said = '';
-        if (kind === 'wrote') {
-          said = row.said;
-          sub = [row.about_album && `About ${row.about_song || row.about_album}`, when(row.arrived_at || row.written_at)].filter(Boolean).join(' · ');
-        } else if (kind === 'sent') {
-          title = row.song || row.album;
-          sub = [row.song ? row.album : row.artist, row.song ? '' : row.year, row.status === 'reviewed' ? 'Started' : when(row.created_at)].filter(Boolean).join(' · ');
-          said = row.note || '';
-        } else if (kind === 'waved') {
-          title = `${who} waved`;
-          sub = when(row.arrived_at);
-        } else if (kind === 'arrived') {
-          title = row.song || row.album;
-          sub = [`${who} logged it`, when(row.posted_at || row.noticed_at)].filter(Boolean).join(' · ');
-        } else {
-          title = `${who} moved`;
-          sub = 'Their journal lives somewhere new';
-        }
-        // Words about a record they wrote on: the record's chain, with them.
-        const words = kind === 'wrote' && row.about_slug && page
-          ? `${page}/words#${encodeURIComponent(`${tidyJournal(row.about_journal) || ''}/${row.about_slug}`)}`
-          : '';
-        return (
-          <div key={key} className="fp-one">
-            {link ? <Link href={link} data-grows={link} onClick={() => handOff(row)} className="fp-art-link">{cover}</Link> : cover}
-            <div className="fp-says">
-              <span className="fp-kind">
-                {isNew && <span className="ln-new">New</span>}
-                {KIND_WORD[kind]}
-              </span>
-              {title && (link
-                ? <Link href={link} onClick={() => handOff(row)} className="fp-title">{title}</Link>
-                : <span className="fp-title">{title}</span>)}
-              {kind === 'wrote' ? <p className="fp-said">{said}</p> : said ? <p className="fp-note">{said}</p> : null}
-              {sub && <span className="fp-sub">{sub}</span>}
+      {wave && trouble[wave.key] && <p className="fp-trouble" role="status">{trouble[wave.key]}</p>}
+      {moved.map(one)}
 
-              {kind === 'wrote' && (
-                <div className="fp-doors">
-                  {(!stranger || row.from_journal) && (
-                    <Door icon={ArrowBendUpLeft} word="Reply" open={writing === key} onClick={() => setWriting(w => (w === key ? '' : key))} label={`Reply to ${who}`} />
-                  )}
-                  {words && <Door icon={ChatsCircle} word="Words" href={words} label={`All the words with ${who} about this record`} />}
-                  {stranger
-                    ? <Door icon={X} word="Dismiss" onClick={() => keepOnly(item)} disabled={doing} label="Let it go — it is kept, and they can't write again until you add them" />
-                    : <Door icon={BookmarkSimple} word="Keep" onClick={() => keepOnly(item)} disabled={doing} label="Keep it without a reply" />}
-                </div>
-              )}
-              {kind === 'sent' && (
-                <div className="fp-doors">
-                  <Door icon={Headphones} word="Listen" onClick={() => startLog(item)} disabled={doing} label={`Listen to ${title}`} />
-                  <Door icon={X} word="Dismiss" onClick={() => dismissSend(item)} disabled={doing} />
-                </div>
-              )}
-              {kind === 'waved' && (
-                <div className="fp-doors">
-                  {/* A wave from somebody not added is answered by adding
-                      them; Wave back once they are (her answers, 2026-10-26). */}
-                  {stranger
-                    ? journal && onAdd && <Door icon={UserPlus} word="Add" onClick={() => onAdd(journal)} disabled={adding || doing} label={`Add ${who} to your friends`} />
-                    : <Door icon={HandWaving} word="Wave back" onClick={() => waveBack(item)} disabled={doing} />}
-                  <Door icon={X} word="Dismiss" onClick={() => dismissWave(item)} disabled={doing} />
-                </div>
-              )}
-              {kind === 'moved' && (
-                <div className="fp-doors">
-                  <Door icon={Signpost} word="Update" onClick={() => takeMove(item)} disabled={doing} label="Update their address" />
-                </div>
-              )}
+      <div className="fp-doors fp-doors--three" role="group" aria-label={`You and ${who}`}>
+        {page && <Door icon={House} word="Visit" href={page} label={`${who}’s journal`} />}
+        <Door icon={ChatsCircle} word="Messages" open={showing === 'messages'} onClick={() => pick('messages')} isNew={fresh(messages)} label={`Messages from ${who}`} />
+        <Door icon={VinylRecord} word="Sends" open={showing === 'sends'} onClick={() => pick('sends')} isNew={fresh(sends)} label={`Sends from ${who}`} />
+      </div>
 
-              {holding?.key === key && (
-                <div className="fp-holding">
-                  <p className="fp-holding-said">You have <strong>{holding.held.album}</strong> open, with writing in it.</p>
-                  <div className="fp-acts">
-                    <button type="button" className="fp-act fp-act--first" onClick={() => keepThenLog(item)} disabled={doing}>
-                      {doing ? 'Saving the draft…' : 'Save it as a draft, then start'}
-                    </button>
-                    <button type="button" className="fp-act" onClick={() => setHolding(null)}>Never mind</button>
-                  </div>
-                </div>
-              )}
-              {writing === key && (
-                <div className="fp-form">
-                  <MessageForm
-                    draftKey={`reply-${row.id}`}
-                    label={`Your reply to ${who}`}
-                    placeholder={`Reply to ${who}`}
-                    send={words2 => writeBack(row, words2)}
-                    onSent={() => setWriting('')}
-                    onLeave={() => setWriting('')}
-                  />
-                </div>
-              )}
-              {trouble[key] && <p className="fp-trouble" role="status">{trouble[key]}</p>}
-            </div>
-          </div>
-        );
-      })}
+      {showing === 'messages' && (
+        <div className="fp-under">
+          {messages.map(one)}
+          {messages.length === 0 && <p className="fp-none">Nothing from {who} waiting.</p>}
+          {page && (
+            <Link className="fp-all" href={`${page}/words`}>
+              All messages with {who}
+              <CaretRight size={10} weight="bold" aria-hidden="true" />
+            </Link>
+          )}
+        </div>
+      )}
+      {showing === 'sends' && (
+        <div className="fp-under">
+          {sends.map(one)}
+          {sends.length === 0 && <p className="fp-none">Nothing from {who} waiting.</p>}
+        </div>
+      )}
       {stranger && journal && <p className="fp-closed">Add to see their journal</p>}
     </div>
   );
