@@ -1211,7 +1211,25 @@ function Journal({
     clocks.current.push(setTimeout(show, 120));
   }, [arranged, closeTheGap]);
 
+  // ── A filter glides as a view does, 2026-10-28 ──────────────────────────
+  // Miyel: the wall "doesn't do moving animations that the sort does for
+  // filters". A view took where every cover stood before it changed
+  // (chooseView); a filter did not, so the covers that stayed jumped to
+  // their new places. Now a filter takes them too, and the effect above
+  // moves what stayed and fades in what came back. Not while the wall is
+  // scrolled under its line, where covers would fly in from far away — the
+  // same exception chooseView makes. Not the year's slider either, which
+  // changes with every step of a drag.
+  function glideNext() {
+    const wall = grid.current;
+    const wrap = lineWrap.current;
+    const under = wall && wrap ? wrap.getBoundingClientRect().bottom - wall.getBoundingClientRect().top : 0;
+    glideFrom.current = under > 1 ? null : positions();
+  }
+  const gliding = set => value => { glideNext(); set(value); };
+
   function clearFilters() {
+    glideNext();
     setSearch(''); setKind(''); setGenre(''); setGenresOpen(false);
     setFavoritesOnly(false); setMasterpiecesOnly(false); setFormativeOnly(false); setSentOnly(false);
     setYearPicked(null);
@@ -1453,14 +1471,14 @@ function Journal({
           isPhone={isPhone}
           scroller={scroller}
           anchorRef={filterBtnRef}
-          kind={kind} setKind={setKind}
-          genre={genre} setGenre={setGenre} genres={genres} genresShown={genresShown} genresRest={genresRest}
+          kind={kind} setKind={gliding(setKind)}
+          genre={genre} setGenre={gliding(setGenre)} genres={genres} genresShown={genresShown} genresRest={genresRest}
           genresOpen={genresOpen} setGenresOpen={setGenresOpen}
           yearBounds={yearBounds} yearRange={yearRange} setYearPicked={setYearPicked}
-          favoritesOnly={favoritesOnly} setFavoritesOnly={setFavoritesOnly}
-          masterpiecesOnly={masterpiecesOnly} setMasterpiecesOnly={setMasterpiecesOnly}
-          formativeOnly={formativeOnly} setFormativeOnly={setFormativeOnly}
-          sentOnly={sentOnly} setSentOnly={setSentOnly}
+          favoritesOnly={favoritesOnly} setFavoritesOnly={gliding(setFavoritesOnly)}
+          masterpiecesOnly={masterpiecesOnly} setMasterpiecesOnly={gliding(setMasterpiecesOnly)}
+          formativeOnly={formativeOnly} setFormativeOnly={gliding(setFormativeOnly)}
+          sentOnly={sentOnly} setSentOnly={gliding(setSentOnly)}
           hasActiveFilters={hasActiveFilters} clearFilters={clearFilters}
           shownCount={filtered.length}
           leaving={filtersLeaving}
