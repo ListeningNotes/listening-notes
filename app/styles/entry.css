@@ -1236,26 +1236,24 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
   color: var(--ink-faint);
   white-space: nowrap;
 }
-.ln-snippet-foot {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: 18px;
+/* The doors under a record's tracklist and a song's preview — Apple Music,
+   and on a song the keeper's Full album: a glyph in ink over one word in the
+   label face, the way the site's doors are drawn, side by side on the middle
+   of the page (2026-10-29, the doors of Miyel's mock-up; the plain mono link
+   they replace was SnippetLink's). */
+.ln-doors { display: flex; justify-content: center; gap: 0 44px; margin: 18px 0 6px; }
+.ln-door {
+  display: inline-flex; flex-direction: column; align-items: center; gap: 7px;
+  min-width: 44px; padding: 6px 4px; margin: -6px -4px;
+  border: 0; background: none; color: var(--ink-soft); text-decoration: none;
+  font-family: var(--font-label); font-size: 9.5px; line-height: 1;
+  letter-spacing: 0.11em; text-transform: uppercase; white-space: nowrap;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s;
 }
-.ln-snippet-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  min-height: 44px;
-  font-family: var(--font-label);
-  font-size: 10.5px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--ink-soft);
-  text-decoration: none;
-}
-.ln-snippet-link:hover { color: var(--ink); }
+.ln-door svg { display: block; color: var(--ink); }
+.ln-door:hover { color: var(--ink); }
+.ln-door:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: -2px; border-radius: 8px; }
 .ln-snippet-caption {
   margin: 0;
   font-family: var(--font-label);
@@ -1265,27 +1263,10 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
   color: var(--ink-faint);
 }
 /* The track note's: the large button with the meter running the rest of
-   the width beside it, the caption and the link centred under. */
+   the width beside it, the caption and the doors centred under. */
 .tn-snippet { display: flex; flex-direction: column; align-items: center; gap: 8px; margin: 28px 0 8px; }
 .tn-snippet-play { display: flex; align-items: center; gap: 14px; width: 100%; }
 .tn-snippet-play .ln-snippet-meter { flex: 1; margin: 0; }
-/* Its doors, under the preview: a glyph in ink over one word in the label
-   face, the way the site's doors are drawn, side by side on the middle of
-   the card (2026-10-29, the doors of Miyel's mock-up). Under the head, so a
-   long note cannot bury them (2026-09-25). */
-.tn-doors { display: flex; justify-content: center; gap: 0 44px; margin: 18px 0 6px; }
-.tn-door {
-  display: inline-flex; flex-direction: column; align-items: center; gap: 7px;
-  min-width: 44px; padding: 6px 4px; margin: -6px -4px;
-  border: 0; background: none; color: var(--ink-soft); text-decoration: none;
-  font-family: var(--font-label); font-size: 9.5px; line-height: 1;
-  letter-spacing: 0.11em; text-transform: uppercase; white-space: nowrap;
-  cursor: pointer; -webkit-tap-highlight-color: transparent;
-  transition: color 0.15s;
-}
-.tn-door svg { display: block; color: var(--ink); }
-.tn-door:hover { color: var(--ink); }
-.tn-door:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: -2px; border-radius: 8px; }
 /* The count at the far end of a section's heading (MetadataLabel's `aside`):
    a step fainter than the heading's own name, which is what the line is. */
 .ln-meta-label-aside { opacity: 0.7; white-space: nowrap; }

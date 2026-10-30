@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 'use client';
-import { LinkSimple, Play, Pause } from '@phosphor-icons/react';
+import { ArrowSquareOut, Play, Pause } from '@phosphor-icons/react';
 import { toggleSnippet, useSnippetState } from '../../../hooks/useSnippet';
 
 // The round button that plays a song — a thirty-second preview, today
@@ -59,14 +59,16 @@ export function SnippetMeter({ snippetKey, duration = 0, always = false }) {
   );
 }
 
-// Open in Apple Music: the way out to the record or the song
-// (hooks/useSnippet.js, the link out). A plain mono word with its
-// glyph, in a new tab, for visitors and the keeper alike.
+// Apple Music: the way out to the record or the song (hooks/useSnippet.js,
+// the link out), in a new tab, for visitors and the keeper alike. A door —
+// a glyph over one word, in a row of `.ln-doors` — on the record page and
+// the song page alike (Miyel, 2026-10-29: "be buttons more like the rest of
+// the site", and the record's to match the song's).
 export function SnippetLink({ href, children }) {
   if (!href) return null;
   return (
-    <a className="ln-snippet-link" href={href} target="_blank" rel="noopener noreferrer">
-      <LinkSimple size={14} aria-hidden="true" />
+    <a className="ln-door" href={href} target="_blank" rel="noopener noreferrer">
+      <ArrowSquareOut size={22} weight="regular" aria-hidden="true" />
       <span>{children}</span>
     </a>
   );
