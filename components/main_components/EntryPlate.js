@@ -50,6 +50,15 @@
 // again without them, closed up. `draw` hands the press the boxes to hit.
 // Six bubbles under the preview were sixty-four arrangements, most of them
 // worse than the default, with two labels nobody outside this project knew.
+//
+// ── Three prints of one record, 2026-10-30 ───────────────────────────────
+// The horizon cycles as the marks do (Miyel's pick, over Save making all
+// three at once): the shape alone, the one most people post; the shape
+// with each title on the diagonal pointing at its own bar, as HorizonChart
+// draws it with `labels`; every track as a row — number, title, a bar by
+// its rating, its heart — the session's own row, flattened; then off. A
+// record with no titles has only the shape. The titles are the record's,
+// not the keeper's: nothing written about a track travels.
 // ── Units ─────────────────────────────────────────────────────────────────
 // Every measurement is in units of a 340-wide column — a phone's screen one,
 // 390 less its padding — so the numbers here are the post's own pixels, and
@@ -59,7 +68,7 @@
 
 'use client';
 
-import { loadMark, loadPicture, MARK_ASPECT, drawTracked, drawPath, wrapLines, roundRect } from './SharePrinter';
+import { loadMark, loadPicture, MARK_ASPECT, drawTracked, drawPath, wrapLines, roundRect, ellipsize } from './SharePrinter';
 import { parseRating, parseHorizon, entryTracks } from '../../library/entry_formatter';
 
 // The taps (see the note at the top): what each switchable line does when
@@ -70,7 +79,9 @@ const TAPS = {
   title: shown => ({ title: !shown.title }),
   artist: shown => ({ artist: !shown.artist }),
   stars: shown => ({ stars: !shown.stars }),
-  horizon: shown => ({ horizon: !shown.horizon }),
+  horizon: (shown, hasTitles) => (!shown.horizon ? { horizon: true, bars: 'shape' }
+    : !hasTitles || shown.bars === 'tracks' ? { horizon: false, bars: 'shape' }
+      : { bars: shown.bars === 'named' ? 'tracks' : 'named' }),
   // chips → symbols → gone → chips; without a mark that has a symbol, the
   // listen count alone goes chips → gone → chips.
   marks: (shown, hasSymbols) => (shown.chips
@@ -102,6 +113,14 @@ const SYMBOL = 34, SYMBOL_GAP = 18;
 // a heart of 10 sitting 4 above its bar, corners of 3.
 const HORIZON_H = 52, HORIZON_HEAD = 13, HEART = 10, HEART_LIFT = 4, BAR_RADIUS = 3;
 const horizonGap = n => (n > 24 ? 2 : n > 14 ? 3 : 4);
+// HorizonChart's labels: 6 under the bars, a band of 76 (62 past twenty
+// tracks), the mono at 9.5 on a 52° diagonal, cut at 104 wide (78).
+const LABEL_TOP = 6, LABEL = 9.5, LABEL_TURN = (-52 * Math.PI) / 180;
+const labelBand = n => (n > 20 ? 62 : 76);
+const labelMost = n => (n > 20 ? 78 : 104);
+// Every track as a row — .ln-print-tracks: the number, the title, a bar
+// 56 long by its rating, the heart; rows 16 high, 4 apart.
+const ROW_H = 16, ROW_GAP = 4, ROW_NUM = 22, ROW_BAR = 56, ROW_HEART = 14, ROW_COL_GAP = 8, ROW_TITLE = 13, ROW_NUM_SIZE = 10;
 const COLUMN_GAP = 28;                 // opened out: between the cover and the stack
 // The screen's gap is 16 between everything; the artist line pulls up by 8.
 // The screen's card has one gap between everything.
@@ -211,6 +230,11 @@ export function entryPlate({ entry, keeper }) {
     bars = tracks.map(t => Math.max(0, Math.min(1, (Number(t.stars) || 0) / 5)));
   }
   const favs = tracks.map(t => !!t.favorite);
+  // The named print and the rows read the tracks themselves, so a title and
+  // its bar can never belong to different lists.
+  const named = tracks.filter(t => t.name);
+  const hasTitles = named.length > 0 && named.length === tracks.length;
+  const ratings = tracks.map(t => Math.max(0, Math.min(1, (Number(t.stars) || 0) / 5)));
 
   // What the printer offers to leave off. The cover, the album and the
   // artist are not switches: they are the card.
@@ -379,10 +403,20 @@ export function entryPlate({ entry, keeper }) {
         }
 
 
-        // the horizon, with HorizonChart's headroom for the hearts
+        // the horizon, with HorizonChart's headroom for the hearts — as the
+        // shape, the shape named, or every track as a row
         if (bars.length && (on('horizon') || preview)) {
+          const as = on('horizon') && hasTitles ? (shown?.bars || 'shape') : 'shape';
           const head = px(HORIZON_HEAD);
-          rows.push({ key: 'horizon', ghost: !on('horizon'), gap: px(GAP.horizon), h: head + px(HORIZON_H), draw: (c, x, y, w) => drawHorizon(c, x, y + head, w, unit) });
+          if (as === 'tracks') {
+            const n = tracks.length;
+            rows.push({ key: 'horizon', gap: px(GAP.horizon), h: px(n * ROW_H + (n - 1) * ROW_GAP), draw: (c, x, y, w) => drawRows(c, x, y, w, unit) });
+          } else if (as === 'named') {
+            const band = px(HORIZON_H + LABEL_TOP + labelBand(tracks.length));
+            rows.push({ key: 'horizon', gap: px(GAP.horizon), h: head + band, draw: (c, x, y, w) => drawHorizon(c, x, y + head, w, unit, true) });
+          } else {
+            rows.push({ key: 'horizon', ghost: !on('horizon'), gap: px(GAP.horizon), h: head + px(HORIZON_H), draw: (c, x, y, w) => drawHorizon(c, x, y + head, w, unit) });
+          }
         }
 
         const stack = rows.reduce((sum, row) => sum + row.gap + row.h, 0);
@@ -546,17 +580,18 @@ export function entryPlate({ entry, keeper }) {
       // ── the horizon ──────────────────────────────────────────────────────
       // The entry page's bars: one per track, height by rating, a heart over
       // a favourite. In the ink at half strength rather than the page's
-      // accent grey, which sank into the washed photograph. No titles — on a
-      // print the shape is the point, and a diagonal of track names would be
-      // a second print.
-      function drawHorizon(c, x, y, w, unit) {
-        const n = bars.length;
+      // accent grey, which sank into the washed photograph. Named, it reads
+      // the tracks' own ratings and writes each title under its bar.
+      function drawHorizon(c, x, y, w, unit, withTitles = false) {
+        const heights = withTitles ? ratings : bars;
+        const hearts = withTitles ? tracks.map(t => t.favorite) : favs;
+        const n = heights.length;
         const gap = horizonGap(n) * unit;
         const bw = Math.max(1, (w - gap * (n - 1)) / n);
         const h = HORIZON_H * unit;
         const r = Math.min(BAR_RADIUS * unit, bw / 2);
         for (let i = 0; i < n; i++) {
-          const bh = Math.max(0.03 * h, bars[i] * h);
+          const bh = Math.max(0.03 * h, heights[i] * h);
           const x0 = x + i * (bw + gap), x1 = x0 + bw;
           const y0 = y + h - bh, y1 = y + h;
           c.fillStyle = ink.bar;
@@ -569,11 +604,61 @@ export function entryPlate({ entry, keeper }) {
           c.lineTo(x1, y1);
           c.closePath();
           c.fill();
-          if (favs[i]) {
+          if (hearts[i]) {
             const hs = HEART * unit;
             drawPath(c, HEART_PATH, x0 + (bw - hs) / 2, y0 - hs - HEART_LIFT * unit, hs, 24, FAV);
           }
+          if (withTitles) {
+            // Anchored at the bar's centre and turned down-left, so the end of
+            // each title points at the bar it belongs to.
+            c.save();
+            c.translate(x0 + bw / 2, y1 + LABEL_TOP * unit);
+            c.rotate(LABEL_TURN);
+            c.font = `400 ${LABEL * unit}px ${mono}`;
+            c.fillStyle = ink.soft;
+            c.textAlign = 'right';
+            c.textBaseline = 'top';
+            c.fillText(ellipsize(c, tracks[i].name, labelMost(n) * unit), 0, 0);
+            c.restore();
+          }
         }
+      }
+
+      // ── every track ──────────────────────────────────────────────────────
+      // The session's row, flattened: the number, the title on one line, a
+      // bar along by its rating, the heart if it is a favourite.
+      function drawRows(c, x, y, w, unit) {
+        const px = n => n * unit;
+        const titleX = x + px(ROW_NUM + ROW_COL_GAP);
+        const barX = x + w - px(ROW_HEART + ROW_COL_GAP + ROW_BAR);
+        const titleW = barX - px(ROW_COL_GAP) - titleX;
+        tracks.forEach((t, i) => {
+          const top = y + i * px(ROW_H + ROW_GAP);
+          const mid = top + px(ROW_H) / 2;
+          c.textBaseline = 'middle';
+          c.font = `400 ${px(ROW_NUM_SIZE)}px ${mono}`;
+          c.fillStyle = ink.soft;
+          c.textAlign = 'right';
+          c.fillText(String(t.num || i + 1), x + px(ROW_NUM), mid);
+          c.textAlign = 'left';
+          c.font = `700 ${px(ROW_TITLE)}px ${sans}`;
+          c.fillStyle = ink.ink;
+          c.fillText(ellipsize(c, t.name, titleW), titleX, mid);
+          const barH = px(5);
+          c.fillStyle = ink.rule;
+          roundRect(c, barX, mid - barH / 2, px(ROW_BAR), barH, barH / 2);
+          c.fill();
+          if (ratings[i] > 0) {
+            c.fillStyle = ink.bar;
+            roundRect(c, barX, mid - barH / 2, Math.max(barH, px(ROW_BAR) * ratings[i]), barH, barH / 2);
+            c.fill();
+          }
+          if (t.favorite) {
+            const hs = px(HEART);
+            drawPath(c, HEART_PATH, x + w - px(ROW_HEART) + (px(ROW_HEART) - hs) / 2, mid - hs / 2, hs, 24, FAV);
+          }
+        });
+        c.textBaseline = 'top';
       }
 
       // ── lay it down ──────────────────────────────────────────────────────
@@ -606,7 +691,9 @@ export function entryPlate({ entry, keeper }) {
       return targets;
 
       function taps(key) {
-        return key === 'marks' ? shown => TAPS.marks(shown, marks.length > 0) : TAPS[key];
+        if (key === 'marks') return shown => TAPS.marks(shown, marks.length > 0);
+        if (key === 'horizon') return shown => TAPS.horizon(shown, hasTitles);
+        return TAPS[key];
       }
     },
   };
