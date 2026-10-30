@@ -21,7 +21,7 @@ import { useLayerHeaderSlot, useFolder } from '../../../components/main_componen
 import FolderFooter from '../../../components/main_components/FolderFooter';
 import KeeperTools from '../../../components/main_components/KeeperTools';
 import EditingBar from '../../../components/main_components/EditingBar';
-import { entryPlate } from '../../../components/main_components/EntryPlate';
+import { entryPlate, rowColumns } from '../../../components/main_components/EntryPlate';
 import { usePress } from '../../../hooks/usePress';
 import { FRAMES, FRAME_ORDER } from '../../../components/main_components/SharePrinter';
 import HorizonBar from '../../../components/main_components/Slug_Page/HorizonBar';
@@ -1628,14 +1628,18 @@ export default function FullPostPage({ entry, references = [], authed = false, l
         {printing && (horizonBars.length > 0 || parsedTracks.some(t => t.stars > 0)) && (
           <div className={'ln-print-line ln-print-horizon' + (shown.horizon ? '' : ' ln-off')} onClick={cycleBars} title="Tap for the titles, every track, or none">
             {shown.horizon && printTracks && shown.bars === 'tracks' ? (
-              <div className="ln-print-tracks">
-                {parsedTracks.map((t, i) => (
-                  <Fragment key={i}>
-                    <span className="ln-print-track-num">{t.num || i + 1}</span>
-                    <span className="ln-print-track-title">{t.name}</span>
-                    <span className="ln-print-track-bar">{Number(t.stars) > 0 && <span style={{ width: `${Math.min(100, (Number(t.stars) / 5) * 100)}%` }} />}</span>
-                    <span className="ln-print-track-heart">{t.favorite && <Heart size={10} weight="fill" />}</span>
-                  </Fragment>
+              <div className={'ln-print-tracks-wrap' + (parsedTracks.length > 16 ? ' ln-print-tracks-wrap--two' : '')}>
+                {rowColumns(parsedTracks.map((t, i) => ({ ...t, i }))).map((column, k) => (
+                  <div className="ln-print-tracks" key={k}>
+                    {column.map(t => (
+                      <Fragment key={t.i}>
+                        <span className="ln-print-track-num">{t.num || t.i + 1}</span>
+                        <span className="ln-print-track-title">{t.name}</span>
+                        <span className="ln-print-track-bar">{Number(t.stars) > 0 && <span style={{ width: `${Math.min(100, (Number(t.stars) / 5) * 100)}%` }} />}</span>
+                        <span className="ln-print-track-heart">{t.favorite && <Heart size={10} weight="fill" />}</span>
+                      </Fragment>
+                    ))}
+                  </div>
                 ))}
               </div>
             ) : (

@@ -121,6 +121,13 @@ const labelMost = n => (n > 20 ? 78 : 104);
 // Every track as a row — .ln-print-tracks: the number, the title, a bar
 // 56 long by its rating, the heart; rows 16 high, 4 apart.
 const ROW_H = 16, ROW_GAP = 4, ROW_NUM = 22, ROW_BAR = 56, ROW_HEART = 14, ROW_COL_GAP = 8, ROW_TITLE = 13, ROW_NUM_SIZE = 10;
+// Past sixteen tracks the rows go into two columns, down the first and then
+// the second, the bars shorter: thirty-one rows in one column shrank the
+// whole print to fit and took the cover down with it (Donuts, 2026-10-30).
+const TWO_COLUMNS_PAST = 16, COLUMNS_GAP = 16, ROW_BAR_NARROW = 28;
+export const rowColumns = tracks => (tracks.length > TWO_COLUMNS_PAST
+  ? [tracks.slice(0, Math.ceil(tracks.length / 2)), tracks.slice(Math.ceil(tracks.length / 2))]
+  : [tracks]);
 const COLUMN_GAP = 28;                 // opened out: between the cover and the stack
 // The screen's gap is 16 between everything; the artist line pulls up by 8.
 // The screen's card has one gap between everything.
@@ -409,7 +416,7 @@ export function entryPlate({ entry, keeper }) {
           const as = on('horizon') && hasTitles ? (shown?.bars || 'shape') : 'shape';
           const head = px(HORIZON_HEAD);
           if (as === 'tracks') {
-            const n = tracks.length;
+            const n = rowColumns(tracks)[0].length;
             rows.push({ key: 'horizon', gap: px(GAP.horizon), h: px(n * ROW_H + (n - 1) * ROW_GAP), draw: (c, x, y, w) => drawRows(c, x, y, w, unit) });
           } else if (as === 'named') {
             const band = px(HORIZON_H + LABEL_TOP + labelBand(tracks.length));
@@ -627,13 +634,25 @@ export function entryPlate({ entry, keeper }) {
       // ── every track ──────────────────────────────────────────────────────
       // The session's row, flattened: the number, the title on one line, a
       // bar along by its rating, the heart if it is a favourite.
-      function drawRows(c, x, y, w, unit) {
+      function drawRows(c, x0, y, w0, unit) {
         const px = n => n * unit;
+        const columns = rowColumns(tracks.map((t, i) => ({ ...t, i })));
+        const two = columns.length > 1;
+        const w = two ? (w0 - px(COLUMNS_GAP)) / 2 : w0;
+        const barW = px(two ? ROW_BAR_NARROW : ROW_BAR);
+        columns.forEach((column, k) => {
+          const x = x0 + k * (w + px(COLUMNS_GAP));
+          drawColumn(c, column, x, y, w, barW, px);
+        });
+        c.textBaseline = 'top';
+      }
+      function drawColumn(c, column, x, y, w, barW, px) {
         const titleX = x + px(ROW_NUM + ROW_COL_GAP);
-        const barX = x + w - px(ROW_HEART + ROW_COL_GAP + ROW_BAR);
+        const barX = x + w - px(ROW_HEART + ROW_COL_GAP) - barW;
         const titleW = barX - px(ROW_COL_GAP) - titleX;
-        tracks.forEach((t, i) => {
-          const top = y + i * px(ROW_H + ROW_GAP);
+        column.forEach((t, row) => {
+          const i = t.i;
+          const top = y + row * px(ROW_H + ROW_GAP);
           const mid = top + px(ROW_H) / 2;
           c.textBaseline = 'middle';
           c.font = `400 ${px(ROW_NUM_SIZE)}px ${mono}`;
@@ -646,11 +665,11 @@ export function entryPlate({ entry, keeper }) {
           c.fillText(ellipsize(c, t.name, titleW), titleX, mid);
           const barH = px(5);
           c.fillStyle = ink.rule;
-          roundRect(c, barX, mid - barH / 2, px(ROW_BAR), barH, barH / 2);
+          roundRect(c, barX, mid - barH / 2, barW, barH, barH / 2);
           c.fill();
           if (ratings[i] > 0) {
             c.fillStyle = ink.bar;
-            roundRect(c, barX, mid - barH / 2, Math.max(barH, px(ROW_BAR) * ratings[i]), barH, barH / 2);
+            roundRect(c, barX, mid - barH / 2, Math.max(barH, barW * ratings[i]), barH, barH / 2);
             c.fill();
           }
           if (t.favorite) {
@@ -658,7 +677,6 @@ export function entryPlate({ entry, keeper }) {
             drawPath(c, HEART_PATH, x + w - px(ROW_HEART) + (px(ROW_HEART) - hs) / 2, mid - hs / 2, hs, 24, FAV);
           }
         });
-        c.textBaseline = 'top';
       }
 
       // ── lay it down ──────────────────────────────────────────────────────

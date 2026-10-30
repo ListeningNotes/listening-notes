@@ -2101,6 +2101,9 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
   display: grid; grid-template-columns: 22px minmax(0, 1fr) 56px 14px;
   column-gap: 8px; row-gap: 4px; align-items: center; text-align: left;
 }
+/* Past sixteen tracks, two columns: down the first, then the second. */
+.ln-print-tracks-wrap--two { display: grid; grid-template-columns: 1fr 1fr; column-gap: 16px; align-items: start; }
+.ln-print-tracks-wrap--two .ln-print-tracks { grid-template-columns: 22px minmax(0, 1fr) 28px 14px; }
 .ln-print-track-num {
   font-family: var(--font-label); font-size: 10px; color: var(--ink-soft);
   text-align: right; line-height: 16px;
