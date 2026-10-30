@@ -24,10 +24,13 @@
 // single track posts, it just feels right… I do want to make this one
 // formative. I think it matters." Both are the album entry's own columns and
 // its own chips. Masterpiece stays the album's: it is a tracklist of fives.
-// Under it, for the keeper
-// only, Listen to the full album, which starts an ordinary listen of the
-// album — plain words, underlined like the link it is, with a play mark;
-// never a pill (Miyel does not like them). Then the note, read left to right
+// Under it, the song's preview, and
+// two doors: Apple Music, and for the keeper only Full album, which starts
+// an ordinary listen of the album. A glyph over one word each, as the site's
+// doors are — they were a link and a line of underlined words until
+// 2026-10-29 (Miyel: "be buttons more like the rest of the site", the doors
+// picked over tiles from a mock-up of both); never a pill, which she does
+// not like. Then the note, read left to right
 // as an album's notes are, with the way to write to the keeper under it
 // (MessageForm.js). Send is not on the card —
 // it is behind the ···, with Edit, Credit and Delete. There is no Share: the
@@ -65,7 +68,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createPortal } from 'react-dom';
-import { Fingerprint, Heart, Play, VinylRecord } from '@phosphor-icons/react';
+import { ArrowSquareOut, Fingerprint, Heart, VinylRecord } from '@phosphor-icons/react';
 import { parseRating, editStamp, lookup_key } from '../../../library/entry_formatter';
 import { tidyAddress } from '../../../library/return_address';
 import SiteNav from '../../../components/main_components/SiteNav';
@@ -86,7 +89,7 @@ import { useBookplate, useVisiting } from '../../../components/main_components/B
 import { useTheme } from '../../../components/main_components/Lightswitch';
 import { useEntryEditor } from '../../../hooks/useEntryEditor';
 import { useSnippet } from '../../../hooks/useSnippet';
-import SnippetButton, { SnippetMeter, SnippetLink } from '../../../components/main_components/Slug_Page/SnippetButton';
+import SnippetButton, { SnippetMeter } from '../../../components/main_components/Slug_Page/SnippetButton';
 import { PENDING_KEY, TRACK_NOTE_KEY, TRACK_NOTE_WRITING, saidSoAboutTheDesk } from '../../../hooks/useListeningSession';
 
 const COVER_LABELS = { toCode: 'Show the code for this entry', toPicture: 'Show the cover' };
@@ -291,8 +294,27 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
     : '';
   const editedOn = editStamp(entry.edited_at);
 
+  // The keeper's Full album door: an ordinary listen of the record this song
+  // is on, offered while nothing else has the card.
+  const wholeAlbum = authed && !writing && !correcting && !crediting;
+  const listenToAlbum = () => {
+    try {
+      localStorage.setItem(PENDING_KEY, JSON.stringify({
+        album: entry.album,
+        artist: entry.artist || '',
+        year: entry.year || '',
+        artUrl: entry.album_art_source || entry.album_art || '',
+        collectionId: null,
+        genre: entry.genre || '',
+      }));
+      sessionStorage.removeItem(TRACK_NOTE_KEY);
+    } catch { /* a private window still gets the picker, one tap further on */ }
+    saidSoAboutTheDesk();
+    router.push('/session');
+  };
+
   // Edit, Credit, Send and Delete — Miyel, 2026-09-24. Relisten is the card's
-  // own Listen to the full album, and there is no Share (above).
+  // own Full album door, and there is no Share (above).
   const keeperTools = authed && !writing && !correcting && (
     <KeeperTools
       printable={false}
@@ -409,7 +431,7 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
             </div>
           )}
 
-          {!composing && (songPlay || songLink) && (
+          {!composing && (songPlay || songLink || wholeAlbum) && (
             <div className="tn-snippet">
               {songPlay && (
                 <>
@@ -423,7 +445,26 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
                   )}
                 </>
               )}
-              <SnippetLink href={songLink}>Open in Apple Music</SnippetLink>
+              {/* Its doors: the song in Apple Music, for anybody, and an
+                  ordinary listen of the album, for the keeper — through the
+                  key every other way into a listen uses, with the song on
+                  the desk put away first, or the sheet would open on it. */}
+              {(songLink || wholeAlbum) && (
+                <div className="tn-doors">
+                  {songLink && (
+                    <a className="tn-door" href={songLink} target="_blank" rel="noopener noreferrer">
+                      <ArrowSquareOut size={22} weight="regular" aria-hidden="true" />
+                      <span>Apple Music</span>
+                    </a>
+                  )}
+                  {wholeAlbum && (
+                    <button type="button" className="tn-door" onClick={listenToAlbum}>
+                      <VinylRecord size={22} weight="regular" aria-hidden="true" />
+                      <span>Full album</span>
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
@@ -444,35 +485,6 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
                 onOpen={setTrailOpen}
               />
             )}
-
-          {/* An ordinary listen of the album, through the key every other
-              way into a listen uses — the song on the desk is put away
-              first, or the sheet would open on it. Up here rather than at
-              the foot, where a long note buried it. */}
-          {authed && !writing && !correcting && !crediting && (
-            <button
-              type="button"
-              className="tn-whole"
-              onClick={() => {
-                try {
-                  localStorage.setItem(PENDING_KEY, JSON.stringify({
-                    album: entry.album,
-                    artist: entry.artist || '',
-                    year: entry.year || '',
-                    artUrl: entry.album_art_source || entry.album_art || '',
-                    collectionId: null,
-                    genre: entry.genre || '',
-                  }));
-                  sessionStorage.removeItem(TRACK_NOTE_KEY);
-                } catch { /* a private window still gets the picker, one tap further on */ }
-                saidSoAboutTheDesk();
-                router.push('/session');
-              }}
-            >
-              <Play size={12} weight="fill" aria-hidden="true" />
-              <span>Listen to the full album</span>
-            </button>
-          )}
 
           <div className="tn-body">
             {composing ? (
