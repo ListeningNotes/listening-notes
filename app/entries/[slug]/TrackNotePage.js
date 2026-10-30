@@ -68,7 +68,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createPortal } from 'react-dom';
-import { ArrowSquareOut, Fingerprint, Heart, VinylRecord } from '@phosphor-icons/react';
+import { Fingerprint, Heart, VinylRecord } from '@phosphor-icons/react';
 import { parseRating, editStamp, lookup_key } from '../../../library/entry_formatter';
 import { tidyAddress } from '../../../library/return_address';
 import SiteNav from '../../../components/main_components/SiteNav';
@@ -89,7 +89,7 @@ import { useBookplate, useVisiting } from '../../../components/main_components/B
 import { useTheme } from '../../../components/main_components/Lightswitch';
 import { useEntryEditor } from '../../../hooks/useEntryEditor';
 import { useSnippet } from '../../../hooks/useSnippet';
-import SnippetButton, { SnippetMeter } from '../../../components/main_components/Slug_Page/SnippetButton';
+import SnippetButton, { SnippetMeter, SnippetLink } from '../../../components/main_components/Slug_Page/SnippetButton';
 import { PENDING_KEY, TRACK_NOTE_KEY, TRACK_NOTE_WRITING, saidSoAboutTheDesk } from '../../../hooks/useListeningSession';
 
 const COVER_LABELS = { toCode: 'Show the code for this entry', toPicture: 'Show the cover' };
@@ -450,15 +450,10 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
                   key every other way into a listen uses, with the song on
                   the desk put away first, or the sheet would open on it. */}
               {(songLink || wholeAlbum) && (
-                <div className="tn-doors">
-                  {songLink && (
-                    <a className="tn-door" href={songLink} target="_blank" rel="noopener noreferrer">
-                      <ArrowSquareOut size={22} weight="regular" aria-hidden="true" />
-                      <span>Apple Music</span>
-                    </a>
-                  )}
+                <div className="ln-doors">
+                  <SnippetLink href={songLink}>Apple Music</SnippetLink>
                   {wholeAlbum && (
-                    <button type="button" className="tn-door" onClick={listenToAlbum}>
+                    <button type="button" className="ln-door" onClick={listenToAlbum}>
                       <VinylRecord size={22} weight="regular" aria-hidden="true" />
                       <span>Full album</span>
                     </button>

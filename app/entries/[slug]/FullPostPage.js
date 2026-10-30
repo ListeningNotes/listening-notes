@@ -1853,12 +1853,14 @@ export default function FullPostPage({ entry, references = [], authed = false, l
                 );
               })}
             </div>
-            {/* The way out to the record (the previews brief). The caption
-                that stood beside it, Previews · 30s, came off the same day
-                it went on (Miyel, 2026-10-13). Not while correcting. */}
+            {/* The way out to the record (the previews brief), a door on the
+                middle of the page as the song page's is (2026-10-29). The
+                caption that stood beside it, Previews · 30s, came off the
+                same day it went on (Miyel, 2026-10-13). Not while
+                correcting. */}
             {!edit.editing && snippet.recordLink && (
-              <div className="ln-snippet-foot">
-                <SnippetLink href={snippet.recordLink}>Open in Apple Music</SnippetLink>
+              <div className="ln-doors">
+                <SnippetLink href={snippet.recordLink}>Apple Music</SnippetLink>
               </div>
             )}
             {/* The way in, here, only where there is no album note for it
