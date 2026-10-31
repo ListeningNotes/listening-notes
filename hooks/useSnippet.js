@@ -66,7 +66,7 @@ function ask(album, artist) {
   if (!asked.has(key)) {
     const answer = fetchTracklist(album, artist)
       .then(found => found && {
-        songs: (found.clips || []).map(s => ({ ...s, title: fold(s.title) })),
+        songs: (found.clips || []).map(s => ({ ...s, title: fold(s.title), edit: fold(s.edit) })),
         recordLink: found.recordUrl || '',
       })
       // Nothing found is asked again on the next visit rather than remembered.
@@ -77,13 +77,16 @@ function ask(album, artist) {
 }
 
 // The song on Apple's list that is this track: at its own number when the
-// title there agrees, otherwise wherever the title is.
+// title there agrees, otherwise wherever the title is. A title saved off a
+// clean edit agrees under the edit's name for the song (music_data_api.js,
+// the record as it was made).
 function find(songs, number, title) {
   const want = fold(title);
   if (!want) return null;
+  const is = s => s.title === want || s.edit === want;
   const at = number ? songs[number - 1] : null;
-  if (at && at.title === want) return at;
-  return songs.find(s => s.title === want) || null;
+  if (at && is(at)) return at;
+  return songs.find(is) || null;
 }
 
 // ── What to play ───────────────────────────────────────────────────────────
