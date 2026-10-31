@@ -144,7 +144,7 @@ const PAD_SPREAD = 0.04;
 // ── Ink ────────────────────────────────────────────────────────────────────
 // base.css, stated rather than read: a print is the same colour wherever it
 // is made. Day is the light theme's ink over a light wash, Night the dark's.
-const INKS = {
+export const INKS = {
   day: {
     ink: '#1a1a1a', soft: '#6b6b6b', faint: '#a8a8a8', warm: '#efebe2',
     rule: 'rgba(26,26,26,0.15)', unlit: 'rgba(232,184,75,0.18)',

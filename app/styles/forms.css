@@ -3280,8 +3280,26 @@ a.pn-quiet-act { text-decoration: none; display: inline-block; }
 .ib-report--read { opacity: 0.6; }
 
 .own-screen .kt-tool, .idc-tool { text-decoration: none; }
-.pr-main { width: 100%; max-width: 560px; align-self: center; box-sizing: border-box; padding: 60px 24px 120px; }
-.pr-title { font-family: var(--font-display); font-weight: var(--font-display-weight, 700); font-size: 28px; margin: 10px 0 14px; letter-spacing: -0.01em; }
+/* ── The journal's printer (JournalPlate.js) ────────────────────────────────
+   The paper in the room left between the top and the print bar, which is
+   fixed at the foot; the canvas is the print at full size, shown smaller,
+   its shape kept by its own width and height. */
+.jp-room {
+  width: 100%; box-sizing: border-box; min-height: 100dvh;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px 16px 240px;
+}
+.jp-paper { display: flex; justify-content: center; max-width: 100%; }
+.jp-canvas, .jp-out {
+  display: block; width: auto; height: auto;
+  max-width: 100%; max-height: calc(100dvh - 280px);
+  border-radius: 10px; box-shadow: var(--shadow-lift);
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.jp-out { -webkit-touch-callout: default; }
+.jp-canvas--waiting { opacity: 0; }
+.jp-face-sans { position: absolute; width: 0; height: 0; overflow: hidden; font-family: var(--font-display); }
+.jp-face-mono { position: absolute; width: 0; height: 0; overflow: hidden; font-family: var(--font-label); }
 
 /* ── The address book, tightened for a row ──────────────────────────────────
    MiniAddressBook's dense variant (`tight`), used by the inbox and nowhere

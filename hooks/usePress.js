@@ -48,7 +48,7 @@ function probeCanShare() {
 // Canvas cannot read CSS variables and the faces arrive from next/font, so
 // the resolved family names are read off elements on the page that wear
 // them — the title for the display face, the artist line for the label face.
-function readFamilies(fonts) {
+export function readFamilies(fonts) {
   const of = selector => {
     const el = selector && document.querySelector(selector);
     return getComputedStyle(el || document.body).fontFamily;

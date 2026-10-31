@@ -17,7 +17,7 @@ import { createPortal } from 'react-dom';
 import { CaretLeft, DownloadSimple, X } from '@phosphor-icons/react';
 import { FRAME_ORDER, FRAMES } from '../SharePrinter';
 
-export default function PrintBar({ grounds, ground, onGround, size, onSize, onSave, onDone, status, final = false, onBack, onDeliver, canDeliver = false }) {
+export default function PrintBar({ grounds, ground, onGround, look = null, size, onSize, onSave, onDone, status, final = false, onBack, onDeliver, canDeliver = false }) {
   // Portalled onto the body: the paper sets its own colours on the box it
   // sits in, and the bar is the page's, not the paper's — it keeps the
   // site's theme whatever ground the card is on (Miyel, 2026-09-13).
@@ -55,7 +55,9 @@ export default function PrintBar({ grounds, ground, onGround, size, onSize, onSa
   return createPortal(
     <div className="ln-print-bar" role="toolbar" aria-label="Printing">
       <div className="ln-print-said" aria-live="polite">{status}</div>
-      <div className="ln-print-look">{current?.label}</div>
+      {/* The ground's name — or, where a plate has a dial (JournalPlate.js),
+          what the plate says, the dial's stop with it. */}
+      <div className="ln-print-look">{look ?? current?.label}</div>
       <div className="ln-print-grounds" role="tablist" aria-label="Ground">
         {grounds.map(g => (
           <button
