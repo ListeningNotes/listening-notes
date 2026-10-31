@@ -164,25 +164,62 @@ async function fromTheArtist(albumName, artistName) {
   const look = await fetch(`https://itunes.apple.com/lookup?id=${artist.artistId}&entity=album&limit=200`);
   const lookData = await look.json();
   const albums = (lookData.results || []).filter(r => r.wrapperType === 'collection' && norm(r.collectionName) === norm(albumName));
-  return albums[0]?.collectionId || null;
+  // The record as it was made before its clean edit (songsOf, below).
+  const record = albums.find(r => r.collectionExplicitness === 'explicit') || albums[0];
+  return record?.collectionId || null;
 }
 
-// Step 2: every song under one id, in order, with the record's facts off the
-// same answer. Null when Apple has no songs under it — a retired id, or one
-// that was never a record's.
-async function songsOf(id) {
+// One lookup: the record's row and its songs in disc and track order. Null
+// when Apple has no songs under the id — a retired id, or one that was never
+// a record's.
+async function editionOf(id) {
   const lookupRes = await fetch(`https://itunes.apple.com/lookup?id=${id}&entity=song&limit=300`);
   const lookupData = await lookupRes.json();
   const rows = lookupData.results || [];
   const songs = rows.filter(r => r.wrapperType === 'track' && r.kind === 'song');
   if (!songs.length) return null;
-
+  songs.sort((a, b) => (a.discNumber || 1) - (b.discNumber || 1) || (a.trackNumber || 0) - (b.trackNumber || 0));
   // The same response carries the album row. It is what the contents screen
   // prints its facts from, so it is read here rather than fetched again —
   // one lookup, both halves (Miyel's contents brief, 2026-09-18).
-  const album = rows.find(r => r.wrapperType === 'collection') || null;
+  return { id: String(id), album: rows.find(r => r.wrapperType === 'collection') || null, songs };
+}
 
-  songs.sort((a, b) => (a.discNumber || 1) - (b.discNumber || 1) || (a.trackNumber || 0) - (b.trackNumber || 0));
+// ── The record as it was made, 2026-10-30 ─────────────────────────────────
+// A record with swearing on it is two on Apple, the explicit one and its
+// clean edit, each with clips of its own. Apple's search now answers with
+// the clean edit alone — DAMN., SOS and IGOR each came back clean and only
+// clean, `explicit=Yes` or not — so every preview played the edit, bleeped
+// (Miyel: "on the music previews, they're censored"). The artist's own list
+// still holds both. So a clean edit is traded for its explicit twin there:
+// the same title, the same year, the same number of songs where there is a
+// choice. None found, and the clean edit stands.
+async function uncutTwin(clean) {
+  if (clean?.collectionExplicitness !== 'cleaned' || !clean.artistId) return null;
+  try {
+    const look = await fetch(`https://itunes.apple.com/lookup?id=${clean.artistId}&entity=album&limit=200`);
+    const lookData = await look.json();
+    const year = String(clean.releaseDate || '').slice(0, 4);
+    const twins = (lookData.results || []).filter(r => r.wrapperType === 'collection'
+      && r.collectionExplicitness === 'explicit'
+      && norm(r.collectionName) === norm(clean.collectionName)
+      && String(r.releaseDate || '').slice(0, 4) === year);
+    const twin = twins.find(r => r.trackCount === clean.trackCount) || twins[0];
+    return twin ? await editionOf(twin.collectionId) : null;
+  } catch { return null; }
+}
+
+// Step 2: every song under one id, in order, with the record's facts off the
+// same answer — the explicit twin's, where the id is a clean edit's.
+async function songsOf(id) {
+  const given = await editionOf(id);
+  if (!given) return null;
+  const uncut = await uncutTwin(given.album);
+  const { album, songs } = uncut || given;
+  // A clean edit sometimes renames a song, not only bleeps it. A title saved
+  // off the edit is still that song, so each song keeps the edit's name for
+  // it beside its own — only where the two lists line up song for song.
+  const editNames = uncut && given.songs.length === songs.length ? given.songs.map(s => s.trackName) : null;
   return {
     tracks: songs
       .map((s, i) => ({
@@ -195,12 +232,17 @@ async function songsOf(id) {
       })),
     facts: factsFrom(album),
     // The id these songs came from — the one worth keeping.
-    collectionId: String(id),
+    collectionId: (uncut || given).id,
     // Thirty seconds of each song, and its address on Apple, for the previews
     // (hooks/useSnippet.js), 2026-10-13. Beside the tracks rather than on
     // them, so a listen's draft, which keeps `tracks`, never stores a link
-    // Apple may retire.
-    clips: songs.map(s => ({ title: s.trackName, clip: s.previewUrl || '', songUrl: s.trackViewUrl || '' })),
+    // Apple may retire. `edit` is the clean edit's title, where it differs.
+    clips: songs.map((s, i) => ({
+      title: s.trackName,
+      edit: editNames && editNames[i] !== s.trackName ? editNames[i] : '',
+      clip: s.previewUrl || '',
+      songUrl: s.trackViewUrl || '',
+    })),
     recordUrl: album?.collectionViewUrl || '',
   };
 }
