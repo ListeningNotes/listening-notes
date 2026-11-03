@@ -281,6 +281,24 @@
   background: var(--ink-faint);
   opacity: 0.5;
 }
+/* ── The sheet carries the wash, 2026-11-02 ────────────────────────────────
+   While the record is live, home's wash goes on down the sheet (HomeNav, And
+   the listen's sheet): the tab and the top of the listen in the colour of
+   the wash just above the sheet's edge, reaching the page's colour where the
+   wash does, so the row over the sheet, the strip of home and the sheet are
+   one colour. The tab wears the head of the same fade, so at rest it is the
+   listen under it to the pixel — a solid band stood out from the fade below
+   it — and keeps it however far the listen is scrolled, as the top row keeps
+   its slice of the wash. A phone's only, as the wash is. */
+@media (max-width: 768px) {
+  html[data-washed='sheet'] .lay--sheet .lay-grip,
+  html[data-washed='sheet'] .lay--sheet .ses {
+    background-color: var(--bg);
+    background-image: linear-gradient(180deg, var(--wash-sheet-top, var(--bg)) 0, var(--bg) var(--wash-sheet-h, 0px));
+    background-size: 100% var(--wash-sheet-h, 0px);
+    background-repeat: no-repeat;
+  }
+}
 /* The status bar is outside the sheet now, so the page inside it starts
    under the tab rather than under the clock. */
 .lay--sheet .ses-body--page { padding-top: 34px; }
