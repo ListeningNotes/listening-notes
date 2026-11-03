@@ -608,7 +608,13 @@ export default function JournalPrinter({ layered = false }) {
   const stageRef = useRef(null);
   const shown = useMemo(() => ({ stop, live: liveRef }), [stop]);
   const fonts = useMemo(() => ({ sans: '.jp-face-sans', mono: '.jp-face-mono' }), []);
-  const press = usePress({ plate: plate || { load: async () => null, draw() {} }, shown, ground, isDark, link: address, fonts });
+  // While a ground moves, Save records the preview itself: it is the print
+  // at full size, drawn every frame.
+  const canvasRef = useRef(null);
+  const motion = useCallback(() => (isMoving ? canvasRef.current : null), [isMoving]);
+  const press = usePress({ plate: plate || { load: async () => null, draw() {} }, shown, ground, isDark, link: address, fonts, motion });
+  // Nothing changes on the paper while it is being filmed.
+  const busy = press.clip === 'saving';
 
   // The stage: the wall's size at the paper's pixels, scaled the way the
   // screensavers scale themselves on a phone so their canvas comes out at
@@ -618,7 +624,6 @@ export default function JournalPrinter({ layered = false }) {
 
   // The preview: the plate itself at the paper's size, shown smaller —
   // drawn once when still, every frame while a ground moves.
-  const canvasRef = useRef(null);
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || !plate || !art) return undefined;
@@ -643,20 +648,21 @@ export default function JournalPrinter({ layered = false }) {
 
   const [learned, setLearned] = useState(false);
   const turnDial = useCallback(() => {
-    if (!plate?.stopsFor || !art) return;
+    if (!plate?.stopsFor || !art || busy) return;
     const can = plate.stopsFor(frame, art, isMoving);
     if (can.length < 2) return;
     setLearned(true);
     const next = can[(can.indexOf(stop) + 1) % can.length];
     setChoices(c => ({ ...c, stop: next }));
-  }, [plate, art, frame, stop, isMoving]);
+  }, [plate, art, frame, stop, isMoving, busy]);
 
   const done = () => { if (layered) router.back(); else router.push('/'); };
   const stopLabel = STOPS.find(s => s.key === stop)?.label;
   const groundLabel = groundsHere.find(g => g.key === ground)?.label;
   const canTurn = Boolean(plate?.stopsFor && art && plate.stopsFor(frame, art, isMoving).length > 1);
   const hint = canTurn && !learned ? 'Tap the records to turn the dial.' : '';
-  const chooseGround = key => setChoices(c => ({ ...c, ground: key, ...(isPaper(key) ? { paper: key } : {}) }));
+  const choose = change => { if (!busy) setChoices(c => ({ ...c, ...change })); };
+  const chooseGround = key => choose({ ground: key, ...(isPaper(key) ? { paper: key } : {}) });
   const what = month ? month.label : 'Your journal';
 
   // Drawn in the browser only: the choices live in this tab's storage and
@@ -687,7 +693,7 @@ export default function JournalPrinter({ layered = false }) {
                 type="button"
                 className={'jp-subject' + (on ? ' jp-subject--on' : '')}
                 aria-pressed={on}
-                onClick={() => setChoices(c => ({ ...c, subject: m.key }))}
+                onClick={() => choose({ subject: m.key })}
               >
                 {m.short}
               </button>
@@ -710,8 +716,15 @@ export default function JournalPrinter({ layered = false }) {
           />
         )}
       </div>
-      {press.picture ? (
-        <PrintBar final status={press.status} onBack={press.dismissPicture} onDeliver={press.deliver} canDeliver={press.canDeliver} />
+      {press.picture || press.clip === 'ready' ? (
+        <PrintBar
+          final
+          status={press.status}
+          onBack={press.dismissPicture}
+          onDeliver={press.deliver}
+          canDeliver={press.clip === 'ready' || press.canDeliver}
+          deliverLabel={press.clip === 'ready' && press.canSend ? 'Save to Photos' : 'Save'}
+        />
       ) : (
         <PrintBar
           grounds={groundsHere}
@@ -719,8 +732,8 @@ export default function JournalPrinter({ layered = false }) {
           onGround={chooseGround}
           look={!stop || stop === 'paper' ? groundLabel : `${stopLabel} · ${groundLabel}`}
           size={size}
-          onSize={key => setChoices(c => ({ ...c, size: key }))}
-          onSave={() => press.save(size)}
+          onSize={key => choose({ size: key })}
+          onSave={() => { if (!busy) press.save(size); }}
           onDone={done}
           status={press.status || hint}
         />

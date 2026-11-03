@@ -17,7 +17,7 @@ import { createPortal } from 'react-dom';
 import { CaretLeft, DownloadSimple, X } from '@phosphor-icons/react';
 import { FRAME_ORDER, FRAMES } from '../SharePrinter';
 
-export default function PrintBar({ grounds, ground, onGround, look = null, size, onSize, onSave, onDone, status, final = false, onBack, onDeliver, canDeliver = false }) {
+export default function PrintBar({ grounds, ground, onGround, look = null, size, onSize, onSave, onDone, status, final = false, onBack, onDeliver, canDeliver = false, deliverLabel = 'Save' }) {
   // Portalled onto the body: the paper sets its own colours on the box it
   // sits in, and the bar is the page's, not the paper's — it keeps the
   // site's theme whatever ground the card is on (Miyel, 2026-09-13).
@@ -43,7 +43,7 @@ export default function PrintBar({ grounds, ground, onGround, look = null, size,
           {canDeliver && (
             <button type="button" className="ln-pin ln-pin--on" onClick={onDeliver}>
               <DownloadSimple size={13} weight="bold" aria-hidden="true" />
-              <span>Save</span>
+              <span>{deliverLabel}</span>
             </button>
           )}
         </div>
