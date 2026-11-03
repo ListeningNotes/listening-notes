@@ -2239,64 +2239,55 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 .ps-row-one--open .fr-live-name { color: var(--ink); }
 .ps-row-one:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 4px; border-radius: 10px; }
 
-/* ── Headlines, 2026-10-27 ──────────────────────────────────────────────────
-   Headlines.js: one sentence at a time between two hairlines, rolling up
-   like a departures board, the pips on the right. The stack holds two lines
-   of the sentence whatever is showing, so the page never jumps as it turns. */
-.hl {
-  display: flex; align-items: stretch; gap: 14px;
-  margin-top: 6px; padding: 14px 0;
-  border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+/* ── The top of Friends, 2026-10-30 ──────────────────────────────────────
+   Headlines.js. While a friend is logging, the Board band's cards (.fr-now,
+   above), set off from the top. While nobody is, what friends logged lately
+   drifting left to right, small covers with the friend and the record under
+   them (her pick, 2026-10-31). Bled to the screen's edges like the cards'
+   row; each cover carries its own room on the right, so the two halves of
+   the belt are one length and the lap has no seam. */
+.hl-now { margin-top: 6px; }
+.hl-drift {
+  margin-top: 6px; padding-bottom: 18px;
+  border-bottom: 1px solid var(--border);
 }
-.hl-stack {
-  position: relative; flex: 1; min-width: 0;
-  height: 66px; overflow: hidden;
+.hl-drift-window { margin: 0 -24px; padding-top: 16px; overflow: hidden; }
+.hl-drift-belt {
+  display: flex; width: max-content;
+  animation: hl-drift var(--drift-lap, 60s) linear infinite;
 }
-.hl-one {
-  position: absolute; inset: 0;
-  display: flex; align-items: flex-start; gap: 14px;
-  color: var(--ink); text-decoration: none;
+.hl-drift--still .hl-drift-belt,
+.hl-drift:active .hl-drift-belt { animation-play-state: paused; }
+@keyframes hl-drift {
+  from { transform: translateX(-50%); }
+  to   { transform: translateX(0); }
+}
+.hl-drift-one {
+  flex: 0 0 auto; display: flex; flex-direction: column;
+  width: 96px; box-sizing: border-box; padding-right: 12px;
+  color: inherit; text-decoration: none;
   -webkit-tap-highlight-color: transparent;
 }
-.hl-one--in { animation: hl-in 0.56s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
-.hl-one--out { animation: hl-out 0.56s cubic-bezier(0.22, 0.61, 0.36, 1) both; pointer-events: none; }
-@keyframes hl-in {
-  from { transform: translateY(100%); opacity: 0; }
-  to   { transform: none; opacity: 1; }
-}
-@keyframes hl-out {
-  from { transform: none; opacity: 1; }
-  to   { transform: translateY(-100%); opacity: 0; }
-}
-.hl-one:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: -2px; border-radius: 8px; }
-.hl-art {
-  flex: 0 0 50px; height: 50px; border-radius: 6px; overflow: hidden;
+.hl-drift-art {
+  position: relative; display: block;
+  width: 84px; height: 84px; border-radius: 8px; overflow: hidden;
   background: var(--bg-warm);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 }
-.hl-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.hl-words { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
-.hl-when {
-  font-family: var(--font-label); font-size: 9px; line-height: 1;
-  letter-spacing: 0.11em; text-transform: uppercase; color: var(--ink-faint);
-}
-.hl-said {
+.hl-drift-art > img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.hl-drift-who {
+  margin-top: 7px;
   font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
-  font-size: 19px; line-height: 1.2; color: var(--ink);
-  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
-  overflow-wrap: anywhere;
+  font-size: 12px; color: var(--ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.hl-title { font-style: italic; font-weight: 400; }
-.hl-mark--formative { color: var(--formative); }
-.hl-mark--fav { color: var(--fav); }
-.hl-mark--mp { color: var(--mp); }
-.hl-pips { flex: 0 0 auto; display: flex; flex-direction: column; justify-content: center; gap: 4px; }
-.hl-pip { width: 4px; height: 4px; border-radius: 50%; background: var(--ink-faint); opacity: 0.45; transition: opacity 0.3s, background 0.3s; }
-.hl-pip--on { background: var(--ink); opacity: 1; }
+.hl-drift-rec {
+  font-size: 11.5px; color: var(--ink-soft);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
 @media (prefers-reduced-motion: reduce) {
-  .hl-one--in { animation: hl-fade 0.3s ease both; }
-  .hl-one--out { animation: none; opacity: 0; }
-  @keyframes hl-fade { from { opacity: 0; } to { opacity: 1; } }
+  .hl-drift-window { overflow-x: auto; scrollbar-width: none; }
+  .hl-drift-belt { animation: none; }
 }
 
 /* Their doors, the book's own, opening under the line and folding shut

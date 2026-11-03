@@ -506,8 +506,8 @@ do not say what they hold.
 - `Friends.js` — the address book as a grid of faces; drawn nowhere since
   2026-10-27 (the address book's page draws Friends, PeopleScreen.js), and
   only its `since` is still imported (Friend_panel.js).
-- `Headlines.js` — what friends did, one sentence at a time, at the top of
-  Friends.
+- `Headlines.js` — the top of Friends: who is logging right now, as cards,
+  or, while nobody is, what friends logged lately drifting by (2026-10-30).
 - `Words.js` — all the words with one friend, record by record.
 - `PinnedLetter.js` — the LN. Admin letter, pinned over the home wall.
 - `EditingBar.js` — the Save and Cancel band at the foot of anything being
