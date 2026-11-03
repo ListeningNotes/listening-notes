@@ -48,6 +48,13 @@ import { usePress, readFamilies } from '../../hooks/usePress';
 import { readBioAnswers, CARD_PROMPT } from '../../library/bioprompt';
 import { monthPlate } from './MonthPlate';
 import { gatherAlbums } from './Journal';
+import DVD from '../session_components/backgrounds/DVD';
+import Snake from '../session_components/backgrounds/Snake';
+import Rain from '../session_components/backgrounds/Rain';
+import Fizzy from '../session_components/backgrounds/Fizzy';
+import Reel from '../session_components/backgrounds/Reel';
+import Solitaire from '../session_components/backgrounds/Solitaire';
+import { backgroundScale } from '../../library/background_scale';
 
 // ── The dial ───────────────────────────────────────────────────────────────
 export const STOPS = [
@@ -136,18 +143,24 @@ export function drawPortrait(c, img, cx, cy, d, ring, paper, position) {
 
 // ── The plate ──────────────────────────────────────────────────────────────
 
-export function journalPlate({ name, portrait, position, counts, prompt, covers }) {
+// A month's moving look is this plate too (MonthPlate.js has the still one):
+// the month at the head where the journal says what it is, its records and
+// marks as the facts, no prompt — `tagline`, `headline`, `title` and
+// `fileName` say so.
+export function journalPlate({ name, portrait, position, counts, prompt, covers, tagline = TAGLINE, headline = false, title = 'Your journal', fileName = 'journal' }) {
   const coverList = covers.slice(0, 60);
 
   // The stops this paper can print with these records: a stop is offered
-  // only when its wall fills without a sleeve twice.
-  function stopsFor(frame, art) {
+  // only when its wall fills without a sleeve twice. A moving ground fills
+  // any wall, so with one every stop is there.
+  function stopsFor(frame, art, moving = false) {
+    if (moving) return STOPS.map(s => s.key);
     const have = (art?.covers || []).filter(Boolean).length;
     const lay = layout(frame);
     return STOPS.filter(s => wallTiles(...lay[s.key].wallArgs).length <= have).map(s => s.key);
   }
-  function stopFor(frame, art, wanted) {
-    const can = stopsFor(frame, art);
+  function stopFor(frame, art, wanted, moving = false) {
+    const can = stopsFor(frame, art, moving);
     if (can.includes(wanted)) return wanted;
     return can.includes('half') ? 'half' : can[0] || 'paper';
   }
@@ -177,10 +190,12 @@ export function journalPlate({ name, portrait, position, counts, prompt, covers 
   }
 
   return {
-    title: 'Your journal',
-    fileName: 'journal',
+    title,
+    fileName,
     stopsFor,
     stopFor,
+    // Where a stop's records go, for a moving ground to be laid there.
+    wallFor(frame, stop) { return layout(frame)[stop]?.wall || null; },
 
     async load({ isDark }) {
       const [mark, face, ...sleeves] = await Promise.all([
@@ -196,7 +211,9 @@ export function journalPlate({ name, portrait, position, counts, prompt, covers 
       const { sans, mono } = families;
       const W = frame.w, H = frame.h;
       const lay = layout(frame);
-      const stop = stopFor(frame, art, shown?.stop);
+      // A moving ground, when one is on: its canvas, laid where the wall goes.
+      const live = shown?.live?.current || null;
+      const stop = stopFor(frame, art, shown?.stop, Boolean(live));
       const sleeves = art?.covers || [];
       const U = Math.min(W, H) / COL;
 
@@ -257,7 +274,7 @@ export function journalPlate({ name, portrait, position, counts, prompt, covers 
           } else if (part === 'tag') {
             add(6, {
               h: px(TAG) * 1.4,
-              draw(c, x, y, w) { c.font = `400 ${px(TAG)}px ${mono}`; c.fillStyle = colour.soft; drawTracked(c, TAGLINE.toUpperCase(), x + w / 2, y, px(TAG) * 0.16, 'center'); },
+              draw(c, x, y, w) { c.font = `400 ${px(TAG)}px ${mono}`; c.fillStyle = colour.soft; drawTracked(c, tagline.toUpperCase(), x + w / 2, y, px(TAG) * 0.16, 'center'); },
             });
           } else if (part === 'rule') {
             add(16, { h: Math.max(1, unit * 0.8), draw(c, x, y, w) { c.fillStyle = colour.rule; c.fillRect(x + (w - colW) / 2, y, colW, Math.max(1, unit * 0.8)); } });
@@ -328,7 +345,24 @@ export function journalPlate({ name, portrait, position, counts, prompt, covers 
         return [];
       }
 
-      drawWall(ctx, lay[stop].wall, wallTiles(...lay[stop].wallArgs), sleeves);
+      if (live) {
+        const r = lay[stop].wall;
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(r.x, r.y, r.w, r.h);
+        ctx.clip();
+        ctx.drawImage(live, r.x, r.y, r.w, r.h);
+        ctx.restore();
+        // On Half the ground and the card share the paper, so a cover cut
+        // off at the band's foot was cut at nothing: a hairline is the edge.
+        if (stop === 'half') {
+          ctx.fillStyle = ink.rule;
+          if (lay.spread) ctx.fillRect(r.x + r.w, r.y, Math.max(1, U * 0.8), r.h);
+          else ctx.fillRect(r.x, r.y + r.h, r.w, Math.max(1, U * 0.8));
+        }
+      } else {
+        drawWall(ctx, lay[stop].wall, wallTiles(...lay[stop].wallArgs), sleeves);
+      }
 
       if (stop === 'half') {
         if (lay.spread) {
@@ -345,7 +379,7 @@ export function journalPlate({ name, portrait, position, counts, prompt, covers 
         const mh = MARK_H * U * 0.8;
         const top = lay.bandH + d / 2 + RING * U + 12 * U;
         const box = { x: pad, y: top, w: W - pad * 2, h: H - top - pad - (art?.mark ? mh + 14 * U : 0) };
-        const s = stack(box, rowsFor(['name', 'facts', 'prompt']));
+        const s = stack(box, rowsFor(headline ? ['tag', 'name', 'facts'] : ['name', 'facts', 'prompt']));
         setDown(s.rows, box.x, box.y + Math.max(0, (box.h - s.h) / 2), box.w);
         if (art?.mark) {
           const mw = mh * MARK_ASPECT;
@@ -391,7 +425,7 @@ export function journalPlate({ name, portrait, position, counts, prompt, covers 
       const textW = W - pad * 2 - d - RING * U * 2 - 16 * U;
       ctx.font = `400 ${TAG * U}px ${mono}`;
       ctx.fillStyle = 'rgba(255,255,255,0.72)';
-      drawTracked(ctx, TAGLINE.toUpperCase(), pad, foot - TAG * U * 1.2, TAG * U * 0.16, 'left');
+      drawTracked(ctx, tagline.toUpperCase(), pad, foot - TAG * U * 1.2, TAG * U * 0.16, 'left');
       ctx.font = `700 ${NAME * U}px ${sans}`;
       ctx.fillStyle = '#ffffff';
       ctx.fillText(ellipsize(ctx, name || '', textW), pad, foot - TAG * U * 1.2 - 8 * U - NAME * U * 1.1);
@@ -443,6 +477,37 @@ function monthsOf(entries) {
   return [...byKey.values()];
 }
 
+// The moving grounds (the printer brief): six of the parked screensavers,
+// turned with the same dots as Day and Night, after them. Each runs in a
+// stage of its own off the screen, the size of the wall it fills, and the
+// plate lays its canvas there every frame. Only on 9:16 and 4:5: a moving
+// ground needs room above and below to read as motion. The paper under the
+// card stays the last of Day or Night chosen (Miyel, 2026-11-02).
+const MOVING = [
+  { key: 'dvd', label: 'DVD', Ground: DVD },
+  { key: 'snake', label: 'Snake', Ground: Snake },
+  { key: 'rain', label: 'Rain', Ground: Rain },
+  { key: 'fizzy', label: 'Fizzy', Ground: Fizzy },
+  { key: 'reel', label: 'Reel', Ground: Reel },
+  { key: 'solitaire', label: 'Solitaire', Ground: Solitaire },
+];
+const MOVES_ON = ['story', 'portrait'];
+const GROUND_COVERS = 40;
+
+// A month's facts for its moving look: its records, then its marks, a zero
+// left off.
+function monthFacts(month) {
+  const n = key => month.records.filter(r => r.marks[key]).length;
+  const word = (count, one, many) => (count === 1 ? one : many);
+  const records = month.records.length;
+  return [
+    { word: word(records, 'record', 'records'), n: records, always: true },
+    { word: word(n('favorites'), 'favorite', 'favorites'), n: n('favorites') },
+    { word: word(n('masterpieces'), 'masterpiece', 'masterpieces'), n: n('masterpieces') },
+    { word: 'formative', n: n('formative') },
+  ].filter(f => f.always || f.n > 0);
+}
+
 const STORE = 'ln-printing-journal';
 const noSubscription = () => () => {};
 
@@ -456,10 +521,15 @@ export default function JournalPrinter({ layered = false }) {
     try { sessionStorage.setItem(STORE, JSON.stringify(choices)); } catch { /* private mode */ }
   }, [choices]);
   const wanted = STOPS.some(s => s.key === choices.stop) ? choices.stop : 'half';
-  const ground = GROUNDS.some(g => g.key === choices.ground) ? choices.ground : 'day';
   const size = FRAME_ORDER.includes(choices.size) ? choices.size : 'story';
   const frame = FRAMES[size];
-  const isDark = ground === 'night';
+  const isPaper = key => GROUNDS.some(g => g.key === key);
+  const paper = isPaper(choices.paper) ? choices.paper : isPaper(choices.ground) ? choices.ground : 'day';
+  const movesHere = MOVES_ON.includes(size);
+  const moving = movesHere ? MOVING.find(m => m.key === choices.ground) || null : null;
+  const ground = moving ? moving.key : paper;
+  const groundsHere = movesHere ? [...GROUNDS, ...MOVING] : GROUNDS;
+  const isDark = paper === 'night';
 
   // What the card prints, read the way the card reads it.
   const [stamps, setStamps] = useState(null);
@@ -501,12 +571,28 @@ export default function JournalPrinter({ layered = false }) {
   const months = useMemo(() => (entries ? monthsOf(entries) : []), [entries]);
   const month = months.find(m => m.key === choices.subject) || null;
 
+  // A month still is its own plate, the grid; a month moving is the
+  // journal's plate with the month on its card and its covers in the ground.
+  const isMoving = Boolean(moving);
   const plate = useMemo(() => {
     if (!covers) return null;
     const keeper = { name, portrait: settings?.portrait_url, position: settings?.portrait_position };
-    if (month) return monthPlate({ ...keeper, month, records: month.records });
+    if (month && !isMoving) return monthPlate({ ...keeper, month, records: month.records });
+    if (month) {
+      return journalPlate({
+        ...keeper, counts: monthFacts(month), prompt: null, covers: month.records.map(r => r.art).filter(Boolean),
+        tagline: month.label, headline: true, title: month.label, fileName: `month-${month.key}`,
+      });
+    }
     return journalPlate({ ...keeper, counts, prompt, covers });
-  }, [covers, month, name, settings?.portrait_url, settings?.portrait_position, counts, prompt]);
+  }, [covers, month, isMoving, name, settings?.portrait_url, settings?.portrait_position, counts, prompt]);
+
+  // The covers a moving ground is made of: the month's, or the journal's
+  // newest.
+  const groundAlbums = useMemo(() => {
+    const list = month ? month.records.map(r => r.art) : covers || [];
+    return list.filter(Boolean).slice(0, GROUND_COVERS).map(src => ({ album_art: src }));
+  }, [month, covers]);
 
   const [art, setArt] = useState(null);
   useEffect(() => {
@@ -516,37 +602,62 @@ export default function JournalPrinter({ layered = false }) {
     return () => { live = false; };
   }, [plate, isDark]);
 
-  // A month has no dial yet; its moving look comes with the grounds.
-  const stop = month ? null : plate?.stopFor && art ? plate.stopFor(frame, art, wanted) : wanted;
-  const shown = useMemo(() => ({ stop }), [stop]);
+  const stop = plate?.stopFor ? (art ? plate.stopFor(frame, art, wanted, isMoving) : wanted) : null;
+  // The moving ground's canvas, found in its stage each frame.
+  const liveRef = useRef(null);
+  const stageRef = useRef(null);
+  const shown = useMemo(() => ({ stop, live: liveRef }), [stop]);
   const fonts = useMemo(() => ({ sans: '.jp-face-sans', mono: '.jp-face-mono' }), []);
   const press = usePress({ plate: plate || { load: async () => null, draw() {} }, shown, ground, isDark, link: address, fonts });
 
-  // The preview: the plate itself at the paper's size, shown smaller.
+  // The stage: the wall's size at the paper's pixels, scaled the way the
+  // screensavers scale themselves on a phone so their canvas comes out at
+  // exactly the wall's size.
+  const wall = isMoving && plate?.wallFor && stop ? plate.wallFor(frame, stop) : null;
+  const k = inBrowser ? backgroundScale() : 1;
+
+  // The preview: the plate itself at the paper's size, shown smaller —
+  // drawn once when still, every frame while a ground moves.
   const canvasRef = useRef(null);
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas || !plate || !art) return;
+    if (!canvas || !plate || !art) return undefined;
     canvas.width = frame.w;
     canvas.height = frame.h;
-    plate.draw(canvas.getContext('2d'), frame, { art, shown, isDark, families: readFamilies(fonts), ground });
-  }, [plate, art, frame, shown, isDark, ground, fonts]);
+    const ctx = canvas.getContext('2d');
+    const paint = () => plate.draw(ctx, frame, { art, shown, isDark, families: readFamilies(fonts), ground });
+    if (!isMoving) {
+      liveRef.current = null;
+      paint();
+      return undefined;
+    }
+    let raf;
+    const tick = () => {
+      liveRef.current = stageRef.current?.querySelector('canvas') || null;
+      paint();
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [plate, art, frame, shown, isDark, ground, fonts, isMoving, press.picture]);
 
   const [learned, setLearned] = useState(false);
   const turnDial = useCallback(() => {
     if (!plate?.stopsFor || !art) return;
-    const can = plate.stopsFor(frame, art);
+    const can = plate.stopsFor(frame, art, isMoving);
     if (can.length < 2) return;
     setLearned(true);
     const next = can[(can.indexOf(stop) + 1) % can.length];
     setChoices(c => ({ ...c, stop: next }));
-  }, [plate, art, frame, stop]);
+  }, [plate, art, frame, stop, isMoving]);
 
   const done = () => { if (layered) router.back(); else router.push('/'); };
   const stopLabel = STOPS.find(s => s.key === stop)?.label;
-  const groundLabel = GROUNDS.find(g => g.key === ground)?.label;
-  const canTurn = Boolean(plate?.stopsFor && art && plate.stopsFor(frame, art).length > 1);
+  const groundLabel = groundsHere.find(g => g.key === ground)?.label;
+  const canTurn = Boolean(plate?.stopsFor && art && plate.stopsFor(frame, art, isMoving).length > 1);
   const hint = canTurn && !learned ? 'Tap the records to turn the dial.' : '';
+  const chooseGround = key => setChoices(c => ({ ...c, ground: key, ...(isPaper(key) ? { paper: key } : {}) }));
+  const what = month ? month.label : 'Your journal';
 
   // Drawn in the browser only: the choices live in this tab's storage and
   // the bar is portalled onto the body, neither of which the server has.
@@ -556,6 +667,16 @@ export default function JournalPrinter({ layered = false }) {
       {/* The faces the canvas draws in, worn by something so they can be read. */}
       <span className="jp-face-sans" aria-hidden="true" />
       <span className="jp-face-mono" aria-hidden="true" />
+      {moving && wall && groundAlbums.length > 0 && (
+        <div
+          ref={stageRef}
+          className="jp-stage"
+          aria-hidden="true"
+          style={{ width: Math.round(wall.w * k), height: Math.round(wall.h * k) }}
+        >
+          <moving.Ground key={`${moving.key}-${Math.round(wall.w)}x${Math.round(wall.h)}-${month?.key || 'journal'}`} albums={groundAlbums} />
+        </div>
+      )}
       {months.length > 0 && (
         <nav className="jp-subjects" aria-label="What to print">
           {[{ key: 'journal', short: 'Journal' }, ...months].map(m => {
@@ -585,7 +706,7 @@ export default function JournalPrinter({ layered = false }) {
             height={frame.h}
             onClick={turnDial}
             role="img"
-            aria-label={month ? month.label : `Your journal, ${stop === 'paper' ? 'on paper' : stopLabel}`}
+            aria-label={stop === 'paper' || !stop ? what : `${what}, ${stopLabel}`}
           />
         )}
       </div>
@@ -593,10 +714,10 @@ export default function JournalPrinter({ layered = false }) {
         <PrintBar final status={press.status} onBack={press.dismissPicture} onDeliver={press.deliver} canDeliver={press.canDeliver} />
       ) : (
         <PrintBar
-          grounds={GROUNDS}
+          grounds={groundsHere}
           ground={ground}
-          onGround={key => setChoices(c => ({ ...c, ground: key }))}
-          look={month || stop === 'paper' ? groundLabel : `${stopLabel} · ${groundLabel}`}
+          onGround={chooseGround}
+          look={!stop || stop === 'paper' ? groundLabel : `${stopLabel} · ${groundLabel}`}
           size={size}
           onSize={key => setChoices(c => ({ ...c, size: key }))}
           onSave={() => press.save(size)}

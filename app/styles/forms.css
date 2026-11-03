@@ -3312,6 +3312,8 @@ a.pn-quiet-act { text-decoration: none; display: inline-block; }
 }
 .jp-out { -webkit-touch-callout: default; }
 .jp-canvas--waiting { opacity: 0; }
+/* Where a moving ground runs, off the screen, at the wall's size. */
+.jp-stage { position: fixed; left: -40000px; top: 0; overflow: hidden; pointer-events: none; }
 .jp-face-sans { position: absolute; width: 0; height: 0; overflow: hidden; font-family: var(--font-display); }
 .jp-face-mono { position: absolute; width: 0; height: 0; overflow: hidden; font-family: var(--font-label); }
 

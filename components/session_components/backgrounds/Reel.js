@@ -19,6 +19,8 @@ export default function Reel({ albums = [] }) {
 
     const images = albums.map(a => {
       const img = new Image();
+      // Anonymously, so the share printer can read the canvas it lands on.
+      img.crossOrigin = 'anonymous';
       img.src = a.album_art;
       return img;
     });
