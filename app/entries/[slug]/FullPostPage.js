@@ -8,7 +8,7 @@
 // It receives the entry data from page.js which fetched it server-side.
 
 'use client';
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Envelope, Fingerprint, Heart, SketchLogo, VinylRecord } from '@phosphor-icons/react';
 import { fonts } from '../../../library/sitewide_visuals';
@@ -21,7 +21,7 @@ import { useLayerHeaderSlot, useFolder } from '../../../components/main_componen
 import FolderFooter from '../../../components/main_components/FolderFooter';
 import KeeperTools from '../../../components/main_components/KeeperTools';
 import EditingBar from '../../../components/main_components/EditingBar';
-import { entryPlate } from '../../../components/main_components/EntryPlate';
+import { entryPlate, rowColumns } from '../../../components/main_components/EntryPlate';
 import { usePress } from '../../../hooks/usePress';
 import { FRAMES, FRAME_ORDER } from '../../../components/main_components/SharePrinter';
 import HorizonBar from '../../../components/main_components/Slug_Page/HorizonBar';
@@ -326,6 +326,8 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     chips: printChoices.chips !== false,
     symbols: printChoices.symbols === true,
     horizon: printChoices.horizon !== false,
+    // The horizon's three prints, cycled by tapping it (EntryPlate.js).
+    bars: ['named', 'tracks'].includes(printChoices.bars) ? printChoices.bars : 'shape',
     // The mark is not a switch — no print goes out without it — but its dot
     // is: a tap turns it live green or back to ink (Miyel, 2026-09-13).
     liveDot: printChoices.liveDot === true,
@@ -372,6 +374,12 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     if (shown.chips) return { ...c, chips: false, symbols: hasSymbols };
     if (shown.symbols) return { ...c, chips: false, symbols: false };
     return { ...c, chips: true, symbols: false };
+  }); };
+  // printTracks, below with the tracks: whether the record has titles to print.
+  const cycleBars = () => { learn(); setPrintChoices(c => {
+    if (!shown.horizon) return { ...c, horizon: true, bars: 'shape' };
+    if (!printTracks || shown.bars === 'tracks') return { ...c, horizon: false, bars: 'shape' };
+    return { ...c, bars: shown.bars === 'named' ? 'tracks' : 'named' };
   }); };
   const turnGround = step => setPrintChoices(c => {
     const i = GROUNDS.findIndex(g => g.key === ground);
@@ -625,6 +633,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
 
   const { albumNotes } = splitNotes(entry.notes);
   const parsedTracks = entryTracks(entry);
+  const printTracks = parsedTracks.length > 0 && parsedTracks.every(t => t.name);
   const horizonBars = parseHorizon(entry.horizon);
   // ── What was said, against what is on the record ────────────────────────
   // An entry carries its whole tracklist from 2026-09-18, including the songs
@@ -1617,15 +1626,34 @@ export default function FullPostPage({ entry, references = [], authed = false, l
           Posted {postedOn}
         </div>
         {printing && (horizonBars.length > 0 || parsedTracks.some(t => t.stars > 0)) && (
-          <div className={'ln-print-line ln-print-horizon' + (shown.horizon ? '' : ' ln-off')} onClick={() => leaveOff('horizon')} title="Tap to leave this off the print">
-            <HorizonChart
-              tracks={parsedTracks.map(t => ({ title: t.name, number: t.num, favorite: t.favorite }))}
-              trackRatings={parsedTracks.map(t => Number(t.stars) || 0)}
-              height={52}
-              color="color-mix(in srgb, var(--ink) 50%, transparent)"
-              emptyColor="color-mix(in srgb, var(--ink) 12%, transparent)"
-              animate={false}
-            />
+          <div className={'ln-print-line ln-print-horizon' + (shown.horizon ? '' : ' ln-off')} onClick={cycleBars} title="Tap for the titles, every track, or none">
+            {shown.horizon && printTracks && shown.bars === 'tracks' ? (
+              <div className={'ln-print-tracks-wrap' + (parsedTracks.length > 16 ? ' ln-print-tracks-wrap--two' : '')}>
+                {rowColumns(parsedTracks.map((t, i) => ({ ...t, i }))).map((column, k) => (
+                  <div className="ln-print-tracks" key={k}>
+                    {column.map(t => (
+                      <Fragment key={t.i}>
+                        <span className="ln-print-track-num">{t.num || t.i + 1}</span>
+                        <span className="ln-print-track-title">{t.name}</span>
+                        <span className="ln-print-track-bar">{Number(t.stars) > 0 && <span style={{ width: `${Math.min(100, (Number(t.stars) / 5) * 100)}%` }} />}</span>
+                        <span className="ln-print-track-heart">{t.favorite && <Heart size={10} weight="fill" />}</span>
+                      </Fragment>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <HorizonChart
+                tracks={parsedTracks.map(t => ({ title: t.name, number: t.num, favorite: t.favorite }))}
+                trackRatings={parsedTracks.map(t => Number(t.stars) || 0)}
+                height={52}
+                labels={shown.horizon && printTracks && shown.bars === 'named'}
+                color="color-mix(in srgb, var(--ink) 50%, transparent)"
+                emptyColor="color-mix(in srgb, var(--ink) 12%, transparent)"
+                labelColor="var(--ink-soft)"
+                animate={false}
+              />
+            )}
           </div>
         )}
         </div>

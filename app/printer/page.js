@@ -5,12 +5,16 @@
 //
 // The press for a record is a mode of the record's own page — press the
 // printer glyph beside the pencil and the first screen becomes the flyer
-// (FullPostPage.js, hooks/usePress.js). This address is what the card's
-// door opens, and what an old `?entry=` link lands on before being sent to
-// the record.
+// (FullPostPage.js, hooks/usePress.js). An old `?entry=` link lands there.
 //
+// This address prints the journal itself: the card's ··· menu opens it, and
+// it is the keeper's alone — the room is JournalPlate.js. It said Coming soon
+// until 2026-10-30. A visitor is sent to the card, which is what they came
+// for; nothing here is theirs to print.
 import { redirect } from 'next/navigation';
 import SiteNav from '../../components/main_components/SiteNav';
+import JournalPrinter from '../../components/main_components/JournalPlate';
+import { wristbandOnHand } from '../../library/wristband';
 
 export const metadata = { title: 'Printer' };
 
@@ -22,14 +26,12 @@ export default async function PrinterPage({ layered = false, searchParams }) {
   // A record's print is a mode of the record's own page now (2026-09-13);
   // an old link with ?entry= lands there.
   if (slug) redirect(`/entries/${encodeURIComponent(slug)}`);
+  if (!(await wristbandOnHand())) redirect('/');
 
   return (
     <div className={'own-screen' + (layered ? ' own-screen--layered' : '')}>
-      <SiteNav />
-      <main className="pr-main">
-        <div className="own-label">Share printer</div>
-        <h1 className="pr-title">Coming soon.</h1>
-      </main>
+      {!layered && <SiteNav />}
+      <JournalPrinter layered={layered} />
     </div>
   );
 }

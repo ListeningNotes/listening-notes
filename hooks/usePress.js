@@ -17,10 +17,21 @@
 // cover's words. Copied FIRST, before the picture is drawn: Safari only
 // writes the clipboard inside the tap that asked, and drawing takes long
 // enough to fall out of that.
+//
+// ── A moving print is a video ────────────────────────────────────────────
+// Given `motion`, a function returning the canvas a moving ground is being drawn on at the
+// paper's size (or nothing while the ground is still), Save records five seconds of it (library/video_file.js) —
+// quietly, "Saving…", nothing played back (Miyel, 2026-11-02: "why do we
+// need to see it make video?"). Five seconds is longer than iOS lets a tap
+// open the share sheet, so on a phone the bar then offers Save to Photos,
+// the one tap left; a computer downloads it straight away.
 'use client';
 
 import { useCallback, useRef, useState, useSyncExternalStore } from 'react';
 import { FRAMES } from '../components/main_components/SharePrinter';
+import { canRecord, recordCanvas } from '../library/video_file';
+
+const SECONDS = 5;
 
 const COPIED = 'Copied — paste it anywhere';
 const COPIED_MS = 2400;
@@ -48,7 +59,7 @@ function probeCanShare() {
 // Canvas cannot read CSS variables and the faces arrive from next/font, so
 // the resolved family names are read off elements on the page that wear
 // them — the title for the display face, the artist line for the label face.
-function readFamilies(fonts) {
+export function readFamilies(fonts) {
   const of = selector => {
     const el = selector && document.querySelector(selector);
     return getComputedStyle(el || document.body).fontFamily;
@@ -56,8 +67,21 @@ function readFamilies(fonts) {
   return { sans: of(fonts?.sans), mono: of(fonts?.mono) };
 }
 
-export function usePress({ plate, shown, ground, isDark, link, fonts }) {
+// A file handed over as a download — a computer's Save, and a phone's with
+// no share sheet.
+function handOver(it) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(it.blob);
+  a.download = it.name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+export function usePress({ plate, shown, ground, isDark, link, fonts, motion = null }) {
   const [status, setStatus] = useState('');
+  // A video's progress: 'saving' while it records, 'ready' while it waits
+  // for the tap that hands it over.
+  const [clip, setClip] = useState(null);
   // The finished picture, shown on the paper for a phone that has no share
   // sheet to hand it to (a page on plain http gets none): iOS lets a held
   // finger add any picture on a page to Photos, and that works everywhere.
@@ -131,7 +155,35 @@ export function usePress({ plate, shown, ground, isDark, link, fonts }) {
   // lets no page write to the camera roll; a download on a desktop. A phone
   // with no sheet (a page on plain http, like a dev copy on the home
   // network) holds the picture to add it to Photos, and has no second tap.
+  const film = useCallback(async (canvas, frameKey) => {
+    const pasted = copyLink();
+    clearTimeout(timer.current);
+    setStatus('Saving…');
+    setClip('saving');
+    const blob = await recordCanvas(canvas, { seconds: SECONDS }).catch(() => null);
+    if (!blob) {
+      setClip(null);
+      say('This browser cannot make a video, so nothing was saved.', 4000);
+      return;
+    }
+    const frame = FRAMES[frameKey] || FRAMES.story;
+    made.current = { blob, name: `${plate?.fileName || 'print'}-${ground}-${frame.label.replace(':', 'x')}.mp4` };
+    const copied = await pasted;
+    if (!canSend && !touch) {
+      // A computer: downloaded now, nothing more to press.
+      handOver(made.current);
+      made.current = null;
+      setClip(null);
+      say(copied ? 'Saved, and its address is copied.' : 'Saved.', 4000);
+      return;
+    }
+    setClip('ready');
+    setStatus(copied ? 'Its address is copied.' : '');
+  }, [copyLink, say, plate, ground, canSend, touch]);
+
   const save = useCallback(async frameKey => {
+    const canvas = motion ? motion() : null;
+    if (canvas && canRecord()) return film(canvas, frameKey);
     const pasted = copyLink();
     try {
       const blob = await compose(frameKey);
@@ -152,19 +204,15 @@ export function usePress({ plate, shown, ground, isDark, link, fonts }) {
     } catch {
       say('A picture on this print could not be read, so it cannot be saved.', 4000);
     }
-  }, [compose, fileName, copyLink, say, canDeliver]);
+  }, [compose, fileName, copyLink, say, canDeliver, motion, film]);
   const deliver = useCallback(async () => {
     const it = made.current;
     if (!it) return;
     try {
       if (canSend) {
-        await navigator.share({ files: [new File([it.blob], it.name, { type: 'image/png' })] });
+        await navigator.share({ files: [new File([it.blob], it.name, { type: it.blob.type || 'image/png' })] });
       } else {
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(it.blob);
-        a.download = it.name;
-        a.click();
-        setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+        handOver(it);
       }
     } catch (error) {
       // Cancelling the share sheet rejects, and being told about it would be
@@ -173,7 +221,7 @@ export function usePress({ plate, shown, ground, isDark, link, fonts }) {
       say('That could not be handed over from here.', 4000);
     }
   }, [canSend, say]);
-  const dismissPicture = useCallback(() => { setPicture(null); made.current = null; setStatus(''); }, []);
+  const dismissPicture = useCallback(() => { setPicture(null); setClip(null); made.current = null; setStatus(''); }, []);
 
-  return { save, deliver, canDeliver, status, picture, dismissPicture };
+  return { save, deliver, canDeliver, canSend, status, picture, clip, dismissPicture };
 }

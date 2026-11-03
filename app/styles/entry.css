@@ -2111,6 +2111,32 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
 }
 .ln-print-symbol { display: inline-flex; line-height: 1; padding: 0 4px; }
 .ln-print-horizon { width: 100%; max-width: 340px; }
+/* Every track as a row (EntryPlate.js, the same numbers): the number, the
+   title on one line, a bar along by its rating, the heart. */
+.ln-print-tracks {
+  display: grid; grid-template-columns: 22px minmax(0, 1fr) 56px 14px;
+  column-gap: 8px; row-gap: 4px; align-items: center; text-align: left;
+}
+/* Past sixteen tracks, two columns: down the first, then the second. */
+.ln-print-tracks-wrap--two { display: grid; grid-template-columns: 1fr 1fr; column-gap: 16px; align-items: start; }
+.ln-print-tracks-wrap--two .ln-print-tracks { grid-template-columns: 22px minmax(0, 1fr) 28px 14px; }
+.ln-print-track-num {
+  font-family: var(--font-label); font-size: 10px; color: var(--ink-soft);
+  text-align: right; line-height: 16px;
+}
+.ln-print-track-title {
+  font-family: var(--font-display); font-weight: 700; font-size: 13px; line-height: 16px;
+  color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ln-print-track-bar {
+  display: block; height: 5px; border-radius: 3px; overflow: hidden;
+  background: color-mix(in srgb, var(--ink) 15%, transparent);
+}
+.ln-print-track-bar > span {
+  display: block; height: 100%; min-width: 5px; border-radius: 3px;
+  background: color-mix(in srgb, var(--ink) 50%, transparent);
+}
+.ln-print-track-heart { display: inline-flex; justify-content: center; color: var(--fav, #f0484f); }
 .ln-print-bar {
   /* Above the sheet (200) and the nav (300): it is portalled onto the body
      so it keeps the site's colours while the paper sets its own. */
