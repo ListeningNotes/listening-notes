@@ -3286,13 +3286,27 @@ a.pn-quiet-act { text-decoration: none; display: inline-block; }
    its shape kept by its own width and height. */
 .jp-room {
   width: 100%; box-sizing: border-box; min-height: 100dvh;
-  display: flex; align-items: center; justify-content: center;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
   padding: 20px 16px 240px;
 }
+/* What is printed: the journal or one of its months, a line of words over
+   the paper that slides sideways to reach older months. */
+.jp-subjects {
+  display: flex; gap: 18px; max-width: 100%; box-sizing: border-box;
+  overflow-x: auto; scrollbar-width: none; padding: 4px 4px 14px;
+}
+.jp-subjects::-webkit-scrollbar { display: none; }
+.jp-subject {
+  flex: none; background: none; border: 0; padding: 4px 0; cursor: pointer;
+  font-family: var(--font-label); font-size: 11px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--ink-soft);
+  border-bottom: 1px solid transparent;
+}
+.jp-subject--on { color: var(--ink); border-bottom-color: var(--ink); }
 .jp-paper { display: flex; justify-content: center; max-width: 100%; }
 .jp-canvas, .jp-out {
   display: block; width: auto; height: auto;
-  max-width: 100%; max-height: calc(100dvh - 280px);
+  max-width: 100%; max-height: calc(100dvh - 320px);
   border-radius: 10px; box-shadow: var(--shadow-lift);
   cursor: pointer; -webkit-tap-highlight-color: transparent;
 }

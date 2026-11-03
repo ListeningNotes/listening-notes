@@ -46,6 +46,8 @@ import PrintBar from './Slug_Page/PrintBar';
 import { useBookplate } from './Bookplate';
 import { usePress, readFamilies } from '../../hooks/usePress';
 import { readBioAnswers, CARD_PROMPT } from '../../library/bioprompt';
+import { monthPlate } from './MonthPlate';
+import { gatherAlbums } from './Journal';
 
 // ── The dial ───────────────────────────────────────────────────────────────
 export const STOPS = [
@@ -112,7 +114,7 @@ function drawWall(c, rect, tiles, covers) {
 }
 
 // The face, in a ring of the paper. object-position as the card has it.
-function drawPortrait(c, img, cx, cy, d, ring, paper, position) {
+export function drawPortrait(c, img, cx, cy, d, ring, paper, position) {
   c.save();
   c.fillStyle = paper;
   c.beginPath();
@@ -399,7 +401,47 @@ export function journalPlate({ name, portrait, position, counts, prompt, covers 
 }
 
 // ── The room ───────────────────────────────────────────────────────────────
-// /printer, for the keeper: the paper in the middle, the print bar under it.
+// /printer, for the keeper: the paper in the middle, the print bar under it,
+// and over the paper a line of words choosing what is printed — the journal,
+// or one of its months (MonthPlate.js), newest first, only months a record
+// came in (Miyel's pick, 2026-11-02).
+
+// The journal's months, the way the wall's By month draws them: a record
+// belongs to the month it came into the journal, its covers in the wall's
+// order, and its marks the ones given that month to the record itself — a
+// favourite track is not a favourite record.
+function monthsOf(entries) {
+  const thisYear = new Date().getFullYear();
+  const keyOf = when => `${when.getFullYear()}-${String(when.getMonth() + 1).padStart(2, '0')}`;
+  const byKey = new Map();
+  const albums = gatherAlbums(entries)
+    .sort((a, b) => new Date(b.first.posted_at) - new Date(a.first.posted_at));
+  for (const album of albums) {
+    const when = new Date(album.first.posted_at);
+    if (Number.isNaN(when.getTime())) continue;
+    const key = keyOf(when);
+    if (!byKey.has(key)) {
+      byKey.set(key, {
+        key,
+        label: when.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+        short: when.getFullYear() === thisYear
+          ? when.toLocaleDateString('en-US', { month: 'long' })
+          : when.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+        records: [],
+      });
+    }
+    const given = album.all.filter(e => !e.song && keyOf(new Date(e.posted_at)) === key);
+    byKey.get(key).records.push({
+      art: album.face.album_art,
+      marks: {
+        masterpieces: given.some(e => e.masterpiece === true || e.rating === 'Masterpiece'),
+        favorites: given.some(e => e.favorite === true || e.favorite === 'true'),
+        formative: given.some(e => e.formative === true || e.formative === 'true'),
+      },
+    });
+  }
+  return [...byKey.values()];
+}
 
 const STORE = 'ln-printing-journal';
 const noSubscription = () => () => {};
@@ -421,7 +463,7 @@ export default function JournalPrinter({ layered = false }) {
 
   // What the card prints, read the way the card reads it.
   const [stamps, setStamps] = useState(null);
-  const [covers, setCovers] = useState(null);
+  const [entries, setEntries] = useState(null);
   // The journal's address, for the clipboard on Save: where this page is.
   const address = useSyncExternalStore(noSubscription, () => window.location.origin, () => '');
   const inBrowser = useSyncExternalStore(noSubscription, () => true, () => false);
@@ -429,10 +471,8 @@ export default function JournalPrinter({ layered = false }) {
     let live = true;
     fetch('/api/public/stamps').then(r => r.json()).then(s => { if (live) setStamps(s); }).catch(() => { if (live) setStamps({}); });
     fetch('/api/entries').then(r => r.json()).then(d => {
-      if (!live) return;
-      const seen = new Set();
-      setCovers((d?.entries || []).map(e => e.album_art).filter(src => src && !seen.has(src) && seen.add(src)));
-    }).catch(() => { if (live) setCovers([]); });
+      if (live) setEntries(Array.isArray(d?.entries) ? d.entries : []);
+    }).catch(() => { if (live) setEntries([]); });
     return () => { live = false; };
   }, []);
 
@@ -453,9 +493,20 @@ export default function JournalPrinter({ layered = false }) {
     return answers.find(a => a.key === CARD_PROMPT) || answers[0] || null;
   }, [settings?.bioanswers]);
 
-  const plate = useMemo(() => (covers ? journalPlate({
-    name, portrait: settings?.portrait_url, position: settings?.portrait_position, counts, prompt, covers,
-  }) : null), [covers, name, settings?.portrait_url, settings?.portrait_position, counts, prompt]);
+  const covers = useMemo(() => {
+    if (!entries) return null;
+    const seen = new Set();
+    return entries.map(e => e.album_art).filter(src => src && !seen.has(src) && seen.add(src));
+  }, [entries]);
+  const months = useMemo(() => (entries ? monthsOf(entries) : []), [entries]);
+  const month = months.find(m => m.key === choices.subject) || null;
+
+  const plate = useMemo(() => {
+    if (!covers) return null;
+    const keeper = { name, portrait: settings?.portrait_url, position: settings?.portrait_position };
+    if (month) return monthPlate({ ...keeper, month, records: month.records });
+    return journalPlate({ ...keeper, counts, prompt, covers });
+  }, [covers, month, name, settings?.portrait_url, settings?.portrait_position, counts, prompt]);
 
   const [art, setArt] = useState(null);
   useEffect(() => {
@@ -465,7 +516,8 @@ export default function JournalPrinter({ layered = false }) {
     return () => { live = false; };
   }, [plate, isDark]);
 
-  const stop = plate && art ? plate.stopFor(frame, art, wanted) : wanted;
+  // A month has no dial yet; its moving look comes with the grounds.
+  const stop = month ? null : plate?.stopFor && art ? plate.stopFor(frame, art, wanted) : wanted;
   const shown = useMemo(() => ({ stop }), [stop]);
   const fonts = useMemo(() => ({ sans: '.jp-face-sans', mono: '.jp-face-mono' }), []);
   const press = usePress({ plate: plate || { load: async () => null, draw() {} }, shown, ground, isDark, link: address, fonts });
@@ -482,7 +534,7 @@ export default function JournalPrinter({ layered = false }) {
 
   const [learned, setLearned] = useState(false);
   const turnDial = useCallback(() => {
-    if (!plate || !art) return;
+    if (!plate?.stopsFor || !art) return;
     const can = plate.stopsFor(frame, art);
     if (can.length < 2) return;
     setLearned(true);
@@ -493,7 +545,7 @@ export default function JournalPrinter({ layered = false }) {
   const done = () => { if (layered) router.back(); else router.push('/'); };
   const stopLabel = STOPS.find(s => s.key === stop)?.label;
   const groundLabel = GROUNDS.find(g => g.key === ground)?.label;
-  const canTurn = Boolean(plate && art && plate.stopsFor(frame, art).length > 1);
+  const canTurn = Boolean(plate?.stopsFor && art && plate.stopsFor(frame, art).length > 1);
   const hint = canTurn && !learned ? 'Tap the records to turn the dial.' : '';
 
   // Drawn in the browser only: the choices live in this tab's storage and
@@ -504,6 +556,24 @@ export default function JournalPrinter({ layered = false }) {
       {/* The faces the canvas draws in, worn by something so they can be read. */}
       <span className="jp-face-sans" aria-hidden="true" />
       <span className="jp-face-mono" aria-hidden="true" />
+      {months.length > 0 && (
+        <nav className="jp-subjects" aria-label="What to print">
+          {[{ key: 'journal', short: 'Journal' }, ...months].map(m => {
+            const on = (month?.key || 'journal') === m.key;
+            return (
+              <button
+                key={m.key}
+                type="button"
+                className={'jp-subject' + (on ? ' jp-subject--on' : '')}
+                aria-pressed={on}
+                onClick={() => setChoices(c => ({ ...c, subject: m.key }))}
+              >
+                {m.short}
+              </button>
+            );
+          })}
+        </nav>
+      )}
       <div className="jp-paper">
         {press.picture ? (
           <img className="jp-out" src={press.picture} alt="Your print" onClick={press.dismissPicture} />
@@ -515,7 +585,7 @@ export default function JournalPrinter({ layered = false }) {
             height={frame.h}
             onClick={turnDial}
             role="img"
-            aria-label={`Your journal, ${stop === 'paper' ? 'on paper' : stopLabel}`}
+            aria-label={month ? month.label : `Your journal, ${stop === 'paper' ? 'on paper' : stopLabel}`}
           />
         )}
       </div>
@@ -526,7 +596,7 @@ export default function JournalPrinter({ layered = false }) {
           grounds={GROUNDS}
           ground={ground}
           onGround={key => setChoices(c => ({ ...c, ground: key }))}
-          look={stop === 'paper' ? groundLabel : `${stopLabel} · ${groundLabel}`}
+          look={month || stop === 'paper' ? groundLabel : `${stopLabel} · ${groundLabel}`}
           size={size}
           onSize={key => setChoices(c => ({ ...c, size: key }))}
           onSave={() => press.save(size)}
