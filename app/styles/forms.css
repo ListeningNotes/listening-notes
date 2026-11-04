@@ -3282,8 +3282,8 @@ a.pn-quiet-act { text-decoration: none; display: inline-block; }
 .own-screen .kt-tool, .idc-tool { text-decoration: none; }
 /* ── The journal's printer (JournalPlate.js) ────────────────────────────────
    The whole screen, over the nav and under the print bar, which is fixed at
-   the foot: inside a layer the sheet's own top covered the line of months
-   (Miyel's phone, 2026-11-03). The canvas is the print at full size, shown
+   the foot: inside a layer the sheet's own top covered what sat at the head
+   of it (Miyel's phone, 2026-11-03). The canvas is the print at full size, shown
    smaller, its shape kept by its own width and height. */
 .jp-room {
   --jp-top: calc(10px + env(safe-area-inset-top));
@@ -3292,24 +3292,10 @@ a.pn-quiet-act { text-decoration: none; display: inline-block; }
   display: flex; flex-direction: column; align-items: center;
   padding: var(--jp-top) 16px var(--jp-bar);
 }
-/* What is printed: the journal or one of its months, a line of words over
-   the paper that slides sideways to reach older months. */
-.jp-subjects {
-  display: flex; gap: 18px; max-width: 100%; box-sizing: border-box;
-  flex: none; overflow-x: auto; scrollbar-width: none; padding: 4px 4px 12px;
-}
-.jp-subjects::-webkit-scrollbar { display: none; }
-.jp-subject {
-  flex: none; background: none; border: 0; padding: 4px 0; cursor: pointer;
-  font-family: var(--font-label); font-size: 11px; letter-spacing: 0.12em;
-  text-transform: uppercase; color: var(--ink-soft);
-  border-bottom: 1px solid transparent;
-}
-.jp-subject--on { color: var(--ink); border-bottom-color: var(--ink); }
 .jp-paper { display: flex; justify-content: center; max-width: 100%; margin-block: auto; touch-action: pan-y; }
 .jp-canvas {
   display: block; width: auto; height: auto;
-  max-width: 100%; max-height: calc(100dvh - var(--jp-top) - var(--jp-bar) - 56px);
+  max-width: 100%; max-height: calc(100dvh - var(--jp-top) - var(--jp-bar) - 16px);
   border-radius: 10px; box-shadow: var(--shadow-lift);
 }
 .jp-canvas--waiting { opacity: 0; }
