@@ -32,7 +32,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowsHorizontal, Cards, CloudRain, Moon, Pause, Sun, Swap } from '@phosphor-icons/react';
+import { ArrowsHorizontal, Cards, CloudRain, Moon, Pause, Sun } from '@phosphor-icons/react';
 import { FRAMES, loadMark, loadPicture, MARK_ASPECT, drawTracked, ellipsize, roundRect } from './SharePrinter';
 import { INKS } from './EntryPlate';
 import PrintBar from './Slug_Page/PrintBar';
@@ -44,7 +44,7 @@ const MOVING = ['drift', 'rain', 'swap', 'deal', 'snake', 'bounce'];
 const STYLES = ['still', ...MOVING];
 const SIZES = ['story', 'portrait', 'square'];
 const ALBUM_SIZES = ['s', 'm', 'l'];
-const LOOKS = ['full', 'genres', 'numbers', 'name'];
+const LOOKS = ['bottom', 'middle', 'top', 'minimal'];
 const COLS = { s: 7, m: 5, l: 3 };
 const SNAKE_COLS = { 7: 12, 5: 10, 3: 7 };   // by the album size's columns
 const MOST_COVERS = 120;               // more than any wall of these can show at once
@@ -194,34 +194,63 @@ const scenes = {
     };
   },
 
-  // Two covers trading places, again and again.
-  swap(covers, area, across, random) {
+  // A departures board (Miyel, 2026-11-03: "more like a train station
+  // flipboard than passing around"): a row at a time, left to right, each
+  // cover flapping through a few albums and settling on a new one, so the wall
+  // works through the whole collection. The word is Flip; the stored key is
+  // still `swap`, so a browser that remembered it opens on it.
+  swap(covers, area, across, random, _once, ink) {
     const { tiles, g } = gridTiles(covers, area, across);
-    const tween = 0.7;
-    const live = tiles.map(t => ({ ...t, fromX: t.x, fromY: t.y, age: tween }));
-    let wait = 0.4;
+    const FLAP = 0.15;
+    const live = tiles.map(t => ({ ...t, queue: [], age: 0, delay: 0 }));
+    let next = tiles.length, wait = 0.4;
+    const half = g.S / 2;
     return {
       step(dt) {
-        live.forEach(t => { t.age = Math.min(tween, t.age + dt); });
         wait -= dt;
-        if (wait > 0 || live.length < 2) return;
-        wait = 0.9;
-        const a = live[Math.floor(random() * live.length)];
-        let b = a;
-        while (b === a) b = live[Math.floor(random() * live.length)];
-        [a, b].forEach(t => { t.fromX = t.x; t.fromY = t.y; t.age = 0; });
-        [a.x, b.x] = [b.x, a.x];
-        [a.y, b.y] = [b.y, a.y];
+        if (wait <= 0 && covers.length > 1) {
+          wait = 1.1 + random() * 0.8;
+          const row = Math.floor(random() * g.rows);
+          live.filter((_, i) => Math.floor(i / g.cols) === row).forEach((t, i) => {
+            if (t.queue.length) return;
+            const flaps = 3 + Math.floor(random() * 3);
+            for (let f = 0; f < flaps; f++) t.queue.push(covers[next++ % covers.length]);
+            t.delay = i * 0.07;
+            t.age = 0;
+          });
+        }
+        for (const t of live) {
+          if (!t.queue.length) continue;
+          if (t.delay > 0) { t.delay -= dt; continue; }
+          t.age += dt;
+          if (t.age >= FLAP) { t.img = t.queue.shift(); t.age = 0; }
+        }
       },
       draw(c) {
-        const ease = v => 1 - (1 - v) ** 3;
-        const moving = [];
-        const drawOne = t => {
-          const k = ease(t.age / tween);
-          c.drawImage(sprite(t.img, g.S), t.fromX + (t.x - t.fromX) * k, t.fromY + (t.y - t.fromY) * k);
-        };
-        for (const t of live) { if (t.age < tween) moving.push(t); else drawOne(t); }
-        moving.forEach(drawOne);
+        for (const t of live) {
+          const from = sprite(t.img, g.S);
+          const w = from.width, h = from.height / 2;
+          const turning = t.queue.length && t.delay <= 0;
+          if (!turning) {
+            c.drawImage(from, t.x, t.y);
+          } else {
+            const to = sprite(t.queue[0], g.S);
+            const k = t.age / FLAP;
+            // Behind: the new top, the old bottom. In front: the old top
+            // folding down to the hinge, then the new bottom falling from it.
+            c.drawImage(to, 0, 0, w, h, t.x, t.y, g.S, half);
+            c.drawImage(from, 0, h, w, h, t.x, t.y + half, g.S, half);
+            if (k < 0.5) {
+              const fold = half * (1 - k * 2);
+              c.drawImage(from, 0, 0, w, h, t.x, t.y + half - fold, g.S, fold);
+            } else {
+              c.drawImage(to, 0, h, w, h, t.x, t.y + half, g.S, half * (k * 2 - 1));
+            }
+          }
+          // The slit every flap hangs from.
+          c.fillStyle = ink.paper;
+          c.fillRect(t.x, t.y + half - Math.max(0.5, g.S * 0.006), g.S, Math.max(1, g.S * 0.012));
+        }
       },
     };
   },
@@ -541,51 +570,89 @@ export function journalPlate({ name, portrait, position, counts, genres, covers,
       y += px(CAPTION) * 1.2 + px(8);
     }
 
-    // The foot: the face, and beside it what the Info word says to show.
-    const look = shown?.look || 'full';
-    const showGenres = (look === 'full' || look === 'genres') && genres.length > 0;
-    const showNumbers = (look === 'full' || look === 'numbers') && counts.length > 0;
-    const textH = px(NAME) * 1.15 + (showGenres ? px(3) + px(GENRES) * 1.2 : 0) + (showNumbers ? px(5) + px(NUMBER) * 1.1 + px(WORD) * 1.3 : 0);
-    const footH = Math.max(px(FACE), textH);
-    const footY = H - head - footH;
-    const faceD = px(FACE);
-    drawPortrait(c, art?.face, side + faceD / 2, footY + footH / 2, faceD, position);
-    const tx = side + faceD + px(11);
-    const tw = W - side - tx;
-    let ty = footY + (footH - textH) / 2;
-    if (name) {
-      c.font = `800 ${px(NAME)}px ${sans}`;
-      c.fillStyle = ink.ink;
-      c.fillText(ellipsize(c, name, tw), tx, ty);
-    }
-    ty += px(NAME) * 1.15;
-    if (showGenres) {
-      ty += px(3);
-      c.font = `400 ${px(GENRES)}px ${sans}`;
-      c.fillStyle = ink.soft;
-      c.fillText(ellipsize(c, genres.join(' · '), tw), tx, ty);
-      ty += px(GENRES) * 1.2;
-    }
-    if (showNumbers) {
-      ty += px(5);
-      let x = tx;
-      for (const f of counts) {
-        const n = f.n.toLocaleString();
-        const word = f.word.toUpperCase();
-        c.font = `700 ${px(NUMBER)}px ${sans}`;
-        c.fillStyle = ink.ink;
-        c.fillText(n, x, ty);
-        const numW = c.measureText(n).width;
-        c.font = `400 ${px(WORD)}px ${mono}`;
-        c.fillStyle = ink.soft;
-        c.fillText(word, x, ty + px(NUMBER) * 1.1);
-        x += Math.max(numW, c.measureText(word).width) + px(12);
+    // The ID: the face, and beside it the name, the genres and the numbers.
+    // Where it sits is the ID word's: at the foot, under the mark, on a label
+    // over the middle of the wall, or just the face and name, small.
+    const look = shown?.look || 'bottom';
+    const minimal = look === 'minimal';
+    const showGenres = !minimal && genres.length > 0;
+    const showNumbers = !minimal && counts.length > 0;
+    const faceD = px(minimal ? 30 : FACE);
+    const nameSize = px(minimal ? 14 : NAME);
+    const textH = nameSize * 1.15 + (showGenres ? px(3) + px(GENRES) * 1.2 : 0) + (showNumbers ? px(5) + px(NUMBER) * 1.1 + px(WORD) * 1.3 : 0);
+    const idH = Math.max(faceD, textH);
+    const drawId = (pen, left, top, width) => {
+      drawPortrait(pen, art?.face, left + faceD / 2, top + idH / 2, faceD, position);
+      const tx = left + faceD + px(11);
+      const tw = left + width - tx;
+      let ty = top + (idH - textH) / 2;
+      pen.textBaseline = 'top';
+      if (name) {
+        pen.font = `800 ${nameSize}px ${sans}`;
+        pen.fillStyle = ink.ink;
+        pen.fillText(ellipsize(pen, name, tw), tx, ty);
       }
+      ty += nameSize * 1.15;
+      if (showGenres) {
+        ty += px(3);
+        pen.font = `400 ${px(GENRES)}px ${sans}`;
+        pen.fillStyle = ink.soft;
+        pen.fillText(ellipsize(pen, genres.join(' · '), tw), tx, ty);
+        ty += px(GENRES) * 1.2;
+      }
+      if (showNumbers) {
+        ty += px(5);
+        let x = tx;
+        for (const f of counts) {
+          const n = f.n.toLocaleString();
+          const word = f.word.toUpperCase();
+          pen.font = `700 ${px(NUMBER)}px ${sans}`;
+          pen.fillStyle = ink.ink;
+          pen.fillText(n, x, ty);
+          const numW = pen.measureText(n).width;
+          pen.font = `400 ${px(WORD)}px ${mono}`;
+          pen.fillStyle = ink.soft;
+          pen.fillText(word, x, ty + px(NUMBER) * 1.1);
+          x += Math.max(numW, pen.measureText(word).width) + px(12);
+        }
+      }
+    };
+    const rule = at => { c.fillStyle = ink.rule; c.fillRect(side, at, W - side * 2, Math.max(1, px(0.8))); };
+    const bottomEdge = H - head;
+
+    if (look === 'top') {
+      drawId(c, side, y, W - side * 2);
+      y += idH + px(10);
+      rule(y);
+      y += px(10);
+      return { area: { x: side, y, w: W - side * 2, h: Math.max(10, bottomEdge - y) } };
     }
-    const ruleY = footY - px(10);
-    c.fillStyle = ink.rule;
-    c.fillRect(side, ruleY, W - side * 2, Math.max(1, px(0.8)));
-    return { x: side, y, w: W - side * 2, h: Math.max(10, ruleY - px(10) - y) };
+    if (look === 'middle') {
+      // A label stuck over the wall, so it is drawn over the records.
+      const area = { x: side, y, w: W - side * 2, h: Math.max(10, bottomEdge - y) };
+      const inset = px(12);
+      const labelW = W - side * 2 - px(16), labelH = idH + inset * 2;
+      const labelX = (W - labelW) / 2, labelY = y + (area.h - labelH) / 2;
+      return {
+        area,
+        over(pen) {
+          pen.save();
+          pen.shadowColor = 'rgba(0,0,0,0.35)';
+          pen.shadowBlur = px(18);
+          pen.shadowOffsetY = px(6);
+          pen.fillStyle = ink.paper;
+          roundRect(pen, labelX, labelY, labelW, labelH, px(10));
+          pen.fill();
+          pen.restore();
+          drawId(pen, labelX + inset, labelY + inset, labelW - inset * 2);
+        },
+      };
+    }
+    const idY = bottomEdge - idH;
+    drawId(c, side, idY, W - side * 2);
+    const ruleY = idY - px(10);
+    rule(ruleY);
+    return { area: { x: side, y, w: W - side * 2, h: Math.max(10, ruleY - px(10) - y) } };
   }
 
   // One style on one paper: the still parts kept, the records drawn over them.
@@ -594,7 +661,15 @@ export function journalPlate({ name, portrait, position, counts, genres, covers,
     const base = document.createElement('canvas');
     base.width = frame.w;
     base.height = frame.h;
-    const area = layOut(base.getContext('2d'), frame, { art, shown, ink, families });
+    const { area, over } = layOut(base.getContext('2d'), frame, { art, shown, ink, families });
+    // Kept as a picture too, so a moving print does not redraw its text.
+    let cover = null;
+    if (over) {
+      cover = document.createElement('canvas');
+      cover.width = frame.w;
+      cover.height = frame.h;
+      over(cover.getContext('2d'));
+    }
     const list = (art?.covers || []).filter(Boolean);
     const across = COLS[shown?.albums] || COLS.m;
     const kind = list.length ? (scenes[shown?.style] ? shown.style : 'still') : null;
@@ -603,14 +678,16 @@ export function journalPlate({ name, portrait, position, counts, genres, covers,
       step(dt) { made?.step(dt); },
       paint(c) {
         c.drawImage(base, 0, 0);
-        if (!made) return;
-        c.save();
-        c.beginPath();
-        c.rect(area.x, area.y, area.w, area.h);
-        c.clip();
-        c.translate(area.x, area.y);
-        made.draw(c);
-        c.restore();
+        if (made) {
+          c.save();
+          c.beginPath();
+          c.rect(area.x, area.y, area.w, area.h);
+          c.clip();
+          c.translate(area.x, area.y);
+          made.draw(c);
+          c.restore();
+        }
+        if (cover) c.drawImage(cover, 0, 0);
       },
     };
   }
@@ -658,7 +735,7 @@ const STYLE_WORDS = {
   still: ['Still', <Pause key="still" size={23} aria-hidden="true" />],
   drift: ['Drift', <ArrowsHorizontal key="drift" size={23} aria-hidden="true" />],
   rain: ['Rain', <CloudRain key="rain" size={23} aria-hidden="true" />],
-  swap: ['Swap', <Swap key="swap" size={23} aria-hidden="true" />],
+  swap: ['Flip', <Glyph key="flip"><rect x="48" y="36" width="160" height="80" rx="14" /><rect x="48" y="140" width="160" height="80" rx="14" /></Glyph>],
   deal: ['Deal', <Cards key="deal" size={23} aria-hidden="true" />],
   snake: ['Snake', <Glyph key="snake"><path d="M40 64h56v56H40zM104 64h56v56h-56zM168 64h56v56h-56zM168 128h56v56h-56zM104 136h48v48h-48z" /></Glyph>],
   bounce: ['Bounce', <Glyph key="bounce"><rect x="48" y="196" width="160" height="24" rx="12" /><circle cx="150" cy="96" r="30" /></Glyph>],
@@ -666,7 +743,7 @@ const STYLE_WORDS = {
 const ALBUM_WORDS = { s: ['Small', blocks(3)], m: ['Medium', blocks(2)], l: ['Large', blocks(1)] };
 const SIZE_WORDS = { story: ['9:16', shape(112, 200)], portrait: ['4:5', shape(150, 188)], square: ['1:1', shape(170, 170)] };
 const PAPER_WORDS = { day: ['Day', <Sun key="day" size={23} aria-hidden="true" />], night: ['Night', <Moon key="night" size={23} aria-hidden="true" />] };
-const LOOK_WORDS = { full: 'Full', genres: 'Genres', numbers: 'Numbers', name: 'Name' };
+const LOOK_WORDS = { bottom: 'Bottom', middle: 'Middle', top: 'Top', minimal: 'Minimal' };
 
 const STORE = 'ln-printing-journal';
 const noSubscription = () => () => {};
@@ -685,7 +762,7 @@ export default function JournalPrinter({ layered = false }) {
   const albums = oneOf(ALBUM_SIZES, choices.albums, 'm');
   const size = oneOf(SIZES, choices.size, 'story');
   const paper = oneOf(['day', 'night'], choices.paper, 'day');
-  const look = oneOf(LOOKS, choices.look, 'full');
+  const look = oneOf(LOOKS, choices.look, 'bottom');
   const tab = oneOf(['style', 'card', 'info'], choices.tab, 'style');
   const frame = FRAMES[size];
   const isDark = paper === 'night';
@@ -811,7 +888,7 @@ export default function JournalPrinter({ layered = false }) {
   const sections = [
     { key: 'style', label: 'Style', groups: [doors('style', style, STYLE_WORDS)] },
     { key: 'card', label: 'Card', groups: [doors('albums', albums, ALBUM_WORDS), doors('size', size, SIZE_WORDS), doors('paper', paper, PAPER_WORDS)] },
-    { key: 'info', label: 'Info', groups: [doors('look', look, LOOK_WORDS)] },
+    { key: 'info', label: 'ID', groups: [doors('look', look, LOOK_WORDS)] },
   ];
 
   // Drawn in the browser only: the choices live in this tab's storage and the
