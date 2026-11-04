@@ -254,6 +254,9 @@ export function entryPlate({ entry, keeper }) {
   if (bars.length) toggles.push({ key: 'horizon', label: 'Horizon', on: true });
 
   return {
+    // What the moving print is earned by (albumScene).
+    masterpiece: isMasterpiece,
+    stars,
     title: 'The record',
     fileName: entry?.slug || 'record',
     toggles,
@@ -683,6 +686,13 @@ export function entryPlate({ entry, keeper }) {
 // attention, each star landing with its own shine (Miyel, 2026-11-03: "this is
 // the look"). Fizz, Vinyl, Foil and Pieces were tried beside it and went.
 //
+// How much of it you get is earned by the rating (Miyel, the same day:
+// "masterpiece and things below should have different effects"), the way a rare
+// thing arrives bigger than a common one: a Masterpiece in gold with doubled
+// rays, a ring as it lands and light crossing the album itself; four stars and
+// up in plain light; threes a faint few rays; below that it simply arrives and
+// turns. The album, the rotation and the order of arrival are the same for all.
+//
 // A scene is told the time rather than reading it, so a video is made faster
 // than real time (library/video_file.js), and the same scene is the preview.
 // The ground and the rows are the plate's own, kept as pictures.
@@ -691,7 +701,15 @@ export function entryPlate({ entry, keeper }) {
 // is: a canvas has no 3D of its own. It is a true rotation: the back is the
 // front seen from behind, so mirrored, and the sides are the art's own edge
 // carried round.
-const GOLD_RAY = 'rgba(232,184,75,0.3)';
+const GRADES = {
+  masterpiece: { ray: 'rgba(232,184,75,0.34)', wedges: 18, twin: true, sparks: 46, spark: '#e8b84b', ring: true, sheen: true, starFan: 3.4, sweep: 3.2 },
+  high: { ray: 'rgba(255,255,255,0.3)', wedges: 12, sparks: 18, spark: '#ffffff', starFan: 2.4, sweep: 5 },
+  middle: { ray: 'rgba(255,255,255,0.16)', wedges: 6, sparks: 6, spark: '#ffffff' },
+  low: {},
+};
+const gradeOf = plate => (plate.masterpiece ? GRADES.masterpiece
+  : plate.stars >= 4 ? GRADES.high
+    : plate.stars >= 3 ? GRADES.middle : GRADES.low);
 const easeOut = v => 1 - (1 - v) ** 3;
 const easeBack = v => { const k = 1.70158; const u = v - 1; return 1 + (k + 1) * u ** 3 + k * u ** 2; };
 const clamp01 = v => Math.min(1, Math.max(0, v));
@@ -756,18 +774,18 @@ function drawTurned(c, picture, mirrored, cx, cy, size, angle, depth) {
   }
 }
 
-function rayPicture(size) {
+function rayPicture(size, colour, wedges) {
   const c = document.createElement('canvas');
   c.width = c.height = Math.max(1, Math.round(size));
   const x = c.getContext('2d');
   const r = c.width / 2;
   x.translate(r, r);
-  x.fillStyle = GOLD_RAY;
-  for (let i = 0; i < 12; i++) {
-    const a = (i * Math.PI * 2) / 12;
+  x.fillStyle = colour;
+  for (let i = 0; i < wedges; i++) {
+    const a = (i * Math.PI * 2) / wedges;
     x.beginPath();
     x.moveTo(0, 0);
-    x.arc(0, 0, r, a, a + Math.PI / 18);
+    x.arc(0, 0, r, a, a + (Math.PI * 2) / wedges / 3);
     x.closePath();
     x.fill();
   }
@@ -821,12 +839,13 @@ export function albumScene(plate, frame, { art, shown, isDark, families, ground 
   flip.drawImage(square, 0, 0);
   const unit = spot?.unit || size / 265;
 
-  const rays = rayPicture(frame.w * 1.7);
-  const smallRays = rayPicture(unit * 90);
+  const grade = gradeOf(plate);
+  const rays = grade.ray ? rayPicture(frame.w * 1.7, grade.ray, grade.wedges) : null;
+  const smallRays = grade.starFan ? rayPicture(unit * 90, grade.ray, 12) : null;
   let seed = 7;
   const random = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
   const lowest = rows.length ? Math.max(...rows.map(r => r.y + r.canvas.height)) : frame.h;
-  const sparks = Array.from({ length: 26 }, () => ({ x: random() * frame.w, y: random() * lowest, at: random() * 2.4, s: frame.w * (0.008 + random() * 0.012) }));
+  const sparks = Array.from({ length: grade.sparks || 0 }, () => ({ x: random() * frame.w, y: random() * lowest, at: random() * 2.4, s: frame.w * (0.008 + random() * 0.012) }));
 
   // When each row arrives, after the album has landed.
   const ARRIVES = { title: 1.15, artist: 1.35, stars: 1.6, marks: 2.75, horizon: 3.05 };
@@ -837,8 +856,9 @@ export function albumScene(plate, frame, { art, shown, isDark, families, ground 
 
   // A band of light crossing a picture's ink, for what has landed.
   const scratch = document.createElement('canvas');
-  const sweep = (c, row, t, at, every) => {
-    const local = (t - at) % every;
+  const sweep = (c, row, t, at) => {
+    if (!grade.sweep) return;
+    const local = (t - at) % grade.sweep;
     if (t < at || local > 1) return;
     const w = row.canvas.width, h = row.canvas.height;
     if (scratch.width !== w) scratch.width = w;
@@ -883,21 +903,23 @@ export function albumScene(plate, frame, { art, shown, isDark, families, ground 
       const midX = row.x + sx + box / 2;
       // Its own shine, turning behind it, a little larger as it lands.
       const flare = 1 + 0.8 * (1 - clamp01((t - at) / 0.9));
-      const fan = box * 2.6 * easeOut(k) * flare;
-      c.save();
-      c.translate(midX, midY);
-      c.rotate((t * Math.PI * 2) / (9 + i) * (i % 2 ? -1 : 1));
-      c.drawImage(smallRays, -fan / 2, -fan / 2, fan, fan);
-      c.restore();
+      if (smallRays) {
+        const fan = box * grade.starFan * easeOut(k) * flare;
+        c.save();
+        c.translate(midX, midY);
+        c.rotate((t * Math.PI * 2) / (9 + i) * (i % 2 ? -1 : 1));
+        c.drawImage(smallRays, -fan / 2, -fan / 2, fan, fan);
+        c.restore();
+      }
       popped(c, row, k, midX, midY, () => {
         c.drawImage(row.canvas, sx, 0, box, row.canvas.height, row.x + sx, row.y, box, row.canvas.height);
       });
     }
-    sweep(c, row, t, ARRIVES.stars + STARS * STAR_EVERY + 0.5, 4.5);
+    sweep(c, row, t, ARRIVES.stars + STARS * STAR_EVERY + 0.5);
     // A glint on one star, then the next.
     const cycle = Math.floor(t / 1.1) % STARS;
     const phase = (t % 1.1) / 1.1;
-    if (t > ARRIVES.stars + STARS * STAR_EVERY) {
+    if (grade.starFan && t > ARRIVES.stars + STARS * STAR_EVERY) {
       c.fillStyle = '#fff6d8';
       const gx = row.x + left + cycle * (STAR_W + STAR_SPACE) * u + STAR_W * u * 0.72;
       spark(c, gx, midY - STAR_W * u * 0.28, STAR_W * u * 0.32 * Math.sin(phase * Math.PI));
@@ -922,11 +944,11 @@ export function albumScene(plate, frame, { art, shown, isDark, families, ground 
         c.clip();
         c.drawImage(row.canvas, row.x, row.y);
         c.restore();
-        sweep(c, row, t, at + 1.3, 4.5);
+        sweep(c, row, t, at + 1.3);
         continue;
       }
       const midX = row.x + w / 2, midY = row.y + h / 2;
-      if (row.key === 'marks') {
+      if (row.key === 'marks' && smallRays) {
         const fan = row.unit * 150 * easeOut(k);
         c.save();
         c.translate(midX, midY);
@@ -935,24 +957,42 @@ export function albumScene(plate, frame, { art, shown, isDark, families, ground 
         c.restore();
       }
       popped(c, row, k, midX, midY, () => c.drawImage(row.canvas, row.x, row.y));
-      if (row.key === 'title') sweep(c, row, t, at + 2.6, 4.5);
-      if (row.key === 'marks') sweep(c, row, t, at + 1.4, 4.5);
+      if (row.key === 'title') sweep(c, row, t, at + 2.6);
+      if (row.key === 'marks') sweep(c, row, t, at + 1.4);
     }
   }
 
+  const lit = document.createElement('canvas');
   let t = 0;
   return {
     step(dt) { t += dt; },
     paint(c) {
       c.drawImage(under, 0, 0);
       const grow = easeOut(Math.min(1, t / 0.9));
-      c.save();
-      c.translate(cx, cy);
-      c.rotate((t * Math.PI * 2) / 26);
-      c.scale(grow, grow);
-      c.drawImage(rays, -rays.width / 2, -rays.height / 2);
-      c.restore();
-      c.fillStyle = '#e8b84b';
+      if (rays) {
+        c.save();
+        c.translate(cx, cy);
+        c.scale(grow, grow);
+        c.save();
+        c.rotate((t * Math.PI * 2) / 26);
+        c.drawImage(rays, -rays.width / 2, -rays.height / 2);
+        c.restore();
+        if (grade.twin) {
+          c.rotate((-t * Math.PI * 2) / 40);
+          c.drawImage(rays, -rays.width / 2, -rays.height / 2);
+        }
+        c.restore();
+      }
+      // A Masterpiece's ring, thrown out as it lands.
+      if (grade.ring && t > 1.1 && t < 2.1) {
+        const k = (t - 1.1) / 1;
+        c.strokeStyle = grade.spark;
+        c.lineWidth = size * 0.03 * (1 - k);
+        c.beginPath();
+        c.arc(cx, cy, size * (0.45 + easeOut(k) * 0.9), 0, Math.PI * 2);
+        c.stroke();
+      }
+      c.fillStyle = grade.spark || '#fff';
       for (const s of sparks) {
         const r = s.s * Math.sin((((t + s.at) % 2.4) / 2.4) * Math.PI) * 1.5;
         if (r > 0.2) spark(c, s.x, s.y, r);
@@ -964,7 +1004,29 @@ export function albumScene(plate, frame, { art, shown, isDark, families, ground 
       c.beginPath();
       c.ellipse(cx, cy + lift + (size * scale) / 2 + size * 0.01, size * scale * (0.3 + 0.2 * Math.abs(Math.cos((t * Math.PI * 2) / 12))), size * 0.012, 0, 0, Math.PI * 2);
       c.fill();
-      drawTurned(c, square, mirrored, cx, cy + lift, size * scale, (t * Math.PI * 2) / 12, size * 0.06 * scale);
+      const angle = (t * Math.PI * 2) / 12;
+      let face = square, back = mirrored;
+      if (grade.sheen && t > 1.6) {
+        // Light crossing the album itself, on whichever face is showing.
+        const local = ((t - 1.6) % 3.2) / 1.1;
+        if (local < 1) {
+          const showing = Math.cos(angle) >= 0 ? square : mirrored;
+          const w = showing.width;
+          if (lit.width !== w) { lit.width = w; lit.height = w; }
+          const l = lit.getContext('2d');
+          l.globalCompositeOperation = 'source-over';
+          l.drawImage(showing, 0, 0);
+          const mid = -w * 0.3 + local * w * 1.6;
+          const g = l.createLinearGradient(mid - w * 0.2, 0, mid + w * 0.2, w * 0.25);
+          g.addColorStop(0, 'rgba(255,240,190,0)');
+          g.addColorStop(0.5, 'rgba(255,240,190,0.7)');
+          g.addColorStop(1, 'rgba(255,240,190,0)');
+          l.fillStyle = g;
+          l.fillRect(0, 0, w, w);
+          face = lit; back = lit;
+        }
+      }
+      drawTurned(c, face, back, cx, cy + lift, size * scale, angle, size * 0.06 * scale);
       drawRows(c, t);
     },
   };
