@@ -4,7 +4,8 @@
 // The bar at the foot of the entry while it is being printed.
 //
 // The same fixed bar the correction mode wears, with the printer's things on
-// it: words picking what is being changed, and one row of choices under them.
+// it: words picking what is being changed, when there is more than one thing to
+// change, and one row of choices under them.
 // No pills: a word with a line under the one that is on, a glyph over a word.
 // Save is the one big black button, and the way back an X at the top left (Miyel, 2026-11-03).
 //
@@ -59,13 +60,15 @@ export default function PrintBar({ sections = [], tab = null, onTab, away = fals
     <div className="ln-print-bar" role="toolbar" aria-label="Printing">
       {section && (
         <>
-          <div className="ln-print-tabs" role="group" aria-label="What to change">
-            {sections.map(t => (
-              <button key={t.key} type="button" aria-pressed={t.key === section.key} className={'ln-print-word' + (t.key === section.key ? ' ln-print-word--on' : '')} onClick={() => onTab(t.key)}>
-                {t.label}
-              </button>
-            ))}
-          </div>
+          {sections.length > 1 && (
+            <div className="ln-print-tabs" role="group" aria-label="What to change">
+              {sections.map(t => (
+                <button key={t.key} type="button" aria-pressed={t.key === section.key} className={'ln-print-word' + (t.key === section.key ? ' ln-print-word--on' : '')} onClick={() => onTab(t.key)}>
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          )}
           <div className="ln-print-choices">
             {section.groups.map((group, g) => (
               <div className="ln-print-group" key={g}>

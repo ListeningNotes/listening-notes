@@ -362,7 +362,6 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   }, [printing, isMoving, printArt, plate, printFonts, size, ground]);
-  const [printTab, setPrintTab] = useState('style');
   // Stamped on <html> so the sheet's own furniture can stand down (entry.css
   // reaches the carets from the root). The grounds' colours are NOT stamped
   // there: a day or night paper must not turn the site's own theme — only
@@ -597,10 +596,6 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   const choosePrint = change => { if (!press.saving) setPrintChoices(c => ({ ...c, ...change })); };
   const printIcon = { size: 23, 'aria-hidden': true };
   const printSections = [
-    { key: 'style', label: 'Style', groups: [[
-      { key: 'unlock', label: 'Unlock', icon: <LockKeyOpen {...printIcon} /> },
-      { key: 'still', label: 'Still', icon: <Pause {...printIcon} /> },
-    ].map(c => ({ ...c, on: effect === c.key, press: () => choosePrint({ effect: c.key }) }))] },
     { key: 'card', label: 'Card', groups: [
       [
         { key: 'record', label: 'Reflect', icon: <ImageSquare {...printIcon} /> },
@@ -608,6 +603,10 @@ export default function FullPostPage({ entry, references = [], authed = false, l
         { key: 'night', label: 'Night', icon: <Moon {...printIcon} /> },
       ].map(c => ({ ...c, on: ground === c.key, press: () => choosePrint({ ground: c.key }) })),
       PRINT_SIZES.map(key => ({ key, label: FRAMES[key].label, icon: printGlyph(...SIZE_SHAPES[key]), on: size === key, press: () => choosePrint({ size: key }) })),
+      [
+        { key: 'unlock', label: 'Unlock', icon: <LockKeyOpen {...printIcon} /> },
+        { key: 'still', label: 'Still', icon: <Pause {...printIcon} /> },
+      ].map(c => ({ ...c, on: effect === c.key, press: () => choosePrint({ effect: c.key }) })),
     ] },
   ];
   // ── What was said, against what is on the record ────────────────────────
@@ -1573,8 +1572,6 @@ export default function FullPostPage({ entry, references = [], authed = false, l
         {printing && (
           <PrintBar
             sections={printSections}
-            tab={printTab}
-            onTab={setPrintTab}
             onSave={() => { if (!press.saving) press.save(size); }}
             onDone={finishPrinting}
             status={press.status}
