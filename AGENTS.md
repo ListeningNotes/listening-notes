@@ -416,6 +416,10 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   the branch the copy was built from; read by the update route and by
   `/updates/go`, the journal's own redirect that a phone's GitHub app cannot
   swallow.
+- `video_file.js` — a moving print as an MP4, made in the browser with no
+  library: `filmFrames` runs a scene on its own clock through the browser's
+  H.264 encoder, faster than real time, and `videoFile` writes the plain file
+  around the frames. Not MediaRecorder, whose file Apple reads as a blink.
 - `version.js` — this copy's version from `package.json`, the releases URL,
   `REPORTS_URL`, `INSTAGRAM_URL`, `DIRECTORY_URL` and `PUBLICATION_URL`, and
   `SANDBOX`: whether this build is a preview nothing may leave.
@@ -502,6 +506,8 @@ do not say what they hold.
   portrait), read once on the server and handed down; and `Visiting`, whose
   journal a friend's post read inside this one is (2026-10-28), for its
   header and its message way in.
+- `JournalPlate.js` — the journal as a print, and `/printer`, the room it is
+  printed in: what the wall is showing, its styles, a video on Save.
 - `KeeperTools.js` — the owner's ··· menu on an entry or the card.
 - `Friends.js` — the address book as a grid of faces; drawn nowhere since
   2026-10-27 (the address book's page draws Friends, PeopleScreen.js), and

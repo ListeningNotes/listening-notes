@@ -2043,6 +2043,7 @@ export default function HomeNav() {
                   entries={entries}
                   loading={loading}
                   scroller={wallScroller}
+                  printable={authed}
                 />
               </div>
             </div>

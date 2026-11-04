@@ -4,154 +4,496 @@
 // The journal, cut as a printing plate — and the room it is printed in.
 //
 // The second thing the share printer prints (the record is EntryPlate.js).
-// The card and the wall of records are the same plate at different volumes
-// (the printer brief, 2026-10-29), so it is one plate with a dial rather
-// than two plates:
+// It shows people at a glance what you listen to (Miyel, 2026-11-03): the mark
+// at the head, your records, and at the foot your face with a bit about you.
+// Nothing written about a record travels and no address is printed; Save puts
+// the journal's address on the clipboard. The portrait is a portrait: no code
+// on anything digital.
 //
-//   Most — the records fill the frame and the card is a label stuck onto
-//     them, the way a sleeve carries a sticker.
-//   All — the records are the whole frame; the only thing over them is a
-//     signature at the foot: the face and the name.
+// ── The print is the view ────────────────────────────────────────────────
+// It opens from the wall's own line and prints what the wall is showing, in
+// the wall's order (library/handoff.js, handOffWall), with a small caption
+// when the wall is filtered. So there is no choosing of records here. Opened
+// by its address, it prints the whole journal, newest first.
 //
-// The dial is two words on the print bar (Miyel, 2026-11-03; a tap on the
-// records until then, and a third stop, Half, with a band of records over the
-// card on paper, which went the same day). It falls back on its own: a journal
-// that cannot fill the frame without repeating a record prints on paper alone,
-// framed, which is the card somebody who just started will share. Not a third
-// stop nobody has to choose.
+// ── Styles ───────────────────────────────────────────────────────────────
+// How the records move, each a scene with its own clock: step it, draw it.
+// A scene is told the time rather than reading it, so Save can run one faster
+// than real time for the video (library/video_file.js). Snake is the parked
+// screensaver's own steering and food (session_components/backgrounds/
+// Snake.js), the album it eats joining at the tail, Miyel's one change. Rain
+// is that folder's numbers too. Bounce is a bar, a ball and the albums, nothing
+// coming down to replace what is broken.
 //
-// What the card carries is a bit about the keeper: the name as the card
-// prints it and the card's own counts (albums, songs, masterpieces, formative
-// — a zero left off, a hidden row left hidden). It is a nice picture of the
-// records and who keeps them, so no prompt and no months (Miyel, 2026-11-03,
-// when a month print was tried here and went). The portrait is a portrait: no
-// code on anything digital (DECISIONS: the printer brief). Nothing written
-// about a record travels, and no address is printed — Save puts the
-// journal's address on the clipboard for the link sticker.
-//
-// The preview on screen IS the plate, drawn at the paper's full size and
-// shown smaller, so the picture saved is the picture approved. The record's
-// print is a mode of its page with a screen twin; a journal has no page that
-// shape, and the moving grounds to come draw into a canvas anyway.
+// The preview on screen IS the plate, drawn at the paper's full size and shown
+// smaller, so the picture saved is the picture approved.
 
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { useRouter } from 'next/navigation';
-import { FRAMES, FRAME_ORDER, loadMark, loadPicture, MARK_ASPECT, drawTracked, wrapLines, ellipsize, roundRect } from './SharePrinter';
+import { ArrowsHorizontal, Cards, CloudRain, Moon, Pause, Sun, Swap } from '@phosphor-icons/react';
+import { FRAMES, loadMark, loadPicture, MARK_ASPECT, drawTracked, ellipsize, roundRect } from './SharePrinter';
 import { INKS } from './EntryPlate';
 import PrintBar from './Slug_Page/PrintBar';
 import { useBookplate } from './Bookplate';
 import { usePress, readFamilies } from '../../hooks/usePress';
-import DVD from '../session_components/backgrounds/DVD';
-import Snake from '../session_components/backgrounds/Snake';
-import Rain from '../session_components/backgrounds/Rain';
-import Fizzy from '../session_components/backgrounds/Fizzy';
-import Solitaire from '../session_components/backgrounds/Solitaire';
-import { backgroundScale } from '../../library/background_scale';
+import { wallHandedOver } from '../../library/handoff';
 
-// ── The dial ───────────────────────────────────────────────────────────────
-export const STOPS = [
-  { key: 'most', label: 'Most' },
-  { key: 'all', label: 'All' },
-];
-const GROUNDS = [
-  { key: 'day', label: 'Day' },
-  { key: 'night', label: 'Night' },
-];
-const TAGLINE = 'A listening journal';
+const MOVING = ['drift', 'rain', 'swap', 'deal', 'snake', 'bounce'];
+const STYLES = ['still', ...MOVING];
+const SIZES = ['story', 'portrait', 'square'];
+const ALBUM_SIZES = ['s', 'm', 'l'];
+const LOOKS = ['full', 'genres', 'numbers', 'name'];
+const COLS = { s: 7, m: 5, l: 3 };
+const SNAKE_COLS = { 7: 12, 5: 10, 3: 7 };   // by the album size's columns
+const MOST_COVERS = 120;               // more than any wall of these can show at once
+const SNAKE_HOP = 0.3;                 // a little slower than the screensaver's: Miyel, "too fast"
 
-// ── Measurements, in units of a 340-wide column — the card's own ──────────
+// ── Measurements, in units of a 340-wide column ────────────────────────────
 const COL = 340;
-const NAME = 26, NAME_LEAD = 26 * 1.18;
-const TAG = 9;
-const FACT_N = 22, FACT_WORD = 8;
-const MARK_H = 26;
-const RING = 5;                        // the paper's ring round the face
-const PORTRAIT = { most: 78, paper: 118, all: 62 };
-const WALL = '#141414';                // between the sleeves
-const MOST_AT = 0.62;                  // Most: where the label's middle sits
+const MARK_H = 28, CAPTION = 9, FACE = 52, NAME = 19, GENRES = 12, NUMBER = 15, WORD = 6.2;
 
-// ── The wall ───────────────────────────────────────────────────────────────
-// Columns of sleeves, each column started at its own height so the rows do
-// not line up — a wall, not a grid. Laid out before anything is drawn so a
-// stop knows how many records it needs.
-function wallTiles(x, y, w, h, frameH) {
-  const cols = Math.max(3, Math.round(w / (frameH * 0.3)));
-  const gap = w * 0.014;
-  const s = (w - gap * (cols - 1)) / cols;
-  const tiles = [];
-  for (let c = 0; c < cols; c++) {
-    let top = y - s * ((c * 0.38) % 1);
-    while (top < y + h) {
-      tiles.push({ x: x + c * (s + gap), y: top, s });
-      top += s + gap;
+// A small, seedable random, so a scene is its own and nothing else's.
+function randomFrom(seed) {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// Covers, cut once at the size they are drawn: dozens of clipped pictures a
+// frame is what a phone cannot afford, and the same few squares reused is.
+const cut = new WeakMap();
+function sprite(img, size) {
+  const s = Math.max(1, Math.round(size));
+  let sizes = cut.get(img);
+  if (!sizes) { sizes = new Map(); cut.set(img, sizes); }
+  if (sizes.has(s)) return sizes.get(s);
+  const c = document.createElement('canvas');
+  c.width = c.height = s;
+  const ctx = c.getContext('2d');
+  roundRect(ctx, 0, 0, s, s, s * 0.02);
+  ctx.clip();
+  const k = Math.max(s / img.naturalWidth, s / img.naturalHeight);
+  ctx.drawImage(img, (s - img.naturalWidth * k) / 2, (s - img.naturalHeight * k) / 2, img.naturalWidth * k, img.naturalHeight * k);
+  sizes.set(s, c);
+  return c;
+}
+
+// The grid. The album size says how many across; when the wall has too few
+// records to fill that, they grow until they do, so a filtered print never
+// looks unfinished.
+function grid(area, n, across) {
+  const G = Math.max(2, area.w * 0.012);
+  const sideFor = c => (area.w - G * (c - 1)) / c;
+  let cols = across;
+  let S = sideFor(cols);
+  let rows = Math.max(1, Math.floor((area.h + G) / (S + G)));
+  if (n > 0 && n < cols * rows) {
+    let best = 0;
+    for (let c = 1; c <= n; c++) {
+      const r = Math.ceil(n / c);
+      const s = Math.min(sideFor(c), (area.h - G * (r - 1)) / r);
+      if (s > best) { best = s; cols = c; rows = r; }
     }
+    S = best;
   }
-  return tiles;
+  const left = (area.w - (cols * S + (cols - 1) * G)) / 2;
+  const top = (area.h - (rows * S + (rows - 1) * G)) / 2;
+  return { cols, rows, S, G, at: (c, r) => ({ x: left + c * (S + G), y: top + r * (S + G) }) };
 }
 
-function drawWall(c, rect, tiles, covers) {
-  c.save();
-  c.beginPath();
-  c.rect(rect.x, rect.y, rect.w, rect.h);
-  c.clip();
-  c.fillStyle = WALL;
-  c.fillRect(rect.x, rect.y, rect.w, rect.h);
-  tiles.forEach((t, i) => {
-    const img = covers[i];
-    if (!img?.naturalWidth) return;
-    const k = Math.max(t.s / img.naturalWidth, t.s / img.naturalHeight);
-    c.save();
-    roundRect(c, t.x, t.y, t.s, t.s, t.s * 0.035);
-    c.clip();
-    c.drawImage(img, t.x - (img.naturalWidth * k - t.s) / 2, t.y - (img.naturalHeight * k - t.s) / 2, img.naturalWidth * k, img.naturalHeight * k);
-    c.restore();
-  });
-  c.restore();
+function gridTiles(covers, area, across) {
+  const g = grid(area, covers.length, across);
+  const tiles = [];
+  for (let i = 0; i < Math.min(covers.length, g.cols * g.rows); i++) tiles.push({ img: covers[i], ...g.at(i % g.cols, Math.floor(i / g.cols)) });
+  return { tiles, g };
 }
 
-// How far to move a centred line so its ink is what is centred. A name can
-// wear ornaments from scripts the print's faces do not have, and a phone's
-// fallback for them left the name visibly off the middle (Miyel, 2026-11-03),
-// so it is measured from the pixels and kept: a moving print asks every frame.
-const inkShifts = new Map();
-function inkShift(font, text, size) {
-  const key = `${font}|${text}`;
-  if (inkShifts.has(key)) return inkShifts.get(key);
-  let shift = 0;
-  try {
-    const probe = document.createElement('canvas');
-    const ctx = probe.getContext('2d', { willReadFrequently: true });
-    ctx.font = font;
-    probe.width = Math.ceil(ctx.measureText(text).width + size * 4);
-    probe.height = Math.ceil(size * 3);
-    ctx.font = font;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillStyle = '#000';
-    ctx.fillText(text, probe.width / 2, probe.height / 2);
-    const { data } = ctx.getImageData(0, 0, probe.width, probe.height);
-    let left = probe.width, right = -1;
-    for (let i = 3; i < data.length; i += 4) {
-      if (data[i] < 40) continue;
-      const x = ((i - 3) / 4) % probe.width;
-      if (x < left) left = x;
-      if (x > right) right = x;
+// ── The scenes ─────────────────────────────────────────────────────────────
+// Each draws in the area's own coordinates; the plate has clipped to it.
+
+const scenes = {
+  still(covers, area, across) {
+    const { tiles, g } = gridTiles(covers, area, across);
+    return {
+      step() {},
+      draw(c) { for (const t of tiles) c.drawImage(sprite(t.img, g.S), t.x, t.y); },
+    };
+  },
+
+  // Rows sliding sideways, each the other way to the one before.
+  drift(covers, area, across) {
+    const g = grid(area, covers.length, across);
+    const unit = area.w / 270;
+    const len = Math.max(g.cols + 2, Math.ceil(covers.length / g.rows));
+    const lanes = [];
+    let cur = 0;
+    for (let r = 0; r < g.rows; r++) {
+      const items = [];
+      for (let k = 0; k < len; k++) items.push(covers[cur++ % covers.length]);
+      lanes.push({ items, dir: r % 2 ? 1 : -1, speed: (10 + ((r * 7) % 5)) * unit, y: g.at(0, r).y });
     }
-    if (right >= left) shift = probe.width / 2 - (left + right + 1) / 2;
-  } catch { /* the line stays where the browser centred it */ }
-  inkShifts.set(key, shift);
-  return shift;
+    const pitch = g.S + g.G;
+    const span = len * pitch;
+    let t = 0;
+    return {
+      step(dt) { t += dt; },
+      draw(c) {
+        for (const lane of lanes) {
+          lane.items.forEach((img, k) => {
+            let p = (k * pitch + t * lane.speed * lane.dir) % span;
+            if (p < 0) p += span;
+            c.drawImage(sprite(img, g.S), p - pitch, lane.y);
+          });
+        }
+      },
+    };
+  },
+
+  // Covers falling in lanes at a slight tilt, big ones a little faster.
+  rain(covers, area, _across, random) {
+    const k = (area.w / 1080) * 1.6;
+    const tMin = 80 * k, tMax = 280 * k, gap = 24 * k;
+    const lanes = Math.max(3, Math.floor(area.w / (tMax + gap)));
+    const step = area.w / lanes;
+    const perLane = Math.max(2, Math.round(area.h / (400 * k)));
+    const order = [...covers].map(img => ({ img, at: random() })).sort((a, b) => a.at - b.at).map(o => o.img);
+    const tiles = [];
+    let cur = 0;
+    for (let l = 0; l < lanes; l++) {
+      for (let i = 0; i < perLane; i++) {
+        const u = random();
+        const size = Math.round(tMin + (u < 0.4 ? (u / 0.4) * 0.3 : (u - 0.4) / 0.6) * (tMax - tMin));
+        const dur = (14 + random() * 14) * (1 - ((size - tMin) / (tMax - tMin)) * 0.3);
+        tiles.push({ img: order[cur++ % order.length], size, x: l * step + (step - size) / 2, dur, start: -random() * dur, angle: ((random() - 0.5) * 12 * Math.PI) / 180 });
+      }
+    }
+    const lead = tMax * 0.3;
+    let t = 0;
+    return {
+      step(dt) { t += dt; },
+      draw(c) {
+        for (const tile of tiles) {
+          const p = (((t - tile.start) % tile.dur) + tile.dur) % tile.dur / tile.dur;
+          const y = -tile.size - lead + p * (area.h + tile.size * 2 + lead * 2);
+          c.save();
+          c.translate(tile.x + tile.size / 2, y + tile.size / 2);
+          c.rotate(tile.angle);
+          c.drawImage(sprite(tile.img, tile.size), -tile.size / 2, -tile.size / 2);
+          c.restore();
+        }
+      },
+    };
+  },
+
+  // Two covers trading places, again and again.
+  swap(covers, area, across, random) {
+    const { tiles, g } = gridTiles(covers, area, across);
+    const tween = 0.7;
+    const live = tiles.map(t => ({ ...t, fromX: t.x, fromY: t.y, age: tween }));
+    let wait = 0.4;
+    return {
+      step(dt) {
+        live.forEach(t => { t.age = Math.min(tween, t.age + dt); });
+        wait -= dt;
+        if (wait > 0 || live.length < 2) return;
+        wait = 0.9;
+        const a = live[Math.floor(random() * live.length)];
+        let b = a;
+        while (b === a) b = live[Math.floor(random() * live.length)];
+        [a, b].forEach(t => { t.fromX = t.x; t.fromY = t.y; t.age = 0; });
+        [a.x, b.x] = [b.x, a.x];
+        [a.y, b.y] = [b.y, a.y];
+      },
+      draw(c) {
+        const ease = v => 1 - (1 - v) ** 3;
+        const moving = [];
+        const drawOne = t => {
+          const k = ease(t.age / tween);
+          c.drawImage(sprite(t.img, g.S), t.fromX + (t.x - t.fromX) * k, t.fromY + (t.y - t.fromY) * k);
+        };
+        for (const t of live) { if (t.age < tween) moving.push(t); else drawOne(t); }
+        moving.forEach(drawOne);
+      },
+    };
+  },
+
+  // Covers landing one by one until the sheet is full. A video deals once and
+  // holds, so its last frame is the whole wall; the preview deals again.
+  deal(covers, area, across, _random, once) {
+    const { tiles, g } = gridTiles(covers, area, across);
+    const dealing = 3.2, flight = 0.55, cycle = 7;
+    let t = 0;
+    return {
+      step(dt) { t += dt; },
+      draw(c) {
+        const local = once ? t : t % cycle;
+        tiles.forEach((tile, i) => {
+          const k = Math.min(1, Math.max(0, (local - (i / Math.max(1, tiles.length)) * dealing) / flight));
+          const from = area.h + g.S;
+          c.drawImage(sprite(tile.img, g.S), tile.x, from + (tile.y - from) * (1 - (1 - k) ** 3));
+        });
+      },
+    };
+  },
+
+  snake(covers, area, across, random, _once, ink) {
+    const cols = SNAKE_COLS[across] || 10;
+    const G = area.w * 0.006;
+    const S = (area.w - G * (cols - 1)) / cols;
+    const rows = Math.max(1, Math.floor((area.h + G) / (S + G)));
+    const top = (area.h - (rows * S + (rows - 1) * G)) / 2;
+    const at = p => ({ x: p.x * (S + G), y: top + p.y * (S + G) });
+    const key = (x, y) => `${x},${y}`;
+    const longest = Math.min(40, Math.floor(cols * rows * 0.75));
+    let positions, arts, dir, food, foodAt, wait, hold;
+    let next = 0;
+
+    function placeFood() {
+      const occupied = new Set(positions.map(p => key(p.x, p.y)));
+      const head = positions[0];
+      const midX = Math.floor(cols / 2), midY = Math.floor(rows / 2);
+      const quads = [
+        { x1: 0, y1: 0, x2: midX, y2: midY }, { x1: midX, y1: 0, x2: cols, y2: midY },
+        { x1: 0, y1: midY, x2: midX, y2: rows }, { x1: midX, y1: midY, x2: cols, y2: rows },
+      ].map(q => {
+        const dist = Math.abs((q.x1 + q.x2) / 2 - head.x) + Math.abs((q.y1 + q.y2) / 2 - head.y);
+        const density = positions.filter(p => p.x >= q.x1 && p.x < q.x2 && p.y >= q.y1 && p.y < q.y2).length;
+        return { q, score: dist - density * 2 };
+      }).sort((a, b) => b.score - a.score);
+      foodAt = null;
+      for (const { q } of quads) {
+        for (let a = 0; a < 60 && !foodAt && q.x2 > q.x1 && q.y2 > q.y1; a++) {
+          const fx = q.x1 + Math.floor(random() * (q.x2 - q.x1));
+          const fy = q.y1 + Math.floor(random() * (q.y2 - q.y1));
+          if (!occupied.has(key(fx, fy))) foodAt = { x: fx, y: fy };
+        }
+        if (foodAt) break;
+      }
+      food = covers[next++ % covers.length];
+      return Boolean(foodAt);
+    }
+    function begin() {
+      positions = [{ x: Math.floor(cols / 2), y: Math.floor(rows / 2) }];
+      arts = [];
+      dir = { x: 1, y: 0 };
+      wait = SNAKE_HOP;
+      hold = 0;
+      placeFood();
+    }
+    function floodFill(sx, sy, body) {
+      const seen = new Set([key(sx, sy)]);
+      const queue = [{ x: sx, y: sy }];
+      while (queue.length) {
+        const { x, y } = queue.shift();
+        for (const d of [{ x: 1, y: 0 }, { x: -1, y: 0 }, { x: 0, y: 1 }, { x: 0, y: -1 }]) {
+          const nx = x + d.x, ny = y + d.y;
+          const k = key(nx, ny);
+          if (nx < 0 || nx >= cols || ny < 0 || ny >= rows || body.has(k) || seen.has(k)) continue;
+          seen.add(k);
+          queue.push({ x: nx, y: ny });
+        }
+      }
+      return seen.size;
+    }
+    function steer() {
+      const head = positions[0], tail = positions[positions.length - 1];
+      const body = new Set(positions.slice(1).map(p => key(p.x, p.y)));
+      const safe = [{ x: 1, y: 0 }, { x: -1, y: 0 }, { x: 0, y: 1 }, { x: 0, y: -1 }].filter(d => {
+        if (d.x === -dir.x && d.y === -dir.y) return false;
+        const nx = head.x + d.x, ny = head.y + d.y;
+        return nx >= 0 && nx < cols && ny >= 0 && ny < rows && !body.has(key(nx, ny));
+      });
+      if (!safe.length) return null;
+      const minSpace = Math.max(Math.floor(cols * rows * 0.35), positions.length * 2);
+      const cmx = positions.reduce((s, p) => s + p.x, 0) / positions.length;
+      const cmy = positions.reduce((s, p) => s + p.y, 0) / positions.length;
+      const scored = safe.map(d => {
+        const nx = head.x + d.x, ny = head.y + d.y;
+        return {
+          d,
+          space: floodFill(nx, ny, body),
+          distFood: Math.abs(nx - foodAt.x) + Math.abs(ny - foodAt.y),
+          distTail: Math.abs(nx - tail.x) + Math.abs(ny - tail.y),
+          spread: Math.abs(nx - cmx) + Math.abs(ny - cmy),
+          straight: d.x === dir.x && d.y === dir.y ? 3 : 0,
+        };
+      });
+      const roomy = scored.filter(s => s.space >= minSpace);
+      if (roomy.length) {
+        const worth = s => -s.distFood * 3 + s.spread * 1.5 + s.straight;
+        roomy.sort((a, b) => worth(b) - worth(a));
+        return random() < 0.9 ? roomy[0].d : roomy[Math.min(1, roomy.length - 1)].d;
+      }
+      scored.sort((a, b) => a.distTail - b.distTail || b.space - a.space);
+      return scored[0].d;
+    }
+    function hop() {
+      const d = steer();
+      if (!d) { hold = 0.8; return; }
+      dir = d;
+      const nx = positions[0].x + dir.x, ny = positions[0].y + dir.y;
+      const ate = nx === foodAt.x && ny === foodAt.y;
+      positions.unshift({ x: nx, y: ny });
+      if (ate) {
+        // The album it ate joins at the tail, where that square already is.
+        arts.push(food);
+        if (positions.length >= longest || !placeFood()) hold = 1.2;
+      } else {
+        positions.pop();
+      }
+    }
+    begin();
+    return {
+      step(dt) {
+        if (hold > 0) { hold -= dt; if (hold <= 0) begin(); return; }
+        wait -= dt;
+        while (wait <= 0 && hold <= 0) { wait += SNAKE_HOP; hop(); }
+      },
+      draw(c) {
+        if (foodAt && food) {
+          const f = at(foodAt);
+          c.save();
+          c.shadowColor = 'rgba(0,0,0,0.3)';
+          c.shadowBlur = S * 0.16;
+          c.drawImage(sprite(food, S), f.x, f.y);
+          c.restore();
+          c.strokeStyle = 'rgba(255,255,255,0.85)';
+          c.lineWidth = Math.max(1, S * 0.025);
+          roundRect(c, f.x, f.y, S, S, S * 0.02);
+          c.stroke();
+        }
+        for (let i = positions.length - 1; i > 0; i--) {
+          const art = arts[i - 1];
+          if (!art) continue;
+          const p = at(positions[i]);
+          c.globalAlpha = 1 - ((i - 1) / (positions.length + 2)) * 0.4;
+          c.drawImage(sprite(art, S), p.x, p.y);
+          c.globalAlpha = 1;
+        }
+        const h = at(positions[0]);
+        c.fillStyle = ink.ink;
+        roundRect(c, h.x, h.y, S, S, S * 0.1);
+        c.fill();
+        c.fillStyle = ink.paper;
+        for (const [ex, ey] of dir.x !== 0 ? [[0.65, 0.28], [0.65, 0.72]] : [[0.28, 0.65], [0.72, 0.65]]) {
+          c.beginPath();
+          c.arc(h.x + S * ex, h.y + S * ey, S * 0.04, 0, Math.PI * 2);
+          c.fill();
+        }
+      },
+    };
+  },
+
+  // A bar at the foot, a ball, and the albums at the top. Each hit breaks one
+  // and nothing comes down to replace it; the last gone, the next albums come.
+  bounce(covers, area, across, random, _once, ink) {
+    const room = { w: area.w, h: area.h * 0.66 };
+    let start = 0, g, bricks, shards, x, y, vx, vy, barX, aim, hold;
+    const ballR = Math.max(area.w * 0.014, 5);
+    const barW = area.w * 0.26, barH = area.w * 0.022, barY = area.h - barH - area.w * 0.01;
+    const speed = area.h * 0.52;
+    function begin() {
+      const shown = covers.slice(start).concat(covers.slice(0, start));
+      g = grid(room, shown.length, across);
+      const fits = Math.min(shown.length, g.cols * g.rows);
+      bricks = [];
+      for (let i = 0; i < fits; i++) {
+        const p = g.at(i % g.cols, Math.floor(i / g.cols));
+        bricks.push({ img: shown[i], x: p.x, y: p.y });
+      }
+      start = (start + fits) % covers.length;
+      shards = [];
+      x = area.w / 2;
+      y = barY - ballR - 1;
+      const a = ((-65 - random() * 50) * Math.PI) / 180;
+      vx = Math.cos(a) * speed;
+      vy = Math.sin(a) * speed;
+      barX = area.w / 2;
+      aim = 0;
+      hold = 0;
+    }
+    begin();
+    return {
+      step(dt) {
+        shards = shards.filter(s => (s.age += dt) < 0.5);
+        if (hold > 0) { hold -= dt; if (hold <= 0) begin(); return; }
+        x += vx * dt;
+        y += vy * dt;
+        if (x < ballR) { x = ballR; vx = Math.abs(vx); }
+        if (x > area.w - ballR) { x = area.w - ballR; vx = -Math.abs(vx); }
+        if (y < ballR) { y = ballR; vy = Math.abs(vy); }
+        for (const b of bricks) {
+          const nx = Math.max(b.x, Math.min(x, b.x + g.S)), ny = Math.max(b.y, Math.min(y, b.y + g.S));
+          if ((x - nx) ** 2 + (y - ny) ** 2 > ballR * ballR) continue;
+          if (x > b.x && x < b.x + g.S) vy = y < b.y + g.S / 2 ? -Math.abs(vy) : Math.abs(vy);
+          else if (y > b.y && y < b.y + g.S) vx = x < b.x + g.S / 2 ? -Math.abs(vx) : Math.abs(vx);
+          else { vx = -vx; vy = -vy; }
+          for (const [p, q] of [[0, 0], [1, 0], [0, 1], [1, 1]]) shards.push({ img: b.img, s: g.S, p, q, x: b.x, y: b.y, age: 0 });
+          bricks = bricks.filter(o => o !== b);
+          break;
+        }
+        // The bar plays itself, a little off centre so the ball goes somewhere new.
+        const want = Math.max(barW / 2, Math.min(area.w - barW / 2, x + aim));
+        barX += (want - barX) * Math.min(1, dt * 12);
+        if (vy > 0 && y + ballR >= barY && y < barY + barH && x > barX - barW / 2 - ballR && x < barX + barW / 2 + ballR) {
+          const off = Math.max(-1, Math.min(1, (x - barX) / (barW / 2)));
+          const t = ((-90 + off * 58) * Math.PI) / 180;
+          vx = Math.cos(t) * speed;
+          vy = Math.sin(t) * speed;
+          y = barY - ballR;
+          aim = (random() - 0.5) * barW * 0.8;
+        }
+        if (y > area.h + ballR) { x = barX; y = barY - ballR; vy = -Math.abs(vy); }
+        if (!bricks.length) hold = 1;
+      },
+      draw(c) {
+        for (const b of bricks) c.drawImage(sprite(b.img, g.S), b.x, b.y);
+        for (const s of shards) {
+          const k = s.age / 0.5;
+          const half = s.s / 2;
+          const sp = sprite(s.img, s.s);
+          const dx = (s.p ? 1 : -1) * s.s * 0.7 * k, dy = (s.q ? 1 : -0.4) * s.s * 0.7 * k;
+          c.save();
+          c.translate(s.x + s.p * half + half / 2 + dx, s.y + s.q * half + half / 2 + dy);
+          c.rotate(((s.p ? 1 : -1) * 70 * k * Math.PI) / 180);
+          c.scale(1 - k, 1 - k);
+          c.drawImage(sp, (s.p * sp.width) / 2, (s.q * sp.height) / 2, sp.width / 2, sp.height / 2, -half / 2, -half / 2, half, half);
+          c.restore();
+        }
+        c.fillStyle = ink.ink;
+        c.beginPath();
+        c.arc(x, y, ballR, 0, Math.PI * 2);
+        c.fill();
+        roundRect(c, barX - barW / 2, barY, barW, barH, barH / 2);
+        c.fill();
+      },
+    };
+  },
+};
+
+// A cover whose site lets a page read its pixels, or nothing. One that does not
+// (a few from outside Apple's catalogue) would stop the print being saved at
+// all, so it is left off the print rather than the print being lost.
+function readableCover(src) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
 }
 
-// The face, in a ring of the paper. object-position as the card has it.
-function drawPortrait(c, img, cx, cy, d, ring, paper, position) {
+// The face in a circle. object-position as the card has it.
+function drawPortrait(c, img, cx, cy, d, position) {
   c.save();
-  c.fillStyle = paper;
-  c.beginPath();
-  c.arc(cx, cy, d / 2 + ring, 0, Math.PI * 2);
-  c.fill();
   c.beginPath();
   c.arc(cx, cy, d / 2, 0, Math.PI * 2);
   c.clip();
@@ -168,255 +510,165 @@ function drawPortrait(c, img, cx, cy, d, ring, paper, position) {
 
 // ── The plate ──────────────────────────────────────────────────────────────
 
-export function journalPlate({ name, portrait, position, counts, covers }) {
-  const coverList = covers.slice(0, 60);
+export function journalPlate({ name, portrait, position, counts, genres, covers, caption = '' }) {
+  const coverList = covers.slice(0, MOST_COVERS);
 
-  // The stops this paper can print with these records: a stop is offered
-  // only when its wall fills without a sleeve twice. A moving ground fills
-  // the whole print with the card on it as a label (Miyel, 2026-11-03), so
-  // with one there is only Most.
-  function stopsFor(frame, art, moving = false) {
-    if (moving) return ['most'];
-    const have = (art?.covers || []).filter(Boolean).length;
-    const lay = layout(frame);
-    return STOPS.filter(s => wallTiles(...lay[s.key].wallArgs).length <= have).map(s => s.key);
-  }
-  function stopFor(frame, art, wanted, moving = false) {
-    const can = stopsFor(frame, art, moving);
-    if (can.includes(wanted)) return wanted;
-    return can[0] || 'paper';
-  }
-
-  // Where each stop puts its wall and its card, in the paper's pixels.
-  function layout(frame) {
+  // What never moves, drawn once: the paper, the mark, the caption, the foot.
+  // Returns where the records go.
+  function layOut(c, frame, { art, shown, ink, families }) {
+    const { sans, mono } = families;
     const W = frame.w, H = frame.h;
-    const spread = W / H > 1.3;
-    const pad = Math.min(W, H) * 0.07;
-    const full = [0, 0, W, H, H];
+    const px = n => (n * Math.min(W, H * 0.72)) / COL;
+    const side = W * 0.05, head = H * 0.03;
+    c.textBaseline = 'top';
+    c.textAlign = 'left';
+    c.fillStyle = ink.paper;
+    c.fillRect(0, 0, W, H);
+
+    let y = head;
+    if (art?.mark) {
+      const mh = px(MARK_H), mw = mh * MARK_ASPECT;
+      c.drawImage(art.mark, (W - mw) / 2, y, mw, mh);
+      y += mh;
+    }
+    y += px(8);
+    if (caption) {
+      c.font = `400 ${px(CAPTION)}px ${mono}`;
+      c.fillStyle = ink.soft;
+      drawTracked(c, ellipsize(c, caption.toUpperCase(), W - side * 2), W / 2, y, px(CAPTION) * 0.18, 'center');
+      y += px(CAPTION) * 1.2 + px(8);
+    }
+
+    // The foot: the face, and beside it what the Info word says to show.
+    const look = shown?.look || 'full';
+    const showGenres = (look === 'full' || look === 'genres') && genres.length > 0;
+    const showNumbers = (look === 'full' || look === 'numbers') && counts.length > 0;
+    const textH = px(NAME) * 1.15 + (showGenres ? px(3) + px(GENRES) * 1.2 : 0) + (showNumbers ? px(5) + px(NUMBER) * 1.1 + px(WORD) * 1.3 : 0);
+    const footH = Math.max(px(FACE), textH);
+    const footY = H - head - footH;
+    const faceD = px(FACE);
+    drawPortrait(c, art?.face, side + faceD / 2, footY + footH / 2, faceD, position);
+    const tx = side + faceD + px(11);
+    const tw = W - side - tx;
+    let ty = footY + (footH - textH) / 2;
+    if (name) {
+      c.font = `800 ${px(NAME)}px ${sans}`;
+      c.fillStyle = ink.ink;
+      c.fillText(ellipsize(c, name, tw), tx, ty);
+    }
+    ty += px(NAME) * 1.15;
+    if (showGenres) {
+      ty += px(3);
+      c.font = `400 ${px(GENRES)}px ${sans}`;
+      c.fillStyle = ink.soft;
+      c.fillText(ellipsize(c, genres.join(' · '), tw), tx, ty);
+      ty += px(GENRES) * 1.2;
+    }
+    if (showNumbers) {
+      ty += px(5);
+      let x = tx;
+      for (const f of counts) {
+        const n = f.n.toLocaleString();
+        const word = f.word.toUpperCase();
+        c.font = `700 ${px(NUMBER)}px ${sans}`;
+        c.fillStyle = ink.ink;
+        c.fillText(n, x, ty);
+        const numW = c.measureText(n).width;
+        c.font = `400 ${px(WORD)}px ${mono}`;
+        c.fillStyle = ink.soft;
+        c.fillText(word, x, ty + px(NUMBER) * 1.1);
+        x += Math.max(numW, c.measureText(word).width) + px(12);
+      }
+    }
+    const ruleY = footY - px(10);
+    c.fillStyle = ink.rule;
+    c.fillRect(side, ruleY, W - side * 2, Math.max(1, px(0.8)));
+    return { x: side, y, w: W - side * 2, h: Math.max(10, ruleY - px(10) - y) };
+  }
+
+  // One style on one paper: the still parts kept, the records drawn over them.
+  function scene(frame, { art, shown, isDark, families, once = false }) {
+    const ink = isDark ? INKS.night : INKS.day;
+    const base = document.createElement('canvas');
+    base.width = frame.w;
+    base.height = frame.h;
+    const area = layOut(base.getContext('2d'), frame, { art, shown, ink, families });
+    const list = (art?.covers || []).filter(Boolean);
+    const across = COLS[shown?.albums] || COLS.m;
+    const kind = list.length ? (scenes[shown?.style] ? shown.style : 'still') : null;
+    const made = kind ? scenes[kind](list, { w: area.w, h: area.h }, across, randomFrom(Date.now()), once, ink) : null;
     return {
-      most: { wallArgs: full, wall: { x: 0, y: 0, w: W, h: H } },
-      all: { wallArgs: full, wall: { x: 0, y: 0, w: W, h: H } },
-      spread, pad,
+      step(dt) { made?.step(dt); },
+      paint(c) {
+        c.drawImage(base, 0, 0);
+        if (!made) return;
+        c.save();
+        c.beginPath();
+        c.rect(area.x, area.y, area.w, area.h);
+        c.clip();
+        c.translate(area.x, area.y);
+        made.draw(c);
+        c.restore();
+      },
     };
   }
 
   return {
     title: 'Your journal',
     fileName: 'journal',
-    stopsFor,
-    stopFor,
+    scene,
 
     async load({ isDark }) {
       const [mark, face, ...sleeves] = await Promise.all([
         loadMark(isDark ? INKS.night.ink : INKS.day.ink),
         loadPicture(portrait),
-        ...coverList.map(loadPicture),
+        ...coverList.map(readableCover),
       ]);
       return { mark, face, covers: sleeves.filter(Boolean) };
     },
 
+    // The picture, for Save with nothing moving.
     draw(ctx, frame, { art, shown, isDark, families }) {
-      const ink = isDark ? INKS.night : INKS.day;
-      const { sans, mono } = families;
-      const W = frame.w, H = frame.h;
-      const lay = layout(frame);
-      // A moving ground, when one is on: its canvas, laid where the wall goes.
-      const live = shown?.live?.current || null;
-      const stop = stopFor(frame, art, shown?.stop, Boolean(live));
-      const sleeves = art?.covers || [];
-      const U = Math.min(W, H) / COL;
-
-      ctx.textBaseline = 'top';
-      ctx.fillStyle = ink.paper;
-      ctx.fillRect(0, 0, W, H);
-
-      // ── the card's rows, measured then laid down in a box ────────────────
-      // Every row is centred in the column it is given; the whole stack comes
-      // down in size if it would overrun its box, as the record's card does.
-      function stack(box, rowsAt) {
-        let unit = U * Math.min(1, box.w / (COL * U));
-        let built = rowsAt(unit);
-        let h = built.reduce((sum, r) => sum + r.gap + r.h, 0);
-        if (h > box.h) {
-          unit *= box.h / h;
-          built = rowsAt(unit);
-          h = built.reduce((sum, r) => sum + r.gap + r.h, 0);
-        }
-        return { rows: built, h, unit };
-      }
-      function setDown(rows, x, y, w) {
-        let at = y;
-        for (const row of rows) {
-          at += row.gap;
-          row.draw(ctx, x, at, w);
-          at += row.h;
-        }
-      }
-
-      const rowsFor = (parts, colour = ink) => unit => {
-        const px = n => n * unit;
-        const colW = Math.min(px(COL) * 0.92, px(COL));
-        const rows = [];
-        const add = (gap, row) => rows.push({ ...row, gap: rows.length ? px(gap) : 0 });
-        for (const part of parts) {
-          if (part === 'mark' && art?.mark) {
-            add(14, {
-              h: px(MARK_H),
-              draw(c, x, y, w) { const mw = px(MARK_H) * MARK_ASPECT; c.drawImage(art.mark, x + (w - mw) / 2, y, mw, px(MARK_H)); },
-            });
-          } else if (part.portrait) {
-            const d = px(part.portrait);
-            add(16, { h: d + px(RING) * 2, draw(c, x, y, w) { drawPortrait(c, art?.face, x + w / 2, y + px(RING) + d / 2, d, px(RING), ink.paper, position); } });
-          } else if (part === 'name' && name) {
-            ctx.font = `700 ${px(NAME)}px ${sans}`;
-            const lines = wrapLines(ctx, name, colW, 2);
-            add(14, {
-              h: lines.length * px(NAME_LEAD),
-              draw(c, x, y, w) {
-                c.font = `700 ${px(NAME)}px ${sans}`;
-                c.fillStyle = colour.ink;
-                c.textAlign = 'center';
-                lines.forEach((l, i) => c.fillText(l, x + w / 2 + inkShift(c.font, l, px(NAME)), y + i * px(NAME_LEAD) + (px(NAME_LEAD) - px(NAME)) / 2));
-                c.textAlign = 'left';
-              },
-            });
-          } else if (part === 'tag') {
-            add(6, {
-              h: px(TAG) * 1.4,
-              draw(c, x, y, w) { c.font = `400 ${px(TAG)}px ${mono}`; c.fillStyle = colour.soft; drawTracked(c, TAGLINE.toUpperCase(), x + w / 2, y, px(TAG) * 0.16, 'center'); },
-            });
-          } else if (part === 'rule') {
-            add(16, { h: Math.max(1, unit * 0.8), draw(c, x, y, w) { c.fillStyle = colour.rule; c.fillRect(x + (w - colW) / 2, y, colW, Math.max(1, unit * 0.8)); } });
-          } else if (part === 'facts' && counts.length) {
-            add(16, {
-              h: px(FACT_N) * 1.2 + px(6) + px(FACT_WORD) * 1.4,
-              draw(c, x, y, w) {
-                const cell = colW / counts.length;
-                const left = x + (w - colW) / 2;
-                counts.forEach((f, i) => {
-                  const mid = left + cell * (i + 0.5);
-                  c.font = `700 ${px(FACT_N)}px ${sans}`;
-                  c.fillStyle = colour.ink;
-                  c.textAlign = 'center';
-                  c.fillText(f.n.toLocaleString(), mid, y);
-                  c.textAlign = 'left';
-                  c.font = `400 ${px(FACT_WORD)}px ${mono}`;
-                  c.fillStyle = colour.soft;
-                  drawTracked(c, f.word.toUpperCase(), mid, y + px(FACT_N) * 1.2 + px(6), px(FACT_WORD) * 0.14, 'center');
-                  if (i > 0) {
-                    c.fillStyle = colour.rule;
-                    c.fillRect(left + cell * i, y + px(4), Math.max(1, unit * 0.8), px(FACT_N) * 1.2 + px(FACT_WORD));
-                  }
-                });
-              },
-            });
-          }
-        }
-        return rows;
-      };
-
-      const pad = lay.pad;
-
-      if (stop === 'paper') {
-        // Paper alone, done properly: a hairline frame inset from the edge,
-        // the mark at the head, the face, and the card under it.
-        const inset = pad * 0.6;
-        ctx.strokeStyle = ink.rule;
-        ctx.lineWidth = Math.max(1, U * 0.8);
-        roundRect(ctx, inset, inset, W - inset * 2, H - inset * 2, U * 10);
-        ctx.stroke();
-        const box = { x: pad * 1.4, y: pad * 1.4, w: W - pad * 2.8, h: H - pad * 2.8 };
-        const parts = lay.spread
-          ? ['mark', { portrait: PORTRAIT.paper * 0.8 }, 'name', 'facts']
-          : ['mark', 'tag', { portrait: PORTRAIT.paper }, 'name', 'rule', 'facts'];
-        const s = stack(box, rowsFor(parts));
-        setDown(s.rows, box.x, box.y + (box.h - s.h) / 2, box.w);
-        return [];
-      }
-
-      if (live) {
-        const r = lay[stop].wall;
-        ctx.save();
-        ctx.beginPath();
-        ctx.rect(r.x, r.y, r.w, r.h);
-        ctx.clip();
-        ctx.drawImage(live, r.x, r.y, r.w, r.h);
-        ctx.restore();
-      } else {
-        drawWall(ctx, lay[stop].wall, wallTiles(...lay[stop].wallArgs), sleeves);
-      }
-
-      if (stop === 'most') {
-        // The card as a label stuck onto the wall: paper, rounded, lifted,
-        // the face on its top edge.
-        const labelW = lay.spread ? W * 0.44 : W - pad * 2;
-        const inner = labelW * 0.88;
-        const d = PORTRAIT.most * U * (lay.spread ? 0.8 : 1);
-        const s = stack({ x: 0, y: 0, w: inner, h: H * (lay.spread ? 0.62 : 0.5) }, rowsFor(['name', 'tag', 'rule', 'facts']));
-        const labelH = d / 2 + 14 * U + s.h + 22 * U;
-        const lx = lay.spread ? W - pad - labelW : pad;
-        const ly = Math.min(H - pad - labelH, Math.max(pad + d / 2, H * (lay.spread ? 0.55 : MOST_AT) - labelH / 2));
-        ctx.save();
-        ctx.shadowColor = 'rgba(0,0,0,0.35)';
-        ctx.shadowBlur = 40 * U;
-        ctx.shadowOffsetY = 12 * U;
-        ctx.fillStyle = ink.paper;
-        roundRect(ctx, lx, ly, labelW, labelH, 16 * U);
-        ctx.fill();
-        ctx.restore();
-        drawPortrait(ctx, art?.face, lx + labelW / 2, ly, d, RING * U, ink.paper, position);
-        setDown(s.rows, lx + (labelW - inner) / 2, ly + d / 2 + 14 * U, inner);
-        return [];
-      }
-
-      // All: a shade at the foot for the signature, and nothing else over
-      // the records.
-      const shadeH = H * (lay.spread ? 0.6 : 0.34);
-      const g = ctx.createLinearGradient(0, H - shadeH, 0, H);
-      g.addColorStop(0, 'rgba(0,0,0,0)');
-      g.addColorStop(1, 'rgba(0,0,0,0.72)');
-      ctx.fillStyle = g;
-      ctx.fillRect(0, H - shadeH, W, shadeH);
-      // Face, name and what it is, centred at the foot, as the other stops are.
-      const d = PORTRAIT.all * U;
-      const tagY = H - pad - TAG * U * 1.2;
-      const nameY = tagY - 8 * U - NAME * U * 1.1;
-      drawPortrait(ctx, art?.face, W / 2, nameY - 12 * U - d / 2, d, RING * U * 0.6, 'rgba(255,255,255,0.85)', position);
-      ctx.font = `400 ${TAG * U}px ${mono}`;
-      ctx.fillStyle = 'rgba(255,255,255,0.72)';
-      drawTracked(ctx, TAGLINE.toUpperCase(), W / 2, tagY, TAG * U * 0.16, 'center');
-      ctx.font = `700 ${NAME * U}px ${sans}`;
-      ctx.fillStyle = '#ffffff';
-      ctx.textAlign = 'center';
-      const signed = ellipsize(ctx, name || '', W - pad * 2);
-      ctx.fillText(signed, W / 2 + inkShift(ctx.font, signed, NAME * U), nameY);
-      ctx.textAlign = 'left';
+      scene(frame, { art, shown: { ...shown, style: 'still' }, isDark, families }).paint(ctx);
       return [];
     },
   };
 }
 
 // ── The room ───────────────────────────────────────────────────────────────
-// /printer, for the keeper: the paper in the middle, the print bar under it.
+// /printer, for the keeper: the paper in the middle, the bar under it. A tap on
+// the print hides the bar and a sideways swipe turns the style.
 
-// The moving grounds (the printer brief): five of the parked screensavers,
-// turned with the same dots as Day and Night, after them. Each runs in a
-// stage of its own off the screen, the size of the print it fills, and the
-// plate lays its canvas there every frame. Only on 9:16 and 4:5: a moving
-// ground needs room above and below to read as motion. The paper under the
-// card stays the last of Day or Night chosen (Miyel, 2026-11-02).
-const MOVING = [
-  { key: 'dvd', label: 'DVD', Ground: DVD },
-  { key: 'snake', label: 'Snake', Ground: Snake },
-  { key: 'rain', label: 'Rain', Ground: Rain },
-  { key: 'fizzy', label: 'Fizzy', Ground: Fizzy },
-  { key: 'solitaire', label: 'Solitaire', Ground: Solitaire },
-];
-const MOVES_ON = ['story', 'portrait'];
-const GROUND_COVERS = 40;
+// Glyphs Phosphor has no word for: Snake is squares, as its body is; Bounce a
+// ball over a bar; the album sizes solid blocks, the card shapes outlines, so
+// a large album and a square card cannot be mistaken for each other.
+function Glyph({ children }) {
+  return <svg width="23" height="23" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true">{children}</svg>;
+}
+const blocks = n => {
+  const gap = 14, box = 184, c = (box - gap * (n - 1)) / n;
+  const out = [];
+  for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) out.push(<rect key={`${i}${j}`} x={36 + i * (c + gap)} y={36 + j * (c + gap)} width={c} height={c} rx="8" />);
+  return <Glyph>{out}</Glyph>;
+};
+const shape = (w, h) => <Glyph><rect x={(256 - w) / 2} y={(256 - h) / 2} width={w} height={h} rx="14" fill="none" stroke="currentColor" strokeWidth="16" /></Glyph>;
+const STYLE_WORDS = {
+  still: ['Still', <Pause key="still" size={23} aria-hidden="true" />],
+  drift: ['Drift', <ArrowsHorizontal key="drift" size={23} aria-hidden="true" />],
+  rain: ['Rain', <CloudRain key="rain" size={23} aria-hidden="true" />],
+  swap: ['Swap', <Swap key="swap" size={23} aria-hidden="true" />],
+  deal: ['Deal', <Cards key="deal" size={23} aria-hidden="true" />],
+  snake: ['Snake', <Glyph key="snake"><path d="M40 64h56v56H40zM104 64h56v56h-56zM168 64h56v56h-56zM168 128h56v56h-56zM104 136h48v48h-48z" /></Glyph>],
+  bounce: ['Bounce', <Glyph key="bounce"><rect x="48" y="196" width="160" height="24" rx="12" /><circle cx="150" cy="96" r="30" /></Glyph>],
+};
+const ALBUM_WORDS = { s: ['Small', blocks(3)], m: ['Medium', blocks(2)], l: ['Large', blocks(1)] };
+const SIZE_WORDS = { story: ['9:16', shape(112, 200)], portrait: ['4:5', shape(150, 188)], square: ['1:1', shape(170, 170)] };
+const PAPER_WORDS = { day: ['Day', <Sun key="day" size={23} aria-hidden="true" />], night: ['Night', <Moon key="night" size={23} aria-hidden="true" />] };
+const LOOK_WORDS = { full: 'Full', genres: 'Genres', numbers: 'Numbers', name: 'Name' };
 
 const STORE = 'ln-printing-journal';
 const noSubscription = () => () => {};
+const oneOf = (list, value, fallback) => (list.includes(value) ? value : fallback);
 
 export default function JournalPrinter({ layered = false }) {
   const router = useRouter();
@@ -427,18 +679,19 @@ export default function JournalPrinter({ layered = false }) {
   useEffect(() => {
     try { sessionStorage.setItem(STORE, JSON.stringify(choices)); } catch { /* private mode */ }
   }, [choices]);
-  const wanted = STOPS.some(s => s.key === choices.stop) ? choices.stop : 'most';
-  const size = FRAME_ORDER.includes(choices.size) ? choices.size : 'story';
+  const style = oneOf(STYLES, choices.style, 'still');
+  const albums = oneOf(ALBUM_SIZES, choices.albums, 'm');
+  const size = oneOf(SIZES, choices.size, 'story');
+  const paper = oneOf(['day', 'night'], choices.paper, 'day');
+  const look = oneOf(LOOKS, choices.look, 'full');
+  const tab = oneOf(['style', 'card', 'info'], choices.tab, 'style');
   const frame = FRAMES[size];
-  const isPaper = key => GROUNDS.some(g => g.key === key);
-  const paper = isPaper(choices.paper) ? choices.paper : isPaper(choices.ground) ? choices.ground : 'day';
-  const movesHere = MOVES_ON.includes(size);
-  const moving = movesHere ? MOVING.find(m => m.key === choices.ground) || null : null;
-  const ground = moving ? moving.key : paper;
-  const groundsHere = movesHere ? [...GROUNDS, ...MOVING] : GROUNDS;
   const isDark = paper === 'night';
+  const isMoving = style !== 'still';
 
-  // What the card prints, read the way the card reads it.
+  // What the wall was showing as its door was pressed, or nothing if this
+  // address was opened by itself: then the whole journal, newest first.
+  const [wall] = useState(() => wallHandedOver());
   const [stamps, setStamps] = useState(null);
   const [entries, setEntries] = useState(null);
   // The journal's address, for the clipboard on Save: where this page is.
@@ -447,37 +700,37 @@ export default function JournalPrinter({ layered = false }) {
   useEffect(() => {
     let live = true;
     fetch('/api/public/stamps').then(r => r.json()).then(s => { if (live) setStamps(s); }).catch(() => { if (live) setStamps({}); });
-    fetch('/api/entries').then(r => r.json()).then(d => {
-      if (live) setEntries(Array.isArray(d?.entries) ? d.entries : []);
-    }).catch(() => { if (live) setEntries([]); });
+    if (!wall) {
+      fetch('/api/entries').then(r => r.json()).then(d => {
+        if (live) setEntries(Array.isArray(d?.entries) ? d.entries : []);
+      }).catch(() => { if (live) setEntries([]); });
+    }
     return () => { live = false; };
-  }, []);
+  }, [wall]);
 
   const name = (settings?.display_name || settings?.keeper_name || '').trim();
+  const hiddenFields = settings?.hidden_fields;
+  const hidden = useMemo(() => (Array.isArray(hiddenFields) ? hiddenFields : []), [hiddenFields]);
   const counts = useMemo(() => {
-    if (!stamps) return [];
-    const hidden = Array.isArray(settings?.hidden_fields) ? settings.hidden_fields : [];
-    if (hidden.includes('albums')) return [];
+    if (!stamps || hidden.includes('albums')) return [];
     return [
       { word: 'albums', n: stamps.records ?? 0, always: true },
       { word: 'songs', n: stamps.songs ?? 0 },
       { word: 'masterpieces', n: stamps.masterpieces ?? 0 },
       { word: 'formative', n: stamps.formative ?? 0 },
     ].filter(f => f.always || f.n > 0);
-  }, [stamps, settings?.hidden_fields]);
-
+  }, [stamps, hidden]);
+  const genres = useMemo(() => (hidden.includes('genres') || !Array.isArray(stamps?.genres) ? [] : stamps.genres), [stamps, hidden]);
   const covers = useMemo(() => {
+    if (wall) return wall.covers;
     if (!entries) return null;
     const seen = new Set();
     return entries.map(e => e.album_art).filter(src => src && !seen.has(src) && seen.add(src));
-  }, [entries]);
-  const isMoving = Boolean(moving);
-  const plate = useMemo(() => (covers ? journalPlate({
-    name, portrait: settings?.portrait_url, position: settings?.portrait_position, counts, covers,
-  }) : null), [covers, name, settings?.portrait_url, settings?.portrait_position, counts]);
+  }, [wall, entries]);
 
-  // The covers a moving ground is made of: the journal's newest.
-  const groundAlbums = useMemo(() => (covers || []).slice(0, GROUND_COVERS).map(src => ({ album_art: src })), [covers]);
+  const plate = useMemo(() => (covers && stamps ? journalPlate({
+    name, portrait: settings?.portrait_url, position: settings?.portrait_position, counts, genres, covers, caption: wall?.caption || '',
+  }) : null), [covers, stamps, name, settings?.portrait_url, settings?.portrait_position, counts, genres, wall]);
 
   const [art, setArt] = useState(null);
   useEffect(() => {
@@ -487,67 +740,52 @@ export default function JournalPrinter({ layered = false }) {
     return () => { live = false; };
   }, [plate, isDark]);
 
-  const stop = plate?.stopFor ? (art ? plate.stopFor(frame, art, wanted, isMoving) : wanted) : null;
-  // The moving ground's canvas, found in its stage each frame.
-  const liveRef = useRef(null);
-  const stageRef = useRef(null);
-  const shown = useMemo(() => ({ stop, live: liveRef }), [stop]);
+  const shown = useMemo(() => ({ style, albums, look }), [style, albums, look]);
   const fonts = useMemo(() => ({ sans: '.jp-face-sans', mono: '.jp-face-mono' }), []);
-  // While a ground moves, Save records the preview itself: it is the print
-  // at full size, drawn every frame.
-  const canvasRef = useRef(null);
-  const motion = useCallback(() => (isMoving ? canvasRef.current : null), [isMoving]);
-  const press = usePress({ plate: plate || { load: async () => null, draw() {} }, shown, ground, isDark, link: address, fonts, motion });
-  // Nothing changes on the paper while it is being filmed.
+
+  // A moving print saves as a video: a scene of its own, run off the screen on
+  // its own clock, once where the style has an ending.
+  const motion = useCallback(() => {
+    if (!isMoving || !plate || !art) return null;
+    const made = plate.scene(frame, { art, shown, isDark, families: readFamilies(fonts), once: true });
+    return { width: frame.w, height: frame.h, frame: (ctx, dt) => { made.step(dt); made.paint(ctx); } };
+  }, [isMoving, plate, art, frame, shown, isDark, fonts]);
+  const press = usePress({ plate: plate || { load: async () => null, draw() {} }, shown, ground: isMoving ? style : paper, isDark, link: address, fonts, motion });
   const busy = press.saving;
 
-  // The stage: the paper's pixels, scaled the way the screensavers scale
-  // themselves on a phone so their canvas comes out at exactly the paper's
-  // size.
-  const k = inBrowser ? backgroundScale() : 1;
-
-  // The preview: the plate itself at the paper's size, shown smaller —
-  // drawn once when still, every frame while a ground moves.
+  // The preview: the plate at the paper's size, shown smaller — drawn once when
+  // still, every frame while it moves.
+  const canvasRef = useRef(null);
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || !plate || !art) return undefined;
     canvas.width = frame.w;
     canvas.height = frame.h;
     const ctx = canvas.getContext('2d');
-    const paint = () => plate.draw(ctx, frame, { art, shown, isDark, families: readFamilies(fonts), ground });
-    if (!isMoving) {
-      liveRef.current = null;
-      paint();
-      return undefined;
-    }
-    let raf;
-    const tick = () => {
-      liveRef.current = stageRef.current?.querySelector('canvas') || null;
-      paint();
+    const made = plate.scene(frame, { art, shown, isDark, families: readFamilies(fonts) });
+    made.paint(ctx);
+    if (!isMoving) return undefined;
+    let raf, last = null;
+    const tick = now => {
+      if (last !== null) made.step(Math.min(0.05, (now - last) / 1000));
+      last = now;
+      made.paint(ctx);
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [plate, art, frame, shown, isDark, ground, fonts, isMoving]);
+  }, [plate, art, frame, shown, isDark, fonts, isMoving]);
 
-  const done = () => { if (layered) router.back(); else router.push('/'); };
-  const stopLabel = STOPS.find(s => s.key === stop)?.label;
-  const groundLabel = groundsHere.find(g => g.key === ground)?.label;
-  const choose = change => { if (!busy) setChoices(c => ({ ...c, ...change })); };
-  // The dial, as words under the print: the stops this paper can print, when
-  // there is more than one.
-  const can = plate?.stopsFor && art ? plate.stopsFor(frame, art, isMoving) : [];
-  const dial = can.length > 1
-    ? STOPS.filter(s => can.includes(s.key)).map(s => ({ key: s.key, label: s.label, on: s.key === stop, press: () => choose({ stop: s.key }) }))
-    : null;
-  const chooseGround = key => choose({ ground: key, ...(isPaper(key) ? { paper: key } : {}) });
   // The sheet's furniture stands down, as it does while a record prints.
   useEffect(() => {
     const root = document.documentElement;
     root.dataset.printing = '1';
     return () => { delete root.dataset.printing; };
   }, []);
-  // A sideways swipe on the print turns the ground, as it does on a record.
+
+  const choose = change => { if (!busy) setChoices(c => ({ ...c, ...change })); };
+  const [barAway, setBarAway] = useState(false);
+  // A sideways swipe on the print turns the style; a tap hides the bar.
   const swipe = useRef(null);
   const onTouchStart = e => {
     if (e.touches.length === 1) swipe.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
@@ -559,36 +797,37 @@ export default function JournalPrinter({ layered = false }) {
     const dx = e.changedTouches[0].clientX - from.x;
     const dy = e.changedTouches[0].clientY - from.y;
     if (Math.abs(dx) <= 42 || Math.abs(dx) <= Math.abs(dy)) return;
-    const i = groundsHere.findIndex(g => g.key === ground);
-    chooseGround(groundsHere[(i + (dx < 0 ? 1 : -1) + groundsHere.length) % groundsHere.length].key);
+    const i = STYLES.indexOf(style);
+    choose({ style: STYLES[(i + (dx < 0 ? 1 : -1) + STYLES.length) % STYLES.length] });
   };
 
-  // Drawn in the browser only: the choices live in this tab's storage and
-  // the bar is portalled onto the body, neither of which the server has.
+  const done = () => { if (layered) router.back(); else router.push('/'); };
+  const doors = (what, value, words) => Object.entries(words).map(([key, word]) => {
+    const [label, icon] = Array.isArray(word) ? word : [word, null];
+    return { key, label, icon, on: value === key, press: () => choose({ [what]: key }) };
+  });
+  const sections = [
+    { key: 'style', label: 'Style', groups: [doors('style', style, STYLE_WORDS)] },
+    { key: 'card', label: 'Card', groups: [doors('albums', albums, ALBUM_WORDS), doors('size', size, SIZE_WORDS), doors('paper', paper, PAPER_WORDS)] },
+    { key: 'info', label: 'Info', groups: [doors('look', look, LOOK_WORDS)] },
+  ];
+
+  // Drawn in the browser only: the choices live in this tab's storage and the
+  // bar is portalled onto the body, neither of which the server has.
   if (!inBrowser) return <div className="jp-room" />;
   return (
-    <div className={'jp-room' + (isDark ? ' jp-room--night' : '')}>
+    <div className={'jp-room' + (barAway ? ' jp-room--full' : '')}>
       {/* The faces the canvas draws in, worn by something so they can be read. */}
       <span className="jp-face-sans" aria-hidden="true" />
       <span className="jp-face-mono" aria-hidden="true" />
-      {moving && groundAlbums.length > 0 && (
-        <div
-          ref={stageRef}
-          className="jp-stage"
-          aria-hidden="true"
-          style={{ width: Math.round(frame.w * k), height: Math.round(frame.h * k) }}
-        >
-          <moving.Ground key={`${moving.key}-${size}`} albums={groundAlbums} />
-        </div>
-      )}
-      <div className="jp-paper" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+      <div className="jp-paper" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd} onClick={() => setBarAway(a => !a)}>
         <canvas
           ref={canvasRef}
           className={'jp-canvas' + (art ? '' : ' jp-canvas--waiting')}
           width={frame.w}
           height={frame.h}
           role="img"
-          aria-label={stop === 'paper' || !stop ? 'Your journal' : `Your journal, ${stopLabel}`}
+          aria-label={wall?.caption ? `Your journal: ${wall.caption}` : 'Your journal'}
         />
       </div>
       {press.picture || press.clip ? (
@@ -604,13 +843,10 @@ export default function JournalPrinter({ layered = false }) {
         />
       ) : (
         <PrintBar
-          grounds={groundsHere}
-          ground={ground}
-          onGround={chooseGround}
-          look={groundLabel}
-          choices={isMoving ? null : dial}
-          size={size}
-          onSize={key => choose({ size: key })}
+          away={barAway}
+          sections={sections}
+          tab={tab}
+          onTab={key => choose({ tab: key })}
           onSave={() => { if (!busy) press.save(size); }}
           onDone={done}
           status={press.status}

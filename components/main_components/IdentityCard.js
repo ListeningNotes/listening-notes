@@ -425,7 +425,7 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
   // page should take same look as edit mode in entry with same footer to end
   // editing". An entry's ··· goes the same way while it is being corrected.
   // See About.js, which owns the editor and raises the bar.
-  const toolsRow = authed && !editing && <KeeperTools what="card" onEdit={edit.begin} />;
+  const toolsRow = authed && !editing && <KeeperTools what="card" printable={false} onEdit={edit.begin} />;
 
   // Whether each counted line has anything left on it. `showing` is the
   // keeper's own answer and is always true while editing, so the eye that

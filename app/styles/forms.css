@@ -3286,8 +3286,8 @@ a.pn-quiet-act { text-decoration: none; display: inline-block; }
    of it (Miyel's phone, 2026-11-03). The canvas is the print at full size, shown
    smaller, its shape kept by its own width and height. */
 .jp-room {
-  --jp-top: calc(10px + env(safe-area-inset-top));
-  --jp-bar: calc(190px + env(safe-area-inset-bottom));
+  --jp-top: calc(44px + env(safe-area-inset-top));
+  --jp-bar: calc(160px + env(safe-area-inset-bottom));
   position: fixed; inset: 0; z-index: 350; box-sizing: border-box; background: var(--bg);
   display: flex; flex-direction: column; align-items: center;
   padding: var(--jp-top) 16px var(--jp-bar);
@@ -3295,10 +3295,12 @@ a.pn-quiet-act { text-decoration: none; display: inline-block; }
 .jp-paper { display: flex; justify-content: center; max-width: 100%; margin-block: auto; touch-action: pan-y; }
 .jp-canvas {
   display: block; width: auto; height: auto;
-  max-width: 100%; max-height: calc(100dvh - var(--jp-top) - var(--jp-bar) - 16px);
+  max-width: 100%; max-height: calc(100dvh - var(--jp-top) - var(--jp-bar) - 10px);
   border-radius: 10px; box-shadow: var(--shadow-lift);
 }
 .jp-canvas--waiting { opacity: 0; }
+/* The bar tapped away: the print takes the room. */
+.jp-room--full { --jp-top: calc(12px + env(safe-area-inset-top)); --jp-bar: calc(12px + env(safe-area-inset-bottom)); }
 /* Where a moving ground runs, off the screen, at the wall's size. */
 .jp-stage { position: fixed; left: -40000px; top: 0; overflow: hidden; pointer-events: none; }
 .jp-face-sans { position: absolute; width: 0; height: 0; overflow: hidden; font-family: var(--font-display); }

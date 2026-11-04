@@ -1965,7 +1965,7 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
 .ln-printing {
   /* The fixed logo row stands down while printing (below), so only the
      phone's own bar is cleared — the inset rides along on the home screen. */
-  --print-top: calc(22px + env(safe-area-inset-top, 0px));
+  --print-top: calc(44px + env(safe-area-inset-top, 0px));
   --print-bar: 190px;    /* the bar's three rows */
   --print-side: 12px;
   --print-max: 520px;    /* the paper's width on a wide screen */
@@ -2115,6 +2115,32 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
 }
 .ln-print-size:hover, .ln-print-word:hover { color: var(--ink); }
 .ln-print-size--on, .ln-print-word--on { color: var(--ink); border-bottom-color: var(--ink); }
+.ln-print-tabs { display: flex; justify-content: center; gap: 28px; width: 100%; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+.ln-print-choices { display: flex; width: 100%; min-height: 50px; overflow-x: auto; scrollbar-width: none; }
+.ln-print-choices::-webkit-scrollbar { display: none; }
+.ln-print-group { display: flex; flex: 1 0 auto; justify-content: center; align-items: center; }
+.ln-print-group + .ln-print-group { border-left: 1px solid var(--border); }
+.ln-print-choice {
+  flex: 0 0 auto; min-width: 42px; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 4px 2px; border: 0; background: transparent; color: var(--ink-faint);
+  font-family: var(--font-label); font-size: 8px; letter-spacing: 0.05em; text-transform: uppercase;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.ln-print-choice--on { color: var(--ink); }
+/* A choice with no glyph is a word: the Info row. */
+.ln-print-choice--word { font-size: 10px; letter-spacing: 0.1em; color: var(--ink-soft); padding: 6px 10px; border-bottom: 1px solid transparent; }
+.ln-print-choice--word.ln-print-choice--on { color: var(--ink); border-bottom-color: var(--ink); }
+.ln-print-save {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; max-width: 420px; margin-top: 2px; padding: 13px 0; border: 0; border-radius: 12px;
+  background: #111; color: #fff; font-family: var(--font-display); font-weight: 800; font-size: 15px;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.ln-print-shut {
+  position: fixed; left: 8px; top: calc(6px + env(safe-area-inset-top, 0px)); z-index: 401;
+  padding: 8px; line-height: 0; border: 0; background: transparent; color: var(--ink); cursor: pointer;
+}
+@media (min-width: 769px) { .ln-print-shut { left: calc(var(--spine-w, 0px) + 8px); } }
 .ln-print-doors { display: flex; justify-content: center; gap: 32px; }
 .ln-print-door {
   display: flex; flex-direction: column; align-items: center; gap: 4px;

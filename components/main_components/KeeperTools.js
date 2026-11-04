@@ -51,8 +51,8 @@
 // out of it, and Delete ends it — opening the correction's own confirmation
 // rather than doing anything itself, because the warning and the second press
 // already exist there and a destructive action should not get a shorter path
-// just because it moved to a shorter menu. On the card: the pencil and the
-// printer, and nothing that ends anything. You cannot delete the card; it is
+// just because it moved to a shorter menu. On the card: the pencil, and nothing
+// that ends anything; the journal prints from the wall's line since 2026-11-03. You cannot delete the card; it is
 // the journal.
 //
 // A visitor sees none of this. Sharing stays one path — press the album art,
