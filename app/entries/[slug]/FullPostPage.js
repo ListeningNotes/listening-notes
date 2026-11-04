@@ -10,7 +10,7 @@
 'use client';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Envelope, Fingerprint, Heart, LockKeyOpen, Pause, SketchLogo, VinylRecord } from '@phosphor-icons/react';
+import { Envelope, Fingerprint, Heart, ImageSquare, LockKeyOpen, Moon, Pause, SketchLogo, Sun, VinylRecord } from '@phosphor-icons/react';
 import { fonts } from '../../../library/sitewide_visuals';
 import { sizedAlbumArt, fetchAlbumArtUrl } from '../../../library/music_data_api';
 import { parseHorizon, entryTracks, splitNotes, parseRating, flawless } from '../../../library/entry_formatter';
@@ -320,6 +320,9 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   const plate = useMemo(() => entryPlate({ entry }), [entry]);
   const effect = EFFECTS.includes(printChoices.effect) ? printChoices.effect : 'unlock';
   const isMoving = effect !== 'still';
+  // Reflect, Day or Night. A Masterpiece is dark, so it has no Day.
+  const printsDark = entry?.masterpiece === true || entry?.rating === 'Masterpiece';
+  const ground = ['record', 'night', ...(printsDark ? [] : ['day'])].includes(printChoices.ground) ? printChoices.ground : 'record';
   const printFonts = useMemo(() => ({ sans: '.ln-screen-one-title', mono: '.ln-screen-one-artist' }), []);
   // The print is a scene on a canvas: the same scene here, and run on its own
   // clock for the video on Save. The card under it stays in the page, unseen,
@@ -328,16 +331,16 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   useEffect(() => {
     if (!printing) return undefined;
     let live = true;
-    plate.load().then(a => { if (live) setPrintArt(a); });
+    plate.load({ ground }).then(a => { if (live) setPrintArt(a); });
     return () => { live = false; };
-  }, [printing, plate]);
+  }, [printing, plate, ground]);
   const motion = useCallback(() => {
     if (!isMoving || !printArt) return null;
-    const made = plate.scene(FRAMES[size], { art: printArt, families: readFamilies(printFonts) });
+    const made = plate.scene(FRAMES[size], { art: printArt, families: readFamilies(printFonts), ground });
     return { width: FRAMES[size].w, height: FRAMES[size].h, frame: (ctx, dt) => { made.step(dt); made.paint(ctx); } };
-  }, [isMoving, printArt, plate, printFonts, size]);
+  }, [isMoving, printArt, plate, printFonts, size, ground]);
   const press = usePress({
-    plate, shown: null, ground: effect, isDark: false, link: entryUrl,
+    plate, shown: null, ground, isDark: false, link: entryUrl,
     fonts: printFonts, motion,
   });
   const liveCanvas = useRef(null);
@@ -347,7 +350,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     canvas.width = FRAMES[size].w;
     canvas.height = FRAMES[size].h;
     const ctx = canvas.getContext('2d');
-    const made = plate.scene(FRAMES[size], { art: printArt, families: readFamilies(printFonts), still: !isMoving });
+    const made = plate.scene(FRAMES[size], { art: printArt, families: readFamilies(printFonts), ground, still: !isMoving });
     made.paint(ctx);
     if (!isMoving) return undefined;
     let raf, last = null;
@@ -359,7 +362,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [printing, isMoving, printArt, plate, printFonts, size]);
+  }, [printing, isMoving, printArt, plate, printFonts, size, ground]);
   const [printTab, setPrintTab] = useState('style');
   // Stamped on <html> so the sheet's own furniture can stand down (entry.css
   // reaches the carets from the root). The grounds' colours are NOT stamped
@@ -600,6 +603,11 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       { key: 'still', label: 'Still', icon: <Pause {...printIcon} /> },
     ].map(c => ({ ...c, on: effect === c.key, press: () => choosePrint({ effect: c.key }) }))] },
     { key: 'card', label: 'Card', groups: [
+      [
+        { key: 'record', label: 'Reflect', icon: <ImageSquare {...printIcon} /> },
+        ...(printsDark ? [] : [{ key: 'day', label: 'Day', icon: <Sun {...printIcon} /> }]),
+        { key: 'night', label: 'Night', icon: <Moon {...printIcon} /> },
+      ].map(c => ({ ...c, on: ground === c.key, press: () => choosePrint({ ground: c.key }) })),
       PRINT_SIZES.map(key => ({ key, label: FRAMES[key].label, icon: printGlyph(...SIZE_SHAPES[key]), on: size === key, press: () => choosePrint({ size: key }) })),
     ] },
   ];

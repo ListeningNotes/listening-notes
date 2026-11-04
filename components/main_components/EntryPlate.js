@@ -19,7 +19,8 @@
 // faint few, below that it simply arrives. A Masterpiece is a different object,
 // not a decorated one: a dark ground, gold as the ink, the word where the stars
 // were, and the album square and still. Rays stay white: gold rays were ruled
-// out. The diamond stays blue for now, the one thing on that print not gold:
+// out. Reflect, Day or Night is the ground (the cover blurred, or plain paper);
+// a Masterpiece is dark on all of its grounds, so it has no Day. The diamond stays blue for now, the one thing on that print not gold:
 // whether to leave it, gild it or drop it is still hers to decide.
 //
 // A scene is told the time rather than reading it, so a video is made faster
@@ -236,14 +237,17 @@ export function entryPlate({ entry }) {
   const favs = rated ? tracks.map(t => Boolean(t.favorite)) : [];
   const grade = isMasterpiece ? GRADES.masterpiece : stars >= 4 ? GRADES.high : stars >= 3 ? GRADES.middle : GRADES.low;
 
-  function scene(frame, { art, families, still = false }) {
+  function scene(frame, { art, families, ground = 'record', still = false }) {
     const { sans, mono } = families;
     const W = frame.w, H = frame.h;
     const base = Math.min(W, H * 0.72);
     const px = n => (n * base) / 340;
-    const ink = isMasterpiece ? GOLD : INKS.day.ink;
-    const soft = isMasterpiece ? GOLD : INKS.day.soft;
-    const barColour = isMasterpiece ? GOLD : INKS.day.bar;
+    const night = isMasterpiece || ground === 'night';
+    const paper = night ? INKS.night : INKS.day;
+    const reflecting = ground === 'record';
+    const ink = isMasterpiece ? GOLD : paper.ink;
+    const soft = isMasterpiece ? GOLD : paper.soft;
+    const barColour = isMasterpiece ? GOLD : paper.bar;
 
     // ── Where everything goes ───────────────────────────────────────────
     const floorH = bars.length ? H * 0.16 : 0;
@@ -251,7 +255,7 @@ export function entryPlate({ entry }) {
     const markH = px(30), markY = H * 0.035;
     const size = Math.min(W * 0.68, H * 0.36);
     const cx = W / 2;
-    const albumY = markY + markH + H * 0.025;
+    const albumY = markY + markH + H * 0.05;
     const cy = albumY + size / 2;
     const top = albumY + size + H * 0.03;
 
@@ -272,9 +276,11 @@ export function entryPlate({ entry }) {
     const under = document.createElement('canvas');
     under.width = W;
     under.height = H;
-    paintGround(under.getContext('2d'), frame, art?.cover, isMasterpiece ? INKS.night.paper : INKS.day.paper, isMasterpiece ? NIGHT_WASH : INKS.day.wash);
+    paintGround(under.getContext('2d'), frame, reflecting ? art?.cover : null, paper.paper, !reflecting ? 'rgba(0,0,0,0)' : isMasterpiece ? NIGHT_WASH : INKS.day.wash);
     const picture = coverPicture(art?.cover, size);
-    const rays = grade.ray ? rayPicture(W * 1.7, grade.ray, grade.wedges) : null;
+    // White rays and sparks vanish on plain light paper, so there they are ink.
+    const onDay = ground === 'day';
+    const rays = grade.ray ? rayPicture(W * 1.7, onDay ? 'rgba(26,26,26,0.07)' : grade.ray, grade.wedges) : null;
     let seed = 7;
     const random = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
     const sparks = Array.from({ length: grade.sparks }, () => ({ x: random() * W, y: random() * floorTop, at: random() * 2.4, s: W * (0.008 + random() * 0.012) }));
@@ -298,7 +304,7 @@ export function entryPlate({ entry }) {
       for (let i = 0; i < 5; i++) {
         const x = left + i * (box + gap);
         popped(c, ARRIVES.stars + i * 0.2, x + box / 2, y + box / 2, () => {
-          drawPath(c, STAR_PATH, x, y, box, 18, INKS.day.unlit);
+          drawPath(c, STAR_PATH, x, y, box, 18, paper.unlit);
           const part = clamp01(stars - i);
           if (part > 0) {
             c.save();
@@ -416,7 +422,7 @@ export function entryPlate({ entry }) {
         c.arc(cx, cy, size * (0.45 + easeOut(v) * 0.9), 0, Math.PI * 2);
         c.stroke();
       }
-      c.fillStyle = grade.spark || '#fff';
+      c.fillStyle = onDay ? 'rgba(26,26,26,0.32)' : grade.spark || '#fff';
       for (const s of sparks) {
         const r = s.s * Math.sin((((t + s.at) % 2.4) / 2.4) * Math.PI) * 1.5;
         if (r > 0.2) spark(c, s.x, s.y, r);
@@ -424,7 +430,7 @@ export function entryPlate({ entry }) {
       drawFloor(c, t);
       // The scrim: the page colour, none at either end, most of it in the
       // middle. It sits over the floor and under the words.
-      const [r0, g0, b0] = isMasterpiece ? NIGHT_SCRIM : PAPER_SCRIM;
+      const [r0, g0, b0] = night ? NIGHT_SCRIM : PAPER_SCRIM;
       const scrim = c.createLinearGradient(0, scrimMid - scrimH / 2, 0, scrimMid + scrimH / 2);
       scrim.addColorStop(0, `rgba(${r0},${g0},${b0},0)`);
       scrim.addColorStop(0.5, `rgba(${r0},${g0},${b0},0.86)`);
@@ -479,17 +485,17 @@ export function entryPlate({ entry }) {
 
     // The mark in the print's ink, and the cover, which is also the ground.
     // Either may come back null and the print draws on without it.
-    async load() {
+    async load({ ground = 'record' } = {}) {
       const [mark, cover] = await Promise.all([
-        loadMark(isMasterpiece ? GOLD : INKS.day.ink),
+        loadMark(isMasterpiece ? GOLD : ground === 'night' ? INKS.night.ink : INKS.day.ink),
         loadPicture(entry?.album_art),
       ]);
       return { mark, cover };
     },
 
     // The picture, for Save with nothing moving.
-    draw(ctx, frame, { art, families }) {
-      scene(frame, { art, families, still: true }).paint(ctx);
+    draw(ctx, frame, { art, families, ground }) {
+      scene(frame, { art, families, ground, still: true }).paint(ctx);
       return [];
     },
   };
