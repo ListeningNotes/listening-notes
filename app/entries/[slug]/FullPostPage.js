@@ -320,9 +320,8 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   const plate = useMemo(() => entryPlate({ entry }), [entry]);
   const effect = EFFECTS.includes(printChoices.effect) ? printChoices.effect : 'unlock';
   const isMoving = effect !== 'still';
-  // Reflect, Day or Night. A Masterpiece is dark, so it has no Day.
-  const printsDark = entry?.masterpiece === true || entry?.rating === 'Masterpiece';
-  const ground = ['record', 'night', ...(printsDark ? [] : ['day'])].includes(printChoices.ground) ? printChoices.ground : 'record';
+  // Reflect, Day or Night.
+  const ground = ['record', 'day', 'night'].includes(printChoices.ground) ? printChoices.ground : 'record';
   const printFonts = useMemo(() => ({ sans: '.ln-screen-one-title', mono: '.ln-screen-one-artist' }), []);
   // The print is a scene on a canvas: the same scene here, and run on its own
   // clock for the video on Save. The card under it stays in the page, unseen,
@@ -605,7 +604,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     { key: 'card', label: 'Card', groups: [
       [
         { key: 'record', label: 'Reflect', icon: <ImageSquare {...printIcon} /> },
-        ...(printsDark ? [] : [{ key: 'day', label: 'Day', icon: <Sun {...printIcon} /> }]),
+        { key: 'day', label: 'Day', icon: <Sun {...printIcon} /> },
         { key: 'night', label: 'Night', icon: <Moon {...printIcon} /> },
       ].map(c => ({ ...c, on: ground === c.key, press: () => choosePrint({ ground: c.key }) })),
       PRINT_SIZES.map(key => ({ key, label: FRAMES[key].label, icon: printGlyph(...SIZE_SHAPES[key]), on: size === key, press: () => choosePrint({ size: key }) })),

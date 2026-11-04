@@ -17,11 +17,13 @@
 // ── What the rating earns ────────────────────────────────────────────────
 // Rays and sparks grow with the stars: four and up in plain light, threes a
 // faint few, below that it simply arrives. A Masterpiece is a different object,
-// not a decorated one: a dark ground, gold as the ink, the word where the stars
-// were, and the album square and still. Rays stay white: gold rays were ruled
-// out. Reflect, Day or Night is the ground (the cover blurred, or plain paper);
-// a Masterpiece is dark on all of its grounds, so it has no Day. The diamond stays blue for now, the one thing on that print not gold:
-// whether to leave it, gild it or drop it is still hers to decide.
+// not a decorated one: gold on the mark, the bars and the sparks, the word where
+// the stars were, the album square and still with a gilded edge, and a gold
+// light passing through the title now and then. The words themselves stay the
+// paper's ink, so they read (Miyel, 2026-11-03). Rays stay white: gold rays were
+// ruled out. Reflect, Day or Night is the ground (the cover blurred, or plain
+// paper); a Masterpiece's Reflect is the dark one. The diamond stays blue for
+// now: whether to leave it, gild it or drop it is still hers to decide.
 //
 // A scene is told the time rather than reading it, so a video is made faster
 // than real time (library/video_file.js), and the same scene is the preview.
@@ -53,6 +55,7 @@ export const INKS = {
   },
 };
 const GOLD = '#e8b84b';
+const DEEP_GOLD = '#b98a1e';           // gold that still reads on light paper
 const NIGHT_WASH = 'rgba(12,13,16,0.62)';
 const NIGHT_SCRIM = [12, 13, 16];
 const PAPER_SCRIM = [238, 240, 236];
@@ -242,12 +245,13 @@ export function entryPlate({ entry }) {
     const W = frame.w, H = frame.h;
     const base = Math.min(W, H * 0.72);
     const px = n => (n * base) / 340;
-    const night = isMasterpiece || ground === 'night';
-    const paper = night ? INKS.night : INKS.day;
     const reflecting = ground === 'record';
-    const ink = isMasterpiece ? GOLD : paper.ink;
-    const soft = isMasterpiece ? GOLD : paper.soft;
-    const barColour = isMasterpiece ? GOLD : paper.bar;
+    const night = ground === 'night' || (isMasterpiece && reflecting);
+    const paper = night ? INKS.night : INKS.day;
+    const ink = paper.ink;
+    const soft = night ? '#c9c5bd' : paper.soft;
+    const accent = night ? GOLD : DEEP_GOLD;
+    const barColour = isMasterpiece ? accent : paper.bar;
 
     // ── Where everything goes ───────────────────────────────────────────
     const floorH = bars.length ? H * 0.16 : 0;
@@ -323,9 +327,10 @@ export function entryPlate({ entry }) {
       const size2 = px(13) * k;
       popped(c, ARRIVES.stars, cx, y + size2, () => {
         c.font = `400 ${size2}px ${mono}`;
-        c.fillStyle = GOLD;
+        c.fillStyle = ink;
         drawTracked(c, 'MASTERPIECE', cx, y + px(4) * k, size2 * 0.42, 'center');
         const ruleW = px(64) * k;
+        c.fillStyle = accent;
         c.fillRect(cx - ruleW / 2, y + px(4) * k + size2 * 1.5, ruleW, Math.max(1, px(0.8)));
       }, t);
     }
@@ -391,7 +396,24 @@ export function entryPlate({ entry }) {
           face = lit;
         }
       }
+      if (isMasterpiece) {
+        // Gilded: a soft gold glow behind it, a thin gold edge on it.
+        const s = size * scale;
+        c.save();
+        c.shadowColor = accent;
+        c.shadowBlur = size * 0.1;
+        c.fillStyle = accent;
+        c.fillRect(cx - s / 2, cy + lift - s / 2, s, s);
+        c.restore();
+      }
       drawTurned(c, face, cx, cy + lift, size * scale, angle, angle === 0 ? 0 : size * 0.06 * scale);
+      if (isMasterpiece) {
+        const s = size * scale;
+        const line = size * 0.012;
+        c.strokeStyle = accent;
+        c.lineWidth = line;
+        c.strokeRect(cx - s / 2 + line / 2, cy + lift - s / 2 + line / 2, s - line, s - line);
+      }
     }
 
     function paintAt(c, t) {
@@ -422,7 +444,7 @@ export function entryPlate({ entry }) {
         c.arc(cx, cy, size * (0.45 + easeOut(v) * 0.9), 0, Math.PI * 2);
         c.stroke();
       }
-      c.fillStyle = onDay ? 'rgba(26,26,26,0.32)' : grade.spark || '#fff';
+      c.fillStyle = isMasterpiece ? accent : onDay ? 'rgba(26,26,26,0.32)' : grade.spark || '#fff';
       for (const s of sparks) {
         const r = s.s * Math.sin((((t + s.at) % 2.4) / 2.4) * Math.PI) * 1.5;
         if (r > 0.2) spark(c, s.x, s.y, r);
@@ -455,6 +477,18 @@ export function entryPlate({ entry }) {
       popped(c, ARRIVES.title, cx, titleY + lead / 2, () => {
         c.font = `800 ${titleSize}px ${sans}`;
         c.fillStyle = ink;
+        if (isMasterpiece && !still) {
+          // A gold light passing through the title, every few seconds.
+          const pass = ((t - 2) % 4.5) / 1.3;
+          if (t > 2 && pass < 1) {
+            const mid = -W * 0.2 + pass * W * 1.4, reach = W * 0.16;
+            const shine = c.createLinearGradient(mid - reach, 0, mid + reach, 0);
+            shine.addColorStop(0, ink);
+            shine.addColorStop(0.5, accent);
+            shine.addColorStop(1, ink);
+            c.fillStyle = shine;
+          }
+        }
         c.textAlign = 'center';
         titleLines.forEach((line, i) => c.fillText(line, cx, titleY + i * lead));
         c.textAlign = 'left';
@@ -487,7 +521,7 @@ export function entryPlate({ entry }) {
     // Either may come back null and the print draws on without it.
     async load({ ground = 'record' } = {}) {
       const [mark, cover] = await Promise.all([
-        loadMark(isMasterpiece ? GOLD : ground === 'night' ? INKS.night.ink : INKS.day.ink),
+        loadMark(isMasterpiece ? (ground === 'day' ? DEEP_GOLD : GOLD) : ground === 'night' ? INKS.night.ink : INKS.day.ink),
         loadPicture(entry?.album_art),
       ]);
       return { mark, cover };
