@@ -111,17 +111,36 @@ function drawTurned(c, picture, cx, cy, size, angle, depth) {
   const w = picture.width, h = picture.height;
   const u = sin < 0 ? 1 : -1;
   const a = point(u, 1), b = point(u, -1);
+  // The shadow is cast by the album's own outline at this angle, so it turns
+  // with it. A square here stayed square and its corners showed.
+  const quad = (p, q) => {
+    c.beginPath();
+    c.moveTo(p.x, cy - p.half);
+    c.lineTo(q.x, cy - q.half);
+    c.lineTo(q.x, cy + q.half);
+    c.lineTo(p.x, cy + p.half);
+    c.closePath();
+  };
+  c.save();
+  c.shadowColor = 'rgba(0,0,0,0.32)';
+  c.shadowBlur = size * 0.09;
+  c.shadowOffsetY = size * 0.035;
+  c.fillStyle = 'rgba(0,0,0,0.9)';
+  quad(point(-1, 1), point(1, 1));
+  c.fill();
+  c.restore();
   if (Math.abs(b.x - a.x) > 0.5) {
     const edge = u > 0 ? w - 2 : 0;
-    const STEPS = 6;
+    const STEPS = 12;
     for (let i = 0; i < STEPS; i++) {
       const k0 = i / STEPS, k1 = (i + 1) / STEPS;
       const x0 = a.x + (b.x - a.x) * k0, x1 = a.x + (b.x - a.x) * k1;
       const half = a.half + (b.half - a.half) * ((k0 + k1) / 2);
-      c.drawImage(picture, edge, 0, 2, h, Math.min(x0, x1), cy - half, Math.abs(x1 - x0) + 0.8, half * 2);
+      c.drawImage(picture, edge, 0, 2, h, Math.min(x0, x1), cy - half, Math.abs(x1 - x0) + 0.4, half * 2);
     }
     c.fillStyle = 'rgba(0,0,0,0.16)';
-    c.fillRect(Math.min(a.x, b.x), cy - Math.max(a.half, b.half), Math.abs(b.x - a.x), Math.max(a.half, b.half) * 2);
+    quad(a, b);
+    c.fill();
   }
   const STRIPS = 48;
   for (let i = 0; i < STRIPS; i++) {
@@ -366,13 +385,6 @@ export function entryPlate({ entry }) {
           face = lit;
         }
       }
-      c.save();
-      c.shadowColor = 'rgba(0,0,0,0.32)';
-      c.shadowBlur = size * 0.09;
-      c.shadowOffsetY = size * 0.035;
-      c.fillStyle = 'rgba(0,0,0,0.25)';
-      c.fillRect(cx - (size * scale) / 2 + 2, cy + lift - (size * scale) / 2 + 2, size * scale - 4, size * scale - 4);
-      c.restore();
       drawTurned(c, face, cx, cy + lift, size * scale, angle, angle === 0 ? 0 : size * 0.06 * scale);
     }
 
