@@ -77,7 +77,7 @@ function sprite(img, size) {
   const c = document.createElement('canvas');
   c.width = c.height = s;
   const ctx = c.getContext('2d');
-  roundRect(ctx, 0, 0, s, s, s * 0.02);
+  roundRect(ctx, 0, 0, s, s, s * 0.055);
   ctx.clip();
   const k = Math.max(s / img.naturalWidth, s / img.naturalHeight);
   ctx.drawImage(img, (s - img.naturalWidth * k) / 2, (s - img.naturalHeight * k) / 2, img.naturalWidth * k, img.naturalHeight * k);
@@ -397,7 +397,7 @@ const scenes = {
           c.restore();
           c.strokeStyle = 'rgba(255,255,255,0.85)';
           c.lineWidth = Math.max(1, S * 0.025);
-          roundRect(c, f.x, f.y, S, S, S * 0.02);
+          roundRect(c, f.x, f.y, S, S, S * 0.055);
           c.stroke();
         }
         for (let i = positions.length - 1; i > 0; i--) {
