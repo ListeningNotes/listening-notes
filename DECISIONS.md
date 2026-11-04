@@ -739,6 +739,8 @@ pills. A record's horizon prints with its titles or without: no list of tracks.
 A record prints under the mark alone, and never over a moving ground. A moving
 ground (9:16 and 4:5) fills the whole print, the card a label on it. Save
 shows the print in a pop-up, because no web page can write to a camera roll.
+The journal's print is the records and a bit about the keeper: no months and
+no prompt.
 
 **The printer is a mode of the entry page, 2026-09-13.** Press the glyph and
 the first screen becomes the flyer, the way correcting is a mode: the card
