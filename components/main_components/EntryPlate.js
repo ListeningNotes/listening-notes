@@ -688,10 +688,11 @@ export function entryPlate({ entry, keeper }) {
 //
 // How much of it you get is earned by the rating (Miyel, the same day:
 // "masterpiece and things below should have different effects"), the way a rare
-// thing arrives bigger than a common one: a Masterpiece in gold with doubled
-// rays, a ring as it lands and light crossing the album itself; four stars and
-// up in plain light; threes a faint few rays; below that it simply arrives and
-// turns. The album, the rotation and the order of arrival are the same for all.
+// thing arrives bigger than a common one: a Masterpiece with doubled rays, rays
+// off each star, gold sparks, a ring as it lands and light crossing the album
+// itself; four stars and up in plain light with stars that are only stars
+// (Miyel: no gold rays, and the stars' rays are the Masterpiece's); threes a
+// faint few rays; below that it simply arrives and turns. The album, the rotation and the order of arrival are the same for all.
 //
 // A scene is told the time rather than reading it, so a video is made faster
 // than real time (library/video_file.js), and the same scene is the preview.
@@ -702,8 +703,8 @@ export function entryPlate({ entry, keeper }) {
 // front seen from behind, so mirrored, and the sides are the art's own edge
 // carried round.
 const GRADES = {
-  masterpiece: { ray: 'rgba(232,184,75,0.34)', wedges: 18, twin: true, sparks: 46, spark: '#e8b84b', ring: true, sheen: true, starFan: 3.4, sweep: 3.2 },
-  high: { ray: 'rgba(255,255,255,0.3)', wedges: 12, sparks: 18, spark: '#ffffff', starFan: 2.4, sweep: 5 },
+  masterpiece: { ray: 'rgba(255,255,255,0.3)', wedges: 18, twin: true, sparks: 46, spark: '#e8b84b', ring: true, sheen: true, starFan: 2.8, sweep: 3.2 },
+  high: { ray: 'rgba(255,255,255,0.3)', wedges: 12, sparks: 18, spark: '#ffffff', sweep: 5 },
   middle: { ray: 'rgba(255,255,255,0.16)', wedges: 6, sparks: 6, spark: '#ffffff' },
   low: {},
 };
@@ -986,7 +987,7 @@ export function albumScene(plate, frame, { art, shown, isDark, families, ground 
       // A Masterpiece's ring, thrown out as it lands.
       if (grade.ring && t > 1.1 && t < 2.1) {
         const k = (t - 1.1) / 1;
-        c.strokeStyle = grade.spark;
+        c.strokeStyle = '#ffffff';
         c.lineWidth = size * 0.03 * (1 - k);
         c.beginPath();
         c.arc(cx, cy, size * (0.45 + easeOut(k) * 0.9), 0, Math.PI * 2);
