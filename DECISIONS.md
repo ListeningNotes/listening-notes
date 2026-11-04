@@ -737,8 +737,8 @@ card's door still says so until its plate is reworked.
 the print in a pop-up, because no web page can write to a camera roll. A record
 prints as one design: the album sweeps, never a full turn (half of one shows a
 backwards cover), over the horizon as a floor, on a scrim, no borders. Effects
-are earned by the rating; a Masterpiece is a different object: gold bits, plain
-words, the word for stars, square, still and gilded, white rays never gold. The journal's print
+are earned by the rating; a Masterpiece is a different object: the word for stars,
+square and still, more rays, a bar of light, and no gold (it looked tacky). The journal's print
 opens from the wall's line and is what the wall shows. Original games only.
 
 **The printer is a mode of the entry page, 2026-09-13.** Press the glyph and
