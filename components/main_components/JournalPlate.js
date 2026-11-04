@@ -8,22 +8,19 @@
 // (the printer brief, 2026-10-29), so it is one plate with a dial rather
 // than two plates:
 //
-//   Half — a band of records above, the card below on paper. Type never
-//     touches the records, and the portrait sits on the seam in a ring of
-//     the paper.
 //   Most — the records fill the frame and the card is a label stuck onto
 //     them, the way a sleeve carries a sticker.
 //   All — the records are the whole frame; the only thing over them is a
 //     signature at the foot: the face and the name.
 //
-// The dial is three words on the print bar (Miyel, 2026-11-03; a tap on the
-// records until then). It falls back on its own: a stop that needs more records than the journal has
-// to fill it without repeating one is skipped, and a journal that cannot fill
-// even Half's band prints on paper alone — framed, nothing moving, which is
-// the card somebody who just started will share. Not a fourth stop nobody
-// has to choose.
+// The dial is two words on the print bar (Miyel, 2026-11-03; a tap on the
+// records until then, and a third stop, Half, with a band of records over the
+// card on paper, which went the same day). It falls back on its own: a journal
+// that cannot fill the frame without repeating a record prints on paper alone,
+// framed, which is the card somebody who just started will share. Not a third
+// stop nobody has to choose.
 //
-// What the card half carries is a bit about the keeper: the name as the card
+// What the card carries is a bit about the keeper: the name as the card
 // prints it and the card's own counts (albums, songs, masterpieces, formative
 // — a zero left off, a hidden row left hidden). It is a nice picture of the
 // records and who keeps them, so no prompt and no months (Miyel, 2026-11-03,
@@ -55,7 +52,6 @@ import { backgroundScale } from '../../library/background_scale';
 
 // ── The dial ───────────────────────────────────────────────────────────────
 export const STOPS = [
-  { key: 'half', label: 'Half' },
   { key: 'most', label: 'Most' },
   { key: 'all', label: 'All' },
 ];
@@ -72,9 +68,8 @@ const TAG = 9;
 const FACT_N = 22, FACT_WORD = 8;
 const MARK_H = 26;
 const RING = 5;                        // the paper's ring round the face
-const PORTRAIT = { half: 104, most: 78, paper: 118, all: 62 };
+const PORTRAIT = { most: 78, paper: 118, all: 62 };
 const WALL = '#141414';                // between the sleeves
-const BAND = 0.4;                      // Half: how much of a tall paper is records
 const MOST_AT = 0.62;                  // Most: where the label's middle sits
 
 // ── The wall ───────────────────────────────────────────────────────────────
@@ -189,7 +184,7 @@ export function journalPlate({ name, portrait, position, counts, covers }) {
   function stopFor(frame, art, wanted, moving = false) {
     const can = stopsFor(frame, art, moving);
     if (can.includes(wanted)) return wanted;
-    return can.includes('half') ? 'half' : can[0] || 'paper';
+    return can[0] || 'paper';
   }
 
   // Where each stop puts its wall and its card, in the paper's pixels.
@@ -198,21 +193,10 @@ export function journalPlate({ name, portrait, position, counts, covers }) {
     const spread = W / H > 1.3;
     const pad = Math.min(W, H) * 0.07;
     const full = [0, 0, W, H, H];
-    if (spread) {
-      const bandW = W * 0.45;
-      return {
-        half: { wallArgs: [0, 0, bandW, H, H], wall: { x: 0, y: 0, w: bandW, h: H } },
-        most: { wallArgs: full, wall: { x: 0, y: 0, w: W, h: H } },
-        all: { wallArgs: full, wall: { x: 0, y: 0, w: W, h: H } },
-        spread, pad, bandW,
-      };
-    }
-    const bandH = H * (W / H > 0.9 ? 0.36 : BAND);
     return {
-      half: { wallArgs: [0, 0, W, bandH, H], wall: { x: 0, y: 0, w: W, h: bandH } },
       most: { wallArgs: full, wall: { x: 0, y: 0, w: W, h: H } },
       all: { wallArgs: full, wall: { x: 0, y: 0, w: W, h: H } },
-      spread, pad, bandH,
+      spread, pad,
     };
   }
 
@@ -362,30 +346,6 @@ export function journalPlate({ name, portrait, position, counts, covers }) {
         drawWall(ctx, lay[stop].wall, wallTiles(...lay[stop].wallArgs), sleeves);
       }
 
-      if (stop === 'half') {
-        if (lay.spread) {
-          const box = { x: lay.bandW + pad, y: pad, w: W - lay.bandW - pad * 2, h: H - pad * 2 };
-          const s = stack(box, rowsFor([{ portrait: PORTRAIT.half * 0.8 }, 'name', 'facts', 'mark']));
-          setDown(s.rows, box.x, box.y + (box.h - s.h) / 2, box.w);
-          return [];
-        }
-        // The face on the seam, the card under it on the paper.
-        const d = PORTRAIT.half * U;
-        drawPortrait(ctx, art?.face, W / 2, lay.bandH, d, RING * U, ink.paper, position);
-        // The mark sits at the foot, and the card keeps clear of it: on a
-        // square the two met (2026-10-30).
-        const mh = MARK_H * U * 0.8;
-        const top = lay.bandH + d / 2 + RING * U + 12 * U;
-        const box = { x: pad, y: top, w: W - pad * 2, h: H - top - pad - (art?.mark ? mh + 14 * U : 0) };
-        const s = stack(box, rowsFor(['name', 'facts']));
-        setDown(s.rows, box.x, box.y + Math.max(0, (box.h - s.h) / 2), box.w);
-        if (art?.mark) {
-          const mw = mh * MARK_ASPECT;
-          ctx.drawImage(art.mark, (W - mw) / 2, H - pad - mh, mw, mh);
-        }
-        return [];
-      }
-
       if (stop === 'most') {
         // The card as a label stuck onto the wall: paper, rounded, lifted,
         // the face on its top edge.
@@ -467,7 +427,7 @@ export default function JournalPrinter({ layered = false }) {
   useEffect(() => {
     try { sessionStorage.setItem(STORE, JSON.stringify(choices)); } catch { /* private mode */ }
   }, [choices]);
-  const wanted = STOPS.some(s => s.key === choices.stop) ? choices.stop : 'half';
+  const wanted = STOPS.some(s => s.key === choices.stop) ? choices.stop : 'most';
   const size = FRAME_ORDER.includes(choices.size) ? choices.size : 'story';
   const frame = FRAMES[size];
   const isPaper = key => GROUNDS.some(g => g.key === key);
