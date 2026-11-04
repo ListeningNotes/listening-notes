@@ -16,8 +16,8 @@
 //   All — the records are the whole frame; the only thing over them is a
 //     signature at the foot: the face and the name.
 //
-// The dial turns with a tap on the records (Miyel's pick, 2026-10-30). It
-// falls back on its own: a stop that needs more records than the journal has
+// The dial is three words on the print bar (Miyel, 2026-11-03; a tap on the
+// records until then). It falls back on its own: a stop that needs more records than the journal has
 // to fill it without repeating one is skipped, and a journal that cannot fill
 // even Half's band prints on paper alone — framed, nothing moving, which is
 // the card somebody who just started will share. Not a fourth stop nobody
@@ -144,17 +144,17 @@ export function drawPortrait(c, img, cx, cy, d, ring, paper, position) {
 // ── The plate ──────────────────────────────────────────────────────────────
 
 // A month's moving look is this plate too (MonthPlate.js has the still one):
-// the month at the head where the journal says what it is, its records and
-// marks as the facts, no prompt — `tagline`, `headline`, `title` and
-// `fileName` say so.
-export function journalPlate({ name, portrait, position, counts, prompt, covers, tagline = TAGLINE, headline = false, title = 'Your journal', fileName = 'journal' }) {
+// the month where the journal says what it is, its records and marks as the
+// facts, no prompt — `tagline`, `title` and `fileName` say so.
+export function journalPlate({ name, portrait, position, counts, prompt, covers, tagline = TAGLINE, title = 'Your journal', fileName = 'journal' }) {
   const coverList = covers.slice(0, 60);
 
   // The stops this paper can print with these records: a stop is offered
   // only when its wall fills without a sleeve twice. A moving ground fills
-  // any wall, so with one every stop is there.
+  // the whole print with the card on it as a label (Miyel, 2026-11-03), so
+  // with one there is only Most.
   function stopsFor(frame, art, moving = false) {
-    if (moving) return STOPS.map(s => s.key);
+    if (moving) return ['most'];
     const have = (art?.covers || []).filter(Boolean).length;
     const lay = layout(frame);
     return STOPS.filter(s => wallTiles(...lay[s.key].wallArgs).length <= have).map(s => s.key);
@@ -194,8 +194,6 @@ export function journalPlate({ name, portrait, position, counts, prompt, covers,
     fileName,
     stopsFor,
     stopFor,
-    // Where a stop's records go, for a moving ground to be laid there.
-    wallFor(frame, stop) { return layout(frame)[stop]?.wall || null; },
 
     async load({ isDark }) {
       const [mark, face, ...sleeves] = await Promise.all([
@@ -353,13 +351,6 @@ export function journalPlate({ name, portrait, position, counts, prompt, covers,
         ctx.clip();
         ctx.drawImage(live, r.x, r.y, r.w, r.h);
         ctx.restore();
-        // On Half the ground and the card share the paper, so a cover cut
-        // off at the band's foot was cut at nothing: a hairline is the edge.
-        if (stop === 'half') {
-          ctx.fillStyle = ink.rule;
-          if (lay.spread) ctx.fillRect(r.x + r.w, r.y, Math.max(1, U * 0.8), r.h);
-          else ctx.fillRect(r.x, r.y + r.h, r.w, Math.max(1, U * 0.8));
-        }
       } else {
         drawWall(ctx, lay[stop].wall, wallTiles(...lay[stop].wallArgs), sleeves);
       }
@@ -379,7 +370,7 @@ export function journalPlate({ name, portrait, position, counts, prompt, covers,
         const mh = MARK_H * U * 0.8;
         const top = lay.bandH + d / 2 + RING * U + 12 * U;
         const box = { x: pad, y: top, w: W - pad * 2, h: H - top - pad - (art?.mark ? mh + 14 * U : 0) };
-        const s = stack(box, rowsFor(headline ? ['tag', 'name', 'facts'] : ['name', 'facts', 'prompt']));
+        const s = stack(box, rowsFor(['name', 'facts', 'prompt']));
         setDown(s.rows, box.x, box.y + Math.max(0, (box.h - s.h) / 2), box.w);
         if (art?.mark) {
           const mw = mh * MARK_ASPECT;
@@ -479,7 +470,7 @@ function monthsOf(entries) {
 
 // The moving grounds (the printer brief): six of the parked screensavers,
 // turned with the same dots as Day and Night, after them. Each runs in a
-// stage of its own off the screen, the size of the wall it fills, and the
+// stage of its own off the screen, the size of the print it fills, and the
 // plate lays its canvas there every frame. Only on 9:16 and 4:5: a moving
 // ground needs room above and below to read as motion. The paper under the
 // card stays the last of Day or Night chosen (Miyel, 2026-11-02).
@@ -581,7 +572,7 @@ export default function JournalPrinter({ layered = false }) {
     if (month) {
       return journalPlate({
         ...keeper, counts: monthFacts(month), prompt: null, covers: month.records.map(r => r.art).filter(Boolean),
-        tagline: month.label, headline: true, title: month.label, fileName: `month-${month.key}`,
+        tagline: month.label, title: month.label, fileName: `month-${month.key}`,
       });
     }
     return journalPlate({ ...keeper, counts, prompt, covers });
@@ -614,12 +605,11 @@ export default function JournalPrinter({ layered = false }) {
   const motion = useCallback(() => (isMoving ? canvasRef.current : null), [isMoving]);
   const press = usePress({ plate: plate || { load: async () => null, draw() {} }, shown, ground, isDark, link: address, fonts, motion });
   // Nothing changes on the paper while it is being filmed.
-  const busy = press.clip === 'saving';
+  const busy = press.saving;
 
-  // The stage: the wall's size at the paper's pixels, scaled the way the
-  // screensavers scale themselves on a phone so their canvas comes out at
-  // exactly the wall's size.
-  const wall = isMoving && plate?.wallFor && stop ? plate.wallFor(frame, stop) : null;
+  // The stage: the paper's pixels, scaled the way the screensavers scale
+  // themselves on a phone so their canvas comes out at exactly the paper's
+  // size.
   const k = inBrowser ? backgroundScale() : 1;
 
   // The preview: the plate itself at the paper's size, shown smaller —
@@ -644,26 +634,41 @@ export default function JournalPrinter({ layered = false }) {
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [plate, art, frame, shown, isDark, ground, fonts, isMoving, press.picture]);
-
-  const [learned, setLearned] = useState(false);
-  const turnDial = useCallback(() => {
-    if (!plate?.stopsFor || !art || busy) return;
-    const can = plate.stopsFor(frame, art, isMoving);
-    if (can.length < 2) return;
-    setLearned(true);
-    const next = can[(can.indexOf(stop) + 1) % can.length];
-    setChoices(c => ({ ...c, stop: next }));
-  }, [plate, art, frame, stop, isMoving, busy]);
+  }, [plate, art, frame, shown, isDark, ground, fonts, isMoving]);
 
   const done = () => { if (layered) router.back(); else router.push('/'); };
   const stopLabel = STOPS.find(s => s.key === stop)?.label;
   const groundLabel = groundsHere.find(g => g.key === ground)?.label;
-  const canTurn = Boolean(plate?.stopsFor && art && plate.stopsFor(frame, art, isMoving).length > 1);
-  const hint = canTurn && !learned ? 'Tap the records to turn the dial.' : '';
   const choose = change => { if (!busy) setChoices(c => ({ ...c, ...change })); };
+  // The dial, as words under the print: the stops this paper can print, when
+  // there is more than one.
+  const can = plate?.stopsFor && art ? plate.stopsFor(frame, art, isMoving) : [];
+  const dial = can.length > 1
+    ? STOPS.filter(s => can.includes(s.key)).map(s => ({ key: s.key, label: s.label, on: s.key === stop, press: () => choose({ stop: s.key }) }))
+    : null;
   const chooseGround = key => choose({ ground: key, ...(isPaper(key) ? { paper: key } : {}) });
   const what = month ? month.label : 'Your journal';
+  // The sheet's furniture stands down, as it does while a record prints.
+  useEffect(() => {
+    const root = document.documentElement;
+    root.dataset.printing = '1';
+    return () => { delete root.dataset.printing; };
+  }, []);
+  // A sideways swipe on the print turns the ground, as it does on a record.
+  const swipe = useRef(null);
+  const onTouchStart = e => {
+    if (e.touches.length === 1) swipe.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  };
+  const onTouchEnd = e => {
+    const from = swipe.current;
+    swipe.current = null;
+    if (!from || !e.changedTouches?.length) return;
+    const dx = e.changedTouches[0].clientX - from.x;
+    const dy = e.changedTouches[0].clientY - from.y;
+    if (Math.abs(dx) <= 42 || Math.abs(dx) <= Math.abs(dy)) return;
+    const i = groundsHere.findIndex(g => g.key === ground);
+    chooseGround(groundsHere[(i + (dx < 0 ? 1 : -1) + groundsHere.length) % groundsHere.length].key);
+  };
 
   // Drawn in the browser only: the choices live in this tab's storage and
   // the bar is portalled onto the body, neither of which the server has.
@@ -673,14 +678,14 @@ export default function JournalPrinter({ layered = false }) {
       {/* The faces the canvas draws in, worn by something so they can be read. */}
       <span className="jp-face-sans" aria-hidden="true" />
       <span className="jp-face-mono" aria-hidden="true" />
-      {moving && wall && groundAlbums.length > 0 && (
+      {moving && groundAlbums.length > 0 && (
         <div
           ref={stageRef}
           className="jp-stage"
           aria-hidden="true"
-          style={{ width: Math.round(wall.w * k), height: Math.round(wall.h * k) }}
+          style={{ width: Math.round(frame.w * k), height: Math.round(frame.h * k) }}
         >
-          <moving.Ground key={`${moving.key}-${Math.round(wall.w)}x${Math.round(wall.h)}-${month?.key || 'journal'}`} albums={groundAlbums} />
+          <moving.Ground key={`${moving.key}-${size}-${month?.key || 'journal'}`} albums={groundAlbums} />
         </div>
       )}
       {months.length > 0 && (
@@ -701,41 +706,39 @@ export default function JournalPrinter({ layered = false }) {
           })}
         </nav>
       )}
-      <div className="jp-paper">
-        {press.picture ? (
-          <img className="jp-out" src={press.picture} alt="Your print" onClick={press.dismissPicture} />
-        ) : (
-          <canvas
-            ref={canvasRef}
-            className={'jp-canvas' + (art ? '' : ' jp-canvas--waiting')}
-            width={frame.w}
-            height={frame.h}
-            onClick={turnDial}
-            role="img"
-            aria-label={stop === 'paper' || !stop ? what : `${what}, ${stopLabel}`}
-          />
-        )}
+      <div className="jp-paper" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+        <canvas
+          ref={canvasRef}
+          className={'jp-canvas' + (art ? '' : ' jp-canvas--waiting')}
+          width={frame.w}
+          height={frame.h}
+          role="img"
+          aria-label={stop === 'paper' || !stop ? what : `${what}, ${stopLabel}`}
+        />
       </div>
-      {press.picture || press.clip === 'ready' ? (
+      {press.picture || press.clip ? (
         <PrintBar
           final
+          picture={press.picture}
+          clip={press.clip}
+          canSend={press.canSend}
           status={press.status}
           onBack={press.dismissPicture}
           onDeliver={press.deliver}
-          canDeliver={press.clip === 'ready' || press.canDeliver}
-          deliverLabel={press.clip === 'ready' && press.canSend ? 'Save to Photos' : 'Save'}
+          canDeliver={press.canDeliver}
         />
       ) : (
         <PrintBar
           grounds={groundsHere}
           ground={ground}
           onGround={chooseGround}
-          look={!stop || stop === 'paper' ? groundLabel : `${stopLabel} · ${groundLabel}`}
+          look={groundLabel}
+          choices={isMoving ? null : dial}
           size={size}
           onSize={key => choose({ size: key })}
           onSave={() => { if (!busy) press.save(size); }}
           onDone={done}
-          status={press.status || hint}
+          status={press.status}
         />
       )}
     </div>

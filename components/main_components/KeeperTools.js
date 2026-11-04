@@ -41,8 +41,7 @@
 // three tools and a door reach 197px back from the right on a 375px phone
 // while the mark ends at 212. So the row is told when the menu is open and
 // takes its mark off the screen for as long as it is — the row becomes the
-// menu, and comes back when it shuts. The card has two tools and 30px to
-// spare, and keeps its mark. This is a DOM write rather than a prop because
+// menu, and comes back when it shuts. The card's row does the same. This is a DOM write rather than a prop because
 // the row is two components away (FullPostPage builds the menu, SiteNav draws
 // the row) and threading a boolean through both to hide one logo is more
 // moving parts than the thing it moves.
@@ -177,11 +176,12 @@ export default function KeeperTools({
   // page mid-close does not come back to a component that has gone.
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
 
-  // Tell the nav row, if this is in one, so it can get its mark out of the
-  // way. Nothing happens on a card: there is no .sitenav-row over it.
+  // Tell the row it is in, so it can get its mark out of the way: the entry's
+  // nav and the home bar over the card (.hn-bar, since the card's three tools
+  // came to reach the mark, Miyel's phone, 2026-11-03).
   const mine = useRef(null);
   useEffect(() => {
-    const row = mine.current && mine.current.closest('.sitenav-row');
+    const row = mine.current && mine.current.closest('.sitenav-row, .hn-bar');
     if (!row) return undefined;
     row.toggleAttribute('data-tooling', phase === 'out');
     return () => row.removeAttribute('data-tooling');

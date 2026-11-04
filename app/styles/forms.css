@@ -3281,19 +3281,22 @@ a.pn-quiet-act { text-decoration: none; display: inline-block; }
 
 .own-screen .kt-tool, .idc-tool { text-decoration: none; }
 /* ── The journal's printer (JournalPlate.js) ────────────────────────────────
-   The paper in the room left between the top and the print bar, which is
-   fixed at the foot; the canvas is the print at full size, shown smaller,
-   its shape kept by its own width and height. */
+   The whole screen, over the nav and under the print bar, which is fixed at
+   the foot: inside a layer the sheet's own top covered the line of months
+   (Miyel's phone, 2026-11-03). The canvas is the print at full size, shown
+   smaller, its shape kept by its own width and height. */
 .jp-room {
-  width: 100%; box-sizing: border-box; min-height: 100dvh;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  padding: 20px 16px 240px;
+  --jp-top: calc(10px + env(safe-area-inset-top));
+  --jp-bar: calc(190px + env(safe-area-inset-bottom));
+  position: fixed; inset: 0; z-index: 350; box-sizing: border-box; background: var(--bg);
+  display: flex; flex-direction: column; align-items: center;
+  padding: var(--jp-top) 16px var(--jp-bar);
 }
 /* What is printed: the journal or one of its months, a line of words over
    the paper that slides sideways to reach older months. */
 .jp-subjects {
   display: flex; gap: 18px; max-width: 100%; box-sizing: border-box;
-  overflow-x: auto; scrollbar-width: none; padding: 4px 4px 14px;
+  flex: none; overflow-x: auto; scrollbar-width: none; padding: 4px 4px 12px;
 }
 .jp-subjects::-webkit-scrollbar { display: none; }
 .jp-subject {
@@ -3303,14 +3306,12 @@ a.pn-quiet-act { text-decoration: none; display: inline-block; }
   border-bottom: 1px solid transparent;
 }
 .jp-subject--on { color: var(--ink); border-bottom-color: var(--ink); }
-.jp-paper { display: flex; justify-content: center; max-width: 100%; }
-.jp-canvas, .jp-out {
+.jp-paper { display: flex; justify-content: center; max-width: 100%; margin-block: auto; touch-action: pan-y; }
+.jp-canvas {
   display: block; width: auto; height: auto;
-  max-width: 100%; max-height: calc(100dvh - 320px);
+  max-width: 100%; max-height: calc(100dvh - var(--jp-top) - var(--jp-bar) - 56px);
   border-radius: 10px; box-shadow: var(--shadow-lift);
-  cursor: pointer; -webkit-tap-highlight-color: transparent;
 }
-.jp-out { -webkit-touch-callout: default; }
 .jp-canvas--waiting { opacity: 0; }
 /* Where a moving ground runs, off the screen, at the wall's size. */
 .jp-stage { position: fixed; left: -40000px; top: 0; overflow: hidden; pointer-events: none; }
