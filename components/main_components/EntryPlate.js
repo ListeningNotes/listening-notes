@@ -1,6 +1,9 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // components/main_components/EntryPlate.js
+// (2026-11-03: the head is the mark alone, no name passed in, and what a print
+// shows is chosen by the words on the bar rather than by tapping lines: the
+// keeper and tap branches below are left for what still calls them.)
 // A record, cut as a printing plate.
 //
 // The first thing the share printer prints, and the one that matters: a

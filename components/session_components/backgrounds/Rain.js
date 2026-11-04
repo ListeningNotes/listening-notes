@@ -36,12 +36,15 @@ export default function Rain({ albums = [] }) {
     function build() {
       const lanes = Math.max(3, Math.floor(W / (TILE_MAX + GAP)));
       const step  = W / lanes;
+      // As many to a lane as the height wants: two left a tall print nearly
+      // empty, and it is meant to be the whole background (2026-11-03).
+      const perLane = Math.max(2, Math.round(H / 400));
       // Shuffle once, deal round-robin — no repeats until all albums shown
       const order = [...images.keys()].sort(() => Math.random() - 0.5);
       let cursor = 0;
       tiles = [];
       for (let lane = 0; lane < lanes; lane++) {
-        for (let i = 0; i < 2; i++) {
+        for (let i = 0; i < perLane; i++) {
           const img = order[cursor++ % order.length];
           // Bias toward extremes so "close" and "far" tiles are more common than mid-size
           const t    = Math.random();

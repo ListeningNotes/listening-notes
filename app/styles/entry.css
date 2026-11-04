@@ -2094,21 +2094,7 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
 .ln-print-line:focus, .ln-print-line:focus-visible { outline: none; }
 .ln-print-mark path, .ln-print-mark circle { fill: var(--ink); transition: fill 0.2s; }
 .ln-print-mark .ln-print-mark-dot--live { fill: var(--live); }
-/* The finished picture over the paper, when a phone has no share sheet to
-   take it: held, iOS offers Add to Photos; tapped, the card returns. */
-.ln-print-out {
-  position: absolute; inset: 0; z-index: 3;
-  width: 100%; height: 100%; object-fit: contain;
-  background: var(--bg);
-  -webkit-touch-callout: default;
-}
-.ln-print-line { cursor: pointer; transition: opacity 0.25s ease; -webkit-tap-highlight-color: transparent; }
-.ln-print-line.ln-off { opacity: 0.18; }
-.ln-print-keeper {
-  font-family: var(--font-label); font-size: 13px; letter-spacing: 0.14em;
-  text-transform: uppercase; color: var(--ink-soft);
-  padding: 4px 12px;
-}
+.ln-print-line.ln-off { display: none; }
 .ln-print-symbol { display: inline-flex; line-height: 1; padding: 0 4px; }
 .ln-print-horizon { width: 100%; max-width: 340px; }
 /* Every track as a row (EntryPlate.js, the same numbers): the number, the
@@ -2159,21 +2145,47 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
   transition: background 0.15s, border-color 0.15s, transform 0.15s;
 }
 .ln-print-dot--on { background: var(--ink); border-color: var(--ink); transform: scale(1.25); }
-.ln-print-sizes { gap: 6px; }
-.ln-print-size {
-  font-family: var(--font-label); font-size: 9.5px; letter-spacing: 0.1em;
-  padding: 6px 11px; border-radius: 999px;
-  border: 1px solid var(--border); background: transparent; color: var(--ink-soft);
+/* No pills (2026-11-03): a word with a line under the one that is on, for the
+   sizes and for what the print shows; a glyph over a word for the doors. */
+.ln-print-sizes, .ln-print-words { display: flex; justify-content: center; flex-wrap: wrap; gap: 4px 16px; }
+.ln-print-words { padding-bottom: 8px; margin-bottom: 2px; width: 100%; border-bottom: 1px solid var(--border); }
+.ln-print-size, .ln-print-word {
+  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.1em;
+  padding: 5px 0 3px; border: 0; border-bottom: 1px solid transparent; border-radius: 0;
+  background: transparent; color: var(--ink-soft); text-transform: uppercase;
   cursor: pointer; white-space: nowrap;
-  transition: color 0.15s, border-color 0.15s, background 0.15s;
 }
-.ln-print-size:hover { color: var(--ink); border-color: var(--ink-faint); }
-.ln-print-size--on { color: var(--bg); background: var(--ink); border-color: var(--ink); }
+.ln-print-size:hover, .ln-print-word:hover { color: var(--ink); }
+.ln-print-size--on, .ln-print-word--on { color: var(--ink); border-bottom-color: var(--ink); }
+.ln-print-doors { display: flex; justify-content: center; gap: 32px; }
+.ln-print-door {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  min-width: 56px; padding: 4px; border: 0; background: transparent; color: var(--ink);
+  font-family: var(--font-label); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+/* The pop-up: the finished print over the page. */
+.ln-print-pop {
+  position: fixed; inset: 0; z-index: 500;
+  display: flex; align-items: center; justify-content: center;
+  padding: calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom));
+  background: rgba(0, 0, 0, 0.5);
+}
+.ln-print-pop-sheet {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  max-width: 100%; max-height: 100%; padding: 14px; box-sizing: border-box;
+  border-radius: 16px; background: var(--bg); color: var(--ink);
+}
+.ln-print-pop-print {
+  display: block; width: auto; height: auto; min-height: 0;
+  max-width: 100%; max-height: calc(100dvh - 170px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  border-radius: 8px; -webkit-touch-callout: default;
+}
 .ln-print-said {
   font-family: var(--font-label); font-size: 10px; letter-spacing: 0.08em;
-  color: var(--ink-soft); min-height: 12px; text-align: center; overflow-wrap: anywhere;
-  margin-bottom: 2px;
+  color: var(--ink-soft); text-align: center; overflow-wrap: anywhere;
 }
+.ln-print-said:empty { display: none; }
 /* The sheet's own furniture stands down while printing: the carets to the
    neighbours (a pointer's version of the sideways swipe, which now turns
    the ground). Reached from the root — the carets are the sheet's, not the
@@ -2190,7 +2202,6 @@ html[data-printing] .sitenav-row { display: none; }
    foot (tried, 2026-09-13). So the bar stays inside the viewport and the
    band, which shows the page's background, wears the bar's colour — the
    same --bg — and reads as the bar's foot rather than as a gap. */
-@media (prefers-reduced-motion: reduce) { .ln-print-line { transition: none; } }
 
 /* ── The bars an entry pins to the window, on a desk ───────────────────────
    The correction bar, its trouble line and the print bar (which is portalled

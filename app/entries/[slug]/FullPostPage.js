@@ -70,7 +70,6 @@ const GROUNDS = [
 // Said under the bar each time the printer opens, until the first tap of
 // that opening — nobody would know a line can be tapped off otherwise
 // (Miyel, 2026-09-13; once-ever was too little).
-const PRINT_HINT = 'Tap an element to remove or add it.';
 
 
 // The pair of actions that close the entry out used to share a local style
@@ -319,18 +318,17 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   }, [printChoices]);
   const ground = GROUNDS.some(g => g.key === printChoices.ground) ? printChoices.ground : 'record';
   const shown = {
-    keeper: printChoices.keeper !== false,
-    title: printChoices.title !== false,
-    artist: printChoices.artist !== false,
+    // What is left to switch is in the words on the bar (Miyel, 2026-11-03,
+    // when tapping the print went); the title and the artist always print,
+    // and the head of the print is the mark alone.
+    title: true,
+    artist: true,
     stars: printChoices.stars !== false,
     chips: printChoices.chips !== false,
     symbols: printChoices.symbols === true,
     horizon: printChoices.horizon !== false,
-    // The horizon's three prints, cycled by tapping it (EntryPlate.js).
+    // The horizon's three prints (EntryPlate.js).
     bars: ['named', 'tracks'].includes(printChoices.bars) ? printChoices.bars : 'shape',
-    // The mark is not a switch — no print goes out without it — but its dot
-    // is: a tap turns it live green or back to ink (Miyel, 2026-09-13).
-    liveDot: printChoices.liveDot === true,
   };
   // Plain night is dark whatever the page's theme; the record's ground
   // follows it, the way the page does.
@@ -363,24 +361,22 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     return () => observer.disconnect();
   }, [printing, size]);
   const keeperName = (keeper_name || '').trim();
-  const plate = useMemo(() => entryPlate({ entry, keeper: keeperName }), [entry, keeperName]);
+  const plate = useMemo(() => entryPlate({ entry }), [entry]);
   const press = usePress({
     plate, shown, ground, isDark: printDark, link: entryUrl,
     fonts: { sans: '.ln-screen-one-title', mono: '.ln-screen-one-artist' },
   });
-  const leaveOff = key => { learn(); setPrintChoices(c => ({ ...c, [key]: !shown[key] })); };
-  const cycleMarks = () => { learn(); setPrintChoices(c => {
+  const leaveOff = key => setPrintChoices(c => ({ ...c, [key]: !shown[key] }));
+  const cycleMarks = () => setPrintChoices(c => {
     const hasSymbols = entry.favorite === true || entry.favorite === 'true' || isMasterpiece || isFormative;
     if (shown.chips) return { ...c, chips: false, symbols: hasSymbols };
     if (shown.symbols) return { ...c, chips: false, symbols: false };
     return { ...c, chips: true, symbols: false };
-  }); };
-  // printTracks, below with the tracks: whether the record has titles to print.
-  const cycleBars = () => { learn(); setPrintChoices(c => {
-    if (!shown.horizon) return { ...c, horizon: true, bars: 'shape' };
-    if (!printTracks || shown.bars === 'tracks') return { ...c, horizon: false, bars: 'shape' };
-    return { ...c, bars: shown.bars === 'named' ? 'tracks' : 'named' };
-  }); };
+  });
+  // One of the horizon's prints; pressing the one that is on leaves it off.
+  const chooseBars = kind => setPrintChoices(c => (shown.horizon && shown.bars === kind
+    ? { ...c, horizon: false }
+    : { ...c, horizon: true, bars: kind }));
   const turnGround = step => setPrintChoices(c => {
     const i = GROUNDS.findIndex(g => g.key === ground);
     return { ...c, ground: GROUNDS[(i + step + GROUNDS.length) % GROUNDS.length].key };
@@ -411,8 +407,6 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     if (printing) root.dataset.printing = '1'; else delete root.dataset.printing;
     return () => { delete root.dataset.printing; };
   }, [printing]);
-  const [learned, setLearned] = useState(false);
-  const learn = () => { if (!learned) setLearned(true); };
   const finishPrinting = useCallback(() => { setPrinting(false); press.dismissPicture(); }, [press]);
   // Escape leaves the mode, and is stopped before the sheet under it hears
   // it and closes the entry too.
@@ -477,7 +471,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     <KeeperTools
       onEdit={edit.begin}
       slug={entry.slug}
-      onPrint={() => { setPrinting(true); setLearned(false); }}
+      onPrint={() => setPrinting(true)}
       /* Sent by unfolds where its answer prints, in the slot under the chips,
          rather than turning the whole page into a form for one field. */
       // Which of the two slots is on screen, decided once, at the press. The
@@ -635,6 +629,17 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   const parsedTracks = entryTracks(entry);
   const printTracks = parsedTracks.length > 0 && parsedTracks.every(t => t.name);
   const horizonBars = parseHorizon(entry.horizon);
+  const printWords = [
+    ...(parsedTracks.some(t => t.stars > 0) || horizonBars.length > 0 ? [
+      { key: 'shape', label: 'Shape', on: shown.horizon && shown.bars === 'shape', press: () => chooseBars('shape') },
+      ...(printTracks ? [
+        { key: 'named', label: 'Named', on: shown.horizon && shown.bars === 'named', press: () => chooseBars('named') },
+        { key: 'tracks', label: 'Tracks', on: shown.horizon && shown.bars === 'tracks', press: () => chooseBars('tracks') },
+      ] : []),
+    ] : []),
+    { key: 'stars', label: 'Stars', on: shown.stars, press: () => leaveOff('stars') },
+    { key: 'marks', label: 'Marks', on: shown.chips || shown.symbols, press: cycleMarks },
+  ];
   // ── What was said, against what is on the record ────────────────────────
   // An entry carries its whole tracklist from 2026-09-18, including the songs
   // nothing was written about — the record's own contents, which nothing else
@@ -1501,11 +1506,6 @@ export default function FullPostPage({ entry, references = [], authed = false, l
             {ground === 'record' && entry.album_art && <img src={entry.album_art} alt="" />}
           </div>
         )}
-        {printing && press.picture && (
-          /* The finished picture, for a phone with no share sheet: hold it to
-             add it to Photos (iOS's own callout), tap it to come back. */
-          <img className="ln-print-out" src={press.picture} alt="Your print" onClick={press.dismissPicture} />
-        )}
         <div className="ln-print-stack" ref={printStackRef}>
         <div className="ln-print-card" ref={printCardRef} style={printing ? { '--print-scale': printScale } : undefined}>
         {printing && (
@@ -1516,20 +1516,12 @@ export default function FullPostPage({ entry, references = [], authed = false, l
             viewBox="76 96 241 140"
             className="ln-print-mark"
             xmlns="http://www.w3.org/2000/svg"
-            role="button"
-            tabIndex={0}
-            aria-label={shown.liveDot ? 'The mark, its dot lit — tap for ink' : 'The mark — tap to light its dot'}
-            onClick={() => { learn(); setPrintChoices(c => ({ ...c, liveDot: !shown.liveDot })); }}
+            aria-hidden="true"
           >
             <path transform="translate(73.734177, 220.794814)" d="M 44.65625 0 C 37.46875 0 31.160156 -1.601562 25.734375 -4.8125 C 20.304688 -8.019531 16.097656 -12.28125 13.109375 -17.59375 C 10.128906 -22.90625 8.640625 -28.773438 8.640625 -35.203125 L 8.640625 -116.21875 L 36.53125 -116.21875 L 36.53125 -33.203125 C 36.53125 -30.546875 37.46875 -28.222656 39.34375 -26.234375 C 41.226562 -24.242188 43.550781 -23.25 46.3125 -23.25 L 77.03125 -23.25 L 77.03125 0 Z M 44.65625 0 " />
             <path transform="translate(153.915942, 220.794814)" d="M 91.96875 2 C 85 2 78.742188 0.476562 73.203125 -2.5625 C 67.671875 -5.613281 63.300781 -9.847656 60.09375 -15.265625 C 56.882812 -20.691406 55.28125 -26.835938 55.28125 -33.703125 L 55.28125 -84.5 C 55.28125 -86.269531 54.835938 -87.875 53.953125 -89.3125 C 53.066406 -90.75 51.90625 -91.910156 50.46875 -92.796875 C 49.03125 -93.679688 47.425781 -94.125 45.65625 -94.125 C 43.882812 -94.125 42.28125 -93.679688 40.84375 -92.796875 C 39.40625 -91.910156 38.269531 -90.75 37.4375 -89.3125 C 36.601562 -87.875 36.1875 -86.269531 36.1875 -84.5 L 36.1875 0 L 8.96875 0 L 8.96875 -82.515625 C 8.96875 -89.484375 10.539062 -95.625 13.6875 -100.9375 C 16.84375 -106.25 21.21875 -110.453125 26.8125 -113.546875 C 32.40625 -116.648438 38.6875 -118.203125 45.65625 -118.203125 C 52.738281 -118.203125 59.046875 -116.648438 64.578125 -113.546875 C 70.109375 -110.453125 74.476562 -106.25 77.6875 -100.9375 C 80.90625 -95.625 82.515625 -89.484375 82.515625 -82.515625 L 82.515625 -31.703125 C 82.515625 -29.929688 82.957031 -28.300781 83.84375 -26.8125 C 84.726562 -25.320312 85.859375 -24.160156 87.234375 -23.328125 C 88.617188 -22.492188 90.144531 -22.078125 91.8125 -22.078125 C 93.582031 -22.078125 95.210938 -22.492188 96.703125 -23.328125 C 98.203125 -24.160156 99.394531 -25.320312 100.28125 -26.8125 C 101.164062 -28.300781 101.609375 -29.929688 101.609375 -31.703125 L 101.609375 -116.21875 L 128.65625 -116.21875 L 128.65625 -33.703125 C 128.65625 -26.835938 127.050781 -20.691406 123.84375 -15.265625 C 120.632812 -9.847656 116.265625 -5.613281 110.734375 -2.5625 C 105.203125 0.476562 98.945312 2 91.96875 2 Z M 91.96875 2 " />
-            <circle cx="297.0547" cy="216.71875" r="14.1328" className={shown.liveDot ? 'ln-print-mark-dot--live' : undefined} />
+            <circle cx="297.0547" cy="216.71875" r="14.1328" />
           </svg>
-        )}
-        {printing && keeperName && (
-          <div className={'ln-print-line ln-print-keeper' + (shown.keeper ? '' : ' ln-off')} onClick={() => leaveOff('keeper')} role="button" tabIndex={0} title="Tap to leave this off the print">
-            {keeperName}
-          </div>
         )}
         {edit.editing ? (
           <button
@@ -1566,14 +1558,12 @@ export default function FullPostPage({ entry, references = [], authed = false, l
             <h1
               className={'ln-screen-one-title' + (printing ? ' ln-print-line' : '') + (printing && !shown.title ? ' ln-off' : '')}
               style={{ fontSize: titleSize }}
-              onClick={printing ? () => leaveOff('title') : undefined}
             >
               {entry.album}
             </h1>
           )}
         <div
           className={'ln-screen-one-artist' + (printing ? ' ln-print-line' : '') + (printing && !shown.artist ? ' ln-off' : '')}
-          onClick={printing ? () => leaveOff('artist') : undefined}
         >
           {edit.editing ? bylineField : <>{entry.artist}{entry.year ? ' · ' + entry.year : ''}</>}
         </div>
@@ -1590,18 +1580,17 @@ export default function FullPostPage({ entry, references = [], authed = false, l
              line with the stars sitting on it — the stand-in draws the
              stars bare, and the 14px of slack was the chips and the date
              dropping when the entry landed over the journal (2026-09-15). */
-          <div className={(printing ? 'ln-print-line' : '') + (printing && !shown.stars ? ' ln-off' : '')} style={{ display: 'flex', justifyContent: 'center' }} onClick={printing ? () => leaveOff('stars') : undefined}>
+          <div className={(printing ? 'ln-print-line' : '') + (printing && !shown.stars ? ' ln-off' : '')} style={{ display: 'flex', justifyContent: 'center' }}>
             <StarRating rating={displayRating} size={24} glow={isMasterpiece} animate={!alreadyShown} burst={isMasterpiece && !alreadyShown} />
           </div>
         )}
         {edit.editing && flagFields}
         <div
           className={'ln-screen-one-chips' + (printing ? ' ln-print-line' : '') + (printing && !shown.chips && !shown.symbols ? ' ln-off' : '')}
-          onClick={printing ? cycleMarks : undefined}
         >
           {printing && shown.symbols ? (
             /* The marks as the feed's symbols — the second of the three
-               states a tap cycles through while printing. */
+               states the word cycles through while printing. */
             <>
               {(entry.favorite === true || entry.favorite === 'true') && <span className="ln-print-symbol" style={{ color: 'var(--fav, #f0484f)' }}><Heart size={34} weight="fill" aria-label="Favorite" /></span>}
               {isMasterpiece && <span className="ln-print-symbol" style={{ color: 'var(--mp, #4a9bf0)' }}><SketchLogo size={34} weight="fill" aria-label="Masterpiece" /></span>}
@@ -1626,7 +1615,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
           Posted {postedOn}
         </div>
         {printing && (horizonBars.length > 0 || parsedTracks.some(t => t.stars > 0)) && (
-          <div className={'ln-print-line ln-print-horizon' + (shown.horizon ? '' : ' ln-off')} onClick={cycleBars} title="Tap for the titles, every track, or none">
+          <div className={'ln-print-line ln-print-horizon' + (shown.horizon ? '' : ' ln-off')}>
             {shown.horizon && printTracks && shown.bars === 'tracks' ? (
               <div className={'ln-print-tracks-wrap' + (parsedTracks.length > 16 ? ' ln-print-tracks-wrap--two' : '')}>
                 {rowColumns(parsedTracks.map((t, i) => ({ ...t, i }))).map((column, k) => (
@@ -1683,10 +1672,13 @@ export default function FullPostPage({ entry, references = [], authed = false, l
             onGround={key => setPrintChoices(c => ({ ...c, ground: key }))}
             size={size}
             onSize={key => setPrintChoices(c => ({ ...c, size: key }))}
+            choices={printWords}
             onSave={() => press.save(size)}
             onDone={finishPrinting}
-            status={press.status || (learned || press.picture ? '' : PRINT_HINT)}
+            status={press.status}
             final={Boolean(press.picture)}
+            picture={press.picture}
+            canSend={press.canSend}
             onBack={press.dismissPicture}
             onDeliver={press.deliver}
             canDeliver={press.canDeliver}

@@ -21,10 +21,15 @@
 // ── A moving print is a video ────────────────────────────────────────────
 // Given `motion`, a function returning the canvas a moving ground is being drawn on at the
 // paper's size (or nothing while the ground is still), Save records five seconds of it (library/video_file.js) —
-// quietly, "Saving…", nothing played back (Miyel, 2026-11-02: "why do we
-// need to see it make video?"). Five seconds is longer than iOS lets a tap
-// open the share sheet, so on a phone the bar then offers Save to Photos,
-// the one tap left; a computer downloads it straight away.
+// quietly, "Saving…" (Miyel, 2026-11-02: "why do we need to see it make
+// video?"), and then comes up in the same pop-up a picture does.
+//
+// ── The pop-up ───────────────────────────────────────────────────────────
+// Save shows the finished print over the page, with one button that hands
+// it over (Miyel, 2026-11-03; it replaced the paper until then). A web page
+// cannot write to the camera roll, and five seconds is longer than iOS lets
+// a tap open the share sheet, so the button is the tap the sheet needs. A
+// phone with no sheet holds a picture to save it, and downloads a video.
 'use client';
 
 import { useCallback, useRef, useState, useSyncExternalStore } from 'react';
@@ -79,8 +84,8 @@ function handOver(it) {
 
 export function usePress({ plate, shown, ground, isDark, link, fonts, motion = null }) {
   const [status, setStatus] = useState('');
-  // A video's progress: 'saving' while it records, 'ready' while it waits
-  // for the tap that hands it over.
+  // A video's progress: 'saving' while it records, then its address while it
+  // waits in the pop-up.
   const [clip, setClip] = useState(null);
   // The finished picture, shown on the paper for a phone that has no share
   // sheet to hand it to (a page on plain http gets none): iOS lets a held
@@ -169,17 +174,9 @@ export function usePress({ plate, shown, ground, isDark, link, fonts, motion = n
     const frame = FRAMES[frameKey] || FRAMES.story;
     made.current = { blob, name: `${plate?.fileName || 'print'}-${ground}-${frame.label.replace(':', 'x')}.mp4` };
     const copied = await pasted;
-    if (!canSend && !touch) {
-      // A computer: downloaded now, nothing more to press.
-      handOver(made.current);
-      made.current = null;
-      setClip(null);
-      say(copied ? 'Saved, and its address is copied.' : 'Saved.', 4000);
-      return;
-    }
-    setClip('ready');
+    setClip(URL.createObjectURL(blob));
     setStatus(copied ? 'Its address is copied.' : '');
-  }, [copyLink, say, plate, ground, canSend, touch]);
+  }, [copyLink, say, plate, ground]);
 
   const save = useCallback(async frameKey => {
     const canvas = motion ? motion() : null;
@@ -199,7 +196,7 @@ export function usePress({ plate, shown, ground, isDark, link, fonts, motion = n
       // Said for as long as the picture is up; dismissing it clears it.
       clearTimeout(timer.current);
       setStatus(canDeliver
-        ? (copied ? 'This is your print, and its address is copied.' : 'This is your print.')
+        ? (copied ? 'Its address is copied.' : '')
         : 'Touch and hold the picture to add it to Photos.');
     } catch {
       say('A picture on this print could not be read, so it cannot be saved.', 4000);
@@ -221,7 +218,14 @@ export function usePress({ plate, shown, ground, isDark, link, fonts, motion = n
       say('That could not be handed over from here.', 4000);
     }
   }, [canSend, say]);
-  const dismissPicture = useCallback(() => { setPicture(null); setClip(null); made.current = null; setStatus(''); }, []);
+  const dismissPicture = useCallback(() => {
+    setPicture(null);
+    setClip(c => { if (c && c !== 'saving') URL.revokeObjectURL(c); return null; });
+    made.current = null;
+    setStatus('');
+  }, []);
 
-  return { save, deliver, canDeliver, canSend, status, picture, clip, dismissPicture };
+  const saving = clip === 'saving';
+  const finished = saving ? null : clip;
+  return { save, deliver, canDeliver: canDeliver || Boolean(finished), canSend, status, picture, saving, clip: finished, dismissPicture };
 }
