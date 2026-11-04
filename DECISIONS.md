@@ -733,14 +733,12 @@ pressing. `?entry=slug` travels from an entry; the card sends nobody,
 meaning the profile. The press landed for the record on 2026-09-12; the
 card's door still says so until its plate is reworked.
 
-**What the printer is, 2026-11-03 (Miyel, trying it on her phone).** A print
-is changed by words on its bar, never by tapping the print, and its bar has no
-pills. A record's horizon prints with its titles or without: no list of tracks.
-A record prints under the mark alone, and never over a moving ground. A moving
-ground (9:16 and 4:5) fills the whole print, the card a label on it. Save
-shows the print in a pop-up, because no web page can write to a camera roll.
-The journal's print is the records and a bit about the keeper: no months and
-no prompt.
+**What the printer is, 2026-11-03 (Miyel, trying it on her phone).** Save shows
+the print in a pop-up, because no web page can write to a camera roll. A record
+prints under the mark alone, by words on its bar, never by tapping lines; its
+horizon with titles or without, no track list. The journal's print opens from
+the wall's line and is what the wall is showing: no order or month choices, no
+prompt. Original games only, never a copy of a named one.
 
 **The printer is a mode of the entry page, 2026-09-13.** Press the glyph and
 the first screen becomes the flyer, the way correcting is a mode: the card

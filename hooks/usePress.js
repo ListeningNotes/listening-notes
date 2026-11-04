@@ -19,8 +19,8 @@
 // enough to fall out of that.
 //
 // ── A moving print is a video ────────────────────────────────────────────
-// Given `motion`, a function returning the canvas a moving ground is being drawn on at the
-// paper's size (or nothing while the ground is still), Save records five seconds of it (library/video_file.js) —
+// Given `motion`, a function returning what to film while the print moves (or
+// nothing while it is still), Save makes a video (library/video_file.js) —
 // quietly, "Saving…" (Miyel, 2026-11-02: "why do we need to see it make
 // video?"), and then comes up in the same pop-up a picture does.
 //
@@ -34,9 +34,10 @@
 
 import { useCallback, useRef, useState, useSyncExternalStore } from 'react';
 import { FRAMES } from '../components/main_components/SharePrinter';
-import { canRecord, recordCanvas } from '../library/video_file';
+import { canRecord, filmFrames } from '../library/video_file';
 
-const SECONDS = 5;
+// Stories hold far more than this; it is long enough for the games to get going.
+const SECONDS = 15;
 
 const COPIED = 'Copied — paste it anywhere';
 const COPIED_MS = 2400;
@@ -160,12 +161,12 @@ export function usePress({ plate, shown, ground, isDark, link, fonts, motion = n
   // lets no page write to the camera roll; a download on a desktop. A phone
   // with no sheet (a page on plain http, like a dev copy on the home
   // network) holds the picture to add it to Photos, and has no second tap.
-  const film = useCallback(async (canvas, frameKey) => {
+  const film = useCallback(async (spec, frameKey) => {
     const pasted = copyLink();
     clearTimeout(timer.current);
     setStatus('Saving…');
     setClip('saving');
-    const blob = await recordCanvas(canvas, { seconds: SECONDS }).catch(() => null);
+    const blob = await filmFrames({ ...spec, seconds: SECONDS }).catch(() => null);
     if (!blob) {
       setClip(null);
       say('This browser cannot make a video, so nothing was saved.', 4000);
@@ -179,8 +180,8 @@ export function usePress({ plate, shown, ground, isDark, link, fonts, motion = n
   }, [copyLink, say, plate, ground]);
 
   const save = useCallback(async frameKey => {
-    const canvas = motion ? motion() : null;
-    if (canvas && canRecord()) return film(canvas, frameKey);
+    const spec = motion ? motion() : null;
+    if (spec && canRecord()) return film(spec, frameKey);
     const pasted = copyLink();
     try {
       const blob = await compose(frameKey);

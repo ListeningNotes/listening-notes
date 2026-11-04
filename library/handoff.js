@@ -43,6 +43,12 @@ let passing = null;
 // handOffOrder and neighboursOf below.
 let order = [];
 
+// What the wall is showing, left by the print door on its line: its covers in
+// its order and, when it is filtered, a word or two saying so (JournalPlate.js).
+let wall = null;
+export function handOffWall(covers, caption) { wall = { covers, caption }; }
+export function wallHandedOver() { return wall; }
+
 // Called by a tile as it is pressed. Only the fields the first screen prints,
 // rather than the whole row: what goes past here should be obvious from
 // reading it, and an entry object handed over whole invites somebody to reach

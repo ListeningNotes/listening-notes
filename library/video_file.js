@@ -11,8 +11,6 @@
 // around them that every phone plays: the index (moov) first, so a player
 // can start before it has the whole file, then the frames (mdat).
 //
-// The canvas is read as it is drawn, in real time — the grounds move on
-// their own clocks, so five seconds of film take five seconds to make.
 
 const CODECS = ['avc1.640028', 'avc1.4d0028', 'avc1.42e028'];  // High, Main, Baseline — level 4, room for 1080×1920
 const FPS = 30;
@@ -23,16 +21,17 @@ export function canRecord() {
   return typeof window !== 'undefined' && typeof window.VideoEncoder === 'function' && typeof window.VideoFrame === 'function';
 }
 
-// ── Recording ──────────────────────────────────────────────────────────────
-// Reads `canvas` for `seconds`, a frame every thirtieth of a second while it
-// is being drawn, and resolves to the MP4 — or to null if this browser has
-// no encoder for it, so the caller can save a still instead.
-export async function recordCanvas(canvas, { seconds = 5 } = {}) {
+// ── Filming ────────────────────────────────────────────────────────────────
+// Makes `seconds` of film from `frame(ctx, dt)`, which draws the next frame,
+// `dt` seconds on from the last. The scene is told the time rather than
+// reading it, so this runs as fast as the phone can draw and encode, not in
+// real time. Resolves to the MP4, or to null if this browser has no encoder for
+// it, so the caller can say so.
+export async function filmFrames({ width, height, seconds, frame }) {
   if (!canRecord()) return null;
-  const width = canvas.width, height = canvas.height;
   let config = null;
   for (const codec of CODECS) {
-    const tried = { codec, width, height, bitrate: 10_000_000, framerate: FPS, latencyMode: 'realtime', avc: { format: 'avc' } };
+    const tried = { codec, width, height, bitrate: 6_000_000, framerate: FPS, latencyMode: 'realtime', avc: { format: 'avc' } };
     try {
       if ((await VideoEncoder.isConfigSupported(tried)).supported) { config = tried; break; }
     } catch { /* the next codec, then */ }
@@ -58,31 +57,22 @@ export async function recordCanvas(canvas, { seconds = 5 } = {}) {
   });
   encoder.configure(config);
 
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
   const step = 1e6 / FPS;
-  const length = seconds * 1e6;
-  await new Promise(resolve => {
-    let start = null, slot = 0, count = 0;
-    const tick = now => {
-      if (start === null) start = now;
-      const at = (now - start) * 1000;
-      if (failed || at >= length) { resolve(); return; }
-      if (at >= slot * step) {
-        // Stamped on an even thirtieth of a second, so the film plays
-        // smoothly (stamped with the moment it was read, a 60-a-second
-        // screen gave frames a sixtieth, a thirtieth or a twentieth apart).
-        // A phone that falls behind skips to the slot it has reached, so
-        // the film still runs at the speed the ground moved.
-        slot = Math.floor(at / step);
-        const frame = new VideoFrame(canvas, { timestamp: Math.round(slot * step) });
-        encoder.encode(frame, { keyFrame: count % KEY_EVERY === 0 });
-        frame.close();
-        slot++;
-        count++;
-      }
-      requestAnimationFrame(tick);
-    };
-    requestAnimationFrame(tick);
-  });
+  const total = Math.round(seconds * FPS);
+  for (let i = 0; i < total && !failed; i++) {
+    frame(ctx, 1 / FPS);
+    const made = new VideoFrame(canvas, { timestamp: Math.round(i * step), duration: Math.round(step) });
+    encoder.encode(made, { keyFrame: i % KEY_EVERY === 0 });
+    made.close();
+    // Hand the page back now and then, and wait when the encoder falls behind:
+    // a phone that queues every frame at once runs out of memory.
+    while (encoder.encodeQueueSize > 4 && !failed) await new Promise(r => setTimeout(r, 4));
+    if (i % 6 === 0) await new Promise(r => setTimeout(r, 0));
+  }
   try { await encoder.flush(); } catch (error) { failed = failed || error; }
   encoder.close();
   if (failed || !description || !chunks.length) return null;

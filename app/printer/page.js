@@ -7,10 +7,10 @@
 // printer glyph beside the pencil and the first screen becomes the flyer
 // (FullPostPage.js, hooks/usePress.js). An old `?entry=` link lands there.
 //
-// This address prints the journal itself: the card's ··· menu opens it, and
-// it is the keeper's alone — the room is JournalPlate.js. It said Coming soon
-// until 2026-10-30. A visitor is sent to the card, which is what they came
-// for; nothing here is theirs to print.
+// This address prints the journal itself: the wall's line opens it, with what
+// the wall is showing, and it is the keeper's alone — the room is
+// JournalPlate.js. A visitor is sent to the card, which is what they came for;
+// nothing here is theirs to print.
 import { redirect } from 'next/navigation';
 import SiteNav from '../../components/main_components/SiteNav';
 import JournalPrinter from '../../components/main_components/JournalPlate';
