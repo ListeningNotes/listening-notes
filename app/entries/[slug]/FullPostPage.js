@@ -324,8 +324,9 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     title: true,
     artist: true,
     stars: printChoices.stars !== false,
-    chips: printChoices.chips !== false,
-    symbols: printChoices.symbols === true,
+    // The tags print as their icons, not chips (Miyel, 2026-11-03).
+    chips: false,
+    symbols: printChoices.symbols !== false,
     horizon: printChoices.horizon !== false,
     // The horizon's two prints (EntryPlate.js).
     bars: printChoices.bars === 'named' ? 'named' : 'shape',
@@ -407,12 +408,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   }, [printing, isMoving, printArt, makeScene, size]);
   const [printTab, setPrintTab] = useState('style');
   const leaveOff = key => setPrintChoices(c => ({ ...c, [key]: !shown[key] }));
-  const cycleMarks = () => setPrintChoices(c => {
-    const hasSymbols = entry.favorite === true || entry.favorite === 'true' || isMasterpiece || isFormative;
-    if (shown.chips) return { ...c, chips: false, symbols: hasSymbols };
-    if (shown.symbols) return { ...c, chips: false, symbols: false };
-    return { ...c, chips: true, symbols: false };
-  });
+  const cycleMarks = () => leaveOff('symbols');
   // One of the horizon's prints; pressing the one that is on leaves it off.
   const chooseBars = kind => setPrintChoices(c => (shown.horizon && shown.bars === kind
     ? { ...c, horizon: false }
@@ -656,7 +652,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       ] : []),
     ] : []),
     { key: 'stars', label: 'Stars', on: shown.stars, press: () => leaveOff('stars') },
-    { key: 'marks', label: 'Marks', on: shown.chips || shown.symbols, press: cycleMarks },
+    { key: 'marks', label: 'Marks', on: shown.symbols, press: cycleMarks },
   ];
   const printGlyph = (w, h) => <svg width="23" height="23" viewBox="0 0 256 256" aria-hidden="true"><rect x={(256 - w) / 2} y={(256 - h) / 2} width={w} height={h} rx="14" fill="none" stroke="currentColor" strokeWidth="16" /></svg>;
   const choosePrint = change => { if (!press.saving) setPrintChoices(c => ({ ...c, ...change })); };
