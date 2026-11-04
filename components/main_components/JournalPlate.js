@@ -160,9 +160,11 @@ const scenes = {
   rain(covers, area, _across, random) {
     const k = (area.w / 1080) * 1.6;
     const tMin = 80 * k, tMax = 280 * k, gap = 24 * k;
-    const lanes = Math.max(3, Math.floor(area.w / (tMax + gap)));
+    // More to a lane and more lanes than the screensaver had (Miyel, 2026-11-03:
+    // "more albums falling"), spaced out down each lane so they do not clump.
+    const lanes = Math.max(4, Math.floor(area.w / (tMax + gap)));
     const step = area.w / lanes;
-    const perLane = Math.max(2, Math.round(area.h / (400 * k)));
+    const perLane = Math.max(4, Math.round(area.h / (200 * k)));
     const order = [...covers].map(img => ({ img, at: random() })).sort((a, b) => a.at - b.at).map(o => o.img);
     const tiles = [];
     let cur = 0;
@@ -171,7 +173,7 @@ const scenes = {
         const u = random();
         const size = Math.round(tMin + (u < 0.4 ? (u / 0.4) * 0.3 : (u - 0.4) / 0.6) * (tMax - tMin));
         const dur = (14 + random() * 14) * (1 - ((size - tMin) / (tMax - tMin)) * 0.3);
-        tiles.push({ img: order[cur++ % order.length], size, x: l * step + (step - size) / 2, dur, start: -random() * dur, angle: ((random() - 0.5) * 12 * Math.PI) / 180 });
+        tiles.push({ img: order[cur++ % order.length], size, x: l * step + (step - size) / 2, dur, start: -((i + random() * 0.7) / perLane) * dur, angle: ((random() - 0.5) * 12 * Math.PI) / 180 });
       }
     }
     const lead = tMax * 0.3;
