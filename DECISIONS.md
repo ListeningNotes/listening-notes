@@ -735,12 +735,11 @@ card's door still says so until its plate is reworked.
 
 **What the printer is, 2026-11-03 (Miyel, trying it on her phone).** Save shows
 the print in a pop-up, because no web page can write to a camera roll. A record
-prints under the mark alone, by words on its bar, never by tapping lines; its
-horizon with titles or without, no track list. Its look is Unlock, the album a
-solid thing turning slowly with the shine on everything, earned by the rating
-(a Masterpiece the most); on Reflect only. Fizz, Vinyl, Foil and Pieces went. The journal's print opens from
-the wall's line and is what the wall is showing: no order or month choices, no
-prompt. Original games only, never a copy of a named one.
+prints as one design: the album sweeps, never a full turn (half of one shows a
+backwards cover), over the horizon as a floor, on a scrim, no borders. Effects
+are earned by the rating; a Masterpiece is a different object: dark, gold ink,
+the word for stars, square and still, white rays never gold. The journal's print
+opens from the wall's line and is what the wall shows. Original games only.
 
 **The printer is a mode of the entry page, 2026-09-13.** Press the glyph and
 the first screen becomes the flyer, the way correcting is a mode: the card
