@@ -8,7 +8,7 @@
 // It receives the entry data from page.js which fetched it server-side.
 
 'use client';
-import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Envelope, Fingerprint, Heart, SketchLogo, VinylRecord } from '@phosphor-icons/react';
 import { fonts } from '../../../library/sitewide_visuals';
@@ -21,7 +21,7 @@ import { useLayerHeaderSlot, useFolder } from '../../../components/main_componen
 import FolderFooter from '../../../components/main_components/FolderFooter';
 import KeeperTools from '../../../components/main_components/KeeperTools';
 import EditingBar from '../../../components/main_components/EditingBar';
-import { entryPlate, rowColumns } from '../../../components/main_components/EntryPlate';
+import { entryPlate } from '../../../components/main_components/EntryPlate';
 import { usePress } from '../../../hooks/usePress';
 import { FRAMES, FRAME_ORDER } from '../../../components/main_components/SharePrinter';
 import HorizonBar from '../../../components/main_components/Slug_Page/HorizonBar';
@@ -327,8 +327,8 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     chips: printChoices.chips !== false,
     symbols: printChoices.symbols === true,
     horizon: printChoices.horizon !== false,
-    // The horizon's three prints (EntryPlate.js).
-    bars: ['named', 'tracks'].includes(printChoices.bars) ? printChoices.bars : 'shape',
+    // The horizon's two prints (EntryPlate.js).
+    bars: printChoices.bars === 'named' ? 'named' : 'shape',
   };
   // Plain night is dark whatever the page's theme; the record's ground
   // follows it, the way the page does.
@@ -634,7 +634,6 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       { key: 'shape', label: 'Shape', on: shown.horizon && shown.bars === 'shape', press: () => chooseBars('shape') },
       ...(printTracks ? [
         { key: 'named', label: 'Named', on: shown.horizon && shown.bars === 'named', press: () => chooseBars('named') },
-        { key: 'tracks', label: 'Tracks', on: shown.horizon && shown.bars === 'tracks', press: () => chooseBars('tracks') },
       ] : []),
     ] : []),
     { key: 'stars', label: 'Stars', on: shown.stars, press: () => leaveOff('stars') },
@@ -1616,33 +1615,16 @@ export default function FullPostPage({ entry, references = [], authed = false, l
         </div>
         {printing && (horizonBars.length > 0 || parsedTracks.some(t => t.stars > 0)) && (
           <div className={'ln-print-line ln-print-horizon' + (shown.horizon ? '' : ' ln-off')}>
-            {shown.horizon && printTracks && shown.bars === 'tracks' ? (
-              <div className={'ln-print-tracks-wrap' + (parsedTracks.length > 16 ? ' ln-print-tracks-wrap--two' : '')}>
-                {rowColumns(parsedTracks.map((t, i) => ({ ...t, i }))).map((column, k) => (
-                  <div className="ln-print-tracks" key={k}>
-                    {column.map(t => (
-                      <Fragment key={t.i}>
-                        <span className="ln-print-track-num">{t.num || t.i + 1}</span>
-                        <span className="ln-print-track-title">{t.name}</span>
-                        <span className="ln-print-track-bar">{Number(t.stars) > 0 && <span style={{ width: `${Math.min(100, (Number(t.stars) / 5) * 100)}%` }} />}</span>
-                        <span className="ln-print-track-heart">{t.favorite && <Heart size={10} weight="fill" />}</span>
-                      </Fragment>
-                    ))}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <HorizonChart
-                tracks={parsedTracks.map(t => ({ title: t.name, number: t.num, favorite: t.favorite }))}
-                trackRatings={parsedTracks.map(t => Number(t.stars) || 0)}
-                height={52}
-                labels={shown.horizon && printTracks && shown.bars === 'named'}
-                color="color-mix(in srgb, var(--ink) 50%, transparent)"
-                emptyColor="color-mix(in srgb, var(--ink) 12%, transparent)"
-                labelColor="var(--ink-soft)"
-                animate={false}
-              />
-            )}
+            <HorizonChart
+              tracks={parsedTracks.map(t => ({ title: t.name, number: t.num, favorite: t.favorite }))}
+              trackRatings={parsedTracks.map(t => Number(t.stars) || 0)}
+              height={52}
+              labels={shown.horizon && printTracks && shown.bars === 'named'}
+              color="color-mix(in srgb, var(--ink) 50%, transparent)"
+              emptyColor="color-mix(in srgb, var(--ink) 12%, transparent)"
+              labelColor="var(--ink-soft)"
+              animate={false}
+            />
           </div>
         )}
         </div>

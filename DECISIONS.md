@@ -733,6 +733,13 @@ pressing. `?entry=slug` travels from an entry; the card sends nobody,
 meaning the profile. The press landed for the record on 2026-09-12; the
 card's door still says so until its plate is reworked.
 
+**What the printer is, 2026-11-03 (Miyel, trying it on her phone).** A print
+is changed by words on its bar, never by tapping the print, and its bar has no
+pills. A record's horizon prints with its titles or without: no list of tracks.
+A record prints under the mark alone, and never over a moving ground. A moving
+ground (9:16 and 4:5) fills the whole print, the card a label on it. Save
+shows the print in a pop-up, because no web page can write to a camera roll.
+
 **The printer is a mode of the entry page, 2026-09-13.** Press the glyph and
 the first screen becomes the flyer, the way correcting is a mode: the card
 you already know, full size, in the real type. A sheet of its own — a
@@ -2609,10 +2616,6 @@ no file".
 
 - Spotify Connect transport control (fragile: two API tightenings in eighteen
   months; needs per-copy client ID and Premium). After the deploy button.
-- Video exports. The ffmpeg-and-timeouts reason is gone, 2026-09-12: a
-  browser records its own canvas into an H.264 MP4 with no server, in
-  about a second for four seconds of 1080×1920 (proved in Chromium). Still parked until a phone has posted one and a moving card
-  earns it — motion that means something, not a screensaver.
 - Manual now-playing override — say what is on without opening a listen. It
   covered vinyl and iOS Apple Music while Last.fm was the other beacon; with
   Last.fm gone it is the only way the beacon could ever mean *playing* rather
