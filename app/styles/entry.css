@@ -2042,6 +2042,10 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
   transform-origin: center;
 }
 .ln-printing .ln-print-card > * { position: relative; z-index: 1; }
+/* Moving, the print is a canvas over all of it (albumScene, EntryPlate.js); the
+   card stays in the page, unseen, for the faces the canvas reads off it. */
+.ln-print-live { position: absolute; inset: 0; z-index: 2; width: 100%; height: 100%; display: block; }
+.ln-printing--live .ln-print-card { visibility: hidden; }
 /* Opened out on the wide paper, the way the plate lays it: the cover to
    the left, as large as the paper allows, and the writing beside it
    (Miyel, 2026-09-13), with the paper's padding pulled in to give it room. */
