@@ -10,7 +10,7 @@
 'use client';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Envelope, Fingerprint, Heart, ImageSquare, LockKeyOpen, Moon, Pause, SketchLogo, Sun, VinylRecord } from '@phosphor-icons/react';
+import { Envelope, Fingerprint, Heart, LockKeyOpen, Pause, SketchLogo, VinylRecord } from '@phosphor-icons/react';
 import { fonts } from '../../../library/sitewide_visuals';
 import { sizedAlbumArt, fetchAlbumArtUrl } from '../../../library/music_data_api';
 import { parseHorizon, entryTracks, splitNotes, parseRating, flawless } from '../../../library/entry_formatter';
@@ -61,16 +61,10 @@ import { SnippetLink } from '../../../components/main_components/Slug_Page/Snipp
 // numbers (EntryPlate.js), through hooks/usePress.js. Choices are kept for
 // the session, per browser.
 const PRINT_STORE = 'ln-printing';
-// Reflect is Miyel's word for the cover blurred behind the card.
 // A record's print is Unlock (albumScene, EntryPlate.js; Miyel, 2026-11-03:
 // "this is the look"), a video, or Still, the picture.
 const EFFECTS = ['unlock', 'still'];
 const SIZE_SHAPES = { story: [112, 200], portrait: [150, 188], square: [170, 170], spread: [204, 107] };
-const GROUNDS = [
-  { key: 'record', label: 'Reflect' },
-  { key: 'day', label: 'Day' },
-  { key: 'night', label: 'Night' },
-];
 // Said under the bar each time the printer opens, until the first tap of
 // that opening — nobody would know a line can be tapped off otherwise
 // (Miyel, 2026-09-13; once-ever was too little).
@@ -320,7 +314,9 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   useEffect(() => {
     try { sessionStorage.setItem(PRINT_STORE, JSON.stringify(printChoices)); } catch { /* private mode */ }
   }, [printChoices]);
-  const ground = GROUNDS.some(g => g.key === printChoices.ground) ? printChoices.ground : 'record';
+  // Always the cover blurred behind the card, Reflect: Day and Night came off
+  // when Unlock became the look (Miyel, 2026-11-03: "only do reflect for now").
+  const ground = 'record';
   const shown = {
     // What is left to switch is in the words on the bar (Miyel, 2026-11-03,
     // when tapping the print went); the title and the artist always print,
@@ -336,7 +332,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   };
   // Plain night is dark whatever the page's theme; the record's ground
   // follows it, the way the page does.
-  const printDark = ground === 'night' || (ground === 'record' && theme === 'dark');
+  const printDark = theme === 'dark';
   const size = FRAME_ORDER.includes(printChoices.size) ? printChoices.size : 'story';
   // The paper on screen fits the room between the nav and the bar, and the
   // card is scaled to fit the paper: measured, never guessed, and only from
@@ -421,27 +417,6 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   const chooseBars = kind => setPrintChoices(c => (shown.horizon && shown.bars === kind
     ? { ...c, horizon: false }
     : { ...c, horizon: true, bars: kind }));
-  const turnGround = step => setPrintChoices(c => {
-    const i = GROUNDS.findIndex(g => g.key === ground);
-    return { ...c, ground: GROUNDS[(i + step + GROUNDS.length) % GROUNDS.length].key };
-  });
-  // A sideways swipe on the screen turns the ground. The sheet's own
-  // sideways swipe — the next record — stands down while printing; this is
-  // a different mode (LayerEntry looks for .ln-printing).
-  const groundSwipe = useRef(null);
-  const onGroundTouchStart = e => {
-    if (!printing || press.picture || e.touches.length !== 1) return;
-    groundSwipe.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-  };
-  const onGroundTouchEnd = e => {
-    const from = groundSwipe.current;
-    groundSwipe.current = null;
-    if (!from || !printing || press.picture || !e.changedTouches?.length) return;
-    const t = e.changedTouches[0];
-    const dx = t.clientX - from.x;
-    const dy = t.clientY - from.y;
-    if (Math.abs(dx) > 42 && Math.abs(dx) > Math.abs(dy)) turnGround(dx < 0 ? 1 : -1);
-  };
   // Stamped on <html> so the sheet's own furniture can stand down (entry.css
   // reaches the carets from the root). The grounds' colours are NOT stamped
   // there: a day or night paper must not turn the site's own theme — only
@@ -692,11 +667,6 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       { key: 'still', label: 'Still', icon: <Pause {...printIcon} /> },
     ].map(c => ({ ...c, on: effect === c.key, press: () => choosePrint({ effect: c.key }) }))] },
     { key: 'card', label: 'Card', groups: [
-      [
-        { key: 'record', label: 'Reflect', icon: <ImageSquare {...printIcon} /> },
-        { key: 'day', label: 'Day', icon: <Sun {...printIcon} /> },
-        { key: 'night', label: 'Night', icon: <Moon {...printIcon} /> },
-      ].map(c => ({ ...c, on: ground === c.key, press: () => choosePrint({ ground: c.key }) })),
       FRAME_ORDER.map(key => ({ key, label: FRAMES[key].label, icon: printGlyph(...SIZE_SHAPES[key]), on: size === key, press: () => choosePrint({ size: key }) })),
     ] },
     { key: 'show', label: 'Show', groups: [printWords] },
@@ -1552,8 +1522,6 @@ export default function FullPostPage({ entry, references = [], authed = false, l
         className={'ln-screens' + (edit.editing ? ' ln-editing' : '') + (printing ? ' ln-printing' : '') + (printing && isMoving ? ' ln-printing--live' : '') + (sendering || sending || dialTrack !== null ? ' ln-busy' : '') + (sendering ? ' ln-crediting' : '') + (trailOpen ? ' ln-sent-open' : '')}
         data-ground={printing ? ground : undefined}
         data-size={printing ? size : undefined}
-        onTouchStart={printing ? onGroundTouchStart : undefined}
-        onTouchEnd={printing ? onGroundTouchEnd : undefined}
       >
       {/* ── SCREEN ONE (phones) ── a full screen of album: art up top, then the
           title, artist, year, rating and qualifiers centred beneath it. The
