@@ -736,7 +736,9 @@ card's door still says so until its plate is reworked.
 **What the printer is, 2026-11-03 (Miyel, trying it on her phone).** Save shows
 the print in a pop-up, because no web page can write to a camera roll. A record
 prints under the mark alone, by words on its bar, never by tapping lines; its
-horizon with titles or without, no track list. The journal's print opens from
+horizon with titles or without, no track list. Its look is Unlock, the album a
+solid thing turning slowly with the shine on everything; Fizz, Vinyl, Foil and
+Pieces were tried and went. The journal's print opens from
 the wall's line and is what the wall is showing: no order or month choices, no
 prompt. Original games only, never a copy of a named one.
 

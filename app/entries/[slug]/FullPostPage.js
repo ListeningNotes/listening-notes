@@ -10,7 +10,7 @@
 'use client';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Envelope, Fingerprint, Heart, SketchLogo, VinylRecord } from '@phosphor-icons/react';
+import { Envelope, Fingerprint, Heart, ImageSquare, LockKeyOpen, Moon, Pause, SketchLogo, Sun, VinylRecord } from '@phosphor-icons/react';
 import { fonts } from '../../../library/sitewide_visuals';
 import { sizedAlbumArt, fetchAlbumArtUrl } from '../../../library/music_data_api';
 import { parseHorizon, entryTracks, splitNotes, parseRating, flawless } from '../../../library/entry_formatter';
@@ -21,8 +21,8 @@ import { useLayerHeaderSlot, useFolder } from '../../../components/main_componen
 import FolderFooter from '../../../components/main_components/FolderFooter';
 import KeeperTools from '../../../components/main_components/KeeperTools';
 import EditingBar from '../../../components/main_components/EditingBar';
-import { entryPlate } from '../../../components/main_components/EntryPlate';
-import { usePress } from '../../../hooks/usePress';
+import { albumScene, entryPlate } from '../../../components/main_components/EntryPlate';
+import { usePress, readFamilies } from '../../../hooks/usePress';
 import { FRAMES, FRAME_ORDER } from '../../../components/main_components/SharePrinter';
 import HorizonBar from '../../../components/main_components/Slug_Page/HorizonBar';
 import TrackThread from '../../../components/main_components/Slug_Page/TrackThread';
@@ -62,6 +62,10 @@ import { SnippetLink } from '../../../components/main_components/Slug_Page/Snipp
 // the session, per browser.
 const PRINT_STORE = 'ln-printing';
 // Reflect is Miyel's word for the cover blurred behind the card.
+// A record's print is Unlock (albumScene, EntryPlate.js; Miyel, 2026-11-03:
+// "this is the look"), a video, or Still, the picture.
+const EFFECTS = ['unlock', 'still'];
+const SIZE_SHAPES = { story: [112, 200], portrait: [150, 188], square: [170, 170], spread: [204, 107] };
 const GROUNDS = [
   { key: 'record', label: 'Reflect' },
   { key: 'day', label: 'Day' },
@@ -362,10 +366,50 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   }, [printing, size]);
   const keeperName = (keeper_name || '').trim();
   const plate = useMemo(() => entryPlate({ entry }), [entry]);
+  const effect = EFFECTS.includes(printChoices.effect) ? printChoices.effect : 'unlock';
+  const isMoving = effect !== 'still';
+  const shownKey = JSON.stringify(shown);
+  const printFonts = useMemo(() => ({ sans: '.ln-screen-one-title', mono: '.ln-screen-one-artist' }), []);
+  // Moving, the print is a scene rather than the card on the screen: the same
+  // scene on a canvas here, and run on its own clock for the video on Save.
+  const [printArt, setPrintArt] = useState(null);
+  useEffect(() => {
+    if (!printing || !isMoving) return undefined;
+    let live = true;
+    plate.load({ isDark: printDark }).then(a => { if (live) setPrintArt(a); });
+    return () => { live = false; };
+  }, [printing, isMoving, plate, printDark]);
+  const makeScene = useCallback(() => albumScene(plate, FRAMES[size], {
+    art: printArt, shown: JSON.parse(shownKey), isDark: printDark, families: readFamilies(printFonts), ground,
+  }), [plate, size, printArt, shownKey, printDark, printFonts, ground]);
+  const motion = useCallback(() => {
+    if (!isMoving || !printArt) return null;
+    const made = makeScene();
+    return { width: FRAMES[size].w, height: FRAMES[size].h, frame: (ctx, dt) => { made.step(dt); made.paint(ctx); } };
+  }, [isMoving, printArt, makeScene, size]);
   const press = usePress({
     plate, shown, ground, isDark: printDark, link: entryUrl,
-    fonts: { sans: '.ln-screen-one-title', mono: '.ln-screen-one-artist' },
+    fonts: printFonts, motion,
   });
+  const liveCanvas = useRef(null);
+  useEffect(() => {
+    const canvas = liveCanvas.current;
+    if (!printing || !isMoving || !canvas || !printArt) return undefined;
+    canvas.width = FRAMES[size].w;
+    canvas.height = FRAMES[size].h;
+    const ctx = canvas.getContext('2d');
+    const made = makeScene();
+    let raf, last = null;
+    const tick = now => {
+      if (last !== null) made.step(Math.min(0.05, (now - last) / 1000));
+      last = now;
+      made.paint(ctx);
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [printing, isMoving, printArt, makeScene, size]);
+  const [printTab, setPrintTab] = useState('style');
   const leaveOff = key => setPrintChoices(c => ({ ...c, [key]: !shown[key] }));
   const cycleMarks = () => setPrintChoices(c => {
     const hasSymbols = entry.favorite === true || entry.favorite === 'true' || isMasterpiece || isFormative;
@@ -638,6 +682,24 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     ] : []),
     { key: 'stars', label: 'Stars', on: shown.stars, press: () => leaveOff('stars') },
     { key: 'marks', label: 'Marks', on: shown.chips || shown.symbols, press: cycleMarks },
+  ];
+  const printGlyph = (w, h) => <svg width="23" height="23" viewBox="0 0 256 256" aria-hidden="true"><rect x={(256 - w) / 2} y={(256 - h) / 2} width={w} height={h} rx="14" fill="none" stroke="currentColor" strokeWidth="16" /></svg>;
+  const choosePrint = change => { if (!press.saving) setPrintChoices(c => ({ ...c, ...change })); };
+  const printIcon = { size: 23, 'aria-hidden': true };
+  const printSections = [
+    { key: 'style', label: 'Style', groups: [[
+      { key: 'unlock', label: 'Unlock', icon: <LockKeyOpen {...printIcon} /> },
+      { key: 'still', label: 'Still', icon: <Pause {...printIcon} /> },
+    ].map(c => ({ ...c, on: effect === c.key, press: () => choosePrint({ effect: c.key }) }))] },
+    { key: 'card', label: 'Card', groups: [
+      [
+        { key: 'record', label: 'Reflect', icon: <ImageSquare {...printIcon} /> },
+        { key: 'day', label: 'Day', icon: <Sun {...printIcon} /> },
+        { key: 'night', label: 'Night', icon: <Moon {...printIcon} /> },
+      ].map(c => ({ ...c, on: ground === c.key, press: () => choosePrint({ ground: c.key }) })),
+      FRAME_ORDER.map(key => ({ key, label: FRAMES[key].label, icon: printGlyph(...SIZE_SHAPES[key]), on: size === key, press: () => choosePrint({ size: key }) })),
+    ] },
+    { key: 'show', label: 'Show', groups: [printWords] },
   ];
   // ── What was said, against what is on the record ────────────────────────
   // An entry carries its whole tracklist from 2026-09-18, including the songs
@@ -1487,7 +1549,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
           desktop it has no height or overflow of its own, so everything below
           just falls back into normal document flow. */}
       <div
-        className={'ln-screens' + (edit.editing ? ' ln-editing' : '') + (printing ? ' ln-printing' : '') + (sendering || sending || dialTrack !== null ? ' ln-busy' : '') + (sendering ? ' ln-crediting' : '') + (trailOpen ? ' ln-sent-open' : '')}
+        className={'ln-screens' + (edit.editing ? ' ln-editing' : '') + (printing ? ' ln-printing' : '') + (printing && isMoving ? ' ln-printing--live' : '') + (sendering || sending || dialTrack !== null ? ' ln-busy' : '') + (sendering ? ' ln-crediting' : '') + (trailOpen ? ' ln-sent-open' : '')}
         data-ground={printing ? ground : undefined}
         data-size={printing ? size : undefined}
         onTouchStart={printing ? onGroundTouchStart : undefined}
@@ -1500,6 +1562,9 @@ export default function FullPostPage({ entry, references = [], authed = false, l
           inside it, and the card scaled to fit (.ln-print-stack and
           .ln-print-card are display: contents until then). */}
       <section className="ln-screen-one" style={printing ? { '--print-ratio': FRAMES[size].w / FRAMES[size].h } : undefined}>
+        {printing && (
+          <canvas ref={liveCanvas} className="ln-print-live" hidden={!isMoving} role="img" aria-label={`${entry.album}, moving`} />
+        )}
         {printing && (
           <div className={'ln-print-ground' + (ground === 'record' ? '' : ' ln-print-ground--plain')} aria-hidden="true">
             {ground === 'record' && entry.album_art && <img src={entry.album_art} alt="" />}
@@ -1649,17 +1714,15 @@ export default function FullPostPage({ entry, references = [], authed = false, l
         </div>
         {printing && (
           <PrintBar
-            grounds={GROUNDS}
-            ground={ground}
-            onGround={key => setPrintChoices(c => ({ ...c, ground: key }))}
-            size={size}
-            onSize={key => setPrintChoices(c => ({ ...c, size: key }))}
-            choices={printWords}
-            onSave={() => press.save(size)}
+            sections={printSections}
+            tab={printTab}
+            onTab={setPrintTab}
+            onSave={() => { if (!press.saving) press.save(size); }}
             onDone={finishPrinting}
             status={press.status}
-            final={Boolean(press.picture)}
+            final={Boolean(press.picture || press.clip)}
             picture={press.picture}
+            clip={press.clip}
             canSend={press.canSend}
             onBack={press.dismissPicture}
             onDeliver={press.deliver}

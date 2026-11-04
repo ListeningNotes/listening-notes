@@ -1,6 +1,8 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // components/main_components/EntryPlate.js
+// (2026-11-03: `albumScene`, at the foot, is the record's print moving: Unlock,
+// "this is the look", drawn around the plate's own ground and rows.)
 // (2026-11-03: the head is the mark alone, no name passed in, and what a print
 // shows is chosen by the words on the bar rather than by tapping lines: the
 // keeper and tap branches below are left for what still calls them.)
@@ -266,7 +268,7 @@ export function entryPlate({ entry, keeper }) {
       return { mark, cover };
     },
 
-    draw(ctx, frame, { art, shown, isDark, families, preview = false, ground = 'record' }) {
+    draw(ctx, frame, { art, shown, isDark, families, preview = false, ground = 'record', layer = null, onCover = null, onRow = null }) {
       const ink = isDark ? INKS.night : INKS.day;
       const { sans, mono } = families;
       const on = key => (shown ? shown[key] !== false : true);
@@ -279,7 +281,10 @@ export function entryPlate({ entry, keeper }) {
       const roomH = frame.h - pad * 2;
 
       // ── the ground ───────────────────────────────────────────────────────
-      paintGround(ctx, frame, art?.cover, ink, ground);
+      // A moving print asks for its still parts apart (albumScene): the ground
+      // alone, then each row on its own, told where the cover goes instead.
+      if (layer !== 'rows') paintGround(ctx, frame, art?.cover, ink, ground);
+      if (layer === 'ground') return targets;
 
       // ── measure, then fit ────────────────────────────────────────────────
       // Width decides the unit. If the result is too tall the unit comes down
@@ -341,7 +346,7 @@ export function entryPlate({ entry, keeper }) {
 
         // the cover. Opened out it is beside the stack and not in it.
         if (!spread) {
-          rows.push({ gap: px(GAP.art), h: artW, draw: (c, x, y, w) => drawCover(c, x + (w - artW) / 2, y, artW, unit) });
+          rows.push({ isCover: true, gap: px(GAP.art), h: artW, draw: (c, x, y, w) => drawCover(c, x + (w - artW) / 2, y, artW, unit) });
         }
 
         // the album, two lines at most, as the screen clamps it
@@ -461,6 +466,7 @@ export function entryPlate({ entry, keeper }) {
       // time.
       function drawCover(c, x, y, size, unit) {
         const radius = ART_RADIUS * unit;
+        if (layer === 'rows') { onCover?.({ x, y, size, radius, unit }); return; }
         c.save();
         c.shadowColor = ink.lift[1];
         c.shadowBlur = 48 * unit;
@@ -629,6 +635,19 @@ export function entryPlate({ entry, keeper }) {
         let y = y0;
         for (const row of rows) {
           y += row.gap;
+          if (layer === 'rows') {
+            if (row.isCover) { row.draw(ctx, x, y, colW); y += row.h; continue; }
+            const air = Math.round(U * 24);
+            const alone = document.createElement('canvas');
+            alone.width = Math.ceil(colW + air * 2);
+            alone.height = Math.ceil(row.h + air * 2);
+            const pen = alone.getContext('2d');
+            pen.textBaseline = 'top';
+            row.draw(pen, air, air, colW);
+            onRow?.({ key: row.key || 'head', canvas: alone, x: x - air, y: y - air, air, unit: U, h: row.h });
+            y += row.h;
+            continue;
+          }
           if (row.ghost) { ctx.save(); ctx.globalAlpha = GHOST; }
           row.draw(ctx, x, y, colW);
           if (row.ghost) ctx.restore();
@@ -654,6 +673,299 @@ export function entryPlate({ entry, keeper }) {
         if (key === 'horizon') return shown => TAPS.horizon(shown, hasTitles);
         return TAPS[key];
       }
+    },
+  };
+}
+
+// ── One record, moving: Unlock ─────────────────────────────────────────────
+// The album rises as a solid thing you have just won and turns slowly, with
+// rays and sparks behind it; then the rest of the print arrives with the same
+// attention, each star landing with its own shine (Miyel, 2026-11-03: "this is
+// the look"). Fizz, Vinyl, Foil and Pieces were tried beside it and went.
+//
+// A scene is told the time rather than reading it, so a video is made faster
+// than real time (library/video_file.js), and the same scene is the preview.
+// The ground and the rows are the plate's own, kept as pictures.
+//
+// The turning is drawn in vertical strips, each its own height for how near it
+// is: a canvas has no 3D of its own. It is a true rotation: the back is the
+// front seen from behind, so mirrored, and the sides are the art's own edge
+// carried round.
+const GOLD_RAY = 'rgba(232,184,75,0.3)';
+const easeOut = v => 1 - (1 - v) ** 3;
+const easeBack = v => { const k = 1.70158; const u = v - 1; return 1 + (k + 1) * u ** 3 + k * u ** 2; };
+const clamp01 = v => Math.min(1, Math.max(0, v));
+
+function coverPicture(img, size) {
+  const s = Math.max(1, Math.round(size));
+  const c = document.createElement('canvas');
+  c.width = c.height = s;
+  const x = c.getContext('2d');
+  if (img?.naturalWidth) {
+    const k = Math.max(s / img.naturalWidth, s / img.naturalHeight);
+    x.drawImage(img, (s - img.naturalWidth * k) / 2, (s - img.naturalHeight * k) / 2, img.naturalWidth * k, img.naturalHeight * k);
+  } else {
+    x.fillStyle = '#777';
+    x.fillRect(0, 0, s, s);
+  }
+  return c;
+}
+
+function drawTurned(c, picture, mirrored, cx, cy, size, angle, depth) {
+  const hs = size / 2;
+  const eye = size * 3.2;
+  const cos = Math.cos(angle), sin = Math.sin(angle);
+  const facing = cos >= 0 ? 1 : -1;
+  const point = (u, side) => {
+    const x = u * hs * cos + side * (depth / 2) * sin;
+    const z = -u * hs * sin + side * (depth / 2) * cos;
+    const p = eye / (eye - z);
+    return { x: cx + x * p, half: hs * p };
+  };
+  const w = picture.width, h = picture.height;
+  // The side nearer the eye: the art's own edge, stretched round and a little
+  // shaded, as light falls off a turning thing.
+  const u = sin < 0 ? 1 : -1;
+  const a = point(u, 1), b = point(u, -1);
+  const edge = u > 0 ? w - 2 : 0;
+  const STEPS = 6;
+  for (let i = 0; i < STEPS; i++) {
+    const k0 = i / STEPS, k1 = (i + 1) / STEPS;
+    const x0 = a.x + (b.x - a.x) * k0, x1 = a.x + (b.x - a.x) * k1;
+    const half = a.half + (b.half - a.half) * ((k0 + k1) / 2);
+    const left = Math.min(x0, x1), wide = Math.abs(x1 - x0);
+    if (wide < 0.01) continue;
+    c.drawImage(picture, edge, 0, 2, h, left, cy - half, wide + 0.8, half * 2);
+  }
+  const shade = Math.min(a.x, b.x), shadeW = Math.abs(b.x - a.x);
+  c.fillStyle = 'rgba(0,0,0,0.16)';
+  c.fillRect(shade, cy - Math.max(a.half, b.half), shadeW, Math.max(a.half, b.half) * 2);
+
+  const STRIPS = 48;
+  for (let i = 0; i < STRIPS; i++) {
+    const u0 = -1 + (2 * i) / STRIPS, u1 = -1 + (2 * (i + 1)) / STRIPS;
+    const p0 = point(u0, facing), p1 = point(u1, facing);
+    const left = Math.min(p0.x, p1.x);
+    const wide = Math.abs(p1.x - p0.x);
+    if (wide < 0.01) continue;
+    const mid = (p0.half + p1.half) / 2;
+    // Seen from behind, the art runs the other way across the screen, so it is
+    // read off a mirrored copy, left to right as the strips go.
+    if (facing > 0) c.drawImage(picture, ((u0 + 1) / 2) * w, 0, w / STRIPS, h, left, cy - mid, wide + 0.8, mid * 2);
+    else c.drawImage(mirrored, (1 - (u1 + 1) / 2) * w, 0, w / STRIPS, h, left, cy - mid, wide + 0.8, mid * 2);
+  }
+}
+
+function rayPicture(size) {
+  const c = document.createElement('canvas');
+  c.width = c.height = Math.max(1, Math.round(size));
+  const x = c.getContext('2d');
+  const r = c.width / 2;
+  x.translate(r, r);
+  x.fillStyle = GOLD_RAY;
+  for (let i = 0; i < 12; i++) {
+    const a = (i * Math.PI * 2) / 12;
+    x.beginPath();
+    x.moveTo(0, 0);
+    x.arc(0, 0, r, a, a + Math.PI / 18);
+    x.closePath();
+    x.fill();
+  }
+  x.setTransform(1, 0, 0, 1, 0, 0);
+  x.globalCompositeOperation = 'destination-in';
+  const g = x.createRadialGradient(r, r, r * 0.15, r, r, r);
+  g.addColorStop(0, 'rgba(0,0,0,1)');
+  g.addColorStop(1, 'rgba(0,0,0,0)');
+  x.fillStyle = g;
+  x.fillRect(0, 0, c.width, c.height);
+  return c;
+}
+
+function spark(c, x, y, r) {
+  const w = r * 0.28;
+  c.beginPath();
+  c.moveTo(x, y - r);
+  c.lineTo(x + w, y - w);
+  c.lineTo(x + r, y);
+  c.lineTo(x + w, y + w);
+  c.lineTo(x, y + r);
+  c.lineTo(x - w, y + w);
+  c.lineTo(x - r, y);
+  c.lineTo(x - w, y - w);
+  c.closePath();
+  c.fill();
+}
+
+export function albumScene(plate, frame, { art, shown, isDark, families, ground }) {
+  const under = document.createElement('canvas');
+  under.width = frame.w;
+  under.height = frame.h;
+  plate.draw(under.getContext('2d'), frame, { art, shown, isDark, families, ground, layer: 'ground' });
+  let spot = null;
+  const rows = [];
+  plate.draw(document.createElement('canvas').getContext('2d'), frame, {
+    art, shown, isDark, families, ground, layer: 'rows',
+    onCover: got => { spot = got; },
+    onRow: row => rows.push(row),
+  });
+  const size = spot?.size || frame.w * 0.7;
+  const x = spot?.x ?? (frame.w - size) / 2, y = spot?.y ?? frame.h * 0.15;
+  const cx = x + size / 2, cy = y + size / 2;
+  const square = coverPicture(art?.cover, size);
+  const mirrored = document.createElement('canvas');
+  mirrored.width = square.width;
+  mirrored.height = square.height;
+  const flip = mirrored.getContext('2d');
+  flip.translate(square.width, 0);
+  flip.scale(-1, 1);
+  flip.drawImage(square, 0, 0);
+  const unit = spot?.unit || size / 265;
+
+  const rays = rayPicture(frame.w * 1.7);
+  const smallRays = rayPicture(unit * 90);
+  let seed = 7;
+  const random = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+  const lowest = rows.length ? Math.max(...rows.map(r => r.y + r.canvas.height)) : frame.h;
+  const sparks = Array.from({ length: 26 }, () => ({ x: random() * frame.w, y: random() * lowest, at: random() * 2.4, s: frame.w * (0.008 + random() * 0.012) }));
+
+  // When each row arrives, after the album has landed.
+  const ARRIVES = { title: 1.15, artist: 1.35, stars: 1.6, marks: 2.75, horizon: 3.05 };
+  const POP = 0.45;
+  const STAR_EVERY = 0.2;
+  // The star row's boxes, as the plate lays them: 30 wide, 4 apart, centred.
+  const STAR_W = 30, STAR_SPACE = 4, STARS = 5;
+
+  // A band of light crossing a picture's ink, for what has landed.
+  const scratch = document.createElement('canvas');
+  const sweep = (c, row, t, at, every) => {
+    const local = (t - at) % every;
+    if (t < at || local > 1) return;
+    const w = row.canvas.width, h = row.canvas.height;
+    if (scratch.width !== w) scratch.width = w;
+    if (scratch.height !== h) scratch.height = h;
+    const s = scratch.getContext('2d');
+    s.globalCompositeOperation = 'source-over';
+    s.clearRect(0, 0, w, h);
+    s.drawImage(row.canvas, 0, 0);
+    // The light alone, on the shape of the ink: drawing the ink twice darkened
+    // anything see-through, as the bars are.
+    s.globalCompositeOperation = 'source-in';
+    const mid = -w * 0.3 + local * w * 1.6;
+    const g = s.createLinearGradient(mid - w * 0.14, 0, mid + w * 0.14, 0);
+    g.addColorStop(0, 'rgba(255,240,190,0)');
+    g.addColorStop(0.5, 'rgba(255,240,190,0.95)');
+    g.addColorStop(1, 'rgba(255,240,190,0)');
+    s.fillStyle = g;
+    s.fillRect(0, 0, w, h);
+    c.drawImage(scratch, row.x, row.y);
+  };
+  const popped = (c, row, k, centreX, centreY, drawIt) => {
+    const scale = easeBack(k);
+    c.save();
+    c.translate(centreX, centreY);
+    c.scale(scale, scale);
+    c.translate(-centreX, -centreY);
+    drawIt();
+    c.restore();
+  };
+
+  function drawStars(c, row, t) {
+    const air = row.air, u = row.unit;
+    const total = (STAR_W * STARS + STAR_SPACE * (STARS - 1)) * u;
+    const left = (row.canvas.width - total) / 2;
+    const midY = row.y + air + row.h / 2;
+    for (let i = 0; i < STARS; i++) {
+      const at = ARRIVES.stars + i * STAR_EVERY;
+      const k = clamp01((t - at) / POP);
+      if (k <= 0) continue;
+      const sx = left + i * (STAR_W + STAR_SPACE) * u;
+      const box = STAR_W * u;
+      const midX = row.x + sx + box / 2;
+      // Its own shine, turning behind it, a little larger as it lands.
+      const flare = 1 + 0.8 * (1 - clamp01((t - at) / 0.9));
+      const fan = box * 2.6 * easeOut(k) * flare;
+      c.save();
+      c.translate(midX, midY);
+      c.rotate((t * Math.PI * 2) / (9 + i) * (i % 2 ? -1 : 1));
+      c.drawImage(smallRays, -fan / 2, -fan / 2, fan, fan);
+      c.restore();
+      popped(c, row, k, midX, midY, () => {
+        c.drawImage(row.canvas, sx, 0, box, row.canvas.height, row.x + sx, row.y, box, row.canvas.height);
+      });
+    }
+    sweep(c, row, t, ARRIVES.stars + STARS * STAR_EVERY + 0.5, 4.5);
+    // A glint on one star, then the next.
+    const cycle = Math.floor(t / 1.1) % STARS;
+    const phase = (t % 1.1) / 1.1;
+    if (t > ARRIVES.stars + STARS * STAR_EVERY) {
+      c.fillStyle = '#fff6d8';
+      const gx = row.x + left + cycle * (STAR_W + STAR_SPACE) * u + STAR_W * u * 0.72;
+      spark(c, gx, midY - STAR_W * u * 0.28, STAR_W * u * 0.32 * Math.sin(phase * Math.PI));
+    }
+  }
+
+  function drawRows(c, t) {
+    for (const row of rows) {
+      const w = row.canvas.width, h = row.canvas.height;
+      if (row.key === 'head') { c.drawImage(row.canvas, row.x, row.y); continue; }
+      const at = ARRIVES[row.key] ?? 1.2;
+      if (row.key === 'stars') { drawStars(c, row, t); continue; }
+      const k = clamp01((t - at) / POP);
+      if (k <= 0) continue;
+      if (row.key === 'horizon') {
+        // The bars stand up together; the hearts over them come last, being
+        // the top of what rises.
+        const reveal = easeOut(clamp01((t - at) / 0.9));
+        c.save();
+        c.beginPath();
+        c.rect(row.x, row.y + h * (1 - reveal), w, h * reveal);
+        c.clip();
+        c.drawImage(row.canvas, row.x, row.y);
+        c.restore();
+        sweep(c, row, t, at + 1.3, 4.5);
+        continue;
+      }
+      const midX = row.x + w / 2, midY = row.y + h / 2;
+      if (row.key === 'marks') {
+        const fan = row.unit * 150 * easeOut(k);
+        c.save();
+        c.translate(midX, midY);
+        c.rotate((t * Math.PI * 2) / 14);
+        c.drawImage(smallRays, -fan / 2, -fan / 2, fan, fan);
+        c.restore();
+      }
+      popped(c, row, k, midX, midY, () => c.drawImage(row.canvas, row.x, row.y));
+      if (row.key === 'title') sweep(c, row, t, at + 2.6, 4.5);
+      if (row.key === 'marks') sweep(c, row, t, at + 1.4, 4.5);
+    }
+  }
+
+  let t = 0;
+  return {
+    step(dt) { t += dt; },
+    paint(c) {
+      c.drawImage(under, 0, 0);
+      const grow = easeOut(Math.min(1, t / 0.9));
+      c.save();
+      c.translate(cx, cy);
+      c.rotate((t * Math.PI * 2) / 26);
+      c.scale(grow, grow);
+      c.drawImage(rays, -rays.width / 2, -rays.height / 2);
+      c.restore();
+      c.fillStyle = '#e8b84b';
+      for (const s of sparks) {
+        const r = s.s * Math.sin((((t + s.at) % 2.4) / 2.4) * Math.PI) * 1.5;
+        if (r > 0.2) spark(c, s.x, s.y, r);
+      }
+      const rise = Math.min(1, t / 1.4);
+      const scale = (0.25 + 0.75 * easeBack(rise)) * 0.92;
+      const lift = (1 - easeBack(rise)) * size * 0.46 + (t > 1.4 ? Math.sin((t - 1.4) * (Math.PI / 2)) * size * 0.022 : 0);
+      c.fillStyle = 'rgba(0,0,0,0.2)';
+      c.beginPath();
+      c.ellipse(cx, cy + lift + (size * scale) / 2 + size * 0.01, size * scale * (0.3 + 0.2 * Math.abs(Math.cos((t * Math.PI * 2) / 12))), size * 0.012, 0, 0, Math.PI * 2);
+      c.fill();
+      drawTurned(c, square, mirrored, cx, cy + lift, size * scale, (t * Math.PI * 2) / 12, size * 0.06 * scale);
+      drawRows(c, t);
     },
   };
 }
