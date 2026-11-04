@@ -2127,7 +2127,7 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
   cursor: pointer; -webkit-tap-highlight-color: transparent;
 }
 .ln-print-choice--on { color: var(--ink); }
-/* A choice with no glyph is a word: the Info row. */
+/* A choice with no glyph is a word: the ID row. */
 .ln-print-choice--word { font-size: 10px; letter-spacing: 0.1em; color: var(--ink-soft); padding: 6px 10px; border-bottom: 1px solid transparent; }
 .ln-print-choice--word.ln-print-choice--on { color: var(--ink); border-bottom-color: var(--ink); }
 .ln-print-save {
