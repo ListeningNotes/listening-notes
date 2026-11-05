@@ -8,14 +8,14 @@
 // default stay here, the rays pale rather than gold (Miyel, 2026-11-04).
 //
 // Sizes are in `u`, a hundredth of a story's width at this paper's height, so
-// the print is the same composition on every paper. What shadows and glows cost
-// to draw is paid once, on pictures made here, and not sixty times a second.
+// the print is the same composition on every paper.
 'use client';
 
 import {
-  ARRIVES, TONES, STAR_PATH, HEART_PATH, SYMBOLS, MARK_ASPECT,
-  drawTracked, wrapLines, roundRect, popped, easeOut, easeBack, clamp01,
-  coverPicture, drawTurned, rayPicture, paintGround, INKS,
+  ARRIVES, TONES, STAR_PATH, HEART_PATH, SYMBOLS, MARK_ASPECT, INKS,
+  drawTracked, drawArtist, roundRect, popped, easeOut, easeBack,
+  coverPicture, drawTurned, rayPicture, paintGround,
+  sheet, stamp, drawStarRow, fitTitle, barsFloor,
 } from '../SharePrinter';
 import { colorOfArt, COLOR_SIDE } from '../../../library/music_data_api';
 
@@ -40,20 +40,12 @@ const SPARKS = [
 // gets a plain dark.
 function barColour(cover) {
   try {
-    const small = picture(COLOR_SIDE, COLOR_SIDE, c => c.drawImage(cover, 0, 0, COLOR_SIDE, COLOR_SIDE));
+    const small = sheet(COLOR_SIDE, COLOR_SIDE, c => c.drawImage(cover, 0, 0, COLOR_SIDE, COLOR_SIDE));
     const { hue, plain } = colorOfArt(small.getContext('2d').getImageData(0, 0, COLOR_SIDE, COLOR_SIDE).data);
     // Yellows are pale at any lightness the others are deep at.
     if (!plain) return `${Math.round(hue)},72%,${hue > 35 && hue < 80 ? 33 : 42}%`;
   } catch { /* the plain dark, then */ }
   return '0,0%,24%';
-}
-
-function picture(w, h, paint) {
-  const canvas = document.createElement('canvas');
-  canvas.width = Math.max(1, Math.ceil(w));
-  canvas.height = Math.max(1, Math.ceil(h));
-  paint(canvas.getContext('2d'));
-  return canvas;
 }
 
 export function gameScene(record, frame, { art, families, still = false }) {
@@ -71,28 +63,14 @@ export function gameScene(record, frame, { art, families, still = false }) {
   const floorTop = H - floorH;
   const roomTop = albumTop + size + 5 * u;
   const room = floorTop - 2.5 * u - roomTop;
-  const titleWide = W * 0.86;
-
-  const measure = document.createElement('canvas').getContext('2d');
-  let k = 1, titleLines = [], rowsH = 0;
-  const titleFont = () => `900 ${12 * k * u}px ${sans}`;
-  const lay = () => {
-    measure.font = titleFont();
-    titleLines = wrapLines(measure, entry?.album || '', titleWide, 0);
-    rowsH = (stars > 0 ? 13 : 0) * k * u + (tags.length ? 15 : 0) * k * u
-      + titleLines.length * 12.6 * k * u + (artistLine ? 5.6 : 0) * k * u;
-  };
-  lay();
-  // One word wider than the paper, or more lines than there is room for: the
-  // whole block comes down together, title with stars and marks.
-  const widest = Math.max(1, ...titleLines.map(line => measure.measureText(line).width));
-  k = Math.min(1, titleWide / widest);
-  lay();
-  if (rowsH > room) { k *= room / rowsH; lay(); }
+  const heightAt = (k, lines) => ((stars > 0 ? 13 : 0) + (tags.length ? 15 : 0) + lines * 12.6 + (artistLine ? 5.6 : 0)) * k * u;
+  const titleFont = k => `900 ${12 * k * u}px ${sans}`;
+  const { k, lines: titleLines } = fitTitle({ album: entry?.album, fontAt: titleFont, wide: W * 0.86, room, heightAt });
+  const rowsH = heightAt(k, titleLines.length);
   const rowsTop = roomTop + Math.max(0, room - rowsH) / 2;
 
   // ── What never changes, kept as pictures ──────────────────────────────
-  const under = picture(W, H, c => {
+  const under = sheet(W, H, c => {
     // The cover reflected, as on Day: neither the dark the first one wore nor
     // plain white (Miyel, 2026-11-04).
     paintGround(c, frame, art?.cover, INKS.day.paper, INKS.day.wash);
@@ -119,36 +97,19 @@ export function gameScene(record, frame, { art, families, still = false }) {
   const slab = coverPicture(art?.cover, size, { shade: 0.5, ring: 'rgba(27,15,51,0.2)' });
   const rays = rayPicture(170 * u, 'rgba(255,255,255,0.22)', 14);
 
+  // A hard shadow under a warm glow.
   const starBox = 9 * k * u, starPad = 3 * u;
-  const starPicture = lit => picture(starBox + starPad * 2, starBox + starPad * 2, c => {
-    const scale = starBox / 18;
-    const path = new Path2D(STAR_PATH);
-    const place = (dy = 0) => c.setTransform(scale, 0, 0, scale, starPad, starPad + dy);
-    c.lineJoin = 'round';
-    c.lineWidth = 1;
-    if (lit) {
-      // A hard shadow under a warm glow.
-      c.shadowColor = 'rgba(255,200,70,0.75)';
-      c.shadowBlur = 2.4 * u;
-      place(0.5 * k * u);
-      c.fillStyle = '#8a5a00';
-      c.fill(path);
-      c.shadowBlur = 0;
-    }
-    place();
-    c.strokeStyle = lit ? '#4a2d00' : '#c9c3d9';
-    c.stroke(path);
-    c.fillStyle = lit ? YELLOW : '#ece9f2';
-    c.fill(path);
-  });
-  const starLit = starPicture(true), starCold = starPicture(false);
+  const starLit = stamp(STAR_PATH, 18, starBox, starPad, [
+    { fill: '#8a5a00', y: 0.5 * k * u, glow: 2.4 * u, glowColour: 'rgba(255,200,70,0.75)' },
+    { fill: YELLOW, stroke: '#4a2d00' },
+  ]);
+  const starCold = stamp(STAR_PATH, 18, starBox, starPad, [{ fill: '#ece9f2', stroke: '#c9c3d9' }]);
 
   const medalBox = 11 * k * u, medalPad = 3.4 * u;
-  const medals = Object.fromEntries(tags.map(tag => [tag, picture(medalBox + medalPad * 2, medalBox + medalPad * 2, c => {
+  const medals = Object.fromEntries(tags.map(tag => [tag, sheet(medalBox + medalPad * 2, medalBox + medalPad * 2, c => {
     const r = medalBox / 2, mid = medalPad + r;
     c.save();
     c.shadowColor = 'rgba(0,0,0,0.45)';
-    c.shadowBlur = 0;
     c.shadowOffsetY = 0.7 * k * u;
     const face = c.createRadialGradient(mid - r * 0.32, mid - r * 0.44, 0, mid, mid, r * 1.1);
     face.addColorStop(0, MEDALS[tag][0]);
@@ -174,8 +135,8 @@ export function gameScene(record, frame, { art, families, still = false }) {
   // top. Stroked, then filled, in that order: a stroke drawn after would eat
   // into the letters.
   const titleSize = 12 * k * u, lead = 12.6 * k * u, titlePad = 4 * u;
-  const logo = picture(W, titleLines.length * lead + titlePad * 2, c => {
-    c.font = titleFont();
+  const logo = sheet(W, titleLines.length * lead + titlePad * 2, c => {
+    c.font = titleFont(k);
     c.textAlign = 'center';
     c.textBaseline = 'top';
     c.lineJoin = 'round';
@@ -194,62 +155,16 @@ export function gameScene(record, frame, { art, families, still = false }) {
     line((text, x, y) => c.fillText(text, x, y));
   });
 
-  // The XP bar, whole, with its glow: each bar shows as much of it as it has earned.
-  const floorPad = 3 * u;
-  const barsLeft = 3.4 * u;
-  const slot = bars.length ? (W - barsLeft * 2) / bars.length : 0;
-  const barGap = Math.min(1.3 * u, slot * 0.22);
-  const barW = slot - barGap;
-  const chunk = 1.5 * u, pitch = 2.2 * u;
-  const chunksOf = v => Math.max(1, Math.round((floorH * v) / pitch));
+  // The XP bar, in the album's colour, its last chunk earned the bright one; the
+  // hearts red (Miyel, 2026-11-04).
   const barHsl = bars.length ? barColour(art?.cover) : null;
-  const floor = bars.length ? picture(W, floorH + floorPad, c => {
-    const bottom = floorH + floorPad;
-    bars.forEach((v, i) => {
-      const x = barsLeft + i * slot + barGap / 2;
-      const count = chunksOf(v);
-      c.shadowColor = `hsla(${barHsl},0.55)`;
-      c.shadowBlur = 1.6 * u;
-      c.fillStyle = `hsl(${barHsl})`;
-      for (let n = 0; n < count; n++) {
-        const y = bottom - (n + 1) * pitch + (pitch - chunk);
-        c.fillRect(x, y, barW, chunk);
-      }
-      c.shadowBlur = 0;
-      // The cap: the last one earned is the bright one.
-      c.fillStyle = 'rgba(255,255,255,0.4)';
-      c.fillRect(x, bottom - count * pitch + (pitch - chunk), barW, 0.6 * u);
-    });
-  }) : null;
-  const heartBox = 3.6 * u, heartPad = 2.4 * u;
-  const heart = picture(heartBox + heartPad * 2, heartBox + heartPad * 2, c => {
-    c.shadowColor = 'rgba(240,72,79,0.6)';
-    c.shadowBlur = 1.4 * u;
-    c.translate(heartPad, heartPad);
-    c.scale(heartBox / 24, heartBox / 24);
-    c.fillStyle = TONES.fav;
-    c.fill(new Path2D(HEART_PATH));
+  const floor = barsFloor({
+    W, H, floorH, u, bars, favs,
+    left: 3.4 * u, gapMost: 1.3 * u, seg: 1.5 * u, pitch: 2.2 * u,
+    colourOf: () => `hsl(${barHsl})`, glowOf: () => `hsla(${barHsl},0.55)`, glow: 1.6 * u,
+    cap: 'rgba(255,255,255,0.4)',
+    heart: stamp(HEART_PATH, 24, 3.6 * u, 2.4 * u, [{ fill: TONES.fav, glow: 1.4 * u, glowColour: 'rgba(240,72,79,0.6)' }]),
   });
-
-  function drawFloor(c, t) {
-    if (!floor) return;
-    const sliceH = floor.height;
-    bars.forEach((v, i) => {
-      const x = barsLeft + i * slot;
-      const earned = Math.ceil(chunksOf(v) * easeOut(clamp01((t - ARRIVES.floor - i * 0.02) / 0.9)));
-      if (earned < 1) return;
-      const h = Math.min(sliceH, earned * pitch + 0.8 * u);
-      c.drawImage(floor, x, sliceH - h, slot, h, x, H - h, slot, h);
-    });
-    bars.forEach((v, i) => {
-      if (!favs[i]) return;
-      const x = barsLeft + i * slot + slot / 2;
-      const tip = H - chunksOf(v) * pitch - 0.6 * u;
-      popped(c, ARRIVES.hearts + i * 0.02, x, tip - heartBox / 2, () => {
-        c.drawImage(heart, x - heart.width / 2, tip - heartBox - heartPad);
-      }, t);
-    });
-  }
 
   function drawSparks(c, t) {
     SPARKS.forEach(spark => {
@@ -291,29 +206,14 @@ export function gameScene(record, frame, { art, families, still = false }) {
     scrim.addColorStop(1, 'rgba(238,240,236,0)');
     c.fillStyle = scrim;
     c.fillRect(0, scrimMid - scrimH / 2, W, scrimH);
-    drawFloor(c, t);
+    floor.draw(c, t);
     drawAlbum(c, t);
     drawSparks(c, t);
 
     let y = rowsTop;
     if (stars > 0) {
       const gap = 1.8 * k * u;
-      const left = cx - (starBox * 5 + gap * 4) / 2;
-      for (let i = 0; i < 5; i++) {
-        const x = left + i * (starBox + gap);
-        popped(c, ARRIVES.stars + i * 0.2, x + starBox / 2, y + starBox / 2, () => {
-          c.drawImage(starCold, x - starPad, y - starPad);
-          const part = clamp01(stars - i);
-          if (part > 0) {
-            c.save();
-            c.beginPath();
-            c.rect(x - starPad, y - starPad, starPad + starBox * part + (part === 1 ? starPad : 0), starLit.height);
-            c.clip();
-            c.drawImage(starLit, x - starPad, y - starPad);
-            c.restore();
-          }
-        }, t);
-      }
+      drawStarRow(c, t, { stars, x: cx - (starBox * 5 + gap * 4) / 2, y, box: starBox, gap, pad: starPad, lit: starLit, cold: starCold });
       y += 13 * k * u;
     }
     if (tags.length) {
@@ -334,10 +234,7 @@ export function gameScene(record, frame, { art, families, still = false }) {
     if (artistLine) {
       const artistY = y + 1.6 * k * u;
       popped(c, ARRIVES.artist, cx, artistY + 1.5 * u, () => {
-        c.font = `400 ${2.9 * k * u}px ${mono}`;
-        c.textBaseline = 'top';
-        c.fillStyle = '#5a4e7a';
-        drawTracked(c, artistLine, cx, artistY, 0.87 * k * u, 'center');
+        drawArtist(c, artistLine, cx, artistY, { size: 2.9 * k * u, tracking: 0.3, wide: W * 0.9, least: W * 0.02, colour: '#5a4e7a', mono });
       }, t);
     }
   }

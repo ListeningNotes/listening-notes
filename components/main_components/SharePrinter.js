@@ -408,3 +408,139 @@ export function paintGround(c, f, img, paper, wash, { tone = 'saturate(1.25)', b
   c.fillStyle = wash;
   c.fillRect(0, 0, f.w, f.h);
 }
+
+// Whatever costs to draw (a shadow, a glow) is paid once on a picture like this,
+// not on every frame of a video.
+export function sheet(w, h, paint) {
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, Math.ceil(w));
+  canvas.height = Math.max(1, Math.ceil(h));
+  paint(canvas.getContext('2d'));
+  return canvas;
+}
+
+// A glyph as a picture, `pad` of room round it for its glow, drawn in layers,
+// back to front: { fill, stroke, lineWidth, x, y, glow, glowColour }.
+export function stamp(path, viewBox, box, pad, layers) {
+  return sheet(box + pad * 2, box + pad * 2, c => {
+    const shape = new Path2D(path);
+    const scale = box / viewBox;
+    layers.forEach(({ fill, stroke, lineWidth = 1, x = 0, y = 0, glow = 0, glowColour = 'transparent' }) => {
+      c.save();
+      c.shadowColor = glowColour;
+      c.shadowBlur = glow;
+      c.setTransform(scale, 0, 0, scale, pad + x, pad + y);
+      if (stroke) {
+        c.lineJoin = 'round';
+        c.strokeStyle = stroke;
+        c.lineWidth = lineWidth;
+        c.stroke(shape);
+      }
+      if (fill) {
+        c.fillStyle = fill;
+        c.fill(shape);
+      }
+      c.restore();
+    });
+  });
+}
+
+// Five stars from two stamps, the lit one over the cold one as far as the rating.
+export function drawStarRow(c, t, { stars, x, y, box, gap, pad, lit, cold }) {
+  for (let i = 0; i < 5; i++) {
+    const at = x + i * (box + gap);
+    popped(c, ARRIVES.stars + i * 0.2, at + box / 2, y + box / 2, () => {
+      c.drawImage(cold, at - pad, y - pad);
+      const part = clamp01(stars - i);
+      if (part > 0) {
+        c.save();
+        c.beginPath();
+        c.rect(at - pad, y - pad, pad + box * part + (part === 1 ? pad : 0), lit.height);
+        c.clip();
+        c.drawImage(lit, at - pad, y - pad);
+        c.restore();
+      }
+    }, t);
+  }
+}
+
+// The title wrapped to fit `wide`. A word wider than the paper, or more lines
+// than there is `room` for, and the whole block comes down together: `heightAt`
+// is the block's height at that size with that many lines.
+export function fitTitle({ album, fontAt, wide, room, heightAt }) {
+  const measure = document.createElement('canvas').getContext('2d');
+  let k = 1, lines = [];
+  const lay = () => {
+    measure.font = fontAt(k);
+    lines = wrapLines(measure, album || '', wide, 0);
+  };
+  lay();
+  k = Math.min(1, wide / Math.max(1, ...lines.map(line => measure.measureText(line).width)));
+  lay();
+  if (heightAt(k, lines.length) > room) {
+    k *= room / heightAt(k, lines.length);
+    lay();
+  }
+  return { k, lines };
+}
+
+// The horizon as bars of stacked segments, whole, with their glow: each bar
+// shows as much of it as it has earned, and a heart lands on a favourite.
+export function barsFloor({ W, H, floorH, left, gapMost, seg, pitch, u, colourOf, glow = 0, glowOf = null, cap = null, bars, favs, heart }) {
+  if (!bars.length) return { draw() {} };
+  const pad = 3 * u;
+  const slot = (W - left * 2) / bars.length;
+  const gap = Math.min(gapMost, slot * 0.22);
+  const countOf = v => Math.max(1, Math.round((floorH * v) / pitch));
+  const whole = sheet(W, floorH + pad, c => {
+    const bottom = floorH + pad;
+    bars.forEach((v, i) => {
+      const x = left + i * slot + gap / 2;
+      const count = countOf(v);
+      c.shadowColor = glowOf ? glowOf(i) : 'transparent';
+      c.shadowBlur = glow;
+      c.fillStyle = colourOf(i);
+      for (let n = 0; n < count; n++) c.fillRect(x, bottom - (n + 1) * pitch + (pitch - seg), slot - gap, seg);
+      c.shadowBlur = 0;
+      if (cap) {
+        c.fillStyle = cap;
+        c.fillRect(x, bottom - count * pitch + (pitch - seg), slot - gap, 0.6 * u);
+      }
+    });
+  });
+  const heartBox = 3.6 * u;
+  return {
+    draw(c, t) {
+      bars.forEach((v, i) => {
+        const x = left + i * slot;
+        const earned = Math.ceil(countOf(v) * easeOut(clamp01((t - ARRIVES.floor - i * 0.02) / 0.9)));
+        if (earned < 1) return;
+        const h = Math.min(whole.height, earned * pitch + 0.8 * u);
+        c.drawImage(whole, x, whole.height - h, slot, h, x, H - h, slot, h);
+      });
+      bars.forEach((v, i) => {
+        if (!favs[i] || !heart) return;
+        const x = left + i * slot + slot / 2;
+        const tip = H - countOf(v) * pitch - 0.6 * u;
+        popped(c, ARRIVES.hearts + i * 0.02, x, tip - heartBox / 2, () => {
+          c.drawImage(heart, x - heart.width / 2, tip - heartBox - (heart.height - heartBox) / 2);
+        }, t);
+      });
+    },
+  };
+}
+
+// The artist line, in the label face and tracked, large enough to read on a
+// smaller paper and never wider than `wide`.
+export function drawArtist(c, line, x, y, { size, tracking, wide, least, colour, mono, align = 'center' }) {
+  let px = Math.max(size, least);
+  c.font = `400 ${px}px ${mono}`;
+  const across = [...line].reduce((n, ch) => n + c.measureText(ch).width + px * tracking, 0);
+  if (across > wide) {
+    px *= wide / across;
+    c.font = `400 ${px}px ${mono}`;
+  }
+  c.textBaseline = 'top';
+  c.fillStyle = colour;
+  drawTracked(c, line, x, y, px * tracking, align);
+}
