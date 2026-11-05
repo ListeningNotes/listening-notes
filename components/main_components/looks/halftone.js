@@ -1,13 +1,13 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// components/main_components/looks/riso.js
-// Riso: a two-ink poster, the inks the album's own (Miyel, 2026-11-04): its
-// strongest colour and the next one far enough from it to tell apart, or, on a
-// cover with only one, that colour's opposite. The cover is separated into a plate
-// for each, a real halftone with its dots at its own angle, and they land from
-// opposite corners a little out of register. Everything else is the same two inks
-// overprinted on the same sheet: the title runs over the bars and the inks make a
-// third where they cross.
+// components/main_components/looks/halftone.js
+// Halftone: the album still looks like itself (Miyel, 2026-11-04; it was Riso, two
+// inks, until the cover stopped being the cover). The four inks of a printed sleeve,
+// each a real plate of dots at its own angle, land from the four corners and build
+// up into the picture, a hair out of register at rest. The words and the bars are
+// overprinted on the same sheet in two inks from the album's own colours: its
+// strongest and the next one far enough away, or, on a cover with only one, that
+// colour's opposite. The title runs over the bars and the inks make a third.
 //
 // The separation is by the pixel. A cover that will not be read throws here, and
 // the print falls back to Day.
@@ -87,7 +87,7 @@ function halftone(px, side, size, ink, angle, cell, density) {
         const amount = density(px[i] / 255, px[i + 1] / 255, px[i + 2] / 255);
         if (amount < 0.04) continue;
         c.beginPath();
-        c.arc(x, y, cell * 0.74 * Math.sqrt(amount), 0, Math.PI * 2);
+        c.arc(x, y, cell * 0.6 * Math.sqrt(amount), 0, Math.PI * 2);
         c.fill();
       }
     }
@@ -101,7 +101,7 @@ function overprint(c, paint) {
   c.restore();
 }
 
-export function risoScene(record, frame, { art, families, still = false }) {
+export function halftoneScene(record, frame, { art, families, still = false }) {
   const { stars, artistLine, tags, bars, favs, entry } = record;
   const { sans, mono } = families;
   const W = frame.w, H = frame.h;
@@ -127,23 +127,21 @@ export function risoScene(record, frame, { art, families, still = false }) {
     else { c.fillStyle = '#999'; c.fillRect(0, 0, side, side); }
   });
   const px = small.getContext('2d').getImageData(0, 0, side, side).data;
-  const cell = Math.max(5, 0.8 * u);
+  const cell = Math.max(4, 0.72 * u);
   const { dark, darkFaint, bright, brightReads } = inksOf(px);
-  // The dark ink carries the picture, by how dark each part is. The bright ink lies
-  // wherever there is colour, and thinly under the rest, so only white stays paper.
-  // Levels stretched to the cover's own range, as a printer would, so a dark cover
-  // still has a picture in it rather than one flat block of ink.
-  const raw = (r, g, b) => r * 0.3 + g * 0.59 + b * 0.11;
-  const levels = [];
-  for (let i = 0; i < px.length; i += 4 * 7) levels.push(raw(px[i] / 255, px[i + 1] / 255, px[i + 2] / 255));
-  levels.sort((a, b) => a - b);
-  const low = levels[Math.floor(levels.length * 0.04)], high = Math.max(low + 0.2, levels[Math.floor(levels.length * 0.96)]);
-  const lum = (r, g, b) => clamp01((raw(r, g, b) - low) / (high - low));
-  const plateBright = halftone(px, side, size, bright, (15 * Math.PI) / 180, cell, (r, g, b) => (
-    clamp01((Math.max(r, g, b) - Math.min(r, g, b)) * 1.15 + (1 - lum(r, g, b)) * 0.3)
-  ));
-  const plateDark = halftone(px, side, size, dark, (75 * Math.PI) / 180, cell, (r, g, b) => clamp01((1 - lum(r, g, b)) ** 1.25 * 1.08));
-  const off = [1.1 * u, 0.9 * u];
+  // Black takes most of what the three colours share, as on a press.
+  const black = (r, g, b) => (1 - Math.max(r, g, b)) * 0.85;
+  const part = channel => (r, g, b) => {
+    const k = black(r, g, b);
+    return clamp01((1 - channel(r, g, b) - k) / Math.max(0.01, 1 - k));
+  };
+  const deg = Math.PI / 180;
+  const plates = [
+    { art: halftone(px, side, size, '#00aeef', 15 * deg, cell, part(r => r)), from: [-1, -1], rest: [0, 0] },
+    { art: halftone(px, side, size, '#ec008c', 75 * deg, cell, part((r, g) => g)), from: [1, -1], rest: [0.28 * u, 0.2 * u] },
+    { art: halftone(px, side, size, '#fff200', 0, cell, part((r, g, b) => b)), from: [-1, 1], rest: [-0.2 * u, 0.24 * u] },
+    { art: halftone(px, side, size, '#231f20', 45 * deg, cell, black), from: [1, 1], rest: [0.14 * u, -0.16 * u] },
+  ];
 
   // ── The sheet ─────────────────────────────────────────────────────────
   const under = sheet(W, H, c => {
@@ -185,12 +183,14 @@ export function risoScene(record, frame, { art, families, still = false }) {
       });
     });
 
-    const away = 1 - easeOut(Math.min(1, t / LANDS_IN));
+    // One plate after another, so the picture builds rather than arrives.
     overprint(c, () => {
-      c.drawImage(plateBright, ax - away * W, -away * H * 0.4);
-      c.drawImage(plateDark, ax + off[0] + away * W, off[1] + away * H * 0.4);
+      plates.forEach((plate, i) => {
+        const away = 1 - easeOut(clamp01((t - i * 0.35) / LANDS_IN));
+        c.drawImage(plate.art, ax + plate.rest[0] + plate.from[0] * away * W, plate.rest[1] + plate.from[1] * away * H * 0.5);
+      });
     });
-    if (away < 0.02) c.drawImage(tab, 0, 0);
+    if (t >= LANDS_IN + 1.05) c.drawImage(tab, 0, 0);
 
     let y = rowsTop;
     if (stars > 0 || tags.length) {

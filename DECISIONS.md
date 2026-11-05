@@ -745,9 +745,9 @@ print had to read as the journal's own card, wrong once a look is a costume some
 chose ("they should genuinely be their own export"). Now the information is fixed and
 the layout is not: every look draws the cover, stars, marks, title with artist and
 year, horizon and the mark, no more and no fewer, in `looks/`, on one canvas scene.
-Day and Night are only the reading card exported, a picture; Riso, in the album's
-own two inks, is the other door. Game, Mosaic, CRT and Paper were built and cut: she
-would not post them (git has them, 2026-11-04).
+Day and Night are only the reading card exported, a picture; Halftone, the album in
+print dots so it still looks like itself, is the other door. Game, Mosaic, CRT, Paper
+and two-ink Riso were built and cut (git has them, 2026-11-04).
 
 **The printer is a mode of the entry page, 2026-09-13.** Press the glyph and
 the first screen becomes the flyer, the way correcting is a mode: the card
