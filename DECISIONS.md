@@ -739,7 +739,7 @@ that turns sweeps, never a full turn (half of one shows a backwards cover). The
 journal's print opens from the wall's line and is what the wall shows. Original
 games only.
 
-**A record's looks are five exports, not five filters, 2026-11-04 (Miyel).** Until
+**A record's looks are separate exports, not filters, 2026-11-04 (Miyel).** Until
 then every look kept one layout and changed only the wash and ink: right while a
 print had to read as the journal's own card, wrong once a look is a costume somebody
 chose ("they should genuinely be their own export"). Now the information is fixed and

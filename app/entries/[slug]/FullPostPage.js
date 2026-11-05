@@ -607,7 +607,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   const choosePrint = change => { if (!press.saving) setPrintChoices(c => ({ ...c, ...change })); };
   const printIcon = { size: 23, 'aria-hidden': true };
   const printSections = [
-    { key: 'card', label: 'Card', groups: [
+    { key: 'card', label: 'Card', stacked: true, groups: [
       LOOKS.filter(look => look.key !== 'night').map(look => {
         if (look.key !== 'day') {
           return { key: look.key, label: look.label, icon: <look.Icon {...printIcon} />, on: ground === look.key, press: () => choosePrint({ ground: look.key }) };
