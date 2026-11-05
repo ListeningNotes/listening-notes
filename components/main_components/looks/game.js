@@ -12,7 +12,7 @@
 
 import {
   ARRIVES, TONES, STAR_PATH, HEART_PATH, SYMBOLS, MARK_ASPECT, INKS,
-  drawArtist, roundRect, popped, easeOut, easeBack,
+  drawArtist, popped, easeOut, easeBack,
   coverPicture, drawTurned, rayPicture, paintGround,
   sheet, stamp, drawStarRow, fitTitle, barsFloor,
 } from '../SharePrinter';
@@ -69,17 +69,21 @@ export function gameScene(record, frame, { art, families, still = false }) {
     // The cover reflected, as on Day: neither the dark the first one wore nor
     // plain white (Miyel, 2026-11-04).
     paintGround(c, frame, art?.cover, INKS.day.paper, INKS.day.wash);
-    // The frame, and the mark on its plate, in the album's colour.
-    const inset = 3.4 * u;
+    // The frame in the album's colour, split at the head for the mark, which sits
+    // centred on the line (Miyel, 2026-11-04).
+    const inset = 4.4 * u, r = 2 * u;
+    const markH = 4.6 * u, markW = markH * MARK_ASPECT;
+    const opening = markW / 2 + 2 * u;
+    const x0 = inset, x1 = W - inset, y0 = inset, y1 = H - inset;
     c.strokeStyle = tone(0.5);
     c.lineWidth = 0.35 * u;
-    roundRect(c, inset, inset, W - inset * 2, H - inset * 2, 2 * u);
-    c.stroke();
-    const markH = 3.8 * u, markW = markH * MARK_ASPECT;
-    const plateX = 6 * u, plateY = 6 * u, plateW = markW + 4.8 * u, plateH = markH + 2.4 * u;
-    roundRect(c, plateX, plateY, plateW, plateH, 1.4 * u);
-    c.strokeStyle = deep;
-    c.lineWidth = 0.4 * u;
+    c.beginPath();
+    c.moveTo(cx + opening, y0);
+    c.arcTo(x1, y0, x1, y1, r);
+    c.arcTo(x1, y1, x0, y1, r);
+    c.arcTo(x0, y1, x0, y0, r);
+    c.arcTo(x0, y0, cx - opening, y0, r);
+    c.lineTo(cx - opening, y0);
     c.stroke();
     if (art?.mark) {
       c.drawImage(sheet(markW, markH, m => {
@@ -87,7 +91,7 @@ export function gameScene(record, frame, { art, families, still = false }) {
         m.globalCompositeOperation = 'source-in';
         m.fillStyle = deep;
         m.fillRect(0, 0, markW, markH);
-      }), plateX + 2.4 * u, plateY + 1.2 * u);
+      }), cx - markW / 2, y0 - markH / 2);
     }
   });
   const slab = coverPicture(art?.cover, size, { shade: 0.5, ring: tone(0.45) });
@@ -137,7 +141,7 @@ export function gameScene(record, frame, { art, families, still = false }) {
   // The XP bar, its last chunk earned the bright one; the hearts red.
   const floor = barsFloor({
     W, H, floorH, u, bars, favs,
-    left: 3.4 * u, gapMost: 1.3 * u, seg: 1.5 * u, pitch: 2.2 * u,
+    left: 4.4 * u, gapMost: 1.3 * u, seg: 1.5 * u, pitch: 2.2 * u,
     colourOf: () => deep, glowOf: () => tone(0.55), glow: 1.6 * u,
     cap: 'rgba(255,255,255,0.4)',
     heart: stamp(HEART_PATH, 24, 3.6 * u, 2.4 * u, [{ fill: TONES.fav, glow: 1.4 * u, glowColour: 'rgba(240,72,79,0.6)' }]),
