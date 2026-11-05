@@ -1,14 +1,13 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // components/main_components/looks/mosaic.js
-// Mosaic: everything becomes a tile, on one grid six across that fills the paper.
-// The cover is fractured into it and its pieces slide toward their places, and
-// about a third never arrive. It must not finish solving: a mosaic that completes
-// is only a slow reveal of a photograph. The stars, marks and title are tiles
-// laid into the same grid; the grid is the only furniture.
-//
-// A heart does not survive at tile scale, so the horizon has none here. A hairline
-// keeps the grid visible on a sparse cover, where the pieces all look alike.
+// Mosaic: everything becomes a tile. The cover is fractured on a grid six across
+// and its pieces slide home until it is the real image (Miyel, 2026-11-04: a mosaic
+// that never makes it only looked broken). The stars, marks and title are tiles laid
+// in under it, and the horizon is a block of tiles filling whatever paper is left:
+// a column for each track, as many lit as it was rated, the top one red on a
+// favourite. On a paper with no room for that it is a strip, as bright as it was
+// rated, with no favourites: a heart does not survive at that scale.
 'use client';
 
 import {
@@ -18,16 +17,15 @@ import {
 
 const INK = '#15151a';
 const COLUMNS = 6;
-const LOST = 0.34;
-const WANDER_SECONDS = 5;
+const TRAVEL = 3;
+const TILES_HIGH = 5;
 
 export function mosaicScene(record, frame, { art, families, still = false }) {
-  const { stars, artistLine, tags, bars, entry } = record;
+  const { stars, artistLine, tags, bars, favs, entry } = record;
   const { sans, mono } = families;
   const W = frame.w, H = frame.h;
   const u = Math.min(W, (H * 9) / 16) / 100;
   const tile = W / COLUMNS, half = tile / 2;
-  const rows = Math.ceil(H / tile);
 
   // ── The pieces ────────────────────────────────────────────────────────
   // The same record breaks the same way every time, on the preview and in the video.
@@ -35,31 +33,10 @@ export function mosaicScene(record, frame, { art, families, still = false }) {
   const rnd = () => { seed = (seed * 1103515245 + 12345) % 2147483648; return seed / 2147483648; };
   const cell = () => Math.floor(rnd() * COLUMNS);
   const pieces = [];
-  for (let i = 0; i < COLUMNS * rows; i++) {
-    const col = i % COLUMNS, row = Math.floor(i / COLUMNS);
-    const lost = rnd() < LOST;
-    pieces.push({
-      col, row, lost,
-      from: [cell(), cell()],
-      to: lost ? [cell(), cell()] : [col, row % COLUMNS],
-      next: [cell(), cell()],
-      delay: rnd() * 2.6,
-      offset: rnd() * WANDER_SECONDS,
-    });
+  for (let i = 0; i < COLUMNS * COLUMNS; i++) {
+    pieces.push({ col: i % COLUMNS, row: Math.floor(i / COLUMNS), from: [cell(), cell()], delay: rnd() * 3.6 });
   }
-  const glide = v => easeOut(clamp01(v));
-  function cropOf(piece, t) {
-    const v = glide((t - piece.delay) / 2.8);
-    let x = piece.from[0] + (piece.to[0] - piece.from[0]) * v;
-    let y = piece.from[1] + (piece.to[1] - piece.from[1]) * v;
-    // A lost piece keeps looking for its place, and keeps not finding it.
-    if (piece.lost && !still) {
-      const w = (Math.sin(((t + piece.offset) * Math.PI * 2) / (WANDER_SECONDS * 2)) + 1) / 2;
-      x += (piece.next[0] - piece.to[0]) * w * clamp01(t / 6);
-      y += (piece.next[1] - piece.to[1]) * w * clamp01(t / 6);
-    }
-    return [x, y];
-  }
+  const SETTLED = 3.6 + TRAVEL;
 
   const flat = sheet(W, W, c => {
     const img = art?.cover;
@@ -67,8 +44,7 @@ export function mosaicScene(record, frame, { art, families, still = false }) {
     else { c.fillStyle = '#777'; c.fillRect(0, 0, W, W); }
   });
 
-  // ── The stack, up from the foot, whole half-tiles so it sits in the grid ──
-  const stripH = bars.length ? half : 0;
+  // ── The stack, under the cover, in whole half-tiles so it sits in the grid ──
   const titlePadX = 3 * u + half * 0.2;
   const artistH = artistLine ? Math.max(4.6 * u, W * 0.034) : 0;
   const titleFont = k => `900 ${10.4 * k * u}px ${sans}`;
@@ -77,20 +53,13 @@ export function mosaicScene(record, frame, { art, families, still = false }) {
     album: entry?.album, fontAt: titleFont, wide: W - titlePadX * 2, room: H * 0.34, heightAt,
   });
   const titleH = Math.ceil((heightAt(k, titleLines.length) + 2 * u) / half) * half;
-  const titleTop = H - stripH - titleH;
+  const left = H - W - half - titleH;
+  const block = bars.length && left >= half * 2.5;
+  const floorH = !bars.length ? 0 : block ? left : half;
+  const titleTop = H - floorH - titleH;
   const marksY = titleTop - half;
 
-  const over = sheet(W, H, c => {
-    const shade = c.createLinearGradient(0, 0, 0, H);
-    shade.addColorStop(0, 'rgba(0,0,0,0.28)');
-    shade.addColorStop(0.14, 'rgba(0,0,0,0)');
-    shade.addColorStop(0.46, 'rgba(0,0,0,0)');
-    shade.addColorStop(0.82, 'rgba(0,0,0,0.84)');
-    c.fillStyle = shade;
-    c.fillRect(0, 0, W, H);
-    c.fillStyle = 'rgba(0,0,0,0.1)';
-    for (let i = 1; i < COLUMNS; i++) c.fillRect(i * tile, 0, 1, H);
-    for (let i = 1; i <= rows; i++) c.fillRect(0, i * tile, W, 1);
+  const plate = sheet(W, H, c => {
     // The mark on a tile of its own, at the grid's corner.
     const markH = 3.8 * u, markW = markH * MARK_ASPECT;
     const plateW = markW + 4 * u, plateH = markH + 2.6 * u;
@@ -118,11 +87,16 @@ export function mosaicScene(record, frame, { art, families, still = false }) {
   function paintAt(c, t) {
     c.fillStyle = INK;
     c.fillRect(0, 0, W, H);
-    pieces.forEach(piece => {
-      const [x, y] = cropOf(piece, t);
-      c.drawImage(flat, x * tile, y * tile, tile, tile, piece.col * tile, piece.row * tile, tile + 0.5, tile + 0.5);
-    });
-    c.drawImage(over, 0, 0);
+    if (t >= SETTLED) c.drawImage(flat, 0, 0);
+    else {
+      pieces.forEach(piece => {
+        const v = easeOut(clamp01((t - piece.delay) / TRAVEL));
+        const x = piece.from[0] + (piece.col - piece.from[0]) * v;
+        const y = piece.from[1] + (piece.row - piece.from[1]) * v;
+        c.drawImage(flat, x * tile, y * tile, tile, tile, piece.col * tile, piece.row * tile, tile + 0.5, tile + 0.5);
+      });
+    }
+    c.drawImage(plate, 0, 0);
 
     if (stars > 0) {
       for (let i = 0; i < 5; i++) {
@@ -154,16 +128,28 @@ export function mosaicScene(record, frame, { art, families, still = false }) {
       }
     }, t);
 
-    // The strip: a tile for each track, no gaps, as bright as it was rated.
     if (bars.length) {
       const slot = W / bars.length;
       c.fillStyle = INK;
-      c.fillRect(0, H - stripH, W, stripH);
+      c.fillRect(0, H - floorH, W, floorH);
       bars.forEach((v, i) => {
         const on = easeOut(clamp01((t - ARRIVES.floor - i * 0.04) / 0.5));
         if (on <= 0) return;
-        c.fillStyle = `rgba(255,255,255,${0.1 + 0.68 * v})`;
-        c.fillRect(i * slot, H - stripH * on, slot + 0.5, stripH * on);
+        if (!block) {
+          // The strip: a tile for each track, as bright as it was rated.
+          c.fillStyle = `rgba(255,255,255,${0.1 + 0.68 * v})`;
+          c.fillRect(i * slot, H - floorH * on, slot + 0.5, floorH * on);
+          return;
+        }
+        const cellH = floorH / TILES_HIGH, grout = Math.max(1, u * 0.2);
+        const litCount = Math.round(v * TILES_HIGH);
+        for (let n = 0; n < TILES_HIGH * on; n++) {
+          const isLit = n < litCount;
+          c.fillStyle = !isLit ? 'rgba(255,255,255,0.08)'
+            : favs[i] && n === litCount - 1 ? TONES.fav
+            : 'rgba(255,255,255,0.92)';
+          c.fillRect(i * slot + grout / 2, H - (n + 1) * cellH + grout / 2, slot - grout, cellH - grout);
+        }
       });
     }
   }
