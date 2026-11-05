@@ -137,7 +137,7 @@ export function usePress({ plate, shown, ground, isDark, link, fonts, motion = n
   // choices, no ghosts, no preview — the print itself.
   const compose = useCallback(async frameKey => {
     const frame = FRAMES[frameKey] || FRAMES.story;
-    const art = await plate.load({ isDark });
+    const art = await plate.load({ isDark, ground });
     const out = document.createElement('canvas');
     out.width = frame.w;
     out.height = frame.h;

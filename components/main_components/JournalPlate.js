@@ -33,8 +33,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowsHorizontal, Cards, CloudRain, Moon, Pause, Sun } from '@phosphor-icons/react';
-import { FRAMES, loadMark, loadPicture, MARK_ASPECT, drawTracked, ellipsize, roundRect } from './SharePrinter';
-import { INKS } from './EntryPlate';
+import { FRAMES, INKS, loadMark, loadPicture, MARK_ASPECT, drawTracked, ellipsize, roundRect } from './SharePrinter';
 import PrintBar from './Slug_Page/PrintBar';
 import { useBookplate } from './Bookplate';
 import { usePress, readFamilies } from '../../hooks/usePress';

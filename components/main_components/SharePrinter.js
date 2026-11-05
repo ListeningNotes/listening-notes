@@ -182,3 +182,229 @@ export function loadPicture(src) {
   });
   return attempt(true).catch(() => attempt(false)).catch(() => null);
 }
+
+// ── A record's print ───────────────────────────────────────────────────────
+// What every look (looks/) draws a record with.
+
+// The papers, for a record's print and the journal's (JournalPlate.js).
+export const INKS = {
+  day: {
+    ink: '#1a1a1a', soft: '#6b6b6b', faint: '#a8a8a8', warm: '#efebe2',
+    rule: 'rgba(26,26,26,0.15)', unlit: 'rgba(232,184,75,0.18)',
+    bar: 'rgba(26,26,26,0.5)',
+    edge: 'rgba(255,255,255,0.6)',                                  // --panel-border
+    lift: ['rgba(0,0,0,0.06)', 'rgba(0,0,0,0.06)'],                 // --shadow-lift
+    wash: 'rgba(238,240,236,0.46)', paper: '#eef0ec',
+  },
+  night: {
+    ink: '#e8e4dc', soft: '#888888', faint: '#666666', warm: '#161616',
+    rule: 'rgba(232,228,220,0.16)', unlit: 'rgba(232,184,75,0.18)',
+    bar: 'rgba(232,228,220,0.5)',
+    edge: 'rgba(255,255,255,0.08)',
+    lift: ['rgba(0,0,0,0.4)', 'rgba(0,0,0,0.3)'],
+    wash: 'rgba(14,14,14,0.5)', paper: '#0e0e0e',
+  },
+};
+export const ALBUM_CORNER = 0.055;     // of the album's width: the post's 16px on its cover
+export const TONES = { fav: '#f0484f', mp: '#4a9bf0', formative: '#3fa96b' };
+export const STAR_PATH = 'M9 1.5l2.163 4.38 4.837.703-3.5 3.412.826 4.818L9 12.39l-4.326 2.273.826-4.818L2 6.583l4.837-.703z';
+export const HEART_PATH = 'M12 21s-8-5.3-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.7-8 11-8 11z';
+// The tags, as the feed draws them: Phosphor's Heart (fill), SketchLogo (fill)
+// and Fingerprint (bold), each a single path in a 256-box.
+export const SYMBOLS = {
+  fav: 'M240,102c0,70-103.79,126.66-108.21,129a8,8,0,0,1-7.58,0C119.79,228.66,16,172,16,102A62.07,62.07,0,0,1,78,40c20.65,0,38.73,8.88,50,23.89C139.27,48.88,157.35,40,178,40A62.07,62.07,0,0,1,240,102Z',
+  mp: 'M246,98.73l-56-64A8,8,0,0,0,184,32H72a8,8,0,0,0-6,2.73l-56,64a8,8,0,0,0,.17,10.73l112,120a8,8,0,0,0,11.7,0l112-120A8,8,0,0,0,246,98.73ZM222.37,96H180L144,48h36.37ZM74.58,112l30.13,75.33L34.41,112Zm106.84,0h40.17l-70.3,75.33ZM75.63,48H112L76,96H33.63Z',
+  formative: 'M160,128a224.48,224.48,0,0,1-26.37,105.54,12,12,0,1,1-21.16-11.32A200.33,200.33,0,0,0,136,128a8,8,0,0,0-16,0,12,12,0,0,1-24,0,32,32,0,0,1,64,0ZM128,56a12,12,0,1,0,0,24,48.05,48.05,0,0,1,48,48c0,7.62-.36,15.32-1.07,22.87A12,12,0,0,0,185.74,164c.38,0,.76,0,1.14,0a12,12,0,0,0,11.93-10.87c.79-8.3,1.18-16.76,1.18-25.13A72.08,72.08,0,0,0,128,56ZM96,92.23A12,12,0,0,0,80,74.35,72.1,72.1,0,0,0,56,128a120.11,120.11,0,0,1-15.12,58.37,12,12,0,0,0,21,11.69A144.14,144.14,0,0,0,80,128,48.08,48.08,0,0,1,96,92.23Zm10.1,64.1a12,12,0,0,0-14.46,8.9,158.61,158.61,0,0,1-18.88,45.86,12,12,0,0,0,20.5,12.48A182.86,182.86,0,0,0,115,170.79,12,12,0,0,0,106.1,156.33Zm76.73,24.07A12,12,0,0,0,168.19,189a241.5,241.5,0,0,1-8,24.87,12,12,0,0,0,6.91,15.49,11.76,11.76,0,0,0,4.29.8,12,12,0,0,0,11.21-7.71,260.2,260.2,0,0,0,8.79-27.37A12,12,0,0,0,182.83,180.4ZM128,16A112.12,112.12,0,0,0,16,127.44c0,.19,0,.38,0,.57a79.81,79.81,0,0,1-5,27.82,12,12,0,1,0,22.5,8.35A103.59,103.59,0,0,0,40,128.58c0-.19,0-.38,0-.57a88,88,0,0,1,176-.5c0,.16,0,.33,0,.5a282.12,282.12,0,0,1-6.74,61.38,12,12,0,0,0,9.09,14.33A11.84,11.84,0,0,0,221,204a12,12,0,0,0,11.7-9.38A305.87,305.87,0,0,0,240,128.55c0-.18,0-.36,0-.54A112.13,112.13,0,0,0,128,16Z',
+};
+
+// When each thing on a record's print arrives, after the album has landed, and
+// the way it arrives.
+export const ARRIVES = { stars: 1.3, tags: 2.5, title: 1.15, artist: 1.35, floor: 2.9, hearts: 3.8 };
+const POP = 0.45;
+export const easeOut = v => 1 - (1 - v) ** 3;
+export const easeBack = v => { const k = 1.70158; const u = v - 1; return 1 + (k + 1) * u ** 3 + k * u ** 2; };
+export const clamp01 = v => Math.min(1, Math.max(0, v));
+export function popped(c, at, x, y, drawIt, t) {
+  const v = clamp01((t - at) / POP);
+  if (v <= 0) return;
+  const scale = easeBack(v);
+  c.save();
+  c.translate(x, y);
+  c.scale(scale, scale);
+  c.translate(-x, -y);
+  drawIt();
+  c.restore();
+}
+
+// The album as a picture with round corners, and the two ends of it a turned
+// album shows. `shade` darkens those ends; `ring` is a hairline round the face.
+export function coverPicture(img, size, { shade = 0.16, ring = null } = {}) {
+  const s = Math.max(1, Math.round(size));
+  const flat = document.createElement('canvas');
+  flat.width = flat.height = s;
+  const f = flat.getContext('2d');
+  if (img?.naturalWidth) {
+    const k = Math.max(s / img.naturalWidth, s / img.naturalHeight);
+    f.drawImage(img, (s - img.naturalWidth * k) / 2, (s - img.naturalHeight * k) / 2, img.naturalWidth * k, img.naturalHeight * k);
+  } else {
+    f.fillStyle = '#777';
+    f.fillRect(0, 0, s, s);
+  }
+  const rounded = paint => {
+    const c = document.createElement('canvas');
+    c.width = c.height = s;
+    const x = c.getContext('2d');
+    x.beginPath();
+    x.roundRect(0, 0, s, s, s * ALBUM_CORNER);
+    x.clip();
+    paint(x);
+    return c;
+  };
+  const picture = rounded(x => {
+    x.drawImage(flat, 0, 0);
+    if (ring) {
+      x.strokeStyle = ring;
+      x.lineWidth = s * 0.016;
+      x.beginPath();
+      x.roundRect(0, 0, s, s, s * ALBUM_CORNER);
+      x.stroke();
+    }
+  });
+  // The album's thickness: its own edge stretched across the same outline and a
+  // little shaded, one for each side it can turn to show.
+  const sided = col => rounded(x => {
+    x.drawImage(flat, col, 0, Math.min(2, s), s, 0, 0, s, s);
+    x.fillStyle = `rgba(0,0,0,${shade})`;
+    x.fillRect(0, 0, s, s);
+  });
+  picture.sides = { [-1]: sided(0), [1]: sided(Math.max(0, s - 2)) };
+  return picture;
+}
+
+// The album at an angle, `depth` thick, its corners round like every cover in
+// the app.
+export function drawTurned(c, picture, cx, cy, size, angle, depth, layersMost = 14) {
+  const hs = size / 2;
+  const eye = size * 3.2;
+  const cos = Math.cos(angle), sin = Math.sin(angle);
+  const point = (u, side) => {
+    const x = u * hs * cos + side * (depth / 2) * sin;
+    const z = -u * hs * sin + side * (depth / 2) * cos;
+    const p = eye / (eye - z);
+    return { x: cx + x * p, half: hs * p };
+  };
+  const w = picture.width, h = picture.height;
+  const u = sin < 0 ? 1 : -1;
+  const a = point(u, 1), b = point(u, -1);
+  // The shadow is cast by the album's own outline at this angle, so it turns
+  // with it. A square here stayed square and its corners showed. A pixel inside
+  // the album, so the dark under it never shows round a corner.
+  const outline = (p, q) => {
+    const [l, r] = p.x < q.x ? [p, q] : [q, p];
+    const x0 = l.x + 1, x1 = r.x - 1, h0 = l.half - 1, h1 = r.half - 1;
+    const wide = Math.max(1, x1 - x0);
+    const corner = size * ALBUM_CORNER;
+    const rx = corner * wide / size, ry0 = corner * h0 / hs, ry1 = corner * h1 / hs;
+    const edge = x => h0 + (h1 - h0) * (x - x0) / wide;
+    const K = 0.4477;                  // how far short of a corner a round one's handles stop
+    c.beginPath();
+    c.moveTo(x0 + rx, cy - edge(x0 + rx));
+    c.lineTo(x1 - rx, cy - edge(x1 - rx));
+    c.bezierCurveTo(x1 - rx * K, cy - h1, x1, cy - h1 + ry1 * K, x1, cy - h1 + ry1);
+    c.lineTo(x1, cy + h1 - ry1);
+    c.bezierCurveTo(x1, cy + h1 - ry1 * K, x1 - rx * K, cy + h1, x1 - rx, cy + edge(x1 - rx));
+    c.lineTo(x0 + rx, cy + edge(x0 + rx));
+    c.bezierCurveTo(x0 + rx * K, cy + h0, x0, cy + h0 - ry0 * K, x0, cy + h0 - ry0);
+    c.lineTo(x0, cy - h0 + ry0);
+    c.bezierCurveTo(x0, cy - h0 + ry0 * K, x0 + rx * K, cy - h0, x0 + rx, cy - edge(x0 + rx));
+    c.closePath();
+  };
+  c.save();
+  c.shadowColor = 'rgba(0,0,0,0.32)';
+  c.shadowBlur = size * 0.09;
+  c.shadowOffsetY = size * 0.035;
+  c.fillStyle = 'rgba(0,0,0,0.9)';
+  outline(point(-1, 1), point(1, 1));
+  c.fill();
+  c.restore();
+  // Vertical strips, each the height the album is at that point.
+  const strips = (art, side, from, to, count) => {
+    for (let i = 0; i < count; i++) {
+      const u0 = from + ((to - from) * i) / count, u1 = from + ((to - from) * (i + 1)) / count;
+      const p0 = point(u0, side), p1 = point(u1, side);
+      const wide = Math.abs(p1.x - p0.x);
+      if (wide < 0.01) continue;
+      const mid = (p0.half + p1.half) / 2;
+      c.drawImage(art, ((u0 + 1) / 2) * w, 0, ((u1 - u0) / 2) * w, h, Math.min(p0.x, p1.x), cy - mid, wide + 0.8, mid * 2);
+    }
+  };
+  // The thickness, back to front: the outline's end, again and again, so the
+  // corners stay round round the side too.
+  const across = Math.abs(b.x - a.x);
+  if (across > 0.5 && picture.sides) {
+    const layers = Math.min(layersMost, Math.ceil(across / 1.5));
+    const reach = ALBUM_CORNER * 4;
+    for (let i = 0; i < layers; i++) {
+      const side = -1 + (2 * i) / layers;
+      if (u > 0) strips(picture.sides[1], side, 1 - reach, 1, 6);
+      else strips(picture.sides[-1], side, -1, -1 + reach, 6);
+    }
+  }
+  strips(picture, 1, -1, 1, 48);
+}
+
+// `share` is how much of each wedge's turn it fills; `hollow` leaves the middle
+// clear, for rays that start behind an album rather than under it.
+export function rayPicture(size, colour, wedges, { share = 1 / 3, hollow = false } = {}) {
+  const c = document.createElement('canvas');
+  c.width = c.height = Math.max(1, Math.round(size));
+  const x = c.getContext('2d');
+  const r = c.width / 2;
+  x.translate(r, r);
+  x.fillStyle = colour;
+  for (let i = 0; i < wedges; i++) {
+    const a = (i * Math.PI * 2) / wedges;
+    x.beginPath();
+    x.moveTo(0, 0);
+    x.arc(0, 0, r, a, a + (Math.PI * 2) / wedges * share);
+    x.closePath();
+    x.fill();
+  }
+  x.setTransform(1, 0, 0, 1, 0, 0);
+  x.globalCompositeOperation = 'destination-in';
+  const g = x.createRadialGradient(r, r, r * 0.15, r, r, r);
+  g.addColorStop(0, hollow ? 'rgba(0,0,0,0)' : 'rgba(0,0,0,1)');
+  if (hollow) g.addColorStop(0.25, 'rgba(0,0,0,1)');
+  g.addColorStop(1, 'rgba(0,0,0,0)');
+  x.fillStyle = g;
+  x.fillRect(0, 0, c.width, c.height);
+  return c;
+}
+
+// The cover blurred across the paper, overscanned so no edge shows.
+export function paintGround(c, f, img, paper, wash, { tone = 'saturate(1.25)', blur = 0.03 } = {}) {
+  c.fillStyle = paper;
+  c.fillRect(0, 0, f.w, f.h);
+  if (img?.naturalWidth) {
+    const s = Math.max(f.w / img.naturalWidth, f.h / img.naturalHeight) * 1.3;
+    const dw = img.naturalWidth * s, dh = img.naturalHeight * s;
+    c.save();
+    if (typeof c.filter === 'string') {
+      c.filter = `blur(${Math.round(f.w * blur)}px) ${tone}`;
+      c.drawImage(img, (f.w - dw) / 2, (f.h - dh) / 2, dw, dh);
+    } else {
+      // No filter on this canvas (Safari): a picture shrunk to a few pixels and
+      // stretched back is a blur by another route.
+      const tiny = document.createElement('canvas');
+      tiny.width = 12; tiny.height = 12;
+      const t = tiny.getContext('2d');
+      t.imageSmoothingQuality = 'high';
+      t.drawImage(img, 0, 0, 12, 12);
+      c.imageSmoothingQuality = 'high';
+      c.drawImage(tiny, (f.w - dw) / 2, (f.h - dh) / 2, dw, dh);
+    }
+    c.restore();
+  }
+  c.fillStyle = wash;
+  c.fillRect(0, 0, f.w, f.h);
+}
