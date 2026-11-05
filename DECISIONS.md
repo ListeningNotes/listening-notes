@@ -734,11 +734,10 @@ meaning the profile. The press landed for the record on 2026-09-12; the
 card's door still says so until its plate is reworked.
 
 **What the printer is, 2026-11-03 (Miyel, trying it on her phone).** Save shows
-the print in a pop-up, because no web page can write to a camera roll. On Day and
-Night the album sweeps, never a full turn (half of one shows a backwards cover), and
-a Masterpiece is a different object: the word for stars, square and still, one slow
-silver glisten, and no gold (it looked tacky). The journal's print opens from the
-wall's line and is what the wall shows. Original games only.
+the print in a pop-up, because no web page can write to a camera roll. An album
+that turns sweeps, never a full turn (half of one shows a backwards cover). The
+journal's print opens from the wall's line and is what the wall shows. Original
+games only.
 
 **A record's looks are five exports, not five filters, 2026-11-04 (Miyel).** Until
 then every look kept one layout and changed only the wash and ink: right while a
@@ -746,6 +745,8 @@ print had to read as the journal's own card, wrong once a look is a costume some
 chose ("they should genuinely be their own export"). Now the information is fixed and
 the layout is not: every look draws the cover, stars, marks, title with artist and
 year, horizon and the mark, no more and no fewer, in `looks/`, on one canvas scene.
+Day and Night are only the reading card exported, a picture, so the others are the
+ones allowed to be loud; a Mosaic settles into the real image.
 
 **The printer is a mode of the entry page, 2026-09-13.** Press the glyph and
 the first screen becomes the flyer, the way correcting is a mode: the card

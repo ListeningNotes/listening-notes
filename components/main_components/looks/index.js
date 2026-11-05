@@ -26,12 +26,12 @@ import { crtScene } from './crt';
 import { risoScene } from './riso';
 
 export const LOOKS = [
-  { key: 'day', label: 'Day', Icon: Sun, ink: INKS.day.ink, scene: paperScene(false) },
-  { key: 'night', label: 'Night', Icon: Moon, ink: INKS.night.ink, scene: paperScene(true) },
+  { key: 'day', label: 'Day', Icon: Sun, ink: INKS.day.ink, moves: false, scene: paperScene(false) },
+  { key: 'night', label: 'Night', Icon: Moon, ink: INKS.night.ink, moves: false, scene: paperScene(true) },
   { key: 'game', label: 'Game', Icon: GameController, ink: '#1b0f33', scene: gameScene },
   { key: 'mosaic', label: 'Mosaic', Icon: PuzzlePiece, ink: '#ffffff', scene: mosaicScene },
   { key: 'crt', label: 'CRT', Icon: Television, ink: '#e9ecff', scene: crtScene },
-  { key: 'riso', label: 'Riso', Icon: Unite, ink: '#1a1a1a', scene: risoScene },
+  { key: 'riso', label: 'Riso', Icon: Unite, ink: '#2a2a2e', scene: risoScene },
 ];
 
 export const lookOf = key => LOOKS.find(look => look.key === key) || LOOKS[0];

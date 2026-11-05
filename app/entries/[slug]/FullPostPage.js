@@ -322,11 +322,13 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   const [printFailed, setPrintFailed] = useState(null);
   const plate = useMemo(() => entryPlate({ entry, onFail: setPrintFailed }), [entry]);
   const effect = EFFECTS.includes(printChoices.effect) ? printChoices.effect : 'unlock';
-  const isMoving = effect !== 'still';
   // Which look (looks/). Day and Night are one door that flips; `paper` is the
   // side of it the door comes back to from another look.
   const ground = lookOf(printChoices.ground).key;
   const paper = printChoices.paper === 'night' ? 'night' : 'day';
+  // Day and Night are a picture; the others move, unless told to hold Still.
+  const lookMoves = lookOf(ground).moves !== false;
+  const isMoving = lookMoves && effect !== 'still';
   const printFonts = useMemo(() => ({ sans: '.ln-screen-one-title', mono: '.ln-screen-one-artist' }), []);
   // The print is a scene on a canvas: the same scene here, and run on its own
   // clock for the video on Save. The card under it stays in the page, unseen,
@@ -617,10 +619,10 @@ export default function FullPostPage({ entry, references = [], authed = false, l
         return { key: 'paper', label: side.label, icon: <side.Icon {...printIcon} />, on, press: () => choosePrint(on ? { ground: other, paper: other } : { ground: paper }) };
       }),
       PRINT_SIZES.map(key => ({ key, label: FRAMES[key].label, icon: printGlyph(...SIZE_SHAPES[key]), on: size === key, press: () => choosePrint({ size: key }) })),
-      [
+      ...(lookMoves ? [[
         { key: 'unlock', label: 'Unlock', icon: <LockKeyOpen {...printIcon} /> },
         { key: 'still', label: 'Still', icon: <Pause {...printIcon} /> },
-      ].map(c => ({ ...c, on: effect === c.key, press: () => choosePrint({ effect: c.key }) })),
+      ].map(c => ({ ...c, on: effect === c.key, press: () => choosePrint({ effect: c.key }) }))] : []),
     ] },
   ];
   // ── What was said, against what is on the record ────────────────────────
