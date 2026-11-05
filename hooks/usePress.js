@@ -166,7 +166,7 @@ export function usePress({ plate, shown, ground, isDark, link, fonts, motion = n
     clearTimeout(timer.current);
     setStatus('Saving…');
     setClip('saving');
-    const blob = await filmFrames({ ...spec, seconds: SECONDS }).catch(() => null);
+    const blob = await filmFrames({ seconds: SECONDS, ...spec }).catch(() => null);
     if (!blob) {
       setClip(null);
       say('This browser cannot make a video, so nothing was saved.', 4000);

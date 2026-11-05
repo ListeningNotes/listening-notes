@@ -5,8 +5,8 @@
 // in day mode or night mode (Miyel, 2026-11-04). The page's own colour, the cover,
 // the title, the artist, the stars, the marks as the post's chips, and the horizon
 // from further down the page. It is the plain one on purpose. Animated, the card
-// only builds: the cover lands, the lines arrive in reading order, the bars rise,
-// and then it is the card, at rest; Still is that last moment as a picture. Not the
+// only unrolls, calm and in under a second, since most people tap through stories: the
+// cover is already there, the lines come down from under it, the bars rise; Still is that last moment as a picture. Not the
 // posted date: a line nobody needed on a print (2026-09-12).
 //
 // The numbers are the post's own pixels, on a 340-wide column.
@@ -14,7 +14,7 @@
 
 import {
   INKS, STAR_PATH, HEART_PATH, MARK_ASPECT,
-  drawTracked, drawPath, roundRect, wrapLines, easeOut, clamp01, sheet,
+  drawTracked, drawPath, roundRect, wrapLines, clamp01, sheet,
 } from '../SharePrinter';
 
 const COL = 340, ART = 265, ART_RADIUS = 16;
@@ -34,21 +34,8 @@ const CHIPS = {
   formative: { word: 'Formative', ink: '#3fa96b', edge: 'rgba(63,169,107,0.4)' },
 };
 const gapOf = n => (n > 24 ? 2 : n > 14 ? 3 : 4);
-// When each thing arrives, in reading order.
-const AT = { title: 0.7, artist: 0.9, stars: 1.1, chips: 1.9, bars: 2.3, hearts: 3.2 };
-const POP = 0.4;
-const overshoot = v => { const k = 1.70158; const u = v - 1; return 1 + (k + 1) * u ** 3 + k * u ** 2; };
-function grown(c, t, at, x, y, paint) {
-  const v = clamp01((t - at) / POP);
-  if (v <= 0) return;
-  const s = overshoot(v);
-  c.save();
-  c.translate(x, y);
-  c.scale(s, s);
-  c.translate(-x, -y);
-  paint();
-  c.restore();
-}
+const ROLLS_IN = 0.75;
+const smooth = v => v * v * (3 - 2 * v);
 
 export function paperScene(night) {
   return (record, frame, { art, families, still = false }) => {
@@ -119,33 +106,35 @@ export function paperScene(night) {
       }
       y += px(MARK_H + GAP);
 
-      // The cover lands.
-      const land = overshoot(clamp01(t / 0.8));
-      const scale = 0.82 + 0.18 * land;
-      const cy = y + size / 2 + (1 - land) * size * 0.12;
-      const drawn = card.width * scale;
-      c.drawImage(card, cx - drawn / 2, cy - drawn / 2, drawn, drawn);
+      c.drawImage(card, cx - card.width / 2, y - margin);
       y += size + px(GAP);
 
+      // Everything under the cover unrolls downward, together.
+      const unroll = smooth(clamp01(t / ROLLS_IN));
+      if (unroll <= 0) return;
+      c.save();
+      c.beginPath();
+      c.rect(0, y - px(GAP), W, (H - y + px(GAP)) * unroll);
+      c.clip();
       c.textBaseline = 'top';
       const titleY = y;
-      grown(c, t, AT.title, cx, titleY + px(TITLE_LEAD) / 2, () => {
+      {
         c.textAlign = 'center';
         c.font = `700 ${px(TITLE)}px ${sans}`;
         c.fillStyle = ink.ink;
         laid.titleLines.forEach((line, i) => c.fillText(line, cx, titleY + i * px(TITLE_LEAD)));
         c.textAlign = 'left';
-      });
+      }
       y += laid.titleLines.length * px(TITLE_LEAD);
 
       if (laid.artistLines.length) {
         y += px(GAP * 0.7);
         const artistY = y;
-        grown(c, t, AT.artist, cx, artistY + px(ARTIST_LEAD) / 2, () => {
+        {
           c.font = `400 ${px(ARTIST)}px ${mono}`;
           c.fillStyle = ink.soft;
           laid.artistLines.forEach((line, i) => drawTracked(c, line, cx, artistY + i * px(ARTIST_LEAD), px(ARTIST) * 0.14, 'center'));
-        });
+        }
         y += laid.artistLines.length * px(ARTIST_LEAD);
       }
 
@@ -156,7 +145,7 @@ export function paperScene(night) {
         const starY = y;
         for (let i = 0; i < 5; i++) {
           const sx = from + i * step;
-          grown(c, t, AT.stars + i * 0.12, sx + box / 2, starY + box / 2, () => {
+          {
             drawPath(c, STAR_PATH, sx, starY, box, 18, ink.unlit);
             const part = clamp01(stars - i);
             if (part > 0) {
@@ -167,7 +156,7 @@ export function paperScene(night) {
               drawPath(c, STAR_PATH, sx, starY, box, 18, GOLD);
               c.restore();
             }
-          });
+          }
         }
         y += box;
       }
@@ -182,7 +171,7 @@ export function paperScene(night) {
         const chipY = y;
         tags.forEach((tag, i) => {
           const chipX = x;
-          grown(c, t, AT.chips + i * 0.12, chipX + widths[i] / 2, chipY + h / 2, () => {
+          {
             c.font = `400 ${px(CHIP)}px ${mono}`;
             c.textBaseline = 'middle';
             c.strokeStyle = CHIPS[tag].edge;
@@ -192,7 +181,7 @@ export function paperScene(night) {
             c.fillStyle = CHIPS[tag].ink;
             drawTracked(c, CHIPS[tag].word, chipX + padX, chipY + h / 2 + px(0.5), spacing);
             c.textBaseline = 'top';
-          });
+          }
           x += widths[i] + gap;
         });
         y += h;
@@ -204,7 +193,7 @@ export function paperScene(night) {
         const h = px(HORIZON_H), r = Math.min(px(BAR_RADIUS), bw / 2);
         const barsY = y;
         bars.forEach((v, i) => {
-          const rise = easeOut(clamp01((t - AT.bars - i * 0.03) / 0.7));
+          const rise = smooth(clamp01(t / ROLLS_IN));
           if (rise <= 0) return;
           const bh = Math.max(0.03 * h, v * h), x0 = left + i * (bw + gap);
           c.fillStyle = ink.bar;
@@ -213,10 +202,11 @@ export function paperScene(night) {
           c.fill();
           if (favs[i]) {
             const hs = px(HEART), hy = barsY + h - bh - hs - px(HEART_LIFT);
-            grown(c, t, AT.hearts + i * 0.03, x0 + bw / 2, hy + hs / 2, () => drawPath(c, HEART_PATH, x0 + (bw - hs) / 2, hy, hs, 24, FAV));
+            drawPath(c, HEART_PATH, x0 + (bw - hs) / 2, hy, hs, 24, FAV);
           }
         });
       }
+      c.restore();
     }
 
     let t = still ? 30 : 0;
