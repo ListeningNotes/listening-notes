@@ -25,8 +25,8 @@ import { paperScene } from './day';
 import { halftoneScene } from './halftone';
 
 export const LOOKS = [
-  { key: 'day', label: 'Day', Icon: Sun, ink: INKS.day.ink, moves: false, scene: paperScene(false) },
-  { key: 'night', label: 'Night', Icon: Moon, ink: INKS.night.ink, moves: false, scene: paperScene(true) },
+  { key: 'day', label: 'Day', Icon: Sun, ink: INKS.day.ink, scene: paperScene(false) },
+  { key: 'night', label: 'Night', Icon: Moon, ink: INKS.night.ink, scene: paperScene(true) },
   { key: 'halftone', label: 'Halftone', Icon: DotsNine, ink: '#000000', scene: halftoneScene },
 ];
 

@@ -4,16 +4,17 @@
 // Day and Night, the default: the card as it reads on the entry page, exported,
 // in day mode or night mode (Miyel, 2026-11-04). The page's own colour, the cover,
 // the title, the artist, the stars, the marks as the post's chips, and the horizon
-// from further down the page. Nothing moves, so it saves as a picture, and it is
-// the plain one on purpose: nobody chooses it, it is what you get by never opening
-// the row. Not the posted date: a line nobody needed on a print (2026-09-12).
+// from further down the page. It is the plain one on purpose. Animated, the card
+// only builds: the cover lands, the lines arrive in reading order, the bars rise,
+// and then it is the card, at rest; Still is that last moment as a picture. Not the
+// posted date: a line nobody needed on a print (2026-09-12).
 //
 // The numbers are the post's own pixels, on a 340-wide column.
 'use client';
 
 import {
   INKS, STAR_PATH, HEART_PATH, MARK_ASPECT,
-  drawTracked, drawPath, roundRect, wrapLines,
+  drawTracked, drawPath, roundRect, wrapLines, easeOut, clamp01, sheet,
 } from '../SharePrinter';
 
 const COL = 340, ART = 265, ART_RADIUS = 16;
@@ -33,9 +34,24 @@ const CHIPS = {
   formative: { word: 'Formative', ink: '#3fa96b', edge: 'rgba(63,169,107,0.4)' },
 };
 const gapOf = n => (n > 24 ? 2 : n > 14 ? 3 : 4);
+// When each thing arrives, in reading order.
+const AT = { title: 0.7, artist: 0.9, stars: 1.1, chips: 1.9, bars: 2.3, hearts: 3.2 };
+const POP = 0.4;
+const overshoot = v => { const k = 1.70158; const u = v - 1; return 1 + (k + 1) * u ** 3 + k * u ** 2; };
+function grown(c, t, at, x, y, paint) {
+  const v = clamp01((t - at) / POP);
+  if (v <= 0) return;
+  const s = overshoot(v);
+  c.save();
+  c.translate(x, y);
+  c.scale(s, s);
+  c.translate(-x, -y);
+  paint();
+  c.restore();
+}
 
 export function paperScene(night) {
-  return (record, frame, { art, families }) => {
+  return (record, frame, { art, families, still = false }) => {
     const { stars, artistLine, tags, bars, favs, entry } = record;
     const { sans, mono } = families;
     const ink = night ? INKS.night : INKS.day;
@@ -63,7 +79,35 @@ export function paperScene(night) {
     const px = n => n * U;
     const colW = px(COL), left = (W - colW) / 2;
 
-    function paint(c) {
+    // The cover with its lift and hairline, once; a shadow is dear on every frame.
+    const size = px(ART), radius = px(ART_RADIUS), margin = px(60);
+    const card = sheet(size + margin * 2, size + margin * 2, c => {
+      c.save();
+      c.shadowColor = ink.lift[1];
+      c.shadowBlur = px(48);
+      c.shadowOffsetY = px(16);
+      c.fillStyle = ink.warm;
+      roundRect(c, margin, margin, size, size, radius);
+      c.fill();
+      c.shadowColor = ink.lift[0];
+      c.shadowBlur = px(20);
+      c.shadowOffsetY = px(4);
+      c.fill();
+      c.restore();
+      if (art?.cover?.naturalWidth) {
+        c.save();
+        roundRect(c, margin, margin, size, size, radius);
+        c.clip();
+        c.drawImage(art.cover, margin, margin, size, size);
+        c.restore();
+      }
+      c.strokeStyle = ink.edge;
+      c.lineWidth = Math.max(1, px(0.8));
+      roundRect(c, margin, margin, size, size, radius);
+      c.stroke();
+    });
+
+    function paintAt(c, t) {
       c.fillStyle = ink.paper;
       c.fillRect(0, 0, W, H);
       let y = (H - laid.h) / 2;
@@ -75,66 +119,55 @@ export function paperScene(night) {
       }
       y += px(MARK_H + GAP);
 
-      // The cover: the square's radius, its lift, a hairline.
-      const size = px(ART), ax = cx - size / 2, radius = px(ART_RADIUS);
-      c.save();
-      c.shadowColor = ink.lift[1];
-      c.shadowBlur = px(48);
-      c.shadowOffsetY = px(16);
-      c.fillStyle = ink.warm;
-      roundRect(c, ax, y, size, size, radius);
-      c.fill();
-      c.shadowColor = ink.lift[0];
-      c.shadowBlur = px(20);
-      c.shadowOffsetY = px(4);
-      c.fill();
-      c.restore();
-      if (art?.cover?.naturalWidth) {
-        c.save();
-        roundRect(c, ax, y, size, size, radius);
-        c.clip();
-        c.drawImage(art.cover, ax, y, size, size);
-        c.restore();
-      }
-      c.strokeStyle = ink.edge;
-      c.lineWidth = Math.max(1, px(0.8));
-      roundRect(c, ax, y, size, size, radius);
-      c.stroke();
+      // The cover lands.
+      const land = overshoot(clamp01(t / 0.8));
+      const scale = 0.82 + 0.18 * land;
+      const cy = y + size / 2 + (1 - land) * size * 0.12;
+      const drawn = card.width * scale;
+      c.drawImage(card, cx - drawn / 2, cy - drawn / 2, drawn, drawn);
       y += size + px(GAP);
 
       c.textBaseline = 'top';
-      c.textAlign = 'center';
-      c.font = `700 ${px(TITLE)}px ${sans}`;
-      c.fillStyle = ink.ink;
-      laid.titleLines.forEach(line => { c.fillText(line, cx, y); y += px(TITLE_LEAD); });
-      c.textAlign = 'left';
+      const titleY = y;
+      grown(c, t, AT.title, cx, titleY + px(TITLE_LEAD) / 2, () => {
+        c.textAlign = 'center';
+        c.font = `700 ${px(TITLE)}px ${sans}`;
+        c.fillStyle = ink.ink;
+        laid.titleLines.forEach((line, i) => c.fillText(line, cx, titleY + i * px(TITLE_LEAD)));
+        c.textAlign = 'left';
+      });
+      y += laid.titleLines.length * px(TITLE_LEAD);
 
       if (laid.artistLines.length) {
         y += px(GAP * 0.7);
-        c.font = `400 ${px(ARTIST)}px ${mono}`;
-        c.fillStyle = ink.soft;
-        laid.artistLines.forEach(line => {
-          drawTracked(c, line, cx, y, px(ARTIST) * 0.14, 'center');
-          y += px(ARTIST_LEAD);
+        const artistY = y;
+        grown(c, t, AT.artist, cx, artistY + px(ARTIST_LEAD) / 2, () => {
+          c.font = `400 ${px(ARTIST)}px ${mono}`;
+          c.fillStyle = ink.soft;
+          laid.artistLines.forEach((line, i) => drawTracked(c, line, cx, artistY + i * px(ARTIST_LEAD), px(ARTIST) * 0.14, 'center'));
         });
+        y += laid.artistLines.length * px(ARTIST_LEAD);
       }
 
       if (stars > 0) {
         y += px(GAP);
         const box = px(STAR), step = px(STAR + STAR_GAP);
         const from = cx - (5 * box + 4 * px(STAR_GAP)) / 2;
+        const starY = y;
         for (let i = 0; i < 5; i++) {
           const sx = from + i * step;
-          drawPath(c, STAR_PATH, sx, y, box, 18, ink.unlit);
-          const part = Math.min(1, Math.max(0, stars - i));
-          if (part > 0) {
-            c.save();
-            c.beginPath();
-            c.rect(sx, y, box * part, box);
-            c.clip();
-            drawPath(c, STAR_PATH, sx, y, box, 18, GOLD);
-            c.restore();
-          }
+          grown(c, t, AT.stars + i * 0.12, sx + box / 2, starY + box / 2, () => {
+            drawPath(c, STAR_PATH, sx, starY, box, 18, ink.unlit);
+            const part = clamp01(stars - i);
+            if (part > 0) {
+              c.save();
+              c.beginPath();
+              c.rect(sx, starY, box * part, box);
+              c.clip();
+              drawPath(c, STAR_PATH, sx, starY, box, 18, GOLD);
+              c.restore();
+            }
+          });
         }
         y += box;
       }
@@ -146,17 +179,22 @@ export function paperScene(night) {
         const across = word => [...word].reduce((n, ch) => n + c.measureText(ch).width + spacing, -spacing);
         const widths = tags.map(tag => across(CHIPS[tag].word) + padX * 2);
         let x = cx - (widths.reduce((n, w) => n + w, 0) + gap * (tags.length - 1)) / 2;
-        c.textBaseline = 'middle';
+        const chipY = y;
         tags.forEach((tag, i) => {
-          c.strokeStyle = CHIPS[tag].edge;
-          c.lineWidth = Math.max(1, px(0.8));
-          roundRect(c, x, y, widths[i], h, px(CHIP_RADIUS));
-          c.stroke();
-          c.fillStyle = CHIPS[tag].ink;
-          drawTracked(c, CHIPS[tag].word, x + padX, y + h / 2 + px(0.5), spacing);
+          const chipX = x;
+          grown(c, t, AT.chips + i * 0.12, chipX + widths[i] / 2, chipY + h / 2, () => {
+            c.font = `400 ${px(CHIP)}px ${mono}`;
+            c.textBaseline = 'middle';
+            c.strokeStyle = CHIPS[tag].edge;
+            c.lineWidth = Math.max(1, px(0.8));
+            roundRect(c, chipX, chipY, widths[i], h, px(CHIP_RADIUS));
+            c.stroke();
+            c.fillStyle = CHIPS[tag].ink;
+            drawTracked(c, CHIPS[tag].word, chipX + padX, chipY + h / 2 + px(0.5), spacing);
+            c.textBaseline = 'top';
+          });
           x += widths[i] + gap;
         });
-        c.textBaseline = 'top';
         y += h;
       }
 
@@ -164,20 +202,27 @@ export function paperScene(night) {
         y += px(GAP + HORIZON_HEAD);
         const n = bars.length, gap = px(gapOf(n)), bw = Math.max(1, (colW - gap * (n - 1)) / n);
         const h = px(HORIZON_H), r = Math.min(px(BAR_RADIUS), bw / 2);
+        const barsY = y;
         bars.forEach((v, i) => {
+          const rise = easeOut(clamp01((t - AT.bars - i * 0.03) / 0.7));
+          if (rise <= 0) return;
           const bh = Math.max(0.03 * h, v * h), x0 = left + i * (bw + gap);
           c.fillStyle = ink.bar;
           c.beginPath();
-          c.roundRect(x0, y + h - bh, bw, bh, [r, r, 0, 0]);
+          c.roundRect(x0, barsY + h - bh * rise, bw, bh * rise, [r, r, 0, 0]);
           c.fill();
           if (favs[i]) {
-            const hs = px(HEART);
-            drawPath(c, HEART_PATH, x0 + (bw - hs) / 2, y + h - bh - hs - px(HEART_LIFT), hs, 24, FAV);
+            const hs = px(HEART), hy = barsY + h - bh - hs - px(HEART_LIFT);
+            grown(c, t, AT.hearts + i * 0.03, x0 + bw / 2, hy + hs / 2, () => drawPath(c, HEART_PATH, x0 + (bw - hs) / 2, hy, hs, 24, FAV));
           }
         });
       }
     }
 
-    return { step() {}, paint };
+    let t = still ? 30 : 0;
+    return {
+      step(dt) { t += dt; },
+      paint(c) { paintAt(c, t); },
+    };
   };
 }

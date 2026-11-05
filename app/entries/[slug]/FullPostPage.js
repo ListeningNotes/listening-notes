@@ -10,7 +10,7 @@
 'use client';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Envelope, Fingerprint, Heart, LockKeyOpen, Pause, SketchLogo, VinylRecord } from '@phosphor-icons/react';
+import { Envelope, Fingerprint, Heart, Pause, Play, SketchLogo, VinylRecord } from '@phosphor-icons/react';
 import { fonts } from '../../../library/sitewide_visuals';
 import { sizedAlbumArt, fetchAlbumArtUrl } from '../../../library/music_data_api';
 import { parseHorizon, entryTracks, splitNotes, parseRating, flawless } from '../../../library/entry_formatter';
@@ -62,8 +62,8 @@ import { SnippetLink } from '../../../components/main_components/Slug_Page/Snipp
 // numbers (EntryPlate.js), through hooks/usePress.js. Choices are kept for
 // the session, per browser.
 const PRINT_STORE = 'ln-printing';
-// A record's print is Unlock (albumScene, EntryPlate.js; Miyel, 2026-11-03:
-// "this is the look"), a video, or Still, the picture.
+// Whichever look, a record's print is Animated, a video, or Still, the picture.
+// `unlock` is what Animated is stored as, from when it had that name.
 const EFFECTS = ['unlock', 'still'];
 const PRINT_SIZES = ['story', 'portrait', 'square'];
 const SIZE_SHAPES = { story: [112, 200], portrait: [150, 188], square: [170, 170] };
@@ -324,9 +324,8 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   const effect = EFFECTS.includes(printChoices.effect) ? printChoices.effect : 'unlock';
   // Which look (looks/).
   const ground = lookOf(printChoices.ground).key;
-  // Day and Night are a picture; the others move, unless told to hold Still.
-  const lookMoves = lookOf(ground).moves !== false;
-  const isMoving = lookMoves && effect !== 'still';
+  // Every look has both: Animated, a video, or Still, the picture.
+  const isMoving = effect !== 'still';
   const printFonts = useMemo(() => ({ sans: '.ln-screen-one-title', mono: '.ln-screen-one-artist' }), []);
   // The print is a scene on a canvas: the same scene here, and run on its own
   // clock for the video on Save. The card under it stays in the page, unseen,
@@ -608,10 +607,10 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     { key: 'card', label: 'Card', groups: [
       LOOKS.map(look => ({ key: look.key, label: look.label, icon: <look.Icon {...printIcon} />, on: ground === look.key, press: () => choosePrint({ ground: look.key }) })),
       PRINT_SIZES.map(key => ({ key, label: FRAMES[key].label, icon: printGlyph(...SIZE_SHAPES[key]), on: size === key, press: () => choosePrint({ size: key }) })),
-      ...(lookMoves ? [[
-        { key: 'unlock', label: 'Unlock', icon: <LockKeyOpen {...printIcon} /> },
+      [
+        { key: 'unlock', label: 'Animated', icon: <Play {...printIcon} /> },
         { key: 'still', label: 'Still', icon: <Pause {...printIcon} /> },
-      ].map(c => ({ ...c, on: effect === c.key, press: () => choosePrint({ effect: c.key }) }))] : []),
+      ].map(c => ({ ...c, on: effect === c.key, press: () => choosePrint({ effect: c.key }) })),
     ] },
   ];
   // ── What was said, against what is on the record ────────────────────────
