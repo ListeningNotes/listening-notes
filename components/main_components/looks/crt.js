@@ -1,12 +1,11 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // components/main_components/looks/crt.js
-// CRT: a channel. The album fills the screen, full bleed, with the record's
-// information over it the way a broadcast puts a caption over a picture (Miyel,
-// 2026-11-04). The picture opens from a horizontal line, overshoots bright and
-// settles; scanlines over everything and a band rolling slowly down. The stars are
-// phosphor, the marks channel glyphs in brackets, the horizon a VU meter, and an
-// on-screen display sits in the corner.
+// CRT: the album on a square television at the head of the page, in its casing,
+// with the record's information on the set's base below (Miyel, 2026-11-04). The
+// picture opens from a horizontal line, overshoots bright and settles; scanlines,
+// a rolling band and an on-screen display belong to the glass and stay on it. The
+// stars are phosphor, the marks channel glyphs in brackets, the horizon a VU meter.
 //
 // The tears are at uneven times on purpose: a glitch on a metronome stops reading
 // as a fault and starts reading as animation.
@@ -14,11 +13,12 @@
 
 import {
   ARRIVES, STAR_PATH, HEART_PATH, SYMBOLS, MARK_ASPECT,
-  drawTracked, drawArtist, popped, easeOut, clamp01,
+  drawTracked, drawArtist, roundRect, popped, easeOut, clamp01,
   sheet, stamp, drawStarRow, fitTitle, barsFloor,
 } from '../SharePrinter';
 import { colorOfArt, COLOR_SIDE } from '../../../library/music_data_api';
 
+const BODY = '#121216';
 const RED = 'rgba(255,40,80,0.75)';
 const BLUE = 'rgba(60,140,255,0.75)';
 const GREEN = '#4bf2a0';
@@ -44,78 +44,94 @@ export function crtScene(record, frame, { art, families, still = false }) {
   const { sans, mono } = families;
   const W = frame.w, H = frame.h;
   const u = Math.min(W, (H * 9) / 16) / 100;
-  const left = 6 * u;
-  const floorH = bars.length ? H * 0.12 : 0;
-  const rowsBottom = H - floorH - 3 * u;
-  const wide = W - left * 2;
+
+  // ── The set ───────────────────────────────────────────────────────────
+  const casing = 2.8 * u;
+  const size = Math.min(W - 2 * (5 * u + casing), H * 0.56);
+  const sx = (W - size) / 2, sy = 3.5 * u + casing;
+  const corner = 4.5 * u;
+
+  // The base: everything lines up with the screen above it.
+  const left = sx;
+  const wide = size;
+  const baseTop = sy + size + casing;
+  const chin = 7 * u;
+  const floorH = bars.length ? Math.min(H * 0.12, (H - baseTop) * 0.34) : 0;
+  const rowsBottom = H - floorH - 3.5 * u;
+  const room = rowsBottom - baseTop - chin;
   const heightAt = (k, lines) => ((stars > 0 || tags.length ? 13 : 0) + lines * 11.6 + (artistLine ? 5.6 : 0)) * k * u;
   const titleFont = k => `900 ${11 * k * u}px ${sans}`;
-  const { k, lines: titleLines } = fitTitle({ album: entry?.album, fontAt: titleFont, wide, room: H * 0.46, heightAt });
-  const rowsTop = rowsBottom - heightAt(k, titleLines.length);
+  const { k, lines: titleLines } = fitTitle({ album: entry?.album, fontAt: titleFont, wide, room, heightAt });
+  const rowsTop = baseTop + chin + Math.max(0, room - heightAt(k, titleLines.length)) / 2;
 
   // ── What never changes ────────────────────────────────────────────────
-  // The album, cut to fill the screen.
-  const face = paint => sheet(W, H, c => {
-    const img = art?.cover;
-    if (img?.naturalWidth) {
-      const s = Math.max(W / img.naturalWidth, H / img.naturalHeight);
-      c.drawImage(img, (W - img.naturalWidth * s) / 2, (H - img.naturalHeight * s) / 2, img.naturalWidth * s, img.naturalHeight * s);
-    } else { c.fillStyle = '#222'; c.fillRect(0, 0, W, H); }
+  const face = paint => sheet(size, size, c => {
+    if (art?.cover?.naturalWidth) c.drawImage(art.cover, 0, 0, size, size);
+    else { c.fillStyle = '#222'; c.fillRect(0, 0, size, size); }
     paint?.(c);
   });
   const tint = colour => face(c => {
     c.globalCompositeOperation = 'multiply';
     c.fillStyle = colour;
-    c.fillRect(0, 0, W, H);
+    c.fillRect(0, 0, size, size);
   });
   const tearRed = tint('#ff2850'), tearBlue = tint('#2864ff');
-
-  const under = sheet(W, H, c => {
+  const picturePlain = sheet(size, size, c => {
     c.drawImage(face(), 0, 0);
     // A dark cover turned up: a screen is lit from inside, whatever is on it.
     if (coverLight(art?.cover) < 0.32) {
       c.globalCompositeOperation = 'screen';
       c.globalAlpha = 0.65;
       c.drawImage(face(), 0, 0);
-      c.globalCompositeOperation = 'source-over';
-      c.globalAlpha = 1;
     }
-    // Dark enough at the top and foot for what sits on them, and clear between.
-    const shade = c.createLinearGradient(0, 0, 0, H);
-    const from = Math.max(0.2, (rowsTop - 10 * u) / H);
-    shade.addColorStop(0, 'rgba(4,4,12,0.55)');
-    shade.addColorStop(0.16, 'rgba(4,4,12,0)');
-    shade.addColorStop(from, 'rgba(4,4,12,0)');
-    shade.addColorStop(Math.min(0.99, from + 0.14), 'rgba(4,4,12,0.86)');
-    shade.addColorStop(1, 'rgba(4,4,12,0.94)');
-    c.fillStyle = shade;
+  });
+
+  const under = sheet(W, H, c => {
+    c.fillStyle = BODY;
     c.fillRect(0, 0, W, H);
-    // The furniture: the mark, and the on-screen display.
-    const markH = 3.6 * u;
-    if (art?.mark) c.drawImage(art.mark, left, H * 0.05, markH * MARK_ASPECT, markH);
+    // The casing round the screen, and the cold light it throws on it.
+    const x = sx - casing, y = sy - casing, s = size + casing * 2;
+    const metal = c.createLinearGradient(0, y, 0, y + s);
+    metal.addColorStop(0, '#3a3a42');
+    metal.addColorStop(1, '#222228');
+    c.fillStyle = metal;
+    roundRect(c, x, y, s, s, corner + casing * 0.7);
+    c.fill();
+    c.strokeStyle = 'rgba(255,255,255,0.1)';
+    c.lineWidth = 0.25 * u;
+    c.stroke();
+    c.save();
+    c.shadowColor = 'rgba(110,190,255,0.3)';
+    c.shadowBlur = 3.5 * u;
+    c.fillStyle = '#000';
+    roundRect(c, sx, sy, size, size, corner);
+    c.fill();
+    c.restore();
+    // The mark on the set, as a maker's badge.
+    const markH = 3.4 * u, markW = markH * MARK_ASPECT;
+    if (art?.mark) c.drawImage(art.mark, W / 2 - markW / 2, baseTop + (chin - markH) / 2, markW, markH);
+  });
+
+  // The glass: scanlines, the tube darkening to its edges, the on-screen display.
+  const glass = sheet(size, size, c => {
+    c.fillStyle = 'rgba(0,0,0,0.32)';
+    const pitch = Math.max(3, 0.82 * u), line = Math.max(1.5, 0.34 * u);
+    for (let y = 0; y < size; y += pitch) c.fillRect(0, y, size, line);
+    const reach = (size * Math.SQRT2) / 2;
+    const tube = c.createRadialGradient(size / 2, size / 2, reach * 0.6, size / 2, size / 2, reach);
+    tube.addColorStop(0, 'rgba(0,0,0,0)');
+    tube.addColorStop(1, 'rgba(0,0,0,0.7)');
+    c.fillStyle = tube;
+    c.fillRect(0, 0, size, size);
     c.font = `400 ${2.5 * u}px ${mono}`;
     c.textBaseline = 'top';
     c.shadowBlur = 2 * u;
     c.shadowColor = 'rgba(127,240,180,0.8)';
     c.fillStyle = '#7ff0b4';
-    drawTracked(c, 'CH 04', W - left, H * 0.05, 0.45 * u, 'right');
+    drawTracked(c, 'CH 04', size - 3.5 * u, 3.5 * u, 0.45 * u, 'right');
     c.shadowColor = 'rgba(255,210,74,0.8)';
     c.fillStyle = AMBER;
-    drawTracked(c, 'AV-1', W - left, H * 0.05 + 3.4 * u, 0.45 * u, 'right');
-    c.shadowBlur = 0;
-  });
-
-  // The glass: scanlines, and the tube darkening to its edges.
-  const glass = sheet(W, H, c => {
-    c.fillStyle = 'rgba(0,0,0,0.32)';
-    const pitch = Math.max(3, 0.82 * u), line = Math.max(1.5, 0.34 * u);
-    for (let y = 0; y < H; y += pitch) c.fillRect(0, y, W, line);
-    const reach = Math.hypot(W, H) / 2;
-    const tube = c.createRadialGradient(W / 2, H / 2, reach * 0.55, W / 2, H / 2, reach);
-    tube.addColorStop(0, 'rgba(0,0,0,0)');
-    tube.addColorStop(1, 'rgba(0,0,0,0.6)');
-    c.fillStyle = tube;
-    c.fillRect(0, 0, W, H);
+    drawTracked(c, 'AV-1', size - 3.5 * u, 6.9 * u, 0.45 * u, 'right');
   });
 
   const starBox = 9 * k * u, starPad = 4 * u;
@@ -168,8 +184,8 @@ export function crtScene(record, frame, { art, families, still = false }) {
   const ambers = bars.length >= 8 ? [3, 7] : [bars.length - 1];
   const isAmber = i => ambers.includes(i);
   const floor = barsFloor({
-    W, H, floorH, u, bars, favs,
-    left: left, gapMost: 1.1 * u, seg: 1.1 * u, pitch: 1.9 * u,
+    W, H: H - 3 * u, floorH, u, bars, favs,
+    left, gapMost: 1.1 * u, seg: 1.1 * u, pitch: 1.9 * u,
     colourOf: i => (isAmber(i) ? AMBER : GREEN),
     glowOf: i => (isAmber(i) ? 'rgba(255,210,74,0.5)' : 'rgba(75,242,160,0.5)'),
     glow: 2 * u,
@@ -183,25 +199,56 @@ export function crtScene(record, frame, { art, families, still = false }) {
     return hit < 0 ? 0 : hit % 2 ? 1.3 : 1;
   }
 
-  const plate = sheet(W, H, () => {});
-  const onPlate = plate.getContext('2d');
-
-  function picture(c, t) {
-    c.drawImage(under, 0, 0);
-    floor.draw(c, t);
+  // Everything on the glass, and only there.
+  function drawScreen(c, t) {
+    c.save();
+    roundRect(c, sx, sy, size, size, corner);
+    c.clip();
+    c.fillStyle = '#05050a';
+    c.fillRect(sx, sy, size, size);
+    // Switching on: a bright line opens into the picture.
+    const v = clamp01(t / OPENS_IN);
+    const opening = !still && v < 1;
+    if (opening) {
+      const open = Math.max(0.004, easeOut(clamp01(v * 1.6)));
+      const mid = sy + size / 2;
+      c.translate(sx + size / 2, mid);
+      c.scale(1 + 0.1 * (1 - clamp01(v * 2)), open);
+      c.translate(-(sx + size / 2), -mid);
+    }
+    c.drawImage(picturePlain, sx, sy);
     const tear = tearAt(t);
     if (tear) {
       c.save();
       c.globalCompositeOperation = 'screen';
-      c.globalAlpha = still ? 0.22 : 0.4;
-      // Under the caption: only the picture tears, not the words.
-      c.beginPath();
-      c.rect(0, 0, W, Math.max(0, rowsTop - 4 * u));
-      c.clip();
-      c.drawImage(tearRed, -2.4 * u * tear, 0);
-      c.drawImage(tearBlue, 2.4 * u * tear, 0);
+      c.globalAlpha = still ? 0.3 : 0.5;
+      c.drawImage(tearRed, sx - 2.4 * u * tear, sy);
+      c.drawImage(tearBlue, sx + 2.4 * u * tear, sy);
       c.restore();
     }
+    c.drawImage(glass, sx, sy);
+    if (!still) {
+      const bandH = size * 0.22;
+      const top = sy - bandH + ((t % ROLL_SECONDS) / ROLL_SECONDS) * (size + bandH);
+      const band = c.createLinearGradient(0, top, 0, top + bandH);
+      band.addColorStop(0, 'rgba(190,220,255,0)');
+      band.addColorStop(0.45, 'rgba(190,220,255,0.11)');
+      band.addColorStop(1, 'rgba(190,220,255,0)');
+      c.fillStyle = band;
+      c.fillRect(sx, top, size, bandH);
+    }
+    if (opening) {
+      c.globalCompositeOperation = 'lighter';
+      c.fillStyle = `rgba(255,255,255,${0.75 * (1 - v)})`;
+      c.fillRect(sx, sy, size, size);
+    }
+    c.restore();
+  }
+
+  function paintAt(c, t) {
+    c.drawImage(under, 0, 0);
+    drawScreen(c, t);
+    floor.draw(c, t);
     let y = rowsTop;
     if (stars > 0 || tags.length) {
       const gap = 1.2 * k * u;
@@ -223,37 +270,6 @@ export function crtScene(record, frame, { art, families, still = false }) {
         drawArtist(c, artistLine, left, artistY, { size: 2.9 * k * u, tracking: 0.3, wide, least: W * 0.02, colour: '#c6cfee', mono, align: 'left' });
       }, t);
     }
-    c.drawImage(glass, 0, 0);
-    if (!still) {
-      const bandH = H * 0.16;
-      const top = -bandH + ((t % ROLL_SECONDS) / ROLL_SECONDS) * (H + bandH);
-      const band = c.createLinearGradient(0, top, 0, top + bandH);
-      band.addColorStop(0, 'rgba(190,220,255,0)');
-      band.addColorStop(0.45, 'rgba(190,220,255,0.11)');
-      band.addColorStop(1, 'rgba(190,220,255,0)');
-      c.fillStyle = band;
-      c.fillRect(0, top, W, bandH);
-    }
-  }
-
-  function paintAt(c, t) {
-    if (t >= OPENS_IN) { picture(c, t); return; }
-    // Switching on: a bright line opens into the picture.
-    onPlate.setTransform(1, 0, 0, 1, 0, 0);
-    picture(onPlate, t);
-    const v = clamp01(t / OPENS_IN);
-    c.fillStyle = '#05050a';
-    c.fillRect(0, 0, W, H);
-    const open = Math.max(0.004, easeOut(clamp01(v * 1.6)));
-    const wide = 1 + 0.1 * (1 - clamp01(v * 2));
-    c.save();
-    c.translate(W / 2, H / 2);
-    c.scale(wide, open);
-    c.drawImage(plate, -W / 2, -H / 2);
-    c.globalCompositeOperation = 'lighter';
-    c.fillStyle = `rgba(255,255,255,${0.75 * (1 - v)})`;
-    c.fillRect(-W / 2, -H / 2, W, H);
-    c.restore();
   }
 
   let t = still ? 30 : 0;
