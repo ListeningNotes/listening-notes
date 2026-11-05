@@ -10,7 +10,7 @@
 'use client';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Envelope, Fingerprint, Heart, ImageSquare, LockKeyOpen, Moon, Pause, SketchLogo, Sun, VinylRecord } from '@phosphor-icons/react';
+import { Envelope, Fingerprint, Heart, LockKeyOpen, Pause, SketchLogo, VinylRecord } from '@phosphor-icons/react';
 import { fonts } from '../../../library/sitewide_visuals';
 import { sizedAlbumArt, fetchAlbumArtUrl } from '../../../library/music_data_api';
 import { parseHorizon, entryTracks, splitNotes, parseRating, flawless } from '../../../library/entry_formatter';
@@ -22,6 +22,7 @@ import FolderFooter from '../../../components/main_components/FolderFooter';
 import KeeperTools from '../../../components/main_components/KeeperTools';
 import EditingBar from '../../../components/main_components/EditingBar';
 import { entryPlate } from '../../../components/main_components/EntryPlate';
+import { LOOKS, lookOf } from '../../../components/main_components/looks';
 import { usePress, readFamilies } from '../../../hooks/usePress';
 import { FRAMES, FRAME_ORDER } from '../../../components/main_components/SharePrinter';
 import HorizonBar from '../../../components/main_components/Slug_Page/HorizonBar';
@@ -317,11 +318,15 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   }, [printChoices]);
   const size = PRINT_SIZES.includes(printChoices.size) ? printChoices.size : 'story';
   const keeperName = (keeper_name || '').trim();
-  const plate = useMemo(() => entryPlate({ entry }), [entry]);
+  // A look that could not be drawn, said under the print (EntryPlate.js).
+  const [printFailed, setPrintFailed] = useState(null);
+  const plate = useMemo(() => entryPlate({ entry, onFail: setPrintFailed }), [entry]);
   const effect = EFFECTS.includes(printChoices.effect) ? printChoices.effect : 'unlock';
   const isMoving = effect !== 'still';
-  // Reflect, Day or Night.
-  const ground = ['record', 'day', 'night'].includes(printChoices.ground) ? printChoices.ground : 'record';
+  // Which look (looks/). Day and Night are one door that flips; `paper` is the
+  // side of it the door comes back to from another look.
+  const ground = lookOf(printChoices.ground).key;
+  const paper = printChoices.paper === 'night' ? 'night' : 'day';
   const printFonts = useMemo(() => ({ sans: '.ln-screen-one-title', mono: '.ln-screen-one-artist' }), []);
   // The print is a scene on a canvas: the same scene here, and run on its own
   // clock for the video on Save. The card under it stays in the page, unseen,
@@ -330,14 +335,17 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   useEffect(() => {
     if (!printing) return undefined;
     let live = true;
-    plate.load({ ground }).then(a => { if (live) setPrintArt(a); });
+    plate.load({ ground }).then(a => { if (live) setPrintArt({ ...a, ground }); });
     return () => { live = false; };
   }, [printing, plate, ground]);
+  // The picture for this look, once it has come: until then the last look stays
+  // on the canvas rather than this one being drawn with the last one's mark.
+  const artHere = printArt?.ground === ground ? printArt : null;
   const motion = useCallback(() => {
-    if (!isMoving || !printArt) return null;
-    const made = plate.scene(FRAMES[size], { art: printArt, families: readFamilies(printFonts), ground });
+    if (!isMoving || !artHere) return null;
+    const made = plate.scene(FRAMES[size], { art: artHere, families: readFamilies(printFonts), ground });
     return { width: FRAMES[size].w, height: FRAMES[size].h, frame: (ctx, dt) => { made.step(dt); made.paint(ctx); } };
-  }, [isMoving, printArt, plate, printFonts, size, ground]);
+  }, [isMoving, artHere, plate, printFonts, size, ground]);
   const press = usePress({
     plate, shown: null, ground, isDark: false, link: entryUrl,
     fonts: printFonts, motion,
@@ -345,11 +353,12 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   const liveCanvas = useRef(null);
   useEffect(() => {
     const canvas = liveCanvas.current;
-    if (!printing || !canvas || !printArt) return undefined;
+    if (!printing || !canvas || !artHere) return undefined;
+    setPrintFailed(null);
     canvas.width = FRAMES[size].w;
     canvas.height = FRAMES[size].h;
     const ctx = canvas.getContext('2d');
-    const made = plate.scene(FRAMES[size], { art: printArt, families: readFamilies(printFonts), ground, still: !isMoving });
+    const made = plate.scene(FRAMES[size], { art: artHere, families: readFamilies(printFonts), ground, still: !isMoving });
     made.paint(ctx);
     if (!isMoving) return undefined;
     let raf, last = null;
@@ -361,7 +370,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [printing, isMoving, printArt, plate, printFonts, size, ground]);
+  }, [printing, isMoving, artHere, plate, printFonts, size, ground]);
   // Stamped on <html> so the sheet's own furniture can stand down (entry.css
   // reaches the carets from the root). The grounds' colours are NOT stamped
   // there: a day or night paper must not turn the site's own theme — only
@@ -597,11 +606,16 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   const printIcon = { size: 23, 'aria-hidden': true };
   const printSections = [
     { key: 'card', label: 'Card', groups: [
-      [
-        { key: 'record', label: 'Reflect', icon: <ImageSquare {...printIcon} /> },
-        { key: 'day', label: 'Day', icon: <Sun {...printIcon} /> },
-        { key: 'night', label: 'Night', icon: <Moon {...printIcon} /> },
-      ].map(c => ({ ...c, on: ground === c.key, press: () => choosePrint({ ground: c.key }) })),
+      LOOKS.filter(look => look.key !== 'night').map(look => {
+        if (look.key !== 'day') {
+          return { key: look.key, label: look.label, icon: <look.Icon {...printIcon} />, on: ground === look.key, press: () => choosePrint({ ground: look.key }) };
+        }
+        // The door for the default: pressed while it is on, it turns over.
+        const on = ground === paper;
+        const side = lookOf(paper);
+        const other = paper === 'day' ? 'night' : 'day';
+        return { key: 'paper', label: side.label, icon: <side.Icon {...printIcon} />, on, press: () => choosePrint(on ? { ground: other, paper: other } : { ground: paper }) };
+      }),
       PRINT_SIZES.map(key => ({ key, label: FRAMES[key].label, icon: printGlyph(...SIZE_SHAPES[key]), on: size === key, press: () => choosePrint({ size: key }) })),
       [
         { key: 'unlock', label: 'Unlock', icon: <LockKeyOpen {...printIcon} /> },
@@ -1574,7 +1588,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
             sections={printSections}
             onSave={() => { if (!press.saving) press.save(size); }}
             onDone={finishPrinting}
-            status={press.status}
+            status={printFailed ? `${printFailed} could not be drawn, so this is Day.` : press.status}
             final={Boolean(press.picture || press.clip)}
             picture={press.picture}
             clip={press.clip}
