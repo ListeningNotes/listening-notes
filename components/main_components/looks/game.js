@@ -13,10 +13,11 @@
 'use client';
 
 import {
-  ARRIVES, STAR_PATH, HEART_PATH, SYMBOLS, MARK_ASPECT,
+  ARRIVES, TONES, STAR_PATH, HEART_PATH, SYMBOLS, MARK_ASPECT,
   drawTracked, wrapLines, roundRect, popped, easeOut, easeBack, clamp01,
   coverPicture, drawTurned, rayPicture, paintGround, INKS,
 } from '../SharePrinter';
+import { colorOfArt, COLOR_SIDE } from '../../../library/music_data_api';
 
 const OUTLINE = '#1b0f33';
 const YELLOW = '#ffd24a';
@@ -32,6 +33,20 @@ const SPARKS = [
   { x: 32, y: -2.3, at: 1.1, rest: 1.2 },
   { x: -34, y: 24, at: 1.9, rest: 0.7 },
 ];
+
+// The bars' colour, from the album (Miyel, 2026-11-04), read the way the wall's
+// By color reads it, and deep enough to stand on the reflected cover whatever
+// that cover is. A cover with hardly any colour, or one that will not be read,
+// gets a plain dark.
+function barColour(cover) {
+  try {
+    const small = picture(COLOR_SIDE, COLOR_SIDE, c => c.drawImage(cover, 0, 0, COLOR_SIDE, COLOR_SIDE));
+    const { hue, plain } = colorOfArt(small.getContext('2d').getImageData(0, 0, COLOR_SIDE, COLOR_SIDE).data);
+    // Yellows are pale at any lightness the others are deep at.
+    if (!plain) return `${Math.round(hue)},72%,${hue > 35 && hue < 80 ? 33 : 42}%`;
+  } catch { /* the plain dark, then */ }
+  return '0,0%,24%';
+}
 
 function picture(w, h, paint) {
   const canvas = document.createElement('canvas');
@@ -187,14 +202,15 @@ export function gameScene(record, frame, { art, families, still = false }) {
   const barW = slot - barGap;
   const chunk = 1.5 * u, pitch = 2.2 * u;
   const chunksOf = v => Math.max(1, Math.round((floorH * v) / pitch));
+  const barHsl = bars.length ? barColour(art?.cover) : null;
   const floor = bars.length ? picture(W, floorH + floorPad, c => {
     const bottom = floorH + floorPad;
     bars.forEach((v, i) => {
       const x = barsLeft + i * slot + barGap / 2;
       const count = chunksOf(v);
-      c.shadowColor = 'rgba(91,51,214,0.55)';
+      c.shadowColor = `hsla(${barHsl},0.55)`;
       c.shadowBlur = 1.6 * u;
-      c.fillStyle = '#5b33d6';
+      c.fillStyle = `hsl(${barHsl})`;
       for (let n = 0; n < count; n++) {
         const y = bottom - (n + 1) * pitch + (pitch - chunk);
         c.fillRect(x, y, barW, chunk);
@@ -207,11 +223,11 @@ export function gameScene(record, frame, { art, families, still = false }) {
   }) : null;
   const heartBox = 3.6 * u, heartPad = 2.4 * u;
   const heart = picture(heartBox + heartPad * 2, heartBox + heartPad * 2, c => {
-    c.shadowColor = 'rgba(255,210,74,0.9)';
+    c.shadowColor = 'rgba(240,72,79,0.6)';
     c.shadowBlur = 1.4 * u;
     c.translate(heartPad, heartPad);
     c.scale(heartBox / 24, heartBox / 24);
-    c.fillStyle = '#f0a800';
+    c.fillStyle = TONES.fav;
     c.fill(new Path2D(HEART_PATH));
   });
 
