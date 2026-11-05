@@ -15,7 +15,7 @@
 import {
   ARRIVES, STAR_PATH, HEART_PATH, SYMBOLS, MARK_ASPECT,
   drawTracked, wrapLines, roundRect, popped, easeOut, easeBack, clamp01,
-  coverPicture, drawTurned, rayPicture, paintGround,
+  coverPicture, drawTurned, rayPicture,
 } from '../SharePrinter';
 
 const OUTLINE = '#1b0f33';
@@ -78,39 +78,31 @@ export function gameScene(record, frame, { art, families, still = false }) {
 
   // ── What never changes, kept as pictures ──────────────────────────────
   const under = picture(W, H, c => {
-    paintGround(c, frame, art?.cover, '#140e22', 'rgba(0,0,0,0)', { tone: 'saturate(1.8) brightness(0.95)', blur: 0.08 });
-    const wash = c.createLinearGradient(0, 0, 0, H);
-    wash.addColorStop(0, 'rgba(22,14,42,0.78)');
-    wash.addColorStop(1, 'rgba(10,8,22,0.9)');
-    c.fillStyle = wash;
+    // White, not the dark the first one wore (Miyel, 2026-11-04).
+    c.fillStyle = '#fff';
     c.fillRect(0, 0, W, H);
     // The frame, and the two pieces of furniture: the mark on its plate, the year.
     const inset = 3.4 * u;
-    c.strokeStyle = 'rgba(255,255,255,0.14)';
+    c.strokeStyle = 'rgba(27,15,51,0.16)';
     c.lineWidth = 0.35 * u;
     roundRect(c, inset, inset, W - inset * 2, H - inset * 2, 2 * u);
     c.stroke();
     const markH = 3.8 * u, markW = markH * MARK_ASPECT;
     const plateX = 6 * u, plateY = 6 * u, plateW = markW + 4.8 * u, plateH = markH + 2.4 * u;
     roundRect(c, plateX, plateY, plateW, plateH, 1.4 * u);
-    c.fillStyle = 'rgba(255,255,255,0.1)';
-    c.fill();
-    c.strokeStyle = 'rgba(255,255,255,0.45)';
+    c.strokeStyle = 'rgba(27,15,51,0.55)';
     c.lineWidth = 0.4 * u;
     c.stroke();
     if (art?.mark) c.drawImage(art.mark, plateX + 2.4 * u, plateY + 1.2 * u, markW, markH);
     if (year) {
       c.font = `400 ${2.6 * u}px ${mono}`;
       c.textBaseline = 'middle';
-      c.fillStyle = YELLOW;
-      c.shadowColor = 'rgba(255,210,74,0.8)';
-      c.shadowBlur = 2 * u;
+      c.fillStyle = OUTLINE;
       drawTracked(c, String(year), W - 6 * u, plateY + plateH / 2, 0.52 * u, 'right');
-      c.shadowBlur = 0;
     }
   });
-  const slab = coverPicture(art?.cover, size, { shade: 0.5, ring: 'rgba(255,255,255,0.3)' });
-  const rays = rayPicture(126 * u, 'rgba(255,214,120,0.3)', 28, { share: 1.6 / 13, hollow: true });
+  const slab = coverPicture(art?.cover, size, { shade: 0.5, ring: 'rgba(27,15,51,0.2)' });
+  const rays = rayPicture(126 * u, 'rgba(240,170,40,0.34)', 28, { share: 1.6 / 13, hollow: true });
 
   const starBox = 9 * k * u, starPad = 3 * u;
   const starPicture = lit => picture(starBox + starPad * 2, starBox + starPad * 2, c => {
@@ -129,9 +121,9 @@ export function gameScene(record, frame, { art, families, still = false }) {
       c.shadowBlur = 0;
     }
     place();
-    c.strokeStyle = lit ? '#4a2d00' : '#241e33';
+    c.strokeStyle = lit ? '#4a2d00' : '#c9c3d9';
     c.stroke(path);
-    c.fillStyle = lit ? YELLOW : '#3b3350';
+    c.fillStyle = lit ? YELLOW : '#ece9f2';
     c.fill(path);
   });
   const starLit = starPicture(true), starCold = starPicture(false);
@@ -177,7 +169,7 @@ export function gameScene(record, frame, { art, families, still = false }) {
     c.strokeStyle = OUTLINE;
     c.lineWidth = titleSize * 0.085;
     c.save();
-    c.shadowColor = 'rgba(0,0,0,0.65)';
+    c.shadowColor = 'rgba(27,15,51,0.28)';
     c.shadowBlur = 3 * u;
     c.shadowOffsetY = 1 * u;
     line((text, x, y) => { c.strokeText(text, x, y); c.fillText(text, x, y); }, titleSize * 0.11);
@@ -219,7 +211,7 @@ export function gameScene(record, frame, { art, families, still = false }) {
     c.shadowBlur = 1.4 * u;
     c.translate(heartPad, heartPad);
     c.scale(heartBox / 24, heartBox / 24);
-    c.fillStyle = YELLOW;
+    c.fillStyle = '#f0a800';
     c.fill(new Path2D(HEART_PATH));
   });
 
@@ -248,7 +240,7 @@ export function gameScene(record, frame, { art, families, still = false }) {
       const swell = still ? spark.rest : Math.sin((((t + spark.at) % 2.6) / 2.6) * Math.PI) * 1.3;
       if (swell <= 0.02) return;
       const x = cx + spark.x * u, y = cy + spark.y * u, r = 1.3 * u * swell;
-      c.fillStyle = '#ffe08a';
+      c.fillStyle = '#f0a800';
       c.beginPath();
       [[0, -1], [0.24, -0.24], [1, 0], [0.24, 0.24], [0, 1], [-0.24, 0.24], [-1, 0], [-0.24, -0.24]]
         .forEach(([dx, dy], i) => (i ? c.lineTo(x + dx * r, y + dy * r) : c.moveTo(x + dx * r, y + dy * r)));
@@ -320,7 +312,7 @@ export function gameScene(record, frame, { art, families, still = false }) {
       popped(c, ARRIVES.artist, cx, artistY + 1.5 * u, () => {
         c.font = `400 ${2.9 * k * u}px ${mono}`;
         c.textBaseline = 'top';
-        c.fillStyle = '#c3b8e8';
+        c.fillStyle = '#5a4e7a';
         drawTracked(c, artistLine, cx, artistY, 0.87 * k * u, 'center');
       }, t);
     }
