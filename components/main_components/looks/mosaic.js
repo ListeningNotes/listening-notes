@@ -3,11 +3,10 @@
 // components/main_components/looks/mosaic.js
 // Mosaic: everything becomes a tile. The cover is fractured on a grid six across
 // and its pieces slide home until it is the real image (Miyel, 2026-11-04: a mosaic
-// that never makes it only looked broken). The stars, marks and title are tiles laid
-// in under it, and the horizon is a block of tiles filling whatever paper is left:
-// a column for each track, as many lit as it was rated, the top one red on a
-// favourite. On a paper with no room for that it is a strip, as bright as it was
-// rated, with no favourites: a heart does not survive at that scale.
+// that never makes it only looked broken). Under it, laid in like the rest, the
+// horizon is a strip of tiles as bright as each track was rated, red on a favourite,
+// not rising from the foot of the page; then the stars and marks, then the title on
+// a white tile at the foot. Paper left over at the head is a masthead for the mark.
 'use client';
 
 import {
@@ -18,7 +17,6 @@ import {
 const INK = '#15151a';
 const COLUMNS = 6;
 const TRAVEL = 3;
-const TILES_HIGH = 5;
 
 export function mosaicScene(record, frame, { art, families, still = false }) {
   const { stars, artistLine, tags, bars, favs, entry } = record;
@@ -53,18 +51,24 @@ export function mosaicScene(record, frame, { art, families, still = false }) {
     album: entry?.album, fontAt: titleFont, wide: W - titlePadX * 2, room: H * 0.34, heightAt,
   });
   const titleH = Math.ceil((heightAt(k, titleLines.length) + 2 * u) / half) * half;
-  const left = H - W - half - titleH;
-  const block = bars.length && left >= half * 2.5;
-  const floorH = !bars.length ? 0 : block ? left : half;
-  const titleTop = H - floorH - titleH;
+  const titleTop = H - titleH;
   const marksY = titleTop - half;
+  const stripH = !bars.length ? 0 : marksY >= W + tile ? tile : half;
+  const stripY = marksY - stripH;
+  const coverY = Math.max(0, stripY - W);
+  const masthead = coverY >= tile;
 
-  const plate = sheet(W, H, c => {
-    // The mark on a tile of its own, at the grid's corner.
+  const plate = sheet(W, Math.max(coverY, tile), c => {
+    if (masthead) {
+      // The mark, large, in the room above the cover.
+      const markH = Math.min(coverY * 0.34, 12 * u), markW = markH * MARK_ASPECT;
+      if (art?.mark) c.drawImage(art.mark, (W - markW) / 2, (coverY - markH) / 2, markW, markH);
+      return;
+    }
+    // No room for that: the mark on a tile of its own, at the grid's corner.
     const markH = 3.8 * u, markW = markH * MARK_ASPECT;
-    const plateW = markW + 4 * u, plateH = markH + 2.6 * u;
     c.fillStyle = INK;
-    c.fillRect(0, 0, plateW, plateH);
+    c.fillRect(0, 0, markW + 4 * u, markH + 2.6 * u);
     if (art?.mark) c.drawImage(art.mark, 2 * u, 1.3 * u, markW, markH);
   });
 
@@ -87,13 +91,13 @@ export function mosaicScene(record, frame, { art, families, still = false }) {
   function paintAt(c, t) {
     c.fillStyle = INK;
     c.fillRect(0, 0, W, H);
-    if (t >= SETTLED) c.drawImage(flat, 0, 0);
+    if (t >= SETTLED) c.drawImage(flat, 0, coverY);
     else {
       pieces.forEach(piece => {
         const v = easeOut(clamp01((t - piece.delay) / TRAVEL));
         const x = piece.from[0] + (piece.col - piece.from[0]) * v;
         const y = piece.from[1] + (piece.row - piece.from[1]) * v;
-        c.drawImage(flat, x * tile, y * tile, tile, tile, piece.col * tile, piece.row * tile, tile + 0.5, tile + 0.5);
+        c.drawImage(flat, x * tile, y * tile, tile, tile, piece.col * tile, coverY + piece.row * tile, tile + 0.5, tile + 0.5);
       });
     }
     c.drawImage(plate, 0, 0);
@@ -131,25 +135,13 @@ export function mosaicScene(record, frame, { art, families, still = false }) {
     if (bars.length) {
       const slot = W / bars.length;
       c.fillStyle = INK;
-      c.fillRect(0, H - floorH, W, floorH);
+      c.fillRect(0, stripY, W, stripH);
       bars.forEach((v, i) => {
         const on = easeOut(clamp01((t - ARRIVES.floor - i * 0.04) / 0.5));
         if (on <= 0) return;
-        if (!block) {
-          // The strip: a tile for each track, as bright as it was rated.
-          c.fillStyle = `rgba(255,255,255,${0.1 + 0.68 * v})`;
-          c.fillRect(i * slot, H - floorH * on, slot + 0.5, floorH * on);
-          return;
-        }
-        const cellH = floorH / TILES_HIGH, grout = Math.max(1, u * 0.2);
-        const litCount = Math.round(v * TILES_HIGH);
-        for (let n = 0; n < TILES_HIGH * on; n++) {
-          const isLit = n < litCount;
-          c.fillStyle = !isLit ? 'rgba(255,255,255,0.08)'
-            : favs[i] && n === litCount - 1 ? TONES.fav
-            : 'rgba(255,255,255,0.92)';
-          c.fillRect(i * slot + grout / 2, H - (n + 1) * cellH + grout / 2, slot - grout, cellH - grout);
-        }
+        const bright = 0.1 + 0.8 * v;
+        c.fillStyle = favs[i] ? `rgba(240,72,79,${Math.max(0.45, bright)})` : `rgba(255,255,255,${bright})`;
+        c.fillRect(i * slot + 1, stripY + (stripH * (1 - on)) / 2, slot - 2, stripH * on);
       });
     }
   }
