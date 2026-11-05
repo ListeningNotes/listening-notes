@@ -69,7 +69,7 @@ export default function PrintBar({ sections = [], tab = null, onTab, away = fals
               ))}
             </div>
           )}
-          <div className={'ln-print-choices' + (section.stacked ? ' ln-print-choices--stacked' : '')}>
+          <div className="ln-print-choices">
             {section.groups.map((group, g) => (
               <div className="ln-print-group" key={g}>
                 {group.map(c => (

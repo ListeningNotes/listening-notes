@@ -322,10 +322,8 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   const [printFailed, setPrintFailed] = useState(null);
   const plate = useMemo(() => entryPlate({ entry, onFail: setPrintFailed }), [entry]);
   const effect = EFFECTS.includes(printChoices.effect) ? printChoices.effect : 'unlock';
-  // Which look (looks/). Day and Night are one door that flips; `paper` is the
-  // side of it the door comes back to from another look.
+  // Which look (looks/).
   const ground = lookOf(printChoices.ground).key;
-  const paper = printChoices.paper === 'night' ? 'night' : 'day';
   // Day and Night are a picture; the others move, unless told to hold Still.
   const lookMoves = lookOf(ground).moves !== false;
   const isMoving = lookMoves && effect !== 'still';
@@ -607,17 +605,8 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   const choosePrint = change => { if (!press.saving) setPrintChoices(c => ({ ...c, ...change })); };
   const printIcon = { size: 23, 'aria-hidden': true };
   const printSections = [
-    { key: 'card', label: 'Card', stacked: true, groups: [
-      LOOKS.filter(look => look.key !== 'night').map(look => {
-        if (look.key !== 'day') {
-          return { key: look.key, label: look.label, icon: <look.Icon {...printIcon} />, on: ground === look.key, press: () => choosePrint({ ground: look.key }) };
-        }
-        // The door for the default: pressed while it is on, it turns over.
-        const on = ground === paper;
-        const side = lookOf(paper);
-        const other = paper === 'day' ? 'night' : 'day';
-        return { key: 'daynight', label: side.label, icon: <side.Icon {...printIcon} />, on, press: () => choosePrint(on ? { ground: other, paper: other } : { ground: paper }) };
-      }),
+    { key: 'card', label: 'Card', groups: [
+      LOOKS.map(look => ({ key: look.key, label: look.label, icon: <look.Icon {...printIcon} />, on: ground === look.key, press: () => choosePrint({ ground: look.key }) })),
       PRINT_SIZES.map(key => ({ key, label: FRAMES[key].label, icon: printGlyph(...SIZE_SHAPES[key]), on: size === key, press: () => choosePrint({ size: key }) })),
       ...(lookMoves ? [[
         { key: 'unlock', label: 'Unlock', icon: <LockKeyOpen {...printIcon} /> },

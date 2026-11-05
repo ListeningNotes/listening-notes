@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // components/main_components/looks/index.js
 // The looks: a record's print, each one its own object rather than a filter
-// over one poster (Miyel, 2026-11-04).
+// over one poster (Miyel, 2026-11-04). Day and Night say "I logged this"; Riso
+// says "I love this one". Game, Mosaic, CRT and Paper were tried and cut the same
+// day (they are in git): a look has to earn its door.
 //
 // ── What keeps them a set ────────────────────────────────────────────────
 // Every look draws exactly the same things and no others: the cover, the stars,
@@ -17,23 +19,15 @@
 // see is what saves.
 'use client';
 
-import { GameController, Moon, PencilSimple, PuzzlePiece, Sun, Television, Unite } from '@phosphor-icons/react';
+import { Moon, Sun, Unite } from '@phosphor-icons/react';
 import { INKS } from '../SharePrinter';
 import { paperScene } from './day';
-import { gameScene } from './game';
-import { mosaicScene } from './mosaic';
-import { crtScene } from './crt';
-import { paperLookScene } from './paper';
 import { risoScene } from './riso';
 
 export const LOOKS = [
   { key: 'day', label: 'Day', Icon: Sun, ink: INKS.day.ink, moves: false, scene: paperScene(false) },
   { key: 'night', label: 'Night', Icon: Moon, ink: INKS.night.ink, moves: false, scene: paperScene(true) },
-  { key: 'game', label: 'Game', Icon: GameController, ink: '#1b0f33', scene: gameScene },
-  { key: 'mosaic', label: 'Mosaic', Icon: PuzzlePiece, ink: '#ffffff', scene: mosaicScene },
-  { key: 'crt', label: 'CRT', Icon: Television, ink: '#e9ecff', scene: crtScene },
-  { key: 'paper', label: 'Paper', Icon: PencilSimple, ink: '#2a2a2e', scene: paperLookScene },
-  { key: 'riso', label: 'Riso', Icon: Unite, ink: '#2f55c0', scene: risoScene },
+  { key: 'riso', label: 'Riso', Icon: Unite, ink: '#000000', scene: risoScene },
 ];
 
 export const lookOf = key => LOOKS.find(look => look.key === key) || LOOKS[0];
