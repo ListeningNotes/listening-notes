@@ -4,8 +4,8 @@
 // Game: everything becomes a HUD. The album is a slab with its sides showing,
 // turning over a slow fan of rays; the stars are collectibles, the marks earned
 // medallions, the title a logo, the horizon an XP bar. A costume somebody chose,
-// so it may be as loud as the default is quiet: the rays, sparks and gold that
-// came off the default stay here (Miyel, 2026-11-04).
+// so it may be louder than the default: the rays and sparks that came off the
+// default stay here, the rays pale rather than gold (Miyel, 2026-11-04).
 //
 // Sizes are in `u`, a hundredth of a story's width at this paper's height, so
 // the print is the same composition on every paper. What shadows and glows cost
@@ -15,7 +15,7 @@
 import {
   ARRIVES, STAR_PATH, HEART_PATH, SYMBOLS, MARK_ASPECT,
   drawTracked, wrapLines, roundRect, popped, easeOut, easeBack, clamp01,
-  coverPicture, drawTurned, rayPicture,
+  coverPicture, drawTurned, rayPicture, paintGround, INKS,
 } from '../SharePrinter';
 
 const OUTLINE = '#1b0f33';
@@ -78,9 +78,9 @@ export function gameScene(record, frame, { art, families, still = false }) {
 
   // ── What never changes, kept as pictures ──────────────────────────────
   const under = picture(W, H, c => {
-    // White, not the dark the first one wore (Miyel, 2026-11-04).
-    c.fillStyle = '#fff';
-    c.fillRect(0, 0, W, H);
+    // The cover reflected, as on Day: neither the dark the first one wore nor
+    // plain white (Miyel, 2026-11-04).
+    paintGround(c, frame, art?.cover, INKS.day.paper, INKS.day.wash);
     // The frame, and the two pieces of furniture: the mark on its plate, the year.
     const inset = 3.4 * u;
     c.strokeStyle = 'rgba(27,15,51,0.16)';
@@ -102,7 +102,7 @@ export function gameScene(record, frame, { art, families, still = false }) {
     }
   });
   const slab = coverPicture(art?.cover, size, { shade: 0.5, ring: 'rgba(27,15,51,0.2)' });
-  const rays = rayPicture(126 * u, 'rgba(240,170,40,0.34)', 28, { share: 1.6 / 13, hollow: true });
+  const rays = rayPicture(170 * u, 'rgba(255,255,255,0.22)', 14);
 
   const starBox = 9 * k * u, starPad = 3 * u;
   const starPicture = lit => picture(starBox + starPad * 2, starBox + starPad * 2, c => {
@@ -192,9 +192,9 @@ export function gameScene(record, frame, { art, families, still = false }) {
     bars.forEach((v, i) => {
       const x = barsLeft + i * slot + barGap / 2;
       const count = chunksOf(v);
-      c.shadowColor = 'rgba(143,107,255,0.7)';
+      c.shadowColor = 'rgba(91,51,214,0.55)';
       c.shadowBlur = 1.6 * u;
-      c.fillStyle = '#8f6bff';
+      c.fillStyle = '#5b33d6';
       for (let n = 0; n < count; n++) {
         const y = bottom - (n + 1) * pitch + (pitch - chunk);
         c.fillRect(x, y, barW, chunk);
@@ -264,9 +264,17 @@ export function gameScene(record, frame, { art, families, still = false }) {
     c.save();
     c.translate(cx, cy);
     c.scale(grow, grow);
-    c.rotate((t * Math.PI * 2) / 30);
+    c.rotate((t * Math.PI * 2) / 40);
     c.drawImage(rays, -rays.width / 2, -rays.height / 2);
     c.restore();
+    // The page's colour behind the words, as on Day: a cover can be any colour.
+    const scrimH = Math.max(H * 0.3, rowsH * 1.25), scrimMid = rowsTop + rowsH / 2;
+    const scrim = c.createLinearGradient(0, scrimMid - scrimH / 2, 0, scrimMid + scrimH / 2);
+    scrim.addColorStop(0, 'rgba(238,240,236,0)');
+    scrim.addColorStop(0.5, 'rgba(238,240,236,0.86)');
+    scrim.addColorStop(1, 'rgba(238,240,236,0)');
+    c.fillStyle = scrim;
+    c.fillRect(0, scrimMid - scrimH / 2, W, scrimH);
     drawFloor(c, t);
     drawAlbum(c, t);
     drawSparks(c, t);
