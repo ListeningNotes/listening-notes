@@ -265,6 +265,7 @@ The furniture — visual pieces
       MarqueeTitle.js          A title too long for the small beacon scrolls one lap and holds
       KeeperTools.js           The owner's ··· — top right on both, Edit/Print/Delete on an entry and Edit/Print on the ID pane; the door stays put and the tools file out of it
       SharePrinter.js          The press's toolbox, not the press: the paper sizes (FRAMES), the page's two colours, and the canvas tools a plate draws with. The press itself has been hooks/usePress.js since 2026-09-13
+      looks/                   A record's print, one file a look: Day and Night (day.js), Game, Mosaic, CRT, Riso; index.js is the list and what they all must draw
       EntryPlate.js            A record cut as a plate — the entry page's first screen on the record's blurred colour: mark, keeper, cover, album, artist and year, stars, chips, date, horizon; no code, the press copies the address
       WritingAccess.js         The lock at the foot of the card for a visitor, the glyph over Unlock — shut, open while the door it opens in place; on a device that has unlocked with a key before, one press goes straight to Face ID
       ComingSoon.js            What a held copy shows instead of a site — unclaimed, no database, database unreachable, or no journal at the address

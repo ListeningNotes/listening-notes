@@ -2128,7 +2128,7 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
 .ln-print-group { display: flex; flex: 1 0 auto; justify-content: center; align-items: center; }
 .ln-print-group + .ln-print-group { border-left: 1px solid var(--border); }
 .ln-print-choice {
-  flex: 0 0 auto; min-width: 42px; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  flex: 0 0 auto; min-width: 34px; display: flex; flex-direction: column; align-items: center; gap: 3px;
   padding: 4px 2px; border: 0; background: transparent; color: var(--ink-faint);
   font-family: var(--font-label); font-size: 8px; letter-spacing: 0.05em; text-transform: uppercase;
   cursor: pointer; -webkit-tap-highlight-color: transparent;
