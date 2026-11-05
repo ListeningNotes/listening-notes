@@ -65,6 +65,8 @@ const PRINT_STORE = 'ln-printing';
 // Whichever look, a record's print is Animated, a video, or Still, the picture.
 // `unlock` is what Animated is stored as, from when it had that name.
 const EFFECTS = ['unlock', 'still'];
+// A record's video: it opens in a second or so, then holds long enough to read.
+const PRINT_SECONDS = 6;
 const PRINT_SIZES = ['story', 'portrait', 'square'];
 const SIZE_SHAPES = { story: [112, 200], portrait: [150, 188], square: [170, 170] };
 // Said under the bar each time the printer opens, until the first tap of
@@ -343,7 +345,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   const motion = useCallback(() => {
     if (!isMoving || !artHere) return null;
     const made = plate.scene(FRAMES[size], { art: artHere, families: readFamilies(printFonts), ground });
-    return { width: FRAMES[size].w, height: FRAMES[size].h, frame: (ctx, dt) => { made.step(dt); made.paint(ctx); } };
+    return { width: FRAMES[size].w, height: FRAMES[size].h, seconds: PRINT_SECONDS, frame: (ctx, dt) => { made.step(dt); made.paint(ctx); } };
   }, [isMoving, artHere, plate, printFonts, size, ground]);
   const press = usePress({
     plate, shown: null, ground, isDark: false, link: entryUrl,
