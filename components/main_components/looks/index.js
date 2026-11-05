@@ -17,13 +17,13 @@
 // see is what saves.
 'use client';
 
-import { GameController, Moon, PuzzlePiece, Sun, Television, Unite } from '@phosphor-icons/react';
+import { GameController, Moon, PencilSimple, PuzzlePiece, Sun, Television } from '@phosphor-icons/react';
 import { INKS } from '../SharePrinter';
 import { paperScene } from './day';
 import { gameScene } from './game';
 import { mosaicScene } from './mosaic';
 import { crtScene } from './crt';
-import { risoScene } from './riso';
+import { paperLookScene } from './paper';
 
 export const LOOKS = [
   { key: 'day', label: 'Day', Icon: Sun, ink: INKS.day.ink, moves: false, scene: paperScene(false) },
@@ -31,7 +31,7 @@ export const LOOKS = [
   { key: 'game', label: 'Game', Icon: GameController, ink: '#1b0f33', scene: gameScene },
   { key: 'mosaic', label: 'Mosaic', Icon: PuzzlePiece, ink: '#ffffff', scene: mosaicScene },
   { key: 'crt', label: 'CRT', Icon: Television, ink: '#e9ecff', scene: crtScene },
-  { key: 'riso', label: 'Riso', Icon: Unite, ink: '#2a2a2e', scene: risoScene },
+  { key: 'paper', label: 'Paper', Icon: PencilSimple, ink: '#2a2a2e', scene: paperLookScene },
 ];
 
 export const lookOf = key => LOOKS.find(look => look.key === key) || LOOKS[0];

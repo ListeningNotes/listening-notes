@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// components/main_components/looks/riso.js
-// On paper (Miyel, 2026-11-04: it looked like stickers and stamps). The cover is
+// components/main_components/looks/paper.js
+// Paper (Miyel, 2026-11-04: as Riso it looked like stickers and stamps). The cover is
 // drawn in pencil, stroke by stroke, on a toothy sheet; the stars and marks are
 // coloured pencil, hatched, the paper showing between the lines; the horizon runs
 // down the side of the page. Nothing bounces: things are drawn on, left to right.
@@ -124,7 +124,7 @@ function drawnOn(c, t, at, lasts, x, y, w, h, paint) {
   c.restore();
 }
 
-export function risoScene(record, frame, { art, families, still = false }) {
+export function paperLookScene(record, frame, { art, families, still = false }) {
   const { stars, artistLine, tags, bars, favs, entry } = record;
   const { sans, mono } = families;
   const W = frame.w, H = frame.h;
