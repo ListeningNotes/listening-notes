@@ -3,8 +3,8 @@
 // components/main_components/looks/game.js
 // Game: everything becomes a HUD. The album is a slab with its sides showing,
 // turning over a slow fan of rays; the title is a logo, the horizon an XP bar. It
-// is close to monochrome: the stars, marks, sparks, hairlines and bars all borrow
-// the album's one colour (Miyel, 2026-11-04). Only the hearts stay red.
+// is close to monochrome: the stars, sparks, hairlines and bars all borrow the
+// album's one colour (Miyel, 2026-11-04). Hearts and the fingerprint keep their own.
 //
 // Sizes are in `u`, a hundredth of a story's width at this paper's height, so
 // the print is the same composition on every paper.
@@ -58,8 +58,8 @@ export function gameScene(record, frame, { art, families, still = false }) {
   const floorTop = H - floorH;
   const roomTop = albumTop + size + 5 * u;
   const room = floorTop - 2.5 * u - roomTop;
-  const heightAt = (k, lines) => ((stars > 0 ? 13 : 0) + (tags.length ? 15 : 0) + lines * 12.6 + (artistLine ? 5.6 : 0)) * k * u;
-  const titleFont = k => `900 ${12 * k * u}px ${sans}`;
+  const heightAt = (k, lines) => ((stars > 0 ? 13 : 0) + (tags.length ? 15 : 0) + lines * 9.6 + (artistLine ? 5.6 : 0)) * k * u;
+  const titleFont = k => `900 ${9 * k * u}px ${sans}`;
   const { k, lines: titleLines } = fitTitle({ album: entry?.album, fontAt: titleFont, wide: W * 0.86, room, heightAt });
   const rowsH = heightAt(k, titleLines.length);
   const rowsTop = roomTop + Math.max(0, room - rowsH) / 2;
@@ -101,17 +101,19 @@ export function gameScene(record, frame, { art, families, still = false }) {
   ]);
   const starCold = stamp(STAR_PATH, 18, starBox, starPad, [{ fill: tone(0.18) }]);
 
-  // The marks: the icons themselves, filled, not on medallions.
+  // The marks: the icons themselves, filled, not on medallions. The heart and the
+  // fingerprint keep their own colours; everything else borrows the album's
+  // (Miyel, 2026-11-04).
   const medalBox = 11 * k * u, medalPad = 2 * u;
   const medals = Object.fromEntries(tags.map(tag => [tag, stamp(SYMBOLS[tag], 256, medalBox, medalPad, [
-    { fill: dark, y: 0.5 * k * u },
-    { fill: deep },
+    { fill: tag === 'mp' ? dark : 'rgba(0,0,0,0.3)', y: 0.5 * k * u },
+    { fill: tag === 'mp' ? deep : TONES[tag] },
   ])]));
 
   // The logo: a face dropped below the title, the outline round it, the white on
   // top. Stroked, then filled, in that order: a stroke drawn after would eat
   // into the letters.
-  const titleSize = 12 * k * u, lead = 12.6 * k * u, titlePad = 4 * u;
+  const titleSize = 9 * k * u, lead = 9.6 * k * u, titlePad = 4 * u;
   const logo = sheet(W, titleLines.length * lead + titlePad * 2, c => {
     c.font = titleFont(k);
     c.textAlign = 'center';
