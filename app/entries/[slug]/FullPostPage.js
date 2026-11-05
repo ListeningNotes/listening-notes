@@ -616,7 +616,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
         const on = ground === paper;
         const side = lookOf(paper);
         const other = paper === 'day' ? 'night' : 'day';
-        return { key: 'paper', label: side.label, icon: <side.Icon {...printIcon} />, on, press: () => choosePrint(on ? { ground: other, paper: other } : { ground: paper }) };
+        return { key: 'daynight', label: side.label, icon: <side.Icon {...printIcon} />, on, press: () => choosePrint(on ? { ground: other, paper: other } : { ground: paper }) };
       }),
       PRINT_SIZES.map(key => ({ key, label: FRAMES[key].label, icon: printGlyph(...SIZE_SHAPES[key]), on: size === key, press: () => choosePrint({ size: key }) })),
       ...(lookMoves ? [[
