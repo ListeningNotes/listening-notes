@@ -1,12 +1,12 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // components/main_components/looks/mosaic.js
-// Mosaic: everything becomes a tile. The cover is fractured on a grid six across
-// and its pieces slide home until it is the real image (Miyel, 2026-11-04: a mosaic
-// that never makes it only looked broken). Under it, laid in like the rest, the
-// horizon is a strip of tiles as bright as each track was rated, red on a favourite,
-// not rising from the foot of the page; then the stars and marks, then the title on
-// a white tile at the foot. Paper left over at the head is a masthead for the mark.
+// Mosaic: everything becomes a tile, on one grid six across that fills the whole
+// page. The cover, cut to fill it, is fractured on that grid and its pieces slide
+// home until it is the real image (Miyel, 2026-11-04: a mosaic that never makes it
+// only looked broken). Laid into the same grid at the foot: the horizon, a strip of
+// tiles as bright as each track was rated, red on a favourite; the stars and marks;
+// the title on a white tile. The grid is the only furniture.
 'use client';
 
 import {
@@ -31,15 +31,18 @@ export function mosaicScene(record, frame, { art, families, still = false }) {
   const rnd = () => { seed = (seed * 1103515245 + 12345) % 2147483648; return seed / 2147483648; };
   const cell = () => Math.floor(rnd() * COLUMNS);
   const pieces = [];
-  for (let i = 0; i < COLUMNS * COLUMNS; i++) {
-    pieces.push({ col: i % COLUMNS, row: Math.floor(i / COLUMNS), from: [cell(), cell()], delay: rnd() * 3.6 });
+  const rows = Math.ceil(H / tile);
+  for (let i = 0; i < COLUMNS * rows; i++) {
+    pieces.push({ col: i % COLUMNS, row: Math.floor(i / COLUMNS), from: [cell(), Math.floor(rnd() * rows)], delay: rnd() * 3.6 });
   }
   const SETTLED = 3.6 + TRAVEL;
 
-  const flat = sheet(W, W, c => {
+  const flat = sheet(W, H, c => {
     const img = art?.cover;
-    if (img?.naturalWidth) c.drawImage(img, 0, 0, W, W);
-    else { c.fillStyle = '#777'; c.fillRect(0, 0, W, W); }
+    if (img?.naturalWidth) {
+      const s = Math.max(W / img.naturalWidth, H / img.naturalHeight);
+      c.drawImage(img, (W - img.naturalWidth * s) / 2, (H - img.naturalHeight * s) / 2, img.naturalWidth * s, img.naturalHeight * s);
+    } else { c.fillStyle = '#777'; c.fillRect(0, 0, W, H); }
   });
 
   // ── The stack, under the cover, in whole half-tiles so it sits in the grid ──
@@ -53,19 +56,11 @@ export function mosaicScene(record, frame, { art, families, still = false }) {
   const titleH = Math.ceil((heightAt(k, titleLines.length) + 2 * u) / half) * half;
   const titleTop = H - titleH;
   const marksY = titleTop - half;
-  const stripH = !bars.length ? 0 : marksY >= W + tile ? tile : half;
+  const stripH = bars.length ? half : 0;
   const stripY = marksY - stripH;
-  const coverY = Math.max(0, stripY - W);
-  const masthead = coverY >= tile;
 
-  const plate = sheet(W, Math.max(coverY, tile), c => {
-    if (masthead) {
-      // The mark, large, in the room above the cover.
-      const markH = Math.min(coverY * 0.34, 12 * u), markW = markH * MARK_ASPECT;
-      if (art?.mark) c.drawImage(art.mark, (W - markW) / 2, (coverY - markH) / 2, markW, markH);
-      return;
-    }
-    // No room for that: the mark on a tile of its own, at the grid's corner.
+  const plate = sheet(W, tile, c => {
+    // The mark on a tile of its own, at the grid's corner.
     const markH = 3.8 * u, markW = markH * MARK_ASPECT;
     c.fillStyle = INK;
     c.fillRect(0, 0, markW + 4 * u, markH + 2.6 * u);
@@ -91,13 +86,13 @@ export function mosaicScene(record, frame, { art, families, still = false }) {
   function paintAt(c, t) {
     c.fillStyle = INK;
     c.fillRect(0, 0, W, H);
-    if (t >= SETTLED) c.drawImage(flat, 0, coverY);
+    if (t >= SETTLED) c.drawImage(flat, 0, 0);
     else {
       pieces.forEach(piece => {
         const v = easeOut(clamp01((t - piece.delay) / TRAVEL));
         const x = piece.from[0] + (piece.col - piece.from[0]) * v;
         const y = piece.from[1] + (piece.row - piece.from[1]) * v;
-        c.drawImage(flat, x * tile, y * tile, tile, tile, piece.col * tile, coverY + piece.row * tile, tile + 0.5, tile + 0.5);
+        c.drawImage(flat, x * tile, y * tile, tile, tile, piece.col * tile, piece.row * tile, tile + 0.5, tile + 0.5);
       });
     }
     c.drawImage(plate, 0, 0);
