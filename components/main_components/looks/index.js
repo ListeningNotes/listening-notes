@@ -2,9 +2,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // components/main_components/looks/index.js
 // The looks: a record's print, each one its own object rather than a filter
-// over one poster (Miyel, 2026-11-04). Day and Night say "I logged this"; Halftone
-// says "I love this one". Game, Mosaic, CRT, Paper and a two-ink Riso were tried
-// and cut the same day (they are in git): a look has to earn its door.
+// over one poster (Miyel, 2026-11-04). Day and Night say "I logged this"; Poster
+// says "I love this one". It is always the album's real cover, in a different
+// layout. Game, Mosaic, CRT, Paper, a two-ink Riso and a dotted Halftone were tried
+// and cut (they are in git): a look has to earn its door.
 //
 // ── What keeps them a set ────────────────────────────────────────────────
 // Every look draws exactly the same things and no others: the cover, the stars,
@@ -19,15 +20,15 @@
 // see is what saves.
 'use client';
 
-import { DotsNine, Moon, Sun } from '@phosphor-icons/react';
+import { ImageSquare, Moon, Sun } from '@phosphor-icons/react';
 import { INKS } from '../SharePrinter';
 import { paperScene } from './day';
-import { halftoneScene } from './halftone';
+import { posterScene } from './poster';
 
 export const LOOKS = [
   { key: 'day', label: 'Day', Icon: Sun, ink: INKS.day.ink, scene: paperScene(false) },
   { key: 'night', label: 'Night', Icon: Moon, ink: INKS.night.ink, scene: paperScene(true) },
-  { key: 'halftone', label: 'Halftone', Icon: DotsNine, ink: '#000000', scene: halftoneScene },
+  { key: 'poster', label: 'Poster', Icon: ImageSquare, ink: '#000000', scene: posterScene },
 ];
 
 export const lookOf = key => LOOKS.find(look => look.key === key) || LOOKS[0];

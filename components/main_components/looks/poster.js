@@ -1,15 +1,16 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// components/main_components/looks/halftone.js
-// Halftone: the album still looks like itself (Miyel, 2026-11-04; it was Riso, two
-// inks, until the cover stopped being the cover). The four inks of a printed sleeve,
-// each a real plate of dots at its own angle, land from the four corners and build
-// up into the picture, a hair out of register at rest. The words and the bars are
-// overprinted on the same sheet in two inks from the album's own colours: its
-// strongest and the next one far enough away, or, on a cover with only one, that
-// colour's opposite. The title runs over the bars and the inks make a third.
+// components/main_components/looks/poster.js
+// Poster: always the album's real cover, in a layout of its own: the cover edge to
+// edge at the head, the title printed over the bars (Miyel, 2026-11-05: "it's always
+// the album art, not any different version of it"). Dots are only how it arrives.
+// The four inks of a printed sleeve, each a plate of dots at its own angle, land from
+// the four corners and build up; then the dots grow until they close into the solid
+// cover. Still is that cover. The words and bars follow, overprinted on the sheet in
+// two inks from the album's own colours: its strongest and the next one far enough
+// away, or, on a cover with only one, that colour's opposite.
 //
-// The separation is by the pixel. A cover that will not be read throws here, and
+// Reading the colours is by the pixel. A cover that will not be read throws here, and
 // the print falls back to Day.
 'use client';
 
@@ -21,6 +22,9 @@ import {
 const SHEET = '#f4f0e5';
 const FAV = '#f0484f';
 const LANDS_IN = 2.4;
+const PLATES_DONE = LANDS_IN + 1.05;   // the last plate has landed
+const CLOSES_IN = 1.3;                 // the dots growing into the solid cover
+const COVER_DONE = PLATES_DONE + CLOSES_IN;
 const FAR_ENOUGH = 60;                 // degrees of hue between the two inks
 const PLAIN_FLOOR = 0.1;               // how much colour a cover needs to give an ink
 const SAMPLE = 360;
@@ -102,7 +106,7 @@ function overprint(c, paint) {
   c.restore();
 }
 
-export function halftoneScene(record, frame, { art, families, still = false }) {
+export function posterScene(record, frame, { art, families, still = false }) {
   const { stars, artistLine, tags, bars, favs, entry } = record;
   const { sans, mono } = families;
   const W = frame.w, H = frame.h;
@@ -148,6 +152,34 @@ export function halftoneScene(record, frame, { art, families, still = false }) {
     { art: halftone(px, side, size, '#231f20', 45 * deg, cell, black), from: [1, 1], rest: [0.14 * u, -0.16 * u] },
   ];
 
+  // The real cover, and the moment the dots close into it: it shows through dots on
+  // one grid that grow until there is nothing between them.
+  const solid = sheet(size, size, c => {
+    if (art?.cover?.naturalWidth) c.drawImage(art.cover, 0, 0, size, size);
+    else { c.fillStyle = '#999'; c.fillRect(0, 0, size, size); }
+  });
+  const closing = sheet(size, size, () => {});
+  const onClosing = closing.getContext('2d');
+  const grid = [];
+  const pitch = cell * 1.25;
+  for (let y = 0; y < size + pitch; y += pitch) {
+    for (let x = 0; x < size + pitch; x += pitch) grid.push(x, y);
+  }
+  function drawClosing(c, v) {
+    onClosing.globalCompositeOperation = 'source-over';
+    onClosing.clearRect(0, 0, size, size);
+    const r = pitch * 0.75 * v;
+    onClosing.beginPath();
+    for (let i = 0; i < grid.length; i += 2) {
+      onClosing.moveTo(grid[i] + r, grid[i + 1]);
+      onClosing.arc(grid[i], grid[i + 1], r, 0, Math.PI * 2);
+    }
+    onClosing.fill();
+    onClosing.globalCompositeOperation = 'source-in';
+    onClosing.drawImage(solid, 0, 0);
+    c.drawImage(closing, ax, 0);
+  }
+
   // ── The sheet ─────────────────────────────────────────────────────────
   const under = sheet(W, H, c => {
     c.fillStyle = SHEET;
@@ -176,10 +208,11 @@ export function halftoneScene(record, frame, { art, families, still = false }) {
 
   function paintAt(c, t) {
     c.drawImage(under, 0, 0);
+    const late = t - COVER_DONE + 1;   // what follows the cover, on its own clock
 
     // The bars first: the title goes over them.
     bars.forEach((v, i) => {
-      const on = easeOut(clamp01((t - ARRIVES.floor - i * 0.03) / 0.8));
+      const on = easeOut(clamp01((late - ARRIVES.floor + 2 - i * 0.03) / 0.8));
       if (on <= 0) return;
       const h = Math.max(floorH * 0.05, floorH * v) * on;
       overprint(c, () => {
@@ -188,14 +221,19 @@ export function halftoneScene(record, frame, { art, families, still = false }) {
       });
     });
 
-    // One plate after another, so the picture builds rather than arrives.
-    overprint(c, () => {
-      plates.forEach((plate, i) => {
-        const away = 1 - easeOut(clamp01((t - i * 0.35) / LANDS_IN));
-        c.drawImage(plate.art, ax + plate.rest[0] + plate.from[0] * away * W, plate.rest[1] + plate.from[1] * away * H * 0.5);
+    // One plate after another, so the picture builds rather than arrives, and then
+    // the dots close into the cover itself.
+    if (t >= COVER_DONE) c.drawImage(solid, ax, 0);
+    else {
+      overprint(c, () => {
+        plates.forEach((plate, i) => {
+          const away = 1 - easeOut(clamp01((t - i * 0.35) / LANDS_IN));
+          c.drawImage(plate.art, ax + plate.rest[0] + plate.from[0] * away * W, plate.rest[1] + plate.from[1] * away * H * 0.5);
+        });
       });
-    });
-    if (t >= LANDS_IN + 1.05) c.drawImage(tab, 0, 0);
+      if (t > PLATES_DONE) drawClosing(c, easeOut(clamp01((t - PLATES_DONE) / CLOSES_IN)));
+    }
+    if (t >= COVER_DONE) c.drawImage(tab, 0, 0);
 
     let y = rowsTop;
     if (stars > 0 || tags.length) {
@@ -203,7 +241,7 @@ export function halftoneScene(record, frame, { art, families, still = false }) {
       overprint(c, () => {
         for (let i = 0; i < 5 && stars > 0; i++) {
           const x = margin + i * (starBox + starGap);
-          if (t < ARRIVES.stars + i * 0.15) continue;
+          if (late < ARRIVES.stars + i * 0.15) continue;
           drawPath(c, STAR_PATH, x, rowY, starBox, 18, darkFaint);
           const part = clamp01(stars - i);
           if (part > 0) {
@@ -216,7 +254,7 @@ export function halftoneScene(record, frame, { art, families, still = false }) {
           }
         }
         tags.forEach((tag, i) => {
-          if (t < ARRIVES.tags + i * 0.2) return;
+          if (late < ARRIVES.tags - 0.6 + i * 0.2) return;
           const x = W - margin - (tags.length - i) * markBox - (tags.length - i - 1) * markGap;
           drawPath(c, SYMBOLS[tag], x, rowY, markBox, 256, brightReads ? bright : dark);
         });
@@ -225,13 +263,13 @@ export function halftoneScene(record, frame, { art, families, still = false }) {
     }
     if (artistLine) {
       const artistY = y;
-      if (t >= ARRIVES.artist) {
+      if (late >= ARRIVES.artist) {
         overprint(c, () => drawArtist(c, artistLine, margin, artistY, { size: 2.9 * k * u, tracking: 0.24, wide: W - margin * 2, least: W * 0.02, colour: dark, mono, align: 'left' }));
       }
       y += 5.4 * k * u;
     }
     if (hasHearts) y += heartBox + 2 * u;
-    if (t >= ARRIVES.title) {
+    if (late >= ARRIVES.title) {
       const titleY = y;
       overprint(c, () => {
         c.font = titleFont(k);
@@ -248,7 +286,7 @@ export function halftoneScene(record, frame, { art, families, still = false }) {
       const box = Math.min(heartBox, slot * 0.8);
       const heartY = Math.min(H - floorH - box - 1.2 * u, titleTop - box - 1 * u);
       bars.forEach((v, i) => {
-        if (!favs[i] || t < ARRIVES.hearts + i * 0.03) return;
+        if (!favs[i] || late < ARRIVES.hearts - 1.4 + i * 0.03) return;
         drawPath(c, HEART_PATH, i * slot + (slot - box) / 2, heartY, box, 24, FAV);
       });
     }
