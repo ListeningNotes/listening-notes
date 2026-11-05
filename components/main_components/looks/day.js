@@ -5,8 +5,8 @@
 // in day mode or night mode (Miyel, 2026-11-04). The page's own colour, the cover,
 // the title, the artist, the stars, the marks as the post's chips, and the horizon
 // from further down the page. It is the plain one on purpose. Animated, the card
-// only unrolls, calm and in under a second, since most people tap through stories: the
-// cover is already there, the lines come down from under it, the bars rise; Still is that last moment as a picture. Not the
+// settles quickly and smoothly, since most people tap through stories: the cover glides
+// up into place, the lines come down from under it, the bars rise; Still is that last moment as a picture. Not the
 // posted date: a line nobody needed on a print (2026-09-12).
 //
 // The numbers are the post's own pixels, on a 340-wide column.
@@ -34,8 +34,10 @@ const CHIPS = {
   formative: { word: 'Formative', ink: '#3fa96b', edge: 'rgba(63,169,107,0.4)' },
 };
 const gapOf = n => (n > 24 ? 2 : n > 14 ? 3 : 4);
-const ROLLS_IN = 0.75;
+const GLIDES_IN = 0.7;
+const ROLLS_AT = 0.25, ROLLS_IN = 0.75;
 const smooth = v => v * v * (3 - 2 * v);
+const easeOut = v => 1 - (1 - v) ** 3;
 
 export function paperScene(night) {
   return (record, frame, { art, families, still = false }) => {
@@ -106,11 +108,14 @@ export function paperScene(night) {
       }
       y += px(MARK_H + GAP);
 
-      c.drawImage(card, cx - card.width / 2, y - margin);
+      // The cover glides up into place, growing the last little way.
+      const glide = easeOut(clamp01(t / GLIDES_IN));
+      const drawn = card.width * (0.94 + 0.06 * glide);
+      c.drawImage(card, cx - drawn / 2, y + size / 2 + (1 - glide) * size * 0.1 - drawn / 2, drawn, drawn);
       y += size + px(GAP);
 
       // Everything under the cover unrolls downward, together.
-      const unroll = smooth(clamp01(t / ROLLS_IN));
+      const unroll = smooth(clamp01((t - ROLLS_AT) / ROLLS_IN));
       if (unroll <= 0) return;
       c.save();
       c.beginPath();
@@ -193,7 +198,7 @@ export function paperScene(night) {
         const h = px(HORIZON_H), r = Math.min(px(BAR_RADIUS), bw / 2);
         const barsY = y;
         bars.forEach((v, i) => {
-          const rise = smooth(clamp01(t / ROLLS_IN));
+          const rise = smooth(clamp01((t - ROLLS_AT) / ROLLS_IN));
           if (rise <= 0) return;
           const bh = Math.max(0.03 * h, v * h), x0 = left + i * (bw + gap);
           c.fillStyle = ink.bar;
