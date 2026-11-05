@@ -19,6 +19,7 @@ import {
 } from '../SharePrinter';
 
 const SHEET = '#f4f0e5';
+const FAV = '#f0484f';
 const LANDS_IN = 2.4;
 const FAR_ENOUGH = 60;                 // degrees of hue between the two inks
 const PLAIN_FLOOR = 0.1;               // how much colour a cover needs to give an ink
@@ -113,9 +114,13 @@ export function halftoneScene(record, frame, { art, families, still = false }) {
   const floorH = bars.length ? H * 0.2 : 0;
   const margin = 5 * u;
   const roomTop = size + 3 * u;
-  const overlap = bars.length ? floorH * 0.28 : 0;
+  // The title comes well down into the bars. The hearts have a row of their own
+  // above them, each over its bar, where nothing covers them (Miyel, 2026-11-04).
+  const overlap = bars.length ? floorH * 0.45 : 0;
+  const hasHearts = favs.some(Boolean) && bars.length > 0;
+  const heartBox = 4.2 * u;
   const room = H - floorH + overlap - margin * (bars.length ? 0 : 1) - roomTop;
-  const heightAt = (k, lines) => ((stars > 0 || tags.length ? 10.5 : 0) + (artistLine ? 5.4 : 0) + lines * 13) * k * u;
+  const heightAt = (k, lines) => ((stars > 0 || tags.length ? 10.5 : 0) + (artistLine ? 5.4 : 0) + lines * 13) * k * u + (hasHearts ? heartBox + 2 * u : 0);
   const titleFont = k => `900 ${14 * k * u}px ${sans}`;
   const { k, lines: titleLines } = fitTitle({ album: entry?.album, fontAt: titleFont, wide: W - margin * 2, room, heightAt });
   const rowsTop = H - floorH + overlap - margin * (bars.length ? 0 : 1) - heightAt(k, titleLines.length);
@@ -225,6 +230,7 @@ export function halftoneScene(record, frame, { art, families, still = false }) {
       }
       y += 5.4 * k * u;
     }
+    if (hasHearts) y += heartBox + 2 * u;
     if (t >= ARRIVES.title) {
       const titleY = y;
       overprint(c, () => {
@@ -236,13 +242,16 @@ export function halftoneScene(record, frame, { art, families, still = false }) {
       });
     }
 
-    // A favourite: a heart in the dark ink on the top of its bar.
-    bars.forEach((v, i) => {
-      if (!favs[i] || t < ARRIVES.hearts + i * 0.03) return;
-      const box = Math.min(3.4 * u, slot * 0.7);
-      const h = Math.max(floorH * 0.05, floorH * v);
-      overprint(c, () => drawPath(c, HEART_PATH, i * slot + (slot - box) / 2, H - h + 0.6 * u, box, 24, dark));
-    });
+    // A favourite: a red heart over its bar, printed last so it stays whole.
+    if (hasHearts) {
+      const titleTop = H - floorH + overlap - titleLines.length * lead;
+      const box = Math.min(heartBox, slot * 0.8);
+      const heartY = Math.min(H - floorH - box - 1.2 * u, titleTop - box - 1 * u);
+      bars.forEach((v, i) => {
+        if (!favs[i] || t < ARRIVES.hearts + i * 0.03) return;
+        drawPath(c, HEART_PATH, i * slot + (slot - box) / 2, heartY, box, 24, FAV);
+      });
+    }
   }
 
   let t = still ? 30 : 0;
