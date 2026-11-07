@@ -5,7 +5,7 @@
 // bar, the real cover in the window, the artist on the type line, the stars and marks as
 // its stats, the horizon with each track's title running down under its bar, the mark
 // as the set symbol. It starts face down, showing its LN back, flips over once, then
-// a shine runs across it once, silver, or gold on a gold card for a Masterpiece.
+// a silver shine runs across it once.
 // Still is the card with its shine caught at the corner.
 'use client';
 
@@ -26,10 +26,8 @@ export const tradingScene = night => (record, frame, { art, families, still = fa
   const u = Math.min(W, (H * 9) / 16) / 100;
   const paper = night ? INKS.night.paper : INKS.day.paper;
   const hue = hueOf(art);
-  // A Masterpiece is the rare one in the pack: a gold card with a gold shine.
-  const gilded = record.isMasterpiece;
-  const frameTop = gilded ? '#ffe9a3' : hue === null ? '#d9dbe0' : `hsl(${hue},72%,62%)`;
-  const frameEnd = gilded ? '#b8862b' : hue === null ? '#8f939c' : `hsl(${(hue + 30) % 360},78%,40%)`;
+  const frameTop = hue === null ? '#d9dbe0' : `hsl(${hue},72%,62%)`;
+  const frameEnd = hue === null ? '#8f939c' : `hsl(${(hue + 30) % 360},78%,40%)`;
   const inkDark = '#14110f';
 
   // The card is the whole picture, edge to edge (Miyel, 2026-11-06).
@@ -178,12 +176,12 @@ export const tradingScene = night => (record, frame, { art, families, still = fa
     c.drawImage(markIn(art, markW, markH, '#ffffff'), (cardW - markW) / 2, (cardH - markH) / 2);
   });
 
-  // The shine: a band of silver on the slant, or gold, kept to the card's own shape.
+  // The shine: a band of silver on the slant, kept to the card's own shape.
   const foilW = cardW * 2.2;
   const foil = sheet(foilW, cardH, c => {
     c.setTransform(1, 0, -0.45, 1, cardH * 0.45, 0);
     const g = c.createLinearGradient(0, 0, foilW * 0.7, 0);
-    const shine = gilded ? '255,215,102' : '255,255,255';
+    const shine = '255,255,255';
     g.addColorStop(0.32, `rgba(${shine},0)`);
     g.addColorStop(0.45, `rgba(${shine},1)`);
     g.addColorStop(0.5, `rgba(${shine},0.5)`);
