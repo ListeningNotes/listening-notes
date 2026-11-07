@@ -3,20 +3,23 @@
 // components/main_components/looks/trading.js
 // Trading: the record as a collectible card (Miyel, 2026-11-06). The title in the name
 // bar, the real cover in the window, the artist on the type line, the stars and marks as
-// its stats, the tracks as a strip, the mark as the set symbol. It flips over into place
-// from its back, then foil keeps sweeping across it. Still is the card with its sheen.
+// its stats, the tracks listed as the card's text, each with its bar and heart, the mark
+// as the set symbol. It starts face down, showing its LN back, flips over once, then foil
+// keeps sweeping across it. Still is the card with its sheen.
 'use client';
 
-import { HEART_PATH, INKS, MARK_ASPECT, STAR_PATH, SYMBOLS, clamp01, drawPath, roundRect, sheet } from '../SharePrinter';
-import { coverOf, easeOut, hueOf, markIn } from './poster';
+import { HEART_PATH, INKS, MARK_ASPECT, STAR_PATH, SYMBOLS, clamp01, drawPath, ellipsize, roundRect, sheet } from '../SharePrinter';
+import { coverOf, hueOf, markIn } from './poster';
 
-const FLIPS_IN = 1.2, TURNS = 3;       // half-turns on the way in
+const FACE_DOWN = 0.6, TURNS_IN = 0.8; // resting on its back, then the one flip
+const SETTLED = FACE_DOWN + TURNS_IN;
+const smooth = v => v * v * (3 - 2 * v);
 const SWEEP_EVERY = 2.4;
 const TONES = { mp: '#2f7bf0', fav: '#ee2f3f', formative: '#1f9e58' };
 const ORDER = ['mp', 'fav', 'formative'];
 
 export const tradingScene = night => (record, frame, { art, families, still = false }) => {
-  const { stars, artistLine, tags, bars, favs, entry } = record;
+  const { stars, artistLine, tags, bars, favs, trackNames, entry } = record;
   const { sans, mono } = families;
   const W = frame.w, H = frame.h;
   const u = Math.min(W, (H * 9) / 16) / 100;
@@ -26,7 +29,7 @@ export const tradingScene = night => (record, frame, { art, families, still = fa
   const frameEnd = hue === null ? '#8f939c' : `hsl(${(hue + 30) % 360},78%,40%)`;
   const inkDark = '#14110f';
 
-  const cardW = 88 * u, cardH = 126 * u, radius = 4.5 * u;
+  const cardW = 88 * u, cardH = 148 * u, radius = 4.5 * u;
   const cx = W / 2, cy = H / 2;
   const y0 = (H - cardH) / 2;
 
@@ -108,17 +111,48 @@ export const tradingScene = night => (record, frame, { art, families, still = fa
       drawPath(c, SYMBOLS[tag], mx - icon / 2, my - icon / 2, icon, 256, '#ffffff');
     });
 
-    // The tracks.
-    const stripY = statY + box + 1.4 * u, stripH = cardH - stripY - rim - 7 * u;
-    const heart = 2.2 * u;
-    const slot = bars.length ? inner / bars.length : 0;
-    bars.forEach((v, i) => {
-      const room = stripH - heart - 0.4 * u;
-      const h = Math.max(room * 0.08, room * v);
-      c.fillStyle = 'rgba(255,255,255,0.92)';
-      c.fillRect(pad + i * slot + slot * 0.1, stripY + stripH - h, slot * 0.8, h);
-      if (favs[i]) drawPath(c, HEART_PATH, pad + i * slot + (slot - Math.min(heart, slot)) / 2, stripY + stripH - h - Math.min(heart, slot) - 0.2 * u, Math.min(heart, slot), 24, '#ffffff');
-    });
+    // The tracks: the card's text, in two columns, each with its bar and heart. With no
+    // titles on record, the bars alone.
+    const stripY = statY + box + 1.4 * u, stripH = cardH - stripY - rim - 6.4 * u;
+    if (trackNames.length) {
+      c.fillStyle = 'rgba(255,255,255,0.86)';
+      roundRect(c, pad, stripY, inner, stripH, 1 * u);
+      c.fill();
+      const rowsDown = Math.ceil(trackNames.length / 2);
+      const rowH = (stripH - 1.4 * u) / rowsDown;
+      const px = Math.min(2.3 * u, rowH * 0.74);
+      const colW = (inner - 2.4 * u) / 2, barW = 5 * u, numW = px * 1.9;
+      c.font = `400 ${px}px ${mono}`;
+      c.textBaseline = 'middle';
+      c.textAlign = 'left';
+      trackNames.forEach((name, i) => {
+        const column = i < rowsDown ? 0 : 1;
+        const x = pad + 0.8 * u + column * (colW + 0.8 * u);
+        const y = stripY + 0.7 * u + (column ? i - rowsDown : i) * rowH + rowH / 2;
+        c.fillStyle = 'rgba(20,17,15,0.5)';
+        c.fillText(String(i + 1), x, y);
+        c.fillStyle = inkDark;
+        c.fillText(ellipsize(c, name, colW - numW - barW - px * 1.3), x + numW, y);
+        if (bars.length === trackNames.length) {
+          const barX = x + colW - barW;
+          c.fillStyle = 'rgba(20,17,15,0.12)';
+          c.fillRect(barX, y - px * 0.28, barW, px * 0.56);
+          c.fillStyle = frameEnd;
+          c.fillRect(barX, y - px * 0.28, barW * bars[i], px * 0.56);
+          if (favs[i]) drawPath(c, HEART_PATH, barX - px * 0.95, y - px * 0.42, px * 0.84, 24, TONES.fav);
+        }
+      });
+    } else {
+      const heart = 2.2 * u;
+      const slot = bars.length ? inner / bars.length : 0;
+      bars.forEach((v, i) => {
+        const room = stripH - heart - 0.4 * u;
+        const h = Math.max(room * 0.08, room * v);
+        c.fillStyle = 'rgba(255,255,255,0.92)';
+        c.fillRect(pad + i * slot + slot * 0.1, stripY + stripH - h, slot * 0.8, h);
+        if (favs[i]) drawPath(c, HEART_PATH, pad + i * slot + (slot - Math.min(heart, slot)) / 2, stripY + stripH - h - Math.min(heart, slot) - 0.2 * u, Math.min(heart, slot), 24, '#ffffff');
+      });
+    }
 
     // The foot: the set symbol, and how many in the set.
     const footY = cardH - rim - 5.4 * u;
@@ -167,7 +201,7 @@ export const tradingScene = night => (record, frame, { art, families, still = fa
     onShade.drawImage(front, 0, 0);
     onShade.globalCompositeOperation = 'source-atop';
     onShade.globalAlpha = still ? 0.22 : 0.34;
-    const pass = still ? 0.42 : ((t - FLIPS_IN) % SWEEP_EVERY + SWEEP_EVERY) % SWEEP_EVERY / SWEEP_EVERY;
+    const pass = still ? 0.42 : ((t - SETTLED) % SWEEP_EVERY + SWEEP_EVERY) % SWEEP_EVERY / SWEEP_EVERY;
     onShade.drawImage(foil, cardW - pass * (foilW + cardW), 0);
     onShade.globalAlpha = 1;
     return shade;
@@ -177,11 +211,11 @@ export const tradingScene = night => (record, frame, { art, families, still = fa
     c.fillStyle = paper;
     c.fillRect(0, 0, W, H);
 
-    const settled = t >= FLIPS_IN;
-    const turn = (1 - easeOut(clamp01(t / FLIPS_IN))) * TURNS * Math.PI;
+    const settled = t >= SETTLED;
+    const turn = (1 - smooth(clamp01((t - FACE_DOWN) / TURNS_IN))) * Math.PI;
     const facing = Math.cos(turn);
     const across = cardW * Math.max(0.02, Math.abs(facing));
-    const bob = still || !settled ? 0 : Math.sin((t - FLIPS_IN) * 1.4) * 0.8 * u;
+    const bob = still || !settled ? 0 : Math.sin((t - SETTLED) * 1.4) * 0.8 * u;
     const y = y0 + bob;
 
     c.save();
