@@ -3,9 +3,9 @@
 // components/main_components/looks/trading.js
 // Trading: the record as a collectible card (Miyel, 2026-11-06). The title in the name
 // bar, the real cover in the window, the artist on the type line, the stars and marks as
-// its stats, the tracks listed as the card's text, each with its bar and heart, the mark
+// its stats, the horizon upright over the tracks' titles as the card's text, the mark
 // as the set symbol. It starts face down, showing its LN back, flips over once, then
-// a shine runs across it now and then, silver, or gold on a gold card for a Masterpiece.
+// a shine runs across it once, silver, or gold on a gold card for a Masterpiece.
 // Still is the card with its shine caught at the corner.
 'use client';
 
@@ -15,7 +15,7 @@ import { coverOf, hueOf, markIn } from './poster';
 const FACE_DOWN = 0.6, TURNS_IN = 0.8; // resting on its back, then the one flip
 const SETTLED = FACE_DOWN + TURNS_IN;
 const smooth = v => v * v * (3 - 2 * v);
-const SWEEP_EVERY = 5, SWEEPS_IN = 1.3;  // the shine, now and then
+const SHINE_AFTER = 0.25, SWEEPS_IN = 1.3; // the shine's one pass, once it is face up
 const TONES = { mp: '#2f7bf0', fav: '#ee2f3f', formative: '#1f9e58' };
 const ORDER = ['mp', 'fav', 'formative'];
 
@@ -71,7 +71,7 @@ export const tradingScene = night => (record, frame, { art, families, still = fa
     const artY = pad + barH + 1.6 * u;
     c.fillStyle = inkDark;
     c.fillRect(pad - 0.4 * u, artY - 0.4 * u, inner + 0.8 * u, inner + 0.8 * u);
-    c.drawImage(coverOf(art, inner, gilded), pad, artY);
+    c.drawImage(coverOf(art, inner), pad, artY);
 
     // The type line.
     const lineY = artY + inner + 1.2 * u, lineH = 5.2 * u;
@@ -114,46 +114,46 @@ export const tradingScene = night => (record, frame, { art, families, still = fa
       drawPath(c, SYMBOLS[tag], mx - icon / 2, my - icon / 2, icon, 256, '#ffffff');
     });
 
-    // The tracks: the card's text, in two columns, each with its bar and heart. With no
-    // titles on record, the bars alone.
+    // The tracks: the horizon standing upright across the top of the card's text box, each
+    // bar with its heart, then the titles in two columns. With no titles on record, the
+    // horizon alone fills the box.
     const stripY = statY + box + 1.4 * u, stripH = cardH - stripY - rim - 6.4 * u;
+    c.fillStyle = 'rgba(255,255,255,0.86)';
+    roundRect(c, pad, stripY, inner, stripH, 1 * u);
+    c.fill();
+    const boxPad = 1.2 * u;
+    const heart = 2 * u;
+    const horizonH = trackNames.length ? 12 * u : stripH - boxPad * 2;
+    if (bars.length) {
+      const slot = (inner - boxPad * 2) / bars.length;
+      const size = Math.min(heart, slot * 0.9);
+      const tall = horizonH - size - 0.4 * u;
+      bars.forEach((v, i) => {
+        const h = Math.max(tall * 0.08, tall * v);
+        const x = pad + boxPad + i * slot;
+        const foot = stripY + boxPad + horizonH;
+        c.fillStyle = frameEnd;
+        c.fillRect(x + slot * 0.1, foot - h, slot * 0.8, h);
+        if (favs[i]) drawPath(c, HEART_PATH, x + (slot - size) / 2, foot - h - size - 0.2 * u, size, 24, TONES.fav);
+      });
+    }
     if (trackNames.length) {
-      c.fillStyle = 'rgba(255,255,255,0.86)';
-      roundRect(c, pad, stripY, inner, stripH, 1 * u);
-      c.fill();
+      const listY = stripY + boxPad + (bars.length ? horizonH + 0.8 * u : 0);
       const rowsDown = Math.ceil(trackNames.length / 2);
-      const rowH = (stripH - 1.4 * u) / rowsDown;
-      const px = Math.min(2.3 * u, rowH * 0.74);
-      const colW = (inner - 2.4 * u) / 2, barW = 5 * u, numW = px * 1.9;
+      const rowH = (stripY + stripH - boxPad * 0.6 - listY) / rowsDown;
+      const px = Math.min(2.2 * u, rowH * 0.8);
+      const colW = (inner - 2.4 * u) / 2, numW = px * 1.9;
       c.font = `400 ${px}px ${mono}`;
       c.textBaseline = 'middle';
       c.textAlign = 'left';
       trackNames.forEach((name, i) => {
         const column = i < rowsDown ? 0 : 1;
         const x = pad + 0.8 * u + column * (colW + 0.8 * u);
-        const y = stripY + 0.7 * u + (column ? i - rowsDown : i) * rowH + rowH / 2;
+        const y = listY + (column ? i - rowsDown : i) * rowH + rowH / 2;
         c.fillStyle = 'rgba(20,17,15,0.5)';
         c.fillText(String(i + 1), x, y);
         c.fillStyle = inkDark;
-        c.fillText(ellipsize(c, name, colW - numW - barW - px * 1.3), x + numW, y);
-        if (bars.length === trackNames.length) {
-          const barX = x + colW - barW;
-          c.fillStyle = 'rgba(20,17,15,0.12)';
-          c.fillRect(barX, y - px * 0.28, barW, px * 0.56);
-          c.fillStyle = frameEnd;
-          c.fillRect(barX, y - px * 0.28, barW * bars[i], px * 0.56);
-          if (favs[i]) drawPath(c, HEART_PATH, barX - px * 0.95, y - px * 0.42, px * 0.84, 24, TONES.fav);
-        }
-      });
-    } else {
-      const heart = 2.2 * u;
-      const slot = bars.length ? inner / bars.length : 0;
-      bars.forEach((v, i) => {
-        const room = stripH - heart - 0.4 * u;
-        const h = Math.max(room * 0.08, room * v);
-        c.fillStyle = 'rgba(255,255,255,0.92)';
-        c.fillRect(pad + i * slot + slot * 0.1, stripY + stripH - h, slot * 0.8, h);
-        if (favs[i]) drawPath(c, HEART_PATH, pad + i * slot + (slot - Math.min(heart, slot)) / 2, stripY + stripH - h - Math.min(heart, slot) - 0.2 * u, Math.min(heart, slot), 24, '#ffffff');
+        c.fillText(ellipsize(c, name, colW - numW), x + numW, y);
       });
     }
 
@@ -207,8 +207,8 @@ export const tradingScene = night => (record, frame, { art, families, still = fa
     onShade.drawImage(front, 0, 0);
     onShade.globalCompositeOperation = 'source-atop';
     onShade.globalAlpha = still ? 0.3 : 0.6;
-    const pass = still ? 0.3 : (t > SETTLED ? ((t - SETTLED) % SWEEP_EVERY) / SWEEPS_IN : 2);
-    if (pass <= 1) onShade.drawImage(foil, cardW - pass * (foilW + cardW), 0);
+    const pass = still ? 0.3 : (t - SETTLED - SHINE_AFTER) / SWEEPS_IN;
+    if (pass >= 0 && pass <= 1) onShade.drawImage(foil, cardW - pass * (foilW + cardW), 0);
     onShade.globalAlpha = 1;
     return shade;
   }
