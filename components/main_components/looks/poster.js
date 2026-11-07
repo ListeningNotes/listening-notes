@@ -4,14 +4,13 @@
 // Poster: always the album's real cover, in a layout of its own: the cover edge to
 // edge at the head, the title printed over the bars (Miyel, 2026-11-05: "it's always
 // the album art, not any different version of it"). It comes in quickly and smoothly,
-// since most people tap through stories, but it does come in: the cover's own red, green
-// and blue, three layers of the actual image, glide in from the edges one after another
-// and add up to the cover itself where they meet. The bars rise as the words unroll from
-// under it. Nothing bounces.
-// The words, stars and marks take an ink from the album's own colours, deep on the day
-// sheet and pale on the night one. The bars are LN green on every record (Miyel,
-// 2026-11-06). At night the words turn the sheet's own black where they cross the
-// green, since a pale ink would vanish there.
+// since most people tap through stories, but it does come in: sheets of the record's
+// own colours slide over one another, the cover slides over them, and the bars rise as
+// the words unroll from under it (Miyel, 2026-11-06). Nothing bounces.
+// By day the words, stars and marks take a deep ink from the album's own colours and the
+// title overlaps the bars. At night they are solid white and the title sits clear of the
+// bars, since white would vanish on the green (Miyel, 2026-11-06). The bars are LN green
+// on every record.
 //
 // Reading the colours is by the pixel. A cover that will not be read throws here, and
 // the print falls back to Day.
@@ -23,10 +22,11 @@ import {
 } from '../SharePrinter';
 
 const SHEETS = { day: '#f4f0e5', night: '#0e0e0e' };
-const LANDS_IN = 0.9;                  // each layer gliding in
-const LAYER_GAP = 0.12;                // between one layer setting off and the next
-const COVER_DONE = LANDS_IN + LAYER_GAP * 2;
-const ROLLS_AT = 0.7, ROLLS_IN = 0.7;  // the words and bars
+const SLIDES_IN = 0.9;                 // each sheet, and the cover
+const SHEET_GAP = 0.35;                // between one setting off and the next
+const ROLLS_IN = 1.0;                  // the words and bars
+const MOST_SHEETS = 3, FAR_APART = 90; // how many colours, and how unlike each other
+const FROM = [[-1, 0], [1, 0], [0, -1], [-1, 0]];  // the edge each one comes from, the cover last
 const FAR_ENOUGH = 60;                 // degrees of hue between the two to choose from
 const PLAIN_FLOOR = 0.1;               // how much colour a cover needs to give an ink
 const SAMPLE = 360;
@@ -37,10 +37,9 @@ function lightOfHue(h) {
   return 0.3 * f(0) + 0.59 * f(8) + 0.11 * f(4);
 }
 
-// The words' ink: the darker of the album's two strongest hues, deepened until it reads
-// by day and lifted until it reads at night. A cover with no colour to speak of prints
-// in plain black, or plain off-white.
-function inksOf(px, night) {
+// The words' ink by day: the darker of the album's two strongest hues, deepened until it
+// reads. A cover with no colour to speak of prints in plain black.
+function inksOf(px) {
   const bins = new Array(36).fill(0);
   let vivid = 0;
   for (let i = 0; i < px.length; i += 4) {
@@ -53,9 +52,7 @@ function inksOf(px, night) {
     vivid += chroma;
   }
   if (vivid / (px.length / 4) < PLAIN_FLOOR) {
-    return night
-      ? { words: 'hsl(40,20%,90%)', faint: 'hsla(40,20%,90%,0.2)' }
-      : { words: 'hsl(240,6%,12%)', faint: 'hsla(240,6%,12%,0.2)' };
+    return { words: 'hsl(240,6%,12%)', faint: 'hsla(240,6%,12%,0.2)' };
   }
   const apart = (a, b) => { const d = Math.abs(a - b) % 360; return Math.min(d, 360 - d); };
   let first = 0;
@@ -69,15 +66,36 @@ function inksOf(px, night) {
   const h2 = second >= 0 ? second * 10 + 5 : (h1 + 180) % 360;
   const darkHue = lightOfHue(h1) <= lightOfHue(h2) ? h1 : h2;
   // A yellow or a green only reads as words once it is quite deep.
-  const light = night ? 80 : lightOfHue(darkHue) > 0.55 ? 24 : 34;
+  const light = lightOfHue(darkHue) > 0.55 ? 24 : 34;
   return {
     words: `hsl(${darkHue},78%,${light}%)`,
     faint: `hsla(${darkHue},78%,${light}%,0.2)`,
   };
 }
 
+// The record's own colours: the pixels sorted into coarse boxes, each box's real average,
+// the strongest first, by how much of the cover it is and how vivid, so a pink beats a
+// white that covers more. Any too like one already taken is skipped.
+function sheetsOf(px) {
+  const boxes = new Map();
+  for (let i = 0; i < px.length; i += 4) {
+    const key = (px[i] >> 5) * 64 + (px[i + 1] >> 5) * 8 + (px[i + 2] >> 5);
+    const box = boxes.get(key) || { n: 0, r: 0, g: 0, b: 0 };
+    box.n++; box.r += px[i]; box.g += px[i + 1]; box.b += px[i + 2];
+    boxes.set(key, box);
+  }
+  const kept = [];
+  const pull = ({ n, r, g, b }) => n * (0.15 + (Math.max(r, g, b) - Math.min(r, g, b)) / n / 255);
+  [...boxes.values()].sort((a, b) => pull(b) - pull(a)).forEach(({ n, r, g, b }) => {
+    const colour = [r / n, g / n, b / n];
+    const unlike = kept.every(k => Math.hypot(k[0] - colour[0], k[1] - colour[1], k[2] - colour[2]) >= FAR_APART);
+    if (unlike && kept.length < MOST_SHEETS) kept.push(colour);
+  });
+  return kept.map(([r, g, b]) => `rgb(${Math.round(r)},${Math.round(g)},${Math.round(b)})`);
+}
+
 const smooth = v => v * v * (3 - 2 * v);
-const easeOut = v => 1 - (1 - v) ** 3;
+const easeOut = v => 1 - (1 - v) ** 2;
 
 function overprint(c, paint) {
   c.save();
@@ -96,19 +114,23 @@ export const posterScene = night => (record, frame, { art, families, still = fal
   // The cover takes the head of the sheet, off the edges where it can.
   const size = Math.min(W, H * 0.6);
   const ax = (W - size) / 2;
-  const floorH = bars.length ? H * 0.2 : 0;
+  const floorH = bars.length ? H * 0.14 : 0;
   const margin = 5 * u;
   const roomTop = size + 3 * u;
-  // The title comes well down into the bars. The hearts have a row of their own
-  // above them, each over its bar, where nothing covers them (Miyel, 2026-11-04).
-  const overlap = bars.length ? floorH * 0.45 : 0;
+  // A favourite's heart stands on its own bar, as on the card (Miyel, 2026-11-06), so the
+  // title keeps clear of them. Only by day, with no hearts to cover, does it come down
+  // into the bars.
   const hasHearts = favs.some(Boolean) && bars.length > 0;
-  const heartBox = 4.2 * u;
-  const room = H - floorH + overlap - margin * (bars.length ? 0 : 1) - roomTop;
-  const heightAt = (k, lines) => ((stars > 0 || tags.length ? 10.5 : 0) + (artistLine ? 5.4 : 0) + lines * 13) * k * u + (hasHearts ? heartBox + 2 * u : 0);
+  const overlap = bars.length && !night && !hasHearts ? floorH * 0.45 : 0;
+  const heartBox = Math.min(4.2 * u, (bars.length ? W / bars.length : 0) * 0.8);
+  const heartLift = 1 * u;
+  const clearance = bars.length && !overlap ? 1.5 * u + (hasHearts ? heartBox + heartLift : 0) : 0;
+  const wordsEnd = H - floorH + overlap - clearance - margin * (bars.length ? 0 : 1);
+  const room = wordsEnd - roomTop;
+  const heightAt = (k, lines) => ((stars > 0 || tags.length ? 10.5 : 0) + (artistLine ? 5.4 : 0) + lines * 13) * k * u;
   const titleFont = k => `900 ${14 * k * u}px ${sans}`;
   const { k, lines: titleLines } = fitTitle({ album: entry?.album, fontAt: titleFont, wide: W - margin * 2, room, heightAt });
-  const rowsTop = H - floorH + overlap - margin * (bars.length ? 0 : 1) - heightAt(k, titleLines.length);
+  const rowsTop = wordsEnd - heightAt(k, titleLines.length);
 
   // ── The picture ─────────────────────────────────────────────────────────────────────────────────────────────────────────────
   const side = SAMPLE;
@@ -117,31 +139,32 @@ export const posterScene = night => (record, frame, { art, families, still = fal
     else { c.fillStyle = '#999'; c.fillRect(0, 0, side, side); }
   });
   const px = small.getContext('2d').getImageData(0, 0, side, side).data;
-  const { words, faint } = inksOf(px, night);
+  const { words, faint } = night ? { words: '#ffffff', faint: 'rgba(255,255,255,0.2)' } : inksOf(px);
 
-  // The real cover, and one layer of it per colour, each only that colour's part of the
-  // picture. Added together in register they are the cover, exactly. Still never shows
-  // the layers, so they are only made for a print that moves.
+  // The real cover, and the sheets that come in ahead of it. Still never shows them.
   const solid = sheet(size, size, c => {
     if (art?.cover?.naturalWidth) c.drawImage(art.cover, 0, 0, size, size);
     else { c.fillStyle = '#999'; c.fillRect(0, 0, size, size); }
   });
-  const layerOf = colour => sheet(size, size, c => {
-    c.drawImage(solid, 0, 0);
-    c.globalCompositeOperation = 'multiply';
-    c.fillStyle = colour;
-    c.fillRect(0, 0, size, size);
-    c.globalCompositeOperation = 'destination-in';
-    c.drawImage(solid, 0, 0);
-  });
-  const layers = still ? [] : [
-    { art: layerOf('#ff0000'), from: [-1, -1] },
-    { art: layerOf('#00ff00'), from: [1, -1] },
-    { art: layerOf('#0000ff'), from: [0, 1] },
-  ];
-  // They add on a clear sheet of their own, then lie on the page.
-  const clear = sheet(W, H, () => {});
-  const onClear = clear.getContext('2d');
+  const colours = still ? [] : sheetsOf(px);
+  const COVER_DONE = colours.length * SHEET_GAP + SLIDES_IN;
+  const ROLLS_AT = COVER_DONE - 0.5;
+  function drawCover(c, t) {
+    if (t >= COVER_DONE) { c.drawImage(solid, ax, 0); return; }
+    c.save();
+    c.beginPath();
+    c.rect(ax, 0, size, size);
+    c.clip();
+    [...colours, solid].forEach((what, i) => {
+      const go = easeOut(clamp01((t - i * SHEET_GAP) / SLIDES_IN));
+      if (go <= 0) return;
+      const edge = what === solid ? FROM[FROM.length - 1] : FROM[i];
+      const x = ax + edge[0] * (1 - go) * size, y = edge[1] * (1 - go) * size;
+      if (what === solid) c.drawImage(solid, x, y);
+      else { c.fillStyle = what; c.fillRect(x, y, size, size); }
+    });
+    c.restore();
+  }
   // The words overprint by day, and simply lie on the black at night.
   const lay = (c, paint) => (night ? paint() : overprint(c, paint));
 
@@ -183,18 +206,7 @@ export const posterScene = night => (record, frame, { art, families, still = fal
       c.fillRect(i * slot + barGap / 2, H - h, slot - barGap, h);
     });
 
-    // The layers glide in, one after another, and add up to the cover.
-    if (t >= COVER_DONE) c.drawImage(solid, ax, 0);
-    else {
-      onClear.globalCompositeOperation = 'source-over';
-      onClear.clearRect(0, 0, W, H);
-      onClear.globalCompositeOperation = 'lighter';
-      layers.forEach((layer, i) => {
-        const away = 1 - easeOut(clamp01((t - i * LAYER_GAP) / LANDS_IN));
-        onClear.drawImage(layer.art, ax + layer.from[0] * away * W, layer.from[1] * away * H * 0.5);
-      });
-      c.drawImage(clear, 0, 0);
-    }
+    drawCover(c, t);
     c.drawImage(tab, 0, 0);
 
     // The words unroll downward from under the cover, all together.
@@ -206,29 +218,14 @@ export const posterScene = night => (record, frame, { art, families, still = fal
     c.clip();
 
     paintWords(c, words, faint);
-    if (night) {
-      c.save();
-      c.beginPath();
-      bars.forEach((v, i) => {
-        const h = Math.max(floorH * 0.05, floorH * v) * rise;
-        c.rect(i * slot + barGap / 2, H - h, slot - barGap, h);
-      });
-      c.clip();
-      paintWords(c, SHEET, 'rgba(14,14,14,0.2)');
-      c.restore();
-    }
 
-    // A favourite: a heart over its bar, black by day and white at night (Miyel,
-    // 2026-11-06), printed last so it stays whole.
-    if (hasHearts) {
-      const titleTop = H - floorH + overlap - titleLines.length * lead;
-      const box = Math.min(heartBox, slot * 0.8);
-      const heartY = Math.min(H - floorH - box - 1.2 * u, titleTop - box - 1 * u);
-      bars.forEach((v, i) => {
-        if (!favs[i]) return;
-        drawPath(c, HEART_PATH, i * slot + (slot - box) / 2, heartY, box, 24, night ? '#ffffff' : '#000000');
-      });
-    }
+    // A favourite: a heart standing on its bar, black by day and white at night (Miyel,
+    // 2026-11-06), rising with it.
+    bars.forEach((v, i) => {
+      if (!favs[i] || rise <= 0) return;
+      const h = Math.max(floorH * 0.05, floorH * v) * rise;
+      drawPath(c, HEART_PATH, i * slot + (slot - heartBox) / 2, H - h - heartBox - heartLift, heartBox, 24, night ? '#ffffff' : '#000000');
+    });
     c.restore();
   }
 
@@ -262,7 +259,6 @@ export const posterScene = night => (record, frame, { art, families, still = fal
       lay(c, () => drawArtist(c, artistLine, margin, artistY, { size: 2.9 * k * u, tracking: 0.24, wide: W - margin * 2, least: W * 0.02, colour: ink, mono, align: 'left' }));
       y += 5.4 * k * u;
     }
-    if (hasHearts) y += heartBox + 2 * u;
     const titleY = y;
     lay(c, () => {
       c.font = titleFont(k);
