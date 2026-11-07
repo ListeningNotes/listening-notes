@@ -2147,6 +2147,10 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
   background: #111; color: #fff; font-family: var(--font-display); font-weight: 800; font-size: 15px;
   cursor: pointer; -webkit-tap-highlight-color: transparent;
 }
+.ln-print-save:disabled { opacity: 1; background: var(--ink-faint); cursor: default; }
+.ln-print-told { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; padding: 4px 0 6px; }
+.ln-print-told strong { font-family: var(--font-display); font-weight: 800; font-size: 16px; color: var(--ink); }
+.ln-print-told span { font-size: 13px; line-height: 1.35; color: var(--ink-soft); }
 .ln-print-shut {
   position: fixed; left: 8px; top: calc(6px + env(safe-area-inset-top, 0px)); z-index: 401;
   padding: 8px; line-height: 0; border: 0; background: transparent; color: var(--ink); cursor: pointer;

@@ -1602,6 +1602,8 @@ export default function FullPostPage({ entry, references = [], authed = false, l
             onDone={finishPrinting}
             status={printFailed ? `${printFailed} could not be drawn, so this is Day.` : press.status}
             final={Boolean(press.picture || press.clip)}
+            inBar
+            saving={press.saving}
             picture={press.picture}
             clip={press.clip}
             canSend={press.canSend}

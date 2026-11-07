@@ -16,6 +16,7 @@ const CODECS = ['avc1.640028', 'avc1.4d0028', 'avc1.42e028'];  // High, Main, Ba
 const FPS = 30;
 const TIMESCALE = 90000;               // the track's ticks a second, video's usual
 const KEY_EVERY = FPS * 2;             // a whole picture every two seconds
+const BITRATE = 14_000_000;            // well above what Instagram keeps, so its copy starts sharp
 
 export function canRecord() {
   return typeof window !== 'undefined' && typeof window.VideoEncoder === 'function' && typeof window.VideoFrame === 'function';
@@ -31,7 +32,7 @@ export async function filmFrames({ width, height, seconds, frame }) {
   if (!canRecord()) return null;
   let config = null;
   for (const codec of CODECS) {
-    const tried = { codec, width, height, bitrate: 6_000_000, framerate: FPS, latencyMode: 'realtime', avc: { format: 'avc' } };
+    const tried = { codec, width, height, bitrate: BITRATE, framerate: FPS, latencyMode: 'quality', avc: { format: 'avc' } };
     try {
       if ((await VideoEncoder.isConfigSupported(tried)).supported) { config = tried; break; }
     } catch { /* the next codec, then */ }

@@ -16,15 +16,33 @@
 'use client';
 
 import { createPortal } from 'react-dom';
-import { DownloadSimple, X } from '@phosphor-icons/react';
+import { DownloadSimple, Export, X } from '@phosphor-icons/react';
 
-export default function PrintBar({ sections = [], tab = null, onTab, away = false, onSave, onDone, status, final = false, picture = null, clip = null, canSend = false, onBack, onDeliver, canDeliver = false }) {
+export default function PrintBar({ sections = [], tab = null, onTab, away = false, onSave, onDone, status, final = false, inBar = false, saving = false, picture = null, clip = null, canSend = false, onBack, onDeliver, canDeliver = false }) {
   // Portalled onto the body: the paper sets its own colours on the box it
   // sits in, and the bar is the page's, not the paper's — it keeps the
   // site's theme whatever ground the card is on (Miyel, 2026-09-13).
   if (typeof document === 'undefined') return null;
   // A phone with no sheet holds the picture to save it, and the line says so:
   // no button then, only Close.
+  // Made and ready: with somewhere to send it, the bar itself says so and offers it, over
+  // the same print, rather than a screen of its own (Miyel, 2026-11-07).
+  if (final && inBar && canDeliver) {
+    return createPortal(
+      <div className="ln-print-bar ln-print-bar--ready" role="toolbar" aria-label="Your print is ready">
+        <div className="ln-print-told" aria-live="polite">
+          {status && <strong>{status}</strong>}
+          <span>{canSend ? 'Share it to your story, then add a Link sticker and paste.' : 'Download it, post it, then add your link.'}</span>
+        </div>
+        <button type="button" className="ln-print-save" onClick={onDeliver}>
+          {canSend ? <Export size={19} aria-hidden="true" /> : <DownloadSimple size={19} aria-hidden="true" />}
+          <span>{canSend ? 'Share' : 'Download'}</span>
+        </button>
+        <button type="button" className="ln-print-word" onClick={onBack}>Change something</button>
+      </div>,
+      document.body,
+    );
+  }
   if (final) {
     return createPortal(
       <div className="ln-print-pop" role="dialog" aria-modal="true" aria-label="Your print" onClick={onBack}>
@@ -83,10 +101,10 @@ export default function PrintBar({ sections = [], tab = null, onTab, away = fals
           </div>
         </>
       )}
-      <div className="ln-print-said" aria-live="polite">{status}</div>
-      <button type="button" className="ln-print-save" onClick={onSave}>
+      {!saving && <div className="ln-print-said" aria-live="polite">{status}</div>}
+      <button type="button" className="ln-print-save" onClick={onSave} disabled={saving}>
         <DownloadSimple size={19} aria-hidden="true" />
-        <span>Save</span>
+        <span>{saving ? 'Making your video…' : 'Save'}</span>
       </button>
     </div>
     </>,
