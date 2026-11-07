@@ -485,6 +485,10 @@ const COVERS_AT_A_TIME = 50;
 //             remembered — Friends adds Feed and List (GridDensity.js); the
 //             size is handed to `tile` beside the record. Unsaid, the
 //             journal's own wall has List and somebody else's the grid alone
+// The wall's print stands down while the record's is tried through the whole process
+// (Miyel, 2026-11-07). Built and whole; this brings its door back.
+const WALL_PRINT_OFFERED = false;
+
 function Journal({
   entries: given, loading: givenLoading, scroller, foot = null,
   records = null, tile = null, tail = null, filters = true, viewKey = VIEW_KEY,
@@ -1510,7 +1514,7 @@ function Journal({
           {/* The keeper's way to the printer, 2026-11-03: it prints what the
               wall is showing, so there is nothing to choose there
               (JournalPlate.js). */}
-          {printable && (
+          {printable && WALL_PRINT_OFFERED && (
             <Link
               href="/printer"
               className="arc-ctl"

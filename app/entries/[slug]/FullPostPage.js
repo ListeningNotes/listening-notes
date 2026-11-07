@@ -66,7 +66,7 @@ const PRINT_STORE = 'ln-printing';
 // `unlock` is what Animated is stored as, from when it had that name.
 const EFFECTS = ['unlock', 'still'];
 // A record's video: it opens in a second or so, then holds long enough to read.
-const PRINT_SECONDS = 6;
+const PRINT_SECONDS = 15;  // long enough to lay a song over it on a story (Miyel, 2026-11-07)
 const PRINT_SIZES = ['story', 'portrait', 'square'];
 const SIZE_SHAPES = { story: [112, 200], portrait: [150, 188], square: [170, 170] };
 // Said under the bar each time the printer opens, until the first tap of
