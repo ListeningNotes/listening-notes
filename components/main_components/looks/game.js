@@ -4,7 +4,7 @@
 // Game: everything becomes a HUD. The album is a slab with its sides showing,
 // turning over a slow fan of rays; the title is a logo, the horizon an XP bar. The
 // hairlines and bars borrow the album's one colour; the stars are gold and each mark its
-// own colour (Miyel, 2026-11-06). The keeper's face and name are in the frame's head.
+// own colour (Miyel, 2026-11-06). The mark and the keeper sit apart in the frame's head.
 // Cut, then brought back beside Commercial, with a night of its own (2026-11-06).
 //
 // Sizes are in `u`, a hundredth of a story's width at this paper's height, so
@@ -364,29 +364,34 @@ export const gameScene = night => (record, frame, { art, families, still = false
     // The frame in the album's colour, split at the head for the mark, which sits
     // centred on the line (Miyel, 2026-11-04).
     const inset = 4.4 * u, r = 2 * u;
+    const signature = signatureOf({ art, record, mono, height: 6.4 * u, colour: night ? '#ffffff' : dark });
     const markH = 4.6 * u, markW = markH * MARK_ASPECT;
-    const opening = markW / 2 + 2 * u;
     const x0 = inset, x1 = W - inset, y0 = story ? 13 * u : inset, y1 = H - inset;
+    // The mark at the left of the frame's head and the keeper at the right, each in its
+    // own gap in the line.
+    const clear = 1.4 * u;
+    const markX = x0 + 4 * u, nameX = x1 - 4 * u - (signature?.width || 0);
     c.strokeStyle = tone(0.5);
     c.lineWidth = 0.35 * u;
     c.beginPath();
-    c.moveTo(cx + opening, y0);
+    c.moveTo(markX + markW + clear, y0);
+    c.lineTo(signature ? nameX - clear : x1 - r, y0);
+    if (signature) c.moveTo(nameX + signature.width + clear, y0);
     c.arcTo(x1, y0, x1, y1, r);
     c.arcTo(x1, y1, x0, y1, r);
     c.arcTo(x0, y1, x0, y0, r);
-    c.arcTo(x0, y0, cx - opening, y0, r);
-    c.lineTo(cx - opening, y0);
+    c.arcTo(x0, y0, markX - clear, y0, r);
+    c.lineTo(markX - clear, y0);
     c.stroke();
     if (art?.mark) {
       c.drawImage(sheet(markW, markH, m => {
         m.drawImage(art.mark, 0, 0, markW, markH);
         m.globalCompositeOperation = 'source-in';
-        m.fillStyle = deep;
+        m.fillStyle = night ? '#ffffff' : dark;
         m.fillRect(0, 0, markW, markH);
-      }), cx - markW / 2, y0 - markH / 2);
+      }), markX, y0 - markH / 2);
     }
-    const signature = signatureOf({ art, record, mono, height: 6.4 * u, colour: night ? '#ffffff' : dark });
-    if (signature) c.drawImage(signature, cx - signature.width / 2, y0 + 3 * u);
+    if (signature) c.drawImage(signature, nameX, y0 - signature.height / 2);
   });
   const slab = coverPicture(art?.cover, size, { shade: 0.5, ring: tone(0.45) });
   const rays = rayPicture(170 * u, 'rgba(255,255,255,0.22)', 14);

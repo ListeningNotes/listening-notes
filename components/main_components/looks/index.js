@@ -25,7 +25,7 @@ import { INKS } from '../SharePrinter';
 import { paperScene } from './day';
 import { posterScene } from './poster';
 import { floodScene } from './flood';
-import { commercialScene } from './commercial';
+import { tvScene } from './tv';
 import { gameScene } from './game';
 import { tradingScene } from './trading';
 
@@ -36,8 +36,8 @@ export const LOOKS = [
   { key: 'poster-night', layout: 'poster', night: true, label: 'Poster', ink: '#ffffff', scene: posterScene(true) },
   { key: 'flood', layout: 'flood', night: false, label: 'Flood', ink: '#000000', scene: floodScene(false) },
   { key: 'flood-night', layout: 'flood', night: true, label: 'Flood', ink: '#ffffff', scene: floodScene(true) },
-  { key: 'commercial', layout: 'commercial', night: false, label: 'Commercial', ink: '#000000', scene: commercialScene(false) },
-  { key: 'commercial-night', layout: 'commercial', night: true, label: 'Commercial', ink: '#ffffff', scene: commercialScene(true) },
+  { key: 'tv', layout: 'tv', night: false, label: 'TV', ink: '#000000', scene: tvScene(false) },
+  { key: 'tv-night', layout: 'tv', night: true, label: 'TV', ink: '#ffffff', scene: tvScene(true) },
   { key: 'game', layout: 'game', night: false, label: 'Game', ink: '#000000', scene: gameScene(false) },
   { key: 'game-night', layout: 'game', night: true, label: 'Game', ink: '#ffffff', scene: gameScene(true) },
   { key: 'trading', layout: 'trading', night: false, label: 'Trading', ink: '#000000', scene: tradingScene(false) },
@@ -49,7 +49,7 @@ export const LAYOUTS = [
   { key: 'card', label: 'Card', Icon: Article },
   { key: 'poster', label: 'Poster', Icon: ImageSquare },
   { key: 'flood', label: 'Flood', Icon: PaintBucket },
-  { key: 'commercial', label: 'Commercial', Icon: Television },
+  { key: 'tv', label: 'TV', Icon: Television },
   { key: 'game', label: 'Game', Icon: GameController },
   { key: 'trading', label: 'Trading', Icon: Cards },
 ];
