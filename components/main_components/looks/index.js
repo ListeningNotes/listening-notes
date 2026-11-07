@@ -20,52 +20,41 @@
 // see is what saves.
 'use client';
 
-import { Article, Cards, Champagne, CircleHalf, Equalizer, GameController, ImageSquare, Monitor, Moon, PaintBucket, Path, Sparkle, Sun, Television } from '@phosphor-icons/react';
+import { Article, CirclesThree, CircleHalf, Equalizer, GridFour, ImageSquare, Moon, PaintBucket, Planet, Sun, Television } from '@phosphor-icons/react';
 import { INKS } from '../SharePrinter';
 import { paperScene } from './day';
-import { crtGround, fizzGround, glowGround, levelsGround, reflectGround, snakeGround } from './grounds';
+import { driftGround, levelsGround, orbsGround, reflectGround } from './grounds';
 import { posterScene } from './poster';
-import { floodScene } from './flood';
 import { tvScene } from './tv';
-import { gameScene } from './game';
-import { tradingScene } from './trading';
 
 export const LOOKS = [
   { key: 'day', layout: 'card', night: false, label: 'Day', ink: INKS.day.ink, scene: paperScene(false) },
   { key: 'night', layout: 'card', night: true, label: 'Night', ink: INKS.night.ink, scene: paperScene(true) },
-  // The room is always dark: it is the light that matters.
-  { key: 'glow', layout: 'glow', night: false, label: 'Glow', ink: INKS.night.ink, scene: paperScene(true, glowGround) },
-  { key: 'glow-night', layout: 'glow', night: true, label: 'Glow', ink: INKS.night.ink, scene: paperScene(true, glowGround) },
-  ...[['levels', 'Levels', levelsGround], ['reflect', 'Reflect', reflectGround], ['fizz', 'Fizz', fizzGround], ['snake', 'Snake', snakeGround], ['crt', 'CRT', crtGround]].flatMap(([key, label, ground]) => [
+  ...[['orbs', 'Orbs', orbsGround], ['levels', 'Levels', levelsGround], ['reflect', 'Reflect', reflectGround], ['drift', 'Drift', driftGround]].flatMap(([key, label, ground]) => [
     { key, layout: key, night: false, label, ink: INKS.day.ink, scene: paperScene(false, ground) },
     { key: `${key}-night`, layout: key, night: true, label, ink: INKS.night.ink, scene: paperScene(true, ground) },
   ]),
   { key: 'poster', layout: 'poster', night: false, label: 'Poster', ink: '#000000', scene: posterScene(false) },
   { key: 'poster-night', layout: 'poster', night: true, label: 'Poster', ink: '#ffffff', scene: posterScene(true) },
-  { key: 'flood', layout: 'flood', night: false, label: 'Flood', ink: '#000000', scene: floodScene(false) },
-  { key: 'flood-night', layout: 'flood', night: true, label: 'Flood', ink: '#ffffff', scene: floodScene(true) },
+  { key: 'tiles', layout: 'tiles', night: false, label: 'Tiles', ink: '#000000', scene: posterScene(false, { tiles: true }) },
+  { key: 'tiles-night', layout: 'tiles', night: true, label: 'Tiles', ink: '#ffffff', scene: posterScene(true, { tiles: true }) },
+  { key: 'flood', layout: 'flood', night: false, label: 'Flood', ink: '#000000', scene: posterScene(false, { reflected: true }) },
+  { key: 'flood-night', layout: 'flood', night: true, label: 'Flood', ink: '#ffffff', scene: posterScene(true, { reflected: true }) },
   { key: 'tv', layout: 'tv', night: false, label: 'TV', ink: '#000000', scene: tvScene(false) },
   { key: 'tv-night', layout: 'tv', night: true, label: 'TV', ink: '#ffffff', scene: tvScene(true) },
-  { key: 'game', layout: 'game', night: false, label: 'Game', ink: '#000000', scene: gameScene(false) },
-  { key: 'game-night', layout: 'game', night: true, label: 'Game', ink: '#ffffff', scene: gameScene(true) },
-  { key: 'trading', layout: 'trading', night: false, label: 'Trading', ink: '#000000', scene: tradingScene(false) },
-  { key: 'trading-night', layout: 'trading', night: true, label: 'Trading', ink: '#ffffff', scene: tradingScene(true) },
 ];
 
 // The doors: which layout, and which mode.
 export const LAYOUTS = [
   { key: 'card', label: 'Card', Icon: Article },
-  { key: 'glow', label: 'Glow', Icon: Sparkle },
+  { key: 'orbs', label: 'Orbs', Icon: CirclesThree },
   { key: 'levels', label: 'Levels', Icon: Equalizer },
   { key: 'reflect', label: 'Reflect', Icon: CircleHalf },
-  { key: 'fizz', label: 'Fizz', Icon: Champagne },
-  { key: 'snake', label: 'Snake', Icon: Path },
-  { key: 'crt', label: 'CRT', Icon: Monitor },
+  { key: 'drift', label: 'Drift', Icon: Planet },
   { key: 'poster', label: 'Poster', Icon: ImageSquare },
+  { key: 'tiles', label: 'Tiles', Icon: GridFour },
   { key: 'flood', label: 'Flood', Icon: PaintBucket },
   { key: 'tv', label: 'TV', Icon: Television },
-  { key: 'game', label: 'Game', Icon: GameController },
-  { key: 'trading', label: 'Trading', Icon: Cards },
 ];
 export const MODES = [
   { night: false, label: 'Day', Icon: Sun },

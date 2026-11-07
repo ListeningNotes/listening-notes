@@ -17,7 +17,7 @@ import { parseHorizon, entryTracks, splitNotes, parseRating, flawless } from '..
 import { buildReferenceIndex, createReferenceLinker } from '../../../library/cross_references';
 import SiteNav from '../../../components/main_components/SiteNav';
 import { createPortal } from 'react-dom';
-import { useLayerHeaderSlot, useFolder } from '../../../components/main_components/LayerEntry';
+import { useLayerHeaderSlot, useFolder, useReturnToSheet } from '../../../components/main_components/LayerEntry';
 import FolderFooter from '../../../components/main_components/FolderFooter';
 import KeeperTools from '../../../components/main_components/KeeperTools';
 import EditingBar from '../../../components/main_components/EditingBar';
@@ -311,6 +311,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   // entry underneath and closing it rebuilt the entry with the journal
   // flashing through. Then it was a sheet of its own over the entry, which
   // was the wrong shape for the front door. Now it is this page.
+  useReturnToSheet(`/entries/${entry.slug}`);
   const [printing, setPrinting] = useState(false);
   const printSwipe = useRef(null);
   const [printChoices, setPrintChoices] = useState(() => {
