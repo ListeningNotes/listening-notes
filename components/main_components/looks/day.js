@@ -7,7 +7,7 @@
 // under each, those not given as ghosts like unlit stars (2026-11-06), under a large mark
 // at the head, with no horizon (trying, 2026-11-06). It is the plain one on purpose.
 // Animated, the album and the words are there from the first frame and the stars and marks
-// turn on one by one, like lights, with no fade (Miyel, 2026-11-06). Still is the last
+// turn on one by one and glow gently, breathing, like lights (Miyel, 2026-11-06). Still is the last
 // moment as a picture. Not the posted date: a line nobody needed on a print (2026-09-12).
 //
 // The numbers are the post's own pixels, on a 340-wide column.
@@ -34,6 +34,8 @@ const MARKS = [
 ];
 const STARS_AT = 0.4, STAR_EVERY = 0.22;  // each star turning on
 const MARKS_AT = 1.6, MARK_EVERY = 0.28;  // each mark given
+const WARMS_IN = 0.35;                    // a light's glow coming up
+const smooth = v => v * v * (3 - 2 * v);
 
 export function paperScene(night) {
   return (record, frame, { art, families, still = false }) => {
@@ -90,6 +92,19 @@ export function paperScene(night) {
       c.stroke();
     });
 
+    // A light's glow, baked once: a shadow is dear on every frame. Its strength is how
+    // long it has been on, breathing slowly; on Still it just glows.
+    const halo = px(20);
+    const glowOf = (path, viewBox, box, colour) => sheet(box + halo * 2, box + halo * 2, g => {
+      g.shadowColor = colour;
+      g.shadowBlur = halo * 0.8;
+      drawPath(g, path, halo, halo, box, viewBox, colour);
+      drawPath(g, path, halo, halo, box, viewBox, colour);
+    });
+    const starGlow = glowOf(STAR_PATH, 18, px(STAR), GOLD);
+    const markGlows = Object.fromEntries(MARKS.map(({ tag, ink: lit }) => [tag, tags.includes(tag) ? glowOf(SYMBOLS[tag], 256, px(SYMBOL), lit) : null]));
+    const strength = since => (still ? 0.9 : smooth(clamp01(since / WARMS_IN)) * (0.78 + 0.22 * Math.sin(since * 2.4)));
+
     function paintAt(c, t) {
       c.fillStyle = ink.paper;
       c.fillRect(0, 0, W, H);
@@ -131,8 +146,15 @@ export function paperScene(night) {
           const sx = from + i * step;
           drawPath(c, STAR_PATH, sx, y, box, 18, ink.unlit);
           const part = clamp01(stars - i);
-          if (part > 0 && t >= STARS_AT + i * STAR_EVERY) {
+          const onAt = STARS_AT + i * STAR_EVERY;
+          if (part > 0 && t >= onAt) {
             c.save();
+            c.beginPath();
+            c.rect(sx - halo, y - halo, halo + box * part, box + halo * 2);
+            c.clip();
+            c.globalAlpha = strength(t - onAt);
+            c.drawImage(starGlow, sx - halo, y - halo);
+            c.globalAlpha = 1;
             c.beginPath();
             c.rect(sx, y, box * part, box);
             c.clip();
@@ -151,8 +173,14 @@ export function paperScene(night) {
       MARKS.forEach(({ tag, word, ink: lit }, i) => {
         const at = cx + (i - 1) * px(SYMBOL_ACROSS);
         const given = tags.includes(tag);
-        const on = given && t >= MARKS_AT + turn * MARK_EVERY;
+        const onAt = MARKS_AT + turn * MARK_EVERY;
+        const on = given && t >= onAt;
         if (given) turn += 1;
+        if (on) {
+          c.globalAlpha = strength(t - onAt);
+          c.drawImage(markGlows[tag], at - box / 2 - halo, y - halo);
+          c.globalAlpha = 1;
+        }
         drawPath(c, SYMBOLS[tag], at - box / 2, y, box, 256, on ? lit : ink.rule);
         c.font = `400 ${px(SYMBOL_WORD)}px ${mono}`;
         c.fillStyle = on ? lit : ink.faint;
