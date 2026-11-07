@@ -38,7 +38,7 @@ const MARKS_AT = 1.6, MARK_EVERY = 0.28;  // each mark given
 const WARMS_IN = 0.5;                     // a light coming up
 const smooth = v => v * v * (3 - 2 * v);
 
-export function paperScene(night) {
+export function paperScene(night, ground = null) {
   return (record, frame, { art, families, still = false }) => {
     const { stars, artistLine, tags, entry } = record;
     const { sans, mono } = families;
@@ -122,8 +122,11 @@ export function paperScene(night) {
     const signature = signatureOf({ art, record, mono, height: px(SIGN_H), colour: ink.soft, faceOnly: true });
 
     function paintAt(c, t) {
-      c.fillStyle = ink.paper;
-      c.fillRect(0, 0, W, H);
+      if (behind) behind.paint(c, t);
+      else {
+        c.fillStyle = ink.paper;
+        c.fillRect(0, 0, W, H);
+      }
       const cx = W / 2;
 
       // All of it centred in the room there is. The keeper's face and the mark sign off
@@ -204,10 +207,15 @@ export function paperScene(night) {
       if (art?.mark) c.drawImage(art.mark, signX + faceW, signY + px(SIGN_H * 0.07), markW, px(SIGN_H * 0.86));
     }
 
+    const behind = ground ? ground(record, frame, { art, night, still }) : null;
+
     let t = still ? 30 : 0;
     return {
       step(dt) { t += dt; },
-      paint(c) { paintAt(c, t); },
+      paint(c) {
+        paintAt(c, t);
+        behind?.over?.(c, t);
+      },
     };
   };
 }
