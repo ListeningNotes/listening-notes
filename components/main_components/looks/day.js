@@ -22,7 +22,7 @@ import {
 
 const COL = 340, ART = 265, ART_RADIUS = 16;
 const MARK_H = 72, MARK_TOP = 0.05, STORY_TOP = 0.09, STORY_FOOT = 0.11;
-const NAME = 18;
+const NAME = 27;
 const TITLE = 26, TITLE_LEAD = 26 * 1.22;
 const ARTIST = 11, ARTIST_LEAD = 11 * 1.4;
 const STAR = 44, STAR_GAP = 6;

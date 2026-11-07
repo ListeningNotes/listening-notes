@@ -161,7 +161,7 @@ export const tradingScene = night => (record, frame, { art, families, still = fa
     const footY = cardH - rim - 5.4 * u - band;
     const markH = 3.2 * u, markW = markH * MARK_ASPECT;
     c.drawImage(markIn(art, markW, markH, inkDark), pad, footY);
-    const signature = signatureOf({ art, record, mono, height: 4 * u, colour: inkDark });
+    const signature = signatureOf({ art, record, mono, height: 5.4 * u, colour: inkDark });
     if (signature) c.drawImage(signature, (cardW - signature.width) / 2, footY + markH / 2 - signature.height / 2);
     if (bars.length) {
       c.font = `400 ${2.1 * u}px ${mono}`;

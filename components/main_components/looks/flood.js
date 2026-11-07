@@ -64,8 +64,8 @@ export const floodScene = night => (record, frame, { art, families, still = fals
   const story = isStory(frame);
   const markY = (story ? 15 : 7) * u;
   const size = Math.min(W - margin * 2, H * (story ? 0.38 : 0.42));
-  const signature = signatureOf({ art, record, mono: families.mono, height: 4.2 * u, colour: night ? '#ffffff' : '#000000' });
-  const coverY = markY + markH + (signature ? 7.5 : 3.5) * u;
+  const signature = signatureOf({ art, record, mono: families.mono, height: 6.4 * u, colour: night ? '#ffffff' : '#000000' });
+  const coverY = markY + markH + (signature ? 9.8 : 3.5) * u;
   const cover = sheet(size, size, c => {
     roundRect(c, 0, 0, size, size, size * 0.06);
     c.clip();
