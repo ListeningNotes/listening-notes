@@ -9,15 +9,15 @@
 // colour layers, sliding sheets and a puzzle of flat shapes were all tried and let go
 // (Miyel, 2026-11-06). Nothing bounces.
 // The words, stars, marks and bars are all one colour, the album's strongest, deepened
-// by day and lifted at night so it reads; a cover with no colour of its own takes LN
-// green (Miyel, 2026-11-06). The title sits clear of the bars, since it would vanish on them.
+// by day and lifted at night so it reads; a black-and-white cover prints in black or
+// white (Miyel, 2026-11-06). The title sits clear of the bars, since it would vanish on them.
 //
 // Reading the colours is by the pixel. A cover that will not be read throws here, and
 // the print falls back to Day.
 'use client';
 
 import {
-  INKS, LN_GREEN, STAR_PATH, HEART_PATH, SYMBOLS, MARK_ASPECT,
+  INKS, STAR_PATH, HEART_PATH, SYMBOLS, MARK_ASPECT,
   drawArtist, drawPath, clamp01, sheet, fitTitle,
 } from '../SharePrinter';
 
@@ -56,13 +56,13 @@ export function hueOf(art) {
   return first * 10 + 5;
 }
 
-// The one colour on a plain page: deepened by day and lifted at night so it reads;
-// LN green on a cover with no colour of its own.
+// The one colour on a plain page: deepened by day and lifted at night so it reads. A
+// black-and-white cover prints in black by day and white at night (Miyel, 2026-11-06).
 export function inkOf(hue, night) {
   if (hue === null) {
     return night
-      ? { ink: LN_GREEN, faint: 'rgba(124,255,155,0.2)' }
-      : { ink: '#2e9c55', faint: 'rgba(46,156,85,0.2)' };
+      ? { ink: '#ffffff', faint: 'rgba(255,255,255,0.2)' }
+      : { ink: '#000000', faint: 'rgba(0,0,0,0.18)' };
   }
   // A yellow or a green only reads on a light page once it is quite deep.
   const light = night ? 64 : lightOfHue(hue) > 0.55 ? 32 : 46;
