@@ -4,8 +4,8 @@
 // Day and Night, the default: the card as it reads on the entry page, exported,
 // in day mode or night mode (Miyel, 2026-11-04). The page's own colour, the cover,
 // the title, the artist, the stars and a row of the three marks, large with a small word
-// under each, those not given as ghosts like unlit stars (2026-11-06), under the keeper's face
-// at the head and over the mark, signing off at the foot, with no horizon (trying, 2026-11-06). It is the plain one on purpose.
+// under each, those not given as ghosts like unlit stars (2026-11-06), over the keeper's face and
+// the mark, signing off together at the foot, with no horizon (trying, 2026-11-06). It is the plain one on purpose.
 // Animated, the album and the words are there from the first frame and the stars and marks
 // come up slowly and glow gently, breathing, like lights: the stars from the left, each
 // one starting as the last is warming, then the marks (Miyel, 2026-11-06). Still is the last
@@ -21,8 +21,7 @@ import {
 } from '../SharePrinter';
 
 const COL = 340, ART = 265, ART_RADIUS = 16;
-const HEAD_H = 30, SIGN_H = 26, STORY_TOP = 0.09, STORY_FOOT = 0.11;
-const NAME = 30;
+const SIGN_H = 30, STORY_TOP = 0.09, STORY_FOOT = 0.11;
 const TITLE = 26, TITLE_LEAD = 26 * 1.22;
 const ARTIST = 11, ARTIST_LEAD = 11 * 1.4;
 const STAR = 44, STAR_GAP = 6;
@@ -55,7 +54,7 @@ export function paperScene(night) {
       const titleLines = wrapLines(measure, entry?.album || '', COL * U, 3);
       measure.font = `400 ${ARTIST * U}px ${mono}`;
       const artistLines = wrapLines(measure, artistLine, COL * U * 0.86, 2);
-      const h = (HEAD_H + GAP + ART + GAP) * U + titleLines.length * TITLE_LEAD * U
+      const h = (ART + GAP) * U + titleLines.length * TITLE_LEAD * U
         + (artistLines.length ? GAP * 0.7 * U + artistLines.length * ARTIST_LEAD * U : 0)
         + (stars > 0 ? (GAP + STAR) * U : 0)
         + (GAP + SYMBOL + 4 + SYMBOL_WORD * 1.3) * U
@@ -116,20 +115,19 @@ export function paperScene(night) {
     const warmed = since => smooth(clamp01(since / WARMS_IN));
     const strength = since => (still ? 0.9 : warmed(since) * (0.78 + 0.22 * Math.sin(since * 2.4)));
 
-    const signature = signatureOf({ art, record, mono, height: px(NAME), colour: ink.soft, faceOnly: true });
+    const signature = signatureOf({ art, record, mono, height: px(SIGN_H), colour: ink.soft, faceOnly: true });
 
     function paintAt(c, t) {
       c.fillStyle = ink.paper;
       c.fillRect(0, 0, W, H);
       const cx = W / 2;
 
-      // Whose journal it is at the left, over the cover, like the head of a post, and the
-      // whole of it centred in the room there is. The mark signs off at the foot.
+      // All of it centred in the room there is. The keeper's face and the mark sign off
+      // together at the foot.
       const top = story
         ? H * STORY_TOP + Math.max(0, (H * (1 - STORY_TOP - STORY_FOOT) - laid.h) / 2)
         : (H - laid.h) / 2;
-      if (signature) c.drawImage(signature, cx - size / 2, top + (px(HEAD_H) - signature.height) / 2);
-      let y = top + px(HEAD_H + GAP);
+      let y = top;
 
       c.drawImage(card, cx - card.width / 2, y + size / 2 - card.height / 2);
       y += size + px(GAP);
@@ -209,11 +207,13 @@ export function paperScene(night) {
       });
       y += px(SYMBOL + 4 + SYMBOL_WORD * 1.3);
 
-      // The mark, small, signing off.
-      if (art?.mark) {
-        const mw = px(SIGN_H) * MARK_ASPECT;
-        c.drawImage(art.mark, cx - mw / 2, y + px(GAP * 1.6), mw, px(SIGN_H));
-      }
+      // The keeper's face right beside the mark's L, signing off together.
+      const signY = y + px(GAP * 1.6);
+      const markW = art?.mark ? px(SIGN_H * 0.86) * MARK_ASPECT : 0;
+      const faceW = signature ? signature.width + px(7) : 0;
+      const signX = cx - (faceW + markW) / 2;
+      if (signature) c.drawImage(signature, signX, signY);
+      if (art?.mark) c.drawImage(art.mark, signX + faceW, signY + px(SIGN_H * 0.07), markW, px(SIGN_H * 0.86));
     }
 
     let t = still ? 30 : 0;
