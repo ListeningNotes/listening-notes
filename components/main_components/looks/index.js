@@ -41,7 +41,7 @@ export const LOOKS = [
 ];
 
 // The doors: which layout, and which mode.
-export const LAYOUTS = [
+const ALL_LAYOUTS = [
   { key: 'card', label: 'Card', Icon: Article },
   { key: 'orbs', label: 'Orbs', Icon: CirclesThree },
   { key: 'levels', label: 'Levels', Icon: Equalizer },
@@ -55,5 +55,11 @@ export const MODES = [
   { night: true, label: 'Night', Icon: Moon },
 ];
 
-export const lookOf = key => LOOKS.find(look => look.key === key) || LOOKS[0];
+// Only the card is offered for now (Miyel, 2026-11-07: she is taking it through the whole
+// process, saving and posting, before choosing the rest). The others stay built, one word
+// from coming back. A choice remembered from one of them falls back to the card.
+const OFFERED = ['card'];
+export const LAYOUTS = ALL_LAYOUTS.filter(layout => OFFERED.includes(layout.key));
+
+export const lookOf = key => LOOKS.find(look => look.key === key && OFFERED.includes(look.layout)) || LOOKS[0];
 export const lookFor = (layout, night) => LOOKS.find(look => look.layout === layout && look.night === night);

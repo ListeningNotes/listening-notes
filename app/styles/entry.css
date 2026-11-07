@@ -1966,7 +1966,7 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
   /* The fixed logo row stands down while printing (below), so only the
      phone's own bar is cleared — the inset rides along on the home screen. */
   --print-top: calc(44px + env(safe-area-inset-top, 0px));
-  --print-bar: 240px;    /* the bar's rows */
+  --print-bar: 190px;    /* the bar's rows; 240px when the layouts have a row of their own */
   --print-side: 12px;
   --print-max: 520px;    /* the paper's width on a wide screen */
   display: flex; flex-direction: column; align-items: center; justify-content: center;
