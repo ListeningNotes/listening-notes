@@ -211,7 +211,7 @@ export const commercialScene = night => (record, frame, { art, families, still =
   });
   const artistY = ratingY + ratingH + 1 * u;
 
-  const signature = signatureOf({ art, record, mono, height: 4.6 * u, colour: '#ffffff' });
+  const signature = signatureOf({ art, record, mono, height: 6.8 * u, colour: '#ffffff' });
   const fine = [year, bars.length ? `${bars.length} ${bars.length === 1 ? 'TRACK' : 'TRACKS'}` : null].filter(Boolean).join(' · ');
   const slot = bars.length ? wide / bars.length : 0;
   const gold = sheet(1, Math.max(1, stripH), c => {
@@ -273,7 +273,7 @@ export const commercialScene = night => (record, frame, { art, families, still =
       c.textAlign = 'left';
     }
 
-    if (t >= 1.8 && signature) c.drawImage(signature, ox + margin, fineY - 0.8 * u);
+    if (t >= 1.8 && signature) c.drawImage(signature, ox + margin, fineY - 0.6 * u);
 
     // The stickers pop on, and go on wiggling.
     stickers.forEach((sticker, i) => {

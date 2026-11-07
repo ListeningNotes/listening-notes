@@ -222,8 +222,8 @@ export const posterScene = night => (record, frame, { art, families, still = fal
   // The mark and whose journal it is, on a tab of the sheet at the cover's foot, clear of
   // what Instagram lays over the top.
   const markH = 3.8 * u, markW = markH * MARK_ASPECT;
-  const signature = signatureOf({ art, record, mono: families.mono, height: 4.4 * u, colour: words });
-  const tab = sheet(markW + 3.6 * u + (signature ? signature.width + 1.6 * u : 0), Math.max(markH, 4.4 * u) + 2.4 * u, c => {
+  const signature = signatureOf({ art, record, mono: families.mono, height: 6.6 * u, colour: words });
+  const tab = sheet(markW + 3.6 * u + (signature ? signature.width + 1.6 * u : 0), Math.max(markH, 6.6 * u) + 2.4 * u, c => {
     c.fillStyle = SHEET;
     c.fillRect(0, 0, c.canvas.width, c.canvas.height);
     c.drawImage(markIn(art, markW, markH, words), 1.8 * u, (c.canvas.height - markH) / 2);

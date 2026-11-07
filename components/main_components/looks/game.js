@@ -385,7 +385,7 @@ export const gameScene = night => (record, frame, { art, families, still = false
         m.fillRect(0, 0, markW, markH);
       }), cx - markW / 2, y0 - markH / 2);
     }
-    const signature = signatureOf({ art, record, mono, height: 4.4 * u, colour: night ? '#ffffff' : dark });
+    const signature = signatureOf({ art, record, mono, height: 6.4 * u, colour: night ? '#ffffff' : dark });
     if (signature) c.drawImage(signature, cx - signature.width / 2, y0 + 3 * u);
   });
   const slab = coverPicture(art?.cover, size, { shade: 0.5, ring: tone(0.45) });
