@@ -28,8 +28,8 @@ const GAP = 12;
 const PAD = 0.07;
 const GOLD = '#E8B84B';
 const MARKS = [
-  { tag: 'fav', word: 'Favorite', ink: '#f0484f' },
   { tag: 'mp', word: 'Masterpiece', ink: '#4a9bf0' },
+  { tag: 'fav', word: 'Favorite', ink: '#f0484f' },
   { tag: 'formative', word: 'Formative', ink: '#3fa96b' },
 ];
 const STARS_AT = 0.4, STAR_EVERY = 0.22;  // each star turning on
