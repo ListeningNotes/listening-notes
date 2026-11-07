@@ -312,6 +312,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   // flashing through. Then it was a sheet of its own over the entry, which
   // was the wrong shape for the front door. Now it is this page.
   const [printing, setPrinting] = useState(false);
+  const printSwipe = useRef(null);
   const [printChoices, setPrintChoices] = useState(() => {
     try { return JSON.parse(sessionStorage.getItem(PRINT_STORE) || '{}') || {}; } catch { return {}; }
   });
@@ -603,6 +604,15 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   const parsedTracks = entryTracks(entry);
   const horizonBars = parseHorizon(entry.horizon);
   const printGlyph = (w, h) => <svg width="23" height="23" viewBox="0 0 256 256" aria-hidden="true"><rect x={(256 - w) / 2} y={(256 - h) / 2} width={w} height={h} rx="14" fill="none" stroke="currentColor" strokeWidth="16" /></svg>;
+  // A sideways swipe on the print turns to the next layout, like a story's filters.
+  const swipePrint = x => {
+    const from = printSwipe.current;
+    printSwipe.current = null;
+    if (from === null || Math.abs(x - from) < 40) return;
+    const at = LAYOUTS.findIndex(l => l.key === lookOf(ground).layout);
+    const next = LAYOUTS[(at + (x < from ? 1 : -1) + LAYOUTS.length) % LAYOUTS.length];
+    choosePrint({ ground: lookFor(next.key, lookOf(ground).night).key });
+  };
   const choosePrint = change => { if (!press.saving) setPrintChoices(c => ({ ...c, ...change })); };
   const printIcon = { size: 23, 'aria-hidden': true };
   const printSections = [
@@ -1475,7 +1485,15 @@ export default function FullPostPage({ entry, references = [], authed = false, l
           .ln-print-card are display: contents until then). */}
       <section className="ln-screen-one" style={printing ? { '--print-ratio': FRAMES[size].w / FRAMES[size].h } : undefined}>
         {printing && (
-          <canvas ref={liveCanvas} className="ln-print-live" role="img" aria-label={entry.album} />
+          <canvas
+            ref={liveCanvas}
+            className="ln-print-live"
+            role="img"
+            aria-label={entry.album}
+            style={{ touchAction: 'pan-y' }}
+            onPointerDown={event => { printSwipe.current = event.clientX; }}
+            onPointerUp={event => swipePrint(event.clientX)}
+          />
         )}
         <div className="ln-print-stack">
         <div className="ln-print-card">
