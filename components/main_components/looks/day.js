@@ -127,13 +127,11 @@ export function paperScene(night, ground = null) {
         c.fillStyle = ink.paper;
         c.fillRect(0, 0, W, H);
       }
+      if (fog) c.drawImage(fog, 0, fogY);
       const cx = W / 2;
 
       // All of it centred in the room there is. The keeper's face and the mark sign off
       // together at the foot.
-      const top = story
-        ? H * STORY_TOP + Math.max(0, (H * (1 - STORY_TOP - STORY_FOOT) - laid.h) / 2)
-        : (H - laid.h) / 2;
       let y = top;
 
       c.drawImage(card, cx - card.width / 2, y + size / 2 - card.height / 2);
@@ -208,6 +206,24 @@ export function paperScene(night, ground = null) {
     }
 
     const behind = ground ? ground(record, frame, { art, night, still }) : null;
+
+    // A soft bank of the page's colour behind the words, so the background can stay clear.
+    const top = story
+      ? H * STORY_TOP + Math.max(0, (H * (1 - STORY_TOP - STORY_FOOT) - laid.h) / 2)
+      : (H - laid.h) / 2;
+    const feather = px(56);
+    const fogY = top + size - feather * 0.6;
+    const fog = behind?.fog ? sheet(W, Math.max(1, top + laid.h + feather * 1.2 - fogY), f => {
+      const shade = night ? '14,14,14' : '238,240,236';
+      const tall = f.canvas.height;
+      const soft = f.createLinearGradient(0, 0, 0, tall);
+      soft.addColorStop(0, `rgba(${shade},0)`);
+      soft.addColorStop(Math.min(0.45, feather / tall), `rgba(${shade},0.9)`);
+      soft.addColorStop(Math.max(0.55, 1 - feather / tall), `rgba(${shade},0.9)`);
+      soft.addColorStop(1, `rgba(${shade},0)`);
+      f.fillStyle = soft;
+      f.fillRect(0, 0, W, tall);
+    }) : null;
 
     let t = still ? 30 : 0;
     return {
