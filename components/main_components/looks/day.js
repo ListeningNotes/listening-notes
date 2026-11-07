@@ -132,7 +132,7 @@ export function paperScene(night, ground = null) {
         c.fillRect(0, 0, W, H);
       }
       if (fog) c.drawImage(fog, 0, fogY);
-      if (!behind) paintHorizon(c, t);
+      if (!behind || behind.horizon) paintHorizon(c, t);
       const cx = W / 2;
 
       // The keeper's face and the mark side by side, centred over the cover (Miyel, 2026-11-07).
