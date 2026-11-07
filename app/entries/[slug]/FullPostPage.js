@@ -606,7 +606,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   const choosePrint = change => { if (!press.saving) setPrintChoices(c => ({ ...c, ...change })); };
   const printIcon = { size: 23, 'aria-hidden': true };
   const printSections = [
-    { key: 'card', label: 'Card', groups: [
+    { key: 'card', label: 'Card', stacked: true, groups: [
       LAYOUTS.map(l => ({ key: l.key, label: l.label, icon: <l.Icon {...printIcon} />, on: lookOf(ground).layout === l.key, press: () => choosePrint({ ground: lookFor(l.key, lookOf(ground).night).key }) })),
       MODES.map(m => ({ key: m.label, label: m.label, icon: <m.Icon {...printIcon} />, on: lookOf(ground).night === m.night, press: () => choosePrint({ ground: lookFor(lookOf(ground).layout, m.night).key }) })),
       PRINT_SIZES.map(key => ({ key, label: FRAMES[key].label, icon: printGlyph(...SIZE_SHAPES[key]), on: size === key, press: () => choosePrint({ size: key }) })),
