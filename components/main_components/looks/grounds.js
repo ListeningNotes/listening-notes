@@ -214,3 +214,64 @@ export function levelsGround(record, frame, { art, night }) {
     },
   };
 }
+
+// A dark room lit only by the album: its own colours thrown on the walls behind it, swelling
+// and fading with the beat, harder for a record rated higher (Miyel, 2026-11-07). `pulse`
+// tells the card how hard the music is hitting, so the cover and the lights move with it.
+export function glowGround(record, frame, { art, still, place }) {
+  const W = frame.w, H = frame.h;
+  const paper = INKS.night.paper;
+  const love = 0.35 + 0.65 * Math.min(1, (record.stars || 0) / 5);
+  const bloomOf = (reach, blur, saturate) => {
+    const side = place.size * reach;
+    return sheet(side, side, c => {
+      const cover = art?.cover;
+      if (cover?.naturalWidth) {
+        const inner = side * 0.62, at = (side - inner) / 2;
+        if (typeof c.filter === 'string') {
+          c.filter = `blur(${Math.round(place.size * blur)}px) saturate(${saturate})`;
+          c.drawImage(cover, at, at, inner, inner);
+          c.filter = 'none';
+        } else {
+          c.imageSmoothingQuality = 'high';
+          c.drawImage(sheet(8, 8, t => t.drawImage(cover, 0, 0, 8, 8)), at * 0.6, at * 0.6, side - at * 1.2, side - at * 1.2);
+        }
+      }
+      // Fades to nothing before its edge, so the light has no shape of its own.
+      c.globalCompositeOperation = 'destination-in';
+      const fade = c.createRadialGradient(side / 2, side / 2, side * 0.2, side / 2, side / 2, side * 0.5);
+      fade.addColorStop(0, 'rgba(0,0,0,1)');
+      fade.addColorStop(1, 'rgba(0,0,0,0)');
+      c.fillStyle = fade;
+      c.fillRect(0, 0, side, side);
+    });
+  };
+  const near = bloomOf(1.9, 0.14, 1.8);
+  const far = bloomOf(3.4, 0.26, 1.6);
+  const pulse = t => {
+    if (still) return 0.55;
+    const beat = Math.floor(t * BEATS);
+    const accent = beat % 4 === 0 ? 1 : beat % 2 === 0 ? 0.7 : 0.45;
+    const swell = 0.65 + 0.35 * Math.sin((t * Math.PI * 2) / 6 - Math.PI / 2);
+    return love * swell * (0.3 + 0.7 * kick(t) * accent);
+  };
+  const lay = (c, bloom, scale, alpha) => {
+    const side = bloom.width * scale;
+    c.globalAlpha = Math.min(1, alpha);
+    c.drawImage(bloom, W / 2 - side / 2, place.y - side / 2, side, side);
+  };
+  return {
+    fog: true,
+    pulse,
+    paint(c, t) {
+      c.fillStyle = paper;
+      c.fillRect(0, 0, W, H);
+      const hit = pulse(t);
+      c.save();
+      c.globalCompositeOperation = 'lighter';
+      lay(c, far, 1 + 0.18 * hit, 0.25 + 0.75 * hit);
+      lay(c, near, 1 + 0.08 * hit, 0.4 + 0.6 * hit);
+      c.restore();
+    },
+  };
+}

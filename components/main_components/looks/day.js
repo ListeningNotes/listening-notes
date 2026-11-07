@@ -134,7 +134,10 @@ export function paperScene(night, ground = null) {
       // together at the foot.
       let y = top;
 
-      c.drawImage(card, cx - card.width / 2, y + size / 2 - card.height / 2);
+      // Where a background sets a beat, the cover breathes with it.
+      const hit = behind?.pulse ? behind.pulse(t) : 0;
+      const drawn = card.width * (1 + 0.018 * hit);
+      c.drawImage(card, cx - drawn / 2, y + size / 2 - drawn / 2, drawn, drawn);
       y += size + px(GAP);
 
       c.textBaseline = 'top';
@@ -166,8 +169,9 @@ export function paperScene(night, ground = null) {
           const since = t - (STARS_AT + i * STAR_EVERY);
           if (part > 0 && since > 0) {
             // The whole star's glow, however much of it is lit, a half star's at half.
-            c.globalAlpha = strength(since) * part;
-            c.drawImage(starGlow, sx - halo, starY - halo);
+            c.globalAlpha = Math.min(1, strength(since) * part * (1 + 0.5 * hit));
+            const flare = starGlow.width * (1 + 0.28 * hit);
+            c.drawImage(starGlow, sx + starBox / 2 - flare / 2, starY + starBox / 2 - flare / 2, flare, flare);
             c.globalAlpha = warmed(since);
             c.save();
             c.beginPath();
@@ -185,8 +189,9 @@ export function paperScene(night, ground = null) {
           const since = t - (MARKS_AT + turn * MARK_EVERY);
           drawPath(c, SYMBOLS[tag], x, markY, markBox, 256, ink.rule);
           if (since > 0) {
-            c.globalAlpha = strength(since);
-            c.drawImage(markGlows[tag], x - halo, markY - halo);
+            c.globalAlpha = Math.min(1, strength(since) * (1 + 0.5 * hit));
+            const flare = markGlows[tag].width * (1 + 0.28 * hit);
+            c.drawImage(markGlows[tag], x + markBox / 2 - flare / 2, markY + markBox / 2 - flare / 2, flare, flare);
             c.globalAlpha = warmed(since);
             drawPath(c, SYMBOLS[tag], x, markY, markBox, 256, lit);
             c.globalAlpha = 1;
@@ -205,12 +210,11 @@ export function paperScene(night, ground = null) {
       if (art?.mark) c.drawImage(art.mark, signX + faceW, signY + px(SIGN_H * 0.07), markW, px(SIGN_H * 0.86));
     }
 
-    const behind = ground ? ground(record, frame, { art, night, still }) : null;
-
     // A soft bank of the page's colour behind the words, so the background can stay clear.
     const top = story
       ? H * STORY_TOP + Math.max(0, (H * (1 - STORY_TOP - STORY_FOOT) - laid.h) / 2)
       : (H - laid.h) / 2;
+    const behind = ground ? ground(record, frame, { art, night, still, place: { y: top + size / 2, size } }) : null;
     const feather = px(56);
     const fogY = top + size - feather * 0.6;
     const fog = behind?.fog ? sheet(W, Math.max(1, top + laid.h + feather * 1.2 - fogY), f => {
