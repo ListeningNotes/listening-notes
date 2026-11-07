@@ -121,10 +121,19 @@ export function levelsGround(record, frame, { art, night }) {
   };
 }
 
-// The cover blurred across the whole page, under an even wash of the page's colour so the
-// card reads clearly on it: simple and still (Miyel, 2026-11-07).
+// The cover blurred across the whole page, bright and full of its colour. Only the lower
+// part dims, gradually, for the words and lights to read on (Miyel, 2026-11-07).
 export function reflectGround(record, frame, { art, night }) {
-  const page = reflectionOf(art, frame.w, frame.h, night, night ? 0.55 : 0.5);
+  const W = frame.w, H = frame.h;
+  const blur = reflectionOf(art, W, H, night, night ? 0.12 : 0);
+  const page = sheet(W, H, c => {
+    c.drawImage(blur, 0, 0);
+    const dim = c.createLinearGradient(0, H * 0.5, 0, H * 0.72);
+    dim.addColorStop(0, 'rgba(14,14,14,0)');
+    dim.addColorStop(1, 'rgba(14,14,14,0.58)');
+    c.fillStyle = dim;
+    c.fillRect(0, H * 0.5, W, H * 0.5);
+  });
   return { horizon: true, paint(c) { c.drawImage(page, 0, 0); } };
 }
 
