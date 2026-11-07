@@ -4,8 +4,8 @@
 // Day and Night, the default: the card as it reads on the entry page, exported,
 // in day mode or night mode (Miyel, 2026-11-04). The page's own colour, the cover,
 // the title with the artist under it, and one line of the stars and the marks given
-// (2026-11-07), over the keeper's face and
-// the mark, signing off together at the foot, with no horizon (trying, 2026-11-06). It is the plain one on purpose.
+// (2026-11-07), under the keeper's face and
+// the mark at the head, with no horizon (trying, 2026-11-06). It is the plain one on purpose.
 // Animated, the album and the words are there from the first frame and the stars and marks
 // come up slowly and glow gently, breathing, like lights: the stars from the left, each
 // one starting as the last is warming, then the marks (Miyel, 2026-11-06). Still is the last
@@ -21,7 +21,7 @@ import {
 } from '../SharePrinter';
 
 const COL = 340, ART = 290, ART_RADIUS = 16;
-const SIGN_H = 30, STORY_TOP = 0.09, STORY_FOOT = 0.11;
+const HEAD_H = 34, STORY_TOP = 0.09, STORY_FOOT = 0.11;
 const TITLE = 26, TITLE_LEAD = 26 * 1.22;
 const ARTIST = 11, ARTIST_LEAD = 11 * 1.4;
 const STAR = 44, STAR_GAP = 6, MARK = 38, MARK_GAP = 8, MARKS_APART = 18;
@@ -59,10 +59,9 @@ export function paperScene(night, ground = null) {
       const titleLines = wrapLines(measure, entry?.album || '', COL * U, 3);
       measure.font = `400 ${ARTIST * U}px ${mono}`;
       const artistLines = wrapLines(measure, artistLine, COL * U * 0.86, 2);
-      const h = (ART + GAP) * U + titleLines.length * TITLE_LEAD * U
+      const h = (HEAD_H + GAP + ART + GAP) * U + titleLines.length * TITLE_LEAD * U
         + (artistLines.length ? GAP * 0.35 * U + artistLines.length * ARTIST_LEAD * U : 0)
-        + (rowH ? (GAP * 1.4 + rowH) * U : 0)
-        + (GAP * 1.6 + SIGN_H) * U;
+        + (rowH ? (GAP * 1.4 + rowH) * U : 0);
       return { titleLines, artistLines, h };
     };
     // A story leaves Instagram's top alone and the foot for the Link sticker.
@@ -119,7 +118,7 @@ export function paperScene(night, ground = null) {
     const warmed = since => smooth(clamp01(since / WARMS_IN));
     const strength = since => (still ? 0.9 : warmed(since) * (0.78 + 0.22 * Math.sin(since * 2.4)));
 
-    const signature = signatureOf({ art, record, mono, height: px(SIGN_H), colour: ink.soft, faceOnly: true });
+    const signature = signatureOf({ art, record, mono, height: px(HEAD_H), colour: ink.soft, faceOnly: true });
 
     function paintAt(c, t) {
       if (behind) behind.paint(c, t);
@@ -130,14 +129,16 @@ export function paperScene(night, ground = null) {
       if (fog) c.drawImage(fog, 0, fogY);
       const cx = W / 2;
 
-      // All of it centred in the room there is. The keeper's face and the mark sign off
-      // together at the foot.
-      let y = top;
+      // The keeper's face at the left and the mark at the right, over the cover, like the
+      // head of a post (Miyel, 2026-11-07).
+      if (signature) c.drawImage(signature, cx - size / 2, top + (px(HEAD_H) - signature.height) / 2);
+      if (art?.mark) {
+        const mw = px(HEAD_H * 0.8) * MARK_ASPECT;
+        c.drawImage(art.mark, cx + size / 2 - mw, top + px(HEAD_H * 0.1), mw, px(HEAD_H * 0.8));
+      }
+      let y = top + px(HEAD_H + GAP);
 
-      // Where a background sets a beat, the cover breathes with it.
-      const hit = behind?.pulse ? behind.pulse(t) : 0;
-      const drawn = card.width * (1 + 0.018 * hit);
-      c.drawImage(card, cx - drawn / 2, y + size / 2 - drawn / 2, drawn, drawn);
+      c.drawImage(card, cx - card.width / 2, y + size / 2 - card.height / 2);
       y += size + px(GAP);
 
       c.textBaseline = 'top';
@@ -169,9 +170,8 @@ export function paperScene(night, ground = null) {
           const since = t - (STARS_AT + i * STAR_EVERY);
           if (part > 0 && since > 0) {
             // The whole star's glow, however much of it is lit, a half star's at half.
-            c.globalAlpha = Math.min(1, strength(since) * part * (1 + 0.5 * hit));
-            const flare = starGlow.width * (1 + 0.28 * hit);
-            c.drawImage(starGlow, sx + starBox / 2 - flare / 2, starY + starBox / 2 - flare / 2, flare, flare);
+            c.globalAlpha = strength(since) * part;
+            c.drawImage(starGlow, sx - halo, starY - halo);
             c.globalAlpha = warmed(since);
             c.save();
             c.beginPath();
@@ -189,9 +189,8 @@ export function paperScene(night, ground = null) {
           const since = t - (MARKS_AT + turn * MARK_EVERY);
           drawPath(c, SYMBOLS[tag], x, markY, markBox, 256, ink.rule);
           if (since > 0) {
-            c.globalAlpha = Math.min(1, strength(since) * (1 + 0.5 * hit));
-            const flare = markGlows[tag].width * (1 + 0.28 * hit);
-            c.drawImage(markGlows[tag], x + markBox / 2 - flare / 2, markY + markBox / 2 - flare / 2, flare, flare);
+            c.globalAlpha = strength(since);
+            c.drawImage(markGlows[tag], x - halo, markY - halo);
             c.globalAlpha = warmed(since);
             drawPath(c, SYMBOLS[tag], x, markY, markBox, 256, lit);
             c.globalAlpha = 1;
@@ -201,13 +200,6 @@ export function paperScene(night, ground = null) {
         y += px(rowH);
       }
 
-      // The keeper's face right beside the mark's L, signing off together.
-      const signY = y + px(GAP * 1.6);
-      const markW = art?.mark ? px(SIGN_H * 0.86) * MARK_ASPECT : 0;
-      const faceW = signature ? signature.width + px(7) : 0;
-      const signX = cx - (faceW + markW) / 2;
-      if (signature) c.drawImage(signature, signX, signY);
-      if (art?.mark) c.drawImage(art.mark, signX + faceW, signY + px(SIGN_H * 0.07), markW, px(SIGN_H * 0.86));
     }
 
     // A soft bank of the page's colour behind the words, so the background can stay clear.
@@ -216,7 +208,7 @@ export function paperScene(night, ground = null) {
       : (H - laid.h) / 2;
     const behind = ground ? ground(record, frame, { art, night, still, place: { y: top + size / 2, size } }) : null;
     const feather = px(56);
-    const fogY = top + size - feather * 0.6;
+    const fogY = top + px(HEAD_H + GAP) + size - feather * 0.6;
     const fog = behind?.fog ? sheet(W, Math.max(1, top + laid.h + feather * 1.2 - fogY), f => {
       const shade = night ? '14,14,14' : '238,240,236';
       const tall = f.canvas.height;

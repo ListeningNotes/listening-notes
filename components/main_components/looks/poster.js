@@ -23,6 +23,8 @@ import {
 
 const GLIDES_IN = 0.9;                 // the cover
 const RISES_AT = 0.45, RISES_IN = 0.85; // everything under the cover
+const TILES_ACROSS = 2.6, TILE_IN = 0.8;  // the tide of dots, and each dot
+const TILES_DONE = 0.1 + TILES_ACROSS + TILE_IN;
 const PLAIN_FLOOR = 0.1;               // how much colour a cover needs to give an ink
 const SAMPLE = 360;
 
@@ -132,9 +134,50 @@ export function markIn(art, w, h, colour) {
   });
 }
 
+// The cover blurred across a whole page, under a wash of the page's colour. Safari's canvas
+// has no blur filter, so where it is missing a cover shrunk and stretched back does the job.
+export function reflectionOf(art, W, H, night, wash = 0) {
+  return sheet(W, H, c => {
+    c.fillStyle = (night ? INKS.night : INKS.day).paper;
+    c.fillRect(0, 0, W, H);
+    const cover = art?.cover;
+    if (cover?.naturalWidth) {
+      const side = Math.max(W, H) * 1.3;
+      const x = (W - side) / 2, y = (H - side) / 2;
+      if (typeof c.filter === 'string') {
+        c.filter = `blur(${Math.round(W * 0.03)}px) saturate(1.25)`;
+        c.drawImage(cover, x, y, side, side);
+        c.filter = 'none';
+      } else {
+        c.imageSmoothingQuality = 'high';
+        c.drawImage(sheet(12, 12, t => t.drawImage(cover, 0, 0, 12, 12)), x, y, side, side);
+      }
+    }
+    if (wash) {
+      c.fillStyle = night ? `rgba(14,14,14,${wash})` : `rgba(238,240,236,${wash})`;
+      c.fillRect(0, 0, W, H);
+    }
+  });
+}
+
+// A light's glow in its own shape, the shape itself drawn off the sheet so only its shadow lands.
+export function glowOf(path, viewBox, box, colour, halo) {
+  return sheet(box + halo * 2, box + halo * 2, g => {
+    const away = (box + halo * 2) * 2;
+    g.shadowColor = colour;
+    g.shadowBlur = halo * 0.7;
+    g.shadowOffsetX = away;
+    drawPath(g, path, halo - away, halo, box, viewBox, colour);
+    drawPath(g, path, halo - away, halo, box, viewBox, colour);
+  });
+}
+
+const warmed = since => { const v = clamp01(since / 0.5); return v * v * (3 - 2 * v); };
+const breathing = since => warmed(since) * (0.78 + 0.22 * Math.sin(since * 2.4));
+
 // The rows of words every look but the card shares: stars and marks, the artist, the
 // title. Measured for the room given, then painted wherever the look wants them.
-export function factRows({ record, families, u, wide, room, align = 'left', size = 14 }) {
+export function factRows({ record, families, u, wide, room, align = 'left', size = 14, lights = null }) {
   const { stars, artistLine, tags, entry } = record;
   const { sans, mono } = families;
   const fontAt = k => `900 ${size * k * u}px ${sans}`;
@@ -145,9 +188,14 @@ export function factRows({ record, families, u, wide, room, align = 'left', size
   const starBox = 7.6 * k * u, starGap = 1.1 * k * u;
   const markBox = 7.6 * k * u, markGap = 1.8 * k * u;
   const centre = align === 'center';
+  // With `lights`, the stars and marks come on one by one and glow, as on the card, all in
+  // the one colour.
+  const halo = 3.6 * k * u;
+  const starGlow = lights ? glowOf(STAR_PATH, 18, starBox, lights.colour, halo) : null;
+  const markGlows = lights ? Object.fromEntries(tags.map(tag => [tag, glowOf(SYMBOLS[tag], 256, markBox, lights.colour, halo)])) : {};
   return {
     height: heightAt(k, lines.length),
-    paint(c, x, top, ink, faint) {
+    paint(c, x, top, ink, faint, t = 30) {
       let y = top;
       if (stars > 0 || tags.length) {
         const across = (stars > 0 ? 5 * starBox + 4 * starGap : 0) + (tags.length ? (stars > 0 ? 3 * markGap : 0) + tags.length * markBox + (tags.length - 1) * markGap : 0);
@@ -156,20 +204,36 @@ export function factRows({ record, families, u, wide, room, align = 'left', size
           const sx = from + i * (starBox + starGap);
           drawPath(c, STAR_PATH, sx, y, starBox, 18, faint);
           const part = clamp01(stars - i);
-          if (part > 0) {
+          const since = lights ? t - (lights.starsAt + i * 0.2) : 1;
+          if (part > 0 && since > 0) {
+            if (lights) {
+              c.globalAlpha = (lights.still ? 0.9 : breathing(since)) * part;
+              c.drawImage(starGlow, sx - halo, y - halo);
+              c.globalAlpha = lights.still ? 1 : warmed(since);
+            }
             c.save();
             c.beginPath();
             c.rect(sx, y, starBox * part, starBox);
             c.clip();
-            drawPath(c, STAR_PATH, sx, y, starBox, 18, ink);
+            drawPath(c, STAR_PATH, sx, y, starBox, 18, lights ? lights.colour : ink);
             c.restore();
+            c.globalAlpha = 1;
           }
         }
         tags.forEach((tag, i) => {
           const mx = centre
             ? from + across - (tags.length - i) * markBox - (tags.length - i - 1) * markGap
             : x + wide - (tags.length - i) * markBox - (tags.length - i - 1) * markGap;
-          drawPath(c, SYMBOLS[tag], mx, y, markBox, 256, ink);
+          if (!lights) { drawPath(c, SYMBOLS[tag], mx, y, markBox, 256, ink); return; }
+          const since = t - (lights.starsAt + 1 + i * 0.28);
+          drawPath(c, SYMBOLS[tag], mx, y, markBox, 256, faint);
+          if (since > 0) {
+            c.globalAlpha = lights.still ? 0.9 : breathing(since);
+            c.drawImage(markGlows[tag], mx - halo, y - halo);
+            c.globalAlpha = lights.still ? 1 : warmed(since);
+            drawPath(c, SYMBOLS[tag], mx, y, markBox, 256, lights.colour);
+            c.globalAlpha = 1;
+          }
         });
         y += 10.5 * k * u;
       }
@@ -189,7 +253,9 @@ export function factRows({ record, families, u, wide, room, align = 'left', size
 
 export const easeOut = v => 1 - (1 - v) ** 3;
 
-export const posterScene = night => (record, frame, { art, families, still = false }) => {
+// `tiles`: the cover at the head fills in as a tide of dots that close up into the picture.
+// `reflected`: the page is the cover's own reflection, the words plain black or white.
+export const posterScene = (night, { tiles = false, reflected = false } = {}) => (record, frame, { art, families, still = false }) => {
   const SHEET = night ? INKS.night.paper : INKS.day.paper;
   const { bars, favs } = record;
   const W = frame.w, H = frame.h;
@@ -210,18 +276,43 @@ export const posterScene = night => (record, frame, { art, families, still = fal
   const clearance = bars.length ? 1.5 * u + (hasHearts ? heartBox + heartLift : 0) : 0;
   const wordsEnd = base - floorH - clearance - margin * (bars.length ? 0 : 1);
   const room = wordsEnd - roomTop;
-  const rows = factRows({ record, families, u, wide: W - margin * 2, room });
-  const rowsTop = wordsEnd - rows.height;
 
   // ── The picture ─────────────────────────────────────────────────────────────────────────────────────────────────────────────
-  const { ink: words, faint } = inkOf(hueOf(art), night);
+  const { ink: albumInk, faint: albumFaint } = inkOf(hueOf(art), night);
+  const words = reflected ? (night ? '#ffffff' : '#000000') : albumInk;
+  const faint = reflected ? (night ? 'rgba(255,255,255,0.22)' : 'rgba(0,0,0,0.18)') : albumFaint;
   const solid = coverOf(art, size);
+  const rows = factRows({
+    record, families, u, wide: W - margin * 2, room,
+    lights: { colour: albumInk, starsAt: RISES_AT + 0.5, still },
+  });
+  const rowsTop = wordsEnd - rows.height;
 
   // ── The sheet ─────────────────────────────────────────────────────────
-  const under = sheet(W, H, c => {
+  const under = reflected ? reflectionOf(art, W, H, night, 0.55) : sheet(W, H, c => {
     c.fillStyle = SHEET;
     c.fillRect(0, 0, W, H);
   });
+
+  // The tide of dots, corner to corner, each growing until it meets its neighbours.
+  const cells = 12, cell = size / cells;
+  function drawTiles(c, t) {
+    if (t >= TILES_DONE) { c.drawImage(solid, ax, 0); return; }
+    c.save();
+    c.beginPath();
+    for (let i = 0; i < cells; i++) {
+      for (let j = 0; j < cells; j++) {
+        const at = 0.1 + ((i + j) / (cells * 2 - 2)) * TILES_ACROSS;
+        const v = clamp01((t - at) / TILE_IN);
+        if (v <= 0) continue;
+        const grow = v * v * (3 - 2 * v), side = cell * 1.02 * grow;
+        c.roundRect(ax + i * cell + (cell - side) / 2, j * cell + (cell - side) / 2, side, side, side * 0.5 * (1 - grow * grow * 0.9));
+      }
+    }
+    c.clip();
+    c.drawImage(solid, ax, 0);
+    c.restore();
+  }
   // The mark and whose journal it is, on a tab of the sheet at the cover's foot, clear of
   // what Instagram lays over the top.
   const markH = 3.8 * u, markW = markH * MARK_ASPECT;
@@ -251,15 +342,20 @@ export const posterScene = night => (record, frame, { art, families, still = fal
     c.restore();
 
     const coverY = -(1 - easeOut(clamp01(t / GLIDES_IN))) * size;
-    c.drawImage(solid, ax, coverY);
-    c.drawImage(tab, ax, coverY + size - tab.height);
+    if (tiles) {
+      drawTiles(c, t);
+      c.drawImage(tab, ax, size - tab.height);
+    } else {
+      c.drawImage(solid, ax, coverY);
+      c.drawImage(tab, ax, coverY + size - tab.height);
+    }
 
     c.save();
     c.beginPath();
     c.rect(0, size, W, H - size);
     c.clip();
     c.translate(0, up);
-    rows.paint(c, margin, rowsTop, words, faint);
+    rows.paint(c, margin, rowsTop, words, faint, t);
 
     // A favourite: a heart standing on its bar, in the same one colour.
     bars.forEach((v, i) => {

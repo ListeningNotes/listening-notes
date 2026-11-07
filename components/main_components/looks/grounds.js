@@ -1,21 +1,18 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // components/main_components/looks/grounds.js
-// What can move behind the card (day.js): the same card with its lights, over a different
-// background, swiped through like a story's filters (Miyel, 2026-11-07, trying). Each is
-// `ground(record, frame, { art, night, still })`, returning `paint(c, t)`, `over(c, t)` if
-// it lies on top of the card as well, and `fog` if the card's words want a soft bank of the
-// page's colour behind them: the background itself stays clear (Miyel, 2026-11-07). Each is only ever the album's real cover, its
-// colours, or the page's. They run in fixed patterns, so the preview and the video agree.
+// What can move behind the card (day.js): the same card with its lights, over something
+// lovely and calm to watch (Miyel, 2026-11-07: "a moment of beauty"), swiped through like a
+// story's filters. Nothing bumps to a beat. Each is `ground(record, frame, { art, night })`,
+// returning `paint(c, t)`, with `fog` when the card's words want a soft bank of the page's
+// colour behind them, so the background itself stays clear. Each is only ever the album's
+// real cover or its colours, in fixed patterns, so the preview and the video agree.
 'use client';
 
 import { INKS, roundRect, sheet } from '../SharePrinter';
-import { coverOf, huesOf } from './poster';
+import { coverOf, reflectionOf } from './poster';
 
-// A print cannot hear anything, so the beat is made up: two to the second, which comes round
-// exactly on a six-second video. `kick` jumps on each beat and dies away.
-const BEATS = 2;
-const kick = t => Math.exp(-((t * BEATS) % 1) * 5);
+const TURN = Math.PI * 2;
 
 // A little pattern of chance that comes out the same every time.
 function dice(start) {
@@ -23,158 +20,79 @@ function dice(start) {
   return () => { seed = (seed * 16807) % 2147483647; return (seed % 100000) / 100000; };
 }
 
-// The cover blurred across the page. Safari's canvas has no blur filter, so where it is
-// missing a cover shrunk and stretched back does the job.
-export function reflectGround(record, frame, { art, night }) {
-  const W = frame.w, H = frame.h;
-  const page = sheet(W, H, c => {
-    c.fillStyle = (night ? INKS.night : INKS.day).paper;
-    c.fillRect(0, 0, W, H);
-    const cover = art?.cover;
-    if (cover?.naturalWidth) {
-      const side = Math.max(W, H) * 1.3;
-      const x = (W - side) / 2, y = (H - side) / 2;
-      if (typeof c.filter === 'string') {
-        c.filter = `blur(${Math.round(W * 0.03)}px) saturate(1.25)`;
-        c.drawImage(cover, x, y, side, side);
-        c.filter = 'none';
-      } else {
-        c.imageSmoothingQuality = 'high';
-        c.drawImage(sheet(12, 12, t => t.drawImage(cover, 0, 0, 12, 12)), x, y, side, side);
-      }
-    }
+// The cover's own colours, the vivid ones first, several and unlike each other.
+function paletteOf(art, most = 5) {
+  const side = 80;
+  const small = sheet(side, side, c => {
+    if (art?.cover?.naturalWidth) c.drawImage(art.cover, 0, 0, side, side);
+    else { c.fillStyle = '#888'; c.fillRect(0, 0, side, side); }
   });
-  return { fog: true, paint(c) { c.drawImage(page, 0, 0); } };
-}
-
-// Copies of the record drifting like a lava lamp: slow, some rising and some sinking,
-// tiny ones and huge ones, each taking its time (Miyel, 2026-11-07).
-export function fizzGround(record, frame, { art, night }) {
-  const W = frame.w, H = frame.h;
-  const u = Math.min(W, (H * 9) / 16) / 100;
-  const paper = (night ? INKS.night : INKS.day).paper;
-  const most = 46 * u;
-  const copy = sheet(most, most, c => {
-    roundRect(c, 0, 0, most, most, most * 0.08);
-    c.clip();
-    c.drawImage(coverOf(art, most), 0, 0);
-  });
-  const roll = dice(11);
-  const blobs = Array.from({ length: 15 }, () => {
-    const big = roll();
-    return {
-      x: roll() * W,
-      // Mostly small, with a few very large: squaring it keeps the large ones rare.
-      size: (4 + big * big * 42) * u,
-      takes: 16 + roll() * 22,          // seconds for the whole way up and back
-      phase: roll() * Math.PI * 2,
-      tilt: (roll() - 0.5) * 0.7,
-      spin: (roll() - 0.5) * 0.08,
-      sway: roll() * Math.PI * 2,
-      swayBy: (2 + roll() * 6) * u,
-    };
-  }).sort((a, b) => b.size - a.size);
-  return {
-    fog: true,
-    paint(c, t) {
-      c.fillStyle = paper;
-      c.fillRect(0, 0, W, H);
-      blobs.forEach(b => {
-        const reach = H / 2 + b.size / 2;
-        const y = H / 2 + reach * Math.sin(b.phase + (t * Math.PI * 2) / b.takes);
-        c.save();
-        c.translate(b.x + Math.sin(t * 0.25 + b.sway) * b.swayBy, y);
-        c.rotate(b.tilt + b.spin * t);
-        const size = b.size * (1 + 0.1 * kick(t));
-        c.drawImage(copy, -size / 2, -size / 2, size, size);
-        c.restore();
-      });
-    },
-  };
-}
-
-// A snake made of pieces of the cover, each piece the part of the picture it is passing
-// over, so its trail hints at the album as it winds about the page.
-export function snakeGround(record, frame, { art, night }) {
-  const W = frame.w, H = frame.h;
-  const u = Math.min(W, (H * 9) / 16) / 100;
-  const paper = (night ? INKS.night : INKS.day).paper;
-  const cell = 12.5 * u, gap = 0.7 * u;
-  const across = Math.ceil(W / cell), down = Math.ceil(H / cell);
-  const side = Math.max(W, H);
-  const picture = coverOf(art, side);
-  const offX = (W - side) / 2, offY = (H - side) / 2;
-  const roll = dice(29);
-  const path = [];
-  let x = Math.floor(across / 2), y = Math.floor(down / 2), dx = 1, dy = 0;
-  for (let i = 0; i < 1600; i++) {
-    path.push([x, y]);
-    const blocked = x + dx < 0 || x + dx >= across || y + dy < 0 || y + dy >= down;
-    if (blocked || roll() < 0.16) {
-      const left = roll() < 0.5;
-      [dx, dy] = dy ? [left ? 1 : -1, 0] : [0, left ? 1 : -1];
-      if (x + dx < 0 || x + dx >= across || y + dy < 0 || y + dy >= down) [dx, dy] = [-dx, -dy];
-    }
-    x += dx; y += dy;
+  const px = small.getContext('2d').getImageData(0, 0, side, side).data;
+  const boxes = new Map();
+  for (let i = 0; i < px.length; i += 4) {
+    const key = (px[i] >> 5) * 64 + (px[i + 1] >> 5) * 8 + (px[i + 2] >> 5);
+    const box = boxes.get(key) || { n: 0, r: 0, g: 0, b: 0 };
+    box.n++; box.r += px[i]; box.g += px[i + 1]; box.b += px[i + 2];
+    boxes.set(key, box);
   }
-  const SPEED = BEATS * 6;  // six cells to the beat
+  const pull = ({ n, r, g, b }) => n * (0.1 + (Math.max(r, g, b) - Math.min(r, g, b)) / n / 255);
+  const kept = [];
+  [...boxes.values()].sort((a, b) => pull(b) - pull(a)).forEach(({ n, r, g, b }) => {
+    const colour = [r / n, g / n, b / n];
+    if (kept.length < most && kept.every(k => Math.hypot(k[0] - colour[0], k[1] - colour[1], k[2] - colour[2]) >= 60)) kept.push(colour);
+  });
+  return kept.length ? kept : [[140, 140, 140]];
+}
+
+// Soft orbs of the album's colours, swirling slowly round one another.
+export function orbsGround(record, frame, { art, night }) {
+  const W = frame.w, H = frame.h;
+  const u = Math.min(W, (H * 9) / 16) / 100;
+  const paper = (night ? INKS.night : INKS.day).paper;
+  const palette = paletteOf(art);
+  const roll = dice(41);
+  const orbs = Array.from({ length: 9 }, (_, i) => {
+    const [r, g, b] = palette[i % palette.length];
+    const radius = (34 + roll() * 46) * u;
+    const art2 = sheet(radius * 2, radius * 2, c => {
+      const soft = c.createRadialGradient(radius, radius, 0, radius, radius, radius);
+      soft.addColorStop(0, `rgba(${r | 0},${g | 0},${b | 0},0.95)`);
+      soft.addColorStop(0.55, `rgba(${r | 0},${g | 0},${b | 0},0.5)`);
+      soft.addColorStop(1, `rgba(${r | 0},${g | 0},${b | 0},0)`);
+      c.fillStyle = soft;
+      c.fillRect(0, 0, radius * 2, radius * 2);
+    });
+    return {
+      art: art2,
+      radius,
+      wide: (20 + roll() * 45) * u,
+      tall: (30 + roll() * 70) * u,
+      takes: (14 + roll() * 20) * (roll() < 0.5 ? 1 : -1),
+      phase: roll() * TURN,
+      midX: W * (0.25 + roll() * 0.5),
+      midY: H * (0.15 + roll() * 0.7),
+    };
+  });
   return {
     fog: true,
     paint(c, t) {
       c.fillStyle = paper;
       c.fillRect(0, 0, W, H);
-      const head = Math.min(path.length - 1, Math.floor(t * SPEED));
-      const long = Math.min(70, 16 + t * 9);
-      for (let i = Math.max(0, head - Math.floor(long)); i <= head; i++) {
-        const [cx, cy] = path[i];
-        const px = cx * cell, py = cy * cell;
-        c.drawImage(picture, px - offX, py - offY, cell, cell, px + gap / 2, py + gap / 2, cell - gap, cell - gap);
-      }
+      c.save();
+      // Light adding up in the dark; by day, soft paint, which never goes muddy.
+      if (night) c.globalCompositeOperation = 'lighter';
+      orbs.forEach(o => {
+        const a = o.phase + (t * TURN) / o.takes;
+        c.drawImage(o.art, o.midX + Math.cos(a) * o.wide - o.radius, o.midY + Math.sin(a) * o.tall - o.radius);
+      });
+      c.restore();
     },
   };
 }
 
-// An old set: the album's colour with CRT lines over everything, the card included, and a
-// band rolling down the screen.
-export function crtGround(record, frame, { art, night, still }) {
-  const W = frame.w, H = frame.h;
-  const u = Math.min(W, (H * 9) / 16) / 100;
-  const { first: hue } = huesOf(art);
-  const page = sheet(W, H, c => {
-    const wash = c.createLinearGradient(0, 0, 0, H);
-    if (hue === null) {
-      wash.addColorStop(0, night ? '#0b0b0b' : '#d6d6d6');
-      wash.addColorStop(1, night ? '#2b2b2b' : '#f2f2f2');
-    } else {
-      wash.addColorStop(0, night ? `hsl(${hue},75%,10%)` : `hsl(${hue},85%,80%)`);
-      wash.addColorStop(1, night ? `hsl(${hue},80%,20%)` : `hsl(${hue},90%,90%)`);
-    }
-    c.fillStyle = wash;
-    c.fillRect(0, 0, W, H);
-  });
-  const pitch = Math.max(3, Math.round(0.55 * u));
-  const tube = sheet(W, H, c => {
-    c.fillStyle = 'rgba(0,0,0,0.2)';
-    for (let x = 0; x < W; x += pitch * 2) c.fillRect(x, 0, pitch, H);
-    c.fillStyle = 'rgba(0,0,0,0.04)';
-    for (let y = 0; y < H; y += pitch * 3) c.fillRect(0, y, W, pitch);
-  });
-  const bandH = 26 * u;
-  return {
-    paint(c) { c.drawImage(page, 0, 0); },
-    over(c, t) {
-      if (!still) {
-        c.fillStyle = 'rgba(255,255,255,0.08)';
-        c.fillRect(0, ((t % 2.6) / 2.6) * (H + bandH) - bandH, W, bandH);
-      }
-      c.drawImage(tube, 0, 0);
-    },
-  };
-}
-
-// A visualizer made of the record itself: every track a bar of the real cover, reaching in
-// from the top and the bottom of the page, as tall as its rating allows, jumping with the
-// beat and wandering a little on its own. Its waves all come round on the six-second video.
+// The horizon made of the record itself: every track a bar of the real cover, reaching in
+// from the top and the bottom of the page, as tall as its rating allows, rising and
+// settling very slowly.
 export function levelsGround(record, frame, { art, night }) {
   const W = frame.w, H = frame.h;
   const u = Math.min(W, (H * 9) / 16) / 100;
@@ -184,94 +102,130 @@ export function levelsGround(record, frame, { art, night }) {
   const offX = (W - side) / 2, offY = (H - side) / 2;
   const roll = dice(53);
   const source = record.bars.length ? record.bars : [0.7, 0.9, 0.6, 0.8, 1, 0.7, 0.85, 0.65];
-  const bands = source.map(level => ({
-    level: Math.max(0.25, level),
-    slow: 1 + Math.floor(roll() * 3),
-    quick: 4 + Math.floor(roll() * 5),
-    phase: roll() * Math.PI * 2,
-    punch: 0.35 + roll() * 0.65,
-  }));
+  const bands = source.map(level => ({ level: Math.max(0.3, level), phase: roll() * TURN, takes: 7 + roll() * 7 }));
   const slot = W / bands.length;
   const gap = Math.min(0.9 * u, slot * 0.12);
-  const reach = H * 0.5;
+  const reach = H * 0.42;
   return {
     fog: true,
     paint(c, t) {
       c.fillStyle = paper;
       c.fillRect(0, 0, W, H);
-      const hit = kick(t);
-      const turn = (t * Math.PI * 2) / 6;
       bands.forEach((band, i) => {
-        const move = 0.42
-          + 0.18 * Math.sin(turn * band.slow + band.phase)
-          + 0.1 * Math.sin(turn * band.quick + band.phase * 2)
-          + 0.3 * hit * band.punch;
-        const h = Math.max(2 * u, reach * band.level * Math.min(1, move));
+        const h = Math.max(2 * u, reach * band.level * (0.72 + 0.28 * Math.sin(band.phase + (t * TURN) / band.takes)));
         const x = i * slot + gap / 2, wide = slot - gap;
-        c.drawImage(picture, x - offX, 0 - offY, wide, h, x, 0, wide, h);
+        c.drawImage(picture, x - offX, -offY, wide, h, x, 0, wide, h);
         c.drawImage(picture, x - offX, H - h - offY, wide, h, x, H - h, wide, h);
       });
     },
   };
 }
 
-// A dark room lit only by the album: its own colours thrown on the walls behind it, swelling
-// and fading with the beat, harder for a record rated higher (Miyel, 2026-11-07). `pulse`
-// tells the card how hard the music is hitting, so the cover and the lights move with it.
-export function glowGround(record, frame, { art, still, place }) {
+// The cover's reflection, as on still water, with a drop landing now and then: rings that
+// spread and bend the picture as they pass.
+export function reflectGround(record, frame, { art, night }) {
   const W = frame.w, H = frame.h;
-  const paper = INKS.night.paper;
-  const love = 0.35 + 0.65 * Math.min(1, (record.stars || 0) / 5);
-  const bloomOf = (reach, blur, saturate) => {
-    const side = place.size * reach;
-    return sheet(side, side, c => {
-      const cover = art?.cover;
-      if (cover?.naturalWidth) {
-        const inner = side * 0.62, at = (side - inner) / 2;
-        if (typeof c.filter === 'string') {
-          c.filter = `blur(${Math.round(place.size * blur)}px) saturate(${saturate})`;
-          c.drawImage(cover, at, at, inner, inner);
-          c.filter = 'none';
-        } else {
-          c.imageSmoothingQuality = 'high';
-          c.drawImage(sheet(8, 8, t => t.drawImage(cover, 0, 0, 8, 8)), at * 0.6, at * 0.6, side - at * 1.2, side - at * 1.2);
-        }
-      }
-      // Fades to nothing before its edge, so the light has no shape of its own.
-      c.globalCompositeOperation = 'destination-in';
-      const fade = c.createRadialGradient(side / 2, side / 2, side * 0.2, side / 2, side / 2, side * 0.5);
-      fade.addColorStop(0, 'rgba(0,0,0,1)');
-      fade.addColorStop(1, 'rgba(0,0,0,0)');
-      c.fillStyle = fade;
-      c.fillRect(0, 0, side, side);
-    });
-  };
-  const near = bloomOf(1.9, 0.14, 1.8);
-  const far = bloomOf(3.4, 0.26, 1.6);
-  const pulse = t => {
-    if (still) return 0.55;
-    const beat = Math.floor(t * BEATS);
-    const accent = beat % 4 === 0 ? 1 : beat % 2 === 0 ? 0.7 : 0.45;
-    const swell = 0.65 + 0.35 * Math.sin((t * Math.PI * 2) / 6 - Math.PI / 2);
-    return love * swell * (0.3 + 0.7 * kick(t) * accent);
-  };
-  const lay = (c, bloom, scale, alpha) => {
-    const side = bloom.width * scale;
-    c.globalAlpha = Math.min(1, alpha);
-    c.drawImage(bloom, W / 2 - side / 2, place.y - side / 2, side, side);
-  };
+  const u = Math.min(W, (H * 9) / 16) / 100;
+  const page = reflectionOf(art, W, H, night);
+  const roll = dice(67);
+  const drops = Array.from({ length: 24 }, (_, i) => ({
+    at: i * 0.9 + roll() * 0.7,
+    x: roll() * W,
+    y: roll() * H,
+    size: 0.7 + roll() * 0.6,
+  }));
+  const SPREADS = 18 * u, LASTS = 3;
   return {
     fog: true,
-    pulse,
+    paint(c, t) {
+      c.drawImage(page, 0, 0);
+      const now = t % 22;
+      drops.forEach(d => {
+        const since = now - d.at;
+        if (since <= 0 || since > LASTS) return;
+        const fade = 1 - since / LASTS;
+        for (let ring = 0; ring < 3; ring++) {
+          const r = (since * SPREADS - ring * 7 * u) * d.size;
+          if (r <= 0) continue;
+          const wide = 2.4 * u;
+          c.save();
+          c.beginPath();
+          c.arc(d.x, d.y, r + wide, 0, TURN);
+          c.arc(d.x, d.y, Math.max(0, r - wide), 0, TURN, true);
+          c.clip();
+          // Through the ring the picture is drawn a little larger, as water bends it.
+          const lens = 1 + 0.05 * fade;
+          c.globalAlpha = fade;
+          c.drawImage(page, d.x - d.x * lens, d.y - d.y * lens, W * lens, H * lens);
+          c.restore();
+          c.globalAlpha = fade * 0.4;
+          c.strokeStyle = '#ffffff';
+          c.lineWidth = 0.28 * u;
+          c.beginPath();
+          c.arc(d.x, d.y, r, 0, TURN);
+          c.stroke();
+          c.globalAlpha = 1;
+        }
+      });
+    },
+  };
+}
+
+// Copies of the record drifting in deep space: huge and soft right up close, tiny and far
+// away at the back, each at its own speed, very dreamy.
+export function driftGround(record, frame, { art, night }) {
+  const W = frame.w, H = frame.h;
+  const u = Math.min(W, (H * 9) / 16) / 100;
+  const paper = (night ? INKS.night : INKS.day).paper;
+  const most = 70 * u;
+  const sharp = sheet(most, most, c => {
+    roundRect(c, 0, 0, most, most, most * 0.07);
+    c.clip();
+    c.drawImage(coverOf(art, most), 0, 0);
+  });
+  const soft = sheet(most, most, c => {
+    if (typeof c.filter === 'string') {
+      c.filter = `blur(${Math.round(most * 0.035)}px)`;
+      c.drawImage(sharp, most * 0.08, most * 0.08, most * 0.84, most * 0.84);
+      c.filter = 'none';
+    } else {
+      c.imageSmoothingQuality = 'high';
+      c.drawImage(sheet(28, 28, s => s.drawImage(sharp, 0, 0, 28, 28)), most * 0.08, most * 0.08, most * 0.84, most * 0.84);
+    }
+  });
+  const roll = dice(11);
+  const copies = Array.from({ length: 20 }, () => {
+    const depth = roll();
+    const near = depth * depth;
+    return {
+      depth,
+      size: (3.5 + near * 62) * u,
+      x: roll() * W,
+      y: roll() * H,
+      // Everything leans the same way, the near ones faster, as it would from a slow train.
+      vx: (0.6 + near * 11) * u * (0.6 + roll() * 0.8),
+      vy: (-0.4 - near * 5) * u * (0.6 + roll() * 0.8),
+      tilt: (roll() - 0.5) * 0.8,
+      spin: (roll() - 0.5) * 0.05,
+    };
+  }).sort((a, b) => a.depth - b.depth);
+  return {
+    fog: true,
     paint(c, t) {
       c.fillStyle = paper;
       c.fillRect(0, 0, W, H);
-      const hit = pulse(t);
-      c.save();
-      c.globalCompositeOperation = 'lighter';
-      lay(c, far, 1 + 0.18 * hit, 0.25 + 0.75 * hit);
-      lay(c, near, 1 + 0.08 * hit, 0.4 + 0.6 * hit);
-      c.restore();
+      copies.forEach(b => {
+        const rangeX = W + b.size * 2, rangeY = H + b.size * 2;
+        const x = ((((b.x + b.vx * t) % rangeX) + rangeX) % rangeX) - b.size;
+        const y = ((((b.y + b.vy * t) % rangeY) + rangeY) % rangeY) - b.size;
+        c.save();
+        c.translate(x, y);
+        c.rotate(b.tilt + b.spin * t);
+        // Only the middle distance is in focus.
+        c.globalAlpha = night ? 0.45 + b.depth * 0.55 : 0.55 + b.depth * 0.45;
+        c.drawImage(b.depth > 0.78 || b.depth < 0.22 ? soft : sharp, -b.size / 2, -b.size / 2, b.size, b.size);
+        c.restore();
+      });
     },
   };
 }

@@ -222,6 +222,39 @@ export function useFolder(folder, slug) {
 // On a phone `over` changes nothing: the stylesheet reads it above 769px only
 // (.lay--over-* in entry.css); this file does the leaving and measures the
 // growth from the sheet's own corner.
+// ── Coming back to a sheet, 2026-11-07 ──────────────────────────────────
+// A record open as a sheet over the wall has a whole-page twin at the same address, which
+// is what a link opens. A reload lands on the twin: nothing behind it, no pull to close, no
+// neighbours to swipe to. And a reload is what a phone does on coming back from another app
+// or running short of memory, both of them likely after making a print and posting it
+// (Miyel: "a weird isolated page from the rest of the site"). So a sheet remembers it is
+// open, for this tab only, and if its twin ever loads in its place the wall comes back
+// and reopens it.
+const SHEET_OPEN = 'ln-sheet-open', REOPEN = 'ln-sheet-reopen';
+const stored = {
+  get: key => { try { return sessionStorage.getItem(key); } catch { return null; } },
+  set: (key, value) => { try { sessionStorage.setItem(key, value); } catch { /* private mode */ } },
+  clear: key => { try { sessionStorage.removeItem(key); } catch { /* private mode */ } },
+};
+export function useReturnToSheet(path) {
+  const onSheet = !!useContext(LayerLeaving);
+  useEffect(() => {
+    if (onSheet) {
+      stored.set(SHEET_OPEN, path);
+      return () => stored.clear(SHEET_OPEN);
+    }
+    if (stored.get(SHEET_OPEN) === path) {
+      stored.clear(SHEET_OPEN);
+      stored.set(REOPEN, path);
+      window.location.replace('/');
+    }
+    return undefined;
+  }, [onSheet, path]);
+}
+// For the wall, once its tiles are there: what to reopen, if anything.
+export const sheetToReopen = () => stored.get(REOPEN);
+export const sheetReopened = () => stored.clear(REOPEN);
+
 export default function LayerEntry({ children, label = 'Entry', scrolls = false, arrives = 'tile', over = null, rise = 0, sheet = false }) {
   const sheetRef = useRef(null);
   const [headerSlot] = useState(() => (typeof document === 'undefined' ? null : document.createElement('div')));

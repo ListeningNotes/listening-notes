@@ -28,6 +28,7 @@
 'use client';
 
 import { Fragment, memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { sheetReopened, sheetToReopen } from './LayerEntry';
 import { ArrowsDownUp, CaretDown, Export, Moon, MoonStars, Sun, SunHorizon } from '@phosphor-icons/react';
 import { parseHorizon, parseRating } from '../../library/entry_formatter';
 import { readArtColor } from '../../library/music_data_api';
@@ -629,6 +630,26 @@ function Journal({
     () => window.matchMedia(`(max-width: ${FLIP_BELOW}px)`).matches,
     () => false,
   );
+
+  // A record that was open as a sheet when the page reloaded comes back, opened from its
+  // tile as if just tapped, so its neighbours and its pull to close are all there. Not on
+  // a frame: a phone coming back from another app may not be drawing yet.
+  useEffect(() => {
+    if (loading) return undefined;
+    let tries = 0;
+    const timer = setInterval(() => {
+      const path = sheetToReopen();
+      tries += 1;
+      if (!path) { clearInterval(timer); return; }
+      const tile = document.querySelector(`a[href="${path}"]`);
+      if (!tile && tries < 30) return;
+      clearInterval(timer);
+      sheetReopened();
+      if (tile) tile.click();
+      else window.location.assign(path);
+    }, 50);
+    return () => clearInterval(timer);
+  }, [loading]);
 
   useEffect(() => {
     if (supplied) return;
