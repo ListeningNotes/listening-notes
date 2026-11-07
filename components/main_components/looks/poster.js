@@ -143,7 +143,7 @@ export function reflectionOf(art, W, H, night, wash = 0) {
       const side = Math.max(W, H) * 1.3;
       const x = (W - side) / 2, y = (H - side) / 2;
       if (typeof c.filter === 'string') {
-        c.filter = `blur(${Math.round(W * 0.03)}px) saturate(1.25)`;
+        c.filter = `blur(${Math.round(W * 0.06)}px) saturate(1.25)`;
         c.drawImage(cover, x, y, side, side);
         c.filter = 'none';
       } else {

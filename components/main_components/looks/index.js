@@ -55,11 +55,13 @@ export const MODES = [
   { night: true, label: 'Night', Icon: Moon },
 ];
 
-// Only the card and its blurred Reflect are offered for now (Miyel, 2026-11-07: she is taking
-// them through the whole process, saving and posting, before choosing the rest). The others stay built, one word
-// from coming back. A choice remembered from one of them falls back to the card.
-const OFFERED = ['card', 'reflect'];
-export const LAYOUTS = ALL_LAYOUTS.filter(layout => OFFERED.includes(layout.key));
+// The doors for now: the card by day, by night, or on its own blurred cover (Miyel,
+// 2026-11-07). The other layouts stay built, one word from coming back. A choice remembered
+// from one of them falls back to the card.
+export const GROUNDS = [
+  { key: 'day', label: 'Day', Icon: Sun },
+  { key: 'night', label: 'Night', Icon: Moon },
+  { key: 'reflect-night', label: 'Reflect', Icon: CircleHalf },
+];
 
-export const lookOf = key => LOOKS.find(look => look.key === key && OFFERED.includes(look.layout)) || LOOKS[0];
-export const lookFor = (layout, night) => LOOKS.find(look => look.layout === layout && look.night === night);
+export const lookOf = key => LOOKS.find(look => look.key === key && GROUNDS.some(g => g.key === look.key)) || LOOKS[0];
