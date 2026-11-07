@@ -609,7 +609,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   const swipePrint = x => {
     const from = printSwipe.current;
     printSwipe.current = null;
-    if (from === null || Math.abs(x - from) < 40) return;
+    if (from === null || Math.abs(x - from) < 40 || LAYOUTS.length < 2) return;
     const at = LAYOUTS.findIndex(l => l.key === lookOf(ground).layout);
     const next = LAYOUTS[(at + (x < from ? 1 : -1) + LAYOUTS.length) % LAYOUTS.length];
     choosePrint({ ground: lookFor(next.key, lookOf(ground).night).key });
@@ -617,8 +617,8 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   const choosePrint = change => { if (!press.saving) setPrintChoices(c => ({ ...c, ...change })); };
   const printIcon = { size: 23, 'aria-hidden': true };
   const printSections = [
-    { key: 'card', label: 'Card', stacked: true, groups: [
-      LAYOUTS.map(l => ({ key: l.key, label: l.label, icon: <l.Icon {...printIcon} />, on: lookOf(ground).layout === l.key, press: () => choosePrint({ ground: lookFor(l.key, lookOf(ground).night).key }) })),
+    { key: 'card', label: 'Card', stacked: LAYOUTS.length > 1, groups: [
+      ...(LAYOUTS.length > 1 ? [LAYOUTS.map(l => ({ key: l.key, label: l.label, icon: <l.Icon {...printIcon} />, on: lookOf(ground).layout === l.key, press: () => choosePrint({ ground: lookFor(l.key, lookOf(ground).night).key }) }))] : []),
       MODES.map(m => ({ key: m.label, label: m.label, icon: <m.Icon {...printIcon} />, on: lookOf(ground).night === m.night, press: () => choosePrint({ ground: lookFor(lookOf(ground).layout, m.night).key }) })),
       PRINT_SIZES.map(key => ({ key, label: FRAMES[key].label, icon: printGlyph(...SIZE_SHAPES[key]), on: size === key, press: () => choosePrint({ size: key }) })),
       [
