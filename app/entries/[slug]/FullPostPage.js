@@ -22,7 +22,7 @@ import FolderFooter from '../../../components/main_components/FolderFooter';
 import KeeperTools from '../../../components/main_components/KeeperTools';
 import EditingBar from '../../../components/main_components/EditingBar';
 import { entryPlate } from '../../../components/main_components/EntryPlate';
-import { LAYOUTS, MODES, lookFor, lookOf } from '../../../components/main_components/looks';
+import { GROUNDS, lookOf } from '../../../components/main_components/looks';
 import { usePress, readFamilies } from '../../../hooks/usePress';
 import { FRAMES, FRAME_ORDER } from '../../../components/main_components/SharePrinter';
 import HorizonBar from '../../../components/main_components/Slug_Page/HorizonBar';
@@ -605,21 +605,19 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   const parsedTracks = entryTracks(entry);
   const horizonBars = parseHorizon(entry.horizon);
   const printGlyph = (w, h) => <svg width="23" height="23" viewBox="0 0 256 256" aria-hidden="true"><rect x={(256 - w) / 2} y={(256 - h) / 2} width={w} height={h} rx="14" fill="none" stroke="currentColor" strokeWidth="16" /></svg>;
-  // A sideways swipe on the print turns to the next layout, like a story's filters.
+  // A sideways swipe on the print turns to the next ground, like a story's filters.
   const swipePrint = x => {
     const from = printSwipe.current;
     printSwipe.current = null;
-    if (from === null || Math.abs(x - from) < 40 || LAYOUTS.length < 2) return;
-    const at = LAYOUTS.findIndex(l => l.key === lookOf(ground).layout);
-    const next = LAYOUTS[(at + (x < from ? 1 : -1) + LAYOUTS.length) % LAYOUTS.length];
-    choosePrint({ ground: lookFor(next.key, lookOf(ground).night).key });
+    if (from === null || Math.abs(x - from) < 40) return;
+    const at = GROUNDS.findIndex(g => g.key === ground);
+    choosePrint({ ground: GROUNDS[(at + (x < from ? 1 : -1) + GROUNDS.length) % GROUNDS.length].key });
   };
   const choosePrint = change => { if (!press.saving) setPrintChoices(c => ({ ...c, ...change })); };
   const printIcon = { size: 23, 'aria-hidden': true };
   const printSections = [
-    { key: 'card', label: 'Card', stacked: LAYOUTS.length > 2, groups: [
-      ...(LAYOUTS.length > 1 ? [LAYOUTS.map(l => ({ key: l.key, label: l.label, icon: <l.Icon {...printIcon} />, on: lookOf(ground).layout === l.key, press: () => choosePrint({ ground: lookFor(l.key, lookOf(ground).night).key }) }))] : []),
-      MODES.map(m => ({ key: m.label, label: m.label, icon: <m.Icon {...printIcon} />, on: lookOf(ground).night === m.night, press: () => choosePrint({ ground: lookFor(lookOf(ground).layout, m.night).key }) })),
+    { key: 'card', label: 'Card', groups: [
+      GROUNDS.map(g => ({ key: g.key, label: g.label, icon: <g.Icon {...printIcon} />, on: ground === g.key, press: () => choosePrint({ ground: g.key }) })),
       PRINT_SIZES.map(key => ({ key, label: FRAMES[key].label, icon: printGlyph(...SIZE_SHAPES[key]), on: size === key, press: () => choosePrint({ size: key }) })),
       [
         { key: 'unlock', label: 'Animated', icon: <Play {...printIcon} /> },
