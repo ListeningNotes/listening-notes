@@ -4,9 +4,10 @@
 // Poster: always the album's real cover, in a layout of its own: the cover edge to
 // edge at the head, the title printed over the bars (Miyel, 2026-11-05: "it's always
 // the album art, not any different version of it"). It comes in quickly and smoothly,
-// since most people tap through stories, but it does come in: the four inks of a
-// printed sleeve glide in from the corners as dots, the dots grow until they close into
-// the cover itself, and the bars rise as the words unroll from under it. Nothing bounces.
+// since most people tap through stories, but it does come in: the cover's own red, green
+// and blue, three layers of the actual image, glide in from the edges one after another
+// and add up to the cover itself where they meet. The bars rise as the words unroll from
+// under it. Nothing bounces.
 // The words, stars and marks take an ink from the album's own colours, deep on the day
 // sheet and pale on the night one. The bars are LN green on every record (Miyel,
 // 2026-11-06). At night the words turn the sheet's own black where they cross the
@@ -22,12 +23,10 @@ import {
 } from '../SharePrinter';
 
 const SHEETS = { day: '#f4f0e5', night: '#0e0e0e' };
-const LANDS_IN = 0.9;                  // each ink gliding in
-const INK_GAP = 0.12;                  // between one ink setting off and the next
-const PLATES_DONE = LANDS_IN + INK_GAP * 3;
-const CLOSES_IN = 0.45;                // the dots growing into the cover
-const COVER_DONE = PLATES_DONE + CLOSES_IN;
-const ROLLS_AT = 1.15, ROLLS_IN = 0.7; // the words and bars
+const LANDS_IN = 0.9;                  // each layer gliding in
+const LAYER_GAP = 0.12;                // between one layer setting off and the next
+const COVER_DONE = LANDS_IN + LAYER_GAP * 2;
+const ROLLS_AT = 0.7, ROLLS_IN = 0.7;  // the words and bars
 const FAR_ENOUGH = 60;                 // degrees of hue between the two to choose from
 const PLAIN_FLOOR = 0.1;               // how much colour a cover needs to give an ink
 const SAMPLE = 360;
@@ -80,31 +79,6 @@ function inksOf(px, night) {
 const smooth = v => v * v * (3 - 2 * v);
 const easeOut = v => 1 - (1 - v) ** 3;
 
-// One ink's plate: `density` says how much of it a pixel wants, and each dot on a grid
-// turned to `angle` is as large as the ink under it.
-function halftone(px, side, size, ink, angle, cell, density) {
-  return sheet(size, size, c => {
-    c.fillStyle = ink;
-    const cos = Math.cos(angle), sin = Math.sin(angle);
-    const reach = Math.ceil((size * 1.5) / cell);
-    for (let a = -reach; a <= reach; a++) {
-      for (let b = -reach; b <= reach; b++) {
-        const x = size / 2 + (a * cos - b * sin) * cell;
-        const y = size / 2 + (a * sin + b * cos) * cell;
-        if (x < -cell || y < -cell || x > size + cell || y > size + cell) continue;
-        const sx = Math.min(side - 1, Math.max(0, Math.round((x / size) * (side - 1))));
-        const sy = Math.min(side - 1, Math.max(0, Math.round((y / size) * (side - 1))));
-        const i = (sy * side + sx) * 4;
-        const amount = density(px[i] / 255, px[i + 1] / 255, px[i + 2] / 255);
-        if (amount < 0.04) continue;
-        c.beginPath();
-        c.arc(x, y, cell * 0.6 * Math.sqrt(amount), 0, Math.PI * 2);
-        c.fill();
-      }
-    }
-  });
-}
-
 function overprint(c, paint) {
   c.save();
   c.globalCompositeOperation = 'multiply';
@@ -143,55 +117,32 @@ export const posterScene = night => (record, frame, { art, families, still = fal
     else { c.fillStyle = '#999'; c.fillRect(0, 0, side, side); }
   });
   const px = small.getContext('2d').getImageData(0, 0, side, side).data;
-  const cell = Math.max(4, 0.72 * u);
   const { words, faint } = inksOf(px, night);
-  // Black takes most of what the three colours share, as on a press. Still never
-  // shows these, so they are only made for a print that moves.
-  const black = (r, g, b) => (1 - Math.max(r, g, b)) * 0.85;
-  const part = channel => (r, g, b) => {
-    const k = black(r, g, b);
-    return clamp01((1 - channel(r, g, b) - k) / Math.max(0.01, 1 - k));
-  };
-  const deg = Math.PI / 180;
-  const plates = still ? [] : [
-    { art: halftone(px, side, size, '#00aeef', 15 * deg, cell, part(r => r)), from: [-1, -1] },
-    { art: halftone(px, side, size, '#ec008c', 75 * deg, cell, part((r, g) => g)), from: [1, -1] },
-    { art: halftone(px, side, size, '#fff200', 0, cell, part((r, g, b) => b)), from: [-1, 1] },
-    { art: halftone(px, side, size, '#231f20', 45 * deg, cell, black), from: [1, 1] },
-  ];
 
-  // The real cover, and its opening: it shows through dots on
-  // one grid that grow until there is nothing between them.
+  // The real cover, and one layer of it per colour, each only that colour's part of the
+  // picture. Added together in register they are the cover, exactly. Still never shows
+  // the layers, so they are only made for a print that moves.
   const solid = sheet(size, size, c => {
     if (art?.cover?.naturalWidth) c.drawImage(art.cover, 0, 0, size, size);
     else { c.fillStyle = '#999'; c.fillRect(0, 0, size, size); }
   });
-  const closing = sheet(size, size, () => {});
-  const onClosing = closing.getContext('2d');
-  const grid = [];
-  const pitch = cell * 1.25;
-  for (let y = 0; y < size + pitch; y += pitch) {
-    for (let x = 0; x < size + pitch; x += pitch) grid.push(x, y);
-  }
-  function drawClosing(c, v) {
-    onClosing.globalCompositeOperation = 'source-over';
-    onClosing.clearRect(0, 0, size, size);
-    const r = pitch * 0.75 * v;
-    onClosing.beginPath();
-    for (let i = 0; i < grid.length; i += 2) {
-      onClosing.moveTo(grid[i] + r, grid[i + 1]);
-      onClosing.arc(grid[i], grid[i + 1], r, 0, Math.PI * 2);
-    }
-    onClosing.fillStyle = '#000';
-    onClosing.fill();
-    onClosing.globalCompositeOperation = 'source-in';
-    onClosing.drawImage(solid, 0, 0);
-    c.drawImage(closing, ax, 0);
-  }
-
-  // Ink only darkens paper, so at night the inks print onto a clear layer of their own,
-  // and the words simply lie on the black.
-  const inkLayer = night ? sheet(W, H, () => {}) : null;
+  const layerOf = colour => sheet(size, size, c => {
+    c.drawImage(solid, 0, 0);
+    c.globalCompositeOperation = 'multiply';
+    c.fillStyle = colour;
+    c.fillRect(0, 0, size, size);
+    c.globalCompositeOperation = 'destination-in';
+    c.drawImage(solid, 0, 0);
+  });
+  const layers = still ? [] : [
+    { art: layerOf('#ff0000'), from: [-1, -1] },
+    { art: layerOf('#00ff00'), from: [1, -1] },
+    { art: layerOf('#0000ff'), from: [0, 1] },
+  ];
+  // They add on a clear sheet of their own, then lie on the page.
+  const clear = sheet(W, H, () => {});
+  const onClear = clear.getContext('2d');
+  // The words overprint by day, and simply lie on the black at night.
   const lay = (c, paint) => (night ? paint() : overprint(c, paint));
 
   // ── The sheet ─────────────────────────────────────────────────────────
@@ -232,19 +183,17 @@ export const posterScene = night => (record, frame, { art, families, still = fal
       c.fillRect(i * slot + barGap / 2, H - h, slot - barGap, h);
     });
 
-    // The inks glide in, one after another, and their dots close into the cover.
+    // The layers glide in, one after another, and add up to the cover.
     if (t >= COVER_DONE) c.drawImage(solid, ax, 0);
     else {
-      const onInks = inkLayer ? inkLayer.getContext('2d') : c;
-      if (inkLayer) onInks.clearRect(0, 0, W, H);
-      overprint(onInks, () => {
-        plates.forEach((plate, i) => {
-          const away = 1 - easeOut(clamp01((t - i * INK_GAP) / LANDS_IN));
-          onInks.drawImage(plate.art, ax + plate.from[0] * away * W, plate.from[1] * away * H * 0.5);
-        });
+      onClear.globalCompositeOperation = 'source-over';
+      onClear.clearRect(0, 0, W, H);
+      onClear.globalCompositeOperation = 'lighter';
+      layers.forEach((layer, i) => {
+        const away = 1 - easeOut(clamp01((t - i * LAYER_GAP) / LANDS_IN));
+        onClear.drawImage(layer.art, ax + layer.from[0] * away * W, layer.from[1] * away * H * 0.5);
       });
-      if (inkLayer) c.drawImage(inkLayer, 0, 0);
-      if (t > PLATES_DONE) drawClosing(c, smooth(clamp01((t - PLATES_DONE) / CLOSES_IN)));
+      c.drawImage(clear, 0, 0);
     }
     c.drawImage(tab, 0, 0);
 
