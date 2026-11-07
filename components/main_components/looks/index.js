@@ -55,10 +55,10 @@ export const MODES = [
   { night: true, label: 'Night', Icon: Moon },
 ];
 
-// Only the card is offered for now (Miyel, 2026-11-07: she is taking it through the whole
-// process, saving and posting, before choosing the rest). The others stay built, one word
+// Only the card and its blurred Reflect are offered for now (Miyel, 2026-11-07: she is taking
+// them through the whole process, saving and posting, before choosing the rest). The others stay built, one word
 // from coming back. A choice remembered from one of them falls back to the card.
-const OFFERED = ['card'];
+const OFFERED = ['card', 'reflect'];
 export const LAYOUTS = ALL_LAYOUTS.filter(layout => OFFERED.includes(layout.key));
 
 export const lookOf = key => LOOKS.find(look => look.key === key && OFFERED.includes(look.layout)) || LOOKS[0];

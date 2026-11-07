@@ -121,54 +121,11 @@ export function levelsGround(record, frame, { art, night }) {
   };
 }
 
-// The cover's reflection, as on still water, with a drop landing now and then: rings that
-// spread and bend the picture as they pass.
+// The cover blurred across the whole page, under an even wash of the page's colour so the
+// card reads clearly on it: simple and still (Miyel, 2026-11-07).
 export function reflectGround(record, frame, { art, night }) {
-  const W = frame.w, H = frame.h;
-  const u = Math.min(W, (H * 9) / 16) / 100;
-  const page = reflectionOf(art, W, H, night);
-  const roll = dice(67);
-  const drops = Array.from({ length: 24 }, (_, i) => ({
-    at: i * 0.9 + roll() * 0.7,
-    x: roll() * W,
-    y: roll() * H,
-    size: 0.7 + roll() * 0.6,
-  }));
-  const SPREADS = 18 * u, LASTS = 3;
-  return {
-    fog: true,
-    paint(c, t) {
-      c.drawImage(page, 0, 0);
-      const now = t % 22;
-      drops.forEach(d => {
-        const since = now - d.at;
-        if (since <= 0 || since > LASTS) return;
-        const fade = 1 - since / LASTS;
-        for (let ring = 0; ring < 3; ring++) {
-          const r = (since * SPREADS - ring * 7 * u) * d.size;
-          if (r <= 0) continue;
-          const wide = 2.4 * u;
-          c.save();
-          c.beginPath();
-          c.arc(d.x, d.y, r + wide, 0, TURN);
-          c.arc(d.x, d.y, Math.max(0, r - wide), 0, TURN, true);
-          c.clip();
-          // Through the ring the picture is drawn a little larger, as water bends it.
-          const lens = 1 + 0.05 * fade;
-          c.globalAlpha = fade;
-          c.drawImage(page, d.x - d.x * lens, d.y - d.y * lens, W * lens, H * lens);
-          c.restore();
-          c.globalAlpha = fade * 0.4;
-          c.strokeStyle = '#ffffff';
-          c.lineWidth = 0.28 * u;
-          c.beginPath();
-          c.arc(d.x, d.y, r, 0, TURN);
-          c.stroke();
-          c.globalAlpha = 1;
-        }
-      });
-    },
-  };
+  const page = reflectionOf(art, frame.w, frame.h, night, night ? 0.55 : 0.5);
+  return { horizon: true, paint(c) { c.drawImage(page, 0, 0); } };
 }
 
 // Copies of the record drifting in deep space: huge and soft right up close, tiny and far
