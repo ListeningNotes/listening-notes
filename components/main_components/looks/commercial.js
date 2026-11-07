@@ -11,7 +11,7 @@
 'use client';
 
 import { HEART_PATH, MARK_ASPECT, SYMBOLS, clamp01, drawPath, sheet, wrapLines } from '../SharePrinter';
-import { coverOf, easeOut, huesOf, isStory, markIn } from './poster';
+import { coverOf, easeOut, huesOf, isStory, markIn, signatureOf } from './poster';
 
 const OUTLINE = '#120810';
 const NUMBERS = ['', 'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE'];
@@ -211,7 +211,8 @@ export const commercialScene = night => (record, frame, { art, families, still =
   });
   const artistY = ratingY + ratingH + 1 * u;
 
-  const fine = [record.keeper ? `${record.keeper.toUpperCase()}'S JOURNAL` : null, year, bars.length ? `${bars.length} ${bars.length === 1 ? 'TRACK' : 'TRACKS'}` : null].filter(Boolean).join(' · ');
+  const signature = signatureOf({ art, record, mono, height: 4.6 * u, colour: '#ffffff' });
+  const fine = [year, bars.length ? `${bars.length} ${bars.length === 1 ? 'TRACK' : 'TRACKS'}` : null].filter(Boolean).join(' · ');
   const slot = bars.length ? wide / bars.length : 0;
   const gold = sheet(1, Math.max(1, stripH), c => {
     const g = c.createLinearGradient(0, 0, 0, stripH);
@@ -265,12 +266,14 @@ export const commercialScene = night => (record, frame, { art, families, still =
     });
     if (t >= 1.8 && fine) {
       c.font = `400 ${2.3 * u}px ${mono}`;
-      c.textAlign = 'center';
+      c.textAlign = signature ? 'right' : 'center';
       c.textBaseline = 'top';
       c.fillStyle = '#ffffff';
-      c.fillText(fine, W / 2, fineY);
+      c.fillText(fine, signature ? ox + margin + wide : W / 2, fineY);
       c.textAlign = 'left';
     }
+
+    if (t >= 1.8 && signature) c.drawImage(signature, ox + margin, fineY - 0.8 * u);
 
     // The stickers pop on, and go on wiggling.
     stickers.forEach((sticker, i) => {

@@ -89,6 +89,35 @@ export function coverOf(art, size) {
   });
 }
 
+// Whose journal it is: the keeper's face in a circle and their name, and no other words,
+// to be set wherever suits the look (Miyel, 2026-11-06). Null with no name.
+export function signatureOf({ art, record, mono, height, colour }) {
+  const name = (record.keeper || '').toUpperCase();
+  if (!name) return null;
+  const px = height * 0.52, gap = height * 0.28;
+  const hasFace = art?.face?.naturalWidth;
+  const font = `400 ${px}px ${mono}`;
+  const measure = document.createElement('canvas').getContext('2d');
+  measure.font = font;
+  const across = (hasFace ? height + gap : 0) + measure.measureText(name).width;
+  return sheet(across, height, c => {
+    if (hasFace) {
+      const { naturalWidth: w, naturalHeight: h } = art.face;
+      const side = Math.min(w, h);
+      c.save();
+      c.beginPath();
+      c.arc(height / 2, height / 2, height / 2, 0, Math.PI * 2);
+      c.clip();
+      c.drawImage(art.face, (w - side) / 2, (h - side) / 2, side, side, 0, 0, height, height);
+      c.restore();
+    }
+    c.font = font;
+    c.textBaseline = 'middle';
+    c.fillStyle = colour;
+    c.fillText(name, hasFace ? height + gap : 0, height / 2 + px * 0.04);
+  });
+}
+
 // The mark, in one colour.
 export function markIn(art, w, h, colour) {
   return sheet(w, h, m => {
@@ -193,21 +222,12 @@ export const posterScene = night => (record, frame, { art, families, still = fal
   // The mark and whose journal it is, on a tab of the sheet at the cover's foot, clear of
   // what Instagram lays over the top.
   const markH = 3.8 * u, markW = markH * MARK_ASPECT;
-  const nameFont = `400 ${2.4 * u}px ${families.mono}`;
-  const keeper = (record.keeper || '').toUpperCase();
-  const namer = document.createElement('canvas').getContext('2d');
-  namer.font = nameFont;
-  const nameW = keeper ? namer.measureText(keeper).width + 2 * u : 0;
-  const tab = sheet(markW + 3.6 * u + nameW, markH + 2.4 * u, c => {
+  const signature = signatureOf({ art, record, mono: families.mono, height: 4.4 * u, colour: words });
+  const tab = sheet(markW + 3.6 * u + (signature ? signature.width + 1.6 * u : 0), Math.max(markH, 4.4 * u) + 2.4 * u, c => {
     c.fillStyle = SHEET;
     c.fillRect(0, 0, c.canvas.width, c.canvas.height);
-    c.drawImage(markIn(art, markW, markH, words), 1.8 * u, 1.2 * u);
-    if (keeper) {
-      c.font = nameFont;
-      c.textBaseline = 'middle';
-      c.fillStyle = words;
-      c.fillText(keeper, markW + 3.8 * u, c.canvas.height / 2 + 0.1 * u);
-    }
+    c.drawImage(markIn(art, markW, markH, words), 1.8 * u, (c.canvas.height - markH) / 2);
+    if (signature) c.drawImage(signature, markW + 3.4 * u, (c.canvas.height - signature.height) / 2);
   });
 
   const slot = bars.length ? W / bars.length : 0;
