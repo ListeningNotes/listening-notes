@@ -3,15 +3,19 @@
 // components/main_components/looks/grounds.js
 // What can move behind the card (day.js): the same card with its lights, over a different
 // background, swiped through like a story's filters (Miyel, 2026-11-07, trying). Each is
-// `ground(record, frame, { art, night, still })`, returning `paint(c, t)`, and `over(c, t)`
-// if it lies on top of the card as well. Each is only ever the album's real cover, its
+// `ground(record, frame, { art, night, still })`, returning `paint(c, t)`, `over(c, t)` if
+// it lies on top of the card as well, and `fog` if the card's words want a soft bank of the
+// page's colour behind them: the background itself stays clear (Miyel, 2026-11-07). Each is only ever the album's real cover, its
 // colours, or the page's. They run in fixed patterns, so the preview and the video agree.
 'use client';
 
 import { INKS, roundRect, sheet } from '../SharePrinter';
 import { coverOf, huesOf } from './poster';
 
-const veilOf = (night, amount = 0.62) => (night ? `rgba(14,14,14,${amount})` : `rgba(238,240,236,${amount})`);
+// A print cannot hear anything, so the beat is made up: two to the second, which comes round
+// exactly on a six-second video. `kick` jumps on each beat and dies away.
+const BEATS = 2;
+const kick = t => Math.exp(-((t * BEATS) % 1) * 5);
 
 // A little pattern of chance that comes out the same every time.
 function dice(start) {
@@ -39,10 +43,8 @@ export function reflectGround(record, frame, { art, night }) {
         c.drawImage(sheet(12, 12, t => t.drawImage(cover, 0, 0, 12, 12)), x, y, side, side);
       }
     }
-    c.fillStyle = veilOf(night);
-    c.fillRect(0, 0, W, H);
   });
-  return { paint(c) { c.drawImage(page, 0, 0); } };
+  return { fog: true, paint(c) { c.drawImage(page, 0, 0); } };
 }
 
 // Copies of the record drifting like a lava lamp: slow, some rising and some sinking,
@@ -73,6 +75,7 @@ export function fizzGround(record, frame, { art, night }) {
     };
   }).sort((a, b) => b.size - a.size);
   return {
+    fog: true,
     paint(c, t) {
       c.fillStyle = paper;
       c.fillRect(0, 0, W, H);
@@ -82,11 +85,10 @@ export function fizzGround(record, frame, { art, night }) {
         c.save();
         c.translate(b.x + Math.sin(t * 0.25 + b.sway) * b.swayBy, y);
         c.rotate(b.tilt + b.spin * t);
-        c.drawImage(copy, -b.size / 2, -b.size / 2, b.size, b.size);
+        const size = b.size * (1 + 0.1 * kick(t));
+        c.drawImage(copy, -size / 2, -size / 2, size, size);
         c.restore();
       });
-      c.fillStyle = veilOf(night, 0.36);
-      c.fillRect(0, 0, W, H);
     },
   };
 }
@@ -115,8 +117,9 @@ export function snakeGround(record, frame, { art, night }) {
     }
     x += dx; y += dy;
   }
-  const SPEED = 13;
+  const SPEED = BEATS * 6;  // six cells to the beat
   return {
+    fog: true,
     paint(c, t) {
       c.fillStyle = paper;
       c.fillRect(0, 0, W, H);
@@ -127,8 +130,6 @@ export function snakeGround(record, frame, { art, night }) {
         const px = cx * cell, py = cy * cell;
         c.drawImage(picture, px - offX, py - offY, cell, cell, px + gap / 2, py + gap / 2, cell - gap, cell - gap);
       }
-      c.fillStyle = veilOf(night, 0.36);
-      c.fillRect(0, 0, W, H);
     },
   };
 }
@@ -167,6 +168,49 @@ export function crtGround(record, frame, { art, night, still }) {
         c.fillRect(0, ((t % 2.6) / 2.6) * (H + bandH) - bandH, W, bandH);
       }
       c.drawImage(tube, 0, 0);
+    },
+  };
+}
+
+// A visualizer made of the record itself: every track a bar of the real cover, reaching in
+// from the top and the bottom of the page, as tall as its rating allows, jumping with the
+// beat and wandering a little on its own. Its waves all come round on the six-second video.
+export function levelsGround(record, frame, { art, night }) {
+  const W = frame.w, H = frame.h;
+  const u = Math.min(W, (H * 9) / 16) / 100;
+  const paper = (night ? INKS.night : INKS.day).paper;
+  const side = Math.max(W, H);
+  const picture = coverOf(art, side);
+  const offX = (W - side) / 2, offY = (H - side) / 2;
+  const roll = dice(53);
+  const source = record.bars.length ? record.bars : [0.7, 0.9, 0.6, 0.8, 1, 0.7, 0.85, 0.65];
+  const bands = source.map(level => ({
+    level: Math.max(0.25, level),
+    slow: 1 + Math.floor(roll() * 3),
+    quick: 4 + Math.floor(roll() * 5),
+    phase: roll() * Math.PI * 2,
+    punch: 0.35 + roll() * 0.65,
+  }));
+  const slot = W / bands.length;
+  const gap = Math.min(0.9 * u, slot * 0.12);
+  const reach = H * 0.5;
+  return {
+    fog: true,
+    paint(c, t) {
+      c.fillStyle = paper;
+      c.fillRect(0, 0, W, H);
+      const hit = kick(t);
+      const turn = (t * Math.PI * 2) / 6;
+      bands.forEach((band, i) => {
+        const move = 0.42
+          + 0.18 * Math.sin(turn * band.slow + band.phase)
+          + 0.1 * Math.sin(turn * band.quick + band.phase * 2)
+          + 0.3 * hit * band.punch;
+        const h = Math.max(2 * u, reach * band.level * Math.min(1, move));
+        const x = i * slot + gap / 2, wide = slot - gap;
+        c.drawImage(picture, x - offX, 0 - offY, wide, h, x, 0, wide, h);
+        c.drawImage(picture, x - offX, H - h - offY, wide, h, x, H - h, wide, h);
+      });
     },
   };
 }

@@ -20,10 +20,10 @@
 // see is what saves.
 'use client';
 
-import { Article, Cards, Champagne, CircleHalf, GameController, ImageSquare, Monitor, Moon, PaintBucket, Path, Sun, Television } from '@phosphor-icons/react';
+import { Article, Cards, Champagne, CircleHalf, Equalizer, GameController, ImageSquare, Monitor, Moon, PaintBucket, Path, Sun, Television } from '@phosphor-icons/react';
 import { INKS } from '../SharePrinter';
 import { paperScene } from './day';
-import { crtGround, fizzGround, reflectGround, snakeGround } from './grounds';
+import { crtGround, fizzGround, levelsGround, reflectGround, snakeGround } from './grounds';
 import { posterScene } from './poster';
 import { floodScene } from './flood';
 import { tvScene } from './tv';
@@ -33,7 +33,7 @@ import { tradingScene } from './trading';
 export const LOOKS = [
   { key: 'day', layout: 'card', night: false, label: 'Day', ink: INKS.day.ink, scene: paperScene(false) },
   { key: 'night', layout: 'card', night: true, label: 'Night', ink: INKS.night.ink, scene: paperScene(true) },
-  ...[['reflect', 'Reflect', reflectGround], ['fizz', 'Fizz', fizzGround], ['snake', 'Snake', snakeGround], ['crt', 'CRT', crtGround]].flatMap(([key, label, ground]) => [
+  ...[['levels', 'Levels', levelsGround], ['reflect', 'Reflect', reflectGround], ['fizz', 'Fizz', fizzGround], ['snake', 'Snake', snakeGround], ['crt', 'CRT', crtGround]].flatMap(([key, label, ground]) => [
     { key, layout: key, night: false, label, ink: INKS.day.ink, scene: paperScene(false, ground) },
     { key: `${key}-night`, layout: key, night: true, label, ink: INKS.night.ink, scene: paperScene(true, ground) },
   ]),
@@ -52,6 +52,7 @@ export const LOOKS = [
 // The doors: which layout, and which mode.
 export const LAYOUTS = [
   { key: 'card', label: 'Card', Icon: Article },
+  { key: 'levels', label: 'Levels', Icon: Equalizer },
   { key: 'reflect', label: 'Reflect', Icon: CircleHalf },
   { key: 'fizz', label: 'Fizz', Icon: Champagne },
   { key: 'snake', label: 'Snake', Icon: Path },
