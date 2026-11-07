@@ -121,13 +121,13 @@ export function paperScene(night, ground = null) {
 
     const signature = signatureOf({ art, record, mono, height: px(HEAD_H), colour: ink.soft, faceOnly: true });
 
-    // The horizon, faintly, rising from the foot of the page behind the words, its tallest
-    // bar reaching past the stars and marks (Miyel, 2026-11-07).
+    // The horizon, faintly, rising from the foot of the page, its tallest bar and its hearts
+    // stopping under the stars and marks (Miyel, 2026-11-07).
     function paintHorizon(c, t) {
       if (!bars.length) return;
       const rise = smooth(clamp01((t - HORIZON_AT) / HORIZON_IN));
       if (rise <= 0) return;
-      const tallest = H - (horizonTop() - px(2));
+      const tallest = Math.max(px(10), H - horizonTop() - px(GAP + 17));
       const slot = W / bars.length, gap = Math.min(px(4), slot * 0.14);
       const heart = Math.min(px(13), slot * 0.7);
       bars.forEach((v, i) => {
@@ -229,7 +229,7 @@ export function paperScene(night, ground = null) {
       ? H * STORY_TOP + Math.max(0, (H * (1 - STORY_TOP - STORY_FOOT) - laid.h) / 2)
       : (H - laid.h) / 2;
     const behind = ground ? ground(record, frame, { art, night, still, place: { y: top + size / 2, size } }) : null;
-    const horizonTop = () => top + laid.h - px(rowH);
+    const horizonTop = () => top + laid.h;
     const feather = px(56);
     const fogY = top + px(HEAD_H + GAP) + size - feather * 0.6;
     const fog = behind?.fog ? sheet(W, Math.max(1, top + laid.h + feather * 1.2 - fogY), f => {
