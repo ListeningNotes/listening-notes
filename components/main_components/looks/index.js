@@ -20,12 +20,14 @@
 // see is what saves.
 'use client';
 
-import { Article, ChartBarHorizontal, ImageSquare, Moon, PaintBucket, Sun, Television, TextAa } from '@phosphor-icons/react';
+import { Article, Cards, ChartBarHorizontal, GameController, ImageSquare, Moon, PaintBucket, Sun, Television, TextAa } from '@phosphor-icons/react';
 import { INKS } from '../SharePrinter';
 import { paperScene } from './day';
 import { posterScene } from './poster';
 import { floodScene } from './flood';
 import { commercialScene } from './commercial';
+import { gameScene } from './game';
+import { tradingScene } from './trading';
 import { sidewaysScene } from './sideways';
 import { headlineScene } from './headline';
 
@@ -38,6 +40,10 @@ export const LOOKS = [
   { key: 'flood-night', layout: 'flood', night: true, label: 'Flood', ink: '#ffffff', scene: floodScene(true) },
   { key: 'commercial', layout: 'commercial', night: false, label: 'Commercial', ink: '#000000', scene: commercialScene(false) },
   { key: 'commercial-night', layout: 'commercial', night: true, label: 'Commercial', ink: '#ffffff', scene: commercialScene(true) },
+  { key: 'game', layout: 'game', night: false, label: 'Game', ink: '#000000', scene: gameScene(false) },
+  { key: 'game-night', layout: 'game', night: true, label: 'Game', ink: '#ffffff', scene: gameScene(true) },
+  { key: 'trading', layout: 'trading', night: false, label: 'Trading', ink: '#000000', scene: tradingScene(false) },
+  { key: 'trading-night', layout: 'trading', night: true, label: 'Trading', ink: '#ffffff', scene: tradingScene(true) },
   { key: 'sideways', layout: 'sideways', night: false, label: 'Sideways', ink: '#000000', scene: sidewaysScene(false) },
   { key: 'sideways-night', layout: 'sideways', night: true, label: 'Sideways', ink: '#ffffff', scene: sidewaysScene(true) },
   { key: 'headline', layout: 'headline', night: false, label: 'Headline', ink: '#000000', scene: headlineScene(false) },
@@ -50,6 +56,8 @@ export const LAYOUTS = [
   { key: 'poster', label: 'Poster', Icon: ImageSquare },
   { key: 'flood', label: 'Flood', Icon: PaintBucket },
   { key: 'commercial', label: 'Commercial', Icon: Television },
+  { key: 'game', label: 'Game', Icon: GameController },
+  { key: 'trading', label: 'Trading', Icon: Cards },
   { key: 'sideways', label: 'Sideways', Icon: ChartBarHorizontal },
   { key: 'headline', label: 'Headline', Icon: TextAa },
 ];
