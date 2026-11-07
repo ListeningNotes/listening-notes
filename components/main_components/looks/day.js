@@ -129,13 +129,12 @@ export function paperScene(night, ground = null) {
       if (fog) c.drawImage(fog, 0, fogY);
       const cx = W / 2;
 
-      // The keeper's face at the left and the mark at the right, over the cover, like the
-      // head of a post (Miyel, 2026-11-07).
-      if (signature) c.drawImage(signature, cx - size / 2, top + (px(HEAD_H) - signature.height) / 2);
-      if (art?.mark) {
-        const mw = px(HEAD_H * 0.8) * MARK_ASPECT;
-        c.drawImage(art.mark, cx + size / 2 - mw, top + px(HEAD_H * 0.1), mw, px(HEAD_H * 0.8));
-      }
+      // The keeper's face and the mark side by side, centred over the cover (Miyel, 2026-11-07).
+      const mw = art?.mark ? px(HEAD_H * 0.8) * MARK_ASPECT : 0;
+      const faceW = signature ? signature.width + (mw ? px(9) : 0) : 0;
+      const headX = cx - (faceW + mw) / 2;
+      if (signature) c.drawImage(signature, headX, top + (px(HEAD_H) - signature.height) / 2);
+      if (art?.mark) c.drawImage(art.mark, headX + faceW, top + px(HEAD_H * 0.1), mw, px(HEAD_H * 0.8));
       let y = top + px(HEAD_H + GAP);
 
       c.drawImage(card, cx - card.width / 2, y + size / 2 - card.height / 2);
