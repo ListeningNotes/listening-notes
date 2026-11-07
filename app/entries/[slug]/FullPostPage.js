@@ -149,7 +149,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   // browser as the page opens (hooks/useSnippet.js). The column for the
   // buttons is held while Apple is being asked, so the rows do not jump right
   // when it answers; it goes again on a record where no track has a clip.
-  const snippet = useSnippet(entry.album, entry.artist);
+  const snippet = useSnippet(entry.album, entry.artist, entry.year);
   const snippetGutter = !!entry.album && (!snippet.ready || snippet.any);
 
   // ── The cover ─────────────────────────────────────────────────────────────

@@ -109,14 +109,14 @@ export function readArtColor(address) {
 // So a given id is tried first, and when it answers nothing the name search
 // runs as though no id had been given. What comes back names the id that
 // actually worked, so the caller can keep that one instead.
-export async function fetchTracklist(albumName, artistName, collectionId = null) {
+export async function fetchTracklist(albumName, artistName, collectionId = null, year = null) {
   try {
     const given = collectionId ? String(collectionId) : '';
     if (given) {
       const found = await songsOf(given);
       if (found) return found;
     }
-    const id = await findCollectionId(albumName, artistName);
+    const id = await findCollectionId(albumName, artistName, year);
     if (!id || String(id) === given) return null;
     return await songsOf(id);
   } catch { return null; }
@@ -124,7 +124,18 @@ export async function fetchTracklist(albumName, artistName, collectionId = null)
 
 // Step 1: the record's id, from a search on the name, scored so the plain
 // edition wins over the deluxe when both match. `norm` is the module's, below.
-async function findCollectionId(albumName, artistName) {
+//
+// ── The right one of several, 2026-11-07 ────────────────────────────────
+// Two ways the search used to land on the wrong record, both of them Miyel's (her "one of my
+// favorite parts of the site"): Skinty Fia, where Apple's search holds only the one-song
+// "Skinty Fia (Edit) - Single" and the album is on the artist's list alone; and Your Day
+// Will Come, two records of one name by one artist, 2024 and 2026. So a near title is no
+// longer taken while the artist's list may hold the exact one, a single or an EP loses to a
+// record unless that is what was asked for, and the year, where it is known, decides
+// between records of the same name.
+const SHORT_RELEASE = /\b(single|ep)\b|\(edit\)/;
+const yearOf = r => String(r.releaseDate || '').slice(0, 4);
+async function findCollectionId(albumName, artistName, year = null) {
   const query = encodeURIComponent(`${artistName} ${albumName}`);
   const searchRes = await fetch(`https://itunes.apple.com/search?term=${query}&entity=album&limit=25`);
   const searchData = await searchRes.json();
@@ -142,11 +153,21 @@ async function findCollectionId(albumName, artistName) {
     else if (rar.includes(nArtist) || nArtist.includes(rar)) score += 15;
     // Prefer a plain edition over deluxe/expanded when scores otherwise tie.
     if (/\b(deluxe|expanded|special|anniversary)\b/.test(ra)) score -= 3;
+    if (SHORT_RELEASE.test(ra) && !SHORT_RELEASE.test(nAlbum)) score -= 25;
+    if (year && yearOf(r) === String(year)) score += 25;
     if (score > bestScore) { bestScore = score; best = r; }
   }
-  // The album's name has to be in the answer for it to be this record.
-  if (best && bestScore >= 20 + 15) return best.collectionId;
-  return (await fromTheArtist(albumName, artistName)) || (best ? best.collectionId : null);
+  // The album's name has to be in the answer for it to be this record, and a near name
+  // only stands once the artist's own list has been asked for the exact one.
+  const exact = best && bestScore >= 20 + 15 && norm(best.collectionName || '') === nAlbum;
+  if (exact) {
+    // A record of this very name, but another year's: the artist's list is asked for this
+    // year's, and only one of this year's will do. A year saved for the first pressing,
+    // where Apple has only a later one, keeps the record the search found.
+    if (!year || yearOf(best) === String(year)) return best.collectionId;
+    return (await fromTheArtist(albumName, artistName, year, true)) || best.collectionId;
+  }
+  return (await fromTheArtist(albumName, artistName, year)) || (best ? best.collectionId : null);
 }
 
 // ── When the search does not know the record, 2026-10-13 ──────────────────
@@ -155,7 +176,7 @@ async function findCollectionId(albumName, artistName) {
 // Krule's albums include The OOZ. So the artist is found by name, their
 // albums are read, and the one whose title is the album's is taken — only an
 // exact title, since there is no search score here to weigh a near one.
-async function fromTheArtist(albumName, artistName) {
+async function fromTheArtist(albumName, artistName, year = null, thisYearOnly = false) {
   if (!artistName) return null;
   const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(artistName)}&entity=musicArtist&limit=5`);
   const data = await res.json();
@@ -164,8 +185,12 @@ async function fromTheArtist(albumName, artistName) {
   const look = await fetch(`https://itunes.apple.com/lookup?id=${artist.artistId}&entity=album&limit=200`);
   const lookData = await look.json();
   const albums = (lookData.results || []).filter(r => r.wrapperType === 'collection' && norm(r.collectionName) === norm(albumName));
-  // The record as it was made before its clean edit (songsOf, below).
-  const record = albums.find(r => r.collectionExplicitness === 'explicit') || albums[0];
+  // The year's record where there are several of the name, then the record as it was made
+  // before its clean edit (songsOf, below).
+  const ofYear = year ? albums.filter(r => yearOf(r) === String(year)) : [];
+  if (thisYearOnly && !ofYear.length) return null;
+  const pool = ofYear.length ? ofYear : albums;
+  const record = pool.find(r => r.collectionExplicitness === 'explicit') || pool[0];
   return record?.collectionId || null;
 }
 

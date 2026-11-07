@@ -107,7 +107,7 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
   // Thirty seconds of the song, and the way out to it (hooks/useSnippet.js).
   // A track note is about one song, so its preview gets the room: the large
   // button, a meter the width of the page, and the link under it.
-  const snippet = useSnippet(entry.album, entry.artist);
+  const snippet = useSnippet(entry.album, entry.artist, entry.year);
   const songPlay = snippet.playFor(null, entry.song);
   const songLink = snippet.songLinkFor(null, entry.song);
   const router = useRouter();
