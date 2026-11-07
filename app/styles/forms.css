@@ -2239,64 +2239,55 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 .ps-row-one--open .fr-live-name { color: var(--ink); }
 .ps-row-one:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 4px; border-radius: 10px; }
 
-/* ── Headlines, 2026-10-27 ──────────────────────────────────────────────────
-   Headlines.js: one sentence at a time between two hairlines, rolling up
-   like a departures board, the pips on the right. The stack holds two lines
-   of the sentence whatever is showing, so the page never jumps as it turns. */
-.hl {
-  display: flex; align-items: stretch; gap: 14px;
-  margin-top: 6px; padding: 14px 0;
-  border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+/* ── The top of Friends, 2026-10-30 ──────────────────────────────────────
+   Headlines.js. While a friend is logging, the Board band's cards (.fr-now,
+   above), set off from the top. While nobody is, what friends logged lately
+   drifting left to right, small covers with the friend and the record under
+   them (her pick, 2026-10-31). Bled to the screen's edges like the cards'
+   row; each cover carries its own room on the right, so the two halves of
+   the belt are one length and the lap has no seam. */
+.hl-now { margin-top: 6px; }
+.hl-drift {
+  margin-top: 6px; padding-bottom: 18px;
+  border-bottom: 1px solid var(--border);
 }
-.hl-stack {
-  position: relative; flex: 1; min-width: 0;
-  height: 66px; overflow: hidden;
+.hl-drift-window { margin: 0 -24px; padding-top: 16px; overflow: hidden; }
+.hl-drift-belt {
+  display: flex; width: max-content;
+  animation: hl-drift var(--drift-lap, 60s) linear infinite;
 }
-.hl-one {
-  position: absolute; inset: 0;
-  display: flex; align-items: flex-start; gap: 14px;
-  color: var(--ink); text-decoration: none;
+.hl-drift--still .hl-drift-belt,
+.hl-drift:active .hl-drift-belt { animation-play-state: paused; }
+@keyframes hl-drift {
+  from { transform: translateX(-50%); }
+  to   { transform: translateX(0); }
+}
+.hl-drift-one {
+  flex: 0 0 auto; display: flex; flex-direction: column;
+  width: 96px; box-sizing: border-box; padding-right: 12px;
+  color: inherit; text-decoration: none;
   -webkit-tap-highlight-color: transparent;
 }
-.hl-one--in { animation: hl-in 0.56s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
-.hl-one--out { animation: hl-out 0.56s cubic-bezier(0.22, 0.61, 0.36, 1) both; pointer-events: none; }
-@keyframes hl-in {
-  from { transform: translateY(100%); opacity: 0; }
-  to   { transform: none; opacity: 1; }
-}
-@keyframes hl-out {
-  from { transform: none; opacity: 1; }
-  to   { transform: translateY(-100%); opacity: 0; }
-}
-.hl-one:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: -2px; border-radius: 8px; }
-.hl-art {
-  flex: 0 0 50px; height: 50px; border-radius: 6px; overflow: hidden;
+.hl-drift-art {
+  position: relative; display: block;
+  width: 84px; height: 84px; border-radius: 8px; overflow: hidden;
   background: var(--bg-warm);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 }
-.hl-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.hl-words { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
-.hl-when {
-  font-family: var(--font-label); font-size: 9px; line-height: 1;
-  letter-spacing: 0.11em; text-transform: uppercase; color: var(--ink-faint);
-}
-.hl-said {
+.hl-drift-art > img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.hl-drift-who {
+  margin-top: 7px;
   font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
-  font-size: 19px; line-height: 1.2; color: var(--ink);
-  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
-  overflow-wrap: anywhere;
+  font-size: 12px; color: var(--ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.hl-title { font-style: italic; font-weight: 400; }
-.hl-mark--formative { color: var(--formative); }
-.hl-mark--fav { color: var(--fav); }
-.hl-mark--mp { color: var(--mp); }
-.hl-pips { flex: 0 0 auto; display: flex; flex-direction: column; justify-content: center; gap: 4px; }
-.hl-pip { width: 4px; height: 4px; border-radius: 50%; background: var(--ink-faint); opacity: 0.45; transition: opacity 0.3s, background 0.3s; }
-.hl-pip--on { background: var(--ink); opacity: 1; }
+.hl-drift-rec {
+  font-size: 11.5px; color: var(--ink-soft);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
 @media (prefers-reduced-motion: reduce) {
-  .hl-one--in { animation: hl-fade 0.3s ease both; }
-  .hl-one--out { animation: none; opacity: 0; }
-  @keyframes hl-fade { from { opacity: 0; } to { opacity: 1; } }
+  .hl-drift-window { overflow-x: auto; scrollbar-width: none; }
+  .hl-drift-belt { animation: none; }
 }
 
 /* Their doors, the book's own, opening under the line and folding shut
@@ -2317,7 +2308,7 @@ textarea.st-field { resize: vertical; min-height: 96px; }
    first in ink. A hairline between each, and above the quiet line. */
 .fp { display: flex; flex-direction: column; padding-top: 12px; border-top: 1px solid var(--border); margin-top: 6px; }
 .fp-one { display: flex; align-items: flex-start; gap: 14px; padding: 16px 0; border-top: 1px solid var(--border); }
-.fp-who + .fp-one { border-top: 0; padding-top: 10px; }
+.fp > .fp-one:first-child { border-top: 0; padding-top: 6px; }
 .fp-art-link { flex: 0 0 auto; display: block; border-radius: 8px; -webkit-tap-highlight-color: transparent; }
 .fp-art {
   flex: 0 0 auto; width: 60px; height: 60px; border-radius: 8px; overflow: hidden;
@@ -2354,38 +2345,62 @@ textarea.st-field { resize: vertical; min-height: 96px; }
   font-family: var(--font-label); font-size: 9px; line-height: 1.4;
   letter-spacing: 0.11em; text-transform: uppercase; color: var(--ink-faint);
 }
-/* Who it is from, at the head: their face small and their name, going to
-   their journal page. */
-.fp-who {
-  align-self: flex-start;
-  display: inline-flex; align-items: center; gap: 9px;
-  padding: 4px 0; color: var(--ink); text-decoration: none;
-  -webkit-tap-highlight-color: transparent;
-}
-.fp-who .fr-ring { width: 28px; flex-shrink: 0; }
-.fp-who-name {
-  font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
-  font-size: 15px; line-height: 1.2;
-}
-.fp-who svg { color: var(--ink-faint); }
-.fp-who:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; border-radius: 6px; }
-/* A stranger's head (step five): their face larger, their name, Not one of
-   your friends under it, and Add on the right — a head and not a link, since
-   nothing of theirs opens until they are added. */
-.fp-who--stranger { align-self: stretch; gap: 14px; }
-.fp-who--stranger .fr-ring { width: 52px; }
-.fp-who-says { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
-.fp-who--stranger .fp-who-name { font-size: 24px; line-height: 1.1; }
-.fp-who-not {
+/* No head (her review, 2026-10-29: "we already know who we're opening"):
+   a stranger has the one line the lit face in the row cannot say, centred
+   over the doors (step five). */
+.fp-not {
+  margin: 0 0 14px; text-align: center;
   font-family: var(--font-label); font-size: 9px; line-height: 1;
   letter-spacing: 0.11em; text-transform: uppercase; color: var(--ink-faint);
 }
-.fp-who-add { flex: 0 0 auto; }
 .fp-closed {
-  margin: 0; padding: 14px 0 4px; border-top: 1px solid var(--border);
+  margin: 0; padding: 14px 0 4px; border-top: 1px solid var(--border); text-align: center;
   font-family: var(--font-label); font-size: 9px; letter-spacing: 0.11em; text-transform: uppercase;
   color: var(--ink-faint);
 }
+/* A wave: the hand after Sends, its glyph level with the doors' glyphs and
+   no word under it, since it is not a door (2026-10-29). */
+.fp-wave {
+  position: relative; flex: 0 0 auto; display: inline-flex; align-self: flex-start;
+  padding: 6px; margin: -6px;
+  border: 0; background: none; color: var(--ink); cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.fp-wave:disabled { opacity: 0.45; cursor: default; }
+.fp-wave:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: -2px; border-radius: 8px; }
+/* The × that says pressing it lets the wave go. */
+.fp-wave-x {
+  position: absolute; right: 2px; bottom: 3px;
+  display: grid; place-items: center;
+  width: 12px; height: 12px; border-radius: 50%;
+  background: var(--ink); color: var(--bg);
+  box-shadow: 0 0 0 1.5px var(--bg);
+}
+/* Visit · Messages · Sends, the same three on every face (2026-10-29),
+   centred under the row (her review, the same day); what Messages or Sends
+   opens unrolls under them. A move above them gets a rule between. */
+.fp-doors--three { justify-content: center; gap: 8px 34px; margin-top: 8px; }
+.fp-one + .fp-doors--three { margin-top: 0; padding-top: 14px; border-top: 1px solid var(--border); }
+.fp-trouble--wave { margin-top: 10px; text-align: center; }
+/* A send's Listen · Dismiss, on the right of it (2026-10-29). */
+.fp-doors--side { flex: 0 0 auto; flex-wrap: nowrap; align-self: center; gap: 0 16px; margin-top: 0; }
+.fp-door-glyph { position: relative; display: inline-flex; }
+/* New on a door, above and right of its glyph, as on the top row's stops. */
+.fp-door-new {
+  position: absolute; top: -7px; left: calc(100% - 7px);
+  padding: 2px 4px 1px; font-size: 6.5px;
+  box-shadow: 0 0 0 1.5px var(--bg);
+  pointer-events: none;
+}
+.fp-under { display: flex; flex-direction: column; padding-top: 4px; }
+.fp-under > .fp-none, .fp-under > .fp-all { margin-top: 12px; }
+.fp-none { margin: 0; font-size: 13.5px; line-height: 1.45; color: var(--ink-faint); text-align: center; }
+.fp-all {
+  align-self: center; display: inline-flex; align-items: center; gap: 6px; padding: 4px 0;
+  font-family: var(--font-label); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--ink-soft); text-decoration: none;
+}
+.fp-all:hover { color: var(--ink); }
 /* Its answers: a glyph over one word each, as the site's doors are (her
    review, 2026-10-27: "i lost the icons"). */
 .fp-doors { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 6px; }
@@ -2898,7 +2913,8 @@ a.pn-quiet-act { text-decoration: none; display: inline-block; }
 }
 .wd-about-art { flex: 0 0 52px; height: 52px; border-radius: 6px; overflow: hidden; background: var(--panel); }
 .wd-about-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.wd-about-says { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.wd-about-says { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.wd-about-count { display: inline-flex; align-items: center; gap: 8px; }
 .wd-about-count, .wd-about-artist, .wd-when, .wd-kept {
   font-family: var(--font-label); font-size: 9px; line-height: 1.3;
   letter-spacing: 0.11em; text-transform: uppercase; color: var(--ink-faint);
@@ -2931,7 +2947,15 @@ a.pn-quiet-act { text-decoration: none; display: inline-block; }
   color: var(--ink-soft); -webkit-tap-highlight-color: transparent;
 }
 .wd-write:hover { color: var(--ink); }
+.wd-write:disabled { opacity: 0.45; cursor: default; }
+/* Write back, and on a friend's face Keep beside it. */
+.wd-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 0 26px; margin-top: 18px; }
+.wd-foot .wd-write { margin-top: 0; }
 .wd-form { margin-top: 14px; }
+/* The same conversations under Messages on a friend's face (Friend_panel.js,
+   2026-10-29): a rule between each, tighter than on their own page. */
+.fp-talks .wd-chain { padding: 14px 0 18px; }
+.fp-talk + .fp-talk .wd-chain { border-top: 1px solid var(--border); }
 .wd-said { margin: 24px 0; font-size: 15px; line-height: 1.5; color: var(--ink-soft); }
 .wd-kept { margin: 18px 0 0; padding-top: 14px; border-top: 1px solid var(--border); }
 /* The counted facts, one table: the card's label-and-answer shape. */

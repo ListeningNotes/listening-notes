@@ -30,6 +30,10 @@
 //
 // What they wrote is opened by reading it here: it stops saying New on
 // their face, and nothing is told to anybody.
+//
+// The conversations themselves are drawn by `Conversation`, which Messages
+// on a friend's face draws too (Friend_panel.js, 2026-10-29: Miyel, "They
+// should look like conversations under the album that was sent").
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -53,6 +57,100 @@ function stamp(iso) {
 // The record a thing was said about, as a key: the journal it lives on
 // (empty for this journal's own) and its slug. Empty for no record.
 const aboutOf = w => (w.about_slug ? `${tidyJournal(w.about_journal || '') || ''}/${w.about_slug}` : '');
+
+// Each record's words together, oldest first inside; the record whose
+// words moved last at the top; no record last of all.
+export function chainsOf(words) {
+  const by = new Map();
+  for (const w of words || []) {
+    const key = aboutOf(w);
+    let chain = by.get(key);
+    if (!chain) { chain = { key, words: [] }; by.set(key, chain); }
+    chain.words.push(w);
+  }
+  return [...by.values()].map(c => {
+    const lead = c.words.find(w => w.about_album || w.about_song) || c.words[0];
+    const last = c.words[c.words.length - 1];
+    // What Write back answers: the newest thing they said here.
+    const answer = [...c.words].reverse().find(w => w.side === 'theirs') || null;
+    return {
+      ...c,
+      album: lead.about_album || '',
+      artist: lead.about_artist || '',
+      art: lead.about_art || '',
+      song: lead.about_song || '',
+      lastAt: Date.parse(last.at) || 0,
+      answer,
+    };
+  }).sort((a, b) => (a.key === '' ? 1 : b.key === '' ? -1 : b.lastAt - a.lastAt));
+}
+
+// What a landed reply adds to the words, at once: the reply, on the record
+// its answer was about.
+export function withReply(words, chain, said, at) {
+  return [...words, {
+    id: `new-${Date.now()}`, side: 'mine', said, at,
+    about_journal: chain.answer.about_journal, about_slug: chain.answer.about_slug,
+    about_album: chain.answer.about_album, about_artist: chain.answer.about_artist,
+    about_art: chain.answer.about_art, about_song: chain.answer.about_song,
+  }];
+}
+
+// One conversation: the record it is about, the words, and Write back at
+// the foot — `writing` while its form is open, `onWriting(open)` to open
+// or shut it, `send(said)` the reply. `isNew` says New over the record;
+// `extra` stands beside Write back (Keep, on a friend's face).
+export function Conversation({ chain, name, draftKey, writing, onWriting, send, isNew = false, extra = null }) {
+  return (
+    <section className="wd-chain" data-about={chain.key}>
+      {chain.key && (
+        <div className="wd-about">
+          <span className="wd-about-art" aria-hidden="true">
+            {chain.art ? <img src={chain.art} alt="" loading="lazy" onError={e => { e.currentTarget.style.visibility = 'hidden'; }} /> : null}
+          </span>
+          <span className="wd-about-says">
+            <span className="wd-about-count">
+              {isNew && <span className="ln-new">New</span>}
+              About · {chain.words.length} {chain.words.length === 1 ? 'note' : 'notes'}
+            </span>
+            <span className="wd-about-title">{chain.song || chain.album}</span>
+            <span className="wd-about-artist">{chain.song ? chain.album : chain.artist}</span>
+          </span>
+        </div>
+      )}
+      <div className="wd-thread">
+        {chain.words.map(w => (
+          <div key={`${w.side}-${w.id}`} className={'wd-one wd-one--' + w.side}>
+            <p className="wd-bubble">{w.said}</p>
+            <span className="wd-when">{stamp(w.at)}</span>
+          </div>
+        ))}
+      </div>
+      {chain.answer && (
+        writing ? (
+          <div className="wd-form">
+            <MessageForm
+              draftKey={draftKey}
+              label={`Your words to ${name}`}
+              placeholder={`Write back to ${name}`}
+              send={send}
+              onSent={() => onWriting(false)}
+              onLeave={() => onWriting(false)}
+            />
+          </div>
+        ) : (
+          <div className="wd-foot">
+            <button type="button" className="wd-write" onClick={() => onWriting(true)}>
+              <ArrowBendUpLeft size={16} weight="regular" aria-hidden="true" />
+              Write back
+            </button>
+            {extra}
+          </div>
+        )
+      )}
+    </section>
+  );
+}
 
 function Face({ address }) {
   return (
@@ -93,32 +191,7 @@ export default function Words({ layered = false }) {
   }, [read]);
 
   const name = read?.person?.name || 'them';
-  // Each record's words together, oldest first inside; the record whose
-  // words moved last at the top; no record last of all.
-  const chains = useMemo(() => {
-    const by = new Map();
-    for (const w of read?.words || []) {
-      const key = aboutOf(w);
-      let chain = by.get(key);
-      if (!chain) { chain = { key, words: [] }; by.set(key, chain); }
-      chain.words.push(w);
-    }
-    return [...by.values()].map(c => {
-      const lead = c.words.find(w => w.about_album || w.about_song) || c.words[0];
-      const last = c.words[c.words.length - 1];
-      // What Write back answers: the newest thing they said here.
-      const answer = [...c.words].reverse().find(w => w.side === 'theirs') || null;
-      return {
-        ...c,
-        album: lead.about_album || '',
-        artist: lead.about_artist || '',
-        art: lead.about_art || '',
-        song: lead.about_song || '',
-        lastAt: Date.parse(last.at) || 0,
-        answer,
-      };
-    }).sort((a, b) => (a.key === '' ? 1 : b.key === '' ? -1 : b.lastAt - a.lastAt));
-  }, [read]);
+  const chains = useMemo(() => chainsOf(read?.words), [read]);
 
   // Arriving at one record (Words on something they wrote): it is scrolled
   // to, once it is drawn.
@@ -152,16 +225,7 @@ export default function Words({ layered = false }) {
       return { ok: false, error: d?.error || 'Something went wrong. Nothing was sent, and your words are still here.' };
     }
     const at = d.said_at || new Date().toISOString();
-    setRead(prev => ({
-      ...prev,
-      since: prev.since || at,
-      words: [...prev.words, {
-        id: `new-${Date.now()}`, side: 'mine', said, at,
-        about_journal: chain.answer.about_journal, about_slug: chain.answer.about_slug,
-        about_album: chain.answer.about_album, about_artist: chain.answer.about_artist,
-        about_art: chain.answer.about_art, about_song: chain.answer.about_song,
-      }],
-    }));
+    setRead(prev => ({ ...prev, since: prev.since || at, words: withReply(prev.words, chain, said, at) }));
     return { ok: true };
   };
 
@@ -186,47 +250,15 @@ export default function Words({ layered = false }) {
         ) : chains.length === 0 ? (
           <p className="wd-said">Nothing between you yet. Words start on a record — write from one of {name}&rsquo;s entries.</p>
         ) : chains.map(chain => (
-          <section key={chain.key || 'none'} className="wd-chain" data-about={chain.key}>
-            {chain.key && (
-              <div className="wd-about">
-                <span className="wd-about-art" aria-hidden="true">
-                  {chain.art ? <img src={chain.art} alt="" loading="lazy" onError={e => { e.currentTarget.style.visibility = 'hidden'; }} /> : null}
-                </span>
-                <span className="wd-about-says">
-                  <span className="wd-about-count">About · {chain.words.length} {chain.words.length === 1 ? 'note' : 'notes'}</span>
-                  <span className="wd-about-title">{chain.song || chain.album}</span>
-                  <span className="wd-about-artist">{chain.song ? chain.album : chain.artist}</span>
-                </span>
-              </div>
-            )}
-            <div className="wd-thread">
-              {chain.words.map(w => (
-                <div key={`${w.side}-${w.id}`} className={'wd-one wd-one--' + w.side}>
-                  <p className="wd-bubble">{w.said}</p>
-                  <span className="wd-when">{stamp(w.at)}</span>
-                </div>
-              ))}
-            </div>
-            {chain.answer && (
-              writing === chain.key ? (
-                <div className="wd-form">
-                  <MessageForm
-                    draftKey={`words-${id}-${chain.key}`}
-                    label={`Your words to ${name}`}
-                    placeholder={`Write back to ${name}`}
-                    send={said => writeBack(chain, said)}
-                    onSent={() => setWriting('')}
-                    onLeave={() => setWriting('')}
-                  />
-                </div>
-              ) : (
-                <button type="button" className="wd-write" onClick={() => setWriting(chain.key)}>
-                  <ArrowBendUpLeft size={16} weight="regular" aria-hidden="true" />
-                  Write back
-                </button>
-              )
-            )}
-          </section>
+          <Conversation
+            key={chain.key || 'none'}
+            chain={chain}
+            name={name}
+            draftKey={`words-${id}-${chain.key}`}
+            writing={writing === chain.key}
+            onWriting={open => setWriting(open ? chain.key : '')}
+            send={said => writeBack(chain, said)}
+          />
         ))}
         {read && !read.failed && <p className="wd-kept">{keptFrom}</p>}
       </div>
