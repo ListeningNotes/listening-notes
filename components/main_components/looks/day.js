@@ -3,7 +3,8 @@
 // components/main_components/looks/day.js
 // Day and Night, the default: the card as it reads on the entry page, exported,
 // in day mode or night mode (Miyel, 2026-11-04). The page's own colour, the cover,
-// the title, the artist, the stars and the marks as the post's chips, under a large mark
+// the title, the artist, the stars and a row of the three marks, large with a small word
+// under each, those not given as ghosts like unlit stars (2026-11-06), under a large mark
 // at the head, with no horizon (trying, 2026-11-06). It is the plain one on purpose. Animated, the card
 // settles quickly and smoothly, since most people tap through stories: the cover glides
 // up into place, the lines come down from under it, the bars rise; Still is that last moment as a picture. Not the
@@ -13,7 +14,7 @@
 'use client';
 
 import {
-  INKS, STAR_PATH, MARK_ASPECT,
+  INKS, STAR_PATH, SYMBOLS, MARK_ASPECT,
   drawTracked, drawPath, roundRect, wrapLines, clamp01, sheet,
 } from '../SharePrinter';
 
@@ -22,15 +23,15 @@ const MARK_H = 72, MARK_TOP = 0.05;
 const TITLE = 26, TITLE_LEAD = 26 * 1.22;
 const ARTIST = 11, ARTIST_LEAD = 11 * 1.4;
 const STAR = 30, STAR_GAP = 4;
-const CHIP = 13, CHIP_PAD_X = 10, CHIP_PAD_Y = 4, CHIP_GAP = 8, CHIP_RADIUS = 5;
+const SYMBOL = 36, SYMBOL_WORD = 8.5, SYMBOL_ACROSS = 92;
 const GAP = 12;
 const PAD = 0.07;
 const GOLD = '#E8B84B';
-const CHIPS = {
-  fav: { word: 'Favorite', ink: '#f0484f', edge: 'rgba(240,72,79,0.4)' },
-  mp: { word: 'Masterpiece', ink: '#4a9bf0', edge: 'rgba(74,155,240,0.4)' },
-  formative: { word: 'Formative', ink: '#3fa96b', edge: 'rgba(63,169,107,0.4)' },
-};
+const MARKS = [
+  { tag: 'fav', word: 'Favorite', ink: '#f0484f' },
+  { tag: 'mp', word: 'Masterpiece', ink: '#4a9bf0' },
+  { tag: 'formative', word: 'Formative', ink: '#3fa96b' },
+];
 const GLIDES_IN = 0.7;
 const ROLLS_AT = 0.25, ROLLS_IN = 0.75;
 const smooth = v => v * v * (3 - 2 * v);
@@ -54,7 +55,7 @@ export function paperScene(night) {
       const h = (MARK_H + GAP + ART + GAP) * U + titleLines.length * TITLE_LEAD * U
         + (artistLines.length ? GAP * 0.7 * U + artistLines.length * ARTIST_LEAD * U : 0)
         + (stars > 0 ? (GAP + STAR) * U : 0)
-        + (tags.length ? (GAP + CHIP * 1.2 + CHIP_PAD_Y * 2) * U : 0);
+        + (GAP + SYMBOL + 4 + SYMBOL_WORD * 1.3) * U;
       return { titleLines, artistLines, h };
     };
     const roomW = W * (1 - PAD * 2), roomH = H * (1 - PAD * 2);
@@ -164,32 +165,16 @@ export function paperScene(night) {
         y += box;
       }
 
-      if (tags.length) {
-        y += px(GAP);
-        const spacing = px(CHIP) * 0.08, padX = px(CHIP_PAD_X), h = px(CHIP * 1.2 + CHIP_PAD_Y * 2), gap = px(CHIP_GAP);
-        c.font = `400 ${px(CHIP)}px ${mono}`;
-        const across = word => [...word].reduce((n, ch) => n + c.measureText(ch).width + spacing, -spacing);
-        const widths = tags.map(tag => across(CHIPS[tag].word) + padX * 2);
-        let x = cx - (widths.reduce((n, w) => n + w, 0) + gap * (tags.length - 1)) / 2;
-        const chipY = y;
-        tags.forEach((tag, i) => {
-          const chipX = x;
-          {
-            c.font = `400 ${px(CHIP)}px ${mono}`;
-            c.textBaseline = 'middle';
-            c.strokeStyle = CHIPS[tag].edge;
-            c.lineWidth = Math.max(1, px(0.8));
-            roundRect(c, chipX, chipY, widths[i], h, px(CHIP_RADIUS));
-            c.stroke();
-            c.fillStyle = CHIPS[tag].ink;
-            drawTracked(c, CHIPS[tag].word, chipX + padX, chipY + h / 2 + px(0.5), spacing);
-            c.textBaseline = 'top';
-          }
-          x += widths[i] + gap;
-        });
-        y += h;
-      }
-
+      // The three marks in a row: those given in their colours, the rest as ghosts.
+      y += px(GAP);
+      MARKS.forEach(({ tag, word, ink: lit }, i) => {
+        const on = tags.includes(tag);
+        const at = cx + (i - 1) * px(SYMBOL_ACROSS);
+        drawPath(c, SYMBOLS[tag], at - px(SYMBOL) / 2, y, px(SYMBOL), 256, on ? lit : ink.rule);
+        c.font = `400 ${px(SYMBOL_WORD)}px ${mono}`;
+        c.fillStyle = on ? lit : ink.faint;
+        drawTracked(c, word.toUpperCase(), at, y + px(SYMBOL + 4), px(SYMBOL_WORD) * 0.1, 'center');
+      });
       c.restore();
     }
 
