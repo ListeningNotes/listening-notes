@@ -74,32 +74,14 @@ export function paperScene(night, ground = null) {
     if (laid.h > roomH) { U *= roomH / laid.h; laid = lay(U); }
     const px = n => n * U;
 
-    // The cover with its lift and hairline, once; a shadow is dear on every frame.
-    const size = px(ART), radius = px(ART_RADIUS), margin = px(60);
-    const card = sheet(size + margin * 2, size + margin * 2, c => {
-      c.save();
-      c.shadowColor = ink.lift[1];
-      c.shadowBlur = px(48);
-      c.shadowOffsetY = px(16);
-      c.fillStyle = ink.warm;
-      roundRect(c, margin, margin, size, size, radius);
-      c.fill();
-      c.shadowColor = ink.lift[0];
-      c.shadowBlur = px(20);
-      c.shadowOffsetY = px(4);
-      c.fill();
-      c.restore();
-      if (art?.cover?.naturalWidth) {
-        c.save();
-        roundRect(c, margin, margin, size, size, radius);
-        c.clip();
-        c.drawImage(art.cover, margin, margin, size, size);
-        c.restore();
-      }
-      c.strokeStyle = ink.edge;
-      c.lineWidth = Math.max(1, px(0.8));
-      roundRect(c, margin, margin, size, size, radius);
-      c.stroke();
+    // The cover, flat: no shadow or hairline round it. Instagram's compression turns the
+    // faint steps of a soft shadow on a dark page into visible rings (Miyel, 2026-11-07).
+    const size = px(ART), radius = px(ART_RADIUS);
+    const card = sheet(size, size, c => {
+      if (!art?.cover?.naturalWidth) return;
+      roundRect(c, 0, 0, size, size, radius);
+      c.clip();
+      c.drawImage(art.cover, 0, 0, size, size);
     });
 
     // A light's glow in its own shape, baked once: a shadow is dear on every frame. The
