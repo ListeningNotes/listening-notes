@@ -325,7 +325,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   // A look that could not be drawn, said under the print (EntryPlate.js).
   const [printFailed, setPrintFailed] = useState(null);
   const plate = useMemo(() => entryPlate({ entry, keeper: keeperName, face: portrait_url, onFail: setPrintFailed }), [entry, keeperName, portrait_url]);
-  const effect = EFFECTS.includes(printChoices.effect) ? printChoices.effect : 'unlock';
+  const effect = EFFECTS.includes(printChoices.effect) ? printChoices.effect : 'still';
   // Which look (looks/).
   const ground = lookOf(printChoices.ground).key;
   // Every look has both: Animated, a video, or Still, the picture.

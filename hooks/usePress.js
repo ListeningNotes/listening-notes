@@ -197,6 +197,11 @@ export function usePress({ plate, shown, ground, isDark, link, fonts, motion = n
       });
       setPicture(url);
       const copied = await pasted;
+      // A picture is made fast enough that the phone may still count this as the tap that
+      // asked, so the share sheet can open at once. If it refuses, the bar's Share is there.
+      if (canSend && navigator.share) {
+        navigator.share({ files: [new File([blob], made.current.name, { type: blob.type || 'image/png' })] }).catch(() => {});
+      }
       // Said for as long as the picture is up; dismissing it clears it.
       clearTimeout(timer.current);
       setStatus(canDeliver
@@ -205,7 +210,7 @@ export function usePress({ plate, shown, ground, isDark, link, fonts, motion = n
     } catch {
       say('A picture on this print could not be read, so it cannot be saved.', 4000);
     }
-  }, [compose, fileName, copyLink, say, canDeliver, motion, film]);
+  }, [compose, fileName, copyLink, say, canDeliver, canSend, motion, film]);
   const deliver = useCallback(async () => {
     const it = made.current;
     if (!it) return;
