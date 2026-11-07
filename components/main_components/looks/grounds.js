@@ -45,42 +45,43 @@ export function reflectGround(record, frame, { art, night }) {
   return { paint(c) { c.drawImage(page, 0, 0); } };
 }
 
-// Little copies of the record fizzing up the page, the near ones larger and quicker.
+// Copies of the record drifting like a lava lamp: slow, some rising and some sinking,
+// tiny ones and huge ones, each taking its time (Miyel, 2026-11-07).
 export function fizzGround(record, frame, { art, night }) {
   const W = frame.w, H = frame.h;
   const u = Math.min(W, (H * 9) / 16) / 100;
   const paper = (night ? INKS.night : INKS.day).paper;
-  const most = 22 * u;
+  const most = 46 * u;
   const copy = sheet(most, most, c => {
     roundRect(c, 0, 0, most, most, most * 0.08);
     c.clip();
     c.drawImage(coverOf(art, most), 0, 0);
   });
   const roll = dice(11);
-  const bubbles = Array.from({ length: 34 }, () => {
-    const depth = roll();
+  const blobs = Array.from({ length: 15 }, () => {
+    const big = roll();
     return {
-      depth,
       x: roll() * W,
-      size: (5 + depth * 17) * u,
-      speed: (14 + depth * 34) * u,
-      phase: roll(),
-      tilt: (roll() - 0.5) * 0.9,
-      spin: (roll() - 0.5) * 0.5,
+      // Mostly small, with a few very large: squaring it keeps the large ones rare.
+      size: (4 + big * big * 42) * u,
+      takes: 16 + roll() * 22,          // seconds for the whole way up and back
+      phase: roll() * Math.PI * 2,
+      tilt: (roll() - 0.5) * 0.7,
+      spin: (roll() - 0.5) * 0.08,
       sway: roll() * Math.PI * 2,
+      swayBy: (2 + roll() * 6) * u,
     };
-  }).sort((a, b) => a.depth - b.depth);
+  }).sort((a, b) => b.size - a.size);
   return {
     paint(c, t) {
       c.fillStyle = paper;
       c.fillRect(0, 0, W, H);
-      bubbles.forEach(b => {
-        const travel = H + b.size * 2;
-        const y = travel - ((b.phase * travel + t * b.speed) % travel) - b.size;
+      blobs.forEach(b => {
+        const reach = H / 2 + b.size / 2;
+        const y = H / 2 + reach * Math.sin(b.phase + (t * Math.PI * 2) / b.takes);
         c.save();
-        c.translate(b.x + Math.sin(t * 0.8 + b.sway) * 2 * u, y);
+        c.translate(b.x + Math.sin(t * 0.25 + b.sway) * b.swayBy, y);
         c.rotate(b.tilt + b.spin * t);
-        c.globalAlpha = 0.45 + b.depth * 0.55;
         c.drawImage(copy, -b.size / 2, -b.size / 2, b.size, b.size);
         c.restore();
       });
