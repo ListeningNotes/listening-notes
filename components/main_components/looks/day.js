@@ -7,8 +7,8 @@
 // under each, those not given as ghosts like unlit stars (2026-11-06), under a large mark
 // at the head, with no horizon (trying, 2026-11-06). It is the plain one on purpose.
 // Animated, the album and the words are there from the first frame and the stars and marks
-// fill and turn on and glow gently, breathing, like lights: the stars in one smooth sweep
-// from the left, then the marks one by one (Miyel, 2026-11-06). Still is the last
+// come up slowly and glow gently, breathing, like lights: the stars from the left, each
+// one starting as the last is warming, then the marks (Miyel, 2026-11-06). Still is the last
 // moment as a picture. Not the posted date: a line nobody needed on a print (2026-09-12).
 //
 // The numbers are the post's own pixels, on a 340-wide column.
@@ -33,9 +33,9 @@ const MARKS = [
   { tag: 'fav', word: 'Favorite', ink: '#f0484f' },
   { tag: 'formative', word: 'Formative', ink: '#3fa96b' },
 ];
-const STARS_AT = 0.4, STARS_IN = 1.2;     // the stars filling, left to right, in one sweep
+const STARS_AT = 0.4, STAR_EVERY = 0.2;   // each star starting to come up
 const MARKS_AT = 1.6, MARK_EVERY = 0.28;  // each mark given
-const WARMS_IN = 0.35;                    // a light's glow coming up
+const WARMS_IN = 0.5;                     // a light coming up
 const smooth = v => v * v * (3 - 2 * v);
 
 export function paperScene(night) {
@@ -93,18 +93,22 @@ export function paperScene(night) {
       c.stroke();
     });
 
-    // A light's glow, baked once: a shadow is dear on every frame. Its strength is how
-    // long it has been on, breathing slowly; on Still it just glows.
-    const halo = px(20);
+    // A light's glow in its own shape, baked once: a shadow is dear on every frame. The
+    // shape itself is drawn off the sheet, so only its shadow lands. The strength is how
+    // long the light has been on, breathing slowly; on Still it just glows.
+    const halo = px(24);
     const glowOf = (path, viewBox, box, colour) => sheet(box + halo * 2, box + halo * 2, g => {
+      const away = (box + halo * 2) * 2;
       g.shadowColor = colour;
-      g.shadowBlur = halo * 0.8;
-      drawPath(g, path, halo, halo, box, viewBox, colour);
-      drawPath(g, path, halo, halo, box, viewBox, colour);
+      g.shadowBlur = halo * 0.7;
+      g.shadowOffsetX = away;
+      drawPath(g, path, halo - away, halo, box, viewBox, colour);
+      drawPath(g, path, halo - away, halo, box, viewBox, colour);
     });
     const starGlow = glowOf(STAR_PATH, 18, px(STAR), GOLD);
     const markGlows = Object.fromEntries(MARKS.map(({ tag, ink: lit }) => [tag, tags.includes(tag) ? glowOf(SYMBOLS[tag], 256, px(SYMBOL), lit) : null]));
-    const strength = since => (still ? 0.9 : smooth(clamp01(since / WARMS_IN)) * (0.78 + 0.22 * Math.sin(since * 2.4)));
+    const warmed = since => smooth(clamp01(since / WARMS_IN));
+    const strength = since => (still ? 0.9 : warmed(since) * (0.78 + 0.22 * Math.sin(since * 2.4)));
 
     function paintAt(c, t) {
       c.fillStyle = ink.paper;
@@ -143,25 +147,23 @@ export function paperScene(night) {
         y += px(GAP);
         const box = px(STAR), step = px(STAR + STAR_GAP);
         const from = cx - (5 * box + 4 * px(STAR_GAP)) / 2;
-        const sweep = stars * smooth(clamp01((t - STARS_AT) / STARS_IN));
         for (let i = 0; i < 5; i++) {
           const sx = from + i * step;
           drawPath(c, STAR_PATH, sx, y, box, 18, ink.unlit);
-          const part = clamp01(sweep - i);
-          const onAt = STARS_AT + (i * STARS_IN) / 5;
-          if (part > 0) {
-            c.save();
-            c.beginPath();
-            c.rect(sx - halo, y - halo, halo + box * part, box + halo * 2);
-            c.clip();
-            c.globalAlpha = strength(Math.max(0, t - onAt));
+          const part = clamp01(stars - i);
+          const since = t - (STARS_AT + i * STAR_EVERY);
+          if (part > 0 && since > 0) {
+            // The whole star's glow, however much of it is lit, a half star's at half.
+            c.globalAlpha = strength(since) * part;
             c.drawImage(starGlow, sx - halo, y - halo);
-            c.globalAlpha = 1;
+            c.globalAlpha = warmed(since);
+            c.save();
             c.beginPath();
             c.rect(sx, y, box * part, box);
             c.clip();
             drawPath(c, STAR_PATH, sx, y, box, 18, GOLD);
             c.restore();
+            c.globalAlpha = 1;
           }
         }
         y += box;
@@ -175,18 +177,28 @@ export function paperScene(night) {
       MARKS.forEach(({ tag, word, ink: lit }, i) => {
         const at = cx + (i - 1) * px(SYMBOL_ACROSS);
         const given = tags.includes(tag);
-        const onAt = MARKS_AT + turn * MARK_EVERY;
-        const on = given && t >= onAt;
+        const since = t - (MARKS_AT + turn * MARK_EVERY);
+        const on = given && since > 0;
         if (given) turn += 1;
+        const wordAt = y + px(SYMBOL + 4);
+        const drawWord = colour => {
+          c.font = `400 ${px(SYMBOL_WORD)}px ${mono}`;
+          c.fillStyle = colour;
+          drawTracked(c, word.toUpperCase(), at, wordAt, px(SYMBOL_WORD) * 0.1, 'center');
+        };
         if (on) {
-          c.globalAlpha = strength(t - onAt);
+          c.globalAlpha = strength(since);
           c.drawImage(markGlows[tag], at - box / 2 - halo, y - halo);
           c.globalAlpha = 1;
         }
-        drawPath(c, SYMBOLS[tag], at - box / 2, y, box, 256, on ? lit : ink.rule);
-        c.font = `400 ${px(SYMBOL_WORD)}px ${mono}`;
-        c.fillStyle = on ? lit : ink.faint;
-        drawTracked(c, word.toUpperCase(), at, y + px(SYMBOL + 4), px(SYMBOL_WORD) * 0.1, 'center');
+        drawPath(c, SYMBOLS[tag], at - box / 2, y, box, 256, ink.rule);
+        drawWord(ink.faint);
+        if (on) {
+          c.globalAlpha = warmed(since);
+          drawPath(c, SYMBOLS[tag], at - box / 2, y, box, 256, lit);
+          drawWord(lit);
+          c.globalAlpha = 1;
+        }
       });
     }
 
