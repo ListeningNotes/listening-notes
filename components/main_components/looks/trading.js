@@ -32,16 +32,16 @@ export const tradingScene = night => (record, frame, { art, families, still = fa
   const frameEnd = gilded ? '#b8862b' : hue === null ? '#8f939c' : `hsl(${(hue + 30) % 360},78%,40%)`;
   const inkDark = '#14110f';
 
-  const cardW = 88 * u, cardH = 158 * u, radius = 4.5 * u;
-  const cx = W / 2, cy = H / 2;
-  const y0 = (H - cardH) / 2;
+  // The card is the whole picture, edge to edge (Miyel, 2026-11-06).
+  const cardW = W, cardH = H, radius = 0;
+  const cx = W / 2;
 
   const front = sheet(cardW, cardH, c => {
     roundRect(c, 0, 0, cardW, cardH, radius);
     c.clip();
     c.fillStyle = '#17120e';
     c.fillRect(0, 0, cardW, cardH);
-    const rim = 2.2 * u;
+    const rim = 0;
     const face = c.createLinearGradient(0, 0, cardW, cardH);
     face.addColorStop(0, frameTop);
     face.addColorStop(1, frameEnd);
@@ -49,7 +49,8 @@ export const tradingScene = night => (record, frame, { art, families, still = fa
     roundRect(c, rim, rim, cardW - rim * 2, cardH - rim * 2, radius * 0.6);
     c.fill();
 
-    const pad = rim + 2.4 * u, inner = cardW - pad * 2;
+    const pad = 5 * u, inner = cardW - pad * 2;
+    const window_ = Math.min(inner, cardH * 0.56), artX = (cardW - window_) / 2;
 
     // The name bar.
     const barH = 10 * u;
@@ -70,11 +71,11 @@ export const tradingScene = night => (record, frame, { art, families, still = fa
     // The window.
     const artY = pad + barH + 1.6 * u;
     c.fillStyle = inkDark;
-    c.fillRect(pad - 0.4 * u, artY - 0.4 * u, inner + 0.8 * u, inner + 0.8 * u);
-    c.drawImage(coverOf(art, inner), pad, artY);
+    c.fillRect(artX - 0.4 * u, artY - 0.4 * u, window_ + 0.8 * u, window_ + 0.8 * u);
+    c.drawImage(coverOf(art, window_), artX, artY);
 
     // The type line.
-    const lineY = artY + inner + 1.2 * u, lineH = 5.2 * u;
+    const lineY = artY + window_ + 1.2 * u, lineH = 5.2 * u;
     c.fillStyle = 'rgba(255,255,255,0.86)';
     roundRect(c, pad, lineY, inner, lineH, 1 * u);
     c.fill();
@@ -209,23 +210,11 @@ export const tradingScene = night => (record, frame, { art, families, still = fa
     c.fillStyle = paper;
     c.fillRect(0, 0, W, H);
 
-    const settled = t >= SETTLED;
     const turn = (1 - smooth(clamp01((t - FACE_DOWN) / TURNS_IN))) * Math.PI;
     const facing = Math.cos(turn);
     const across = cardW * Math.max(0.02, Math.abs(facing));
-    const bob = still || !settled ? 0 : Math.sin((t - SETTLED) * 1.4) * 0.8 * u;
-    const y = y0 + bob;
-
-    c.save();
-    c.shadowColor = night ? 'rgba(0,0,0,0.7)' : 'rgba(0,0,0,0.3)';
-    c.shadowBlur = 6 * u;
-    c.shadowOffsetY = 2 * u;
-    c.fillStyle = '#000';
-    roundRect(c, cx - across / 2, y, across, cardH, radius * (across / cardW));
-    c.fill();
-    c.restore();
-    if (facing >= 0) c.drawImage(foiled(t), cx - across / 2, y, across, cardH);
-    else c.drawImage(back, cx - across / 2, y, across, cardH);
+    if (facing >= 0) c.drawImage(foiled(t), cx - across / 2, 0, across, cardH);
+    else c.drawImage(back, cx - across / 2, 0, across, cardH);
   }
 
   let t = still ? 30 : 0;
