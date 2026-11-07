@@ -22,7 +22,7 @@ import FolderFooter from '../../../components/main_components/FolderFooter';
 import KeeperTools from '../../../components/main_components/KeeperTools';
 import EditingBar from '../../../components/main_components/EditingBar';
 import { entryPlate } from '../../../components/main_components/EntryPlate';
-import { LOOKS, lookOf } from '../../../components/main_components/looks';
+import { LAYOUTS, MODES, lookFor, lookOf } from '../../../components/main_components/looks';
 import { usePress, readFamilies } from '../../../hooks/usePress';
 import { FRAMES, FRAME_ORDER } from '../../../components/main_components/SharePrinter';
 import HorizonBar from '../../../components/main_components/Slug_Page/HorizonBar';
@@ -607,7 +607,8 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   const printIcon = { size: 23, 'aria-hidden': true };
   const printSections = [
     { key: 'card', label: 'Card', groups: [
-      LOOKS.map(look => ({ key: look.key, label: look.label, icon: <look.Icon {...printIcon} />, on: ground === look.key, press: () => choosePrint({ ground: look.key }) })),
+      LAYOUTS.map(l => ({ key: l.key, label: l.label, icon: <l.Icon {...printIcon} />, on: lookOf(ground).layout === l.key, press: () => choosePrint({ ground: lookFor(l.key, lookOf(ground).night).key }) })),
+      MODES.map(m => ({ key: m.label, label: m.label, icon: <m.Icon {...printIcon} />, on: lookOf(ground).night === m.night, press: () => choosePrint({ ground: lookFor(lookOf(ground).layout, m.night).key }) })),
       PRINT_SIZES.map(key => ({ key, label: FRAMES[key].label, icon: printGlyph(...SIZE_SHAPES[key]), on: size === key, press: () => choosePrint({ size: key }) })),
       [
         { key: 'unlock', label: 'Animated', icon: <Play {...printIcon} /> },

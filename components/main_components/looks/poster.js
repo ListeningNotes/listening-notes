@@ -7,41 +7,41 @@
 // since most people tap through stories, but it does come in: the four inks of a
 // printed sleeve glide in from the corners as dots, the dots grow until they close into
 // the cover itself, and the bars rise as the words unroll from under it. Nothing bounces.
-// The words and bars are overprinted in two inks from the album's own colours: its
-// strongest and the next one far enough away, or, on a cover with only one, that
-// colour's opposite.
+// The words, stars and marks take an ink from the album's own colours, deep on the day
+// sheet and pale on the night one. The bars are LN green on every record (Miyel,
+// 2026-11-06). At night the words turn the sheet's own black where they cross the
+// green, since a pale ink would vanish there.
 //
 // Reading the colours is by the pixel. A cover that will not be read throws here, and
 // the print falls back to Day.
 'use client';
 
 import {
-  STAR_PATH, HEART_PATH, SYMBOLS, MARK_ASPECT,
+  LN_GREEN, STAR_PATH, HEART_PATH, SYMBOLS, MARK_ASPECT,
   drawArtist, drawPath, clamp01, sheet, fitTitle,
 } from '../SharePrinter';
 
-const SHEET = '#f4f0e5';
-const FAV = '#f0484f';
+const SHEETS = { day: '#f4f0e5', night: '#0e0e0e' };
 const LANDS_IN = 0.9;                  // each ink gliding in
 const INK_GAP = 0.12;                  // between one ink setting off and the next
 const PLATES_DONE = LANDS_IN + INK_GAP * 3;
 const CLOSES_IN = 0.45;                // the dots growing into the cover
 const COVER_DONE = PLATES_DONE + CLOSES_IN;
 const ROLLS_AT = 1.15, ROLLS_IN = 0.7; // the words and bars
-const FAR_ENOUGH = 60;                 // degrees of hue between the two inks
+const FAR_ENOUGH = 60;                 // degrees of hue between the two to choose from
 const PLAIN_FLOOR = 0.1;               // how much colour a cover needs to give an ink
 const SAMPLE = 360;
 
-// How light a fully bright hue reads, for telling the dark ink from the bright one.
+// How light a fully bright hue reads, for telling which of two makes the better words.
 function lightOfHue(h) {
   const f = n => { const k = (n + h / 30) % 12; return 0.5 - 0.5 * Math.max(-1, Math.min(k - 3, 9 - k, 1)); };
   return 0.3 * f(0) + 0.59 * f(8) + 0.11 * f(4);
 }
 
-// The album's two hues, as inks: the darker one prints the picture's darks and the
-// words, the brighter one its colour and the bars. A cover with no colour to speak
-// of prints in black and one warm ink.
-function inksOf(px) {
+// The words' ink: the darker of the album's two strongest hues, deepened until it reads
+// by day and lifted until it reads at night. A cover with no colour to speak of prints
+// in plain black, or plain off-white.
+function inksOf(px, night) {
   const bins = new Array(36).fill(0);
   let vivid = 0;
   for (let i = 0; i < px.length; i += 4) {
@@ -54,7 +54,9 @@ function inksOf(px) {
     vivid += chroma;
   }
   if (vivid / (px.length / 4) < PLAIN_FLOOR) {
-    return { dark: 'hsl(240,6%,12%)', darkFaint: 'hsla(240,6%,12%,0.2)', bright: 'hsl(4,84%,62%)', brightReads: true };
+    return night
+      ? { words: 'hsl(40,20%,90%)', faint: 'hsla(40,20%,90%,0.2)' }
+      : { words: 'hsl(240,6%,12%)', faint: 'hsla(240,6%,12%,0.2)' };
   }
   const apart = (a, b) => { const d = Math.abs(a - b) % 360; return Math.min(d, 360 - d); };
   let first = 0;
@@ -66,14 +68,12 @@ function inksOf(px) {
     if (second < 0 || v > bins[second]) second = i;
   });
   const h2 = second >= 0 ? second * 10 + 5 : (h1 + 180) % 360;
-  const [darkHue, brightHue] = lightOfHue(h1) <= lightOfHue(h2) ? [h1, h2] : [h2, h1];
+  const darkHue = lightOfHue(h1) <= lightOfHue(h2) ? h1 : h2;
   // A yellow or a green only reads as words once it is quite deep.
-  const darkL = lightOfHue(darkHue) > 0.55 ? 24 : 34;
+  const light = night ? 80 : lightOfHue(darkHue) > 0.55 ? 24 : 34;
   return {
-    dark: `hsl(${darkHue},78%,${darkL}%)`,
-    darkFaint: `hsla(${darkHue},78%,${darkL}%,0.2)`,
-    bright: `hsl(${brightHue},86%,58%)`,
-    brightReads: lightOfHue(brightHue) < 0.6,
+    words: `hsl(${darkHue},78%,${light}%)`,
+    faint: `hsla(${darkHue},78%,${light}%,0.2)`,
   };
 }
 
@@ -112,7 +112,8 @@ function overprint(c, paint) {
   c.restore();
 }
 
-export function posterScene(record, frame, { art, families, still = false }) {
+export const posterScene = night => (record, frame, { art, families, still = false }) => {
+  const SHEET = night ? SHEETS.night : SHEETS.day;
   const { stars, artistLine, tags, bars, favs, entry } = record;
   const { sans, mono } = families;
   const W = frame.w, H = frame.h;
@@ -143,7 +144,7 @@ export function posterScene(record, frame, { art, families, still = false }) {
   });
   const px = small.getContext('2d').getImageData(0, 0, side, side).data;
   const cell = Math.max(4, 0.72 * u);
-  const { dark, darkFaint, bright, brightReads } = inksOf(px);
+  const { words, faint } = inksOf(px, night);
   // Black takes most of what the three colours share, as on a press. Still never
   // shows these, so they are only made for a print that moves.
   const black = (r, g, b) => (1 - Math.max(r, g, b)) * 0.85;
@@ -188,12 +189,17 @@ export function posterScene(record, frame, { art, families, still = false }) {
     c.drawImage(closing, ax, 0);
   }
 
+  // Ink only darkens paper, so at night the inks print onto a clear layer of their own,
+  // and the words simply lie on the black.
+  const inkLayer = night ? sheet(W, H, () => {}) : null;
+  const lay = (c, paint) => (night ? paint() : overprint(c, paint));
+
   // ── The sheet ─────────────────────────────────────────────────────────
   const under = sheet(W, H, c => {
     c.fillStyle = SHEET;
     c.fillRect(0, 0, W, H);
   });
-  // The mark on a tab of the sheet at the corner, in the dark ink.
+  // The mark on a tab of the sheet at the corner, in the words' ink.
   const markH = 3.8 * u, markW = markH * MARK_ASPECT;
   const tab = sheet(markW + 3.6 * u, markH + 2.4 * u, c => {
     c.fillStyle = SHEET;
@@ -202,7 +208,7 @@ export function posterScene(record, frame, { art, families, still = false }) {
       c.drawImage(sheet(markW, markH, m => {
         m.drawImage(art.mark, 0, 0, markW, markH);
         m.globalCompositeOperation = 'source-in';
-        m.fillStyle = dark;
+        m.fillStyle = words;
         m.fillRect(0, 0, markW, markH);
       }), 1.8 * u, 1.2 * u);
     }
@@ -222,21 +228,22 @@ export function posterScene(record, frame, { art, families, still = false }) {
     bars.forEach((v, i) => {
       if (rise <= 0) return;
       const h = Math.max(floorH * 0.05, floorH * v) * rise;
-      overprint(c, () => {
-        c.fillStyle = bright;
-        c.fillRect(i * slot + barGap / 2, H - h, slot - barGap, h);
-      });
+      c.fillStyle = LN_GREEN;
+      c.fillRect(i * slot + barGap / 2, H - h, slot - barGap, h);
     });
 
     // The inks glide in, one after another, and their dots close into the cover.
     if (t >= COVER_DONE) c.drawImage(solid, ax, 0);
     else {
-      overprint(c, () => {
+      const onInks = inkLayer ? inkLayer.getContext('2d') : c;
+      if (inkLayer) onInks.clearRect(0, 0, W, H);
+      overprint(onInks, () => {
         plates.forEach((plate, i) => {
           const away = 1 - easeOut(clamp01((t - i * INK_GAP) / LANDS_IN));
-          c.drawImage(plate.art, ax + plate.from[0] * away * W, plate.from[1] * away * H * 0.5);
+          onInks.drawImage(plate.art, ax + plate.from[0] * away * W, plate.from[1] * away * H * 0.5);
         });
       });
+      if (inkLayer) c.drawImage(inkLayer, 0, 0);
       if (t > PLATES_DONE) drawClosing(c, smooth(clamp01((t - PLATES_DONE) / CLOSES_IN)));
     }
     c.drawImage(tab, 0, 0);
@@ -249,56 +256,72 @@ export function posterScene(record, frame, { art, families, still = false }) {
     c.rect(0, size, W, (H - size) * unroll);
     c.clip();
 
-    let y = rowsTop;
-    if (stars > 0 || tags.length) {
-      const rowY = y;
-      overprint(c, () => {
-        for (let i = 0; i < 5 && stars > 0; i++) {
-          const x = margin + i * (starBox + starGap);
-          drawPath(c, STAR_PATH, x, rowY, starBox, 18, darkFaint);
-          const part = clamp01(stars - i);
-          if (part > 0) {
-            c.save();
-            c.beginPath();
-            c.rect(x, rowY, starBox * part, starBox);
-            c.clip();
-            drawPath(c, STAR_PATH, x, rowY, starBox, 18, dark);
-            c.restore();
-          }
-        }
-        tags.forEach((tag, i) => {
-          const x = W - margin - (tags.length - i) * markBox - (tags.length - i - 1) * markGap;
-          drawPath(c, SYMBOLS[tag], x, rowY, markBox, 256, brightReads ? bright : dark);
-        });
+    paintWords(c, words, faint);
+    if (night) {
+      c.save();
+      c.beginPath();
+      bars.forEach((v, i) => {
+        const h = Math.max(floorH * 0.05, floorH * v) * rise;
+        c.rect(i * slot + barGap / 2, H - h, slot - barGap, h);
       });
-      y += 10.5 * k * u;
+      c.clip();
+      paintWords(c, SHEET, 'rgba(14,14,14,0.2)');
+      c.restore();
     }
-    if (artistLine) {
-      const artistY = y;
-      overprint(c, () => drawArtist(c, artistLine, margin, artistY, { size: 2.9 * k * u, tracking: 0.24, wide: W - margin * 2, least: W * 0.02, colour: dark, mono, align: 'left' }));
-      y += 5.4 * k * u;
-    }
-    if (hasHearts) y += heartBox + 2 * u;
-    const titleY = y;
-    overprint(c, () => {
-      c.font = titleFont(k);
-      c.textBaseline = 'top';
-      c.textAlign = 'left';
-      c.fillStyle = dark;
-      titleLines.forEach((line, i) => c.fillText(line, margin, titleY + i * lead));
-    });
 
-    // A favourite: a red heart over its bar, printed last so it stays whole.
+    // A favourite: a heart over its bar, black by day and white at night (Miyel,
+    // 2026-11-06), printed last so it stays whole.
     if (hasHearts) {
       const titleTop = H - floorH + overlap - titleLines.length * lead;
       const box = Math.min(heartBox, slot * 0.8);
       const heartY = Math.min(H - floorH - box - 1.2 * u, titleTop - box - 1 * u);
       bars.forEach((v, i) => {
         if (!favs[i]) return;
-        drawPath(c, HEART_PATH, i * slot + (slot - box) / 2, heartY, box, 24, FAV);
+        drawPath(c, HEART_PATH, i * slot + (slot - box) / 2, heartY, box, 24, night ? '#ffffff' : '#000000');
       });
     }
     c.restore();
+  }
+
+  function paintWords(c, ink, inkFaint) {
+    let y = rowsTop;
+    if (stars > 0 || tags.length) {
+      const rowY = y;
+      lay(c, () => {
+        for (let i = 0; i < 5 && stars > 0; i++) {
+          const x = margin + i * (starBox + starGap);
+          drawPath(c, STAR_PATH, x, rowY, starBox, 18, inkFaint);
+          const part = clamp01(stars - i);
+          if (part > 0) {
+            c.save();
+            c.beginPath();
+            c.rect(x, rowY, starBox * part, starBox);
+            c.clip();
+            drawPath(c, STAR_PATH, x, rowY, starBox, 18, ink);
+            c.restore();
+          }
+        }
+        tags.forEach((tag, i) => {
+          const x = W - margin - (tags.length - i) * markBox - (tags.length - i - 1) * markGap;
+          drawPath(c, SYMBOLS[tag], x, rowY, markBox, 256, ink);
+        });
+      });
+      y += 10.5 * k * u;
+    }
+    if (artistLine) {
+      const artistY = y;
+      lay(c, () => drawArtist(c, artistLine, margin, artistY, { size: 2.9 * k * u, tracking: 0.24, wide: W - margin * 2, least: W * 0.02, colour: ink, mono, align: 'left' }));
+      y += 5.4 * k * u;
+    }
+    if (hasHearts) y += heartBox + 2 * u;
+    const titleY = y;
+    lay(c, () => {
+      c.font = titleFont(k);
+      c.textBaseline = 'top';
+      c.textAlign = 'left';
+      c.fillStyle = ink;
+      titleLines.forEach((line, i) => c.fillText(line, margin, titleY + i * lead));
+    });
   }
 
   let t = still ? 30 : 0;
@@ -306,4 +329,4 @@ export function posterScene(record, frame, { art, families, still = false }) {
     step(dt) { t += dt; },
     paint(c) { paintAt(c, t); },
   };
-}
+};

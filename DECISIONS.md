@@ -746,8 +746,9 @@ chose ("they should genuinely be their own export"). Now the information is fixe
 the layout is not: every look draws the cover, stars, marks, title with artist and
 year, horizon and the mark, no more and no fewer, in `looks/`, on one canvas scene.
 A print is always the album's real cover: looks differ by layout, never by a version
-of the art (2026-11-05). Day and Night are the reading card exported; Poster is the
-other door, dots only as it builds. Each is Animated or Still. Game, Mosaic, CRT, Paper,
+of the art (2026-11-05). The card is the reading card exported, grey bars and red
+hearts; Poster is the other layout, dots only as it builds, LN green bars. Each is Day
+or Night (2026-11-06) and Animated or Still. Game, Mosaic, CRT, Paper,
 Riso and dotted Halftone were built and cut (git has them, 2026-11-04).
 
 **The printer is a mode of the entry page, 2026-09-13.** Press the glyph and
