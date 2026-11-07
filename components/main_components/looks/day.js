@@ -3,8 +3,8 @@
 // components/main_components/looks/day.js
 // Day and Night, the default: the card as it reads on the entry page, exported,
 // in day mode or night mode (Miyel, 2026-11-04). The page's own colour, the cover,
-// the title, the artist, the stars, the marks as the post's chips, and the horizon
-// from further down the page. It is the plain one on purpose. Animated, the card
+// the title, the artist, the stars and the marks as the post's chips, under a large mark
+// at the head, with no horizon (trying, 2026-11-06). It is the plain one on purpose. Animated, the card
 // settles quickly and smoothly, since most people tap through stories: the cover glides
 // up into place, the lines come down from under it, the bars rise; Still is that last moment as a picture. Not the
 // posted date: a line nobody needed on a print (2026-09-12).
@@ -13,27 +13,24 @@
 'use client';
 
 import {
-  INKS, STAR_PATH, HEART_PATH, MARK_ASPECT,
+  INKS, STAR_PATH, MARK_ASPECT,
   drawTracked, drawPath, roundRect, wrapLines, clamp01, sheet,
 } from '../SharePrinter';
 
 const COL = 340, ART = 265, ART_RADIUS = 16;
-const MARK_H = 44;
+const MARK_H = 72, MARK_TOP = 0.05;
 const TITLE = 26, TITLE_LEAD = 26 * 1.22;
 const ARTIST = 11, ARTIST_LEAD = 11 * 1.4;
 const STAR = 30, STAR_GAP = 4;
 const CHIP = 13, CHIP_PAD_X = 10, CHIP_PAD_Y = 4, CHIP_GAP = 8, CHIP_RADIUS = 5;
-const HORIZON_H = 52, HORIZON_HEAD = 13, HEART = 10, HEART_LIFT = 4, BAR_RADIUS = 3;
 const GAP = 12;
 const PAD = 0.07;
 const GOLD = '#E8B84B';
-const FAV = '#f0484f';
 const CHIPS = {
   fav: { word: 'Favorite', ink: '#f0484f', edge: 'rgba(240,72,79,0.4)' },
   mp: { word: 'Masterpiece', ink: '#4a9bf0', edge: 'rgba(74,155,240,0.4)' },
   formative: { word: 'Formative', ink: '#3fa96b', edge: 'rgba(63,169,107,0.4)' },
 };
-const gapOf = n => (n > 24 ? 2 : n > 14 ? 3 : 4);
 const GLIDES_IN = 0.7;
 const ROLLS_AT = 0.25, ROLLS_IN = 0.75;
 const smooth = v => v * v * (3 - 2 * v);
@@ -41,7 +38,7 @@ const easeOut = v => 1 - (1 - v) ** 3;
 
 export function paperScene(night) {
   return (record, frame, { art, families, still = false }) => {
-    const { stars, artistLine, tags, bars, favs, entry } = record;
+    const { stars, artistLine, tags, entry } = record;
     const { sans, mono } = families;
     const ink = night ? INKS.night : INKS.day;
     const W = frame.w, H = frame.h;
@@ -57,8 +54,7 @@ export function paperScene(night) {
       const h = (MARK_H + GAP + ART + GAP) * U + titleLines.length * TITLE_LEAD * U
         + (artistLines.length ? GAP * 0.7 * U + artistLines.length * ARTIST_LEAD * U : 0)
         + (stars > 0 ? (GAP + STAR) * U : 0)
-        + (tags.length ? (GAP + CHIP * 1.2 + CHIP_PAD_Y * 2) * U : 0)
-        + (bars.length ? (GAP + HORIZON_HEAD + HORIZON_H) * U : 0);
+        + (tags.length ? (GAP + CHIP * 1.2 + CHIP_PAD_Y * 2) * U : 0);
       return { titleLines, artistLines, h };
     };
     const roomW = W * (1 - PAD * 2), roomH = H * (1 - PAD * 2);
@@ -99,14 +95,16 @@ export function paperScene(night) {
     function paintAt(c, t) {
       c.fillStyle = ink.paper;
       c.fillRect(0, 0, W, H);
-      let y = (H - laid.h) / 2;
       const cx = W / 2;
 
+      // The mark high up, large; the rest centred in what is left.
+      const markY = H * MARK_TOP, markEnd = markY + px(MARK_H);
       if (art?.mark) {
         const mw = px(MARK_H) * MARK_ASPECT;
-        c.drawImage(art.mark, cx - mw / 2, y, mw, px(MARK_H));
+        c.drawImage(art.mark, cx - mw / 2, markY, mw, px(MARK_H));
       }
-      y += px(MARK_H + GAP);
+      const stack = laid.h - px(MARK_H + GAP);
+      let y = markEnd + Math.max(px(GAP), (H - markEnd - H * PAD - stack) / 2);
 
       // The cover glides up into place, growing the last little way.
       const glide = easeOut(clamp01(t / GLIDES_IN));
@@ -192,25 +190,6 @@ export function paperScene(night) {
         y += h;
       }
 
-      if (bars.length) {
-        y += px(GAP + HORIZON_HEAD);
-        const n = bars.length, gap = px(gapOf(n)), bw = Math.max(1, (colW - gap * (n - 1)) / n);
-        const h = px(HORIZON_H), r = Math.min(px(BAR_RADIUS), bw / 2);
-        const barsY = y;
-        bars.forEach((v, i) => {
-          const rise = smooth(clamp01((t - ROLLS_AT) / ROLLS_IN));
-          if (rise <= 0) return;
-          const bh = Math.max(0.03 * h, v * h), x0 = left + i * (bw + gap);
-          c.fillStyle = ink.bar;
-          c.beginPath();
-          c.roundRect(x0, barsY + h - bh * rise, bw, bh * rise, [r, r, 0, 0]);
-          c.fill();
-          if (favs[i]) {
-            const hs = px(HEART), hy = barsY + h - bh - hs - px(HEART_LIFT);
-            drawPath(c, HEART_PATH, x0 + (bw - hs) / 2, hy, hs, 24, FAV);
-          }
-        });
-      }
       c.restore();
     }
 

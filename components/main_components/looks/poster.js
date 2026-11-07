@@ -5,26 +5,25 @@
 // edge at the head, the title printed over the bars (Miyel, 2026-11-05: "it's always
 // the album art, not any different version of it"). It comes in quickly and smoothly,
 // since most people tap through stories, but it does come in: the cover glides down from
-// the top of the sheet, and the bars rise as the words unroll from under it. Dots, colour
-// layers, sliding sheets and a puzzle of flat shapes were all tried and let go (Miyel,
-// 2026-11-06). Nothing bounces.
-// By day the words, stars and marks take a deep ink from the album's own colours and the
-// title overlaps the bars. At night they are solid white and the title sits clear of the
-// bars (Miyel, 2026-11-06). The bars are in the album's own bright colour, or LN green on
-// a cover with no colour of its own.
+// the top of the sheet and everything else comes up from the bottom to meet it. Dots,
+// colour layers, sliding sheets and a puzzle of flat shapes were all tried and let go
+// (Miyel, 2026-11-06). Nothing bounces.
+// The words, stars and marks take an ink from the album's own colours, deep by day and
+// lifted at night, and the bars its brighter one, or LN green on a cover with no colour
+// of its own. Everything wears a hairline, black by day and white at night (Miyel,
+// 2026-11-06). The title overlaps the bars only by day, with no hearts to cover.
 //
 // Reading the colours is by the pixel. A cover that will not be read throws here, and
 // the print falls back to Day.
 'use client';
 
 import {
-  LN_GREEN, STAR_PATH, HEART_PATH, SYMBOLS, MARK_ASPECT,
+  INKS, LN_GREEN, STAR_PATH, HEART_PATH, SYMBOLS, MARK_ASPECT,
   drawArtist, drawPath, clamp01, sheet, fitTitle,
 } from '../SharePrinter';
 
-const SHEETS = { day: '#f4f0e5', night: '#0e0e0e' };
 const GLIDES_IN = 0.9;                 // the cover
-const ROLLS_AT = 0.6, ROLLS_IN = 0.7;  // the words and bars
+const RISES_AT = 0.45, RISES_IN = 0.85; // everything under the cover
 const FAR_ENOUGH = 60;                 // degrees of hue between the two to choose from
 const PLAIN_FLOOR = 0.1;               // how much colour a cover needs to give an ink
 const SAMPLE = 360;
@@ -51,7 +50,10 @@ function inksOf(px) {
     vivid += chroma;
   }
   if (vivid / (px.length / 4) < PLAIN_FLOOR) {
-    return { words: 'hsl(240,6%,12%)', faint: 'hsla(240,6%,12%,0.2)', barInk: LN_GREEN };
+    return {
+      words: 'hsl(240,6%,12%)', faint: 'hsla(240,6%,12%,0.2)', barInk: LN_GREEN,
+      nightWords: '#ffffff', nightFaint: 'rgba(255,255,255,0.2)',
+    };
   }
   const apart = (a, b) => { const d = Math.abs(a - b) % 360; return Math.min(d, 360 - d); };
   let first = 0;
@@ -70,10 +72,11 @@ function inksOf(px) {
     words: `hsl(${darkHue},78%,${light}%)`,
     faint: `hsla(${darkHue},78%,${light}%,0.2)`,
     barInk: `hsl(${brightHue},86%,58%)`,
+    nightWords: `hsl(${darkHue},78%,70%)`,
+    nightFaint: `hsla(${darkHue},78%,70%,0.2)`,
   };
 }
 
-const smooth = v => v * v * (3 - 2 * v);
 const easeOut = v => 1 - (1 - v) ** 3;
 
 function overprint(c, paint) {
@@ -84,7 +87,7 @@ function overprint(c, paint) {
 }
 
 export const posterScene = night => (record, frame, { art, families, still = false }) => {
-  const SHEET = night ? SHEETS.night : SHEETS.day;
+  const SHEET = night ? INKS.night.paper : INKS.day.paper;
   const { stars, artistLine, tags, bars, favs, entry } = record;
   const { sans, mono } = families;
   const W = frame.w, H = frame.h;
@@ -119,7 +122,10 @@ export const posterScene = night => (record, frame, { art, families, still = fal
   });
   const px = small.getContext('2d').getImageData(0, 0, side, side).data;
   const inks = inksOf(px);
-  const { words, faint } = night ? { words: '#ffffff', faint: 'rgba(255,255,255,0.2)' } : inks;
+  const words = night ? inks.nightWords : inks.words;
+  const faint = night ? inks.nightFaint : inks.faint;
+  const line = night ? '#ffffff' : '#000000';
+  const hair = Math.max(1, 0.2 * u);
 
   // The real cover.
   const solid = sheet(size, size, c => {
@@ -159,35 +165,48 @@ export const posterScene = night => (record, frame, { art, families, still = fal
   function paintAt(c, t) {
     c.drawImage(under, 0, 0);
 
-    // The bars first: the title goes over them.
-    const rise = smooth(clamp01((t - ROLLS_AT) / ROLLS_IN));
+    // Everything under the cover comes up from the bottom, together.
+    const up = (1 - easeOut(clamp01((t - RISES_AT) / RISES_IN))) * (H - size);
+    c.lineWidth = hair;
+    c.strokeStyle = line;
+    c.save();
+    c.translate(0, up);
     bars.forEach((v, i) => {
-      if (rise <= 0) return;
-      const h = Math.max(floorH * 0.05, floorH * v) * rise;
+      const h = Math.max(floorH * 0.05, floorH * v);
       c.fillStyle = inks.barInk;
       c.fillRect(i * slot + barGap / 2, H - h, slot - barGap, h);
+      c.strokeRect(i * slot + barGap / 2, H - h, slot - barGap, h);
     });
+    c.restore();
 
-    c.drawImage(solid, ax, -(1 - easeOut(clamp01(t / GLIDES_IN))) * size);
+    const coverY = -(1 - easeOut(clamp01(t / GLIDES_IN))) * size;
+    c.drawImage(solid, ax, coverY);
+    c.strokeRect(ax, coverY, size, size);
     c.drawImage(tab, 0, 0);
 
-    // The words unroll downward from under the cover, all together.
-    const unroll = smooth(clamp01((t - ROLLS_AT) / ROLLS_IN));
-    if (unroll <= 0) return;
     c.save();
     c.beginPath();
-    c.rect(0, size, W, (H - size) * unroll);
+    c.rect(0, size, W, H - size);
     c.clip();
-
+    c.translate(0, up);
     paintWords(c, words, faint);
 
-    // A favourite: a heart standing on its bar, black by day and white at night (Miyel,
-    // 2026-11-06), rising with it.
+    // A favourite: a heart standing on its bar, black by day and white at night.
     bars.forEach((v, i) => {
-      if (!favs[i] || rise <= 0) return;
-      const h = Math.max(floorH * 0.05, floorH * v) * rise;
-      drawPath(c, HEART_PATH, i * slot + (slot - heartBox) / 2, H - h - heartBox - heartLift, heartBox, 24, night ? '#ffffff' : '#000000');
+      if (!favs[i]) return;
+      const h = Math.max(floorH * 0.05, floorH * v);
+      drawPath(c, HEART_PATH, i * slot + (slot - heartBox) / 2, H - h - heartBox - heartLift, heartBox, 24, line);
     });
+    c.restore();
+  }
+
+  function outline(c, d, x, y, box, viewBox) {
+    c.save();
+    c.translate(x, y);
+    c.scale(box / viewBox, box / viewBox);
+    c.lineWidth = hair * (viewBox / box);
+    c.strokeStyle = line;
+    c.stroke(new Path2D(d));
     c.restore();
   }
 
@@ -199,6 +218,7 @@ export const posterScene = night => (record, frame, { art, families, still = fal
         for (let i = 0; i < 5 && stars > 0; i++) {
           const x = margin + i * (starBox + starGap);
           drawPath(c, STAR_PATH, x, rowY, starBox, 18, inkFaint);
+          outline(c, STAR_PATH, x, rowY, starBox, 18);
           const part = clamp01(stars - i);
           if (part > 0) {
             c.save();
@@ -206,12 +226,15 @@ export const posterScene = night => (record, frame, { art, families, still = fal
             c.rect(x, rowY, starBox * part, starBox);
             c.clip();
             drawPath(c, STAR_PATH, x, rowY, starBox, 18, ink);
+            outline(c, STAR_PATH, x, rowY, starBox, 18);
             c.restore();
           }
         }
         tags.forEach((tag, i) => {
           const x = W - margin - (tags.length - i) * markBox - (tags.length - i - 1) * markGap;
           drawPath(c, SYMBOLS[tag], x, rowY, markBox, 256, ink);
+          // The fingerprint's lines are too fine to take a hairline of their own.
+          if (tag !== 'formative') outline(c, SYMBOLS[tag], x, rowY, markBox, 256);
         });
       });
       y += 10.5 * k * u;
@@ -227,7 +250,13 @@ export const posterScene = night => (record, frame, { art, families, still = fal
       c.textBaseline = 'top';
       c.textAlign = 'left';
       c.fillStyle = ink;
-      titleLines.forEach((line, i) => c.fillText(line, margin, titleY + i * lead));
+      c.lineJoin = 'round';
+      c.lineWidth = hair;
+      c.strokeStyle = line;
+      titleLines.forEach((words, i) => {
+        c.fillText(words, margin, titleY + i * lead);
+        c.strokeText(words, margin, titleY + i * lead);
+      });
     });
   }
 
