@@ -122,16 +122,16 @@ export function paperScene(night) {
       c.fillRect(0, 0, W, H);
       const cx = W / 2;
 
-      // The mark and whose journal it is, side by side over the cover like the head of a
-      // post, and the whole of it centred in the room there is.
+      // Whose journal it is at the left and the mark at the right, over the cover, like the
+      // head of a post, and the whole of it centred in the room there is.
       const top = story
         ? H * STORY_TOP + Math.max(0, (H * (1 - STORY_TOP - STORY_FOOT) - laid.h) / 2)
         : (H - laid.h) / 2;
       if (art?.mark) {
         const mw = px(MARK_H) * MARK_ASPECT;
-        c.drawImage(art.mark, cx - size / 2, top, mw, px(MARK_H));
+        c.drawImage(art.mark, cx + size / 2 - mw, top, mw, px(MARK_H));
       }
-      if (signature) c.drawImage(signature, cx + size / 2 - signature.width, top + (px(MARK_H) - signature.height) / 2);
+      if (signature) c.drawImage(signature, cx - size / 2, top + (px(MARK_H) - signature.height) / 2);
       let y = top + px(MARK_H + GAP);
 
       c.drawImage(card, cx - card.width / 2, y + size / 2 - card.height / 2);
