@@ -22,7 +22,7 @@ const COL = 340, ART = 265, ART_RADIUS = 16;
 const MARK_H = 72, MARK_TOP = 0.05;
 const TITLE = 26, TITLE_LEAD = 26 * 1.22;
 const ARTIST = 11, ARTIST_LEAD = 11 * 1.4;
-const STAR = 30, STAR_GAP = 4;
+const STAR = 44, STAR_GAP = 6;
 const SYMBOL = 36, SYMBOL_WORD = 8.5, SYMBOL_ACROSS = 92;
 const GAP = 12;
 const PAD = 0.07;
