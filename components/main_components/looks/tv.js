@@ -1,16 +1,17 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// components/main_components/looks/commercial.js
-// Commercial: a local TV ad from about 2003 (Miyel, 2026-11-06). A loud page in the
+// components/main_components/looks/tv.js
+// TV: a local TV ad from about 2003 (Miyel, 2026-11-06). A loud page in the
 // album's colour with CRT lines over all of it, the title in chunky type in its second
 // colour, or that colour's opposite, or plain greys on a colourless cover, the rating
 // spelled out like a price, the mark in an oval, the marks as starburst stickers and the
 // bars as a strip above the fine print, which says whose journal it is. It switches on like an old set, the pieces
 // cut in one after another, and keeps fidgeting: the stickers wiggle and a band rolls down
-// the screen. Still is the finished ad, its band gone.
+// the screen. Then the channel flickers: every track and its rating fills the screen, like
+// the listings in those ads, and flickers back. Still is the finished ad, its band gone.
 'use client';
 
-import { HEART_PATH, MARK_ASPECT, SYMBOLS, clamp01, drawPath, sheet, wrapLines } from '../SharePrinter';
+import { HEART_PATH, MARK_ASPECT, STAR_PATH, SYMBOLS, clamp01, drawPath, ellipsize, sheet, wrapLines } from '../SharePrinter';
 import { coverOf, easeOut, huesOf, isStory, markIn, signatureOf } from './poster';
 
 const OUTLINE = '#120810';
@@ -22,6 +23,7 @@ const STICKERS = {
 };
 const ORDER = ['mp', 'fav', 'formative'];
 const ROLL_EVERY = 2.6;
+const CHANNEL_AT = 3, CHANNEL_EVERY = 6, LISTED_FOR = 2.3, FLICKERS_FOR = 0.14;
 
 // The rating, spelled out, one or two lines.
 function ratingWords(stars) {
@@ -53,8 +55,8 @@ function chunky(c, text, x, y, px, { top = '#fff59a', bottom = '#ff9d1c', depth 
   c.fillText(text, x, y);
 }
 
-export const commercialScene = night => (record, frame, { art, families, still = false }) => {
-  const { stars, tags, bars, favs, year, entry } = record;
+export const tvScene = night => (record, frame, { art, families, still = false }) => {
+  const { stars, tags, bars, favs, year, entry, trackNames = [] } = record;
   const { sans, mono } = families;
   const W = frame.w, H = frame.h;
   const u = Math.min(W, (H * 9) / 16) / 100;
@@ -69,7 +71,7 @@ export const commercialScene = night => (record, frame, { art, families, still =
   // A story leaves Instagram's top alone and the foot for the Link sticker.
   const story = isStory(frame);
   const head = story ? 9 * u : 0;
-  const foot = story ? 13 * u : 0;
+  const foot = story ? 10 * u : 0;
 
   const page = sheet(W, H, c => {
     const wash = c.createLinearGradient(0, 0, 0, H);
@@ -194,7 +196,7 @@ export const commercialScene = night => (record, frame, { art, families, still =
   const ratingY = bottomOfBox + 1 * u;
 
   // The artist, then the bars, then the fine print.
-  const fineH = 3 * u;
+  const fineH = 4.4 * u;
   const stripH = bars.length ? 13 * u : 0;
   const fineY = H - fineH - 2.5 * u - foot;
   const stripY = fineY - stripH - 1.5 * u;
@@ -211,7 +213,7 @@ export const commercialScene = night => (record, frame, { art, families, still =
   });
   const artistY = ratingY + ratingH + 1 * u;
 
-  const signature = signatureOf({ art, record, mono, height: 6.8 * u, colour: '#ffffff' });
+  const signature = signatureOf({ art, record, mono, height: 8 * u, colour: night ? '#ffffff' : OUTLINE });
   const fine = [year, bars.length ? `${bars.length} ${bars.length === 1 ? 'TRACK' : 'TRACKS'}` : null].filter(Boolean).join(' · ');
   const slot = bars.length ? wide / bars.length : 0;
   const gold = sheet(1, Math.max(1, stripH), c => {
@@ -225,8 +227,73 @@ export const commercialScene = night => (record, frame, { art, families, still =
 
   const pop = v => (v >= 1 ? 1 : 1.18 * easeOut(v) - 0.18 * v);
 
+  // The other channel: the title, then every track and its rating, as large as they fit.
+  const listing = trackNames.length ? sheet(W, H, c => {
+    let headPx = Math.min(titlePx, 11 * u);
+    c.font = fontAt(headPx);
+    const headLine = entry?.album || '';
+    const headAcross = c.measureText(headLine).width;
+    if (headAcross > wide) headPx *= wide / headAcross;
+    c.font = fontAt(headPx);
+    c.textBaseline = 'top';
+    c.textAlign = 'center';
+    chunky(c, headLine, W / 2, head + 5 * u, headPx, typeInk);
+    const top = head + 5 * u + headPx * 1.5, end = fineY - 3 * u;
+    const columns = trackNames.length > 16 ? 2 : 1;
+    const down = Math.ceil(trackNames.length / columns);
+    const rowH = Math.min(11.5 * u, (end - top) / down);
+    const px = rowH * 0.5, colW = (wide - (columns - 1) * 3 * u) / columns;
+    const rated = bars.length === trackNames.length;
+    const star = Math.min(rowH * 0.5, (colW * 0.32) / 5), starsW = rated ? 5 * star : 0;
+    trackNames.forEach((name, i) => {
+      const col = Math.floor(i / down);
+      const x = ox + margin + col * (colW + 3 * u);
+      const y = top + (i % down) * rowH + (rowH - px) / 2;
+      c.font = fontAt(px);
+      c.textAlign = 'left';
+      c.textBaseline = 'top';
+      const room = colW - starsW - (favs[i] ? star * 1.2 : 0) - px;
+      chunky(c, ellipsize(c, `${i + 1}. ${name}`, room), x, y, px, { top: '#ffffff', bottom: '#d9dcff', depth: 0.05 });
+      if (!rated) return;
+      const lit = bars[i] * 5;
+      const midY = top + (i % down) * rowH + (rowH - star) / 2;
+      for (let n = 0; n < 5; n++) {
+        const sx = x + colW - starsW + n * star;
+        drawPath(c, STAR_PATH, sx, midY, star, 18, 'rgba(0,0,0,0.35)');
+        const part = clamp01(lit - n);
+        if (part > 0) {
+          c.save();
+          c.beginPath();
+          c.rect(sx, midY, star * part, star);
+          c.clip();
+          drawPath(c, STAR_PATH, sx, midY, star, 18, typeInk.top);
+          c.restore();
+        }
+      }
+      if (favs[i]) drawPath(c, HEART_PATH, x + colW - starsW - star * 1.2, midY, star, 24, '#ee2f3f');
+    });
+  }) : null;
+
+  // The flicker between channels: white and black streaks, the same ones every time.
+  let seed = 7;
+  const chance = () => { seed = (seed * 16807) % 2147483647; return (seed % 1000) / 1000; };
+  const snow = sheet(W, H, c => {
+    for (let i = 0; i < 120; i++) {
+      c.fillStyle = chance() > 0.5 ? 'rgba(255,255,255,0.75)' : 'rgba(0,0,0,0.75)';
+      const x = chance() * W;
+      c.fillRect(x - W * 0.4, chance() * H, W * (0.2 + chance() * 0.8), Math.max(1, (0.3 + chance() * 1.6) * u));
+    }
+  });
+
   function paintAt(c, t) {
     c.drawImage(page, 0, 0);
+    const channel = still || !listing || t < CHANNEL_AT ? -1 : (t - CHANNEL_AT) % CHANNEL_EVERY;
+    if (channel >= 0 && channel < LISTED_FOR) {
+      c.drawImage(listing, 0, 0);
+      if (signature) c.drawImage(signature, ox + margin, fineY - 1.8 * u);
+      paintGlass(c, t, channel);
+      return;
+    }
     if (t >= 0.3) c.drawImage(title, 0, head);
 
     // The box slides in on a quick cut from the left.
@@ -265,15 +332,15 @@ export const commercialScene = night => (record, frame, { art, families, still =
       if (favs[i]) drawPath(c, HEART_PATH, x + (slot - heart) / 2, y - heart - 0.7 * u, heart, 24, '#ffffff');
     });
     if (t >= 1.8 && fine) {
-      c.font = `400 ${2.3 * u}px ${mono}`;
+      c.font = `400 ${3.3 * u}px ${mono}`;
       c.textAlign = signature ? 'right' : 'center';
       c.textBaseline = 'top';
-      c.fillStyle = '#ffffff';
+      c.fillStyle = night ? '#ffffff' : OUTLINE;
       c.fillText(fine, signature ? ox + margin + wide : W / 2, fineY);
       c.textAlign = 'left';
     }
 
-    if (t >= 1.8 && signature) c.drawImage(signature, ox + margin, fineY - 0.6 * u);
+    if (t >= 1.8 && signature) c.drawImage(signature, ox + margin, fineY - 1.8 * u);
 
     // The stickers pop on, and go on wiggling.
     stickers.forEach((sticker, i) => {
@@ -290,6 +357,10 @@ export const commercialScene = night => (record, frame, { art, families, still =
       c.restore();
     });
 
+    paintGlass(c, t, channel);
+  }
+
+  function paintGlass(c, t, channel) {
     // A band rolling down the screen, as on a set that wants adjusting.
     if (!still) {
       const bandH = 26 * u;
@@ -298,6 +369,12 @@ export const commercialScene = night => (record, frame, { art, families, still =
       c.fillRect(0, y, W, bandH);
     }
     c.drawImage(tube, 0, 0);
+
+    if (channel >= 0 && (channel < FLICKERS_FOR || Math.abs(channel - LISTED_FOR) < FLICKERS_FOR)) {
+      const roll = Math.floor(t * 30) * 0.37 * H;
+      c.drawImage(snow, 0, roll % H - H);
+      c.drawImage(snow, 0, roll % H);
+    }
 
     // Switching on: a bright line opens out into the picture.
     if (t < 0.35) {

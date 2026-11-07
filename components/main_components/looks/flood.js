@@ -65,7 +65,7 @@ export const floodScene = night => (record, frame, { art, families, still = fals
   const markY = (story ? 15 : 7) * u;
   const size = Math.min(W - margin * 2, H * (story ? 0.38 : 0.42));
   const signature = signatureOf({ art, record, mono: families.mono, height: 6.4 * u, colour: night ? '#ffffff' : '#000000' });
-  const coverY = markY + markH + (signature ? 9.8 : 3.5) * u;
+  const coverY = markY + Math.max(markH, signature?.height || 0) + 2.4 * u;
   const cover = sheet(size, size, c => {
     roundRect(c, 0, 0, size, size, size * 0.06);
     c.clip();
@@ -107,8 +107,10 @@ export const floodScene = night => (record, frame, { art, families, still = fals
       const drawn = size * (1.08 - 0.08 * album);
       c.globalAlpha = album;
       c.drawImage(cover, (W - drawn) / 2, coverY + (size - drawn) / 2, drawn, drawn);
-      c.drawImage(mark, (W - markW) / 2, markY);
-      if (signature) c.drawImage(signature, (W - signature.width) / 2, markY + markH + 0.9 * u);
+      // The mark and the keeper side by side over the album.
+      const row = Math.max(markH, signature?.height || 0);
+      c.drawImage(mark, (W - size) / 2, markY + (row - markH) / 2);
+      if (signature) c.drawImage(signature, (W + size) / 2 - signature.width, markY + (row - signature.height) / 2);
     }
 
     // The rest.

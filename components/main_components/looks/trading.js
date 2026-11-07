@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // components/main_components/looks/trading.js
 // Trading: the record as a collectible card (Miyel, 2026-11-06). The title in the name
-// bar, the real cover in the window, the artist on the type line, the stars and marks as
+// bar, the real cover in the window, the artist in the name bar, the stars and marks as
 // its stats, the horizon with each track's title running down under its bar, the mark
 // as the set symbol. It starts face down, showing its LN back, flips over once, then
 // a silver shine runs across it once.
@@ -51,10 +51,10 @@ export const tradingScene = night => (record, frame, { art, families, still = fa
     const story = isStory(frame);
     const head = story ? 8 * u : 0, band = story ? 11 * u : 0;
     const pad = 5 * u, inner = cardW - pad * 2;
-    const window_ = Math.min(inner, cardH * (story ? 0.47 : 0.56)), artX = (cardW - window_) / 2;
+    const window_ = Math.min(inner, cardH * (story ? 0.42 : 0.5)), artX = (cardW - window_) / 2;
 
-    // The name bar.
-    const barH = 10 * u;
+    // The name bar, with the artist under the title.
+    const barH = 14 * u;
     c.fillStyle = 'rgba(255,255,255,0.86)';
     roundRect(c, pad, pad + head, inner, barH, 1.4 * u);
     c.fill();
@@ -67,29 +67,22 @@ export const tradingScene = night => (record, frame, { art, families, still = fa
     c.textBaseline = 'middle';
     c.textAlign = 'left';
     c.fillStyle = inkDark;
-    c.fillText(entry?.album || '', pad + 2 * u, pad + head + barH / 2 + 0.2 * u);
+    c.fillText(entry?.album || '', pad + 2 * u, pad + head + barH * 0.36);
+    let artistPx = 2.5 * u;
+    c.font = `400 ${artistPx}px ${mono}`;
+    const artistAcross = c.measureText(artistLine).width;
+    if (artistAcross > titleRoom) artistPx *= titleRoom / artistAcross;
+    c.font = `400 ${artistPx}px ${mono}`;
+    c.fillText(artistLine, pad + 2 * u, pad + head + barH * 0.76);
 
     // The window.
-    const artY = pad + head + barH + 1.6 * u;
+    const artY = pad + head + barH + 2.4 * u;
     c.fillStyle = inkDark;
     c.fillRect(artX - 0.4 * u, artY - 0.4 * u, window_ + 0.8 * u, window_ + 0.8 * u);
     c.drawImage(coverOf(art, window_), artX, artY);
 
-    // The type line.
-    const lineY = artY + window_ + 1.2 * u, lineH = 5.2 * u;
-    c.fillStyle = 'rgba(255,255,255,0.86)';
-    roundRect(c, pad, lineY, inner, lineH, 1 * u);
-    c.fill();
-    let artistPx = 2.5 * u;
-    c.font = `400 ${artistPx}px ${mono}`;
-    const artistAcross = c.measureText(artistLine).width;
-    if (artistAcross > inner - 3 * u) artistPx *= (inner - 3 * u) / artistAcross;
-    c.font = `400 ${artistPx}px ${mono}`;
-    c.fillStyle = inkDark;
-    c.fillText(artistLine, pad + 1.5 * u, lineY + lineH / 2 + 0.1 * u);
-
     // The stats: stars at the left, the marks at the right.
-    const statY = lineY + lineH + 1.4 * u, box = 6.4 * u, gap = 0.8 * u;
+    const statY = artY + window_ + 2.4 * u, box = 6.4 * u, gap = 0.8 * u;
     for (let i = 0; i < 5 && stars > 0; i++) {
       const x = pad + i * (box + gap);
       drawPath(c, STAR_PATH, x, statY, box, 18, 'rgba(0,0,0,0.22)');
@@ -118,7 +111,7 @@ export const tradingScene = night => (record, frame, { art, families, still = fa
 
     // The tracks: the horizon standing upright in the card's text box, each bar with its
     // heart. With no titles on record, the horizon alone fills the box.
-    const stripY = statY + box + 1.4 * u, stripH = cardH - stripY - rim - 6.4 * u - band;
+    const stripY = statY + box + 2.4 * u, stripH = cardH - stripY - rim - 9 * u - band;
     c.fillStyle = 'rgba(255,255,255,0.86)';
     roundRect(c, pad, stripY, inner, stripH, 1 * u);
     c.fill();
@@ -157,18 +150,12 @@ export const tradingScene = night => (record, frame, { art, families, still = fa
       });
     }
 
-    // The foot: the set symbol, and how many in the set.
-    const footY = cardH - rim - 5.4 * u - band;
-    const markH = 3.2 * u, markW = markH * MARK_ASPECT;
-    c.drawImage(markIn(art, markW, markH, inkDark), pad, footY);
+    // The foot: the set symbol, and whose it is.
+    const footMid = cardH - rim - 4 * u - band;
+    const markH = 3.6 * u, markW = markH * MARK_ASPECT;
+    c.drawImage(markIn(art, markW, markH, inkDark), pad, footMid - markH / 2);
     const signature = signatureOf({ art, record, mono, height: 5.4 * u, colour: inkDark });
-    if (signature) c.drawImage(signature, (cardW - signature.width) / 2, footY + markH / 2 - signature.height / 2);
-    if (bars.length) {
-      c.font = `400 ${2.1 * u}px ${mono}`;
-      c.textAlign = 'right';
-      c.fillStyle = inkDark;
-      c.fillText(`${bars.length} ${bars.length === 1 ? 'TRACK' : 'TRACKS'}`, pad + inner, footY + markH / 2);
-    }
+    if (signature) c.drawImage(signature, pad + inner - signature.width, footMid - signature.height / 2);
   });
 
   // The back is the same on every card: black, and the logo.

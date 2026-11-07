@@ -4,8 +4,8 @@
 // Day and Night, the default: the card as it reads on the entry page, exported,
 // in day mode or night mode (Miyel, 2026-11-04). The page's own colour, the cover,
 // the title, the artist, the stars and a row of the three marks, large with a small word
-// under each, those not given as ghosts like unlit stars (2026-11-06), under a large mark
-// at the head, with no horizon (trying, 2026-11-06). It is the plain one on purpose.
+// under each, those not given as ghosts like unlit stars (2026-11-06), under the mark and the
+// keeper's face at the head, with no horizon (trying, 2026-11-06). It is the plain one on purpose.
 // Animated, the album and the words are there from the first frame and the stars and marks
 // come up slowly and glow gently, breathing, like lights: the stars from the left, each
 // one starting as the last is warming, then the marks (Miyel, 2026-11-06). Still is the last
@@ -21,8 +21,8 @@ import {
 } from '../SharePrinter';
 
 const COL = 340, ART = 265, ART_RADIUS = 16;
-const MARK_H = 72, MARK_TOP = 0.05, STORY_TOP = 0.09, STORY_FOOT = 0.11;
-const NAME = 27;
+const MARK_H = 34, STORY_TOP = 0.09, STORY_FOOT = 0.11;
+const NAME = 30;
 const TITLE = 26, TITLE_LEAD = 26 * 1.22;
 const ARTIST = 11, ARTIST_LEAD = 11 * 1.4;
 const STAR = 44, STAR_GAP = 6;
@@ -122,16 +122,17 @@ export function paperScene(night) {
       c.fillRect(0, 0, W, H);
       const cx = W / 2;
 
-      // The mark high up, large; the rest centred in what is left.
-      const markY = H * (story ? STORY_TOP : MARK_TOP), markEnd = markY + px(MARK_H);
+      // The mark and whose journal it is, side by side over the cover like the head of a
+      // post, and the whole of it centred in the room there is.
+      const top = story
+        ? H * STORY_TOP + Math.max(0, (H * (1 - STORY_TOP - STORY_FOOT) - laid.h) / 2)
+        : (H - laid.h) / 2;
       if (art?.mark) {
         const mw = px(MARK_H) * MARK_ASPECT;
-        c.drawImage(art.mark, cx - mw / 2, markY, mw, px(MARK_H));
+        c.drawImage(art.mark, cx - size / 2, top, mw, px(MARK_H));
       }
-      if (signature) c.drawImage(signature, cx - signature.width / 2, markEnd + px(4));
-      const stack = laid.h - px(MARK_H + GAP);
-      const under = px(signature ? NAME + 8 + GAP : GAP);
-      let y = story ? markEnd + under : markEnd + Math.max(under, (H - markEnd - H * PAD - stack) / 2);
+      if (signature) c.drawImage(signature, cx + size / 2 - signature.width, top + (px(MARK_H) - signature.height) / 2);
+      let y = top + px(MARK_H + GAP);
 
       c.drawImage(card, cx - card.width / 2, y + size / 2 - card.height / 2);
       y += size + px(GAP);

@@ -749,7 +749,7 @@ A print is always the album's real cover: looks differ by layout, never by a ver
 of the art (2026-11-05). The card is the reading card exported, grey bars and red
 hearts; Poster is the other layout, words and bars in one colour from the album (black or white on a colourless cover), the real cover gliding in; dots, colour layers,
 sheets and a puzzle of colour shapes were tried and let go (2026-11-06). Each is Day
-or Night (2026-11-06) and Animated or Still. Flood, Commercial, Game and Trading
+or Night (2026-11-06) and Animated or Still. Flood, TV, Game and Trading
 were added the same day to be judged; the names are placeholders. No gold for a Masterpiece:
 a gold edge on every look and a gold trading card were tried and taken off (2026-11-06). Game, Mosaic, CRT, Paper,
 Riso, dotted Halftone, Record, Solitaire, Sideways and Headline were built and cut (git has them, 2026-11-04).
