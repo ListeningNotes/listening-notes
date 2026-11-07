@@ -388,7 +388,7 @@ export const gameScene = night => (record, frame, { art, families, still = false
       }), cx - markW / 2, y0 - markH / 2);
     }
   });
-  const slab = coverPicture(art?.cover, size, { shade: 0.5, ring: tone(0.45) });
+  const slab = coverPicture(art?.cover, size, { shade: 0.5, ring: record.isMasterpiece ? '#e8b84b' : tone(0.45) });
   const rays = rayPicture(170 * u, 'rgba(255,255,255,0.22)', 14);
 
   // A hard shadow in the darker shade of the same colour.

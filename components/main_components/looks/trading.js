@@ -4,8 +4,9 @@
 // Trading: the record as a collectible card (Miyel, 2026-11-06). The title in the name
 // bar, the real cover in the window, the artist on the type line, the stars and marks as
 // its stats, the tracks listed as the card's text, each with its bar and heart, the mark
-// as the set symbol. It starts face down, showing its LN back, flips over once, then foil
-// keeps sweeping across it. Still is the card with its sheen.
+// as the set symbol. It starts face down, showing its LN back, flips over once, then
+// a shine runs across it now and then, silver, or gold on a gold card for a Masterpiece.
+// Still is the card with its shine caught at the corner.
 'use client';
 
 import { HEART_PATH, INKS, MARK_ASPECT, STAR_PATH, SYMBOLS, clamp01, drawPath, ellipsize, roundRect, sheet } from '../SharePrinter';
@@ -14,7 +15,7 @@ import { coverOf, hueOf, markIn } from './poster';
 const FACE_DOWN = 0.6, TURNS_IN = 0.8; // resting on its back, then the one flip
 const SETTLED = FACE_DOWN + TURNS_IN;
 const smooth = v => v * v * (3 - 2 * v);
-const SWEEP_EVERY = 2.4;
+const SWEEP_EVERY = 5, SWEEPS_IN = 1.3;  // the shine, now and then
 const TONES = { mp: '#2f7bf0', fav: '#ee2f3f', formative: '#1f9e58' };
 const ORDER = ['mp', 'fav', 'formative'];
 
@@ -25,8 +26,10 @@ export const tradingScene = night => (record, frame, { art, families, still = fa
   const u = Math.min(W, (H * 9) / 16) / 100;
   const paper = night ? INKS.night.paper : INKS.day.paper;
   const hue = hueOf(art);
-  const frameTop = hue === null ? '#d9dbe0' : `hsl(${hue},72%,62%)`;
-  const frameEnd = hue === null ? '#8f939c' : `hsl(${(hue + 30) % 360},78%,40%)`;
+  // A Masterpiece is the rare one in the pack: a gold card with a gold shine.
+  const gilded = record.isMasterpiece;
+  const frameTop = gilded ? '#ffe9a3' : hue === null ? '#d9dbe0' : `hsl(${hue},72%,62%)`;
+  const frameEnd = gilded ? '#b8862b' : hue === null ? '#8f939c' : `hsl(${(hue + 30) % 360},78%,40%)`;
   const inkDark = '#14110f';
 
   const cardW = 88 * u, cardH = 148 * u, radius = 4.5 * u;
@@ -68,7 +71,7 @@ export const tradingScene = night => (record, frame, { art, families, still = fa
     const artY = pad + barH + 1.6 * u;
     c.fillStyle = inkDark;
     c.fillRect(pad - 0.4 * u, artY - 0.4 * u, inner + 0.8 * u, inner + 0.8 * u);
-    c.drawImage(coverOf(art, inner), pad, artY);
+    c.drawImage(coverOf(art, inner, gilded), pad, artY);
 
     // The type line.
     const lineY = artY + inner + 1.2 * u, lineH = 5.2 * u;
@@ -182,14 +185,17 @@ export const tradingScene = night => (record, frame, { art, families, still = fa
     c.drawImage(markIn(art, markW, markH, frameTop), (cardW - markW) / 2, (cardH - markH) / 2);
   });
 
-  // The foil: a rainbow on the slant, kept to the card's own shape.
+  // The shine: a band of silver on the slant, or gold, kept to the card's own shape.
   const foilW = cardW * 2.2;
   const foil = sheet(foilW, cardH, c => {
     c.setTransform(1, 0, -0.45, 1, cardH * 0.45, 0);
     const g = c.createLinearGradient(0, 0, foilW * 0.7, 0);
-    [['#ff5e87', 0.2], ['#ffe45c', 0.32], ['#5effa8', 0.44], ['#5ec8ff', 0.56], ['#c77dff', 0.68]].forEach(([colour, at]) => g.addColorStop(at, colour));
-    g.addColorStop(0, 'rgba(255,255,255,0)');
-    g.addColorStop(0.9, 'rgba(255,255,255,0)');
+    const shine = gilded ? '255,215,102' : '255,255,255';
+    g.addColorStop(0.32, `rgba(${shine},0)`);
+    g.addColorStop(0.45, `rgba(${shine},1)`);
+    g.addColorStop(0.5, `rgba(${shine},0.5)`);
+    g.addColorStop(0.53, `rgba(${shine},0.85)`);
+    g.addColorStop(0.66, `rgba(${shine},0)`);
     c.fillStyle = g;
     c.fillRect(-cardH, 0, foilW + cardH * 2, cardH);
   });
@@ -200,9 +206,9 @@ export const tradingScene = night => (record, frame, { art, families, still = fa
     onShade.clearRect(0, 0, cardW, cardH);
     onShade.drawImage(front, 0, 0);
     onShade.globalCompositeOperation = 'source-atop';
-    onShade.globalAlpha = still ? 0.22 : 0.34;
-    const pass = still ? 0.42 : ((t - SETTLED) % SWEEP_EVERY + SWEEP_EVERY) % SWEEP_EVERY / SWEEP_EVERY;
-    onShade.drawImage(foil, cardW - pass * (foilW + cardW), 0);
+    onShade.globalAlpha = still ? 0.3 : 0.6;
+    const pass = still ? 0.3 : (t > SETTLED ? ((t - SETTLED) % SWEEP_EVERY) / SWEEPS_IN : 2);
+    if (pass <= 1) onShade.drawImage(foil, cardW - pass * (foilW + cardW), 0);
     onShade.globalAlpha = 1;
     return shade;
   }

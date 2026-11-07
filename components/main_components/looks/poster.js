@@ -69,10 +69,27 @@ export function inkOf(hue, night) {
   return { ink: `hsl(${hue},80%,${light}%)`, faint: `hsla(${hue},80%,${light}%,0.2)` };
 }
 
-export function coverOf(art, size) {
+// A Masterpiece's one sign, on every look: a thin edge of gold round its cover, there for
+// anybody who looks and shouting at nobody (Miyel, 2026-11-06).
+export function goldStroke(c, width, x, y, w, h) {
+  const shine = c.createLinearGradient(x, y, x + w, y + h);
+  shine.addColorStop(0, '#fff3c4');
+  shine.addColorStop(0.45, '#e8b84b');
+  shine.addColorStop(0.7, '#fff3c4');
+  shine.addColorStop(1, '#b8862b');
+  c.strokeStyle = shine;
+  c.lineWidth = width;
+}
+
+export function coverOf(art, size, masterpiece = false) {
   return sheet(size, size, c => {
     if (art?.cover?.naturalWidth) c.drawImage(art.cover, 0, 0, size, size);
     else { c.fillStyle = '#999'; c.fillRect(0, 0, size, size); }
+    if (masterpiece) {
+      const width = size * 0.018;
+      goldStroke(c, width, 0, 0, size, size);
+      c.strokeRect(width / 2, width / 2, size - width, size - width);
+    }
   });
 }
 
@@ -168,7 +185,7 @@ export const posterScene = night => (record, frame, { art, families, still = fal
 
   // ── The picture ─────────────────────────────────────────────────────────────────────────────────────────────────────────────
   const { ink: words, faint } = inkOf(hueOf(art), night);
-  const solid = coverOf(art, size);
+  const solid = coverOf(art, size, record.isMasterpiece);
 
   // ── The sheet ─────────────────────────────────────────────────────────
   const under = sheet(W, H, c => {
