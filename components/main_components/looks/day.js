@@ -5,10 +5,11 @@
 // in day mode or night mode (Miyel, 2026-11-04). The page's own colour, the cover,
 // the title, the artist, the stars and a row of the three marks, large with a small word
 // under each, those not given as ghosts like unlit stars (2026-11-06), under a large mark
-// at the head, with no horizon (trying, 2026-11-06). It is the plain one on purpose. Animated, the card
-// settles quickly and smoothly, since most people tap through stories: the cover glides
-// up into place, the lines come down from under it, the bars rise; Still is that last moment as a picture. Not the
-// posted date: a line nobody needed on a print (2026-09-12).
+// at the head, with no horizon (trying, 2026-11-06). It is the plain one on purpose.
+// Animated, the whole card is there as ghosts from the first frame and fills in, in
+// order: the cover, the words, the stars one by one, the marks (Miyel, 2026-11-06). Still
+// is the last moment as a picture. Not the posted date: a line nobody needed on a print
+// (2026-09-12).
 //
 // The numbers are the post's own pixels, on a 340-wide column.
 'use client';
@@ -32,10 +33,12 @@ const MARKS = [
   { tag: 'mp', word: 'Masterpiece', ink: '#4a9bf0' },
   { tag: 'formative', word: 'Formative', ink: '#3fa96b' },
 ];
-const GLIDES_IN = 0.7;
-const ROLLS_AT = 0.25, ROLLS_IN = 0.75;
+const COVER = [0.15, 0.7];             // [starts, takes] of each thing filling in
+const WORDS = [0.5, 0.5];
+const ARTIST_FILL = [0.8, 0.3];
+const STARS_AT = 0.9, STAR_GAP_T = 0.12, STAR_IN = 0.25;
+const MARKS_AT = 1.5, MARK_GAP_T = 0.18, MARK_IN = 0.3;
 const smooth = v => v * v * (3 - 2 * v);
-const easeOut = v => 1 - (1 - v) ** 3;
 
 export function paperScene(night) {
   return (record, frame, { art, families, still = false }) => {
@@ -107,38 +110,51 @@ export function paperScene(night) {
       const stack = laid.h - px(MARK_H + GAP);
       let y = markEnd + Math.max(px(GAP), (H - markEnd - H * PAD - stack) / 2);
 
-      // The cover glides up into place, growing the last little way.
-      const glide = easeOut(clamp01(t / GLIDES_IN));
-      const drawn = card.width * (0.94 + 0.06 * glide);
-      c.drawImage(card, cx - drawn / 2, y + size / 2 + (1 - glide) * size * 0.1 - drawn / 2, drawn, drawn);
+      // Everything is there from the first frame as a ghost, and fills in, in order.
+      const filled = ([at, takes]) => smooth(clamp01((t - at) / takes));
+      const inside = (x, top, w, h, paint) => {
+        c.save();
+        c.beginPath();
+        c.rect(x, top, w, h);
+        c.clip();
+        paint();
+        c.restore();
+      };
+
+      // The cover's slot, and the cover filling it from the top.
+      c.fillStyle = ink.rule;
+      roundRect(c, cx - size / 2, y, size, size, radius);
+      c.fill();
+      const coverFill = filled(COVER);
+      const cardAt = [cx - card.width / 2, y + size / 2 - card.height / 2];
+      if (coverFill >= 1) c.drawImage(card, ...cardAt);
+      else if (coverFill > 0) inside(0, cardAt[1], W, margin + size * coverFill, () => c.drawImage(card, ...cardAt));
       y += size + px(GAP);
 
-      // Everything under the cover unrolls downward, together.
-      const unroll = smooth(clamp01((t - ROLLS_AT) / ROLLS_IN));
-      if (unroll <= 0) return;
-      c.save();
-      c.beginPath();
-      c.rect(0, y - px(GAP), W, (H - y + px(GAP)) * unroll);
-      c.clip();
       c.textBaseline = 'top';
+      const left = cx - colW / 2;
       const titleY = y;
-      {
+      const drawTitle = colour => {
         c.textAlign = 'center';
         c.font = `700 ${px(TITLE)}px ${sans}`;
-        c.fillStyle = ink.ink;
+        c.fillStyle = colour;
         laid.titleLines.forEach((line, i) => c.fillText(line, cx, titleY + i * px(TITLE_LEAD)));
         c.textAlign = 'left';
-      }
+      };
+      drawTitle(ink.rule);
+      inside(left, titleY, colW * filled(WORDS), laid.titleLines.length * px(TITLE_LEAD) + px(4), () => drawTitle(ink.ink));
       y += laid.titleLines.length * px(TITLE_LEAD);
 
       if (laid.artistLines.length) {
         y += px(GAP * 0.7);
         const artistY = y;
-        {
+        const drawArtistLines = colour => {
           c.font = `400 ${px(ARTIST)}px ${mono}`;
-          c.fillStyle = ink.soft;
+          c.fillStyle = colour;
           laid.artistLines.forEach((line, i) => drawTracked(c, line, cx, artistY + i * px(ARTIST_LEAD), px(ARTIST) * 0.14, 'center'));
-        }
+        };
+        drawArtistLines(ink.rule);
+        inside(left, artistY, colW * filled(ARTIST_FILL), laid.artistLines.length * px(ARTIST_LEAD) + px(2), () => drawArtistLines(ink.soft));
         y += laid.artistLines.length * px(ARTIST_LEAD);
       }
 
@@ -149,33 +165,33 @@ export function paperScene(night) {
         const starY = y;
         for (let i = 0; i < 5; i++) {
           const sx = from + i * step;
-          {
-            drawPath(c, STAR_PATH, sx, starY, box, 18, ink.unlit);
-            const part = clamp01(stars - i);
-            if (part > 0) {
-              c.save();
-              c.beginPath();
-              c.rect(sx, starY, box * part, box);
-              c.clip();
-              drawPath(c, STAR_PATH, sx, starY, box, 18, GOLD);
-              c.restore();
-            }
-          }
+          drawPath(c, STAR_PATH, sx, starY, box, 18, ink.unlit);
+          const part = clamp01(stars - i) * filled([STARS_AT + i * STAR_GAP_T, STAR_IN]);
+          if (part > 0) inside(sx, starY, box * part, box, () => drawPath(c, STAR_PATH, sx, starY, box, 18, GOLD));
         }
         y += box;
       }
 
-      // The three marks in a row: those given in their colours, the rest as ghosts.
+      // The three marks in a row: those given fill with their colours from the foot, in
+      // turn; the rest stay ghosts.
       y += px(GAP);
+      const box = px(SYMBOL);
+      let turn = 0;
       MARKS.forEach(({ tag, word, ink: lit }, i) => {
-        const on = tags.includes(tag);
         const at = cx + (i - 1) * px(SYMBOL_ACROSS);
-        drawPath(c, SYMBOLS[tag], at - px(SYMBOL) / 2, y, px(SYMBOL), 256, on ? lit : ink.rule);
-        c.font = `400 ${px(SYMBOL_WORD)}px ${mono}`;
-        c.fillStyle = on ? lit : ink.faint;
-        drawTracked(c, word.toUpperCase(), at, y + px(SYMBOL + 4), px(SYMBOL_WORD) * 0.1, 'center');
+        drawPath(c, SYMBOLS[tag], at - box / 2, y, box, 256, ink.rule);
+        const wordAt = y + px(SYMBOL + 4);
+        const drawWord = colour => {
+          c.font = `400 ${px(SYMBOL_WORD)}px ${mono}`;
+          c.fillStyle = colour;
+          drawTracked(c, word.toUpperCase(), at, wordAt, px(SYMBOL_WORD) * 0.1, 'center');
+        };
+        if (!tags.includes(tag)) { drawWord(ink.faint); return; }
+        const fill = filled([MARKS_AT + turn * MARK_GAP_T, MARK_IN]);
+        turn += 1;
+        drawWord(fill >= 1 ? lit : ink.faint);
+        if (fill > 0) inside(at - box / 2, y + box * (1 - fill), box, box * fill, () => drawPath(c, SYMBOLS[tag], at - box / 2, y, box, 256, lit));
       });
-      c.restore();
     }
 
     let t = still ? 30 : 0;
