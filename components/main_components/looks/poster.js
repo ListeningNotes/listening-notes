@@ -4,9 +4,10 @@
 // Poster: always the album's real cover, in a layout of its own: the cover edge to
 // edge at the head, the title printed over the bars (Miyel, 2026-11-05: "it's always
 // the album art, not any different version of it"). It comes in quickly and smoothly,
-// since most people tap through stories, but it does come in: sheets of the record's
-// own colours slide over one another, the cover slides over them, and the bars rise as
-// the words unroll from under it (Miyel, 2026-11-06). Nothing bounces.
+// since most people tap through stories, but it does come in: the cover is cut into flat
+// shapes of its own few colours, which glide in from the corners and fit together like a
+// puzzle, lightest first; then each shape turns into the real picture, and the bars rise
+// as the words unroll from under it (Miyel, 2026-11-06). Nothing bounces.
 // By day the words, stars and marks take a deep ink from the album's own colours and the
 // title overlaps the bars. At night they are solid white and the title sits clear of the
 // bars, since white would vanish on the green (Miyel, 2026-11-06). The bars are LN green
@@ -22,11 +23,12 @@ import {
 } from '../SharePrinter';
 
 const SHEETS = { day: '#f4f0e5', night: '#0e0e0e' };
-const SLIDES_IN = 0.9;                 // each sheet, and the cover
-const SHEET_GAP = 0.35;                // between one setting off and the next
-const ROLLS_IN = 1.0;                  // the words and bars
-const MOST_SHEETS = 3, FAR_APART = 90; // how many colours, and how unlike each other
-const FROM = [[-1, 0], [1, 0], [0, -1], [-1, 0]];  // the edge each one comes from, the cover last
+const LANDS_IN = 0.9;                  // each shape gliding in
+const SHAPE_GAP = 0.12;                // between one setting off and the next
+const TURNS_GAP = 0.09;                // between one shape turning real and the next
+const ROLLS_IN = 0.7;                  // the words and bars
+const MOST_SHAPES = 5, FAR_APART = 70; // how many colours, and how unlike each other
+const FROM = [[-1, -1], [1, -1], [-1, 1], [1, 1], [0, -1]];  // the corner each one comes from
 const FAR_ENOUGH = 60;                 // degrees of hue between the two to choose from
 const PLAIN_FLOOR = 0.1;               // how much colour a cover needs to give an ink
 const SAMPLE = 360;
@@ -74,9 +76,9 @@ function inksOf(px) {
 }
 
 // The record's own colours: the pixels sorted into coarse boxes, each box's real average,
-// the strongest first, by how much of the cover it is and how vivid, so a pink beats a
-// white that covers more. Any too like one already taken is skipped.
-function sheetsOf(px) {
+// the strongest first, by how much of the cover it is and how vivid. Any too like one
+// already taken is skipped. Lightest first, the order a printer lays them down.
+function coloursOf(px) {
   const boxes = new Map();
   for (let i = 0; i < px.length; i += 4) {
     const key = (px[i] >> 5) * 64 + (px[i + 1] >> 5) * 8 + (px[i + 2] >> 5);
@@ -89,13 +91,27 @@ function sheetsOf(px) {
   [...boxes.values()].sort((a, b) => pull(b) - pull(a)).forEach(({ n, r, g, b }) => {
     const colour = [r / n, g / n, b / n];
     const unlike = kept.every(k => Math.hypot(k[0] - colour[0], k[1] - colour[1], k[2] - colour[2]) >= FAR_APART);
-    if (unlike && kept.length < MOST_SHEETS) kept.push(colour);
+    if (unlike && kept.length < MOST_SHAPES) kept.push(colour);
   });
-  return kept.map(([r, g, b]) => `rgb(${Math.round(r)},${Math.round(g)},${Math.round(b)})`);
+  return kept.sort((a, b) => (b[0] * 0.3 + b[1] * 0.59 + b[2] * 0.11) - (a[0] * 0.3 + a[1] * 0.59 + a[2] * 0.11));
+}
+
+// Each pixel belongs to the colour it is nearest, so the shapes fit with nothing left over.
+function shapesOf(px, side, colours) {
+  const masks = colours.map(() => new ImageData(side, side));
+  for (let i = 0; i < px.length; i += 4) {
+    let near = 0, least = Infinity;
+    colours.forEach(([r, g, b], n) => {
+      const d = (px[i] - r) ** 2 + (px[i + 1] - g) ** 2 + (px[i + 2] - b) ** 2;
+      if (d < least) { least = d; near = n; }
+    });
+    masks[near].data[i + 3] = 255;
+  }
+  return masks.map(mask => sheet(side, side, c => c.putImageData(mask, 0, 0)));
 }
 
 const smooth = v => v * v * (3 - 2 * v);
-const easeOut = v => 1 - (1 - v) ** 2;
+const easeOut = v => 1 - (1 - v) ** 3;
 
 function overprint(c, paint) {
   c.save();
@@ -141,29 +157,38 @@ export const posterScene = night => (record, frame, { art, families, still = fal
   const px = small.getContext('2d').getImageData(0, 0, side, side).data;
   const { words, faint } = night ? { words: '#ffffff', faint: 'rgba(255,255,255,0.2)' } : inksOf(px);
 
-  // The real cover, and the sheets that come in ahead of it. Still never shows them.
+  // The real cover, and the shapes it is built from: each one twice, flat in its colour
+  // and as that piece of the picture. Still never shows them.
   const solid = sheet(size, size, c => {
     if (art?.cover?.naturalWidth) c.drawImage(art.cover, 0, 0, size, size);
     else { c.fillStyle = '#999'; c.fillRect(0, 0, size, size); }
   });
-  const colours = still ? [] : sheetsOf(px);
-  const COVER_DONE = colours.length * SHEET_GAP + SLIDES_IN;
-  const ROLLS_AT = COVER_DONE - 0.5;
+  const colours = still ? [] : coloursOf(px);
+  const pieceOf = (mask, paint) => sheet(size, size, c => {
+    c.drawImage(mask, 0, 0, size, size);
+    c.globalCompositeOperation = 'source-in';
+    paint(c);
+  });
+  const shapes = still ? [] : shapesOf(px, side, colours).map((mask, i) => ({
+    flat: pieceOf(mask, c => {
+      c.fillStyle = `rgb(${colours[i].map(Math.round).join(',')})`;
+      c.fillRect(0, 0, size, size);
+    }),
+    real: pieceOf(mask, c => c.drawImage(solid, 0, 0)),
+    from: FROM[i],
+  }));
+  const FITTED = LANDS_IN + SHAPE_GAP * Math.max(0, shapes.length - 1);
+  const COVER_DONE = FITTED + TURNS_GAP * shapes.length;
+  const ROLLS_AT = Math.max(0, FITTED - 0.2);
   function drawCover(c, t) {
     if (t >= COVER_DONE) { c.drawImage(solid, ax, 0); return; }
-    c.save();
-    c.beginPath();
-    c.rect(ax, 0, size, size);
-    c.clip();
-    [...colours, solid].forEach((what, i) => {
-      const go = easeOut(clamp01((t - i * SHEET_GAP) / SLIDES_IN));
-      if (go <= 0) return;
-      const edge = what === solid ? FROM[FROM.length - 1] : FROM[i];
-      const x = ax + edge[0] * (1 - go) * size, y = edge[1] * (1 - go) * size;
-      if (what === solid) c.drawImage(solid, x, y);
-      else { c.fillStyle = what; c.fillRect(x, y, size, size); }
+    shapes.forEach((shape, i) => {
+      const away = 1 - easeOut(clamp01((t - i * SHAPE_GAP) / LANDS_IN));
+      c.drawImage(shape.flat, ax + shape.from[0] * away * W, shape.from[1] * away * H * 0.5);
     });
-    c.restore();
+    shapes.forEach((shape, i) => {
+      if (t >= FITTED + TURNS_GAP * i) c.drawImage(shape.real, ax, 0);
+    });
   }
   // The words overprint by day, and simply lie on the black at night.
   const lay = (c, paint) => (night ? paint() : overprint(c, paint));

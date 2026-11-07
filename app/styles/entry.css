@@ -2165,7 +2165,8 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
    neighbours (a pointer's version of the sideways swipe, which now turns
    the ground). Reached from the root — the carets are the sheet's, not the
    page's, and :has() does not survive the build. */
-html[data-printing] .lay-step { display: none; }
+html[data-printing] .lay-step,
+html[data-printing] .lay-back-slot { display: none; }
 /* And the header: the card carries its own mark, and the light switch has
    nothing to switch while the paper sets its own colours (Miyel,
    2026-09-13). */
