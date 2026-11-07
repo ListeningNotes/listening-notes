@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // components/main_components/looks/game.js
 // Game: everything becomes a HUD. The album is a slab with its sides showing,
-// turning over a slow fan of rays; the title is a logo, the horizon an XP bar. It
-// is close to monochrome: the stars, sparks, hairlines and bars all borrow the
-// album's one colour (Miyel, 2026-11-04). Hearts and the fingerprint keep their own.
+// turning over a slow fan of rays; the title is a logo, the horizon an XP bar. The
+// hairlines and bars borrow the album's one colour; the stars are gold and each mark its
+// own colour (Miyel, 2026-11-06). The keeper is the player, in the frame's head.
 // Cut, then brought back beside Commercial, with a night of its own (2026-11-06).
 //
 // Sizes are in `u`, a hundredth of a story's width at this paper's height, so
@@ -311,12 +311,6 @@ function barsFloor({ W, H, floorH, left, gapMost, seg, pitch, u, colourOf, glow 
 // ── The look ──────────────────────────────────────────────────────────────
 const SWEEP_SECONDS = 7;
 const SWEEP_ANGLE = (26 * Math.PI) / 180;
-const SPARKS = [
-  { x: -36, y: -16.6, at: 0.2, rest: 0.9 },
-  { x: 32, y: -2.3, at: 1.1, rest: 1.2 },
-  { x: -34, y: 24, at: 1.9, rest: 0.7 },
-];
-
 // The album's colour, read the way the wall's By color reads it, and deep enough
 // to stand on the reflected cover whatever that cover is. A cover with hardly any
 // colour, or one that will not be read, gets a plain dark.
@@ -347,12 +341,15 @@ export const gameScene = night => (record, frame, { art, families, still = false
   const size = 58 * u;
   const albumTop = H * 0.14;
   const cy = albumTop + size / 2;
-  const floorH = bars.length ? H * 0.15 : 0;
-  const floorTop = H - floorH;
+  // A story leaves Instagram's top alone and the foot for the Link sticker.
+  const story = W / H < 0.6;
+  const base = H - (story ? 12 * u : 0);
+  const floorH = bars.length ? H * 0.11 : 0;
+  const floorTop = base - floorH;
   const roomTop = albumTop + size + 5 * u;
   const room = floorTop - 2.5 * u - roomTop;
-  const heightAt = (k, lines) => ((stars > 0 ? 13 : 0) + (tags.length ? 15 : 0) + lines * 9.6 + (artistLine ? 5.6 : 0)) * k * u;
-  const titleFont = k => `900 ${9 * k * u}px ${sans}`;
+  const heightAt = (k, lines) => ((stars > 0 ? 13 : 0) + (tags.length ? 15 : 0) + lines * 7 + (artistLine ? 5.6 : 0)) * k * u;
+  const titleFont = k => `900 ${6.6 * k * u}px ${sans}`;
   const { k, lines: titleLines } = fitTitle({ album: entry?.album, fontAt: titleFont, wide: W * 0.86, room, heightAt });
   const rowsH = heightAt(k, titleLines.length);
   const rowsTop = roomTop + Math.max(0, room - rowsH) / 2;
@@ -368,7 +365,7 @@ export const gameScene = night => (record, frame, { art, families, still = false
     const inset = 4.4 * u, r = 2 * u;
     const markH = 4.6 * u, markW = markH * MARK_ASPECT;
     const opening = markW / 2 + 2 * u;
-    const x0 = inset, x1 = W - inset, y0 = inset, y1 = H - inset;
+    const x0 = inset, x1 = W - inset, y0 = story ? 13 * u : inset, y1 = H - inset;
     c.strokeStyle = tone(0.5);
     c.lineWidth = 0.35 * u;
     c.beginPath();
@@ -387,6 +384,14 @@ export const gameScene = night => (record, frame, { art, families, still = false
         m.fillRect(0, 0, markW, markH);
       }), cx - markW / 2, y0 - markH / 2);
     }
+    if (record.keeper) {
+      c.font = `400 ${2.3 * u}px ${mono}`;
+      c.textAlign = 'center';
+      c.textBaseline = 'top';
+      c.fillStyle = night ? '#ffffff' : dark;
+      c.fillText(`PLAYER · ${record.keeper.toUpperCase()}`, cx, y0 + 3.2 * u);
+      c.textAlign = 'left';
+    }
   });
   const slab = coverPicture(art?.cover, size, { shade: 0.5, ring: tone(0.45) });
   const rays = rayPicture(170 * u, 'rgba(255,255,255,0.22)', 14);
@@ -394,24 +399,24 @@ export const gameScene = night => (record, frame, { art, families, still = false
   // A hard shadow in the darker shade of the same colour.
   const starBox = 9 * k * u, starPad = 3 * u;
   const starLit = stamp(STAR_PATH, 18, starBox, starPad, [
-    { fill: dark, y: 0.5 * k * u },
-    { fill: deep },
+    { fill: '#9c7420', y: 0.5 * k * u },
+    { fill: '#e8b84b' },
   ]);
-  const starCold = stamp(STAR_PATH, 18, starBox, starPad, [{ fill: tone(0.18) }]);
+  const starCold = stamp(STAR_PATH, 18, starBox, starPad, [{ fill: 'rgba(232,184,75,0.2)' }]);
 
   // The marks: the icons themselves, filled, not on medallions. The heart and the
   // fingerprint keep their own colours; everything else borrows the album's
   // (Miyel, 2026-11-04).
   const medalBox = 11 * k * u, medalPad = 2 * u;
   const medals = Object.fromEntries(tags.map(tag => [tag, stamp(SYMBOLS[tag], 256, medalBox, medalPad, [
-    { fill: tag === 'mp' ? dark : 'rgba(0,0,0,0.3)', y: 0.5 * k * u },
-    { fill: tag === 'mp' ? deep : TONES[tag] },
+    { fill: 'rgba(0,0,0,0.3)', y: 0.5 * k * u },
+    { fill: TONES[tag] },
   ])]));
 
   // The logo: a face dropped below the title, the outline round it, the white on
   // top. Stroked, then filled, in that order: a stroke drawn after would eat
   // into the letters.
-  const titleSize = 9 * k * u, lead = 9.6 * k * u, titlePad = 4 * u;
+  const titleSize = 6.6 * k * u, lead = 7 * k * u, titlePad = 4 * u;
   const logo = sheet(W, titleLines.length * lead + titlePad * 2, c => {
     c.font = titleFont(k);
     c.textAlign = 'center';
@@ -434,26 +439,12 @@ export const gameScene = night => (record, frame, { art, families, still = false
 
   // The XP bar, its last chunk earned the bright one; the hearts red.
   const floor = barsFloor({
-    W, H, floorH, u, bars, favs,
+    W, H: base, floorH, u, bars, favs,
     left: 4.4 * u, gapMost: 1.3 * u, seg: 1.5 * u, pitch: 2.2 * u,
     colourOf: () => deep, glowOf: () => tone(0.55), glow: 1.6 * u,
     cap: 'rgba(255,255,255,0.4)',
     heart: stamp(HEART_PATH, 24, 3.6 * u, 2.4 * u, [{ fill: TONES.fav, glow: 1.4 * u, glowColour: 'rgba(240,72,79,0.6)' }]),
   });
-
-  function drawSparks(c, t) {
-    SPARKS.forEach(spark => {
-      const swell = still ? spark.rest : Math.sin((((t + spark.at) % 2.6) / 2.6) * Math.PI) * 1.3;
-      if (swell <= 0.02) return;
-      const x = cx + spark.x * u, y = cy + spark.y * u, r = 1.3 * u * swell;
-      c.fillStyle = deep;
-      c.beginPath();
-      [[0, -1], [0.24, -0.24], [1, 0], [0.24, 0.24], [0, 1], [-0.24, 0.24], [-1, 0], [-0.24, -0.24]]
-        .forEach(([dx, dy], i) => (i ? c.lineTo(x + dx * r, y + dy * r) : c.moveTo(x + dx * r, y + dy * r)));
-      c.closePath();
-      c.fill();
-    });
-  }
 
   function drawAlbum(c, t) {
     const rise = Math.min(1, t / 1.4);
@@ -484,7 +475,6 @@ export const gameScene = night => (record, frame, { art, families, still = false
     c.fillRect(0, scrimMid - scrimH / 2, W, scrimH);
     floor.draw(c, t);
     drawAlbum(c, t);
-    drawSparks(c, t);
 
     let y = rowsTop;
     if (stars > 0) {

@@ -21,7 +21,7 @@ import { LOOKS, lookOf } from './looks';
 
 const clamp01 = v => Math.min(1, Math.max(0, v));
 
-export function entryPlate({ entry, onFail = null }) {
+export function entryPlate({ entry, keeper = '', onFail = null }) {
   const isMasterpiece = entry?.masterpiece === true || entry?.rating === 'Masterpiece';
   const stars = isMasterpiece ? 5 : parseRating(entry?.rating);
   const isFavorite = entry?.favorite === true || entry?.favorite === 'true';
@@ -34,7 +34,7 @@ export function entryPlate({ entry, onFail = null }) {
     ? tracks.map(t => clamp01((Number(t.stars) || 0) / 5))
     : parseHorizon(entry?.horizon);
   const favs = rated ? tracks.map(t => Boolean(t.favorite)) : [];
-  const record = { entry, isMasterpiece, stars, artistLine, year: entry?.year, tags, bars, favs, trackNames: tracks.map(t => t.name).filter(Boolean) };
+  const record = { entry, keeper, isMasterpiece, stars, artistLine, year: entry?.year, tags, bars, favs, trackNames: tracks.map(t => t.name).filter(Boolean) };
 
   function scene(frame, { art, families, ground = 'day', still = false }) {
     const look = lookOf(ground);

@@ -2,15 +2,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // components/main_components/looks/commercial.js
 // Commercial: a local TV ad from about 2003 (Miyel, 2026-11-06). A loud page in the
-// album's colour with CRT lines over all of it, the title in chunky gold, the rating
+// album's colour with CRT lines over all of it, the title in chunky type in its second
+// colour, or that colour's opposite, or plain greys on a colourless cover, the rating
 // spelled out like a price, the mark in an oval, the marks as starburst stickers and the
-// bars as a gold strip above the fine print. It switches on like an old set, the pieces
+// bars as a strip above the fine print, which says whose journal it is. It switches on like an old set, the pieces
 // cut in one after another, and keeps fidgeting: the stickers wiggle and a band rolls down
 // the screen. Still is the finished ad, its band gone.
 'use client';
 
 import { HEART_PATH, MARK_ASPECT, SYMBOLS, clamp01, drawPath, sheet, wrapLines } from '../SharePrinter';
-import { coverOf, easeOut, hueOf, markIn } from './poster';
+import { coverOf, easeOut, huesOf, isStory, markIn } from './poster';
 
 const OUTLINE = '#120810';
 const NUMBERS = ['', 'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE'];
@@ -59,13 +60,26 @@ export const commercialScene = night => (record, frame, { art, families, still =
   const u = Math.min(W, (H * 9) / 16) / 100;
   const ox = (W - 100 * u) / 2;
   const margin = 5 * u, wide = 90 * u;
-  // A cover with no colour of its own still gets the loud pink.
-  const hue = hueOf(art) ?? 328;
+  const { first: hue, second } = huesOf(art);
+  const plain = hue === null;
+  const accent = plain ? null : second ?? (hue + 180) % 360;
+  const typeInk = plain
+    ? { top: '#ffffff', bottom: '#b9b9b9' }
+    : { top: `hsl(${accent},100%,84%)`, bottom: `hsl(${accent},100%,56%)` };
+  // A story leaves Instagram's top alone and the foot for the Link sticker.
+  const story = isStory(frame);
+  const head = story ? 9 * u : 0;
+  const foot = story ? 13 * u : 0;
 
   const page = sheet(W, H, c => {
     const wash = c.createLinearGradient(0, 0, 0, H);
-    wash.addColorStop(0, night ? `hsl(${hue},75%,10%)` : `hsl(${hue},92%,46%)`);
-    wash.addColorStop(1, night ? `hsl(${hue},80%,22%)` : `hsl(${hue},95%,68%)`);
+    if (plain) {
+      wash.addColorStop(0, night ? '#0b0b0b' : '#8d8d8d');
+      wash.addColorStop(1, night ? '#2b2b2b' : '#d6d6d6');
+    } else {
+      wash.addColorStop(0, night ? `hsl(${hue},75%,10%)` : `hsl(${hue},92%,46%)`);
+      wash.addColorStop(1, night ? `hsl(${hue},80%,22%)` : `hsl(${hue},95%,68%)`);
+    }
     c.fillStyle = wash;
     c.fillRect(0, 0, W, H);
   });
@@ -97,11 +111,11 @@ export const commercialScene = night => (record, frame, { art, families, still =
     c.textBaseline = 'top';
     c.textAlign = 'center';
     c.setTransform(1, 0, -0.1, 1, 0.1 * titleH, 0);
-    titleLines.forEach((line, i) => chunky(c, line, W / 2, 3.5 * u + (29 * u - titleH) / 2 + i * titlePx * 0.98, titlePx));
+    titleLines.forEach((line, i) => chunky(c, line, W / 2, 3.5 * u + (29 * u - titleH) / 2 + i * titlePx * 0.98, titlePx, typeInk));
   });
 
   // The album in its box, like the clip in the corner of the ad.
-  const size = 58 * u, coverX = ox + margin, coverY = 37 * u, rim = 1.1 * u;
+  const size = (story ? 46 : 58) * u, coverX = ox + margin, coverY = (story ? 34 : 37) * u + head, rim = 1.1 * u;
   const box = sheet(size + rim * 4, size + rim * 4, c => {
     c.fillStyle = OUTLINE;
     c.fillRect(0, 0, c.canvas.width, c.canvas.height);
@@ -165,7 +179,7 @@ export const commercialScene = night => (record, frame, { art, families, still =
   const bottomOfBox = coverY + size + rim * 4;
   const words = ratingWords(stars);
   measure.font = fontAt(100);
-  const sizes = words.map((line, i) => Math.min(i === 0 ? 27 * u : 18 * u, (wide / measure.measureText(line).width) * 100));
+  const sizes = words.map((line, i) => Math.min(i === 0 ? (story ? 20 : 27) * u : (story ? 13 : 18) * u, (wide / measure.measureText(line).width) * 100));
   const ratingH = sizes.reduce((n, px) => n + px * 0.98, 0);
   const rating = sheet(W, ratingH + 5 * u, c => {
     c.textBaseline = 'top';
@@ -173,7 +187,7 @@ export const commercialScene = night => (record, frame, { art, families, still =
     let y = 1.5 * u;
     words.forEach((line, i) => {
       c.font = fontAt(sizes[i]);
-      chunky(c, line, W / 2, y, sizes[i], { depth: 0.09 });
+      chunky(c, line, W / 2, y, sizes[i], { ...typeInk, depth: 0.09 });
       y += sizes[i] * 0.98;
     });
   });
@@ -182,7 +196,7 @@ export const commercialScene = night => (record, frame, { art, families, still =
   // The artist, then the bars, then the fine print.
   const fineH = 3 * u;
   const stripH = bars.length ? 13 * u : 0;
-  const fineY = H - fineH - 2.5 * u;
+  const fineY = H - fineH - 2.5 * u - foot;
   const stripY = fineY - stripH - 1.5 * u;
   const artistSpace = stripY - (ratingY + ratingH + 2 * u) - (favs.some(Boolean) ? 4 * u : 0);
   let artistPx = Math.min(9 * u, Math.max(3 * u, artistSpace * 0.9));
@@ -197,12 +211,12 @@ export const commercialScene = night => (record, frame, { art, families, still =
   });
   const artistY = ratingY + ratingH + 1 * u;
 
-  const fine = [year, bars.length ? `${bars.length} ${bars.length === 1 ? 'TRACK' : 'TRACKS'}` : null].filter(Boolean).join(' · ');
+  const fine = [record.keeper ? `${record.keeper.toUpperCase()}'S JOURNAL` : null, year, bars.length ? `${bars.length} ${bars.length === 1 ? 'TRACK' : 'TRACKS'}` : null].filter(Boolean).join(' · ');
   const slot = bars.length ? wide / bars.length : 0;
   const gold = sheet(1, Math.max(1, stripH), c => {
     const g = c.createLinearGradient(0, 0, 0, stripH);
-    g.addColorStop(0, '#fff59a');
-    g.addColorStop(1, '#ff9d1c');
+    g.addColorStop(0, typeInk.top);
+    g.addColorStop(1, typeInk.bottom);
     c.fillStyle = g;
     c.fillRect(0, 0, 1, stripH);
   });
@@ -212,7 +226,7 @@ export const commercialScene = night => (record, frame, { art, families, still =
 
   function paintAt(c, t) {
     c.drawImage(page, 0, 0);
-    if (t >= 0.3) c.drawImage(title, 0, 0);
+    if (t >= 0.3) c.drawImage(title, 0, head);
 
     // The box slides in on a quick cut from the left.
     const slide = 1 - easeOut(clamp01((t - 0.55) / 0.28));

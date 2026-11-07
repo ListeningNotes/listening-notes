@@ -83,6 +83,9 @@ function handOver(it) {
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
 
+// What to do with the address once it is copied: most prints go to a story.
+const LINK_NOTE = 'Link copied. On your story: Sticker, Link, paste.';
+
 export function usePress({ plate, shown, ground, isDark, link, fonts, motion = null }) {
   const [status, setStatus] = useState('');
   // A video's progress: 'saving' while it records, then its address while it
@@ -176,7 +179,7 @@ export function usePress({ plate, shown, ground, isDark, link, fonts, motion = n
     made.current = { blob, name: `${plate?.fileName || 'print'}-${ground}-${frame.label.replace(':', 'x')}.mp4` };
     const copied = await pasted;
     setClip(URL.createObjectURL(blob));
-    setStatus(copied ? 'Its address is copied.' : '');
+    setStatus(copied ? LINK_NOTE : '');
   }, [copyLink, say, plate, ground]);
 
   const save = useCallback(async frameKey => {
@@ -197,7 +200,7 @@ export function usePress({ plate, shown, ground, isDark, link, fonts, motion = n
       // Said for as long as the picture is up; dismissing it clears it.
       clearTimeout(timer.current);
       setStatus(canDeliver
-        ? (copied ? 'Its address is copied.' : '')
+        ? (copied ? LINK_NOTE : '')
         : 'Touch and hold the picture to add it to Photos.');
     } catch {
       say('A picture on this print could not be read, so it cannot be saved.', 4000);

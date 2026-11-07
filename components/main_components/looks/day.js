@@ -20,7 +20,8 @@ import {
 } from '../SharePrinter';
 
 const COL = 340, ART = 265, ART_RADIUS = 16;
-const MARK_H = 72, MARK_TOP = 0.05;
+const MARK_H = 72, MARK_TOP = 0.05, STORY_TOP = 0.09, STORY_FOOT = 0.11;
+const NAME = 10;
 const TITLE = 26, TITLE_LEAD = 26 * 1.22;
 const ARTIST = 11, ARTIST_LEAD = 11 * 1.4;
 const STAR = 44, STAR_GAP = 6;
@@ -59,7 +60,11 @@ export function paperScene(night) {
         + (GAP + SYMBOL + 4 + SYMBOL_WORD * 1.3) * U;
       return { titleLines, artistLines, h };
     };
-    const roomW = W * (1 - PAD * 2), roomH = H * (1 - PAD * 2);
+    // A story leaves Instagram's top alone and the foot for the Link sticker.
+    const story = W / H < 0.6;
+    const named = (record.keeper || '').toUpperCase();
+    const roomW = W * (1 - PAD * 2);
+    const roomH = story ? H * (1 - STORY_TOP - STORY_FOOT) : H * (1 - PAD * 2);
     let U = roomW / COL;
     let laid = lay(U);
     if (laid.h > roomH) { U *= roomH / laid.h; laid = lay(U); }
@@ -116,13 +121,20 @@ export function paperScene(night) {
       const cx = W / 2;
 
       // The mark high up, large; the rest centred in what is left.
-      const markY = H * MARK_TOP, markEnd = markY + px(MARK_H);
+      const markY = H * (story ? STORY_TOP : MARK_TOP), markEnd = markY + px(MARK_H);
       if (art?.mark) {
         const mw = px(MARK_H) * MARK_ASPECT;
         c.drawImage(art.mark, cx - mw / 2, markY, mw, px(MARK_H));
       }
+      if (named) {
+        c.font = `400 ${px(NAME)}px ${mono}`;
+        c.fillStyle = ink.soft;
+        c.textBaseline = 'top';
+        drawTracked(c, named, cx, markEnd + px(3), px(NAME) * 0.16, 'center');
+      }
       const stack = laid.h - px(MARK_H + GAP);
-      let y = markEnd + Math.max(px(GAP), (H - markEnd - H * PAD - stack) / 2);
+      const under = px(named ? NAME + 6 + GAP : GAP);
+      let y = story ? markEnd + under : markEnd + Math.max(under, (H - markEnd - H * PAD - stack) / 2);
 
       c.drawImage(card, cx - card.width / 2, y + size / 2 - card.height / 2);
       y += size + px(GAP);
