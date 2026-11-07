@@ -1,25 +1,51 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // components/main_components/looks/flood.js
-// Flood: the whole page is the album's colour, bright by day and deep at night, with the
-// real cover in the middle and everything else in black or white, centred. The cover
-// comes down from the top and the rest comes up from the bottom to meet it.
+// Flood: the whole page is the cover reflected, blurred across the paper under a light
+// wash by day and a dark one at night (Miyel, 2026-11-06), with the real cover in the
+// middle and everything else in black or white, centred. The cover comes down from the
+// top and the rest comes up from the bottom to meet it.
 'use client';
 
-import { HEART_PATH, MARK_ASPECT, clamp01, drawPath } from '../SharePrinter';
-import { coverOf, easeOut, factRows, hueOf, markIn } from './poster';
+import { HEART_PATH, INKS, MARK_ASPECT, clamp01, drawPath, sheet } from '../SharePrinter';
+import { coverOf, easeOut, factRows, markIn } from './poster';
 
 const GLIDES_IN = 0.9;
 const RISES_AT = 0.45, RISES_IN = 0.85;
+
+// The cover blurred across the paper, overscanned so no edge shows. Safari's canvas has
+// no blur filter, so where it is missing a cover shrunk and stretched back does the job.
+function reflectionOf(art, W, H, night) {
+  const ink = night ? INKS.night : INKS.day;
+  return sheet(W, H, c => {
+    c.fillStyle = ink.paper;
+    c.fillRect(0, 0, W, H);
+    const cover = art?.cover;
+    if (cover?.naturalWidth) {
+      const side = Math.max(W, H) * 1.3;
+      const x = (W - side) / 2, y = (H - side) / 2;
+      if (typeof c.filter === 'string') {
+        c.filter = `blur(${Math.round(W * 0.03)}px) saturate(1.25)`;
+        c.drawImage(cover, x, y, side, side);
+        c.filter = 'none';
+      } else {
+        const tiny = sheet(12, 12, t => t.drawImage(cover, 0, 0, 12, 12));
+        c.imageSmoothingEnabled = true;
+        c.imageSmoothingQuality = 'high';
+        c.drawImage(tiny, x, y, side, side);
+      }
+    }
+    // A shade darker than the page's own wash at night, for white words over a pale cover.
+    c.fillStyle = night ? 'rgba(14,14,14,0.62)' : ink.wash;
+    c.fillRect(0, 0, W, H);
+  });
+}
 
 export const floodScene = night => (record, frame, { art, families, still = false }) => {
   const { bars, favs } = record;
   const W = frame.w, H = frame.h;
   const u = Math.min(W, (H * 9) / 16) / 100;
-  const hue = hueOf(art);
-  const page = hue === null
-    ? (night ? '#123d22' : '#7cff9b')
-    : (night ? `hsl(${hue},60%,16%)` : `hsl(${hue},78%,58%)`);
+  const page = reflectionOf(art, W, H, night);
   const ink = night ? '#ffffff' : '#000000';
   const faint = night ? 'rgba(255,255,255,0.22)' : 'rgba(0,0,0,0.18)';
 
@@ -43,8 +69,7 @@ export const floodScene = night => (record, frame, { art, families, still = fals
   const barGap = Math.min(0.8 * u, slot * 0.16);
 
   function paintAt(c, t) {
-    c.fillStyle = page;
-    c.fillRect(0, 0, W, H);
+    c.drawImage(page, 0, 0);
     const up = (1 - easeOut(clamp01((t - RISES_AT) / RISES_IN))) * (H - coverY);
     c.save();
     c.translate(0, up);
