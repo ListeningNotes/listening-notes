@@ -152,11 +152,11 @@ export const posterScene = night => (record, frame, { art, families, still = fal
     c.translate(0, up);
     paintWords(c, words, faint);
 
-    // A favourite: a heart standing on its bar, black by day and white at night.
+    // A favourite: a heart standing on its bar, in the same one colour.
     bars.forEach((v, i) => {
       if (!favs[i]) return;
       const h = Math.max(floorH * 0.05, floorH * v);
-      drawPath(c, HEART_PATH, i * slot + (slot - heartBox) / 2, H - h - heartBox - heartLift, heartBox, 24, night ? '#ffffff' : '#000000');
+      drawPath(c, HEART_PATH, i * slot + (slot - heartBox) / 2, H - h - heartBox - heartLift, heartBox, 24, words);
     });
     c.restore();
   }
