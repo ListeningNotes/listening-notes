@@ -91,15 +91,17 @@ export function coverOf(art, size) {
 
 // Whose journal it is: the keeper's face in a circle and their name, and no other words,
 // to be set wherever suits the look (Miyel, 2026-11-06). Null with no name.
-export function signatureOf({ art, record, mono, height, colour }) {
+export function signatureOf({ art, record, mono, height, colour, faceOnly = false }) {
   const name = (record.keeper || '').toUpperCase();
   if (!name) return null;
   const px = height * 0.52, gap = height * 0.28;
   const hasFace = art?.face?.naturalWidth;
+  // A face alone, where the look asks for it; a keeper with no picture still gets their name.
+  const showName = !(faceOnly && hasFace);
   const font = `400 ${px}px ${mono}`;
   const measure = document.createElement('canvas').getContext('2d');
   measure.font = font;
-  const across = (hasFace ? height + gap : 0) + measure.measureText(name).width;
+  const across = showName ? (hasFace ? height + gap : 0) + measure.measureText(name).width : height;
   return sheet(across, height, c => {
     if (hasFace) {
       const { naturalWidth: w, naturalHeight: h } = art.face;
@@ -111,6 +113,7 @@ export function signatureOf({ art, record, mono, height, colour }) {
       c.drawImage(art.face, (w - side) / 2, (h - side) / 2, side, side, 0, 0, height, height);
       c.restore();
     }
+    if (!showName) return;
     c.font = font;
     c.textBaseline = 'middle';
     c.fillStyle = colour;

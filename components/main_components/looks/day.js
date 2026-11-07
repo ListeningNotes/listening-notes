@@ -115,7 +115,7 @@ export function paperScene(night) {
     const warmed = since => smooth(clamp01(since / WARMS_IN));
     const strength = since => (still ? 0.9 : warmed(since) * (0.78 + 0.22 * Math.sin(since * 2.4)));
 
-    const signature = signatureOf({ art, record, mono, height: px(NAME), colour: ink.soft });
+    const signature = signatureOf({ art, record, mono, height: px(NAME), colour: ink.soft, faceOnly: true });
 
     function paintAt(c, t) {
       c.fillStyle = ink.paper;
