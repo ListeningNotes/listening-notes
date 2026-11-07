@@ -4,8 +4,8 @@
 // Day and Night, the default: the card as it reads on the entry page, exported,
 // in day mode or night mode (Miyel, 2026-11-04). The page's own colour, the cover,
 // the title, the artist, the stars and a row of the three marks, large with a small word
-// under each, those not given as ghosts like unlit stars (2026-11-06), under the mark and the
-// keeper's face at the head, with no horizon (trying, 2026-11-06). It is the plain one on purpose.
+// under each, those not given as ghosts like unlit stars (2026-11-06), under the keeper's face
+// at the head and over the mark, signing off at the foot, with no horizon (trying, 2026-11-06). It is the plain one on purpose.
 // Animated, the album and the words are there from the first frame and the stars and marks
 // come up slowly and glow gently, breathing, like lights: the stars from the left, each
 // one starting as the last is warming, then the marks (Miyel, 2026-11-06). Still is the last
@@ -21,7 +21,7 @@ import {
 } from '../SharePrinter';
 
 const COL = 340, ART = 265, ART_RADIUS = 16;
-const MARK_H = 34, STORY_TOP = 0.09, STORY_FOOT = 0.11;
+const HEAD_H = 30, SIGN_H = 26, STORY_TOP = 0.09, STORY_FOOT = 0.11;
 const NAME = 30;
 const TITLE = 26, TITLE_LEAD = 26 * 1.22;
 const ARTIST = 11, ARTIST_LEAD = 11 * 1.4;
@@ -55,10 +55,11 @@ export function paperScene(night) {
       const titleLines = wrapLines(measure, entry?.album || '', COL * U, 3);
       measure.font = `400 ${ARTIST * U}px ${mono}`;
       const artistLines = wrapLines(measure, artistLine, COL * U * 0.86, 2);
-      const h = (MARK_H + GAP + ART + GAP) * U + titleLines.length * TITLE_LEAD * U
+      const h = (HEAD_H + GAP + ART + GAP) * U + titleLines.length * TITLE_LEAD * U
         + (artistLines.length ? GAP * 0.7 * U + artistLines.length * ARTIST_LEAD * U : 0)
         + (stars > 0 ? (GAP + STAR) * U : 0)
-        + (GAP + SYMBOL + 4 + SYMBOL_WORD * 1.3) * U;
+        + (GAP + SYMBOL + 4 + SYMBOL_WORD * 1.3) * U
+        + (GAP * 1.6 + SIGN_H) * U;
       return { titleLines, artistLines, h };
     };
     // A story leaves Instagram's top alone and the foot for the Link sticker.
@@ -122,17 +123,13 @@ export function paperScene(night) {
       c.fillRect(0, 0, W, H);
       const cx = W / 2;
 
-      // Whose journal it is at the left and the mark at the right, over the cover, like the
-      // head of a post, and the whole of it centred in the room there is.
+      // Whose journal it is at the left, over the cover, like the head of a post, and the
+      // whole of it centred in the room there is. The mark signs off at the foot.
       const top = story
         ? H * STORY_TOP + Math.max(0, (H * (1 - STORY_TOP - STORY_FOOT) - laid.h) / 2)
         : (H - laid.h) / 2;
-      if (art?.mark) {
-        const mw = px(MARK_H) * MARK_ASPECT;
-        c.drawImage(art.mark, cx + size / 2 - mw, top, mw, px(MARK_H));
-      }
-      if (signature) c.drawImage(signature, cx - size / 2, top + (px(MARK_H) - signature.height) / 2);
-      let y = top + px(MARK_H + GAP);
+      if (signature) c.drawImage(signature, cx - size / 2, top + (px(HEAD_H) - signature.height) / 2);
+      let y = top + px(HEAD_H + GAP);
 
       c.drawImage(card, cx - card.width / 2, y + size / 2 - card.height / 2);
       y += size + px(GAP);
@@ -210,6 +207,13 @@ export function paperScene(night) {
           c.globalAlpha = 1;
         }
       });
+      y += px(SYMBOL + 4 + SYMBOL_WORD * 1.3);
+
+      // The mark, small, signing off.
+      if (art?.mark) {
+        const mw = px(SIGN_H) * MARK_ASPECT;
+        c.drawImage(art.mark, cx - mw / 2, y + px(GAP * 1.6), mw, px(SIGN_H));
+      }
     }
 
     let t = still ? 30 : 0;
