@@ -23,8 +23,6 @@ import {
 
 const GLIDES_IN = 0.9;                 // the cover
 const RISES_AT = 0.45, RISES_IN = 0.85; // everything under the cover
-const TILES_ACROSS = 2.6, TILE_IN = 0.8;  // the tide of dots, and each dot
-const TILES_DONE = 0.1 + TILES_ACROSS + TILE_IN;
 const PLAIN_FLOOR = 0.1;               // how much colour a cover needs to give an ink
 const SAMPLE = 360;
 
@@ -253,9 +251,7 @@ export function factRows({ record, families, u, wide, room, align = 'left', size
 
 export const easeOut = v => 1 - (1 - v) ** 3;
 
-// `tiles`: the cover at the head fills in as a tide of dots that close up into the picture.
-// `reflected`: the page is the cover's own reflection, the words plain black or white.
-export const posterScene = (night, { tiles = false, reflected = false } = {}) => (record, frame, { art, families, still = false }) => {
+export const posterScene = night => (record, frame, { art, families, still = false }) => {
   const SHEET = night ? INKS.night.paper : INKS.day.paper;
   const { bars, favs } = record;
   const W = frame.w, H = frame.h;
@@ -278,41 +274,19 @@ export const posterScene = (night, { tiles = false, reflected = false } = {}) =>
   const room = wordsEnd - roomTop;
 
   // ── The picture ─────────────────────────────────────────────────────────────────────────────────────────────────────────────
-  const { ink: albumInk, faint: albumFaint } = inkOf(hueOf(art), night);
-  const words = reflected ? (night ? '#ffffff' : '#000000') : albumInk;
-  const faint = reflected ? (night ? 'rgba(255,255,255,0.22)' : 'rgba(0,0,0,0.18)') : albumFaint;
+  const { ink: words, faint } = inkOf(hueOf(art), night);
   const solid = coverOf(art, size);
   const rows = factRows({
     record, families, u, wide: W - margin * 2, room,
-    lights: { colour: albumInk, starsAt: RISES_AT + 0.5, still },
+    lights: { colour: words, starsAt: RISES_AT + 0.5, still },
   });
   const rowsTop = wordsEnd - rows.height;
 
   // ── The sheet ─────────────────────────────────────────────────────────
-  const under = reflected ? reflectionOf(art, W, H, night, 0.55) : sheet(W, H, c => {
+  const under = sheet(W, H, c => {
     c.fillStyle = SHEET;
     c.fillRect(0, 0, W, H);
   });
-
-  // The tide of dots, corner to corner, each growing until it meets its neighbours.
-  const cells = 12, cell = size / cells;
-  function drawTiles(c, t) {
-    if (t >= TILES_DONE) { c.drawImage(solid, ax, 0); return; }
-    c.save();
-    c.beginPath();
-    for (let i = 0; i < cells; i++) {
-      for (let j = 0; j < cells; j++) {
-        const at = 0.1 + ((i + j) / (cells * 2 - 2)) * TILES_ACROSS;
-        const v = clamp01((t - at) / TILE_IN);
-        if (v <= 0) continue;
-        const grow = v * v * (3 - 2 * v), side = cell * 1.02 * grow;
-        c.roundRect(ax + i * cell + (cell - side) / 2, j * cell + (cell - side) / 2, side, side, side * 0.5 * (1 - grow * grow * 0.9));
-      }
-    }
-    c.clip();
-    c.drawImage(solid, ax, 0);
-    c.restore();
-  }
   // The mark and whose journal it is, on a tab of the sheet at the cover's foot, clear of
   // what Instagram lays over the top.
   const markH = 3.8 * u, markW = markH * MARK_ASPECT;
@@ -342,13 +316,8 @@ export const posterScene = (night, { tiles = false, reflected = false } = {}) =>
     c.restore();
 
     const coverY = -(1 - easeOut(clamp01(t / GLIDES_IN))) * size;
-    if (tiles) {
-      drawTiles(c, t);
-      c.drawImage(tab, ax, size - tab.height);
-    } else {
-      c.drawImage(solid, ax, coverY);
-      c.drawImage(tab, ax, coverY + size - tab.height);
-    }
+    c.drawImage(solid, ax, coverY);
+    c.drawImage(tab, ax, coverY + size - tab.height);
 
     c.save();
     c.beginPath();
