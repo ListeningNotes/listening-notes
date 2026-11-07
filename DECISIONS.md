@@ -749,10 +749,10 @@ A print is always the album's real cover: looks differ by layout, never by a ver
 of the art (2026-11-05). The card is the reading card exported, grey bars and red
 hearts; Poster is the other layout, words and bars in one colour from the album (LN green on a colourless cover), the real cover gliding in; dots, colour layers,
 sheets and a puzzle of colour shapes were tried and let go (2026-11-06). Each is Day
-or Night (2026-11-06) and Animated or Still. Flood, Commercial, Game, Trading, Sideways and Headline
+or Night (2026-11-06) and Animated or Still. Flood, Commercial, Game and Trading
 were added the same day to be judged; the names are placeholders. A Masterpiece is a gold
 card on Trading; a gold edge on every other look was tried and taken off (2026-11-06). Game, Mosaic, CRT, Paper,
-Riso and dotted Halftone were built and cut (git has them, 2026-11-04).
+Riso, dotted Halftone, Record, Solitaire, Sideways and Headline were built and cut (git has them, 2026-11-04).
 
 **The printer is a mode of the entry page, 2026-09-13.** Press the glyph and
 the first screen becomes the flyer, the way correcting is a mode: the card
