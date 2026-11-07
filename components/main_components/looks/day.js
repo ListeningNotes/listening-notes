@@ -7,7 +7,8 @@
 // under each, those not given as ghosts like unlit stars (2026-11-06), under a large mark
 // at the head, with no horizon (trying, 2026-11-06). It is the plain one on purpose.
 // Animated, the album and the words are there from the first frame and the stars and marks
-// turn on one by one and glow gently, breathing, like lights (Miyel, 2026-11-06). Still is the last
+// fill and turn on and glow gently, breathing, like lights: the stars in one smooth sweep
+// from the left, then the marks one by one (Miyel, 2026-11-06). Still is the last
 // moment as a picture. Not the posted date: a line nobody needed on a print (2026-09-12).
 //
 // The numbers are the post's own pixels, on a 340-wide column.
@@ -32,7 +33,7 @@ const MARKS = [
   { tag: 'fav', word: 'Favorite', ink: '#f0484f' },
   { tag: 'formative', word: 'Formative', ink: '#3fa96b' },
 ];
-const STARS_AT = 0.4, STAR_EVERY = 0.22;  // each star turning on
+const STARS_AT = 0.4, STARS_IN = 1.2;     // the stars filling, left to right, in one sweep
 const MARKS_AT = 1.6, MARK_EVERY = 0.28;  // each mark given
 const WARMS_IN = 0.35;                    // a light's glow coming up
 const smooth = v => v * v * (3 - 2 * v);
@@ -142,17 +143,18 @@ export function paperScene(night) {
         y += px(GAP);
         const box = px(STAR), step = px(STAR + STAR_GAP);
         const from = cx - (5 * box + 4 * px(STAR_GAP)) / 2;
+        const sweep = stars * smooth(clamp01((t - STARS_AT) / STARS_IN));
         for (let i = 0; i < 5; i++) {
           const sx = from + i * step;
           drawPath(c, STAR_PATH, sx, y, box, 18, ink.unlit);
-          const part = clamp01(stars - i);
-          const onAt = STARS_AT + i * STAR_EVERY;
-          if (part > 0 && t >= onAt) {
+          const part = clamp01(sweep - i);
+          const onAt = STARS_AT + (i * STARS_IN) / 5;
+          if (part > 0) {
             c.save();
             c.beginPath();
             c.rect(sx - halo, y - halo, halo + box * part, box + halo * 2);
             c.clip();
-            c.globalAlpha = strength(t - onAt);
+            c.globalAlpha = strength(Math.max(0, t - onAt));
             c.drawImage(starGlow, sx - halo, y - halo);
             c.globalAlpha = 1;
             c.beginPath();
