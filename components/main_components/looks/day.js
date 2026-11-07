@@ -117,7 +117,8 @@ export function paperScene(night, ground = null) {
     const starGlow = glowOf(STAR_PATH, 18, px(STAR * fit), GOLD);
     const markGlows = Object.fromEntries(MARKS.map(({ tag, ink: lit }) => [tag, tags.includes(tag) ? glowOf(SYMBOLS[tag], 256, px(MARK * fit), lit) : null]));
     const warmed = since => smooth(clamp01(since / WARMS_IN));
-    const strength = since => (still ? 0.9 : warmed(since) * (0.78 + 0.22 * Math.sin(since * 2.4)));
+    // Held still, a glow is a shape rather than a light, so it is a good deal fainter.
+    const strength = since => (still ? 0.38 : warmed(since) * (0.78 + 0.22 * Math.sin(since * 2.4)));
 
     const signature = signatureOf({ art, record, mono, height: px(HEAD_H), colour: ink.soft, faceOnly: true });
 
