@@ -107,7 +107,7 @@ export const commercialScene = night => (record, frame, { art, families, still =
     c.fillRect(0, 0, c.canvas.width, c.canvas.height);
     c.fillStyle = '#ffffff';
     c.fillRect(rim, rim, size + rim * 2, size + rim * 2);
-    c.drawImage(coverOf(art, size, record.isMasterpiece), rim * 2, rim * 2);
+    c.drawImage(coverOf(art, size), rim * 2, rim * 2);
   });
 
   // The mark in an oval, hung off the box's corner.

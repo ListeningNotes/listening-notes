@@ -14,7 +14,6 @@
 // The numbers are the post's own pixels, on a 340-wide column.
 'use client';
 
-import { goldStroke } from './poster';
 import {
   INKS, STAR_PATH, SYMBOLS, MARK_ASPECT,
   drawTracked, drawPath, roundRect, wrapLines, clamp01, sheet,
@@ -88,10 +87,8 @@ export function paperScene(night) {
         c.drawImage(art.cover, margin, margin, size, size);
         c.restore();
       }
-      // A Masterpiece's edge is gold, here as on every look.
       c.strokeStyle = ink.edge;
       c.lineWidth = Math.max(1, px(0.8));
-      if (record.isMasterpiece) goldStroke(c, px(4), margin, margin, size, size);
       roundRect(c, margin, margin, size, size, radius);
       c.stroke();
     });
