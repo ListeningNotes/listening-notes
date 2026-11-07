@@ -84,7 +84,7 @@ function handOver(it) {
 }
 
 // What to do with the address once it is copied: most prints go to a story.
-const LINK_NOTE = 'Link copied. On your story: Sticker, Link, paste.';
+const LINK_NOTE = 'Your link is copied.';
 
 export function usePress({ plate, shown, ground, isDark, link, fonts, motion = null }) {
   const [status, setStatus] = useState('');
