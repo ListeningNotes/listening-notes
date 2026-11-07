@@ -5,7 +5,7 @@
 // in day mode or night mode (Miyel, 2026-11-04). The page's own colour, the cover,
 // the title with the artist under it, and one line of the stars and the marks given
 // (2026-11-07), under the keeper's face and
-// the mark at the head, with no horizon (trying, 2026-11-06). It is the plain one on purpose.
+// the mark at the head, with the horizon faintly behind it all. It is the plain one on purpose.
 // Animated, the album and the words are there from the first frame and the stars and marks
 // come up slowly and glow gently, breathing, like lights: the stars from the left, each
 // one starting as the last is warming, then the marks (Miyel, 2026-11-06). Still is the last
@@ -16,7 +16,7 @@
 
 import { signatureOf } from './poster';
 import {
-  INKS, STAR_PATH, SYMBOLS, MARK_ASPECT,
+  INKS, STAR_PATH, HEART_PATH, SYMBOLS, MARK_ASPECT,
   drawTracked, drawPath, roundRect, wrapLines, clamp01, sheet,
 } from '../SharePrinter';
 
@@ -37,10 +37,11 @@ const STARS_AT = 0.4, STAR_EVERY = 0.2;   // each star starting to come up
 const MARKS_AT = 1.6, MARK_EVERY = 0.28;  // each mark given
 const WARMS_IN = 0.5;                     // a light coming up
 const smooth = v => v * v * (3 - 2 * v);
+const HORIZON_AT = 0.2, HORIZON_IN = 1.4;
 
 export function paperScene(night, ground = null) {
   return (record, frame, { art, families, still = false }) => {
-    const { stars, artistLine, tags, entry } = record;
+    const { stars, artistLine, tags, bars, favs, entry } = record;
     const { sans, mono } = families;
     const ink = night ? INKS.night : INKS.day;
     const W = frame.w, H = frame.h;
@@ -120,6 +121,27 @@ export function paperScene(night, ground = null) {
 
     const signature = signatureOf({ art, record, mono, height: px(HEAD_H), colour: ink.soft, faceOnly: true });
 
+    // The horizon, faintly, rising from the foot of the page behind the words, its tallest
+    // bar reaching past the stars and marks (Miyel, 2026-11-07).
+    function paintHorizon(c, t) {
+      if (!bars.length) return;
+      const rise = smooth(clamp01((t - HORIZON_AT) / HORIZON_IN));
+      if (rise <= 0) return;
+      const tallest = H - (horizonTop() - px(2));
+      const slot = W / bars.length, gap = Math.min(px(4), slot * 0.14);
+      const heart = Math.min(px(13), slot * 0.7);
+      bars.forEach((v, i) => {
+        const h = Math.max(tallest * 0.05, tallest * v) * rise;
+        c.fillStyle = night ? 'rgba(232,228,220,0.075)' : 'rgba(26,26,26,0.06)';
+        c.fillRect(i * slot + gap / 2, H - h, slot - gap, h);
+        if (favs[i]) {
+          c.globalAlpha = 0.35;
+          drawPath(c, HEART_PATH, i * slot + (slot - heart) / 2, H - h - heart - px(4), heart, 24, '#f0484f');
+          c.globalAlpha = 1;
+        }
+      });
+    }
+
     function paintAt(c, t) {
       if (behind) behind.paint(c, t);
       else {
@@ -127,6 +149,7 @@ export function paperScene(night, ground = null) {
         c.fillRect(0, 0, W, H);
       }
       if (fog) c.drawImage(fog, 0, fogY);
+      if (!behind) paintHorizon(c, t);
       const cx = W / 2;
 
       // The keeper's face and the mark side by side, centred over the cover (Miyel, 2026-11-07).
@@ -206,6 +229,7 @@ export function paperScene(night, ground = null) {
       ? H * STORY_TOP + Math.max(0, (H * (1 - STORY_TOP - STORY_FOOT) - laid.h) / 2)
       : (H - laid.h) / 2;
     const behind = ground ? ground(record, frame, { art, night, still, place: { y: top + size / 2, size } }) : null;
+    const horizonTop = () => top + laid.h - px(rowH);
     const feather = px(56);
     const fogY = top + px(HEAD_H + GAP) + size - feather * 0.6;
     const fog = behind?.fog ? sheet(W, Math.max(1, top + laid.h + feather * 1.2 - fogY), f => {
