@@ -20,22 +20,38 @@
 // see is what saves.
 'use client';
 
-import { Article, ImageSquare, Moon, Sun } from '@phosphor-icons/react';
+import { Article, ChartBarHorizontal, ImageSquare, Moon, PaintBucket, Sun, TextAa, VinylRecord } from '@phosphor-icons/react';
 import { INKS } from '../SharePrinter';
 import { paperScene } from './day';
 import { posterScene } from './poster';
+import { floodScene } from './flood';
+import { recordScene } from './record';
+import { sidewaysScene } from './sideways';
+import { headlineScene } from './headline';
 
 export const LOOKS = [
   { key: 'day', layout: 'card', night: false, label: 'Day', ink: INKS.day.ink, scene: paperScene(false) },
   { key: 'night', layout: 'card', night: true, label: 'Night', ink: INKS.night.ink, scene: paperScene(true) },
   { key: 'poster', layout: 'poster', night: false, label: 'Poster', ink: '#000000', scene: posterScene(false) },
   { key: 'poster-night', layout: 'poster', night: true, label: 'Poster', ink: '#ffffff', scene: posterScene(true) },
+  { key: 'flood', layout: 'flood', night: false, label: 'Flood', ink: '#000000', scene: floodScene(false) },
+  { key: 'flood-night', layout: 'flood', night: true, label: 'Flood', ink: '#ffffff', scene: floodScene(true) },
+  { key: 'record', layout: 'record', night: false, label: 'Record', ink: '#000000', scene: recordScene(false) },
+  { key: 'record-night', layout: 'record', night: true, label: 'Record', ink: '#ffffff', scene: recordScene(true) },
+  { key: 'sideways', layout: 'sideways', night: false, label: 'Sideways', ink: '#000000', scene: sidewaysScene(false) },
+  { key: 'sideways-night', layout: 'sideways', night: true, label: 'Sideways', ink: '#ffffff', scene: sidewaysScene(true) },
+  { key: 'headline', layout: 'headline', night: false, label: 'Headline', ink: '#000000', scene: headlineScene(false) },
+  { key: 'headline-night', layout: 'headline', night: true, label: 'Headline', ink: '#ffffff', scene: headlineScene(true) },
 ];
 
 // The doors: which layout, and which mode.
 export const LAYOUTS = [
   { key: 'card', label: 'Card', Icon: Article },
   { key: 'poster', label: 'Poster', Icon: ImageSquare },
+  { key: 'flood', label: 'Flood', Icon: PaintBucket },
+  { key: 'record', label: 'Record', Icon: VinylRecord },
+  { key: 'sideways', label: 'Sideways', Icon: ChartBarHorizontal },
+  { key: 'headline', label: 'Headline', Icon: TextAa },
 ];
 export const MODES = [
   { night: false, label: 'Day', Icon: Sun },

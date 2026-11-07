@@ -26,14 +26,19 @@ const RISES_AT = 0.45, RISES_IN = 0.85; // everything under the cover
 const PLAIN_FLOOR = 0.1;               // how much colour a cover needs to give an ink
 const SAMPLE = 360;
 
-// How light a fully bright hue reads, for telling which of two makes the better words.
-function lightOfHue(h) {
+// How light a fully bright hue reads.
+export function lightOfHue(h) {
   const f = n => { const k = (n + h / 30) % 12; return 0.5 - 0.5 * Math.max(-1, Math.min(k - 3, 9 - k, 1)); };
   return 0.3 * f(0) + 0.59 * f(8) + 0.11 * f(4);
 }
 
-// The one colour: the album's strongest hue, or LN green on a cover with none to speak of.
-function inkOf(px, night) {
+// The album's strongest hue, or null on a cover with none to speak of.
+export function hueOf(art) {
+  const small = sheet(SAMPLE, SAMPLE, c => {
+    if (art?.cover?.naturalWidth) c.drawImage(art.cover, 0, 0, SAMPLE, SAMPLE);
+    else { c.fillStyle = '#999'; c.fillRect(0, 0, SAMPLE, SAMPLE); }
+  });
+  const px = small.getContext('2d').getImageData(0, 0, SAMPLE, SAMPLE).data;
   const bins = new Array(36).fill(0);
   let vivid = 0;
   for (let i = 0; i < px.length; i += 4) {
@@ -45,25 +50,103 @@ function inkOf(px, night) {
     bins[Math.floor(hue / 10)] += chroma;
     vivid += chroma;
   }
-  if (vivid / (px.length / 4) < PLAIN_FLOOR) {
+  if (vivid / (px.length / 4) < PLAIN_FLOOR) return null;
+  let first = 0;
+  bins.forEach((v, i) => { if (v > bins[first]) first = i; });
+  return first * 10 + 5;
+}
+
+// The one colour on a plain page: deepened by day and lifted at night so it reads;
+// LN green on a cover with no colour of its own.
+export function inkOf(hue, night) {
+  if (hue === null) {
     return night
       ? { ink: LN_GREEN, faint: 'rgba(124,255,155,0.2)' }
       : { ink: '#2e9c55', faint: 'rgba(46,156,85,0.2)' };
   }
-  let first = 0;
-  bins.forEach((v, i) => { if (v > bins[first]) first = i; });
-  const hue = first * 10 + 5;
   // A yellow or a green only reads on a light page once it is quite deep.
   const light = night ? 64 : lightOfHue(hue) > 0.55 ? 32 : 46;
   return { ink: `hsl(${hue},80%,${light}%)`, faint: `hsla(${hue},80%,${light}%,0.2)` };
 }
 
-const easeOut = v => 1 - (1 - v) ** 3;
+export function coverOf(art, size) {
+  return sheet(size, size, c => {
+    if (art?.cover?.naturalWidth) c.drawImage(art.cover, 0, 0, size, size);
+    else { c.fillStyle = '#999'; c.fillRect(0, 0, size, size); }
+  });
+}
+
+// The mark, in one colour.
+export function markIn(art, w, h, colour) {
+  return sheet(w, h, m => {
+    if (!art?.mark) return;
+    m.drawImage(art.mark, 0, 0, w, h);
+    m.globalCompositeOperation = 'source-in';
+    m.fillStyle = colour;
+    m.fillRect(0, 0, w, h);
+  });
+}
+
+// The rows of words every look but the card shares: stars and marks, the artist, the
+// title. Measured for the room given, then painted wherever the look wants them.
+export function factRows({ record, families, u, wide, room, align = 'left', size = 14 }) {
+  const { stars, artistLine, tags, entry } = record;
+  const { sans, mono } = families;
+  const fontAt = k => `900 ${size * k * u}px ${sans}`;
+  const leadOf = k => size * 0.93 * k * u;
+  const heightAt = (k, lines) => (stars > 0 || tags.length ? 10.5 * k * u : 0) + (artistLine ? 5.4 * k * u : 0) + lines * leadOf(k);
+  const { k, lines } = fitTitle({ album: entry?.album, fontAt, wide, room, heightAt });
+  const lead = leadOf(k);
+  const starBox = 7.6 * k * u, starGap = 1.1 * k * u;
+  const markBox = 7.6 * k * u, markGap = 1.8 * k * u;
+  const centre = align === 'center';
+  return {
+    height: heightAt(k, lines.length),
+    paint(c, x, top, ink, faint) {
+      let y = top;
+      if (stars > 0 || tags.length) {
+        const across = (stars > 0 ? 5 * starBox + 4 * starGap : 0) + (tags.length ? (stars > 0 ? 3 * markGap : 0) + tags.length * markBox + (tags.length - 1) * markGap : 0);
+        const from = centre ? x + (wide - across) / 2 : x;
+        for (let i = 0; i < 5 && stars > 0; i++) {
+          const sx = from + i * (starBox + starGap);
+          drawPath(c, STAR_PATH, sx, y, starBox, 18, faint);
+          const part = clamp01(stars - i);
+          if (part > 0) {
+            c.save();
+            c.beginPath();
+            c.rect(sx, y, starBox * part, starBox);
+            c.clip();
+            drawPath(c, STAR_PATH, sx, y, starBox, 18, ink);
+            c.restore();
+          }
+        }
+        tags.forEach((tag, i) => {
+          const mx = centre
+            ? from + across - (tags.length - i) * markBox - (tags.length - i - 1) * markGap
+            : x + wide - (tags.length - i) * markBox - (tags.length - i - 1) * markGap;
+          drawPath(c, SYMBOLS[tag], mx, y, markBox, 256, ink);
+        });
+        y += 10.5 * k * u;
+      }
+      if (artistLine) {
+        drawArtist(c, artistLine, centre ? x + wide / 2 : x, y, { size: 2.9 * k * u, tracking: 0.24, wide, least: c.canvas.width * 0.02, colour: ink, mono, align });
+        y += 5.4 * k * u;
+      }
+      c.font = fontAt(k);
+      c.textBaseline = 'top';
+      c.textAlign = align;
+      c.fillStyle = ink;
+      lines.forEach((line, i) => c.fillText(line, centre ? x + wide / 2 : x, y + i * lead));
+      c.textAlign = 'left';
+    },
+  };
+}
+
+export const easeOut = v => 1 - (1 - v) ** 3;
 
 export const posterScene = night => (record, frame, { art, families, still = false }) => {
   const SHEET = night ? INKS.night.paper : INKS.day.paper;
-  const { stars, artistLine, tags, bars, favs, entry } = record;
-  const { sans, mono } = families;
+  const { bars, favs } = record;
   const W = frame.w, H = frame.h;
   const u = Math.min(W, (H * 9) / 16) / 100;
 
@@ -80,26 +163,12 @@ export const posterScene = night => (record, frame, { art, families, still = fal
   const clearance = bars.length ? 1.5 * u + (hasHearts ? heartBox + heartLift : 0) : 0;
   const wordsEnd = H - floorH - clearance - margin * (bars.length ? 0 : 1);
   const room = wordsEnd - roomTop;
-  const heightAt = (k, lines) => ((stars > 0 || tags.length ? 10.5 : 0) + (artistLine ? 5.4 : 0) + lines * 13) * k * u;
-  const titleFont = k => `900 ${14 * k * u}px ${sans}`;
-  const { k, lines: titleLines } = fitTitle({ album: entry?.album, fontAt: titleFont, wide: W - margin * 2, room, heightAt });
-  const rowsTop = wordsEnd - heightAt(k, titleLines.length);
+  const rows = factRows({ record, families, u, wide: W - margin * 2, room });
+  const rowsTop = wordsEnd - rows.height;
 
   // ── The picture ─────────────────────────────────────────────────────────────────────────────────────────────────────────────
-  const side = SAMPLE;
-  const small = sheet(side, side, c => {
-    if (art?.cover?.naturalWidth) c.drawImage(art.cover, 0, 0, side, side);
-    else { c.fillStyle = '#999'; c.fillRect(0, 0, side, side); }
-  });
-  const px = small.getContext('2d').getImageData(0, 0, side, side).data;
-  const { ink: words, faint } = inkOf(px, night);
-
-  // The real cover.
-  const solid = sheet(size, size, c => {
-    if (art?.cover?.naturalWidth) c.drawImage(art.cover, 0, 0, size, size);
-    else { c.fillStyle = '#999'; c.fillRect(0, 0, size, size); }
-  });
-
+  const { ink: words, faint } = inkOf(hueOf(art), night);
+  const solid = coverOf(art, size);
 
   // ── The sheet ─────────────────────────────────────────────────────────
   const under = sheet(W, H, c => {
@@ -111,19 +180,9 @@ export const posterScene = night => (record, frame, { art, families, still = fal
   const tab = sheet(markW + 3.6 * u, markH + 2.4 * u, c => {
     c.fillStyle = SHEET;
     c.fillRect(0, 0, c.canvas.width, c.canvas.height);
-    if (art?.mark) {
-      c.drawImage(sheet(markW, markH, m => {
-        m.drawImage(art.mark, 0, 0, markW, markH);
-        m.globalCompositeOperation = 'source-in';
-        m.fillStyle = words;
-        m.fillRect(0, 0, markW, markH);
-      }), 1.8 * u, 1.2 * u);
-    }
+    c.drawImage(markIn(art, markW, markH, words), 1.8 * u, 1.2 * u);
   });
 
-  const starBox = 7.6 * k * u, starGap = 1.1 * k * u;
-  const markBox = 7.6 * k * u, markGap = 1.8 * k * u;
-  const lead = 13 * k * u;
   const slot = bars.length ? W / bars.length : 0;
   const barGap = Math.min(0.9 * u, slot * 0.14);
 
@@ -150,7 +209,7 @@ export const posterScene = night => (record, frame, { art, families, still = fal
     c.rect(0, size, W, H - size);
     c.clip();
     c.translate(0, up);
-    paintWords(c, words, faint);
+    rows.paint(c, margin, rowsTop, words, faint);
 
     // A favourite: a heart standing on its bar, in the same one colour.
     bars.forEach((v, i) => {
@@ -159,44 +218,6 @@ export const posterScene = night => (record, frame, { art, families, still = fal
       drawPath(c, HEART_PATH, i * slot + (slot - heartBox) / 2, H - h - heartBox - heartLift, heartBox, 24, words);
     });
     c.restore();
-  }
-
-  function paintWords(c, ink, inkFaint) {
-    let y = rowsTop;
-    if (stars > 0 || tags.length) {
-      const rowY = y;
-      {
-        for (let i = 0; i < 5 && stars > 0; i++) {
-          const x = margin + i * (starBox + starGap);
-          drawPath(c, STAR_PATH, x, rowY, starBox, 18, inkFaint);
-          const part = clamp01(stars - i);
-          if (part > 0) {
-            c.save();
-            c.beginPath();
-            c.rect(x, rowY, starBox * part, starBox);
-            c.clip();
-            drawPath(c, STAR_PATH, x, rowY, starBox, 18, ink);
-            c.restore();
-          }
-        }
-        tags.forEach((tag, i) => {
-          const x = W - margin - (tags.length - i) * markBox - (tags.length - i - 1) * markGap;
-          drawPath(c, SYMBOLS[tag], x, rowY, markBox, 256, ink);
-        });
-      }
-      y += 10.5 * k * u;
-    }
-    if (artistLine) {
-      const artistY = y;
-      drawArtist(c, artistLine, margin, artistY, { size: 2.9 * k * u, tracking: 0.24, wide: W - margin * 2, least: W * 0.02, colour: ink, mono, align: 'left' });
-      y += 5.4 * k * u;
-    }
-    const titleY = y;
-    c.font = titleFont(k);
-    c.textBaseline = 'top';
-    c.textAlign = 'left';
-    c.fillStyle = ink;
-    titleLines.forEach((line, i) => c.fillText(line, margin, titleY + i * lead));
   }
 
   let t = still ? 30 : 0;
