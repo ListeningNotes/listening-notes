@@ -747,7 +747,7 @@ the layout is not: every look draws the cover, stars, marks, title with artist a
 year, horizon and the mark, no more and no fewer, in `looks/`, on one canvas scene.
 A print is always the album's real cover: looks differ by layout, never by a version
 of the art (2026-11-05). The card is the reading card exported, grey bars and red
-hearts; Poster is the other layout, bars in the album's colour (LN green on a colourless cover), the real cover gliding in; dots, colour layers,
+hearts; Poster is the other layout, words and bars in one colour from the album (LN green on a colourless cover), the real cover gliding in; dots, colour layers,
 sheets and a puzzle of colour shapes were tried and let go (2026-11-06). Each is Day
 or Night (2026-11-06) and Animated or Still. Game, Mosaic, CRT, Paper,
 Riso and dotted Halftone were built and cut (git has them, 2026-11-04).
