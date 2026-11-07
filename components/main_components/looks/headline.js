@@ -58,7 +58,7 @@ export const headlineScene = night => (record, frame, { art, families, still = f
   // A short title leaves room, and the cover takes it.
   const size = Math.min(most, least + Math.max(0, end - top - used));
   const ax = W - margin - size;
-  const cover = coverOf(art, size);
+  const cover = coverOf(art, size, record.isMasterpiece);
   const besideWide = ax - margin * 2;
   let at = end - used;
   const placed = words.map((line, i) => {

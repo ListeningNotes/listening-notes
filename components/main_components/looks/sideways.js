@@ -21,7 +21,7 @@ export const sidewaysScene = night => (record, frame, { art, families, still = f
   const column = bars.length ? 22 * u : 0;
   const size = Math.min(W - column - 2 * u, H * 0.46);
   const ax = W - size;
-  const cover = coverOf(art, size);
+  const cover = coverOf(art, size, record.isMasterpiece);
   const markH = 3.8 * u, markW = markH * MARK_ASPECT;
   const tab = sheet(markW + 3.6 * u, markH + 2.4 * u, c => {
     c.fillStyle = paper;

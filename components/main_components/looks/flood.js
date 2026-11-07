@@ -10,7 +10,7 @@
 'use client';
 
 import { HEART_PATH, INKS, MARK_ASPECT, clamp01, drawPath, roundRect, sheet } from '../SharePrinter';
-import { coverOf, factRows, markIn } from './poster';
+import { coverOf, factRows, goldStroke, markIn } from './poster';
 
 const MELTS_AT = 0.4, MELTS_IN = 1.3;  // the picture blurring
 const ALBUM_AT = 0.7, ALBUM_IN = 0.8;  // the album dissolving in
@@ -68,6 +68,11 @@ export const floodScene = night => (record, frame, { art, families, still = fals
     roundRect(c, 0, 0, size, size, size * 0.06);
     c.clip();
     c.drawImage(coverOf(art, size), 0, 0);
+    if (record.isMasterpiece) {
+      goldStroke(c, size * 0.036, 0, 0, size, size);
+      roundRect(c, 0, 0, size, size, size * 0.06);
+      c.stroke();
+    }
   });
   const mark = markIn(art, markW, markH, ink);
 
