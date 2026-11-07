@@ -34,7 +34,7 @@ export function entryPlate({ entry, onFail = null }) {
     ? tracks.map(t => clamp01((Number(t.stars) || 0) / 5))
     : parseHorizon(entry?.horizon);
   const favs = rated ? tracks.map(t => Boolean(t.favorite)) : [];
-  const record = { entry, isMasterpiece, stars, artistLine, year: entry?.year, tags, bars, favs };
+  const record = { entry, isMasterpiece, stars, artistLine, year: entry?.year, tags, bars, favs, trackNames: tracks.map(t => t.name).filter(Boolean) };
 
   function scene(frame, { art, families, ground = 'day', still = false }) {
     const look = lookOf(ground);
