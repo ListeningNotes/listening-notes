@@ -104,7 +104,7 @@ export default function PrintBar({ sections = [], tab = null, onTab, away = fals
       {!saving && <div className="ln-print-said" aria-live="polite">{status}</div>}
       <button type="button" className="ln-print-save" onClick={onSave} disabled={saving}>
         <DownloadSimple size={19} aria-hidden="true" />
-        <span>{saving ? 'Making your video…' : 'Save'}</span>
+        <span>{saving ? 'Making your flyer…' : 'Save'}</span>
       </button>
     </div>
     </>,
