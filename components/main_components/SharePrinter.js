@@ -205,7 +205,7 @@ export const INKS = {
     wash: 'rgba(14,14,14,0.5)', paper: '#0e0e0e',
   },
 };
-// LN green (--live): Poster's bars on a cover with no colour of its own.
+// LN green (--live): Poster's one colour on a cover with no colour of its own.
 export const LN_GREEN = '#7cff9b';
 export const STAR_PATH = 'M9 1.5l2.163 4.38 4.837.703-3.5 3.412.826 4.818L9 12.39l-4.326 2.273.826-4.818L2 6.583l4.837-.703z';
 export const HEART_PATH = 'M12 21s-8-5.3-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.7-8 11-8 11z';

@@ -8,10 +8,9 @@
 // the top of the sheet and everything else comes up from the bottom to meet it. Dots,
 // colour layers, sliding sheets and a puzzle of flat shapes were all tried and let go
 // (Miyel, 2026-11-06). Nothing bounces.
-// The words, stars and marks take an ink from the album's own colours, deep by day and
-// lifted at night, and the bars its brighter one, or LN green on a cover with no colour
-// of its own. Everything wears a hairline, black by day and white at night (Miyel,
-// 2026-11-06). The title overlaps the bars only by day, with no hearts to cover.
+// The words, stars, marks and bars are all one colour, the album's strongest, deepened
+// by day and lifted at night so it reads; a cover with no colour of its own takes LN
+// green (Miyel, 2026-11-06). The title sits clear of the bars, since it would vanish on them.
 //
 // Reading the colours is by the pixel. A cover that will not be read throws here, and
 // the print falls back to Day.
@@ -24,7 +23,6 @@ import {
 
 const GLIDES_IN = 0.9;                 // the cover
 const RISES_AT = 0.45, RISES_IN = 0.85; // everything under the cover
-const FAR_ENOUGH = 60;                 // degrees of hue between the two to choose from
 const PLAIN_FLOOR = 0.1;               // how much colour a cover needs to give an ink
 const SAMPLE = 360;
 
@@ -34,10 +32,8 @@ function lightOfHue(h) {
   return 0.3 * f(0) + 0.59 * f(8) + 0.11 * f(4);
 }
 
-// The album's two strongest hues: the darker, deepened until it reads, is the words' ink
-// by day; the brighter is the bars. A cover with one hue uses it for both. A cover with
-// no colour to speak of prints in plain black, with LN green bars.
-function inksOf(px) {
+// The one colour: the album's strongest hue, or LN green on a cover with none to speak of.
+function inkOf(px, night) {
   const bins = new Array(36).fill(0);
   let vivid = 0;
   for (let i = 0; i < px.length; i += 4) {
@@ -50,41 +46,19 @@ function inksOf(px) {
     vivid += chroma;
   }
   if (vivid / (px.length / 4) < PLAIN_FLOOR) {
-    return {
-      words: 'hsl(240,6%,12%)', faint: 'hsla(240,6%,12%,0.2)', barInk: LN_GREEN,
-      nightWords: '#ffffff', nightFaint: 'rgba(255,255,255,0.2)',
-    };
+    return night
+      ? { ink: LN_GREEN, faint: 'rgba(124,255,155,0.2)' }
+      : { ink: '#2e9c55', faint: 'rgba(46,156,85,0.2)' };
   }
-  const apart = (a, b) => { const d = Math.abs(a - b) % 360; return Math.min(d, 360 - d); };
   let first = 0;
   bins.forEach((v, i) => { if (v > bins[first]) first = i; });
-  const h1 = first * 10 + 5;
-  let second = -1;
-  bins.forEach((v, i) => {
-    if (apart(i * 10 + 5, h1) < FAR_ENOUGH || v < bins[first] * 0.12) return;
-    if (second < 0 || v > bins[second]) second = i;
-  });
-  const h2 = second >= 0 ? second * 10 + 5 : h1;
-  const [darkHue, brightHue] = lightOfHue(h1) <= lightOfHue(h2) ? [h1, h2] : [h2, h1];
-  // A yellow or a green only reads as words once it is quite deep.
-  const light = lightOfHue(darkHue) > 0.55 ? 24 : 34;
-  return {
-    words: `hsl(${darkHue},78%,${light}%)`,
-    faint: `hsla(${darkHue},78%,${light}%,0.2)`,
-    barInk: `hsl(${brightHue},86%,58%)`,
-    nightWords: `hsl(${darkHue},78%,70%)`,
-    nightFaint: `hsla(${darkHue},78%,70%,0.2)`,
-  };
+  const hue = first * 10 + 5;
+  // A yellow or a green only reads on a light page once it is quite deep.
+  const light = night ? 64 : lightOfHue(hue) > 0.55 ? 32 : 46;
+  return { ink: `hsl(${hue},80%,${light}%)`, faint: `hsla(${hue},80%,${light}%,0.2)` };
 }
 
 const easeOut = v => 1 - (1 - v) ** 3;
-
-function overprint(c, paint) {
-  c.save();
-  c.globalCompositeOperation = 'multiply';
-  paint();
-  c.restore();
-}
 
 export const posterScene = night => (record, frame, { art, families, still = false }) => {
   const SHEET = night ? INKS.night.paper : INKS.day.paper;
@@ -99,15 +73,12 @@ export const posterScene = night => (record, frame, { art, families, still = fal
   const floorH = bars.length ? H * 0.14 : 0;
   const margin = 5 * u;
   const roomTop = size + 3 * u;
-  // A favourite's heart stands on its own bar, as on the card (Miyel, 2026-11-06), so the
-  // title keeps clear of them. Only by day, with no hearts to cover, does it come down
-  // into the bars.
+  // A favourite's heart stands on its own bar, as on the card (Miyel, 2026-11-06).
   const hasHearts = favs.some(Boolean) && bars.length > 0;
-  const overlap = bars.length && !night && !hasHearts ? floorH * 0.45 : 0;
   const heartBox = Math.min(4.2 * u, (bars.length ? W / bars.length : 0) * 0.8);
   const heartLift = 1 * u;
-  const clearance = bars.length && !overlap ? 1.5 * u + (hasHearts ? heartBox + heartLift : 0) : 0;
-  const wordsEnd = H - floorH + overlap - clearance - margin * (bars.length ? 0 : 1);
+  const clearance = bars.length ? 1.5 * u + (hasHearts ? heartBox + heartLift : 0) : 0;
+  const wordsEnd = H - floorH - clearance - margin * (bars.length ? 0 : 1);
   const room = wordsEnd - roomTop;
   const heightAt = (k, lines) => ((stars > 0 || tags.length ? 10.5 : 0) + (artistLine ? 5.4 : 0) + lines * 13) * k * u;
   const titleFont = k => `900 ${14 * k * u}px ${sans}`;
@@ -121,11 +92,7 @@ export const posterScene = night => (record, frame, { art, families, still = fal
     else { c.fillStyle = '#999'; c.fillRect(0, 0, side, side); }
   });
   const px = small.getContext('2d').getImageData(0, 0, side, side).data;
-  const inks = inksOf(px);
-  const words = night ? inks.nightWords : inks.words;
-  const faint = night ? inks.nightFaint : inks.faint;
-  const line = night ? '#ffffff' : '#000000';
-  const hair = Math.max(1, 0.2 * u);
+  const { ink: words, faint } = inkOf(px, night);
 
   // The real cover.
   const solid = sheet(size, size, c => {
@@ -133,8 +100,6 @@ export const posterScene = night => (record, frame, { art, families, still = fal
     else { c.fillStyle = '#999'; c.fillRect(0, 0, size, size); }
   });
 
-  // The words overprint by day, and simply lie on the black at night.
-  const lay = (c, paint) => (night ? paint() : overprint(c, paint));
 
   // ── The sheet ─────────────────────────────────────────────────────────
   const under = sheet(W, H, c => {
@@ -167,21 +132,17 @@ export const posterScene = night => (record, frame, { art, families, still = fal
 
     // Everything under the cover comes up from the bottom, together.
     const up = (1 - easeOut(clamp01((t - RISES_AT) / RISES_IN))) * (H - size);
-    c.lineWidth = hair;
-    c.strokeStyle = line;
     c.save();
     c.translate(0, up);
     bars.forEach((v, i) => {
       const h = Math.max(floorH * 0.05, floorH * v);
-      c.fillStyle = inks.barInk;
+      c.fillStyle = words;
       c.fillRect(i * slot + barGap / 2, H - h, slot - barGap, h);
-      c.strokeRect(i * slot + barGap / 2, H - h, slot - barGap, h);
     });
     c.restore();
 
     const coverY = -(1 - easeOut(clamp01(t / GLIDES_IN))) * size;
     c.drawImage(solid, ax, coverY);
-    c.strokeRect(ax, coverY, size, size);
     c.drawImage(tab, 0, 0);
 
     c.save();
@@ -195,18 +156,8 @@ export const posterScene = night => (record, frame, { art, families, still = fal
     bars.forEach((v, i) => {
       if (!favs[i]) return;
       const h = Math.max(floorH * 0.05, floorH * v);
-      drawPath(c, HEART_PATH, i * slot + (slot - heartBox) / 2, H - h - heartBox - heartLift, heartBox, 24, line);
+      drawPath(c, HEART_PATH, i * slot + (slot - heartBox) / 2, H - h - heartBox - heartLift, heartBox, 24, night ? '#ffffff' : '#000000');
     });
-    c.restore();
-  }
-
-  function outline(c, d, x, y, box, viewBox) {
-    c.save();
-    c.translate(x, y);
-    c.scale(box / viewBox, box / viewBox);
-    c.lineWidth = hair * (viewBox / box);
-    c.strokeStyle = line;
-    c.stroke(new Path2D(d));
     c.restore();
   }
 
@@ -214,11 +165,10 @@ export const posterScene = night => (record, frame, { art, families, still = fal
     let y = rowsTop;
     if (stars > 0 || tags.length) {
       const rowY = y;
-      lay(c, () => {
+      {
         for (let i = 0; i < 5 && stars > 0; i++) {
           const x = margin + i * (starBox + starGap);
           drawPath(c, STAR_PATH, x, rowY, starBox, 18, inkFaint);
-          outline(c, STAR_PATH, x, rowY, starBox, 18);
           const part = clamp01(stars - i);
           if (part > 0) {
             c.save();
@@ -226,38 +176,27 @@ export const posterScene = night => (record, frame, { art, families, still = fal
             c.rect(x, rowY, starBox * part, starBox);
             c.clip();
             drawPath(c, STAR_PATH, x, rowY, starBox, 18, ink);
-            outline(c, STAR_PATH, x, rowY, starBox, 18);
             c.restore();
           }
         }
         tags.forEach((tag, i) => {
           const x = W - margin - (tags.length - i) * markBox - (tags.length - i - 1) * markGap;
           drawPath(c, SYMBOLS[tag], x, rowY, markBox, 256, ink);
-          // The fingerprint's lines are too fine to take a hairline of their own.
-          if (tag !== 'formative') outline(c, SYMBOLS[tag], x, rowY, markBox, 256);
         });
-      });
+      }
       y += 10.5 * k * u;
     }
     if (artistLine) {
       const artistY = y;
-      lay(c, () => drawArtist(c, artistLine, margin, artistY, { size: 2.9 * k * u, tracking: 0.24, wide: W - margin * 2, least: W * 0.02, colour: ink, mono, align: 'left' }));
+      drawArtist(c, artistLine, margin, artistY, { size: 2.9 * k * u, tracking: 0.24, wide: W - margin * 2, least: W * 0.02, colour: ink, mono, align: 'left' });
       y += 5.4 * k * u;
     }
     const titleY = y;
-    lay(c, () => {
-      c.font = titleFont(k);
-      c.textBaseline = 'top';
-      c.textAlign = 'left';
-      c.fillStyle = ink;
-      c.lineJoin = 'round';
-      c.lineWidth = hair;
-      c.strokeStyle = line;
-      titleLines.forEach((words, i) => {
-        c.fillText(words, margin, titleY + i * lead);
-        c.strokeText(words, margin, titleY + i * lead);
-      });
-    });
+    c.font = titleFont(k);
+    c.textBaseline = 'top';
+    c.textAlign = 'left';
+    c.fillStyle = ink;
+    titleLines.forEach((line, i) => c.fillText(line, margin, titleY + i * lead));
   }
 
   let t = still ? 30 : 0;
