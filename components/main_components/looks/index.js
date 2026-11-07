@@ -20,7 +20,7 @@
 // see is what saves.
 'use client';
 
-import { Article, CirclesThree, CircleHalf, Equalizer, GridFour, ImageSquare, Moon, PaintBucket, Planet, Sun, Television } from '@phosphor-icons/react';
+import { Article, CirclesThree, CircleHalf, Equalizer, ImageSquare, Moon, Planet, Sun, Television } from '@phosphor-icons/react';
 import { INKS } from '../SharePrinter';
 import { paperScene } from './day';
 import { driftGround, levelsGround, orbsGround, reflectGround } from './grounds';
@@ -36,10 +36,6 @@ export const LOOKS = [
   ]),
   { key: 'poster', layout: 'poster', night: false, label: 'Poster', ink: '#000000', scene: posterScene(false) },
   { key: 'poster-night', layout: 'poster', night: true, label: 'Poster', ink: '#ffffff', scene: posterScene(true) },
-  { key: 'tiles', layout: 'tiles', night: false, label: 'Tiles', ink: '#000000', scene: posterScene(false, { tiles: true }) },
-  { key: 'tiles-night', layout: 'tiles', night: true, label: 'Tiles', ink: '#ffffff', scene: posterScene(true, { tiles: true }) },
-  { key: 'flood', layout: 'flood', night: false, label: 'Flood', ink: '#000000', scene: posterScene(false, { reflected: true }) },
-  { key: 'flood-night', layout: 'flood', night: true, label: 'Flood', ink: '#ffffff', scene: posterScene(true, { reflected: true }) },
   { key: 'tv', layout: 'tv', night: false, label: 'TV', ink: '#000000', scene: tvScene(false) },
   { key: 'tv-night', layout: 'tv', night: true, label: 'TV', ink: '#ffffff', scene: tvScene(true) },
 ];
@@ -52,8 +48,6 @@ export const LAYOUTS = [
   { key: 'reflect', label: 'Reflect', Icon: CircleHalf },
   { key: 'drift', label: 'Drift', Icon: Planet },
   { key: 'poster', label: 'Poster', Icon: ImageSquare },
-  { key: 'tiles', label: 'Tiles', Icon: GridFour },
-  { key: 'flood', label: 'Flood', Icon: PaintBucket },
   { key: 'tv', label: 'TV', Icon: Television },
 ];
 export const MODES = [
