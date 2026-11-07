@@ -32,8 +32,9 @@ export function lightOfHue(h) {
   return 0.3 * f(0) + 0.59 * f(8) + 0.11 * f(4);
 }
 
-// The album's strongest hue, or null on a cover with none to speak of.
-export function hueOf(art) {
+// The album's two strongest hues, far enough apart to tell: `first` is null on a cover with
+// no colour to speak of, `second` null on a cover with only the one.
+export function huesOf(art) {
   const small = sheet(SAMPLE, SAMPLE, c => {
     if (art?.cover?.naturalWidth) c.drawImage(art.cover, 0, 0, SAMPLE, SAMPLE);
     else { c.fillStyle = '#999'; c.fillRect(0, 0, SAMPLE, SAMPLE); }
@@ -50,11 +51,23 @@ export function hueOf(art) {
     bins[Math.floor(hue / 10)] += chroma;
     vivid += chroma;
   }
-  if (vivid / (px.length / 4) < PLAIN_FLOOR) return null;
+  if (vivid / (px.length / 4) < PLAIN_FLOOR) return { first: null, second: null };
   let first = 0;
   bins.forEach((v, i) => { if (v > bins[first]) first = i; });
-  return first * 10 + 5;
+  const apart = i => { const d = Math.abs(i - first) * 10; return Math.min(d, 360 - d); };
+  let second = -1;
+  bins.forEach((v, i) => {
+    if (apart(i) < 60 || v < bins[first] * 0.12) return;
+    if (second < 0 || v > bins[second]) second = i;
+  });
+  return { first: first * 10 + 5, second: second < 0 ? null : second * 10 + 5 };
 }
+
+export const hueOf = art => huesOf(art).first;
+
+// A story's frame: Instagram lays its own name and buttons over the top of it, and the
+// poster's Link sticker needs somewhere to sit near the foot, so a look leaves both clear.
+export const isStory = frame => frame.w / frame.h < 0.6;
 
 // The one colour on a plain page: deepened by day and lifted at night so it reads. A
 // black-and-white cover prints in black by day and white at night (Miyel, 2026-11-06).
@@ -153,7 +166,9 @@ export const posterScene = night => (record, frame, { art, families, still = fal
   // The cover takes the head of the sheet, off the edges where it can.
   const size = Math.min(W, H * 0.6);
   const ax = (W - size) / 2;
-  const floorH = bars.length ? H * 0.14 : 0;
+  const story = isStory(frame);
+  const base = H - (story ? 14 * u : 0);  // the band under the bars is the sticker's
+  const floorH = bars.length ? H * (story ? 0.11 : 0.14) : 0;
   const margin = 5 * u;
   const roomTop = size + 3 * u;
   // A favourite's heart stands on its own bar, as on the card (Miyel, 2026-11-06).
@@ -161,7 +176,7 @@ export const posterScene = night => (record, frame, { art, families, still = fal
   const heartBox = Math.min(4.2 * u, (bars.length ? W / bars.length : 0) * 0.8);
   const heartLift = 1 * u;
   const clearance = bars.length ? 1.5 * u + (hasHearts ? heartBox + heartLift : 0) : 0;
-  const wordsEnd = H - floorH - clearance - margin * (bars.length ? 0 : 1);
+  const wordsEnd = base - floorH - clearance - margin * (bars.length ? 0 : 1);
   const room = wordsEnd - roomTop;
   const rows = factRows({ record, families, u, wide: W - margin * 2, room });
   const rowsTop = wordsEnd - rows.height;
@@ -175,12 +190,24 @@ export const posterScene = night => (record, frame, { art, families, still = fal
     c.fillStyle = SHEET;
     c.fillRect(0, 0, W, H);
   });
-  // The mark on a tab of the sheet at the corner, in the words' ink.
+  // The mark and whose journal it is, on a tab of the sheet at the cover's foot, clear of
+  // what Instagram lays over the top.
   const markH = 3.8 * u, markW = markH * MARK_ASPECT;
-  const tab = sheet(markW + 3.6 * u, markH + 2.4 * u, c => {
+  const nameFont = `400 ${2.4 * u}px ${families.mono}`;
+  const keeper = (record.keeper || '').toUpperCase();
+  const namer = document.createElement('canvas').getContext('2d');
+  namer.font = nameFont;
+  const nameW = keeper ? namer.measureText(keeper).width + 2 * u : 0;
+  const tab = sheet(markW + 3.6 * u + nameW, markH + 2.4 * u, c => {
     c.fillStyle = SHEET;
     c.fillRect(0, 0, c.canvas.width, c.canvas.height);
     c.drawImage(markIn(art, markW, markH, words), 1.8 * u, 1.2 * u);
+    if (keeper) {
+      c.font = nameFont;
+      c.textBaseline = 'middle';
+      c.fillStyle = words;
+      c.fillText(keeper, markW + 3.8 * u, c.canvas.height / 2 + 0.1 * u);
+    }
   });
 
   const slot = bars.length ? W / bars.length : 0;
@@ -196,13 +223,13 @@ export const posterScene = night => (record, frame, { art, families, still = fal
     bars.forEach((v, i) => {
       const h = Math.max(floorH * 0.05, floorH * v);
       c.fillStyle = words;
-      c.fillRect(i * slot + barGap / 2, H - h, slot - barGap, h);
+      c.fillRect(i * slot + barGap / 2, base - h, slot - barGap, h);
     });
     c.restore();
 
     const coverY = -(1 - easeOut(clamp01(t / GLIDES_IN))) * size;
     c.drawImage(solid, ax, coverY);
-    c.drawImage(tab, 0, 0);
+    c.drawImage(tab, ax, coverY + size - tab.height);
 
     c.save();
     c.beginPath();
@@ -215,7 +242,7 @@ export const posterScene = night => (record, frame, { art, families, still = fal
     bars.forEach((v, i) => {
       if (!favs[i]) return;
       const h = Math.max(floorH * 0.05, floorH * v);
-      drawPath(c, HEART_PATH, i * slot + (slot - heartBox) / 2, H - h - heartBox - heartLift, heartBox, 24, words);
+      drawPath(c, HEART_PATH, i * slot + (slot - heartBox) / 2, base - h - heartBox - heartLift, heartBox, 24, words);
     });
     c.restore();
   }

@@ -10,7 +10,7 @@
 'use client';
 
 import { HEART_PATH, INKS, MARK_ASPECT, STAR_PATH, SYMBOLS, clamp01, drawPath, ellipsize, roundRect, sheet } from '../SharePrinter';
-import { coverOf, hueOf, markIn } from './poster';
+import { coverOf, hueOf, isStory, markIn } from './poster';
 
 const FACE_DOWN = 0.6, TURNS_IN = 0.8; // resting on its back, then the one flip
 const SETTLED = FACE_DOWN + TURNS_IN;
@@ -47,13 +47,16 @@ export const tradingScene = night => (record, frame, { art, families, still = fa
     roundRect(c, rim, rim, cardW - rim * 2, cardH - rim * 2, radius * 0.6);
     c.fill();
 
+    // A story leaves Instagram's top alone and the foot for the Link sticker.
+    const story = isStory(frame);
+    const head = story ? 8 * u : 0, band = story ? 11 * u : 0;
     const pad = 5 * u, inner = cardW - pad * 2;
-    const window_ = Math.min(inner, cardH * 0.56), artX = (cardW - window_) / 2;
+    const window_ = Math.min(inner, cardH * (story ? 0.47 : 0.56)), artX = (cardW - window_) / 2;
 
     // The name bar.
     const barH = 10 * u;
     c.fillStyle = 'rgba(255,255,255,0.86)';
-    roundRect(c, pad, pad, inner, barH, 1.4 * u);
+    roundRect(c, pad, pad + head, inner, barH, 1.4 * u);
     c.fill();
     let titlePx = 6.2 * u;
     c.font = `900 ${titlePx}px ${sans}`;
@@ -64,10 +67,10 @@ export const tradingScene = night => (record, frame, { art, families, still = fa
     c.textBaseline = 'middle';
     c.textAlign = 'left';
     c.fillStyle = inkDark;
-    c.fillText(entry?.album || '', pad + 2 * u, pad + barH / 2 + 0.2 * u);
+    c.fillText(entry?.album || '', pad + 2 * u, pad + head + barH / 2 + 0.2 * u);
 
     // The window.
-    const artY = pad + barH + 1.6 * u;
+    const artY = pad + head + barH + 1.6 * u;
     c.fillStyle = inkDark;
     c.fillRect(artX - 0.4 * u, artY - 0.4 * u, window_ + 0.8 * u, window_ + 0.8 * u);
     c.drawImage(coverOf(art, window_), artX, artY);
@@ -115,7 +118,7 @@ export const tradingScene = night => (record, frame, { art, families, still = fa
 
     // The tracks: the horizon standing upright in the card's text box, each bar with its
     // heart. With no titles on record, the horizon alone fills the box.
-    const stripY = statY + box + 1.4 * u, stripH = cardH - stripY - rim - 6.4 * u;
+    const stripY = statY + box + 1.4 * u, stripH = cardH - stripY - rim - 6.4 * u - band;
     c.fillStyle = 'rgba(255,255,255,0.86)';
     roundRect(c, pad, stripY, inner, stripH, 1 * u);
     c.fill();
@@ -155,9 +158,16 @@ export const tradingScene = night => (record, frame, { art, families, still = fa
     }
 
     // The foot: the set symbol, and how many in the set.
-    const footY = cardH - rim - 5.4 * u;
+    const footY = cardH - rim - 5.4 * u - band;
     const markH = 3.2 * u, markW = markH * MARK_ASPECT;
     c.drawImage(markIn(art, markW, markH, inkDark), pad, footY);
+    if (record.keeper) {
+      c.font = `400 ${2.1 * u}px ${mono}`;
+      c.textBaseline = 'middle';
+      c.textAlign = 'center';
+      c.fillStyle = inkDark;
+      c.fillText(`${record.keeper.toUpperCase()}'S COLLECTION`, cardW / 2, footY + markH / 2);
+    }
     if (bars.length) {
       c.font = `400 ${2.1 * u}px ${mono}`;
       c.textAlign = 'right';

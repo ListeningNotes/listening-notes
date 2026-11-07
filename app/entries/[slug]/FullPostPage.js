@@ -322,7 +322,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   const keeperName = (keeper_name || '').trim();
   // A look that could not be drawn, said under the print (EntryPlate.js).
   const [printFailed, setPrintFailed] = useState(null);
-  const plate = useMemo(() => entryPlate({ entry, onFail: setPrintFailed }), [entry]);
+  const plate = useMemo(() => entryPlate({ entry, keeper: keeperName, onFail: setPrintFailed }), [entry, keeperName]);
   const effect = EFFECTS.includes(printChoices.effect) ? printChoices.effect : 'unlock';
   // Which look (looks/).
   const ground = lookOf(printChoices.ground).key;
