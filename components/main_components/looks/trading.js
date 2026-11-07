@@ -3,7 +3,7 @@
 // components/main_components/looks/trading.js
 // Trading: the record as a collectible card (Miyel, 2026-11-06). The title in the name
 // bar, the real cover in the window, the artist on the type line, the stars and marks as
-// its stats, the horizon upright over the tracks' titles as the card's text, the mark
+// its stats, the horizon with each track's title running down under its bar, the mark
 // as the set symbol. It starts face down, showing its LN back, flips over once, then
 // a shine runs across it once, silver, or gold on a gold card for a Masterpiece.
 // Still is the card with its shine caught at the corner.
@@ -32,7 +32,7 @@ export const tradingScene = night => (record, frame, { art, families, still = fa
   const frameEnd = gilded ? '#b8862b' : hue === null ? '#8f939c' : `hsl(${(hue + 30) % 360},78%,40%)`;
   const inkDark = '#14110f';
 
-  const cardW = 88 * u, cardH = 148 * u, radius = 4.5 * u;
+  const cardW = 88 * u, cardH = 158 * u, radius = 4.5 * u;
   const cx = W / 2, cy = H / 2;
   const y0 = (H - cardH) / 2;
 
@@ -114,16 +114,15 @@ export const tradingScene = night => (record, frame, { art, families, still = fa
       drawPath(c, SYMBOLS[tag], mx - icon / 2, my - icon / 2, icon, 256, '#ffffff');
     });
 
-    // The tracks: the horizon standing upright across the top of the card's text box, each
-    // bar with its heart, then the titles in two columns. With no titles on record, the
-    // horizon alone fills the box.
+    // The tracks: the horizon standing upright in the card's text box, each bar with its
+    // heart. With no titles on record, the horizon alone fills the box.
     const stripY = statY + box + 1.4 * u, stripH = cardH - stripY - rim - 6.4 * u;
     c.fillStyle = 'rgba(255,255,255,0.86)';
     roundRect(c, pad, stripY, inner, stripH, 1 * u);
     c.fill();
     const boxPad = 1.2 * u;
     const heart = 2 * u;
-    const horizonH = trackNames.length ? 12 * u : stripH - boxPad * 2;
+    const horizonH = trackNames.length ? 10 * u : stripH - boxPad * 2;
     if (bars.length) {
       const slot = (inner - boxPad * 2) / bars.length;
       const size = Math.min(heart, slot * 0.9);
@@ -137,23 +136,22 @@ export const tradingScene = night => (record, frame, { art, families, still = fa
         if (favs[i]) drawPath(c, HEART_PATH, x + (slot - size) / 2, foot - h - size - 0.2 * u, size, 24, TONES.fav);
       });
     }
+    // Each title runs down under its bar, as on the album page.
     if (trackNames.length) {
+      const slot = (inner - boxPad * 2) / trackNames.length;
       const listY = stripY + boxPad + (bars.length ? horizonH + 0.8 * u : 0);
-      const rowsDown = Math.ceil(trackNames.length / 2);
-      const rowH = (stripY + stripH - boxPad * 0.6 - listY) / rowsDown;
-      const px = Math.min(2.2 * u, rowH * 0.8);
-      const colW = (inner - 2.4 * u) / 2, numW = px * 1.9;
+      const long = stripY + stripH - boxPad * 0.6 - listY;
+      const px = Math.min(2.2 * u, slot * 0.72);
       c.font = `400 ${px}px ${mono}`;
       c.textBaseline = 'middle';
       c.textAlign = 'left';
+      c.fillStyle = inkDark;
       trackNames.forEach((name, i) => {
-        const column = i < rowsDown ? 0 : 1;
-        const x = pad + 0.8 * u + column * (colW + 0.8 * u);
-        const y = listY + (column ? i - rowsDown : i) * rowH + rowH / 2;
-        c.fillStyle = 'rgba(20,17,15,0.5)';
-        c.fillText(String(i + 1), x, y);
-        c.fillStyle = inkDark;
-        c.fillText(ellipsize(c, name, colW - numW), x + numW, y);
+        c.save();
+        c.translate(pad + boxPad + i * slot + slot / 2, listY);
+        c.rotate(Math.PI / 2);
+        c.fillText(ellipsize(c, name, long), 0, 0);
+        c.restore();
       });
     }
 
