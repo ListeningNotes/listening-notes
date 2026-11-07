@@ -14,6 +14,7 @@
 // The numbers are the post's own pixels, on a 340-wide column.
 'use client';
 
+import { signatureOf } from './poster';
 import {
   INKS, STAR_PATH, SYMBOLS, MARK_ASPECT,
   drawTracked, drawPath, roundRect, wrapLines, clamp01, sheet,
@@ -21,7 +22,7 @@ import {
 
 const COL = 340, ART = 265, ART_RADIUS = 16;
 const MARK_H = 72, MARK_TOP = 0.05, STORY_TOP = 0.09, STORY_FOOT = 0.11;
-const NAME = 10;
+const NAME = 18;
 const TITLE = 26, TITLE_LEAD = 26 * 1.22;
 const ARTIST = 11, ARTIST_LEAD = 11 * 1.4;
 const STAR = 44, STAR_GAP = 6;
@@ -62,7 +63,6 @@ export function paperScene(night) {
     };
     // A story leaves Instagram's top alone and the foot for the Link sticker.
     const story = W / H < 0.6;
-    const named = (record.keeper || '').toUpperCase();
     const roomW = W * (1 - PAD * 2);
     const roomH = story ? H * (1 - STORY_TOP - STORY_FOOT) : H * (1 - PAD * 2);
     let U = roomW / COL;
@@ -115,6 +115,8 @@ export function paperScene(night) {
     const warmed = since => smooth(clamp01(since / WARMS_IN));
     const strength = since => (still ? 0.9 : warmed(since) * (0.78 + 0.22 * Math.sin(since * 2.4)));
 
+    const signature = signatureOf({ art, record, mono, height: px(NAME), colour: ink.soft });
+
     function paintAt(c, t) {
       c.fillStyle = ink.paper;
       c.fillRect(0, 0, W, H);
@@ -126,14 +128,9 @@ export function paperScene(night) {
         const mw = px(MARK_H) * MARK_ASPECT;
         c.drawImage(art.mark, cx - mw / 2, markY, mw, px(MARK_H));
       }
-      if (named) {
-        c.font = `400 ${px(NAME)}px ${mono}`;
-        c.fillStyle = ink.soft;
-        c.textBaseline = 'top';
-        drawTracked(c, named, cx, markEnd + px(3), px(NAME) * 0.16, 'center');
-      }
+      if (signature) c.drawImage(signature, cx - signature.width / 2, markEnd + px(4));
       const stack = laid.h - px(MARK_H + GAP);
-      const under = px(named ? NAME + 6 + GAP : GAP);
+      const under = px(signature ? NAME + 8 + GAP : GAP);
       let y = story ? markEnd + under : markEnd + Math.max(under, (H - markEnd - H * PAD - stack) / 2);
 
       c.drawImage(card, cx - card.width / 2, y + size / 2 - card.height / 2);

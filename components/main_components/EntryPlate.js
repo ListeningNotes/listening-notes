@@ -21,7 +21,7 @@ import { LOOKS, lookOf } from './looks';
 
 const clamp01 = v => Math.min(1, Math.max(0, v));
 
-export function entryPlate({ entry, keeper = '', onFail = null }) {
+export function entryPlate({ entry, keeper = '', face = null, onFail = null }) {
   const isMasterpiece = entry?.masterpiece === true || entry?.rating === 'Masterpiece';
   const stars = isMasterpiece ? 5 : parseRating(entry?.rating);
   const isFavorite = entry?.favorite === true || entry?.favorite === 'true';
@@ -70,15 +70,16 @@ export function entryPlate({ entry, keeper = '', onFail = null }) {
     masterpiece: isMasterpiece,
     scene,
 
-    // The mark in the look's ink, and the cover, which is also the ground.
+    // The mark in the look's ink, the cover, which is also the ground, and the keeper's face.
     // Either may come back null and the print draws on without it.
     async load({ ground = 'day' } = {}) {
-      const [mark, dayMark, cover] = await Promise.all([
+      const [mark, dayMark, cover, keeperFace] = await Promise.all([
         loadMark(lookOf(ground).ink),
         loadMark(INKS.day.ink),
         loadPicture(entry?.album_art),
+        loadPicture(face),
       ]);
-      return { mark, dayMark, cover };
+      return { mark, dayMark, cover, face: keeperFace };
     },
 
     // The picture, for Save with nothing moving.

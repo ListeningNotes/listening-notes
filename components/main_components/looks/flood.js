@@ -10,7 +10,7 @@
 'use client';
 
 import { HEART_PATH, INKS, MARK_ASPECT, clamp01, drawPath, roundRect, sheet } from '../SharePrinter';
-import { coverOf, factRows, isStory, markIn } from './poster';
+import { coverOf, factRows, isStory, markIn, signatureOf } from './poster';
 
 const MELTS_AT = 0.4, MELTS_IN = 1.3;  // the picture blurring
 const ALBUM_AT = 0.7, ALBUM_IN = 0.8;  // the album dissolving in
@@ -64,8 +64,8 @@ export const floodScene = night => (record, frame, { art, families, still = fals
   const story = isStory(frame);
   const markY = (story ? 15 : 7) * u;
   const size = Math.min(W - margin * 2, H * (story ? 0.38 : 0.42));
-  const keeper = (record.keeper || '').toUpperCase();
-  const coverY = markY + markH + (keeper ? 6.5 : 3.5) * u;
+  const signature = signatureOf({ art, record, mono: families.mono, height: 4.2 * u, colour: night ? '#ffffff' : '#000000' });
+  const coverY = markY + markH + (signature ? 7.5 : 3.5) * u;
   const cover = sheet(size, size, c => {
     roundRect(c, 0, 0, size, size, size * 0.06);
     c.clip();
@@ -108,14 +108,7 @@ export const floodScene = night => (record, frame, { art, families, still = fals
       c.globalAlpha = album;
       c.drawImage(cover, (W - drawn) / 2, coverY + (size - drawn) / 2, drawn, drawn);
       c.drawImage(mark, (W - markW) / 2, markY);
-      if (keeper) {
-        c.font = `400 ${2.3 * u}px ${families.mono}`;
-        c.textAlign = 'center';
-        c.textBaseline = 'top';
-        c.fillStyle = ink;
-        c.fillText(keeper, W / 2, markY + markH + 0.8 * u);
-        c.textAlign = 'left';
-      }
+      if (signature) c.drawImage(signature, (W - signature.width) / 2, markY + markH + 0.9 * u);
     }
 
     // The rest.

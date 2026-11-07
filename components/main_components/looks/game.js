@@ -4,7 +4,7 @@
 // Game: everything becomes a HUD. The album is a slab with its sides showing,
 // turning over a slow fan of rays; the title is a logo, the horizon an XP bar. The
 // hairlines and bars borrow the album's one colour; the stars are gold and each mark its
-// own colour (Miyel, 2026-11-06). The keeper is the player, in the frame's head.
+// own colour (Miyel, 2026-11-06). The keeper's face and name are in the frame's head.
 // Cut, then brought back beside Commercial, with a night of its own (2026-11-06).
 //
 // Sizes are in `u`, a hundredth of a story's width at this paper's height, so
@@ -16,6 +16,7 @@ import {
   drawArtist, clamp01, roundRect, sheet, fitTitle,
 } from '../SharePrinter';
 import { colorOfArt, COLOR_SIDE } from '../../../library/music_data_api';
+import { signatureOf } from './poster';
 
 // ── Its own drawing tools ─────────────────────────────────────────────────
 const ALBUM_CORNER = 0.055;     // of the album's width: the post's 16px on its cover
@@ -384,14 +385,8 @@ export const gameScene = night => (record, frame, { art, families, still = false
         m.fillRect(0, 0, markW, markH);
       }), cx - markW / 2, y0 - markH / 2);
     }
-    if (record.keeper) {
-      c.font = `400 ${2.3 * u}px ${mono}`;
-      c.textAlign = 'center';
-      c.textBaseline = 'top';
-      c.fillStyle = night ? '#ffffff' : dark;
-      c.fillText(`PLAYER · ${record.keeper.toUpperCase()}`, cx, y0 + 3.2 * u);
-      c.textAlign = 'left';
-    }
+    const signature = signatureOf({ art, record, mono, height: 4.4 * u, colour: night ? '#ffffff' : dark });
+    if (signature) c.drawImage(signature, cx - signature.width / 2, y0 + 3 * u);
   });
   const slab = coverPicture(art?.cover, size, { shade: 0.5, ring: tone(0.45) });
   const rays = rayPicture(170 * u, 'rgba(255,255,255,0.22)', 14);

@@ -10,7 +10,7 @@
 'use client';
 
 import { HEART_PATH, INKS, MARK_ASPECT, STAR_PATH, SYMBOLS, clamp01, drawPath, ellipsize, roundRect, sheet } from '../SharePrinter';
-import { coverOf, hueOf, isStory, markIn } from './poster';
+import { coverOf, hueOf, isStory, markIn, signatureOf } from './poster';
 
 const FACE_DOWN = 0.6, TURNS_IN = 0.8; // resting on its back, then the one flip
 const SETTLED = FACE_DOWN + TURNS_IN;
@@ -161,13 +161,8 @@ export const tradingScene = night => (record, frame, { art, families, still = fa
     const footY = cardH - rim - 5.4 * u - band;
     const markH = 3.2 * u, markW = markH * MARK_ASPECT;
     c.drawImage(markIn(art, markW, markH, inkDark), pad, footY);
-    if (record.keeper) {
-      c.font = `400 ${2.1 * u}px ${mono}`;
-      c.textBaseline = 'middle';
-      c.textAlign = 'center';
-      c.fillStyle = inkDark;
-      c.fillText(`${record.keeper.toUpperCase()}'S COLLECTION`, cardW / 2, footY + markH / 2);
-    }
+    const signature = signatureOf({ art, record, mono, height: 4 * u, colour: inkDark });
+    if (signature) c.drawImage(signature, (cardW - signature.width) / 2, footY + markH / 2 - signature.height / 2);
     if (bars.length) {
       c.font = `400 ${2.1 * u}px ${mono}`;
       c.textAlign = 'right';

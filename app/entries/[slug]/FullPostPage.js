@@ -195,7 +195,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   // (app/api/entries/[slug]/code) and never on entry save: most entries are
   // never tapped, and Apple's art cannot be read in a browser anyway. The
   // slot breathes the cover until it arrives.
-  const { site_address, keeper_name } = useBookplate();
+  const { site_address, keeper_name, portrait_url } = useBookplate();
   const { theme } = useTheme();
   const host = tidyAddress(site_address);
   const entryUrl = host && entry.slug ? `https://${host}/entries/${entry.slug}` : '';
@@ -322,7 +322,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   const keeperName = (keeper_name || '').trim();
   // A look that could not be drawn, said under the print (EntryPlate.js).
   const [printFailed, setPrintFailed] = useState(null);
-  const plate = useMemo(() => entryPlate({ entry, keeper: keeperName, onFail: setPrintFailed }), [entry, keeperName]);
+  const plate = useMemo(() => entryPlate({ entry, keeper: keeperName, face: portrait_url, onFail: setPrintFailed }), [entry, keeperName, portrait_url]);
   const effect = EFFECTS.includes(printChoices.effect) ? printChoices.effect : 'unlock';
   // Which look (looks/).
   const ground = lookOf(printChoices.ground).key;
