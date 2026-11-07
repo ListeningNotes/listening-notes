@@ -169,20 +169,14 @@ export const tradingScene = night => (record, frame, { art, families, still = fa
     }
   });
 
+  // The back is the same on every card: black, and the logo.
   const back = sheet(cardW, cardH, c => {
     roundRect(c, 0, 0, cardW, cardH, radius);
     c.clip();
-    c.fillStyle = '#17120e';
+    c.fillStyle = '#111111';
     c.fillRect(0, 0, cardW, cardH);
-    c.strokeStyle = frameTop;
-    c.lineWidth = 1.4 * u;
-    roundRect(c, 3.4 * u, 3.4 * u, cardW - 6.8 * u, cardH - 6.8 * u, radius * 0.6);
-    c.stroke();
-    c.beginPath();
-    c.ellipse(cardW / 2, cardH / 2, 26 * u, 36 * u, 0, 0, Math.PI * 2);
-    c.stroke();
-    const markH = 13 * u, markW = markH * MARK_ASPECT;
-    c.drawImage(markIn(art, markW, markH, frameTop), (cardW - markW) / 2, (cardH - markH) / 2);
+    const markH = 20 * u, markW = markH * MARK_ASPECT;
+    c.drawImage(markIn(art, markW, markH, '#ffffff'), (cardW - markW) / 2, (cardH - markH) / 2);
   });
 
   // The shine: a band of silver on the slant, or gold, kept to the card's own shape.
