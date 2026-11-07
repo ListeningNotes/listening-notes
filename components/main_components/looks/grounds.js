@@ -122,17 +122,24 @@ export function levelsGround(record, frame, { art, night }) {
 }
 
 // The cover blurred across the whole page, bright and full of its colour. Only the lower
-// part dims, gradually, for the words and lights to read on (Miyel, 2026-11-07).
+// part dims, gently, for the words and lights to read on (Miyel, 2026-11-07: "still seems so
+// dark"). Lifted once more with a screen of itself, since a phone's blur, made by stretching a
+// tiny copy, comes out duller than a computer's.
 export function reflectGround(record, frame, { art, night }) {
   const W = frame.w, H = frame.h;
-  const blur = reflectionOf(art, W, H, night, night ? 0.12 : 0);
+  const blur = reflectionOf(art, W, H, night);
   const page = sheet(W, H, c => {
     c.drawImage(blur, 0, 0);
-    const dim = c.createLinearGradient(0, H * 0.5, 0, H * 0.72);
+    c.globalCompositeOperation = 'screen';
+    c.globalAlpha = 0.35;
+    c.drawImage(blur, 0, 0);
+    c.globalCompositeOperation = 'source-over';
+    c.globalAlpha = 1;
+    const dim = c.createLinearGradient(0, H * 0.55, 0, H * 0.75);
     dim.addColorStop(0, 'rgba(14,14,14,0)');
-    dim.addColorStop(1, 'rgba(14,14,14,0.58)');
+    dim.addColorStop(1, 'rgba(14,14,14,0.42)');
     c.fillStyle = dim;
-    c.fillRect(0, H * 0.5, W, H * 0.5);
+    c.fillRect(0, H * 0.55, W, H * 0.45);
   });
   return { horizon: true, paint(c) { c.drawImage(page, 0, 0); } };
 }

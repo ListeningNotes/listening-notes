@@ -24,14 +24,16 @@ const COL = 340, ART = 290, ART_RADIUS = 16;
 const HEAD_H = 34, STORY_TOP = 0.09, STORY_FOOT = 0.11;
 const TITLE = 26, TITLE_LEAD = 26 * 1.22;
 const ARTIST = 11, ARTIST_LEAD = 11 * 1.4;
-const STAR = 44, STAR_GAP = 6, MARK = 38, MARK_GAP = 8, MARKS_APART = 18;
+// Each mark carries its name small underneath, for whoever does not know Listening Notes
+// (Miyel, 2026-11-07), so the marks stand a word's width apart.
+const STAR = 44, STAR_GAP = 6, MARK = 38, MARK_SLOT = 66, MARKS_APART = 6, MARK_WORD = 7.5;
 const GAP = 12;
 const PAD = 0.07;
 const GOLD = '#E8B84B';
 const MARKS = [
-  { tag: 'mp', ink: '#4a9bf0' },
-  { tag: 'fav', ink: '#f0484f' },
-  { tag: 'formative', ink: '#3fa96b' },
+  { tag: 'mp', word: 'Masterpiece', ink: '#4a9bf0' },
+  { tag: 'fav', word: 'Favorite', ink: '#f0484f' },
+  { tag: 'formative', word: 'Formative', ink: '#3fa96b' },
 ];
 const STARS_AT = 0.4, STAR_EVERY = 0.2;   // each star starting to come up
 const MARKS_AT = 1.6, MARK_EVERY = 0.28;  // each mark given
@@ -52,9 +54,9 @@ export function paperScene(night, ground = null) {
     // The stars and the marks given share one line, a little smaller if it would be too wide.
     const given = MARKS.filter(({ tag }) => tags.includes(tag));
     const across = (stars > 0 ? 5 * STAR + 4 * STAR_GAP : 0)
-      + (given.length ? given.length * MARK + (given.length - 1) * MARK_GAP + (stars > 0 ? MARKS_APART : 0) : 0);
+      + (given.length ? given.length * MARK_SLOT + (stars > 0 ? MARKS_APART : 0) : 0);
     const fit = Math.min(1, COL / Math.max(1, across));
-    const rowH = stars > 0 || given.length ? Math.max(stars > 0 ? STAR : 0, given.length ? MARK : 0) * fit : 0;
+    const rowH = stars > 0 || given.length ? Math.max(stars > 0 ? STAR : 0, given.length ? MARK + 4 + MARK_WORD * 1.3 : 0) * fit : 0;
     const lay = U => {
       measure.font = `700 ${TITLE * U}px ${sans}`;
       const titleLines = wrapLines(measure, entry?.album || '', COL * U, 3);
@@ -169,7 +171,7 @@ export function paperScene(night, ground = null) {
         let x = cx - px(across * fit) / 2;
         for (let i = 0; i < 5 && stars > 0; i++) {
           const sx = x;
-          const starY = y + (px(rowH) - starBox) / 2;
+          const starY = y + (px(MARK * fit) - starBox) / 2;
           drawPath(c, STAR_PATH, sx, starY, starBox, 18, ink.unlit);
           const part = clamp01(stars - i);
           const since = t - (STARS_AT + i * STAR_EVERY);
@@ -189,18 +191,29 @@ export function paperScene(night, ground = null) {
           x += px((STAR + STAR_GAP) * fit);
         }
         if (stars > 0 && given.length) x += px((MARKS_APART - STAR_GAP) * fit);
-        given.forEach(({ tag, ink: lit }, turn) => {
-          const markY = y + (px(rowH) - markBox) / 2;
+        const slot = px(MARK_SLOT * fit);
+        given.forEach(({ tag, word, ink: lit }, turn) => {
+          const markY = y;
+          const mx = x + (slot - markBox) / 2;
           const since = t - (MARKS_AT + turn * MARK_EVERY);
-          drawPath(c, SYMBOLS[tag], x, markY, markBox, 256, ink.rule);
+          const wordAt = () => {
+            c.font = `400 ${px(MARK_WORD * fit)}px ${mono}`;
+            c.textBaseline = 'top';
+            drawTracked(c, word.toUpperCase(), x + slot / 2, markY + markBox + px(4 * fit), px(MARK_WORD * fit) * 0.08, 'center');
+          };
+          drawPath(c, SYMBOLS[tag], mx, markY, markBox, 256, ink.rule);
+          c.fillStyle = ink.faint;
+          wordAt();
           if (since > 0) {
             c.globalAlpha = strength(since);
-            c.drawImage(markGlows[tag], x - halo, markY - halo);
+            c.drawImage(markGlows[tag], mx - halo, markY - halo);
             c.globalAlpha = warmed(since);
-            drawPath(c, SYMBOLS[tag], x, markY, markBox, 256, lit);
+            drawPath(c, SYMBOLS[tag], mx, markY, markBox, 256, lit);
+            c.fillStyle = lit;
+            wordAt();
             c.globalAlpha = 1;
           }
-          x += markBox + px(MARK_GAP * fit);
+          x += slot;
         });
         y += px(rowH);
       }

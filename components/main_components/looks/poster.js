@@ -148,7 +148,7 @@ export function reflectionOf(art, W, H, night, wash = 0) {
         c.filter = 'none';
       } else {
         // In steps, so the stretching itself leaves no grid behind.
-        const tiny = sheet(12, 12, t => t.drawImage(cover, 0, 0, 12, 12));
+        const tiny = sheet(16, 16, t => t.drawImage(cover, 0, 0, 16, 16));
         const soft = sheet(96, 96, t => { t.imageSmoothingQuality = 'high'; t.drawImage(tiny, 0, 0, 96, 96); });
         c.imageSmoothingQuality = 'high';
         c.drawImage(soft, x, y, side, side);
