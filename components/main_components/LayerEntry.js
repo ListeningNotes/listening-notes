@@ -722,8 +722,12 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
       // pulled, and nothing on it is anything else (Miyel: "a tab you can
       // always pull down"). Everywhere else the rules below stand.
       const onTab = !!event.target?.closest?.('.lay-grip');
+      // And the field has to be this sheet's, 2026-11-08: a note left mid-word
+      // in a listen pulled down to the Listen bar keeps the focus, out of
+      // sight, and every post opened over it then refused to be pulled away
+      // — out only by swiping back (Miyel: "I can't get out of the post").
       const writing = document.activeElement;
-      const intoText = writing && (
+      const intoText = writing && sheet.contains(writing) && (
         writing.tagName === 'TEXTAREA'
         || writing.tagName === 'INPUT'
         || writing.isContentEditable
