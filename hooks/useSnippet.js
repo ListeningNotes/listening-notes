@@ -50,8 +50,11 @@ import { lookup_key } from '../library/entry_formatter';
 // would otherwise ask again each time.
 const asked = new Map(); // album and artist → Promise<{ songs, recordLink } | null>
 
+// Accents go too: Apple has "Ola!" where a keeper may have "Óla!".
+const plain = text => String(text || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
 function fold(text) {
-  return String(text || '').toLowerCase()
+  return plain(text)
     .replace(/&/g, 'and')
     // "(Remastered 2011)", "[Live]", " - Single Version": what Apple adds
     // to a title and a keeper usually does not.
@@ -60,13 +63,52 @@ function fold(text) {
     .replace(/[^a-z0-9]+/g, ' ')
     .trim();
 }
+// The whole title, nothing taken off: Apple's "Iz - Us" is a title with a dash
+// in it, not a song with an edition named after the dash (Come to Daddy,
+// 2026-11-07).
+const whole = text => plain(text).replace(/&/g, 'and').replace(/[^a-z0-9]+/g, ' ').trim();
+
+// Apple's bleeped title, "F****D", as a pattern a keeper's whole word fits.
+function bleeped(title) {
+  const t = plain(title);
+  if (!t.includes('*')) return null;
+  return new RegExp(`^${t.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '[a-z]')}$`);
+}
+
+// How many letters apart two titles are: one changed, added or dropped is one.
+function apart(a, b) {
+  let row = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    const next = [i];
+    for (let j = 1; j <= b.length; j++) {
+      next[j] = Math.min(row[j] + 1, next[j - 1] + 1, row[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    }
+    row = next;
+  }
+  return row[b.length];
+}
+
+// ── A slip in the spelling, 2026-11-07 ──────────────────────────────────────
+// Titles that are the same song spelled two ways, Apple's way and the
+// keeper's: "Scoudrels" (Apple's typo), "Brian Gateway", "The Alphabet" for
+// "Alphabet", a censored "F****D". Taken only at the track's own number, where
+// the song is already the one, and only for a slip — a letter in four at most,
+// never in a short title — so "Intro" is never "Outro".
+function near(song, title) {
+  const a = fold(title), b = song.title;
+  if (!a || !b) return false;
+  if (a.replace(/^the /, '') === b.replace(/^the /, '')) return true;
+  if (song.bleep?.test(plain(title).trim())) return true;
+  const longer = Math.max(a.length, b.length);
+  return longer >= 8 && apart(a, b) <= Math.floor(longer / 4);
+}
 
 function ask(album, artist, year) {
   const key = `${lookup_key(album, artist)}|${year || ''}`;
   if (!asked.has(key)) {
     const answer = fetchTracklist(album, artist, null, year)
       .then(found => found && {
-        songs: (found.clips || []).map(s => ({ ...s, title: fold(s.title), edit: fold(s.edit) })),
+        songs: (found.clips || []).map(s => ({ ...s, title: fold(s.title), edit: fold(s.edit), whole: whole(s.title), bleep: bleeped(s.title) })),
         recordLink: found.recordUrl || '',
       })
       // Nothing found is asked again on the next visit rather than remembered.
@@ -77,16 +119,17 @@ function ask(album, artist, year) {
 }
 
 // The song on Apple's list that is this track: at its own number when the
-// title there agrees, otherwise wherever the title is. A title saved off a
+// title there agrees, otherwise wherever the title is, and failing both, at
+// its own number when the titles are a slip apart (near, above). A title saved off a
 // clean edit agrees under the edit's name for the song (music_data_api.js,
 // the record as it was made).
 function find(songs, number, title) {
-  const want = fold(title);
+  const want = fold(title), wanted = whole(title);
   if (!want) return null;
-  const is = s => s.title === want || s.edit === want;
+  const is = s => s.title === want || s.edit === want || s.whole === wanted;
   const at = number ? songs[number - 1] : null;
   if (at && is(at)) return at;
-  return songs.find(is) || null;
+  return songs.find(is) || (at && near(at, title) ? at : null);
 }
 
 // ── What to play ───────────────────────────────────────────────────────────

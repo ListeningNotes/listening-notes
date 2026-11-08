@@ -133,8 +133,15 @@ export async function fetchTracklist(albumName, artistName, collectionId = null,
 // longer taken while the artist's list may hold the exact one, a single or an EP loses to a
 // record unless that is what was asked for, and the year, where it is known, decides
 // between records of the same name.
+//
+// And Come to Daddy (2026-11-07): logged as "Come to Daddy (EP)", which Apple calls "Come to
+// Daddy", so no title agreed and the search's best guess was another of the artist's records
+// altogether. So a title is compared without the "EP" or "Single" either side may wear, and a
+// guess whose title shares nothing with the album's is no guess: nothing plays rather than
+// another record's songs.
 const SHORT_RELEASE = /\b(single|ep)\b|\(edit\)/;
 const yearOf = r => String(r.releaseDate || '').slice(0, 4);
+const titled = s => norm(s).replace(/\s+(ep|single)$/, '');
 async function findCollectionId(albumName, artistName, year = null) {
   const query = encodeURIComponent(`${artistName} ${albumName}`);
   const searchRes = await fetch(`https://itunes.apple.com/search?term=${query}&entity=album&limit=25`);
@@ -142,10 +149,11 @@ async function findCollectionId(albumName, artistName, year = null) {
   const results = (searchData.results || []).filter(r => r.wrapperType === 'collection' && r.collectionId);
   if (!results.length) return fromTheArtist(albumName, artistName);
 
-  const nAlbum = norm(albumName), nArtist = norm(artistName);
+  const nAlbum = titled(albumName), nArtist = norm(artistName);
+  const named = r => { const ra = titled(r.collectionName || ''); return ra.includes(nAlbum) || nAlbum.includes(ra); };
   let best = null, bestScore = -Infinity;
   for (const r of results) {
-    const ra = norm(r.collectionName || ''), rar = norm(r.artistName || '');
+    const ra = titled(r.collectionName || ''), rar = norm(r.artistName || '');
     let score = 0;
     if (ra === nAlbum) score += 40;
     else if (ra.includes(nAlbum) || nAlbum.includes(ra)) score += 20;
@@ -153,13 +161,13 @@ async function findCollectionId(albumName, artistName, year = null) {
     else if (rar.includes(nArtist) || nArtist.includes(rar)) score += 15;
     // Prefer a plain edition over deluxe/expanded when scores otherwise tie.
     if (/\b(deluxe|expanded|special|anniversary)\b/.test(ra)) score -= 3;
-    if (SHORT_RELEASE.test(ra) && !SHORT_RELEASE.test(nAlbum)) score -= 25;
+    if (SHORT_RELEASE.test(norm(r.collectionName || '')) && !SHORT_RELEASE.test(norm(albumName))) score -= 25;
     if (year && yearOf(r) === String(year)) score += 25;
     if (score > bestScore) { bestScore = score; best = r; }
   }
   // The album's name has to be in the answer for it to be this record, and a near name
   // only stands once the artist's own list has been asked for the exact one.
-  const exact = best && bestScore >= 20 + 15 && norm(best.collectionName || '') === nAlbum;
+  const exact = best && bestScore >= 20 + 15 && titled(best.collectionName || '') === nAlbum;
   if (exact) {
     // A record of this very name, but another year's: the artist's list is asked for this
     // year's, and only one of this year's will do. A year saved for the first pressing,
@@ -167,7 +175,7 @@ async function findCollectionId(albumName, artistName, year = null) {
     if (!year || yearOf(best) === String(year)) return best.collectionId;
     return (await fromTheArtist(albumName, artistName, year, true)) || best.collectionId;
   }
-  return (await fromTheArtist(albumName, artistName, year)) || (best ? best.collectionId : null);
+  return (await fromTheArtist(albumName, artistName, year)) || (best && named(best) ? best.collectionId : null);
 }
 
 // ── When the search does not know the record, 2026-10-13 ──────────────────
@@ -184,7 +192,7 @@ async function fromTheArtist(albumName, artistName, year = null, thisYearOnly = 
   if (!artist) return null;
   const look = await fetch(`https://itunes.apple.com/lookup?id=${artist.artistId}&entity=album&limit=200`);
   const lookData = await look.json();
-  const albums = (lookData.results || []).filter(r => r.wrapperType === 'collection' && norm(r.collectionName) === norm(albumName));
+  const albums = (lookData.results || []).filter(r => r.wrapperType === 'collection' && titled(r.collectionName) === titled(albumName));
   // The year's record where there are several of the name, then the record as it was made
   // before its clean edit (songsOf, below).
   const ofYear = year ? albums.filter(r => yearOf(r) === String(year)) : [];
