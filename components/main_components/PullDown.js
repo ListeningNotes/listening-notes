@@ -32,19 +32,13 @@
 // `scroller` is a ref to the element that scrolls; `onPull` is what asking
 // means there and may return a promise; `asking` is the line while it does.
 //
-// ── The logo turns, 2026-11-07 ──────────────────────────────────────────
-// On a phone, where the top row wears the LN. mark, the strip under it goes
-// (Miyel: "have the actual logo spin to show its loading rather than the bar
-// under the header"). It keeps still while the page is pulled and, let go,
-// turns once, smoothly, coming to rest upright; still asking by then, it goes
-// round again, whole turns only. Turning with the finger and stopping wherever
-// the answer landed made every pull look different, and a boomerang (wound
-// back with the pull, flown round on release) was tried and let go: her pick,
-// "one plain spin", the same day. And the page stays held down while it
-// spins, coming back up only once the answer is in and the turn is done, so
-// it looks like what it is, a refresh (her, the same day: "like Instagram…
-// the screen doesn't come back up until it's done"). A desk has no row, and
-// keeps the strip.
+// ── Whole turns, 2026-11-07 ─────────────────────────────────────────────
+// The strip's mark turns once let go, smoothly, coming to rest upright, and
+// again while the answer is still out — whole turns only, so it never stops
+// partway round; the strip holds the page down until then. Tried and let go
+// the same day: the top row's own logo turning in the strip's place, with
+// the finger and as a boomerang — Miyel came back to "the original LN
+// refresh", tweaked.
 
 import { useEffect, useRef, useState } from 'react';
 
@@ -62,18 +56,15 @@ const STILL = 6;
 
 const WORDS = { idle: '', pulling: 'Pull down', release: 'Let go to refresh', asking: '' };
 
-// Whether the top row's mark is standing in for the strip.
-const onTheRow = () => typeof document !== 'undefined'
-  && Boolean(document.querySelector('.hdr-mark')?.offsetWidth);
 // One turn of the mark.
 const TURN_MS = 900;
-const marks = () => [...document.querySelectorAll('.hdr-mark-svg')];
 
 // Once round, upright to upright. Resolves when it has come to rest.
-function spinOnce() {
-  return Promise.all(marks().map(m => m
+function spinOnce(mark) {
+  if (!mark?.animate) return new Promise(resolve => setTimeout(resolve, TURN_MS));
+  return mark
     .animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(360deg)' }], { duration: TURN_MS, easing: 'ease-in-out' })
-    .finished.catch(() => {})));
+    .finished.catch(() => {});
 }
 
 // `mark` is the site's mark, drawn by whoever mounts this (the cross draws
@@ -81,6 +72,7 @@ function spinOnce() {
 export default function PullDown({ scroller, onPull, asking = 'Checking\u2026', mark = null }) {
   const [phase, setPhase] = useState('idle');
   const drag = useRef(null);
+  const markRef = useRef(null);
   const busy = useRef(false);
   // What asking means, kept current without re-wiring the listeners each
   // time the caller re-renders.
@@ -128,18 +120,17 @@ export default function PullDown({ scroller, onPull, asking = 'Checking\u2026', 
 
     const asks = async () => {
       setPhase('asking');
-      const row = onTheRow();
       busy.current = true;
       room(ROOM, still());
       const began = Date.now();
       let answered = false;
       const asked = Promise.resolve().then(() => ask.current?.()).catch(() => {}).finally(() => { answered = true; });
-      if (row && !still()) {
+      if (!still()) {
         // Once round, then again while the answer is still out.
-        do { await spinOnce(); } while (!answered);
+        do { await spinOnce(markRef.current); } while (!answered);
       }
       await asked;
-      const left = row ? 0 : SEEN_MS - (Date.now() - began);
+      const left = SEEN_MS - (Date.now() - began);
       if (left > 0) await new Promise(resolve => setTimeout(resolve, left));
       busy.current = false;
       setPhase('idle');
@@ -239,7 +230,7 @@ export default function PullDown({ scroller, onPull, asking = 'Checking\u2026', 
   const words = phase === 'asking' ? asking : WORDS[phase];
   return (
     <div className={'ln-pull ln-pull--' + phase} role="status" aria-live="polite">
-      {mark && <span className="ln-pull-mark" aria-hidden="true">{mark}</span>}
+      {mark && <span className="ln-pull-mark" ref={markRef} aria-hidden="true">{mark}</span>}
       <span className="ln-pull-say">{words}</span>
     </div>
   );

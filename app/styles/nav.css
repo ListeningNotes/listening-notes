@@ -3185,22 +3185,12 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
 .ln-pull-svg { height: 13px; width: auto; display: block; }
 .ln-pull-svg path, .ln-pull-svg .hn-mark-dot { fill: currentColor; }
 .ln-pull-svg .hn-mark-dot--live { fill: var(--live); }
-.ln-pull--asking .ln-pull-mark { animation: ln-pull-turn 1.1s linear infinite; }
-@keyframes ln-pull-turn { to { transform: rotate(360deg); } }
-.hn-pane--friends .ps,
-.hn-pane--home > .hn-floor--beacon {
+.hn-pane--friends .ps {
   margin-top: var(--pull-room, 0px);
   transition: margin-top var(--pull-ease, 0.22s) ease;
 }
-/* On a phone the top row's own mark is the one that turns, once round when
-   the pull is let go — turned by PullDown.js
-   itself (the logo turns). The strip under the row stands down. */
-@media (max-width: 768px) {
-  .ln-pull { display: none; }
-}
 @media (prefers-reduced-motion: reduce) {
-  .ln-pull, .hn-pane--friends .ps, .hn-pane--home > .hn-floor--beacon { transition: none; }
-  .ln-pull--asking .ln-pull-mark { animation: none; }
+  .ln-pull, .hn-pane--friends .ps { transition: none; }
 }
 
 /* ── The top row, 2026-10-22 ───────────────────────────────────────────────
