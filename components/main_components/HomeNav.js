@@ -71,7 +71,8 @@ import { startTransition, useCallback, useEffect, useLayoutEffect, useMemo, useR
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { ArrowsLeftRight, CaretDown, Globe } from '@phosphor-icons/react';
-import { announce, useListeningBeacon } from '../../hooks/useListeningBeacon';
+import { announce, refreshBeacon, useListeningBeacon } from '../../hooks/useListeningBeacon';
+import PullDown from './PullDown';
 import { useSpineWidth } from '../../hooks/useSpineWidth';
 import { useTheme } from './Lightswitch';
 import { useBookplate } from './Bookplate';
@@ -404,6 +405,12 @@ export default function HomeNav() {
       .catch(() => setLoading(false));
   }, [fetchEntries]);
   useEffect(() => { askEntries(); }, [askEntries]);
+  // A pull down at the top of home asks for both halves of it now: the
+  // beacon and the wall (Miyel, 2026-11-07: the logo's spin "on the wall too").
+  const pullHome = useCallback(() => Promise.all([
+    fetchEntries().then(setEntries).catch(() => {}),
+    refreshBeacon(),
+  ]), [fetchEntries]);
 
   // Fetched on mount rather than on first swipe: it is a few hundred bytes,
   // and a card that assembles itself while you are looking at it is a worse
@@ -1998,6 +2005,7 @@ export default function HomeNav() {
               the journal, which is the thing a fixed band at the foot cannot
               afford — and it cost two EXISTS subqueries on every page render
               to ask. Both went. */}
+          <PullDown scroller={homeRef} onPull={pullHome} mark={mark('ln-pull-svg')} />
           {/* Floor one — the crown, the record with its caption, and what
               came before. On a phone it is exactly one screen tall, so the
               snap has one place to land; on a desk it is a wrapper. */}

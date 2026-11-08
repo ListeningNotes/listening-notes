@@ -31,6 +31,15 @@
 //
 // `scroller` is a ref to the element that scrolls; `onPull` is what asking
 // means there and may return a promise; `asking` is the line while it does.
+//
+// ── The logo turns, 2026-11-07 ──────────────────────────────────────────
+// On a phone, where the top row wears the LN. mark, the strip under it goes
+// (Miyel: "have the actual logo spin to show its loading rather than the bar
+// under the header"). The mark turns with the finger as the page is pulled,
+// and spins while asking; the page springs back rather than holding a gap.
+// Told through the root, `data-pull` and `--pull-turn` (nav.css), so the
+// row needs to know nothing about who is pulling. A desk has no row, and
+// keeps the strip.
 
 import { useEffect, useRef, useState } from 'react';
 
@@ -47,6 +56,21 @@ const SEEN_MS = 600;
 const STILL = 6;
 
 const WORDS = { idle: '', pulling: 'Pull down', release: 'Let go to refresh', asking: '' };
+
+// Whether the top row's mark is standing in for the strip.
+const onTheRow = () => typeof document !== 'undefined'
+  && Boolean(document.querySelector('.hdr-mark')?.offsetWidth);
+// The mark's turn, on the root, for the row to read.
+function turn(phase, dy = 0) {
+  const root = document.documentElement;
+  if (phase === 'idle') {
+    root.removeAttribute('data-pull');
+    root.style.removeProperty('--pull-turn');
+    return;
+  }
+  root.setAttribute('data-pull', phase);
+  root.style.setProperty('--pull-turn', `${Math.round(Math.min(1, dy / FAR_ENOUGH) * 360)}deg`);
+}
 
 // `mark` is the site's mark, drawn by whoever mounts this (the cross draws
 // it from its one source); the line turns it while asking.
@@ -95,14 +119,16 @@ export default function PullDown({ scroller, onPull, asking = 'Checking\u2026', 
 
     const asks = async () => {
       setPhase('asking');
+      turn('asking');
       busy.current = true;
-      room(ROOM, still());
+      room(onTheRow() ? 0 : ROOM, still());
       const began = Date.now();
       try { await ask.current?.(); } catch { /* the line goes either way */ }
       const left = SEEN_MS - (Date.now() - began);
       if (left > 0) await new Promise(resolve => setTimeout(resolve, left));
       busy.current = false;
       setPhase('idle');
+      turn('idle');
       room(0, still());
     };
     const quit = () => {
@@ -110,6 +136,7 @@ export default function PullDown({ scroller, onPull, asking = 'Checking\u2026', 
       el.style.userSelect = '';
       room(0, false);
       setPhase('idle');
+      turn('idle');
     };
 
     const begin = (y, target) => {
@@ -133,14 +160,16 @@ export default function PullDown({ scroller, onPull, asking = 'Checking\u2026', 
       // negative scrollTop; the room makes up the rest, so the page moves
       // once, at half the finger, whichever of the two is doing it.
       room(dy + Math.min(0, el.scrollTop), true);
-      setPhase(dy <= 0 ? 'idle' : d.far ? 'release' : 'pulling');
+      const now = dy <= 0 ? 'idle' : d.far ? 'release' : 'pulling';
+      setPhase(now);
+      turn(now, dy);
     };
     const end = async () => {
       const d = drag.current;
       drag.current = null;
       el.style.userSelect = '';
       if (!d) return;
-      if (!d.far) { room(0, false); setPhase('idle'); return; }
+      if (!d.far) { room(0, false); setPhase('idle'); turn('idle'); return; }
       await asks();
     };
 
@@ -186,6 +215,7 @@ export default function PullDown({ scroller, onPull, asking = 'Checking\u2026', 
       el.style.removeProperty('--pull-room');
       el.style.removeProperty('--pull-ease');
       el.style.userSelect = '';
+      if (busy.current || drag.current) turn('idle');
     };
   }, [scroller]);
 

@@ -149,6 +149,10 @@ function publish(next) {
   for (const listener of beacon.listeners) listener();
 }
 
+// Asked now, for a pull down on the wall (PullDown.js), rather than at the
+// next tick.
+export function refreshBeacon() { return poll(); }
+
 async function poll() {
   // A tab nobody is looking at is a tab with no beacon on screen, and asking
   // on its behalf spends a read on a picture in another window, another app,

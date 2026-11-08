@@ -3187,13 +3187,23 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
 .ln-pull-svg .hn-mark-dot--live { fill: var(--live); }
 .ln-pull--asking .ln-pull-mark { animation: ln-pull-turn 1.1s linear infinite; }
 @keyframes ln-pull-turn { to { transform: rotate(360deg); } }
-.hn-pane--friends .ps {
+.hn-pane--friends .ps,
+.hn-pane--home > .hn-floor--beacon {
   margin-top: var(--pull-room, 0px);
   transition: margin-top var(--pull-ease, 0.22s) ease;
 }
+/* On a phone the top row's own mark is the one that turns (PullDown.js, the
+   logo turns): with the finger while pulling, round and round while asking.
+   The strip under the row stands down. */
+@media (max-width: 768px) {
+  .ln-pull { display: none; }
+  .hdr-mark-svg { transition: transform 0.22s ease; }
+  html[data-pull] .hdr-mark-svg { transform: rotate(var(--pull-turn, 0deg)); transition: none; }
+  html[data-pull="asking"] .hdr-mark-svg { animation: ln-pull-turn 0.9s linear infinite; }
+}
 @media (prefers-reduced-motion: reduce) {
-  .ln-pull, .hn-pane--friends .ps { transition: none; }
-  .ln-pull--asking .ln-pull-mark { animation: none; }
+  .ln-pull, .hn-pane--friends .ps, .hn-pane--home > .hn-floor--beacon { transition: none; }
+  .ln-pull--asking .ln-pull-mark, html[data-pull="asking"] .hdr-mark-svg { animation: none; }
 }
 
 /* ── The top row, 2026-10-22 ───────────────────────────────────────────────
