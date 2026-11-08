@@ -541,15 +541,28 @@
 /* An open list rides over every heading after it. */
 .arc-band--open { z-index: 4; }
 .arc-band:first-child { margin-top: -6px; }
-.arc-band-head { position: relative; margin: 0; font: inherit; }
+.arc-band-head { position: relative; margin: 0; font: inherit; display: flex; align-items: center; gap: 3px; }
 .arc-band-press {
-  display: flex; align-items: center; gap: 7px; width: 100%;
+  display: flex; align-items: center; gap: 7px; flex: 1; min-width: 0;
   padding: 0; border: 0; background: none; cursor: pointer; text-align: left;
   font-family: var(--font-label); font-size: 9px; font-weight: 400;
   letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-faint);
   transition: color 0.15s;
 }
 .arc-band-press:hover, .arc-band--open .arc-band-press { color: var(--ink-soft); }
+/* The count and its caret: the band's records folded away and back
+   (Journal.js, foldBand). The caret points down while they show and to the
+   side once folded. */
+.arc-band-fold {
+  display: flex; align-items: center; gap: 7px; flex-shrink: 0;
+  padding: 4px 0 4px 6px; margin: -4px 0; border: 0; background: none; cursor: pointer;
+  font-family: var(--font-label); font-size: 9px; font-weight: 400;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-faint);
+  -webkit-tap-highlight-color: transparent;
+}
+.arc-band-fold:hover { color: var(--ink-soft); }
+.arc-band-fold:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; border-radius: 4px; }
+.arc-band-head--folded .arc-band-caret { transform: rotate(-90deg); }
 .arc-band-press:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; border-radius: 4px; }
 .arc-band-press::after { content: ''; flex: 1; height: 1px; margin-left: 3px; order: 1; background: var(--border); }
 /* By time of day's glyph and By horizon's bars, before the word, in its ink. */
@@ -558,7 +571,6 @@
    caret after it that says the heading opens. */
 .arc-band-count { order: 2; flex-shrink: 0; margin-left: 3px; }
 .arc-band-caret { order: 3; transition: transform 0.16s ease; }
-.arc-band--open .arc-band-caret { transform: rotate(180deg); }
 /* By rating's words are for a screen reader; its stars say it on the page. */
 .arc-band-said {
   position: absolute; width: 1px; height: 1px; overflow: hidden;

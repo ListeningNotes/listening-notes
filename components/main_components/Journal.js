@@ -1126,6 +1126,23 @@ function Journal({
     if (focus) head.querySelector('button')?.focus({ preventScroll: true });
   }
 
+  // ── A band folded away, 2026-11-08 ─────────────────────────────────────
+  // Miyel: the caret "opens the list of sort categories. I would rather it
+  // collapse the albums under that category." So the heading is two presses:
+  // its name opens the list of bands, as it did, and its count and caret fold
+  // the band's records away and back. Folded for this view only — a new view
+  // is a new set of bands — and for this visit.
+  const [folded, setFolded] = useState({ view, keys: new Set() });
+  const foldedKeys = folded.view === view ? folded.keys : null;
+  const isFolded = key => Boolean(foldedKeys?.has(key));
+  function foldBand(key) {
+    setFolded(was => {
+      const keys = new Set(was.view === view ? was.keys : []);
+      if (keys.has(key)) keys.delete(key); else keys.add(key);
+      return { view, keys };
+    });
+  }
+
   function pressBand(key) {
     if (bandsOpen === key) { closeBands(); return; }
     bringUp(key);
@@ -1339,7 +1356,7 @@ function Journal({
                     the name is also the way to the others. */}
                 {band && (i === 0 || shown[i - 1].band.key !== band.key) && (
                   <div className={'arc-band' + (bandsOpen === band.key ? ' arc-band--open' : '')} data-band={band.key}>
-                    <h3 className="arc-band-head">
+                    <h3 className={'arc-band-head' + (isFolded(band.key) ? ' arc-band-head--folded' : '')}>
                       <button
                         type="button"
                         className="arc-band-press"
@@ -1348,6 +1365,14 @@ function Journal({
                         aria-haspopup="menu"
                       >
                         <BandName band={band} />
+                      </button>
+                      <button
+                        type="button"
+                        className="arc-band-fold"
+                        onClick={() => foldBand(band.key)}
+                        aria-expanded={!isFolded(band.key)}
+                        aria-label={isFolded(band.key) ? 'Show these records' : 'Fold these records away'}
+                      >
                         {bandCount(band)}
                         <CaretDown className="arc-band-caret" size={9} weight="bold" aria-hidden="true" />
                       </button>
@@ -1373,7 +1398,7 @@ function Journal({
                     )}
                   </div>
                 )}
-                {tile ? tile(album, density) : (
+                {band && isFolded(band.key) ? null : tile ? tile(album, density) : (
                   <AlbumTile
                     album={album}
                     density={density}
