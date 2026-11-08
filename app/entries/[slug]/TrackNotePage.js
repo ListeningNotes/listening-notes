@@ -68,7 +68,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createPortal } from 'react-dom';
-import { Fingerprint, Heart, VinylRecord } from '@phosphor-icons/react';
+import { Fingerprint, Heart, PaperPlaneTilt, VinylRecord, X } from '@phosphor-icons/react';
 import { parseRating, editStamp, lookup_key } from '../../../library/entry_formatter';
 import { tidyAddress } from '../../../library/return_address';
 import SiteNav from '../../../components/main_components/SiteNav';
@@ -340,6 +340,71 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
     </>
   );
 
+  // Post: the note saved as an entry (the listen's bar, below).
+  async function saveNote() {
+    setSaving(true);
+    setTrouble(null);
+    // No more drafts of this one: the note is being saved, and the
+    // save takes its draft off the list (save_new_entry).
+    finished.current = true;
+    unsent.current = null;
+    await inflight.current;
+    try {
+      const res = await fetch('/api/entries', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          song: entry.song,
+          album: entry.album,
+          artist: entry.artist || '',
+          year: entry.year || '',
+          genre: entry.genre || '',
+          album_art: entry.album_art || '',
+          // Submission when the inbox opened this note on a song
+          // somebody sent (DECISIONS, 2026-10-06: a song send is
+          // logged as a track note), with the credit written in the
+          // listen's own words; blank fields write null.
+          entry_type: entry.entry_type || 'Personal Library',
+          received_from: entry.received_from || '',
+          received_date: entry.received_date || '',
+          received_from_url: entry.received_from_url || '',
+          credit_private: entry.credit_private === true,
+          rating: written.rating ? `${written.rating} stars` : '',
+          favorite: written.favorite === true,
+          formative: written.formative === true,
+          notes: written.note.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || data.error || !data.entry) throw new Error(data.error || 'That didn’t save. Try again.');
+      // Saved: the words have somewhere to live now, and the copy
+      // kept against losing them goes.
+      try {
+        const all = JSON.parse(localStorage.getItem(TRACK_NOTE_WRITING) || '{}');
+        delete all[songKey];
+        localStorage.setItem(TRACK_NOTE_WRITING, JSON.stringify(all));
+      } catch { /* nothing kept */ }
+      // The send that started this note is settled, the way a listen
+      // settles its send (useListeningSession): the row in the inbox
+      // becomes `logged`, pointed at this note. Not awaited and
+      // silent — the note is saved, and a send already deleted from
+      // the inbox is not a reason to say it failed.
+      if (entry.submission_id && data.entry?.id) {
+        fetch(`/api/submissions/${entry.submission_id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ entry_id: data.entry.id }),
+        }).catch(() => {});
+      }
+      onSaved?.(data.entry);
+    } catch (err) {
+      setTrouble(err.message);
+      setSaving(false);
+      // Not saved, so still a draft: keep filing it.
+      finished.current = false;
+    }
+  }
+
   return (
     <div className={'ln-entry tn' + (writing ? ' tn--writing' : '') + (composing ? ' tn--composing' : '')}>
       {headerSlot ? createPortal(chrome, headerSlot) : chrome}
@@ -517,76 +582,23 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
         </article>
       </div>
 
+      {/* ── The listen's own bar, 2026-11-08 ──────────────────────────────
+          A song being logged wore the correction bar's small words, Writing ·
+          Save · Cancel, while a record's listen had the raised bar of doors
+          (Miyel: "tracks have the old layout too"). It is drawn inside the
+          listen (app/session/page.js), so it takes the listen's bar: a glyph
+          over one word, Cancel and Post, Post being the listen's word. */}
       {writing && (
-        <EditingBar
-          word="Writing"
-          saving={saving}
-          held={!saysSomething}
-          onCancel={() => onLeave?.()}
-          onSave={async () => {
-            setSaving(true);
-            setTrouble(null);
-            // No more drafts of this one: the note is being saved, and the
-            // save takes its draft off the list (save_new_entry).
-            finished.current = true;
-            unsent.current = null;
-            await inflight.current;
-            try {
-              const res = await fetch('/api/entries', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  song: entry.song,
-                  album: entry.album,
-                  artist: entry.artist || '',
-                  year: entry.year || '',
-                  genre: entry.genre || '',
-                  album_art: entry.album_art || '',
-                  // Submission when the inbox opened this note on a song
-                  // somebody sent (DECISIONS, 2026-10-06: a song send is
-                  // logged as a track note), with the credit written in the
-                  // listen's own words; blank fields write null.
-                  entry_type: entry.entry_type || 'Personal Library',
-                  received_from: entry.received_from || '',
-                  received_date: entry.received_date || '',
-                  received_from_url: entry.received_from_url || '',
-                  credit_private: entry.credit_private === true,
-                  rating: written.rating ? `${written.rating} stars` : '',
-                  favorite: written.favorite === true,
-                  formative: written.formative === true,
-                  notes: written.note.trim(),
-                }),
-              });
-              const data = await res.json();
-              if (!res.ok || data.error || !data.entry) throw new Error(data.error || 'That didn’t save. Try again.');
-              // Saved: the words have somewhere to live now, and the copy
-              // kept against losing them goes.
-              try {
-                const all = JSON.parse(localStorage.getItem(TRACK_NOTE_WRITING) || '{}');
-                delete all[songKey];
-                localStorage.setItem(TRACK_NOTE_WRITING, JSON.stringify(all));
-              } catch { /* nothing kept */ }
-              // The send that started this note is settled, the way a listen
-              // settles its send (useListeningSession): the row in the inbox
-              // becomes `logged`, pointed at this note. Not awaited and
-              // silent — the note is saved, and a send already deleted from
-              // the inbox is not a reason to say it failed.
-              if (entry.submission_id && data.entry?.id) {
-                fetch(`/api/submissions/${entry.submission_id}`, {
-                  method: 'PATCH',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ entry_id: data.entry.id }),
-                }).catch(() => {});
-              }
-              onSaved?.(data.entry);
-            } catch (err) {
-              setTrouble(err.message);
-              setSaving(false);
-              // Not saved, so still a draft: keep filing it.
-              finished.current = false;
-            }
-          }}
-        />
+        <div className="ln-editing-bar ses-bar">
+          <button type="button" className="ln-word" onClick={() => onLeave?.()} disabled={saving}>
+            <X className="ses-bar-glyph" size={21} weight="regular" aria-hidden="true" />
+            <span>Cancel</span>
+          </button>
+          <button type="button" className="ln-word ln-word--on" onClick={() => saveNote()} disabled={saving || !saysSomething}>
+            <PaperPlaneTilt className="ses-bar-glyph" size={21} weight="regular" aria-hidden="true" />
+            <span>{saving ? 'Posting' : 'Post'}</span>
+          </button>
+        </div>
       )}
       {correcting && <EditingBar onSave={edit.save} onCancel={edit.cancel} saving={edit.saving} />}
       {(trouble || edit.trouble) && <p className="ln-trouble">{trouble || edit.trouble}</p>}
