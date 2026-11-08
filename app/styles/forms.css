@@ -2812,6 +2812,9 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 }
 .pn-hdr-stop--lit { color: var(--ink); }
 .pn-hdr-stop--still { cursor: default; }
+/* Added pressed once asks, in the red Discard? asks in (page.js, remove). */
+.pn-hdr-stop.pn-hdr-stop--sure,
+.pn-hdr-stop.pn-hdr-stop--sure:hover { color: var(--fav); }
 .pn-hdr-stop:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: -2px; border-radius: 8px; }
 .pn-hdr-word {
   font-family: var(--font-label); font-size: 9px; line-height: 1;

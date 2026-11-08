@@ -44,7 +44,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { CaretLeft, Shuffle, User } from '@phosphor-icons/react';
+import { CaretLeft, Intersect, User } from '@phosphor-icons/react';
 import { usePathname } from 'next/navigation';
 import { useListeningBeacon } from '../../hooks/useListeningBeacon';
 import { useBookplate, useVisiting } from './Bookplate';
@@ -201,7 +201,7 @@ export default function SiteNav({ tools = null, mark = null, lede = true }) {
             aria-pressed={visiting.compare.on}
             aria-label={visiting.compare.on ? 'Back to their post' : `Compare your listen with ${visiting.name || 'theirs'}`}
           >
-            <Shuffle size={19} weight="regular" aria-hidden="true" />
+            <Intersect size={19} weight="regular" aria-hidden="true" />
             {visiting.compare.on && <span className="sitenav-compare-word" aria-hidden="true">Compare</span>}
           </button>
         )}

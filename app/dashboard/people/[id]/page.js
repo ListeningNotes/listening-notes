@@ -47,7 +47,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { CaretDown, CaretLeft, CaretRight, Heart, Printer, Shuffle, SketchLogo, Sparkle, User, UserCheck, UserPlus, X } from '@phosphor-icons/react';
+import { CaretDown, CaretLeft, CaretRight, Heart, Intersect, Printer, SketchLogo, Sparkle, User, UserCheck, UserMinus, UserPlus, X } from '@phosphor-icons/react';
 import StarRating from '../../../../components/main_components/StarRating';
 import Journal, { foldForSearch, gatherAlbums } from '../../../../components/main_components/Journal';
 import { BeaconCard } from '../../../../components/main_components/ListeningBeacon';
@@ -519,6 +519,13 @@ export default function PersonPage({ layered = false }) {
   const [adding, setAdding] = useState(false);
   const [comparing, setComparing] = useState(false);
   const [sure, setSure] = useState(false);
+  // Remove? settles back to Added on its own: a phone never takes the
+  // focus off a button, so a press elsewhere cannot be counted on to.
+  useEffect(() => {
+    if (!sure) return undefined;
+    const back = setTimeout(() => setSure(false), 4000);
+    return () => clearTimeout(back);
+  }, [sure]);
   const [removing, setRemoving] = useState(false);
 
   const rootRef = useRef(null);
@@ -836,13 +843,21 @@ export default function PersonPage({ layered = false }) {
     if (!r?.ok) setPerson(p => ({ ...p, private: !to }));
   }
 
+  // ── Added is the way out, 2026-11-08 ──────────────────────────────────
+  // Miyel: "the add button (added) be the one to remove… it just turns into
+  // remove in red, click again and you remove, but right there you can add
+  // again." So the press stays on this page: once asks, twice takes them out
+  // of the book, and the row says Add. Only the book's row goes — their
+  // messages, the words between you, sends and arrivals are filed by their
+  // address, so adding them back brings it all with them; a pin and Keep
+  // private were the row's and go with it.
   async function remove() {
     if (!sure) { setSure(true); return; }
     setRemoving(true);
     const r = await fetch(`/api/people/${person.id}`, { method: 'DELETE' }).catch(() => null);
-    if (r?.ok) { arrivingBack(); router.push('/dashboard/people'); return; }
     setRemoving(false);
     setSure(false);
+    if (r?.ok) setPerson(p => ({ ...p, id: null, pinned_at: null, private: false }));
   }
 
   if (checking) return <div style={{ minHeight: '100vh', background: 'var(--bg)' }} />;
@@ -869,36 +884,6 @@ export default function PersonPage({ layered = false }) {
       foot={person.id ? (
         <div className="pn-foot">
           <SentList journal={person.address} title={`Still out with ${name}`} />
-          <p className="pn-quiet">
-            {/* All the words between you, record by record (Words.js) —
-                the brief's quiet line under their wall. */}
-            <Link className="pn-quiet-act" href={`/dashboard/people/${person.id}/words`}>All words with {name}</Link>
-            {/* Keep private moved here from under their face, 2026-10-27:
-                the face is for what they sent, this page for them. */}
-            {DIRECTORY_URL && (
-              <button
-                type="button"
-                className={'pn-quiet-act' + (person.private ? ' pn-quiet-act--on' : '')}
-                onClick={keepPrivate}
-                aria-pressed={Boolean(person.private)}
-                title={person.private
-                  ? `${name} stays off everyone's board but yours. Press to share them again.`
-                  : `Keep ${name} off everyone's board but yours`}
-              >
-                {person.private ? 'Kept private' : 'Keep private'}
-              </button>
-            )}
-            <button
-              type="button"
-              className={'pn-quiet-act' + (sure ? ' pn-quiet-act--sure' : '')}
-              onClick={remove}
-              onBlur={() => setSure(false)}
-              disabled={removing}
-              aria-label={sure ? `Press again to take ${name} out of your book` : undefined}
-            >
-              {sure ? 'Remove?' : 'Remove'}
-            </button>
-          </p>
         </div>
       ) : null}
     />
@@ -950,14 +935,23 @@ export default function PersonPage({ layered = false }) {
               aria-expanded={comparing}
               aria-label="Compare"
             >
-              <Shuffle size={19} weight="regular" aria-hidden="true" />
+              <Intersect size={19} weight="regular" aria-hidden="true" />
               {comparing && <span className="pn-hdr-word" aria-hidden="true">Compare</span>}
             </button>
             {person.id ? (
-              <span className="pn-hdr-stop pn-hdr-stop--lit pn-hdr-stop--still" role="img" aria-label={`${name} is in your friends`}>
-                <UserCheck size={19} weight="regular" aria-hidden="true" />
-                <span className="pn-hdr-word" aria-hidden="true">Added</span>
-              </span>
+              <button
+                type="button"
+                className={'pn-hdr-stop pn-hdr-stop--lit' + (sure ? ' pn-hdr-stop--sure' : '')}
+                onClick={remove}
+                onBlur={() => setSure(false)}
+                disabled={removing}
+                aria-label={sure ? `Press again to take ${name} out of your friends` : `${name} is in your friends. Press to remove`}
+              >
+                {sure
+                  ? <UserMinus size={19} weight="regular" aria-hidden="true" />
+                  : <UserCheck size={19} weight="regular" aria-hidden="true" />}
+                <span className="pn-hdr-word" aria-hidden="true">{sure ? 'Remove?' : 'Added'}</span>
+              </button>
             ) : (
               <button type="button" className="pn-hdr-stop" onClick={add} disabled={adding} aria-label={`Add ${name} to your friends`}>
                 <UserPlus size={19} weight="regular" aria-hidden="true" />
@@ -999,7 +993,7 @@ export default function PersonPage({ layered = false }) {
                     <Face src="/api/portrait" />
                     <span className="pn-who-name">You</span>
                   </div>
-                  <span className="pn-between" aria-hidden="true"><Shuffle size={26} weight="regular" /></span>
+                  <span className="pn-between" aria-hidden="true"><Intersect size={26} weight="regular" /></span>
                   <div className="pn-who">
                     <Face address={person.address} />
                     <span className="pn-who-name">{name}</span>
