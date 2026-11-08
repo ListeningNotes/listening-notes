@@ -40,8 +40,11 @@
 // round again, whole turns only. Turning with the finger and stopping wherever
 // the answer landed made every pull look different, and a boomerang (wound
 // back with the pull, flown round on release) was tried and let go: her pick,
-// "one plain spin", the same day. The page springs back rather than holding a
-// gap. A desk has no row, and keeps the strip.
+// "one plain spin", the same day. And the page stays held down while it
+// spins, coming back up only once the answer is in and the turn is done, so
+// it looks like what it is, a refresh (her, the same day: "like Instagram…
+// the screen doesn't come back up until it's done"). A desk has no row, and
+// keeps the strip.
 
 import { useEffect, useRef, useState } from 'react';
 
@@ -127,7 +130,7 @@ export default function PullDown({ scroller, onPull, asking = 'Checking\u2026', 
       setPhase('asking');
       const row = onTheRow();
       busy.current = true;
-      room(row ? 0 : ROOM, still());
+      room(ROOM, still());
       const began = Date.now();
       let answered = false;
       const asked = Promise.resolve().then(() => ask.current?.()).catch(() => {}).finally(() => { answered = true; });
