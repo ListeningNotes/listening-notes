@@ -3192,8 +3192,8 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   margin-top: var(--pull-room, 0px);
   transition: margin-top var(--pull-ease, 0.22s) ease;
 }
-/* On a phone the top row's own mark is the one that turns, wound back as
-   the page is pulled and flown round once let go — turned by PullDown.js
+/* On a phone the top row's own mark is the one that turns, once round when
+   the pull is let go — turned by PullDown.js
    itself (the logo turns). The strip under the row stands down. */
 @media (max-width: 768px) {
   .ln-pull { display: none; }
