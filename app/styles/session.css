@@ -1044,16 +1044,23 @@
 .ses--wide .ses-record-says { display: contents; }
 
 /* ── Doors at the foot, 2026-10-23 ────────────────────────────────────────
-   On a phone, in a sheet, Discard · Save draft · Post are a raised bar at
-   the foot in the Listen bar's shape — 14 in from the sides, rounded all
-   round, on the home bar's line — each a glyph over one word (Miyel's pick
-   of three: "it's easy to miss"). It steps down while a note is written, out
-   of the keyboard's way, and the listen ends far enough above it to scroll
-   clear. A desk, and a listen opened cold, keep their rows; the glyphs are
-   this bar's only. */
+   On a phone, Discard · Save draft · Post are a raised bar at the foot in the
+   Listen bar's shape — 14 in from the sides, rounded all round, on the home
+   bar's line — each a glyph over one word (Miyel's pick of three: "it's easy
+   to miss"). It steps down while a note is written, out of the keyboard's
+   way, and the listen ends far enough above it to scroll clear. A desk keeps
+   its row.
+
+   ── Every bar of a listen, 2026-11-07 ──────────────────────────────────
+   It was the sheet's alone, so a listen opened as a page of its own (a
+   reload, a link) and the Post? screen after it still wore the old band of
+   small words (Miyel: "sometimes I land on the old footer page"). Now the
+   listen's bar wherever it opens, and the Post? screen's, are this one. */
 .ses-bar-glyph { display: none; }
 @media (max-width: 768px) {
-  .lay.lay--sheet .ses:not(.ses--wide) .ses-bar {
+  .ses:not(.ses--wide) .ses-bar,
+  .ses-preview-bar,
+  .ses-preview-bar:not(.ses-preview-bar--done) {
     position: fixed;
     left: 14px; right: 14px;
     top: auto;
@@ -1070,8 +1077,12 @@
     box-shadow: 0 8px 26px rgba(26, 26, 26, 0.16);
     transition: transform 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);
   }
-  [data-theme='dark'] .lay.lay--sheet .ses:not(.ses--wide) .ses-bar { box-shadow: 0 8px 26px rgba(0, 0, 0, 0.55); }
-  .lay.lay--sheet .ses:not(.ses--wide) .ses-bar .ln-word {
+  .ses-preview-bar,
+  .ses-preview-bar:not(.ses-preview-bar--done) { z-index: 220; }
+  [data-theme='dark'] .ses:not(.ses--wide) .ses-bar,
+  [data-theme='dark'] .ses-preview-bar { box-shadow: 0 8px 26px rgba(0, 0, 0, 0.55); }
+  .ses:not(.ses--wide) .ses-bar .ln-word,
+  .ses-preview-bar .ln-word {
     display: inline-flex;
     flex-direction: column;
     align-items: center;
@@ -1079,15 +1090,22 @@
     min-width: 76px;
     padding: 8px 4px;
   }
-  .lay.lay--sheet .ses:not(.ses--wide) .ses-bar-glyph { display: block; }
+  .ses:not(.ses--wide) .ses-bar-glyph,
+  .ses-preview-bar .ses-bar-glyph { display: block; }
   /* While a note is written it goes down off the foot, out of the keys'
      way, as the foot always has. */
-  .lay.lay--sheet .ses--typing:not(.ses--wide) .ses-bar {
+  .ses--typing:not(.ses--wide) .ses-bar {
     transform: translateY(calc(100% + 40px));
     pointer-events: none;
   }
-  /* The listen's end clears the bar. */
-  .lay.lay--sheet .ses:not(.ses--wide) .ses-body--page {
+  /* The listen's end clears the bar, and so does the line saying why Post?
+     cannot post yet. */
+  .ses:not(.ses--wide) .ses-body--page {
     padding-bottom: calc(100px + max(15px, env(safe-area-inset-bottom, 0px)));
   }
+  .ses-preview-why { bottom: calc(86px + max(15px, env(safe-area-inset-bottom, 0px))); }
 }
+/* Post with no stars on the record shakes no before the listen goes up to
+   them (app/session/page.js, post). */
+.ln-word.ses-bar-post--refused { animation: ses-no 0.42s ease-out; }
+@media (prefers-reduced-motion: reduce) { .ln-word.ses-bar-post--refused { animation: none; } }

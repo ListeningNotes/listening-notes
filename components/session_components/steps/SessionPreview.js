@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { ArrowUUpLeft, BookOpen, PaperPlaneTilt, Plus } from '@phosphor-icons/react';
 import { createPortal } from 'react-dom';
 import { serializeTracks } from '../../../library/entry_formatter';
 import FullPostPage from '../../../app/entries/[slug]/FullPostPage';
@@ -194,8 +195,11 @@ export default function SessionPreview({
                 went on 2026-10-17 with the word it was made of: testers did
                 not know what a preview was. Two words now, the way back and
                 the way on, as she drew it. */}
+            {/* A glyph over each word, as the listen's own bar draws them on
+                a phone (session.css, every bar of a listen, 2026-11-07). */}
             <button type="button" className="ln-word" onClick={onBack} disabled={saving}>
-              Go back
+              <ArrowUUpLeft className="ses-bar-glyph" size={21} weight="regular" aria-hidden="true" />
+              <span>Go back</span>
             </button>
             {/* Disabled rather than absent while the record is untouched. A
                 button that vanishes leaves you looking for it; one that is
@@ -222,16 +226,23 @@ export default function SessionPreview({
               onClick={save}
               disabled={saving || !hasWriting}
             >
-              {saving ? 'Posting' : 'Post?'}
+              <PaperPlaneTilt className="ses-bar-glyph" size={21} weight="regular" aria-hidden="true" />
+              <span>{saving ? 'Posting' : 'Post?'}</span>
             </button>
           </>
         ) : (
           <>
             <span className="ln-editing-label">Saved</span>
             {savedEntry?.slug && (
-              <a href={`/entries/${savedEntry.slug}`} className="ln-word ln-word--on">Read it</a>
+              <a href={`/entries/${savedEntry.slug}`} className="ln-word ln-word--on">
+                <BookOpen className="ses-bar-glyph" size={21} weight="regular" aria-hidden="true" />
+                <span>Read it</span>
+              </a>
             )}
-            <button type="button" className="ln-word" onClick={onAnother}>Log another</button>
+            <button type="button" className="ln-word" onClick={onAnother}>
+              <Plus className="ses-bar-glyph" size={21} weight="regular" aria-hidden="true" />
+              <span>Log another</span>
+            </button>
           </>
         )}
       </div>

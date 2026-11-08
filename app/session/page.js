@@ -853,6 +853,21 @@ export default function SessionPage() {
   // and saving is what waits — for the album's stars, since 2026-10-17.
   function forward() { goToStep(step + 1); }
 
+  // ── Post asks for the stars first, 2026-11-07 ────────────────────────────
+  // Miyel: "when clicking post without giving the album marks it should shake
+  // no and take you to the fact that it's missing an album rating." The
+  // preview's Post? already refused a record with no stars; now the first
+  // Post does, before the preview: the door shakes no, and the listen goes
+  // up to its stars, which shake in their turn (askForStars).
+  const [postRefused, setPostRefused] = useState(false);
+  function post() {
+    if (s.rating || s.Masterpiece) { goToStep(1); return; }
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { askForStars(); return; }
+    setPostRefused(false);
+    requestAnimationFrame(() => setPostRefused(true));
+    setTimeout(() => { setPostRefused(false); askForStars(); }, 420);
+  }
+
   // ── Back up to the stars, 2026-10-17 ─────────────────────────────────────
   // What Post? does on a record with no stars, once the preview
   // has shaken no (SessionPreview). Miyel finishes a listen at the foot of
@@ -1056,7 +1071,7 @@ export default function SessionPage() {
                 <BookmarkSimple className="ses-bar-glyph" size={21} weight="regular" aria-hidden="true" />
                 <span>Save draft</span>
               </button>
-              <button type="button" className="ln-word ln-word--on" onClick={() => goToStep(1)}>
+              <button type="button" className={'ln-word ln-word--on' + (postRefused ? ' ses-bar-post--refused' : '')} onClick={post}>
                 <PaperPlaneTilt className="ses-bar-glyph" size={21} weight="regular" aria-hidden="true" />
                 <span>Post</span>
               </button>
