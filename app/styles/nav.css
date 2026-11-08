@@ -3214,6 +3214,15 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
     z-index: 4;
     display: flex; align-items: center; gap: 10px;
   }
+  /* The strip above the row, under the clock, is the row's too, so a tap at
+     the very top of the screen goes back up (Header.js, onTop). */
+  .hdr::before {
+    content: '';
+    position: absolute;
+    left: -18px; right: -18px;
+    top: calc(-22px - var(--safe-top));
+    height: calc(22px + var(--safe-top));
+  }
   .hdr-face {
     position: relative; flex: 0 0 auto;
     width: 34px; height: 34px; padding: 0; border: 0; border-radius: 50%;

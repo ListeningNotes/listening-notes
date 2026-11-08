@@ -1669,6 +1669,7 @@ export default function HomeNav() {
         stops={stops}
         goTo={goTo}
         onHere={goBack}
+        onTop={() => { if (!cardOpen) goUp(pane); }}
         onFace={() => setCardOpen(open => !open)}
         news={{ people: waiting?.friends === true }}
         lights={lights}

@@ -48,11 +48,16 @@ import { useBookplate } from './Bookplate';
 
 export default function Header({
   pane, stops, goTo, onHere = null, onFace, cardOpen = false, news = {}, lights = null, mark = null,
+  // A tap on the row's own ground — between its buttons, on the mark, or the
+  // strip above it under the clock — back to the top (2026-11-08, Miyel: "can
+  // tapping top of the screen bring you back to top"). A phone's own status-bar
+  // tap only scrolls the page itself, and every pane here scrolls in a box.
+  onTop = null,
 }) {
   const { portrait_url: portrait, keeper_name, cover_name } = useBookplate();
   const whose = keeper_name || cover_name;
   return (
-    <div className="hdr">
+    <div className="hdr" onClick={e => { if (onTop && (e.target === e.currentTarget || e.target.closest?.('.hdr-mark'))) onTop(); }}>
       {/* The way in to the person: it opens the card over the page, and
           closes it again (HomeNav). While the card is open it is an X, the
           window's close, in the place the window grew from (2026-10-29). */}

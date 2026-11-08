@@ -129,7 +129,21 @@ export default function SiteNav({ tools = null, mark = null, lede = true }) {
   }, []);
 
   return (
-    <div className={'sitenav-row' + (scrolled ? ' sitenav-row--scrolled' : '')}>
+    // A tap on the row's own ground, between what is on it, back to the top of
+    // the page under it (2026-11-08, Miyel: "can tapping top of the screen
+    // bring you back to top"): an entry scrolls in its own box, which a
+    // phone's status-bar tap never reaches.
+    <div
+      className={'sitenav-row' + (scrolled ? ' sitenav-row--scrolled' : '')}
+      onClick={e => {
+        if (e.target.closest?.('a, button')) return;
+        // Over the journal the row is in the layer's own header, beside the
+        // entry rather than inside it, so the layer is asked first.
+        const page = (e.currentTarget.closest('.lay') || e.currentTarget.closest('.ln-entry'))?.querySelector('.ln-screens') || document.scrollingElement;
+        const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+        page?.scrollTo({ top: 0, behavior: still ? 'auto' : 'smooth' });
+      }}
+    >
       {/* The left slot. A spacer that holds the mark on the middle of the
           row — and, on a page opened on its own with a mouse in hand, the way
           back (2026-09-29). Opened over the journal a page is on a sheet and
