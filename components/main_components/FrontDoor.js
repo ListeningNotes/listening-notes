@@ -221,12 +221,13 @@ function FindFold({ domain }) {
     setBusy(false);
   }
 
-  // The same shape as Choose your address, line for line (Miyel: the two
-  // buttons should not differ): what the box is for, the address, a line
-  // for what was found, and setup's black button.
+  // The same shape as Choose your address (Miyel: the two buttons should not
+  // differ): the address, a line for what was found, and setup's black
+  // button — but no caption over the box; the box's own placeholder and the
+  // button that opened it say what it is for (her, 2026-11-07). The field
+  // keeps its label for a screen reader.
   return (
     <div className="fd-fold-body">
-      <p className="fd-caption">A journal’s address</p>
       <AddressField
         value={name}
         onChange={value => { setName(value); setTrouble(''); }}
