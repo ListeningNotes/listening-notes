@@ -103,10 +103,10 @@ function near(song, title) {
   return longer >= 8 && apart(a, b) <= Math.floor(longer / 4);
 }
 
-function ask(album, artist, year) {
-  const key = `${lookup_key(album, artist)}|${year || ''}`;
+function ask(album, artist, year, songs) {
+  const key = `${lookup_key(album, artist)}|${year || ''}|${songs || ''}`;
   if (!asked.has(key)) {
-    const answer = fetchTracklist(album, artist, null, year)
+    const answer = fetchTracklist(album, artist, null, year, songs)
       .then(found => found && {
         songs: (found.clips || []).map(s => ({ ...s, title: fold(s.title), edit: fold(s.edit), whole: whole(s.title), bleep: bleeped(s.title) })),
         recordLink: found.recordUrl || '',
@@ -157,15 +157,17 @@ function resolve(song) {
 // third party's page between every reader and the record, on every copy, for
 // as long as song.link keeps them working. The clips are Apple's already, so
 // the door is too (Miyel, 2026-10-13).
-export function useSnippet(album, artist, year = null) {
+// `logged`, how many tracks the entry logged, picks between editions of one
+// name (music_data_api.js, fromTheArtist).
+export function useSnippet(album, artist, year = null, logged = 0) {
   const [found, setFound] = useState(null);
   useEffect(() => {
     if (!album) return;
     let live = true;
     // A failed lookup answers as a record with nothing on it.
-    ask(album, artist || '', year).then(result => { if (live) setFound(result || { songs: [], recordLink: '' }); });
+    ask(album, artist || '', year, logged).then(result => { if (live) setFound(result || { songs: [], recordLink: '' }); });
     return () => { live = false; };
-  }, [album, artist, year]);
+  }, [album, artist, year, logged]);
 
   const songs = found?.songs || [];
   return {

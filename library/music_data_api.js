@@ -109,14 +109,14 @@ export function readArtColor(address) {
 // So a given id is tried first, and when it answers nothing the name search
 // runs as though no id had been given. What comes back names the id that
 // actually worked, so the caller can keep that one instead.
-export async function fetchTracklist(albumName, artistName, collectionId = null, year = null) {
+export async function fetchTracklist(albumName, artistName, collectionId = null, year = null, songs = 0) {
   try {
     const given = collectionId ? String(collectionId) : '';
     if (given) {
       const found = await songsOf(given);
       if (found) return found;
     }
-    const id = await findCollectionId(albumName, artistName, year);
+    const id = await findCollectionId(albumName, artistName, year, songs);
     if (!id || String(id) === given) return null;
     return await songsOf(id);
   } catch { return null; }
@@ -142,12 +142,12 @@ export async function fetchTracklist(albumName, artistName, collectionId = null,
 const SHORT_RELEASE = /\b(single|ep)\b|\(edit\)/;
 const yearOf = r => String(r.releaseDate || '').slice(0, 4);
 const titled = s => norm(s).replace(/\s+(ep|single)$/, '');
-async function findCollectionId(albumName, artistName, year = null) {
+async function findCollectionId(albumName, artistName, year = null, songs = 0) {
   const query = encodeURIComponent(`${artistName} ${albumName}`);
   const searchRes = await fetch(`https://itunes.apple.com/search?term=${query}&entity=album&limit=25`);
   const searchData = await searchRes.json();
   const results = (searchData.results || []).filter(r => r.wrapperType === 'collection' && r.collectionId);
-  if (!results.length) return fromTheArtist(albumName, artistName);
+  if (!results.length) return fromTheArtist(albumName, artistName, null, false, songs);
 
   const nAlbum = titled(albumName), nArtist = norm(artistName);
   const named = r => { const ra = titled(r.collectionName || ''); return ra.includes(nAlbum) || nAlbum.includes(ra); };
@@ -173,9 +173,9 @@ async function findCollectionId(albumName, artistName, year = null) {
     // year's, and only one of this year's will do. A year saved for the first pressing,
     // where Apple has only a later one, keeps the record the search found.
     if (!year || yearOf(best) === String(year)) return best.collectionId;
-    return (await fromTheArtist(albumName, artistName, year, true)) || best.collectionId;
+    return (await fromTheArtist(albumName, artistName, year, true, songs)) || best.collectionId;
   }
-  return (await fromTheArtist(albumName, artistName, year)) || (best && named(best) ? best.collectionId : null);
+  return (await fromTheArtist(albumName, artistName, year, false, songs)) || (best && named(best) ? best.collectionId : null);
 }
 
 // ── When the search does not know the record, 2026-10-13 ──────────────────
@@ -184,7 +184,7 @@ async function findCollectionId(albumName, artistName, year = null) {
 // Krule's albums include The OOZ. So the artist is found by name, their
 // albums are read, and the one whose title is the album's is taken — only an
 // exact title, since there is no search score here to weigh a near one.
-async function fromTheArtist(albumName, artistName, year = null, thisYearOnly = false) {
+async function fromTheArtist(albumName, artistName, year = null, thisYearOnly = false, songs = 0) {
   if (!artistName) return null;
   const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(artistName)}&entity=musicArtist&limit=5`);
   const data = await res.json();
@@ -198,8 +198,30 @@ async function fromTheArtist(albumName, artistName, year = null, thisYearOnly = 
   const ofYear = year ? albums.filter(r => yearOf(r) === String(year)) : [];
   if (thisYearOnly && !ofYear.length) return null;
   const pool = ofYear.length ? ofYear : albums;
-  const record = pool.find(r => r.collectionExplicitness === 'explicit') || pool[0];
-  return record?.collectionId || null;
+  const uncut = pool.filter(r => r.collectionExplicitness === 'explicit');
+  const choices = uncut.length ? uncut : pool;
+  if (songs && choices.length > 1) {
+    const held = await editionHolding(choices, songs);
+    if (held) return held;
+  }
+  return choices[0]?.collectionId || null;
+}
+
+// ── Editions of one name, 2026-11-07 ──────────────────────────────────────
+// MAYHEM is two records on Apple, both 2025 and both named MAYHEM: fourteen
+// songs, and the seventeen the later edition added to. Logged with seventeen,
+// the first one found had three songs short. So where the entry says how many
+// songs it logged, each edition's songs are counted (Apple's own count takes in
+// its music videos, so it cannot say) and the smallest that holds them all is
+// taken, or else the one with most. A few lookups, and only here.
+async function editionHolding(choices, songs) {
+  const counted = [];
+  for (const r of choices.slice(0, 4)) {
+    const found = await editionOf(r.collectionId).catch(() => null);
+    if (found) counted.push({ id: r.collectionId, n: found.songs.length });
+  }
+  const holding = counted.filter(c => c.n >= songs).sort((a, b) => a.n - b.n)[0];
+  return (holding || counted.sort((a, b) => b.n - a.n)[0])?.id || null;
 }
 
 // One lookup: the record's row and its songs in disc and track order. Null
