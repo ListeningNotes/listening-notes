@@ -35,11 +35,13 @@
 // ── The logo turns, 2026-11-07 ──────────────────────────────────────────
 // On a phone, where the top row wears the LN. mark, the strip under it goes
 // (Miyel: "have the actual logo spin to show its loading rather than the bar
-// under the header"). The mark turns with the finger as the page is pulled,
-// and spins while asking; the page springs back rather than holding a gap.
-// Told through the root, `data-pull` and `--pull-turn` (nav.css), so the
-// row needs to know nothing about who is pulling. A desk has no row, and
-// keeps the strip.
+// under the header"). And like a boomerang (her word, the same day): as the
+// page is pulled the mark winds back with the finger, "like drawing an
+// arrow", and let go it flies round the other way, a whole turn past where
+// it started, coming to rest upright. Still asking by then, it goes round
+// again, whole turns only. Turning with the finger and stopping wherever the
+// answer landed made every pull look different. The page springs back rather
+// than holding a gap. A desk has no row, and keeps the strip.
 
 import { useEffect, useRef, useState } from 'react';
 
@@ -60,16 +62,34 @@ const WORDS = { idle: '', pulling: 'Pull down', release: 'Let go to refresh', as
 // Whether the top row's mark is standing in for the strip.
 const onTheRow = () => typeof document !== 'undefined'
   && Boolean(document.querySelector('.hdr-mark')?.offsetWidth);
-// The mark's turn, on the root, for the row to read.
-function turn(phase, dy = 0) {
-  const root = document.documentElement;
-  if (phase === 'idle') {
-    root.removeAttribute('data-pull');
-    root.style.removeProperty('--pull-turn');
-    return;
+// One turn of the mark, and how far back it winds at a full pull.
+const TURN_MS = 900;
+const DRAWN = 120;
+const marks = () => [...document.querySelectorAll('.hdr-mark-svg')];
+
+// Wound back by `deg`, held there under the finger.
+function windBack(deg) {
+  for (const m of marks()) m.style.transform = deg > 0 ? `rotate(${-deg}deg)` : '';
+}
+// Back to upright without asking: the pull fell short.
+function unwind() {
+  for (const m of marks()) {
+    const from = m.style.transform;
+    m.style.transform = '';
+    if (from) m.animate([{ transform: from }, { transform: 'rotate(0deg)' }], { duration: 200, easing: 'ease-out' });
   }
-  root.setAttribute('data-pull', phase);
-  root.style.setProperty('--pull-turn', `${Math.round(Math.min(1, dy / FAR_ENOUGH) * 360)}deg`);
+}
+// Let go: round from where it was wound to a whole turn past upright, fast
+// off the finger and slowing to rest. Resolves when it is upright again.
+function flyRound(deg, first) {
+  return Promise.all(marks().map(m => {
+    m.style.transform = '';
+    const flight = m.animate(
+      [{ transform: `rotate(${first ? -deg : 0}deg)` }, { transform: 'rotate(360deg)' }],
+      { duration: first ? TURN_MS * (1 + deg / 360) : TURN_MS, easing: first ? 'cubic-bezier(0.15, 0.7, 0.3, 1)' : 'ease-in-out' },
+    );
+    return flight.finished.catch(() => {});
+  }));
 }
 
 // `mark` is the site's mark, drawn by whoever mounts this (the cross draws
@@ -117,18 +137,25 @@ export default function PullDown({ scroller, onPull, asking = 'Checking\u2026', 
       return true;
     };
 
-    const asks = async () => {
+    const asks = async (drawn = 0) => {
       setPhase('asking');
-      turn('asking');
+      const row = onTheRow();
       busy.current = true;
-      room(onTheRow() ? 0 : ROOM, still());
+      room(row ? 0 : ROOM, still());
       const began = Date.now();
-      try { await ask.current?.(); } catch { /* the line goes either way */ }
-      const left = SEEN_MS - (Date.now() - began);
+      let answered = false;
+      const asked = Promise.resolve().then(() => ask.current?.()).catch(() => {}).finally(() => { answered = true; });
+      if (row && !still()) {
+        // The boomerang: once round from the wind, then whole turns while
+        // the answer is still out.
+        let first = true;
+        do { await flyRound(drawn, first); first = false; } while (!answered);
+      }
+      await asked;
+      const left = row ? 0 : SEEN_MS - (Date.now() - began);
       if (left > 0) await new Promise(resolve => setTimeout(resolve, left));
       busy.current = false;
       setPhase('idle');
-      turn('idle');
       room(0, still());
     };
     const quit = () => {
@@ -136,7 +163,7 @@ export default function PullDown({ scroller, onPull, asking = 'Checking\u2026', 
       el.style.userSelect = '';
       room(0, false);
       setPhase('idle');
-      turn('idle');
+      unwind();
     };
 
     const begin = (y, target) => {
@@ -160,17 +187,18 @@ export default function PullDown({ scroller, onPull, asking = 'Checking\u2026', 
       // negative scrollTop; the room makes up the rest, so the page moves
       // once, at half the finger, whichever of the two is doing it.
       room(dy + Math.min(0, el.scrollTop), true);
-      const now = dy <= 0 ? 'idle' : d.far ? 'release' : 'pulling';
-      setPhase(now);
-      turn(now, dy);
+      setPhase(dy <= 0 ? 'idle' : d.far ? 'release' : 'pulling');
+      // Drawing the arrow: the mark winds back as far as the pull has gone.
+      d.drawn = Math.min(1, dy / FAR_ENOUGH) * DRAWN;
+      if (onTheRow()) windBack(d.drawn);
     };
     const end = async () => {
       const d = drag.current;
       drag.current = null;
       el.style.userSelect = '';
       if (!d) return;
-      if (!d.far) { room(0, false); setPhase('idle'); turn('idle'); return; }
-      await asks();
+      if (!d.far) { room(0, false); setPhase('idle'); unwind(); return; }
+      await asks(d.drawn || 0);
     };
 
     // Touch for a phone; pointer events for a mouse, so the pull can be
@@ -215,7 +243,7 @@ export default function PullDown({ scroller, onPull, asking = 'Checking\u2026', 
       el.style.removeProperty('--pull-room');
       el.style.removeProperty('--pull-ease');
       el.style.userSelect = '';
-      if (busy.current || drag.current) turn('idle');
+      if (drag.current) windBack(0);
     };
   }, [scroller]);
 
