@@ -75,7 +75,7 @@ export function LnMark({ className = '', dotClassName = '' }) {
 }
 
 export default function SiteNav({ tools = null, mark = null, lede = true }) {
-  const { cover_name } = useBookplate();
+  const { cover_name, portrait_url } = useBookplate();
   const { isLive } = useListeningBeacon();
   const here = usePathname();
   // A friend's post read inside this journal is an entry too, and wears the
@@ -145,6 +145,17 @@ export default function SiteNav({ tools = null, mark = null, lede = true }) {
         </Link>
         {/* Whose post this is: their face, to their page here (2026-10-28,
             her ask: "it needs the person on the left"). */}
+        {/* And whose journal a visitor is reading, on this journal's own
+            post (2026-11-08, Miyel: a post followed from Instagram needs "the
+            user's profile picture" and "an easier way to get out of the post
+            into the person's actual page"): their face, to their journal.
+            Not for the keeper, whose ··· is on the right. */}
+        {!visiting && onAnEntry && !tools && portrait_url && (
+          <Link href="/" className="sitenav-who" aria-label={`${cover_name || 'This'} journal`} title={cover_name || ''}>
+            <User size={16} weight="regular" aria-hidden="true" />
+            <img src={portrait_url} alt="" onError={e => { e.currentTarget.style.display = 'none'; }} />
+          </Link>
+        )}
         {visiting && (
           <Link href={visiting.page} className="sitenav-who" aria-label={`${visiting.name || 'Their'} journal`} title={visiting.name || ''}>
             <User size={16} weight="regular" aria-hidden="true" />

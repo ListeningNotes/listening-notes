@@ -49,8 +49,12 @@
   text-align: center;
   min-height: 100dvh;
   box-sizing: border-box;
-  /* clears the fixed logo row and the dot labels beneath it */
-  padding: 172px 24px 0;
+  /* Clears the fixed logo row, and no more (2026-11-08). It cleared a row of
+     dot labels under it too, long after they went, so a post opened from a
+     link started a hand's width down the screen, lower still under
+     Instagram's own bar (Miyel: "everything seems so low"). The row ends at
+     80; the record starts a little under it. */
+  padding: 104px 24px 0;
   gap: 16px;
 }
 /* In a folder the screen ends where its tabs begin, so the caret down to the
@@ -599,7 +603,7 @@
   align-items: center;
   min-height: 100dvh;
   box-sizing: border-box;
-  padding: 172px 24px 0;
+  padding: 104px 24px 0;
   gap: 16px;
 }
 /* --border, not --bg-warm. Warm is #efebe2 against a #eef0ec page: four
@@ -885,7 +889,7 @@
      `height: auto` stays, and is not cosmetic: a fixed 100dvh would clip a
      form that runs longer than the screen on a small phone or at large type.
      The screen grows and scrolls, which is what it did before. */
-  .ln-editing .ln-screen-one { height: auto; min-height: 100dvh; padding: 172px 24px 32px; gap: 16px; }
+  .ln-editing .ln-screen-one { height: auto; min-height: 100dvh; padding: 104px 24px 32px; gap: 16px; }
 }
 
 /* ── Sent by ────────────────────────────────────────────────────────────────
