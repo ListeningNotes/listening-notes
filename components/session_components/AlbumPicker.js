@@ -32,7 +32,7 @@
 
 'use client';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { CaretRight, ClockCounterClockwise, MagnifyingGlass, Trash, User, XCircle } from '@phosphor-icons/react';
+import { ClockCounterClockwise, MagnifyingGlass, Trash, User, VinylRecord, XCircle } from '@phosphor-icons/react';
 import SiteNav from '../main_components/SiteNav';
 import { searchAlbums, searchSongs } from '../../library/music_data_api';
 import { PENDING_EVENT, SAVED_EVENT, TRACK_NOTE_WRITING } from '../../hooks/useListeningSession';
@@ -828,9 +828,9 @@ export default function AlbumPicker({ onPick, onResume, onPickSong = null, inlin
                 {trackPages.map((page, i) => (
                   <div key={i} className="ses-songs ses-page">
                     {page.map(song => (
+                      <div key={`${song.collectionId}-${song.title}`} className="ses-song-row">
                       <button
                         type="button"
-                        key={`${song.collectionId}-${song.title}`}
                         className="ses-song"
                         onClick={e => {
                           const img = e.currentTarget.querySelector('img');
@@ -865,8 +865,23 @@ export default function AlbumPicker({ onPick, onResume, onPickSong = null, inlin
                             {song.year && <span className="ses-split-end">{'\u00a0·\u00a0'}{song.year}</span>}
                           </span>
                         </span>
-                        <CaretRight className="ses-song-go" size={16} weight="regular" aria-hidden="true" />
                       </button>
+                      {/* ── The record it is on, 2026-11-08 ───────────────
+                          Miyel: "sometimes I wish I could get to a full album
+                          from the track; it shows her tracks just not the
+                          album." The song is a note on one track; this door,
+                          beside it, is a listen of the whole record the song
+                          is on, the way pressing that record would be. */}
+                      <button
+                        type="button"
+                        className="ses-song-whole"
+                        aria-label={`Log the whole record, ${song.name}`}
+                        onClick={e => take(song, { currentTarget: e.currentTarget.closest('.ses-song-row') })}
+                      >
+                        <VinylRecord size={20} weight="regular" aria-hidden="true" />
+                        <span>Record</span>
+                      </button>
+                      </div>
                     ))}
                   </div>
                 ))}

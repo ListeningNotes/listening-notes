@@ -668,6 +668,17 @@ export async function searchAlbums(searchQuery) {
       if (/- single$/i.test(r.collectionName || '')) continue;
       if (!byId.has(r.collectionId)) byId.set(r.collectionId, r);
     }
+    // ── An artist with singles only, 2026-11-08 ─────────────────────────
+    // Singles are left out above so an album is not buried under its own
+    // singles. But an artist who has put out nothing else then had nothing
+    // at all: riley echo, six singles and no album, came back as a stranger's
+    // record (Miyel: "I can't find riley echo in search"). So where the artist
+    // the search named has no record left, their singles stand in.
+    if (byArtist.named && ![...byId.values()].some(r => norm(r.artistName) === norm(byArtist.named))) {
+      for (const r of byArtist.rows) {
+        if (r.collectionId && r.artworkUrl100 && !byId.has(r.collectionId)) byId.set(r.collectionId, r);
+      }
+    }
 
     // Collapse pressings. A row folds into a record already kept only when
     // the two are plausibly one record: either name carries an edition marker

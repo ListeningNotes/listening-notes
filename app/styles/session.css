@@ -912,7 +912,18 @@
   font-family: var(--font-label); font-size: 10px; letter-spacing: 0.06em; color: var(--ink-faint);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.ses-song-go { flex-shrink: 0; color: var(--ink-faint); }
+.ses-song-row { display: flex; align-items: center; gap: 6px; border-bottom: 1px solid var(--border); }
+.ses-song-row > .ses-song { flex: 1; min-width: 0; border-bottom: 0; }
+/* The whole record the song is on: a glyph over one word (AlbumPicker.js). */
+.ses-song-whole {
+  flex-shrink: 0;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 8px 4px; min-width: 52px;
+  border: 0; background: none; cursor: pointer; color: var(--ink-soft);
+  font-family: var(--font-label); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
+  -webkit-tap-highlight-color: transparent;
+}
+.ses-song-whole:hover { color: var(--ink); }
 .ses-hand { display: flex; flex-direction: column; gap: 16px; max-width: 440px; }
 /* What typing a record in by hand costs you, said on the form rather than on
    the screen after it. Prose and not a label: it is a sentence to read once,
