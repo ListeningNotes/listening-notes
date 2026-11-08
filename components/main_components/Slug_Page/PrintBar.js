@@ -38,7 +38,11 @@ export default function PrintBar({ sections = [], tab = null, onTab, away = fals
           {canSend ? <Export size={19} aria-hidden="true" /> : <DownloadSimple size={19} aria-hidden="true" />}
           <span>{canSend ? 'Share' : 'Download'}</span>
         </button>
-        <button type="button" className="ln-print-word" onClick={onBack}>Change something</button>
+        {/* Done, once it is shared: back to the post, the printer put away (Miyel, 2026-11-07). */}
+        <div className="ln-print-after">
+          <button type="button" className="ln-print-word" onClick={onBack}>Change something</button>
+          <button type="button" className="ln-print-word" onClick={onDone}>Done</button>
+        </div>
       </div>,
       document.body,
     );
