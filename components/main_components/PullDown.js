@@ -133,7 +133,12 @@ export default function PullDown({ scroller, onPull, asking = 'Checking\u2026', 
       if (document.documentElement.classList.contains('ln-locked')) return false;
       const typing = document.activeElement;
       if (typing && (typing.tagName === 'TEXTAREA' || typing.tagName === 'INPUT' || typing.isContentEditable)) return false;
-      if (target?.closest?.('input, textarea, [role="slider"], [data-slide], .fr-now-row, .fr-live, .ps-found, .ps-row')) return false;
+      // The rows of cards and faces that scroll sideways used to be left out
+      // here, which on Friends was most of the top of the screen, so a pull
+      // took only where the finger happened to land between them (Miyel,
+      // 2026-11-07: "not working on friends consistently"). They pull now,
+      // and a drag that goes sideways first is theirs (move, below).
+      if (target?.closest?.('input, textarea, [role="slider"], [data-slide]')) return false;
       return true;
     };
 
@@ -166,13 +171,20 @@ export default function PullDown({ scroller, onPull, asking = 'Checking\u2026', 
       unwind();
     };
 
-    const begin = (y, target) => {
-      drag.current = allowed(target) ? { y, target, far: false, moved: false } : null;
+    const begin = (y, target, x = 0) => {
+      drag.current = allowed(target) ? { y, x, target, far: false, moved: false, way: null } : null;
       return Boolean(drag.current);
     };
-    const move = y => {
+    const move = (y, x) => {
       const d = drag.current;
       if (!d) return;
+      // Which way the drag went first decides it: sideways is a row's scroll.
+      if (!d.way) {
+        const across = Math.abs(x - d.x), down = Math.abs(y - d.y);
+        if (Math.max(across, down) < STILL) return;
+        d.way = across > down ? 'across' : 'down';
+      }
+      if (d.way === 'across') { drag.current = null; return; }
       // The pane, or something inside it, began to scroll after all: this
       // was never a pull.
       if (el.scrollTop > 0 || inside(d.target)) { quit(); return; }
@@ -206,9 +218,9 @@ export default function PullDown({ scroller, onPull, asking = 'Checking\u2026', 
     // until it has moved: only then is the pointer held, and the page's
     // words kept from being selected, so a face or a door pressed with a
     // mouse is still a press on that face or door.
-    const touchStart = e => { if (e.touches.length === 1) begin(e.touches[0].clientY, e.target); else drag.current = null; };
-    const touchMove = e => { if (e.touches.length === 1) move(e.touches[0].clientY); };
-    const pointerDown = e => { if (e.pointerType === 'mouse' && e.button === 0) begin(e.clientY, e.target); };
+    const touchStart = e => { if (e.touches.length === 1) begin(e.touches[0].clientY, e.target, e.touches[0].clientX); else drag.current = null; };
+    const touchMove = e => { if (e.touches.length === 1) move(e.touches[0].clientY, e.touches[0].clientX); };
+    const pointerDown = e => { if (e.pointerType === 'mouse' && e.button === 0) begin(e.clientY, e.target, e.clientX); };
     const pointerMove = e => {
       if (e.pointerType !== 'mouse') return;
       const d = drag.current;
@@ -220,7 +232,7 @@ export default function PullDown({ scroller, onPull, asking = 'Checking\u2026', 
         window.getSelection?.()?.removeAllRanges();
         try { el.setPointerCapture(e.pointerId); } catch { /* no capture, still a pull */ }
       }
-      move(e.clientY);
+      move(e.clientY, e.clientX);
     };
     const pointerUp = e => { if (e.pointerType === 'mouse') end(); };
     el.addEventListener('touchstart', touchStart, { passive: true });
