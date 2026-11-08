@@ -162,6 +162,10 @@ export function useListeningSession({ step }) {
   // show the mark before there is an entry to read it off.
   const Masterpiece = Array.isArray(tracks) && tracks.length > 0
     && tracks.every((_, i) => Number(trackRatings[i]) === 5);
+  // And the album's own stars are five while it is one, so they are saved as
+  // five (AlbumNotes holds them there). Taken off a track, the five stay,
+  // to be changed by hand.
+  useEffect(() => { if (Masterpiece) setRating(5); }, [Masterpiece]);
 
   // ── The track being logged ───────────────────────────────────────────────
   // By its place in the list, and null until one is. Anything done to a

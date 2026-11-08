@@ -134,7 +134,8 @@ function valueOn(clientX, span) {
 // row, so pressing reveal with a score already given did nothing at all, and
 // Miyel found it. Rating blind and then checking whether it matched is the
 // whole reason this is behind a press.
-export default function StarRating({ value, onChange, size = 18, roomy = false, ghost = 0 }) {
+// `locked`: the stars are said, not set — a Masterpiece's five (AlbumNotes).
+export default function StarRating({ value, onChange, size = 18, roomy = false, ghost = 0, locked = false }) {
   const row = useRef(null);
   // A ref, not state: the timer that raises the stars on a rest has to read
   // it as it is, not as it was when the timer was set.
@@ -337,6 +338,7 @@ export default function StarRating({ value, onChange, size = 18, roomy = false, 
       aria-valuemin={0}
       aria-valuemax={5}
       aria-valuenow={value}
+      aria-readonly={locked || undefined}
       aria-valuetext={value
         ? `${value} out of 5${ghost ? `. Your tracks average ${ghost}.` : ''}`
         : ghost ? `Not rated. Your tracks average ${ghost} out of 5.` : 'Not rated'}
@@ -346,6 +348,7 @@ export default function StarRating({ value, onChange, size = 18, roomy = false, 
       onPointerCancel={cancel}
       onPointerLeave={() => { setHover(null); if (!dragging.current) { press.current = null; if (zoom.current) sitDown(); } }}
       onKeyDown={e => {
+        if (locked) return;
         // The keyboard gets the same half steps the finger does.
         if (e.key === 'ArrowRight') { e.preventDefault(); onChange(Math.min(5, (value || 0) + 0.5)); }
         if (e.key === 'ArrowLeft') { e.preventDefault(); onChange(Math.max(0, (value || 0) - 0.5)); }
@@ -355,7 +358,8 @@ export default function StarRating({ value, onChange, size = 18, roomy = false, 
         display: 'flex',
         gap: roomy ? 7 : 1,
         touchAction: 'pan-y',
-        cursor: 'pointer',
+        cursor: locked ? 'default' : 'pointer',
+        pointerEvents: locked ? 'none' : undefined,
         padding: roomy ? `${reach}px ${Math.round(reach / 3)}px` : 0,
         margin: roomy ? `-${reach}px -${Math.round(reach / 3)}px` : 0,
         width: 'fit-content',

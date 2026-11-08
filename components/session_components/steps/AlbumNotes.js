@@ -68,7 +68,11 @@ export default function AlbumNotes({
           stars under a record you are logging are not ambiguous (Miyel,
           2026-09-18). */}
       <div className="ses-record-marks">
-        <StarRating value={rating} onChange={setRating} size={starSize} roomy ghost={avgShown && avg ? Number(avg) : 0} />
+        {/* A Masterpiece is five stars, held there (Miyel, 2026-11-08: "can
+            masterpiece automatically lock in 5 stars"): every track at five
+            makes it, and the album's own stars follow and cannot be moved
+            off five while it stands (useListeningSession sets them). */}
+        <StarRating value={Masterpiece ? 5 : rating} onChange={setRating} size={starSize} roomy ghost={avgShown && avg ? Number(avg) : 0} locked={Masterpiece} />
         {/* The eye, at the right of the stars: shut until pressed; open,
             with the number and "avg." beside it so the number explains
             itself (Miyel, 2026-09-29). The ghost in the stars is the same
