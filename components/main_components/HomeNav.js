@@ -1487,7 +1487,11 @@ export default function HomeNav() {
     };
     place();
     // The sheet comes in with the address; if it is not drawn yet, a frame on.
-    const late = path === '/session' ? requestAnimationFrame(place) : 0;
+    // And Day or Night: the wash is copied with the page's colour already in
+    // it, so the switch copies it again, a frame on, once the page has turned
+    // (Lightswitch sets it after this runs). Before, the top row kept the old
+    // colour until the page was scrolled (Miyel, 2026-11-07).
+    const late = requestAnimationFrame(place);
     home.addEventListener('scroll', place, { passive: true });
     window.addEventListener('resize', place);
     const watch = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(place);
@@ -1500,7 +1504,7 @@ export default function HomeNav() {
       watch?.disconnect();
       clear();
     };
-  }, [paneRefs, pane, cardOpen, wash, isLive, path]);
+  }, [paneRefs, pane, cardOpen, wash, isLive, path, theme]);
 
   function goTo(index) {
     const el = railRef.current;
