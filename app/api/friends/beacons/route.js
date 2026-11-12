@@ -57,23 +57,15 @@
 // (its beacon's `moved_to`) is written on their row in the book
 // (people_actions.js, note_moves), for the Inbox to offer the Update.
 //
-// ── And their friends: a friend away, 2026-10-08 ─────────────────────────
-// The Board's second ring (Miyel's Board brief): the people the friends
-// added. Folded into this round rather than asked by the browser — "one more
-// fetch per friend on the same round, same 2.5s per-friend timeout, same 60s
-// cache, same per-friend back-off, same cap of thirty per round." Each
-// friend's /api/public/people is read beside their beacon; what it names,
-// less the keeper and the people already in the book, is `away`, each with
-// the friends it came through. Two rings only: nobody's friends' friends are
-// ever asked for their books — ten times ten times ten is where this stops
-// being affordable to other people's hosting. What each of them is playing
-// comes from the directory, asked once a round with hashes, never from them.
+// ── No friends of friends, 2026-11-11 ─────────────────────────────────────
+// From 2026-10-08 each friend's /api/public/people was read beside their
+// beacon, and the people it named were the Board's "a friend away". Taken out
+// on Miyel's word ("lets remove it"): the community is whoever is on the
+// Board, and no journal publishes its book. A friend's copy that still asks
+// this journal for it gets the 404 an older copy always gave.
 
 import { requireWristband } from '@/library/wristband';
 import { pull_people, note_moves } from '@/library/people_actions';
-import { pull_settings } from '@/library/settings_actions';
-import { boardHash } from '@/library/directory_actions';
-import { ask_directory_among } from '@/library/outbox';
 import { journalUrl, tidyJournal } from '@/library/return_address';
 import { memoryOf } from '@/library/hosting_directory';
 
@@ -97,8 +89,6 @@ const BACK_OFF_MOST_MS = 10 * 60 * 1000;
 // How long their needle stays down untouched (library/needle.js): a "logging"
 // heard longer ago than this, from a journal not asked since, is "logged".
 const LIFTS_AFTER_MS = 20 * 60 * 1000;
-// How many of the friends' friends one round hands back at most.
-const AWAY_MOST = 60;
 
 // The last round, when it was asked for, and whether it reached past the
 // first thirty; and the ask in flight — what it covers and its promise — so
@@ -111,7 +101,7 @@ const rounds = new Map();
 function roundsOf(whose) {
   let mine = rounds.get(whose);
   if (!mine) {
-    mine = { round: { at: 0, all: false, friends: [], away: [] }, asking: null };
+    mine = { round: { at: 0, all: false, friends: [] }, asking: null };
     rounds.set(whose, mine);
   }
   return mine;
@@ -119,7 +109,7 @@ function roundsOf(whose) {
 // What each journal last said and when, how many times in a row it has not
 // answered, and when it may be asked again. By address, for as long as this
 // instance lives — shared between the journals a deployment hosts, because
-// it is only what each friend's public beacon and book said, and one ask of
+// it is only what each friend's public beacon said, and one ask of
 // a friend then serves every journal that keeps them.
 const known = new Map();
 
@@ -150,34 +140,12 @@ function lastHeard(person, now, settled = false) {
 // beacon instead of the name: the keeper's own server asking a public route
 // on the keeper's say-so. The beacon route does not say it may be read
 // across origins, and it should not have to.
-// Their book, beside their beacon (app/api/public/people): a list when it
-// answers, an empty one when they are off the Board or too old to say (404),
-// and null when it did not answer — unknown, which keeps the last list.
-async function askBook(url) {
-  try {
-    const answer = await fetch(`${url}/api/public/people`, {
-      signal: AbortSignal.timeout(EACH_MS),
-      headers: { accept: 'application/json' },
-    });
-    if (answer.status === 404) return [];
-    if (!answer.ok) return null;
-    const said = await answer.json();
-    if (!Array.isArray(said?.people)) return null;
-    return said.people
-      .map(p => ({ name: String(p?.name || ''), address: tidyJournal(p?.address) }))
-      .filter(p => p.address);
-  } catch {
-    return null;
-  }
-}
-
 async function ask(person, now, { settled = false, fresh = false } = {}) {
   const was = known.get(person.address);
   if (!fresh && was && now < was.nextAt) return lastHeard(person, now, settled);
   const url = journalUrl(person.address);
   if (!url) return lastHeard(person, now, settled);
   let heard = null;
-  const theirs = askBook(url);
   try {
     const answer = await fetch(`${url}/api/public/beacon`, {
       signal: AbortSignal.timeout(EACH_MS),
@@ -206,9 +174,8 @@ async function ask(person, now, { settled = false, fresh = false } = {}) {
   } catch {
     heard = null;
   }
-  const book = (await theirs) ?? was?.book ?? null;
   if (heard) {
-    known.set(person.address, { heard, heardAt: now, failures: 0, nextAt: 0, book });
+    known.set(person.address, { heard, heardAt: now, failures: 0, nextAt: 0 });
     return heard;
   }
   const failures = (was?.failures || 0) + 1;
@@ -217,48 +184,8 @@ async function ask(person, now, { settled = false, fresh = false } = {}) {
     heardAt: was?.heardAt || 0,
     failures,
     nextAt: now + Math.min(BACK_OFF_MOST_MS, BACK_OFF_MS * 2 ** (failures - 1)),
-    book,
   });
   return lastHeard(person, now, settled);
-}
-
-// The second ring: everybody the friends' books name, less the keeper and
-// the people already in the book, each with up to two of the friends they
-// came through, in the book's order. Only those the directory says are on
-// the Board, with what they are playing; in no order but chance (AGENTS,
-// Never: nothing ordered by how much anybody logs). When the directory does
-// not answer, the last round's second ring stands.
-async function friendsAway(people, here) {
-  const mine = tidyJournal((await pull_settings().catch(() => ({})))?.site_address);
-  const inBook = new Set(people.map(p => p.address));
-  const away = new Map();
-  for (const person of people) {
-    for (const theirs of known.get(person.address)?.book || []) {
-      if (theirs.address === mine || inBook.has(theirs.address)) continue;
-      const row = away.get(theirs.address) || { address: theirs.address, name: theirs.name, through: [] };
-      if (person.name && row.through.length < 2 && !row.through.includes(person.name)) row.through.push(person.name);
-      away.set(theirs.address, row);
-    }
-  }
-  if (away.size === 0) return [];
-  const rows = [...away.values()].slice(0, 200);
-  const on = await ask_directory_among(rows.map(r => boardHash(r.address)));
-  if (!on) return here.round.away;
-  const playing = new Map(on.map(j => [j.address, j]));
-  const found = rows.filter(r => playing.has(r.address)).map(r => {
-    const j = playing.get(r.address);
-    return {
-      address: r.address,
-      name: j.name || r.name || '',
-      state: j.state, album: j.album, artist: j.artist, art: j.art,
-      through: r.through,
-    };
-  });
-  for (let i = found.length - 1; i > 0; i--) {
-    const k = Math.floor(Math.random() * (i + 1));
-    [found[i], found[k]] = [found[k], found[i]];
-  }
-  return found.slice(0, AWAY_MOST);
 }
 
 // Everyone in the book, in its order. On the timer the first thirty are
@@ -280,10 +207,9 @@ async function askEveryone({ all, fresh }, here) {
   // A move a friend's journal says is written down for the Inbox, and one it
   // stopped saying is taken off; a round that could not write still answers.
   await note_moves(people, friends).catch(() => {});
-  const away = await friendsAway(people, here);
   // A round that left the first thirty as they were keeps their clock, so
   // the timer asks them again when it would have anyway.
-  here.round = { at: recent ? since : now, all: all || (recent && here.round.all), friends, away };
+  here.round = { at: recent ? since : now, all: all || (recent && here.round.all), friends };
   return here.round;
 }
 
@@ -315,7 +241,7 @@ export async function GET(request) {
       answer = await (covered ? here.asking : startAsk({ all, fresh }, here)).promise;
     }
     return Response.json(
-      { at: new Date(answer.at).toISOString(), friends: answer.friends, away: answer.away || [] },
+      { at: new Date(answer.at).toISOString(), friends: answer.friends },
       // The keeper's own, and about other people: never for a shared cache.
       { headers: { 'Cache-Control': 'private, no-store' } },
     );

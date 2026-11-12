@@ -1328,8 +1328,8 @@ never a count. The stop's word is Friends.
 **A face opens onto what waits from them, and only that, 2026-10-27.**
 Sends Listen · Dismiss, waves Wave back · Dismiss (her words), words Reply ·
 Words · Keep, each a glyph over its word; a message is never deleted. Nothing
-about the person: its head goes to their page, where Keep private and Remove
-live, and a face with nothing waiting goes straight there (the first panel's
+about the person: its head goes to their page, where Remove
+lives, and a face with nothing waiting goes straight there (the first panel's
 two halves "don't overlap well"). New clears when the face shuts.
 
 **Headlines hold what friends did, from their public reads alone,
@@ -1399,15 +1399,15 @@ wear their loggers' faces, yours first when you have it too (not a gold dot).
 
 **A visitor's People holds the Board's public parts, 2026-10-07/08.** Miyel:
 "strangers and visitors can see this page." No Friends, no switch, no checks,
-and nothing ordered around the keeper — a friend away and your records are
-the viewer's own, so a visitor has neither.
+and nothing ordered around the keeper — your records are the viewer's own,
+so a visitor has none.
 
-**Address books are published, for a friend away, 2026-10-08.** Miyel: "all
-my testers are asking for this, they feel too alone, this will be how they
-find people." /api/public/people gives a name and an address for each person
-in the book who is on the Board themselves — never one added privately,
-nothing while the keeper is off. Two rings only: friends, and theirs; not
-their friends' friends, which is what other people's hosting cannot afford.
+**No friends of friends; address books are never published, 2026-11-11.**
+Miyel: "maybe it's just whoever is in our community, posting to the world."
+The community is whoever is on the Board; nothing publishes a keeper's book,
+so Keep private went with it (`people.private` stays, unread). Song chains
+— who sent a record to whom — are a different thing and stay. Don't bring
+back /api/public/people or "a friend away" (docs/DECISIONS-ARCHIVE.md).
 
 **Quotes on the Board are a keeper's own words, 2026-10-08.** Miyel: the
 rule was "about people writing on other people's journals... nobody's words

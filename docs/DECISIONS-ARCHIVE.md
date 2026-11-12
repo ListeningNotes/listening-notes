@@ -1249,3 +1249,16 @@ Her review: pressing a face opened "two functions that dont overlap well" —
 what they sent beside Visit / Keep private / Remove — and the answers had lost
 their icons. Sends became Listen · Dismiss and waves Wave back · Dismiss; the
 person's own doors went to their page.
+
+## Reversed 2026-11-11: address books published for a friend away
+
+**(2026-10-08, reversed 2026-11-11)** Miyel: "all
+my testers are asking for this, they feel too alone, this will be how they
+find people." /api/public/people gives a name and an address for each person
+in the book who is on the Board themselves — never one added privately,
+nothing while the keeper is off. Two rings only: friends, and theirs; not
+their friends' friends, which is what other people's hosting cannot afford.
+
+Reversed on Miyel's word ("lets remove it"): publishing every book cost a
+privacy switch on every friend, and at a few dozen keepers the second ring
+was the same handful of people. One shared Board meets strangers directly.

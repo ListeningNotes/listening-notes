@@ -9,8 +9,7 @@
 //
 // ── From Miyel's Board brief, 2026-10-08 ───────────────────────────────────
 // Nearest first: who is logging right now, community-wide, as the same band
-// the Friends room draws; then a friend away — people the keeper's friends
-// added, each with the path to them; then strangers who logged the
+// the Friends room draws; then strangers who logged the
 // keeper's records, with their stars, marks and a line of what they wrote;
 // then a wall of what is being logged everywhere; then everybody else,
 // shuffled, a dozen at a time. Search at the top. Being on the Board is the
@@ -51,7 +50,6 @@ import { useHoldStill } from '../../hooks/useHoldStill';
 import { useBookplate } from '../../components/main_components/Bookplate';
 import { DIRECTORY_URL } from '../../library/version';
 import { carrySender, journalUrl, tidyJournal } from '../../library/return_address';
-import { useFriendsBeacons } from '../../hooks/useFriendsBeacons';
 
 // The mock-up's words for a journal whose keeper has not said their name.
 const NO_NAME = 'A journal with no name yet';
@@ -331,17 +329,10 @@ function Cover({ art }) {
   );
 }
 
-// The path to somebody a friend away: "Through Dez and Wren" — the friends
-// they came through, never a score, never more than two names.
-function throughWords(names) {
-  if (!names || names.length === 0) return 'Through a friend';
-  return `Through ${names.slice(0, 2).join(' and ')}`;
-}
-
 // What every row says, whoever is reading: the face, the name, the beacon,
 // the cover — and, for the keeper, a check at the very end for somebody
-// already in the book; for somebody a friend away, the path to them.
-function Inside({ journal, inBook = false, through = null }) {
+// already in the book.
+function Inside({ journal, inBook = false }) {
   const live = journal.state === 'logging';
   const said = journal.state === 'logging' || journal.state === 'logged';
   return (
@@ -349,7 +340,6 @@ function Inside({ journal, inBook = false, through = null }) {
       <Face journal={journal} />
       <span className="dir-who">
         <span className={'dir-name' + (journal.name ? '' : ' dir-name--none')}>{journal.name || NO_NAME}</span>
-        {through && <span className="dir-through">{throughWords(through)}</span>}
         {said ? (
           <>
             <span className={'dir-state' + (live ? ' dir-state--live' : '')}>{live ? 'Now logging' : 'Last logged'}</span>
@@ -401,8 +391,7 @@ function BoardNote() {
         <p className="dir-note-head">You&rsquo;re on the board</p>
         <p className="dir-note-said">
           Your name and what you&rsquo;re playing, nothing else &mdash; the same things your journal already
-          serves to anyone who visits. Keep someone private in Friends and they stay off everyone&rsquo;s
-          board but yours.
+          serves to anyone who visits.
         </p>
         <Link href="/settings" className="dir-note-off">Take me off &rarr;</Link>
       </div>
@@ -464,11 +453,6 @@ export function Everyone({ keeper = false, refreshRef = null }) {
 
   const { page, down } = useEveryone();
   const [drawing, setDrawing] = useState(false);
-  // A friend away: the friends' round carries it (app/api/friends/beacons),
-  // asked while the keeper's Board is on screen and never for a visitor,
-  // who has no friends here to be a friend away from.
-  const { away } = useFriendsBeacons(keeper);
-
   // The keeper's book, by address, for the checks; the row whose doors are
   // open; the one being filed; what filing it said; the wave it offers.
   const [book, setBook] = useState(() => new Map());
@@ -587,7 +571,7 @@ export function Everyone({ keeper = false, refreshRef = null }) {
     return `/dashboard/people/${known?.id ?? encodeURIComponent(address)}`;
   }
 
-  function row(journal, through = null) {
+  function row(journal) {
     // A visitor's row is the way to that journal and nothing else.
     if (!keeper) {
       return (
@@ -606,7 +590,7 @@ export function Everyone({ keeper = false, refreshRef = null }) {
           onClick={() => { setSaid(''); setOpen(isOpen ? '' : journal.address); }}
           aria-expanded={isOpen}
         >
-          <Inside journal={journal} inBook={inBook} through={through} />
+          <Inside journal={journal} inBook={inBook} />
         </button>
         {isOpen && (
           <div className="dir-doors">
@@ -700,10 +684,8 @@ export function Everyone({ keeper = false, refreshRef = null }) {
   // their book: the Friends half is where those are.
   const notMe = j => !(mine && j.address === mine);
   const live = page ? page.live.filter(notMe) : [];
-  const friendsAway = keeper ? away.filter(j => notMe(j) && !book.has(j.address)) : [];
-  const nearer = new Set(friendsAway.map(j => j.address));
   const further = page
-    ? page.further.filter(j => notMe(j) && !(keeper && book.has(j.address)) && !nearer.has(j.address))
+    ? page.further.filter(j => notMe(j) && !(keeper && book.has(j.address)))
     : [];
 
   return (
@@ -756,17 +738,6 @@ export function Everyone({ keeper = false, refreshRef = null }) {
             </div>
           ) : (
             <p className="dir-band-quiet">Nobody on the board is logging right now.</p>
-          )}
-
-          {friendsAway.length > 0 && (
-            <section className="dir-section" aria-label="A friend away">
-              <h2 className="dir-label">A friend away</h2>
-              <p className="dir-sub">
-                People your friends have added. Two doors down rather than across town &mdash; most of the names
-                you actually want are here.
-              </p>
-              {friendsAway.map(j => row(j, j.through))}
-            </section>
           )}
 
           {onYours.length > 0 && (

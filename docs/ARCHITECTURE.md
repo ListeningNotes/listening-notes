@@ -68,8 +68,8 @@ publicly):
 - `/dashboard/people/[id]` — a friend's journal page, on your copy, laid out
   as home: home's top row with their face and name and Compare · Added, their
   beacon with the three before it, the line and their wall from their public
-  feed, and under it what you sent them that is still out, All words with
-  them, Keep private and Remove. By their number in your book or, for a
+  feed, and under it what you sent them that is still out. By their number
+  in your book or, for a
   keeper off the Board, by their address (main's Compare, 2026-10-24).
   Compare opens in place at its top: the two of you, a colour each; face to
   face, your share of your records against theirs by genre, decade, artist,
@@ -208,10 +208,9 @@ The front doors — receive requests, hand them off, send back responses
     public/stamps/route.js     The card's counted facts — records, songs, first entry, top genres, the two flag counts; readable from another journal's pages since 2026-10-29, for a friend's card
     public/card/route.js       The card as a visitor sees it, for a friend's page on another copy to draw from their face — the card's part of BOOKPLATE_FIELDS (name, portrait path, founded, links, answers, rig) and the pinned record as itself; nothing a visitor's page does not already carry
     public/listing/route.js    The code the directory issued this journal, as plain text, or 404 — how the registry proves the address
-    public/people/route.js     The people this journal's keeper added who are on the Board themselves — a name and an address each; never anybody kept private, nothing while the keeper is off the Board; checked against the directory with hashes; kept a minute. What makes "a friend away"
     tickets/route.js           POST, the keeper's own: a ticket to start a journal at the front door, for Invite — one journal, once, within two weeks, naming the journal the press came from; `hosted: false` on a copy of its own (2026-10-22)
     front-door/route.js        The front door only: GET the places left or whether an address is free (and whether it is a kept word, which Find a journal never opens); POST makes a journal — only on a good ticket unless OPEN_DOOR is set, taken as the making begins and given back if it fails — and says where its setup is (the claim code after #, whoever the ticket says invited them as ?invite=, and the ticket, for Start again)
-    friends/beacons/route.js   Everyone in the address book's beacon, through one door — owner-only; each journal's public beacon in parallel, a round kept a minute, a journal that fails asked less often, thirty on the timer — and each friend's /api/public/people on the same round, which makes `away`, the Board's friends of friends (two rings only); a friend whose beacon says it moved is written down (`people.moved_to`) for the Inbox to offer
+    friends/beacons/route.js   Everyone in the address book's beacon, through one door — owner-only; each journal's public beacon in parallel, a round kept a minute, a journal that fails asked less often, thirty on the timer; a friend whose beacon says it moved is written down (`people.moved_to`) for the Inbox to offer
     listing/route.js           On the Board — owner-only: GET says whether this journal is listed and on the Board, and lists it if it is meant to be and is not yet (on by default, 2026-10-08); POST is the switch in Settings, through library/outbox.js
     board/route.js             Everything the Board reads, through one door on this journal (Miyel: keep the fan-out behind a single route): the first screen, a search, the keeper's own records matched (behind the wristband), and lines of keepers' own writing read from their journals by this server — 2.5 s each, kept ten minutes, back-off, only journals on the Board, counted per asker. The Board component talks to this and nothing else
     directory/route.js         The registry's list — public, read across origins: `?board` is the Board's first screen (everybody logging right now, a shuffled dozen of everybody else, the last day's records, and the community's two counts); `?q=` looks up a name or a record; `?among=` which of some hashed addresses are on the Board; `?alike=` who else logged some hashed records; `?covers` the records keepers on the Board logged lately, as covers alone (the front door's record wall); plain, thirty journals and a cursor. Read from the tables, never from the journals; after answering, one round of the refresh (`gather`, only the journals due) — how the Board stays current since 2026-10-17
@@ -363,7 +362,7 @@ The rooms — full pages assembled from furniture
     dashboard/
       page.js                  Redirect to / — the desk is a face of the cross's turning pane
       people/page.js           Friends on a page of its own (PeopleScreen.js), so a desk can answer what waits from a person
-      people/[id]/page.js      A friend's journal page — their beacon and wall drawn by this copy, Compare opened in place (the two of you as listeners, the facts, the records you share); under the wall, what is still out with them, All words with them, Keep private, Remove
+      people/[id]/page.js      A friend's journal page — their beacon and wall drawn by this copy, Compare opened in place (the two of you as listeners, the facts, the records you share); under the wall, what is still out with them
       people/[id]/words/page.js  Words with one friend (Words.js)
       people/[id]/[slug]/page.js  A friend's entry, read inside this journal: their public /api/entries/<slug>, fetched on this copy's server as it opens, drawn by FullPostPage or TrackNotePage in a Bookplate of theirs, Message [name] through the outbox; with your own listen of the record when there is one, for Compare (ListenCompare.js); kept nowhere
       report/page.js           Report a problem — one box, Send

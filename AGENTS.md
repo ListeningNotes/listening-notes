@@ -151,10 +151,8 @@ reasoning; these are inline so nobody has to go looking.
   `/api/public/notes/[slug]`, one entry at a time, never for a track note or
   an entry whose credit was kept quiet; a new column stays private until
   somebody decides otherwise; the chain fields leave only through `withoutChain`, and only on a
-  Submission entry that was not marked quiet. The address book leaves only
-  through `/api/public/people`: a name and an address for each person who is
-  on the Board themselves, never one added privately, and nothing at all
-  while the keeper is off the Board.
+  Submission entry that was not marked quiet. The address book never leaves
+  (since 2026-11-11; there are no friends of friends).
 - **Secrets never reach a browser.** The `secrets` table is read by
   `library/secrets.js` and nothing else, and is never selected with
   `settings`; a page is told whether a key is set and its last four
@@ -351,8 +349,7 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   `ask_directory_among`, which of some hashed addresses are on the Board, and
   `ask_directory_read`, any read of the registry's list, server to server.
 - `people_actions.js` — the address book (`people`): list, file, pin (six at
-  most), keep private, remove, the part that may be published
-  (`pull_public_people`), and asking a journal its keeper's name; and moves —
+  most), remove, and asking a journal its keeper's name; and moves —
   `note_moves`, a friend's journal saying it lives somewhere new, written
   down by the friends round; `take_move`, the keeper's Update, the only
   thing that changes the address, which it changes everywhere the journal
@@ -449,8 +446,8 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
   the host only where no name is set (since 2026-10-21).
 - `useFriendsBeacons.js` — one shared poll, once a minute while People, the
   address book or the Board is on screen, of `/api/friends/beacons`: what everyone in
-  the address book is logging, kept through a journal's failure, and `away`,
-  the Board's friends of friends; `refreshFriends` for the pull,
+  the address book is logging, kept through a journal's failure;
+  `refreshFriends` for the pull,
   `fillFriends` for the whole book.
 - `useListeningBeacon.js` — one shared poll of this journal's own beacon,
   subscribed to by every component that draws it.

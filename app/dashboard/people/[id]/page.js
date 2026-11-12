@@ -834,15 +834,6 @@ export default function PersonPage({ layered = false }) {
     if (r?.ok && d?.person) setPerson(d.person);
   }
 
-  async function keepPrivate() {
-    const to = !person.private;
-    setPerson(p => ({ ...p, private: to }));
-    const r = await fetch(`/api/people/${person.id}`, {
-      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ private: to }),
-    }).catch(() => null);
-    if (!r?.ok) setPerson(p => ({ ...p, private: !to }));
-  }
-
   // ── Added is the way out, 2026-11-08 ──────────────────────────────────
   // Miyel: "the add button (added) be the one to remove… it just turns into
   // remove in red, click again and you remove, but right there you can add
@@ -857,7 +848,7 @@ export default function PersonPage({ layered = false }) {
     const r = await fetch(`/api/people/${person.id}`, { method: 'DELETE' }).catch(() => null);
     setRemoving(false);
     setSure(false);
-    if (r?.ok) setPerson(p => ({ ...p, id: null, pinned_at: null, private: false }));
+    if (r?.ok) setPerson(p => ({ ...p, id: null, pinned_at: null }));
   }
 
   if (checking) return <div style={{ minHeight: '100vh', background: 'var(--bg)' }} />;

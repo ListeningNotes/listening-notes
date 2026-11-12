@@ -70,29 +70,11 @@ export async function save_person({ address, name }) {
   return row;
 }
 
-// ── Private, 2026-10-08 ─────────────────────────────────────────────────────
-// A person kept private is never published (migrations/032_board.sql): they
-// stay out of /api/public/people, so they are on nobody's board but their
-// keeper's own. Everybody else in the book may be published — and only if
-// they are on the Board themselves, which the public route asks the
-// directory (Miyel's Board brief).
-export async function set_private(id, on) {
-  const [row] = await database`
-    UPDATE people SET private = ${Boolean(on)} WHERE id = ${id}
-    RETURNING id, address, name, added_at, pinned_at, private
-  `;
-  return row || null;
-}
-
-// The part of the book that may be published, in the book's own order: the
-// address and the name it was filed under, and nothing else.
-export async function pull_public_people() {
-  return await database`
-    SELECT address, name FROM people
-    WHERE NOT private
-    ORDER BY lower(coalesce(name, address)), added_at
-  `;
-}
+// ── Private, 2026-10-08 to 2026-11-11 ─────────────────────────────────────
+// `people.private` kept somebody out of the book this journal published for
+// the Board's friends of friends. Nothing publishes the book now, so nothing
+// reads or writes the column; it stays where it is (AGENTS, Never: the schema
+// is additive only).
 
 export async function pull_person(id) {
   const [row] = await database`

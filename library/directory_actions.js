@@ -163,9 +163,9 @@ export async function find_by_name(q) {
 }
 
 // ── Which of these are on the Board, 2026-10-08 ───────────────────────────
-// A journal asking about its own book — to publish only the people on the
-// Board (app/api/public/people), or to learn what a friend's friend is
-// playing (app/api/friends/beacons) — asks with hashes, not addresses. So a
+// A journal asking which journals are on the Board (app/api/board) asks with
+// hashes, not addresses — and so did copies from before 2026-11-11, to
+// publish their book for friends of friends, which the registry still answers. So a
 // journal never names to the directory somebody who is not on the Board: the
 // directory recognises the hashes of the addresses it already lists, and the
 // rest are sixteen characters it cannot read. Two hundred at most.

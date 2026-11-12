@@ -568,20 +568,6 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null, 
     setPeople(prev => prev.filter(p => p.id !== id));
   }
 
-  // ── Kept private, 2026-10-08 ────────────────────────────────────────────
-  // Somebody kept private is never published: they stay off the Board's "a
-  // friend away" for everyone but this keeper (Miyel's Board brief; the
-  // public route is app/api/public/people). The same PATCH as a pin, with the
-  // row it returns put back in place.
-  async function keepPrivate(id, on) {
-    const answer = await fetch(`/api/people/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ private: on }),
-    }).then(r => (r.ok ? r.json() : null)).catch(() => null);
-    if (answer?.person) setPeople(prev => inOrder(prev.map(q => (q.id === answer.person.id ? answer.person : q))));
-  }
-
   // ── The + does not open the keyboard ────────────────────────────────────
   // It did, on the reasoning that a + which opens a box you then have to tap
   // is two presses for one act. Miyel, 2026-09-19, off a real phone: "this can
@@ -1247,25 +1233,8 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null, 
                       back by a press anywhere else — the shape the entry's
                       Delete and the picker's discard already have. What
                       changed is where it sits, not how it behaves. */}
-                  {/* Keep private sits beside Remove, in the same quiet
-                      face: both are about the person's place in the book
-                      rather than things done with them (2026-10-08). Only
-                      where there is a Board for them to be kept off. */}
                   {mine && (
                     <div className="fr-quiets">
-                      {DIRECTORY_URL && (
-                        <button
-                          type="button"
-                          className={'fr-cut fr-keep' + (mine.private ? ' fr-keep--on' : '')}
-                          onClick={() => keepPrivate(mine.id, !mine.private)}
-                          aria-pressed={Boolean(mine.private)}
-                          title={mine.private
-                            ? `${mine.name || 'They'} stay off everyone's board but yours. Press to share them again.`
-                            : `Keep ${mine.name || 'them'} off everyone's board but yours`}
-                        >
-                          {mine.private ? 'Kept private' : 'Keep private'}
-                        </button>
-                      )}
                       <button
                         ref={binRef}
                         type="button"
