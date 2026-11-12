@@ -328,12 +328,25 @@ export default function SessionPage() {
     const shift = (field, tapY, keysAt) => {
       const edge = keysAt - KEY_BAR;
       const root = field.closest('.ses');
-      const scroller = field.closest('.lay') || document.scrollingElement;
-      const frame = scroller === document.scrollingElement ? (vv?.offsetTop || 0) : scroller.getBoundingClientRect().top;
-      // No header now: the top of the room is under the phone's status bar,
-      // which is where a row lifted to the very top went (Miyel's screenshot,
-      // 2026-09-29 — the track's name under the clock).
-      const top = (parseFloat(getComputedStyle(root).getPropertyValue('--ses-inset')) || 0) + 10;
+      // ── Measured from the screen, 2026-11-11 ──────────────────────────
+      // The keys' edge is a distance down the part of the screen you can
+      // see; a box's place is a distance down the page's frame. The two
+      // were put side by side from the top of whatever scrolls, which was
+      // the screen's own top until the listen became a sheet that starts a
+      // strip of home below it. Then every note was set that strip too low —
+      // its line under the bar on the keys — and iOS slid the whole screen
+      // to find the cursor, the sheet chasing it (Miyel's recording: "I need
+      // to be able to see where I'm typing"). Both are read from the top of
+      // the part you can see now.
+      const seen = vv?.offsetTop || 0;
+      // The top of the room: under the phone's status bar on a page of its
+      // own, which is where a row lifted to the very top went (Miyel's
+      // screenshot, 2026-09-29 — the track's name under the clock); in a
+      // sheet, under the three words' row stuck at its top.
+      const bar = field.closest('.lay--sheet') && root.querySelector('.ses-bar');
+      const ceiling = bar
+        ? bar.getBoundingClientRect().bottom + 10
+        : seen + (parseFloat(getComputedStyle(root).getPropertyValue('--ses-inset')) || 0) + 10;
       // What is kept in sight over the note: a track's row in a listen, and
       // on a track note the head of its card — cover, song, stars, marks
       // (Miyel, 2026-09-30: "the track data is so lost with so much empty
@@ -344,13 +357,13 @@ export default function SessionPage() {
         || field;
       const box = (field.closest('.ses-note-box') || field).getBoundingClientRect();
       // The foot of the box just over the keys…
-      let by = box.bottom - frame - (edge - GAP);
-      // …but never the line above it up under the top of the screen…
-      const most = above.getBoundingClientRect().top - frame - top;
+      let by = box.bottom - seen - (edge - GAP);
+      // …but never the line above it up under the top of the room…
+      const most = above.getBoundingClientRect().top - ceiling;
       if (by > most) by = most;
       // …and wherever the cursor goes — the letter tapped, or the end of the
       // writing — clear of the keys whatever that costs.
-      const at = (tapY ?? box.bottom - 30) - frame;
+      const at = (tapY ?? box.bottom - 30) - seen;
       if (at - by > edge - 40) by = at - (edge - 40);
       return by;
     };

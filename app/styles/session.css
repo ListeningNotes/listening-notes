@@ -593,8 +593,11 @@
 .ses-album-box { margin-top: 24px; }
 
 /* A track's note: the same box, under the whole row. The row wraps to make
-   the room. */
-.ses-row-box { margin: 0 0 4px; }
+   the room. On the lit row's green the box's own ground and hairline went
+   missing, and there was nothing to say where the writing was (Miyel,
+   2026-11-11: "maybe it does need a type box"): the page's colour and a
+   line you can see, so it is plainly the place you are typing. */
+.ses-row-box { margin: 0 0 4px; background: var(--bg); border-color: var(--ink-faint); }
 
 /* The pencil's slot, on every row: as wide as the pencil, empty but on the
    lit track, so a row's stars stand where they stand whether it is lit or
