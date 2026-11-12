@@ -2,8 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 'use client';
 // components/main_components/Headlines.js
-// The top of Friends: who is logging right now, or, while nobody is, what
-// friends logged lately drifting by.
+// The top of Friends: who is logging right now, and nothing while nobody is.
 //
 // Until 2026-10-30 this was a board of sentences, one friend's newest thing
 // at a time, rolling up every seven seconds (Miyel's Friends brief, step
@@ -21,91 +20,22 @@
 // opens their page, where their beacon is. The styles are the Board's
 // band's still (forms.css, .fr-now).
 //
-// ── Nobody on ─────────────────────────────────────────────────────────────
-// What friends logged lately, one of each friend's in turn (never by how
-// much anybody logs), drifting left to right: a small cover with the friend
-// and the record under it (her pick of the two looks, 2026-10-31). The belt
-// runs on without a seam — the covers are laid twice, enough times over to
-// fill a screen, and it moves one half its length a lap. It waits while
-// Friends is off show or a finger is on it. A cover opens that entry inside
-// this journal, as home's records do (2026-10-28).
-//
+// ── Nobody on: nothing, 2026-11-11 ────────────────────────────────────────
+// From 2026-10-31 what friends logged lately drifted by here while nobody
+// was on. Miyel, 2026-11-11: "I don't think I like the scrolling albums at
+// top of Friends" — and the feed under it already shows what they logged.
+// So the top is there only while somebody is logging. The belt is in git.
+
 // Only what the public reads carry: a friend's beacon, and their feed's
 // allow-listed fields. Never what they sent you: that waits on their face
 // (Friend_panel.js), which stops Friends becoming an inbox again.
 
-import { useMemo } from 'react';
 import Link from 'next/link';
-import { handOff } from '../../library/handoff';
 
-// The most covers on the belt, and the fewest it is laid out to, so a short
-// list still fills a screen.
-const DRIFT_MOST = 14;
-const DRIFT_FILL = 8;
-// How long each cover takes to pass, so a lap's pace is one whatever the
-// count.
-const DRIFT_SECONDS_EACH = 5;
-
-// `friends` is Friends' row, in its order; `onScreen` whether Friends is the
-// pane on show.
-export default function Headlines({ friends, onScreen = true }) {
+// `friends` is Friends' row, in its order.
+export default function Headlines({ friends }) {
   const on = (friends || []).filter(f => f.live && f.person && f.beacon?.album);
-  if (on.length) return <LoggingNow friends={on} />;
-  return <Drift friends={friends} onScreen={onScreen} />;
-}
-
-// Each friend's entries newest first, taken one from each in turn.
-function lately(friends) {
-  const theirs = (friends || [])
-    .filter(f => f.person && !f.stranger)
-    .map(f => [...(f.entries || [])]
-      .filter(e => e.posted_at && e.album_art && e.slug)
-      .sort((a, b) => Date.parse(b.posted_at) - Date.parse(a.posted_at))
-      .map(e => ({ friend: f, entry: e })));
-  const out = [];
-  for (let round = 0; out.length < DRIFT_MOST && theirs.some(t => t[round]); round++) {
-    for (const t of theirs) if (t[round] && out.length < DRIFT_MOST) out.push(t[round]);
-  }
-  return out;
-}
-
-function Drift({ friends, onScreen }) {
-  const covers = useMemo(() => lately(friends), [friends]);
-  if (!covers.length) return null;
-  const times = Math.ceil(DRIFT_FILL / covers.length);
-  const half = Array.from({ length: times }, () => covers).flat();
-  return (
-    <section className={'hl-drift' + (onScreen ? '' : ' hl-drift--still')} aria-label="Lately">
-      <div className="hl-drift-window">
-        <div className="hl-drift-belt" style={{ '--drift-lap': `${half.length * DRIFT_SECONDS_EACH}s` }}>
-          {[...half, ...half].map(({ friend, entry: e }, i) => {
-            const page = `/dashboard/people/${friend.person.id}/${encodeURIComponent(e.slug)}`;
-            const title = e.song || e.album;
-            // Only the first lap is read out and reached by the keyboard;
-            // the rest are the same covers again.
-            const first = i < covers.length;
-            return (
-              <Link
-                key={i}
-                href={page}
-                className="hl-drift-one"
-                onClick={() => handOff(e)}
-                aria-label={first ? `${friend.name}: ${title}` : undefined}
-                aria-hidden={first ? undefined : true}
-                tabIndex={first ? undefined : -1}
-              >
-                <span className="hl-drift-art" data-grows={first ? page : undefined}>
-                  <img src={e.album_art} alt="" loading="lazy" onError={ev => { ev.currentTarget.style.visibility = 'hidden'; }} />
-                </span>
-                <span className="hl-drift-who">{friend.name}</span>
-                <span className="hl-drift-rec">{title}</span>
-              </Link>
-            );
-          })}
-        </div>
-      </div>
-    </section>
-  );
+  return on.length ? <LoggingNow friends={on} /> : null;
 }
 
 function LoggingNow({ friends }) {

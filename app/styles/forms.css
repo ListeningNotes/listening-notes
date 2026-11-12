@@ -2239,54 +2239,8 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 
 /* ── The top of Friends, 2026-10-30 ──────────────────────────────────────
    Headlines.js. While a friend is logging, the Board band's cards (.fr-now,
-   above), set off from the top. While nobody is, what friends logged lately
-   drifting left to right, small covers with the friend and the record under
-   them (her pick, 2026-10-31). Bled to the screen's edges like the cards'
-   row; each cover carries its own room on the right, so the two halves of
-   the belt are one length and the lap has no seam. */
+   above), set off from the top; while nobody is, nothing (2026-11-11). */
 .hl-now { margin-top: 6px; }
-.hl-drift {
-  margin-top: 6px; padding-bottom: 18px;
-  border-bottom: 1px solid var(--border);
-}
-.hl-drift-window { margin: 0 -24px; padding-top: 16px; overflow: hidden; }
-.hl-drift-belt {
-  display: flex; width: max-content;
-  animation: hl-drift var(--drift-lap, 60s) linear infinite;
-}
-.hl-drift--still .hl-drift-belt,
-.hl-drift:active .hl-drift-belt { animation-play-state: paused; }
-@keyframes hl-drift {
-  from { transform: translateX(-50%); }
-  to   { transform: translateX(0); }
-}
-.hl-drift-one {
-  flex: 0 0 auto; display: flex; flex-direction: column;
-  width: 96px; box-sizing: border-box; padding-right: 12px;
-  color: inherit; text-decoration: none;
-  -webkit-tap-highlight-color: transparent;
-}
-.hl-drift-art {
-  position: relative; display: block;
-  width: 84px; height: 84px; border-radius: 8px; overflow: hidden;
-  background: var(--bg-warm);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
-}
-.hl-drift-art > img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.hl-drift-who {
-  margin-top: 7px;
-  font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
-  font-size: 12px; color: var(--ink);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.hl-drift-rec {
-  font-size: 11.5px; color: var(--ink-soft);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-@media (prefers-reduced-motion: reduce) {
-  .hl-drift-window { overflow-x: auto; scrollbar-width: none; }
-  .hl-drift-belt { animation: none; }
-}
 
 /* Their doors, the book's own, opening under the line and folding shut
    rather than appearing. No hairlines round them here: the one under the

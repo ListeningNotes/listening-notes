@@ -1039,7 +1039,7 @@ export default function PeopleScreen({ scroller, onScreen = true, entries = [], 
   // Close; and the doors of whoever is open.
   const top = people ? (
     <div className="ps-top">
-      <Headlines friends={lineup} onScreen={onScreen} />
+      <Headlines friends={lineup} />
       {head}
       <div className={'ps-unroll' + (adding ? ' ps-unroll--open' : '')} inert={adding ? undefined : true}>
         <div className="ps-unroll-in">{addHere}</div>
