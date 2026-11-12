@@ -1553,8 +1553,16 @@ export default function FullPostPage({ entry, references = [], authed = false, l
              line with the stars sitting on it — the stand-in draws the
              stars bare, and the 14px of slack was the chips and the date
              dropping when the entry landed over the journal (2026-09-15). */
-          <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <div className="ln-rate-row" style={{ display: 'flex', justifyContent: 'center' }}>
             <StarRating rating={displayRating} size={24} glow={isMasterpiece} animate={!alreadyShown} burst={isMasterpiece && !alreadyShown} />
+            {/* The marks as dots at the row's end, in the white panels
+                (2026-11-11, the design pivot); the chips below stay for the
+                printer and stand down on the page (entry.css, Panels). */}
+            <span className="ln-mark-dots" aria-hidden="true">
+              {(entry.favorite === true || entry.favorite === 'true') && <span className="ln-mark-dot" style={{ background: 'var(--fav)' }} />}
+              {isMasterpiece && <span className="ln-mark-dot" style={{ background: 'var(--mp)' }} />}
+              {isFormative && <span className="ln-mark-dot" style={{ background: 'var(--formative)' }} />}
+            </span>
           </div>
         )}
         {edit.editing && flagFields}
@@ -1729,7 +1737,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
             the ghost tracks below it: reading shows what was said, correcting
             shows where it goes. */}
         {(albumNotes || edit.editing) && (
-          <section style={{ marginBottom: '48px' }}>
+          <section className="ln-panel" style={{ marginBottom: '48px' }}>
             <MetadataLabel sticky>Album note</MetadataLabel>
             {/* 6px, the same gap a track note leaves under itself before its
                 own bubble. */}
@@ -1757,7 +1765,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
             entry now, and this is the record's tracks. While a correction is
             open the count stands down — it would change under every key. */}
         {(saidTracks > 0 || horizonBars.length > 0 || (edit.editing && parsedTracks.length > 0)) && (
-          <section style={{ marginBottom: '48px' }}>
+          <section className="ln-panel" style={{ marginBottom: '48px' }}>
             <MetadataLabel sticky aside={edit.editing ? null : tracksHold}>Tracks</MetadataLabel>
 
             {/* The hint sits with the bars rather than in the heading: the

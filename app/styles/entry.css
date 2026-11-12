@@ -2414,3 +2414,39 @@ html[data-printing] .sitenav-row { display: none; }
   color: var(--ink-faint);
 }
 
+
+/* ── Panels, 2026-11-11 ─────────────────────────────────────────────────────
+   The design pivot (Miyel's brief), tried on the entry first: a near-white
+   canvas and the post in floating white panels — the record (cover, title,
+   artist · year, stars, the marks as dots), the album note, the tracks. The
+   page's own --bg is the canvas inside the entry, so everything that paints
+   itself the page's colour (the sticky labels) follows. Not while printing,
+   where the card is the picture, and not while correcting. */
+.ln-entry { --bg: var(--canvas); background: var(--canvas); }
+.ln-mark-dots { display: none; }
+.ln-screens:not(.ln-printing) .ln-print-card {
+  display: flex; flex-direction: column; align-items: stretch; gap: 10px;
+  width: 100%; max-width: 440px; box-sizing: border-box;
+  padding: 16px 16px 20px;
+  text-align: left;
+  background: var(--card); border-radius: var(--panel-r); box-shadow: var(--lift-1);
+}
+.ln-screens:not(.ln-printing) .ln-print-card .ln-screen-one-art {
+  width: 100%; height: auto; max-height: none;
+  border: 0; border-radius: var(--tile-r); box-shadow: var(--lift-2);
+  margin-bottom: 6px;
+}
+.ln-screens:not(.ln-printing):not(.ln-editing) .ln-print-card .ln-screen-one-title { text-align: left; margin: 0; }
+.ln-screens:not(.ln-printing):not(.ln-editing) .ln-print-card .ln-screen-one-artist { text-align: left; }
+.ln-screens:not(.ln-printing) .ln-rate-row { justify-content: space-between !important; align-items: center; }
+.ln-screens:not(.ln-printing) .ln-mark-dots { display: inline-flex; gap: 6px; }
+.ln-mark-dot { width: 14px; height: 14px; border-radius: 50%; display: block; }
+/* The chips are drawn with inline styles, hence the weight. A chip that is a
+   button (the Sent chip, which opens the chain) stays. */
+.ln-screens:not(.ln-printing):not(.ln-editing) .ln-screen-one-chips > span { display: none !important; }
+.ln-screens:not(.ln-printing):not(.ln-editing) .ln-print-card .ln-screen-one-posted { text-align: left; }
+.ln-panel {
+  background: var(--card); border-radius: var(--panel-r); box-shadow: var(--lift-1);
+  padding: 4px 20px 22px; margin-bottom: 16px !important;
+}
+.ln-panel .ln-meta-label--sticky { background: var(--card); }

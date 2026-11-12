@@ -191,6 +191,13 @@ you are already in it. They are plain uppercase words now, the one that
 commits on a hairline, and no tick or cross beside them. `.ln-word`, shared by
 the four bars that share that band.
 
+**The one verb on a screen may be filled, 2026-11-11, Miyel.** The rule
+above, amended: no containers around incidental controls; the one primary
+action on a screen may be filled, and it is always a verb (Start a listen,
+Send). Filter chips may be low-contrast pills because they show state; the
+selected one is filled. Panels hold content, not controls, and are the white
+floating cards of the new look (her brief, the design pivot).
+
 **One exception, 2026-10-21: the way into a listen is the Listen bar.** A
 raised panel at the foot of home, the session closed: *Start a listen* at rest
 (the brief's *Listen* "feels so odd", her pick, 2026-10-22), and a lowered
@@ -1408,6 +1415,13 @@ The community is whoever is on the Board; nothing publishes a keeper's book,
 so Keep private went with it (`people.private` stays, unread). Song chains
 — who sent a record to whom — are a different thing and stay. Don't bring
 back /api/public/people or "a friend away" (docs/DECISIONS-ARCHIVE.md).
+
+**Community is the month's prompt, and it replaces the Board, 2026-11-11,
+Miyel.** The globe tab is the current issue: the prompt, and the records
+keepers sent to it, ringed by arrival, never ranked. Nothing reports to the
+canonical copy; one thing is sent to it on a keeper's press, which is the
+month's prompt as already built. A record nobody sent has no page. The
+Board's list, sections and search go (docs/DECISIONS-ARCHIVE.md if found).
 
 **Quotes on the Board are a keeper's own words, 2026-10-08.** Miyel: the
 rule was "about people writing on other people's journals... nobody's words

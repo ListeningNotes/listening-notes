@@ -34,6 +34,20 @@
      read it off their own pane. */
   --hn-bar-h: calc(80px + var(--safe-top));
 
+  /* ── White panels, 2026-11-11 ─────────────────────────────────────────
+     The design pivot (Miyel's brief): a near-white canvas with floating
+     white panels, beside the cream tokens below until every surface has
+     moved, then those go in one commit. Named apart from them — the brief's
+     --panel is --card here, because --panel is still the frosted glass. */
+  --canvas:   #f4f4f2;
+  --card:     #ffffff;
+  --hair:     rgba(20, 20, 15, 0.08);
+  --panel-r:  20px;
+  --tile-r:   12px;
+  --lift-1:   0 4px 14px rgba(0, 0, 0, 0.07);
+  --lift-2:   0 8px 22px rgba(0, 0, 0, 0.14);
+  --lift-3:   0 10px 28px rgba(0, 0, 0, 0.22);
+
   /* Redesign tokens — cream / frosted glass */
   --bg:           #eef0ec;  /* matches the private dashboard's base background */
   --bg-warm:      #efebe2;
@@ -125,6 +139,12 @@
 }
 
 [data-theme='dark'] {
+  --canvas:   #0e0e0e;
+  --card:     #1a1a1a;
+  --hair:     rgba(255, 255, 255, 0.08);
+  --lift-1:   0 4px 14px rgba(0, 0, 0, 0.35);
+  --lift-2:   0 8px 22px rgba(0, 0, 0, 0.45);
+  --lift-3:   0 10px 28px rgba(0, 0, 0, 0.55);
   --bg:           #0e0e0e;
   --bg-warm:      #161616;
   --panel:        rgba(20, 20, 20, 0.45);
