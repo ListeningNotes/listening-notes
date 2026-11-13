@@ -2507,3 +2507,11 @@ html[data-printing] .sitenav-row { display: none; }
   .lay-peek > .ln-entry { min-height: 100%; }
   .lay-content--from-right, .lay-content--from-left { animation: none; }
 }
+@media (max-width: 768px) {
+  /* The record a turn went to, under the record arriving (LayerEntry). The
+     record, read, sits over it on the page's own colour and covers it. */
+  .lay-under { position: absolute; top: 0; left: 0; width: 100%; height: 100dvh; overflow: hidden; pointer-events: none; }
+  .lay-content > .ln-entry { position: relative; z-index: 1; }
+}
+.lay-under { display: none; }
+@media (max-width: 768px) { .lay-under { display: block; } }

@@ -52,7 +52,7 @@ import { createContext, useCallback, useContext, useEffect, useLayoutEffect, use
 import { usePathname, useRouter } from 'next/navigation';
 import { CaretLeft, CaretRight } from '@phosphor-icons/react';
 import { RecordScreen } from './LayerWaiting';
-import { tileBoxOf, neighboursOf, handOffNeighbour, arrivingBySwipe, tookASwipe, growBoxOf, arrivingBack, cameBack, cameAlone, arrivingAlone, carryReading, endReading } from '../../library/handoff';
+import { tileBoxOf, neighboursOf, handOffNeighbour, arrivingBySwipe, tookASwipe, growBoxOf, arrivingBack, cameBack, cameAlone, arrivingAlone, carryReading, endReading, cameReadingOn, washOf } from '../../library/handoff';
 
 // How long the sheet takes to grow to the screen. Unhurried, slowing as it
 // lands — the same curve the slide used.
@@ -63,6 +63,9 @@ const GROW_MS = 420;
 // down a little so it reads smoother, like you're really flipping through
 // pages of a book." 240 was quick enough to read as a cut.
 const TURN_MS = 360;
+// The record a turn went to, for the layer it arrives on to draw from its
+// first frame (the underlay, below).
+let turnedTo = null;
 const GROW_EASE = 'cubic-bezier(0.22, 0.61, 0.36, 1)';
 
 // How far right the pull has to travel before letting go leaves rather than
@@ -358,6 +361,21 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
   // off the folder's tabs, which is not necessarily a neighbour; `reading`
   // is whether you were down in the writing, where the next record opens
   // too, so its first screen is not the thing to show.
+  // ── And under the record that arrives, 2026-11-12 ─────────────────────
+  // A turn makes a new layer, and for its first moment there is nothing in
+  // it: the wait is still being sent and the colour has not been set — a
+  // blink of the bare page (Miyel: "still has a blink of white"). So the
+  // layer starts in the colour the reader was already in, and draws the
+  // record it was turned to underneath, from what the turn knew, until the
+  // record itself covers it.
+  const [under] = useState(() => (arrival.swiped && turnedTo ? { known: turnedTo, reading: cameReadingOn() } : null));
+  // The colour, written before the first paint and imperatively, as the
+  // keyboard's two insets are: React's style here comes and goes with a drag.
+  useLayoutEffect(() => {
+    const sheet = sheetRef.current;
+    const now = washOf();
+    if (sheet && now && !sheet.style.getPropertyValue('--wash')) sheet.style.setProperty('--wash', now);
+  }, []);
   const [turning, setTurning] = useState(null);
   const [reading, setReading] = useState(false);
   const readingNow = () => typeof document !== 'undefined'
@@ -609,6 +627,7 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
     // A page of this same folder travels with the folder, so the tabs hold
     // still at the foot while it loads.
     handOffNeighbour(folder?.some(e => e.slug === target.slug) ? { ...target, folder } : target);
+    turnedTo = target;
     arrivingBySwipe(dir);
     // A folder flipped from somewhere that does not browse stays that
     // folder: the next page arrives alone as this one did.
@@ -900,6 +919,13 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
           leave();
         }}
       >
+        {under && (
+          <div className="lay-under" aria-hidden="true">
+            <div className="ln-entry">
+              {under.reading || under.known.song ? <div className="ln-screens" /> : <RecordScreen known={under.known} />}
+            </div>
+          </div>
+        )}
         {children}
         {browses && [-1, 1].map(side => {
           const known = turning?.dir === side ? turning.known : side < 0 ? neighbours.prev : neighbours.next;

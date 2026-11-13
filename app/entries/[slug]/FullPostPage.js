@@ -38,7 +38,7 @@ import PrintBar from '../../../components/main_components/Slug_Page/PrintBar';
 import HorizonChart from '../../../components/main_components/HorizonChart';
 import MiniCard from '../../../components/main_components/Slug_Page/MiniCard';
 import MarqueeTitle from '../../../components/main_components/MarqueeTitle';
-import { handedOver, cameReadingOn } from '../../../library/handoff';
+import { handedOver, cameReadingOn, keepWash, washOf } from '../../../library/handoff';
 import { tidyAddress } from '../../../library/return_address';
 import { useBookplate, useVisiting } from '../../../components/main_components/Bookplate';
 import { useTheme } from '../../../components/main_components/Lightswitch';
@@ -128,9 +128,6 @@ const COVER_LABELS = { toCode: 'Show the code for this entry', toPicture: 'Show 
 // `folder` is the record's entries, oldest first, when it has more than one
 // (2026-09-25): the entry is then a page of a folder, with its tabs at the
 // foot of the screen and the rest a swipe away (useFolder, FolderFooter).
-// The colour the last post washed its page in (see the wash, below).
-let lastWash = '';
-
 export default function FullPostPage({ entry, references = [], authed = false, layered = false, preview = false, folder = null }) {
   const router = useRouter();
   const turnTo = useFolder(preview ? null : folder, entry.slug);
@@ -260,7 +257,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   // read, and it had no wash, so the colour dropped to nothing and came back.
   // The layer, which stays put while posts turn under it, is given the colour
   // too, and its stand-in wears it (entry.css, Panels).
-  const [wash, setWash] = useState(lastWash);
+  const [wash, setWash] = useState(washOf);
   const washHost = useRef(null);
   useEffect(() => {
     if (wash) washHost.current?.closest('.lay')?.style.setProperty('--wash', wash);
@@ -274,7 +271,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     readArtColor(entry.album_art).then(c => {
       if (!live) return;
       const next = !c ? 'transparent' : c.plain ? 'hsl(40 6% 62%)' : `hsl(${Math.round(c.hue)} 58% 60%)`;
-      lastWash = next;
+      keepWash(next);
       setWash(next);
     });
     return () => { live = false; };

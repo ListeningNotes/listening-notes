@@ -316,3 +316,11 @@ export function handOffCompare(slug) {
 export function cameToCompare(slug) {
   return Boolean(comparing && comparing.slug === slug && Date.now() - comparing.at < 4000);
 }
+
+// ── The colour a post is washed in, 2026-11-12 ──────────────────────────────
+// The last post's, kept here so the next one — and the layer it arrives on,
+// which is a new one every turn — starts from it rather than from no colour,
+// which was a blink of white between two posts (FullPostPage, the wash).
+let washNow = '';
+export function keepWash(color) { washNow = color || ''; }
+export function washOf() { return washNow; }
