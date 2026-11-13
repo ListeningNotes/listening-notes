@@ -2438,6 +2438,11 @@ html[data-printing] .sitenav-row { display: none; }
   transition: --wash 0.9s ease;
   position: relative;
 }
+/* The layer a post opens on stands on the canvas too, so the stand-in
+   between two posts is the same ground the posts are. */
+.lay:not(.lay--sheet) { --bg: var(--canvas); }
+.lay-wait { position: relative; isolation: isolate; }
+.lay-wait::before,
 .ln-screens:not(.ln-printing)::before {
   content: '';
   position: absolute; left: 0; right: 0; top: 0;

@@ -253,7 +253,18 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   // wash), on the page as --wash. The last post's colour is where the next
   // one starts, so a swipe carries the colour over rather than starting from
   // nothing (entry.css, Panels: --wash is a registered colour, so it moves).
+  //
+  // And held over the wait, 2026-11-12 (Miyel: "keep the last color bleed
+  // then slowly fade to the next updated one … instead of having that
+  // flash"): between two posts the layer shows a stand-in while the next is
+  // read, and it had no wash, so the colour dropped to nothing and came back.
+  // The layer, which stays put while posts turn under it, is given the colour
+  // too, and its stand-in wears it (entry.css, Panels).
   const [wash, setWash] = useState(lastWash);
+  const washHost = useRef(null);
+  useEffect(() => {
+    if (wash) washHost.current?.closest('.lay')?.style.setProperty('--wash', wash);
+  }, [wash]);
   useEffect(() => {
     if (!entry.album_art) return undefined;
     let live = true;
@@ -1460,6 +1471,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
 
   return (
     <div
+      ref={washHost}
       className={'ln-entry' + (scrolled ? ' ln-entry--scrolled' : '') + (crowning ? ' ln-entry--crowning' : '') + (inFolder ? ' ln-entry--folder' : '')}
       style={{ background: 'var(--bg)', minHeight: '100vh', color: 'var(--ink)', fontFamily: fonts.sans, ...(wash ? { '--wash': wash } : {}) }}
     >
