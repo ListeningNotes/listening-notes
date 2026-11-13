@@ -178,6 +178,12 @@ export default function LayerWaiting({ slug, authed = false }) {
     {header}
     <div className="ln-screens">
       <section className="ln-screen-one">
+        {/* The print card's two wrappers, as the post has them, so the new
+            look's rules lay this out exactly as the post will be — the cover
+            at the post's width, not a smaller one that grew when it landed
+            (Miyel, 2026-11-12: "the art resizes … it isn't seamless"). */}
+        <div className="ln-print-stack">
+        <div className="ln-print-card">
         {known.album_art && (
           <div className="ln-screen-one-art">
             <img src={known.album_art} alt="" />
@@ -191,7 +197,14 @@ export default function LayerWaiting({ slug, authed = false }) {
           /* No animate and no burst. Those are the rating arriving, and it has
              not arrived — it was already known before the layer opened. A
              flourish here would replay itself the moment the entry landed. */
-          <StarRating rating={displayRating} size={24} glow={isMasterpiece} />
+          <div className="ln-rate-row" style={{ display: 'flex', justifyContent: 'center' }}>
+            <StarRating rating={displayRating} size={24} glow={isMasterpiece} />
+            <span className="ln-mark-dots">
+              {known.favorite && <Heart size={22} weight="fill" color="var(--fav)" />}
+              {isMasterpiece && <SketchLogo size={22} weight="fill" color="var(--mp)" />}
+              {known.formative && <Fingerprint size={22} weight="bold" color="var(--formative)" />}
+            </span>
+          </div>
         )}
         <div className="ln-screen-one-chips">
           {/* The chip only where the line below cannot be drawn, which is the
@@ -210,10 +223,12 @@ export default function LayerWaiting({ slug, authed = false }) {
             it grows off the end of the line rather than reflowing anything. */}
         <SentBy entry={known} />
         {postedOn && (
-          <div style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink-faint)' }}>
+          <div className="ln-screen-one-posted" style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink-faint)' }}>
             Posted {postedOn}
           </div>
         )}
+        </div>
+        </div>
       </section>
     </div>
   </>);

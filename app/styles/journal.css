@@ -720,3 +720,13 @@
 .hn { --bg: var(--canvas); }
 .ft-face { border-radius: var(--tile-r); box-shadow: var(--lift-2); }
 .arc-skel { border-radius: var(--tile-r); }
+/* The record's marks, small, in the cover's top right corner (2026-11-12):
+   on a white chip of their own so they read on any art. */
+.ft-marks {
+  position: absolute; top: 6px; right: 6px; z-index: 1;
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 3px 5px; border-radius: 999px;
+  background: var(--card); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+  pointer-events: none;
+}
+.arc-grid[data-density="small"] .ft-marks { top: 4px; right: 4px; padding: 2px 4px; gap: 2px; }
