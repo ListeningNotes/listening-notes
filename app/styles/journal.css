@@ -710,3 +710,13 @@
   text-wrap: balance;
 }
 .mp-sent { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+
+/* ── The wall in the new look, 2026-11-12 ──────────────────────────────────
+   The design pivot (Miyel's brief): covers on the near-white canvas, each
+   lifted a little off it, the tile radius the panels' family uses. The
+   cross takes the canvas as its page colour, so the wall, People and the
+   beacon's wash (which fades to the page's colour) all stand on it. Still
+   nothing on the art: the wall is covers, and you go in to read. */
+.hn { --bg: var(--canvas); }
+.ft-face { border-radius: var(--tile-r); box-shadow: var(--lift-2); }
+.arc-skel { border-radius: var(--tile-r); }
