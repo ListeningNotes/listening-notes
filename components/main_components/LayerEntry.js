@@ -51,6 +51,7 @@
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { CaretLeft, CaretRight } from '@phosphor-icons/react';
+import { RecordScreen } from './LayerWaiting';
 import { tileBoxOf, neighboursOf, handOffNeighbour, arrivingBySwipe, tookASwipe, growBoxOf, arrivingBack, cameBack, cameAlone, arrivingAlone, carryReading, endReading } from '../../library/handoff';
 
 // How long the sheet takes to grow to the screen. Unhurried, slowing as it
@@ -347,6 +348,20 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
   // The sideways position of the content while a finger has it.
   const [shift, setShift] = useState(0);
   const [settling, setSettling] = useState(false);
+  // ── The neighbours, drawn beside, 2026-11-12 ──────────────────────────
+  // Miyel: "it's still white when we scroll, maybe the whole animation needs
+  // to be rethought." The page used to slide away over nothing and the next
+  // one slid in once it had been read. Now the records either side are drawn
+  // beside this one from what the wall already knew (RecordScreen), so the
+  // finger pulls the next record into view and lets it go where the record,
+  // read, will land — nothing slides in after. `turning` is a page picked
+  // off the folder's tabs, which is not necessarily a neighbour; `reading`
+  // is whether you were down in the writing, where the next record opens
+  // too, so its first screen is not the thing to show.
+  const [turning, setTurning] = useState(null);
+  const [reading, setReading] = useState(false);
+  const readingNow = () => typeof document !== 'undefined'
+    && Number(getComputedStyle(document.documentElement).getPropertyValue('--ln-turn')) > 0.5;
   // No neighbours when this was opened from somewhere that does not browse —
   // the ID pane's pinned record, a cover in one of its count windows. The
   // wall's order is still there for the wall; this arrival simply does not
@@ -600,6 +615,8 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
     if (arrival.alone) arrivingAlone();
     // And where in the record you were, so the next one opens the same way.
     carryReading();
+    setReading(readingNow());
+    if (pick) setTurning({ dir, known: pick });
     setSettling(true);
     setShift(-dir * (sheetRef.current?.offsetWidth || window.innerWidth));
     pendingTurn.current = window.setTimeout(() => {
@@ -749,6 +766,7 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
         else if (pull.top && dy > 0) pull.axis = 'y';
         if (!pull.axis) { pull = null; return; }
         setSettling(false);
+        if (pull.axis === 'x') setReading(readingNow());
       }
       pull.lastX = touch.clientX;
       pull.lastY = touch.clientY;
@@ -883,6 +901,17 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
         }}
       >
         {children}
+        {browses && [-1, 1].map(side => {
+          const known = turning?.dir === side ? turning.known : side < 0 ? neighbours.prev : neighbours.next;
+          if (!known) return null;
+          return (
+            <div key={side} className={'lay-peek lay-peek--' + (side < 0 ? 'prev' : 'next')} aria-hidden="true" inert>
+              <div className="ln-entry">
+                {reading || known.song ? <div className="ln-screens" /> : <RecordScreen known={known} />}
+              </div>
+            </div>
+          );
+        })}
       </div>
       </LayerFolder.Provider>
       </LayerHeaderSlot.Provider>

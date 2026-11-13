@@ -165,6 +165,21 @@ export default function LayerWaiting({ slug, authed = false }) {
     </>);
   }
 
+  return (<>
+    {header}
+    <RecordScreen known={known} />
+  </>);
+}
+
+// ── The record's first screen, drawn from what the wall knew ─────────────────
+// The wait's own screen, and since 2026-11-12 the neighbour's too: the layer
+// keeps the records either side drawn beside the one you are reading, so a
+// swipe pulls the next one into view rather than a blank page (Miyel: "it's
+// still white when we scroll … maybe the whole animation needs to be
+// rethought"). One drawing for both, so the two cannot disagree.
+export function RecordScreen({ known }) {
+  // The same expression FullPostPage uses for the title's size.
+  const titleSize = `clamp(1.25rem, ${(300 / ((known.album || '').length || 1)).toFixed(2)}vw, 2.1rem)`;
   // The real first screen's classes, not lookalikes. If these drift the swap
   // becomes a flicker, and the whole value of this is that nothing moves.
   // The same three lines FullPostPage derives, off the same fields.
@@ -174,62 +189,61 @@ export default function LayerWaiting({ slug, authed = false }) {
     ? new Date(known.posted_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
     : null;
 
-  return (<>
-    {header}
+  return (
     <div className="ln-screens">
-      <section className="ln-screen-one">
-        {/* The print card's two wrappers, as the post has them, so the new
-            look's rules lay this out exactly as the post will be — the cover
-            at the post's width, not a smaller one that grew when it landed
-            (Miyel, 2026-11-12: "the art resizes … it isn't seamless"). */}
-        <div className="ln-print-stack">
-        <div className="ln-print-card">
-        {known.album_art && (
-          <div className="ln-screen-one-art">
-            <img src={known.album_art} alt="" />
-          </div>
-        )}
-        <h1 className="ln-screen-one-title" style={{ fontSize: titleSize }}>{known.album}</h1>
-        <div className="ln-screen-one-artist">
-          {known.artist}{known.year ? ' · ' + known.year : ''}
+    <section className="ln-screen-one">
+      {/* The print card's two wrappers, as the post has them, so the new
+          look's rules lay this out exactly as the post will be — the cover
+          at the post's width, not a smaller one that grew when it landed
+          (Miyel, 2026-11-12: "the art resizes … it isn't seamless"). */}
+      <div className="ln-print-stack">
+      <div className="ln-print-card">
+      {known.album_art && (
+        <div className="ln-screen-one-art">
+          <img src={known.album_art} alt="" />
         </div>
-        {displayRating > 0 && (
-          /* No animate and no burst. Those are the rating arriving, and it has
-             not arrived — it was already known before the layer opened. A
-             flourish here would replay itself the moment the entry landed. */
-          <div className="ln-rate-row" style={{ display: 'flex', justifyContent: 'center' }}>
-            <StarRating rating={displayRating} size={24} glow={isMasterpiece} />
-            <span className="ln-mark-dots">
-              {known.favorite && <Heart size={22} weight="fill" color="var(--fav)" />}
-              {isMasterpiece && <SketchLogo size={22} weight="fill" color="var(--mp)" />}
-              {known.formative && <Fingerprint size={22} weight="bold" color="var(--formative)" />}
-            </span>
-          </div>
-        )}
-        <div className="ln-screen-one-chips">
-          {/* The chip only where the line below cannot be drawn, which is the
-              rule the entry itself follows — both ask creditOn, so the two
-              can never disagree and the row cannot change shape when the
-              entry lands (SentBy.js, 2026-09-15). */}
-          {known.entry_type === 'Submission' && known.credit_by_hand !== true && !creditOn(known) && <Chip>Submission</Chip>}
-          {known.favorite && <Chip tone="fav">Favorite</Chip>}
-          {isMasterpiece && <Chip tone="mp">Masterpiece</Chip>}
+      )}
+      <h1 className="ln-screen-one-title" style={{ fontSize: titleSize }}>{known.album}</h1>
+      <div className="ln-screen-one-artist">
+        {known.artist}{known.year ? ' · ' + known.year : ''}
+      </div>
+      {displayRating > 0 && (
+        /* No animate and no burst. Those are the rating arriving, and it has
+           not arrived — it was already known before the layer opened. A
+           flourish here would replay itself the moment the entry landed. */
+        <div className="ln-rate-row" style={{ display: 'flex', justifyContent: 'center' }}>
+          <StarRating rating={displayRating} size={24} glow={isMasterpiece} />
+          <span className="ln-mark-dots">
+            {known.favorite && <Heart size={22} weight="fill" color="var(--fav)" />}
+            {isMasterpiece && <SketchLogo size={22} weight="fill" color="var(--mp)" />}
+            {known.formative && <Fingerprint size={22} weight="bold" color="var(--formative)" />}
+          </span>
         </div>
-        {/* The real component, drawn from what the wall handed over. The face
-            and the name were already known; the trail behind them is handed no
-            walk here, because it belongs to the entry about to land. Which
-            leaves the +2 pill as the one thing on this screen that does arrive
-            late — it cannot be known without asking somebody's journal — and
-            it grows off the end of the line rather than reflowing anything. */}
-        <SentBy entry={known} />
-        {postedOn && (
-          <div className="ln-screen-one-posted" style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink-faint)' }}>
-            Posted {postedOn}
-          </div>
-        )}
+      )}
+      <div className="ln-screen-one-chips">
+        {/* The chip only where the line below cannot be drawn, which is the
+            rule the entry itself follows — both ask creditOn, so the two
+            can never disagree and the row cannot change shape when the
+            entry lands (SentBy.js, 2026-09-15). */}
+        {known.entry_type === 'Submission' && known.credit_by_hand !== true && !creditOn(known) && <Chip>Submission</Chip>}
+        {known.favorite && <Chip tone="fav">Favorite</Chip>}
+        {isMasterpiece && <Chip tone="mp">Masterpiece</Chip>}
+      </div>
+      {/* The real component, drawn from what the wall handed over. The face
+          and the name were already known; the trail behind them is handed no
+          walk here, because it belongs to the entry about to land. Which
+          leaves the +2 pill as the one thing on this screen that does arrive
+          late — it cannot be known without asking somebody's journal — and
+          it grows off the end of the line rather than reflowing anything. */}
+      <SentBy entry={known} />
+      {postedOn && (
+        <div className="ln-screen-one-posted" style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink-faint)' }}>
+          Posted {postedOn}
         </div>
-        </div>
-      </section>
-    </div>
-  </>);
+      )}
+      </div>
+      </div>
+    </section>
+  </div>
+  );
 }

@@ -2484,3 +2484,26 @@ html[data-printing] .sitenav-row { display: none; }
   padding: 4px 20px 22px; margin-bottom: 16px !important;
 }
 .ln-panel .ln-meta-label--sticky { background: var(--card); }
+
+/* ── The neighbours beside the page, 2026-11-12 ────────────────────────────
+   LayerEntry draws the records either side of the one being read, a width
+   away, inside the content that follows the finger — so a swipe pulls the
+   next record in rather than leaving a blank behind the one going (Miyel:
+   "it's still white when we scroll"). They are already where the page turn
+   would have slid the next one in from, so that slide no longer runs: the
+   record, read, simply takes the place its picture held. A phone's: on a
+   desk the record flows down the page and the carets turn it. */
+.lay-peek { display: none; }
+@media (max-width: 768px) {
+  .lay { overflow-x: hidden; }
+  .lay-content { position: relative; }
+  .lay-peek {
+    display: block;
+    position: absolute; top: 0; width: 100%; height: 100dvh;
+    overflow: hidden; pointer-events: none;
+  }
+  .lay-peek--prev { right: 100%; }
+  .lay-peek--next { left: 100%; }
+  .lay-peek > .ln-entry { min-height: 100%; }
+  .lay-content--from-right, .lay-content--from-left { animation: none; }
+}
