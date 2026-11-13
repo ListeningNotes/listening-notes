@@ -12,7 +12,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { useRouter } from 'next/navigation';
 import { Envelope, Fingerprint, Heart, Pause, Play, SketchLogo, VinylRecord } from '@phosphor-icons/react';
 import { fonts } from '../../../library/sitewide_visuals';
-import { sizedAlbumArt, fetchAlbumArtUrl } from '../../../library/music_data_api';
+import { sizedAlbumArt, fetchAlbumArtUrl, readArtColor } from '../../../library/music_data_api';
 import { parseHorizon, entryTracks, splitNotes, parseRating, flawless } from '../../../library/entry_formatter';
 import { buildReferenceIndex, createReferenceLinker } from '../../../library/cross_references';
 import SiteNav from '../../../components/main_components/SiteNav';
@@ -128,6 +128,9 @@ const COVER_LABELS = { toCode: 'Show the code for this entry', toPicture: 'Show 
 // `folder` is the record's entries, oldest first, when it has more than one
 // (2026-09-25): the entry is then a page of a folder, with its tabs at the
 // foot of the screen and the rest a swipe away (useFolder, FolderFooter).
+// The colour the last post washed its page in (see the wash, below).
+let lastWash = '';
+
 export default function FullPostPage({ entry, references = [], authed = false, layered = false, preview = false, folder = null }) {
   const router = useRouter();
   const turnTo = useFolder(preview ? null : folder, entry.slug);
@@ -242,6 +245,29 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   const coverSrc = edit.editing
     ? (edit.draft.album_art ? sizedAlbumArt(edit.draft.album_art, 900) : '')
     : entry.album_art;
+
+  // ── The record's colour, washed down from the top, 2026-11-12 ─────────
+  // Miyel: "how the beacon bleeds the color from the top, maybe that can be
+  // a similar thing with the albums, and as you switch through them, it
+  // transitions that color." The cover's one colour (readArtColor, as home's
+  // wash), on the page as --wash. The last post's colour is where the next
+  // one starts, so a swipe carries the colour over rather than starting from
+  // nothing (entry.css, Panels: --wash is a registered colour, so it moves).
+  const [wash, setWash] = useState(lastWash);
+  useEffect(() => {
+    if (!entry.album_art) return undefined;
+    let live = true;
+    // A cover with hardly any colour — most black-and-white sleeves — gets
+    // a soft grey rather than none, so no post is without one; home leaves
+    // those bare, and its beacon is one record, not every post.
+    readArtColor(entry.album_art).then(c => {
+      if (!live) return;
+      const next = !c ? 'transparent' : c.plain ? 'hsl(40 6% 62%)' : `hsl(${Math.round(c.hue)} 58% 60%)`;
+      lastWash = next;
+      setWash(next);
+    });
+    return () => { live = false; };
+  }, [entry.album_art]);
 
   const coverField = edit.editing && coverOpen && (
     <div className="ln-cover-swap">
@@ -1435,7 +1461,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   return (
     <div
       className={'ln-entry' + (scrolled ? ' ln-entry--scrolled' : '') + (crowning ? ' ln-entry--crowning' : '') + (inFolder ? ' ln-entry--folder' : '')}
-      style={{ background: 'var(--bg)', minHeight: '100vh', color: 'var(--ink)', fontFamily: fonts.sans }}
+      style={{ background: 'var(--bg)', minHeight: '100vh', color: 'var(--ink)', fontFamily: fonts.sans, ...(wash ? { '--wash': wash } : {}) }}
     >
 
       {/* ── NAV ── shared site nav (logo + tools + lights), identical to
@@ -1555,13 +1581,13 @@ export default function FullPostPage({ entry, references = [], authed = false, l
              dropping when the entry landed over the journal (2026-09-15). */
           <div className="ln-rate-row" style={{ display: 'flex', justifyContent: 'center' }}>
             <StarRating rating={displayRating} size={24} glow={isMasterpiece} animate={!alreadyShown} burst={isMasterpiece && !alreadyShown} />
-            {/* The marks as dots at the row's end, in the white panels
-                (2026-11-11, the design pivot); the chips below stay for the
-                printer and stand down on the page (entry.css, Panels). */}
-            <span className="ln-mark-dots" aria-hidden="true">
-              {(entry.favorite === true || entry.favorite === 'true') && <span className="ln-mark-dot" style={{ background: 'var(--fav)' }} />}
-              {isMasterpiece && <span className="ln-mark-dot" style={{ background: 'var(--mp)' }} />}
-              {isFormative && <span className="ln-mark-dot" style={{ background: 'var(--formative)' }} />}
+            {/* The marks as their emblems at the row's end (2026-11-12: "it
+                can't just be dots. I like my emblems"); the chips below stay
+                for the printer and stand down on the page (entry.css, Panels). */}
+            <span className="ln-mark-dots">
+              {(entry.favorite === true || entry.favorite === 'true') && <Heart size={22} weight="fill" color="var(--fav)" aria-label="Favorite" />}
+              {isMasterpiece && <SketchLogo size={22} weight="fill" color="var(--mp)" aria-label="Masterpiece" />}
+              {isFormative && <Fingerprint size={22} weight="bold" color="var(--formative)" aria-label="Formative" />}
             </span>
           </div>
         )}

@@ -2417,34 +2417,63 @@ html[data-printing] .sitenav-row { display: none; }
 
 /* ── Panels, 2026-11-11 ─────────────────────────────────────────────────────
    The design pivot (Miyel's brief), tried on the entry first: a near-white
-   canvas and the post in floating white panels — the record (cover, title,
-   artist · year, stars, the marks as dots), the album note, the tracks. The
-   page's own --bg is the canvas inside the entry, so everything that paints
-   itself the page's colour (the sticky labels) follows. Not while printing,
-   where the card is the picture, and not while correcting. */
-.ln-entry { --bg: var(--canvas); background: var(--canvas); }
+   canvas, the writing in floating white panels. The page's own --bg is the
+   canvas inside the entry, so everything that paints itself the page's
+   colour (the sticky labels) follows. Not while printing, where the card is
+   the picture.
+
+   One page, 2026-11-12 (Miyel: "maybe the two-tiered system isn't really
+   necessary"): the record no longer fills a screen of its own, and runs
+   straight on into the writing. The record is not a panel: its cover near
+   the phone's width, on its own colour washed down from the top as home's
+   beacon is (--wash, FullPostPage), and the marks as their emblems. */
+@property --wash {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: transparent;
+}
+.ln-entry {
+  --bg: var(--canvas);
+  background: var(--canvas);
+  transition: --wash 0.9s ease;
+  position: relative;
+}
+.ln-screens:not(.ln-printing)::before {
+  content: '';
+  position: absolute; left: 0; right: 0; top: 0;
+  height: min(95dvh, 820px);
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--wash) 55%, var(--canvas)) 0%,
+    color-mix(in srgb, var(--wash) 28%, var(--canvas)) 45%,
+    var(--canvas) 100%);
+}
+.ln-screens:not(.ln-printing) { position: relative; isolation: isolate; }
 .ln-mark-dots { display: none; }
+@media (max-width: 768px) {
+  .ln-screens:not(.ln-printing) .ln-screen-one { min-height: 0; padding-bottom: 20px; }
+  .ln-screens:not(.ln-printing) .ln-scroll-cue { display: none; }
+  .ln-screens:not(.ln-printing) .ln-screen-two { padding-top: 0; }
+}
 .ln-screens:not(.ln-printing) .ln-print-card {
   display: flex; flex-direction: column; align-items: stretch; gap: 10px;
-  width: 100%; max-width: 440px; box-sizing: border-box;
-  padding: 16px 16px 20px;
+  width: 100%; max-width: 480px; box-sizing: border-box;
   text-align: left;
-  background: var(--card); border-radius: var(--panel-r); box-shadow: var(--lift-1);
 }
 .ln-screens:not(.ln-printing) .ln-print-card .ln-screen-one-art {
   width: 100%; height: auto; max-height: none;
-  border: 0; border-radius: var(--tile-r); box-shadow: var(--lift-2);
-  margin-bottom: 6px;
+  border: 0; border-radius: var(--tile-r); box-shadow: var(--lift-3);
+  margin-bottom: 8px;
 }
 .ln-screens:not(.ln-printing):not(.ln-editing) .ln-print-card .ln-screen-one-title { text-align: left; margin: 0; }
 .ln-screens:not(.ln-printing):not(.ln-editing) .ln-print-card .ln-screen-one-artist { text-align: left; }
+.ln-screens:not(.ln-printing):not(.ln-editing) .ln-print-card .ln-screen-one-posted { text-align: left; }
 .ln-screens:not(.ln-printing) .ln-rate-row { justify-content: space-between !important; align-items: center; }
-.ln-screens:not(.ln-printing) .ln-mark-dots { display: inline-flex; gap: 6px; }
-.ln-mark-dot { width: 14px; height: 14px; border-radius: 50%; display: block; }
+.ln-screens:not(.ln-printing) .ln-mark-dots { display: inline-flex; align-items: center; gap: 10px; }
 /* The chips are drawn with inline styles, hence the weight. A chip that is a
    button (the Sent chip, which opens the chain) stays. */
 .ln-screens:not(.ln-printing):not(.ln-editing) .ln-screen-one-chips > span { display: none !important; }
-.ln-screens:not(.ln-printing):not(.ln-editing) .ln-print-card .ln-screen-one-posted { text-align: left; }
 .ln-panel {
   background: var(--card); border-radius: var(--panel-r); box-shadow: var(--lift-1);
   padding: 4px 20px 22px; margin-bottom: 16px !important;
