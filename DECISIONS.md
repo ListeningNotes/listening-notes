@@ -1989,6 +1989,9 @@ they stand, read-only, never a blank box or a catalogue — goes to
 listeningnotes.blog, kept by the studio at an address nobody is shown (the
 magazine has no sign-in). The prompt arrives sealed like an LN. Admin
 letter. Say prompt and record, never question and answer (Miyel).
+Since 2026-11-12, Miyel: up to three records a prompt, each once; what is
+sent is published on the issue for anyone (the sheet says so); the issue's
+one filled control says Add yours.
 
 ## Things open in the page, not over it
 

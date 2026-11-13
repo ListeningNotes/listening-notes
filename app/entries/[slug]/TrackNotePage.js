@@ -81,7 +81,7 @@ import { MessageWayIn } from '../../../components/main_components/Slug_Page/Mess
 import SentBy, { creditOn, useTrail } from '../../../components/main_components/Slug_Page/SentBy';
 import SenderTool from '../../../components/main_components/Slug_Page/SenderTool';
 import SendSheet from '../../../components/main_components/SendSheet';
-import { PromptSheet, useMonthPrompt } from '../../../components/main_components/MonthPrompt';
+import { PromptSheet, useMonthPrompt, maySend } from '../../../components/main_components/MonthPrompt';
 import StarRating from '../../../components/main_components/StarRating';
 import StarPicker from '../../../components/session_components/StarRating';
 import Chip from '../../../components/main_components/Slug_Page/Chip';
@@ -322,7 +322,7 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
       slug={entry.slug}
       onSender={() => setCrediting(true)}
       onSend={() => setSending(true)}
-      onSubmit={prompt && !prompt.sent ? () => setSubmitting(true) : null}
+      onSubmit={maySend(prompt, entry.slug) ? () => setSubmitting(true) : null}
       onDelete={edit.remove}
     />
   );

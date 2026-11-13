@@ -33,7 +33,7 @@ import Chip from '../../../components/main_components/Slug_Page/Chip';
 import SentBy, { creditOn, useTrail } from '../../../components/main_components/Slug_Page/SentBy';
 import SenderTool from '../../../components/main_components/Slug_Page/SenderTool';
 import SendSheet from '../../../components/main_components/SendSheet';
-import { PromptSheet, useMonthPrompt } from '../../../components/main_components/MonthPrompt';
+import { PromptSheet, useMonthPrompt, maySend } from '../../../components/main_components/MonthPrompt';
 import PrintBar from '../../../components/main_components/Slug_Page/PrintBar';
 import HorizonChart from '../../../components/main_components/HorizonChart';
 import MiniCard from '../../../components/main_components/Slug_Page/MiniCard';
@@ -496,7 +496,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       onSend={() => setSending(true)}
       /* And this record for the month's prompt, while one is open and
          nothing has been sent for it. */
-      onSubmit={prompt && !prompt.sent ? () => setSubmitting(true) : null}
+      onSubmit={maySend(prompt, entry.slug) ? () => setSubmitting(true) : null}
       /* And another listen of the same record, which is a new entry and never
          an edit of this one. */
       onRelisten={revisit}

@@ -69,6 +69,17 @@ function timeLeft(endsAt, now = Date.now()) {
 // The record as the prompt's note names it: the song for a track note.
 const titleOf = sent => sent?.song || sent?.album || '';
 
+// What this journal sent for the prompt, oldest first: up to three since
+// 2026-11-12, and one before (`sent`).
+export const sentRecords = prompt => (Array.isArray(prompt?.sents) ? prompt.sents : prompt?.sent ? [prompt.sent] : []);
+// Whether this entry may still be sent: the prompt is open, fewer than three
+// have gone, and not this one.
+export function maySend(prompt, slug) {
+  if (!prompt) return false;
+  const sent = sentRecords(prompt);
+  return sent.length < (prompt.most || 1) && !sent.some(r => r.slug === slug);
+}
+
 // ── Over the wall ─────────────────────────────────────────────────────────
 export default function MonthPrompt({ authed }) {
   const [prompt] = useMonthPrompt(authed);
@@ -77,10 +88,15 @@ export default function MonthPrompt({ authed }) {
     <section className="mp-note" aria-label="This month’s prompt">
       <p className="mp-when">This month’s prompt · {timeLeft(prompt.ends_at)}</p>
       <h2 className="mp-said">{prompt.said}</h2>
-      {prompt.sent ? (
+      {sentRecords(prompt).length ? (
         <p className="mp-how">
           You sent{' '}
-          <Link href={`/entries/${encodeURIComponent(prompt.sent.slug)}`} className="mp-sent">{titleOf(prompt.sent)}</Link>
+          {sentRecords(prompt).map((r, i, all) => (
+            <span key={r.slug}>
+              <Link href={`/entries/${encodeURIComponent(r.slug)}`} className="mp-sent">{titleOf(r)}</Link>
+              {i < all.length - 2 ? ', ' : i === all.length - 2 ? ' and ' : ''}
+            </span>
+          ))}
         </p>
       ) : (
         <p className="mp-how">Send a record from your wall</p>

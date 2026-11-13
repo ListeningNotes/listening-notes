@@ -92,7 +92,8 @@ import Dashboard, { heldNow, subscribeHeld } from './Dashboard';
 import PeopleScreen from './PeopleScreen';
 // The Board's first screen, read when People opens (below).
 import { Everyone, readEveryone, useEveryone } from '../../app/directory/Directory';
-import { BOARD_OPEN, DIRECTORY_URL } from '../../library/version';
+import { DIRECTORY_URL, PUBLICATION_URL } from '../../library/version';
+import Issue from './Issue';
 import { readArtColor } from '../../library/music_data_api';
 // The same two the desk already reaches for, from the same module, so the
 // pane and the desk agree about what "a listen is open" means and say so the
@@ -1654,7 +1655,7 @@ export default function HomeNav() {
   const stops = authed ? [
     { key: 'home', word: 'Home', at: HOME },
     { key: 'people', word: 'Friends', at: BOOK },
-    ...(DIRECTORY_URL ? [{ key: 'community', word: 'Community', at: INBOX }] : []),
+    ...(PUBLICATION_URL ? [{ key: 'community', word: 'Community', at: INBOX }] : []),
   ] : [];
 
   const header = (
@@ -2105,18 +2106,11 @@ export default function HomeNav() {
         {authed && (
           <section className="hn-pane hn-pane--inbox" ref={inboxRef} aria-label="Community">
             {/* Community, 2026-10-27: where the inbox was (her Friends brief
-                retires it; anything from a person waits on their face now).
-                The Board, as /directory draws it, until Community's own
-                brief says what else it holds. Coming soon while the Board
-                is being worked on (BOARD_OPEN, library/version.js). */}
-            {visited[INBOX] && DIRECTORY_URL && (BOARD_OPEN ? (
-              <div className="hn-community"><Everyone keeper /></div>
-            ) : (
-              <div className="hn-soon">
-                <Globe size={22} weight="regular" aria-hidden="true" />
-                <span>Coming soon</span>
-              </div>
-            ))}
+                retires it; anything from a person waits on their face now). */}
+            {/* The issue since 2026-11-12: the month's prompt and the
+                records keepers sent to it, which is what Community is
+                (Miyel, 2026-11-11, replacing the Board; Issue.js). */}
+            {visited[INBOX] && PUBLICATION_URL && <Issue keeper />}
           </section>
         )}
 

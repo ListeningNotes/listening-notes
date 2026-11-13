@@ -157,7 +157,7 @@ export async function POST(request) {
         ? song.trim()
         : null,
     });
-    if (forPrompt) await mark_prompt_record(submission.id, body.prompt);
+    if (forPrompt) await mark_prompt_record(submission.id, body.prompt, body);
     return Response.json({ submission });
   } catch (error) {
     const nowhere = answerNoJournal(error);

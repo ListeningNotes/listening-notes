@@ -3598,3 +3598,155 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .hn .hn-pane--home .hp-recent { gap: 7px; }
   .hn .hn-pane--home .beacon-track { font-size: 21px; }
 }
+
+/* ── Community: the issue, 2026-11-12 ──────────────────────────────────────
+   Issue.js and IssuePicker.js. The prompt in the middle of a ring of the
+   records sent to it; on a phone the ring is larger than the screen and runs
+   off both sides (--ring-r), on a desk it fits whole. The card slides up from
+   the foot; the picker rises over the issue. The one filled thing is the
+   verb, Add yours or Send (DECISIONS, the one verb may be filled). */
+.is {
+  position: relative; min-height: calc(100dvh - var(--hn-bar-h) - 20px); display: flex; flex-direction: column;
+  /* Clear of the Listen bar at the foot of the screen. */
+  padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+}
+.is-quiet, .is-stale {
+  margin: 0; padding: 40px 24px; text-align: center;
+  font-family: var(--font-label); font-size: 11px; letter-spacing: 0.04em; color: var(--ink-faint);
+}
+.is-stale { padding: 8px 24px 0; }
+.is-stage {
+  --ring-r: clamp(200px, 35dvh, 320px);
+  --cover: clamp(52px, 15vw, 72px);
+  position: relative; flex: 1; min-height: calc(2 * var(--ring-r) + var(--cover) + 20px);
+  overflow: hidden;
+}
+@media (min-width: 769px) { .is-stage { --ring-r: min(34dvh, 260px); --cover: 64px; } }
+.is-ring-floor { position: absolute; inset: 0; touch-action: pan-y; cursor: grab; }
+.is-ring {
+  /* A little below the middle, so the cover brought to the top has room
+     over it under the bar. */
+  position: absolute; left: 50%; top: calc(50% + var(--cover) * 0.35); width: 0; height: 0;
+  transform: rotate(var(--turn, 0deg));
+}
+.is-cover {
+  position: absolute; left: 0; top: 0;
+  width: var(--cover); height: var(--cover);
+  margin: calc(var(--cover) / -2) 0 0 calc(var(--cover) / -2);
+  padding: 0; border: 0; border-radius: var(--tile-r, 12px); overflow: hidden;
+  background: var(--bg-warm); box-shadow: var(--lift-2);
+  transform: rotate(var(--at)) translateY(calc(-1 * var(--ring-r)));
+  transition: transform 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.is-cover img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
+.is-cover > span { display: grid; place-items: center; height: 100%; color: var(--ink-faint); }
+.is-cover--picked { transform: rotate(var(--at)) translateY(calc(-1 * var(--ring-r))) scale(1.28); z-index: 2; box-shadow: var(--lift-3); }
+.is-centre {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: min(78vw, 360px); text-align: center; pointer-events: none;
+}
+.is-said {
+  margin: 0; font-family: var(--font-display); font-weight: var(--font-display-weight);
+  font-size: clamp(1.35rem, 6.2vw, 1.9rem); line-height: 1.2; color: var(--ink); text-wrap: balance;
+}
+.is-meta {
+  margin: 12px 0 0; font-family: var(--font-label); font-size: 10px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--ink-faint);
+}
+.is-add {
+  align-self: center; margin: 8px auto 24px;
+  padding: 14px 34px; border: 0; border-radius: 999px;
+  background: var(--ink); color: var(--bg);
+  font-family: var(--font-display); font-weight: var(--font-display-weight); font-size: 16px;
+  cursor: pointer; box-shadow: var(--lift-2);
+}
+.is-add:disabled { opacity: 0.35; cursor: default; }
+.is--picked .is-add { visibility: hidden; }
+.is-card {
+  position: fixed; left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); z-index: 450;
+  max-width: 520px; margin: 0 auto; max-height: 52dvh; overflow-y: auto;
+  padding: 18px 20px 20px; border-radius: var(--panel-r, 20px);
+  background: var(--card); box-shadow: var(--lift-2);
+  animation: isCardUp 0.32s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+@keyframes isCardUp { from { transform: translateY(110%); } to { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .is-card { animation: none; } }
+.is-card-x {
+  position: absolute; top: 10px; right: 10px; padding: 6px; border: 0; background: none;
+  color: var(--ink-faint); cursor: pointer;
+}
+.is-card-who { display: flex; align-items: center; gap: 10px; padding-right: 26px; }
+.is-card-face {
+  flex: 0 0 auto; width: 34px; height: 34px; border-radius: 50%; overflow: hidden; background: var(--bg-warm);
+}
+.is-card-face img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.is-card-name {
+  flex: 1; min-width: 0; font-family: var(--font-display); font-weight: var(--font-display-weight);
+  font-size: 15px; color: var(--ink); text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.is-card-marks, .is-emblems { display: inline-flex; align-items: center; gap: 6px; }
+.is-card-title {
+  margin: 14px 0 0; font-family: var(--font-display); font-weight: var(--font-display-weight);
+  font-size: 1.4rem; line-height: 1.2; color: var(--ink);
+}
+.is-card-by {
+  margin: 4px 0 0; font-family: var(--font-label); font-size: 10px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--ink-soft);
+}
+.is-card-note { margin: 12px 0 0; font-size: 15px; line-height: 1.6; color: var(--ink); white-space: pre-wrap; }
+.is-card-on {
+  display: inline-block; margin-top: 12px; font-family: var(--font-label); font-size: 10px;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-soft);
+}
+
+.ip {
+  position: fixed; inset: 0; z-index: 300; overflow-y: auto;
+  display: flex; flex-direction: column;
+  padding: calc(env(safe-area-inset-top, 0px) + 18px) 0 calc(env(safe-area-inset-bottom, 0px) + 18px);
+  background: var(--canvas, var(--bg));
+  animation: isCardUp 0.36s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+@media (prefers-reduced-motion: reduce) { .ip { animation: none; } }
+.ip-head { display: flex; align-items: flex-start; gap: 12px; padding: 0 16px; }
+.ip-tip {
+  flex: 1; margin: 0; padding: 14px 16px; border-radius: var(--panel-r, 20px);
+  background: var(--card); box-shadow: var(--lift-1);
+  font-family: var(--font-display); font-weight: var(--font-display-weight); font-size: 17px; line-height: 1.3; color: var(--ink);
+}
+.ip-x { padding: 10px; border: 0; background: none; color: var(--ink-soft); cursor: pointer; }
+.ip-strip {
+  display: flex; align-items: center; gap: 12px; margin-top: 22px; padding: 18px 16px;
+  overflow-x: auto; scrollbar-width: none; scroll-snap-type: x proximity;
+}
+.ip-strip::-webkit-scrollbar { display: none; }
+.ip-one {
+  flex: 0 0 auto; width: 74px; height: 74px; padding: 0; border: 0; border-radius: var(--tile-r, 12px);
+  overflow: hidden; background: var(--bg-warm); box-shadow: var(--lift-2); scroll-snap-align: center;
+  transition: transform 0.24s cubic-bezier(0.22, 0.61, 0.36, 1); cursor: pointer; position: relative;
+}
+.ip-one img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ip-one--looking { transform: scale(1.3); margin: 0 10px; z-index: 1; box-shadow: var(--lift-3); }
+.ip-one--in::after {
+  content: ''; position: absolute; top: 5px; right: 5px; width: 12px; height: 12px; border-radius: 50%;
+  background: var(--ink); box-shadow: 0 0 0 2px var(--card);
+}
+.ip-seen { margin: 8px 16px 0; padding: 16px 20px; border-radius: var(--panel-r, 20px); background: var(--card); box-shadow: var(--lift-1); }
+.ip-title { margin: 0; font-family: var(--font-display); font-weight: var(--font-display-weight); font-size: 1.25rem; color: var(--ink); }
+.ip-by { margin: 4px 0 0; font-family: var(--font-label); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-soft); }
+.ip-writing {
+  margin: 10px 0 0; font-size: 14px; line-height: 1.55; color: var(--ink); white-space: pre-wrap;
+  max-height: 9.5em; overflow: hidden;
+}
+.ip-writing--none { color: var(--ink-faint); }
+.ip-pick { margin-top: 12px; }
+.ip-tray { display: flex; justify-content: center; gap: 10px; margin-top: 20px; }
+.ip-slot {
+  width: 54px; height: 54px; border-radius: 10px; overflow: hidden;
+  border: 1px dashed var(--ink-faint); box-sizing: border-box;
+}
+.ip-slot--full { border: 0; box-shadow: var(--lift-2); }
+.ip-slot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ip-said { margin: 16px 24px 0; text-align: center; font-size: 12px; line-height: 1.5; color: var(--ink-soft); }
+.ip-trouble { margin: 8px 24px 0; text-align: center; font-size: 13px; color: var(--fav); }
+.ip-send { margin-top: 16px; }

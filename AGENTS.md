@@ -151,7 +151,10 @@ reasoning; these are inline so nobody has to go looking.
   `/api/public/notes/[slug]`, one entry at a time, never for a track note or
   an entry whose credit was kept quiet; a new column stays private until
   somebody decides otherwise; the chain fields leave only through `withoutChain`, and only on a
-  Submission entry that was not marked quiet. The address book never leaves
+  Submission entry that was not marked quiet. What a keeper sent to the
+  month's prompt is published only through the publication's
+  `/api/public/issue`, as it was sent (library/the_issue.js). The address
+  book never leaves
   (since 2026-11-11; there are no friends of friends).
 - **Secrets never reach a browser.** The `secrets` table is read by
   `library/secrets.js` and nothing else, and is never selected with
@@ -328,6 +331,10 @@ pages and API routes are indexed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - `migrator.js` — brings the database up to date from `migrations/` on start
   and at build, under a session-level advisory lock, on the direct (unpooled)
   endpoint.
+- `the_issue.js` — Community, the issue: on the publication's journal
+  `pull_issue`, the newest prompt's records in the order they arrived (never
+  ranked, an archived one left out); on every other journal `read_issue`,
+  asked of the publication and kept, stale when it cannot be reached.
 - `month_prompt.js` — the month's prompt (the blog's first piece): the one
   a journal holds (`settings.month_prompt`, kept and read here), whether it
   is still open, and `send_to_prompt`, an entry's record and its writing as

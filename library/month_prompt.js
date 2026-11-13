@@ -49,16 +49,30 @@ export async function keep_month_prompt(prompt) {
     sent_at: prompt.sent_at,
     id: prompt.id,
     sent: null,
+    sents: [],
   };
   await database`UPDATE settings SET month_prompt = ${JSON.stringify(kept)}::jsonb WHERE id = 1`;
   return kept;
 }
 
+// ── Up to three records a prompt, 2026-11-12 ────────────────────────────
+// It was one (Miyel's pick of the brief's tray, the day Community became the
+// prompt). `sents` is every record this journal sent for the prompt, oldest
+// first; `sent` stays the latest, as it was, for anything that reads it.
+export const MOST_RECORDS = 3;
+export function sentFor(prompt) {
+  if (Array.isArray(prompt?.sents)) return prompt.sents;
+  return prompt?.sent ? [prompt.sent] : [];
+}
+
 // What this journal sent for the prompt, written down once it landed — the
 // record, never the writing — so the prompt over the wall can say so.
 async function note_sent(id, sent) {
+  const kept = await pull_month_prompt();
+  const sents = [...sentFor(kept), sent];
   const [row] = await database`
-    UPDATE settings SET month_prompt = jsonb_set(month_prompt, '{sent}', ${JSON.stringify(sent)}::jsonb)
+    UPDATE settings SET month_prompt = month_prompt
+      || jsonb_build_object('sent', ${JSON.stringify(sent)}::jsonb, 'sents', ${JSON.stringify(sents)}::jsonb)
     WHERE id = 1 AND month_prompt->>'id' = ${id}
     RETURNING month_prompt
   `;
@@ -95,6 +109,12 @@ export async function send_to_prompt({ prompt, entry, keeper, from }) {
         collection_id: entry.collection_id ?? null,
         song: entry.song || '',
         note: String(entry.notes || ''),
+        // The record's stars and marks as the post has them, for the issue
+        // (2026-11-12); a publication too old to keep them ignores them.
+        rating: entry.rating ?? null,
+        favorite: entry.favorite === true || entry.favorite === 'true',
+        masterpiece: entry.masterpiece === true || entry.rating === 'Masterpiece',
+        formative: entry.formative === true || entry.formative === 'true',
         submitter_name: keeper || null,
         sender_url: from,
         sender_entry: entry.slug,
@@ -136,11 +156,19 @@ export async function takesPrompts() {
 // with it — which prompt, its month and its words — beside the record, the
 // writing and the journal and entry it came from, which the submissions
 // route already keeps.
-export async function mark_prompt_record(id, prompt) {
+//
+// And since 2026-11-12 the record's stars and marks as the sender's post had
+// them, kept beside the prompt for the issue (library/the_issue.js).
+export async function mark_prompt_record(id, prompt, record = {}) {
+  const rating = String(record?.rating ?? '').slice(0, 20);
   const marked = {
     id: String(prompt?.id || '').slice(0, 64),
     month: String(prompt?.month || '').slice(0, 40),
     said: String(prompt?.said || '').slice(0, 300),
+    rating,
+    favorite: record?.favorite === true,
+    masterpiece: record?.masterpiece === true,
+    formative: record?.formative === true,
   };
   await database`UPDATE submissions SET prompt = ${JSON.stringify(marked)}::jsonb WHERE id = ${id}`;
 }

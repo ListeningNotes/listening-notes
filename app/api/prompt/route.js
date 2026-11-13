@@ -15,12 +15,13 @@
 //                          whether it was kept.
 //   POST { slug }          the keeper's press: that entry's record and its
 //                          writing, as they stand, sent to the publication
-//                          for the prompt. Once a prompt, and never written
+//                          for the prompt. Up to three a prompt (2026-11-12),
+//                          each once, and never written
 //                          to the entry.
 import { requireWristband } from '@/library/wristband';
 import { mayKnock, tooSoon, whoIsKnocking } from '@/library/doorman';
 import { read_prompt } from '@/library/letterhead';
-import { pull_month_prompt, keep_month_prompt, stillOpen, send_to_prompt } from '@/library/month_prompt';
+import { pull_month_prompt, keep_month_prompt, stillOpen, send_to_prompt, sentFor, MOST_RECORDS } from '@/library/month_prompt';
 import { pull_entry_by_slug } from '@/library/database_actions';
 import { pull_settings } from '@/library/settings_actions';
 import { tidyJournal } from '@/library/return_address';
@@ -32,7 +33,7 @@ const NO_STORE = { 'Cache-Control': 'no-store' };
 // month, when it closes and what was sent for it — and nothing once it has
 // closed.
 const told = kept => (kept && stillOpen(kept)
-  ? { said: kept.said, month: kept.month, ends_at: kept.ends_at, sent: kept.sent || null }
+  ? { said: kept.said, month: kept.month, ends_at: kept.ends_at, sent: kept.sent || null, sents: sentFor(kept), most: MOST_RECORDS }
   : null);
 
 export async function GET(request) {
@@ -81,8 +82,13 @@ export async function POST(request) {
     if (!kept || !stillOpen(kept)) {
       return Response.json({ ok: false, error: 'This month’s prompt has closed.' }, { status: 409 });
     }
-    if (kept.sent) {
-      return Response.json({ ok: false, error: 'You’ve sent a record for this prompt already.' }, { status: 409 });
+    // Up to three a prompt, and never the same one twice (2026-11-12).
+    const already = sentFor(kept);
+    if (already.some(r => r.slug === slug)) {
+      return Response.json({ ok: false, error: 'You’ve sent this one already.' }, { status: 409 });
+    }
+    if (already.length >= MOST_RECORDS) {
+      return Response.json({ ok: false, error: `You’ve sent ${MOST_RECORDS} records for this prompt.` }, { status: 409 });
     }
     // The entry as it stands this moment, read here rather than taken from
     // the page: what is sent is the keeper's own post, never words a page
