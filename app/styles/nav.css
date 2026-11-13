@@ -3642,6 +3642,21 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
 .is-cover img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
 .is-cover > span { display: grid; place-items: center; height: 100%; color: var(--ink-faint); }
 .is-cover--picked { transform: rotate(var(--at)) translateY(calc(-1 * var(--ring-r))) scale(1.28); z-index: 2; box-shadow: var(--lift-3); }
+/* The globe, on a phone (Issue.js): the prompt over it rather than inside
+   it, and every cover placed and sized each frame by the script. --back is
+   how far round the back a cover is, 0 at the front, 1 behind. */
+.is-globe { position: absolute; inset: 0; isolation: isolate; touch-action: none; cursor: grab; }
+.is-orb {
+  position: absolute; left: 0; top: 0; width: 120px; height: 120px; margin: -60px 0 0 -60px;
+  padding: 0; border: 0; border-radius: var(--tile-r, 12px); overflow: hidden;
+  background: var(--bg-warm); box-shadow: var(--lift-2); will-change: transform;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.is-orb img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
+.is-orb > span { display: grid; place-items: center; height: 100%; color: var(--ink-faint); }
+.is-orb-back { position: absolute; inset: 0; background: #000; opacity: calc(var(--back, 0) * 0.32); pointer-events: none; }
+.is-orb--picked { box-shadow: var(--lift-3), 0 0 0 4px var(--card); }
+.is-stage--globe .is-centre { top: 4%; transform: translateX(-50%); }
 .is-centre {
   position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
   width: min(78vw, 360px); text-align: center; pointer-events: none;

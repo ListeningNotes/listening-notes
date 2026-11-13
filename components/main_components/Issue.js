@@ -7,13 +7,13 @@
 // order they arrived — never ranked (library/the_issue.js).
 //
 // ── The ring ──────────────────────────────────────────────────────────────
-// A cover per record sent, on a circle round the prompt, turning once in two
+// On a desk; a phone has the globe (below). A cover per record sent, on a circle round the prompt, turning once in two
 // and a half minutes. The ring has places for at least thirty-six, so it
 // fills over the month and its shape is how far through the issue you are;
-// past that it takes as many as there are (SLOTS). On a phone it is drawn
-// larger than the screen and runs off both sides, so the covers stay big
-// enough to see; on a desk it fits whole. It never becomes a grid: a grid of
-// covers is what every other music app already is (the brief).
+// past that it takes as many as there are (SLOTS). That is on a desk; on a
+// phone the same records are a globe under the prompt (Globe, below). It
+// never becomes a grid: a grid of covers is what every other music app
+// already is (the brief).
 //
 // A finger turns it like a dial. Let go, and the nearest cover comes to the
 // top and its card slides up from the foot: their face and name, their
@@ -199,12 +199,165 @@ function Ring({ records, picked, onPick }) {
   );
 }
 
+// ── The globe ───────────────────────────────────────────────────────────────
+// On a phone (Miyel, 2026-11-13: "an ode to" the first Echo dashboard): the
+// records on the surface of a ball under the prompt, turning slowly. A finger
+// rolls it any way and lets it coast; a tap turns that cover to face you and
+// opens its card. Each cover is placed by hand a frame at a time — a point on
+// the ball, turned, then drawn smaller and shaded the further back it is.
+const GLOBE_BOX = 120;
+const GLOBE_TILT = 0.12;
+
+function globePlace(i, n, R, W) {
+  if (n === 1) return { x: 0, y: 0, z: 0, size: W * 0.36 };
+  const y = 1 - (2 * (i + 0.5)) / n;
+  const across = Math.sqrt(1 - y * y);
+  const turn = i * 2.399963; // the golden angle, so no two crowd
+  const r = R * (n < 6 ? 0.8 : 1.05);
+  return {
+    x: r * across * Math.sin(turn), y: r * y, z: r * across * Math.cos(turn),
+    size: Math.max(48, Math.min(W * 0.3, (R * 2.6) / Math.sqrt(n))),
+  };
+}
+const wrapPi = a => { const b = (a + Math.PI) % (2 * Math.PI); return (b < 0 ? b + 2 * Math.PI : b) - Math.PI; };
+
+function Globe({ records, picked, onPick }) {
+  const floor = useRef(null);
+  const covers = useRef([]);
+  const view = useRef({ yaw: 0, pitch: GLOBE_TILT, vYaw: 0, vPitch: 0, aim: null, restUntil: 0 });
+  const drag = useRef(null);
+  const n = records.length;
+
+  // The size of the floor, read once a frame is cheap; R follows it.
+  const measure = () => {
+    const box = floor.current;
+    const W = box?.clientWidth || 360, H = box?.clientHeight || 600;
+    return { W, H, R: Math.min(W * 0.36, H * 0.26), cx: W / 2, cy: H * 0.56 };
+  };
+
+  useEffect(() => {
+    let frame = 0;
+    let last = performance.now();
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const tick = now => {
+      const dt = Math.min(48, now - last);
+      last = now;
+      const v = view.current;
+      const { W, R, cx, cy } = measure();
+      if (v.aim) {
+        const k = 1 - Math.exp(-dt / 140);
+        v.yaw += (v.aim.yaw - v.yaw) * k;
+        v.pitch += (v.aim.pitch - v.pitch) * k;
+        if (Math.abs(v.aim.yaw - v.yaw) < 0.002 && Math.abs(v.aim.pitch - v.pitch) < 0.002) v.aim = null;
+      } else if (!drag.current?.moved) {
+        if (Math.abs(v.vYaw) > 0.00004 || Math.abs(v.vPitch) > 0.00004) {
+          v.yaw += v.vYaw * dt; v.vYaw *= Math.pow(0.9955, dt);
+          v.pitch = Math.max(-1.1, Math.min(1.1, v.pitch + v.vPitch * dt)); v.vPitch *= Math.pow(0.993, dt);
+          v.restUntil = now + 2500;
+        } else if (picked === null && !still && !document.hidden && now > v.restUntil) {
+          v.yaw -= ((2 * Math.PI) / 70000) * dt;
+          v.pitch += (GLOBE_TILT - v.pitch) * (1 - Math.exp(-dt / 1200));
+        }
+      }
+      const D = R * 3.2;
+      const cyw = Math.cos(v.yaw), syw = Math.sin(v.yaw), cp = Math.cos(v.pitch), sp = Math.sin(v.pitch);
+      for (let i = 0; i < n; i++) {
+        const el = covers.current[i];
+        if (!el) continue;
+        const p = globePlace(i, n, R, W);
+        const x1 = p.x * cyw + p.z * syw, z1 = -p.x * syw + p.z * cyw;
+        const y2 = p.y * cp + z1 * sp, z2 = -p.y * sp + z1 * cp;
+        const s = D / (D - z2);
+        el.style.transform = `translate3d(${cx + x1 * s}px, ${cy + y2 * s}px, 0) scale(${((p.size / GLOBE_BOX) * s * (i === picked ? 1.15 : 1)).toFixed(4)})`;
+        el.style.zIndex = String(Math.round(1000 + z2));
+        el.style.setProperty('--back', Math.max(0, Math.min(1, (R - z2) / (2 * R))).toFixed(3));
+      }
+      frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [n, picked]);
+
+  // The turn that brings cover i to face you.
+  const bring = useCallback(i => {
+    const v = view.current;
+    const { W, R } = measure();
+    const p = globePlace(i, n, R, W);
+    v.vYaw = v.vPitch = 0;
+    v.aim = { yaw: v.yaw + wrapPi(-Math.atan2(p.x, p.z) - v.yaw), pitch: -Math.atan2(p.y, Math.hypot(p.x, p.z)) };
+    onPick(i);
+  }, [n, onPick]);
+
+  const down = e => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    const v = view.current;
+    drag.current = { x: e.clientX, y: e.clientY, lx: e.clientX, ly: e.clientY, t: performance.now(), vx: 0, vy: 0, yaw: v.yaw, pitch: v.pitch, moved: false };
+  };
+  const move = e => {
+    const d = drag.current;
+    if (!d) return;
+    const dx = e.clientX - d.x, dy = e.clientY - d.y;
+    if (!d.moved && Math.hypot(dx, dy) < 6) return;
+    if (!d.moved) { d.moved = true; view.current.aim = null; e.currentTarget.setPointerCapture?.(e.pointerId); }
+    const now = performance.now(), dt = Math.max(8, now - d.t);
+    // The finger's speed, smoothed, so one jittery sample does not decide a throw.
+    d.vx = d.vx * 0.5 + (0.5 * (e.clientX - d.lx)) / dt;
+    d.vy = d.vy * 0.5 + (0.5 * (e.clientY - d.ly)) / dt;
+    d.lx = e.clientX; d.ly = e.clientY; d.t = now;
+    const { R } = measure();
+    view.current.yaw = d.yaw + dx / (R * 1.4);
+    view.current.pitch = Math.max(-1.1, Math.min(1.1, d.pitch + dy / (R * 1.4)));
+  };
+  const up = () => {
+    const d = drag.current;
+    drag.current = null;
+    if (!d?.moved) return;
+    const { R } = measure();
+    const fresh = performance.now() - d.t < 80;
+    view.current.vYaw = fresh ? d.vx / (R * 1.4) : 0;
+    view.current.vPitch = fresh ? d.vy / (R * 1.4) : 0;
+  };
+
+  return (
+    <div className="is-globe" ref={floor} onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}>
+      {records.map((r, i) => (
+        <button
+          key={r.key}
+          ref={el => { covers.current[i] = el; }}
+          type="button"
+          className={'is-orb' + (picked === i ? ' is-orb--picked' : '')}
+          onClick={() => { if (!drag.current?.moved) bring(i); }}
+          aria-label={`${r.name || 'A keeper'}: ${r.song || r.album}`}
+        >
+          {r.art ? <img src={r.art} alt="" loading="lazy" draggable={false} /> : <span>♪</span>}
+          <i className="is-orb-back" />
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// Whether the stage is wide enough for the ring (a desk) rather than the
+// globe (a phone): measured on the stage itself, never the window.
+function useWide(box) {
+  const [wide, setWide] = useState(false);
+  useEffect(() => {
+    if (!box) return;
+    const watch = new ResizeObserver(() => setWide(box.clientWidth >= 700));
+    watch.observe(box);
+    return () => watch.disconnect();
+  }, [box]);
+  return wide;
+}
+
 // ── The issue ───────────────────────────────────────────────────────────────
 export default function Issue({ keeper = false }) {
   const read = useIssue();
   const [prompt] = useMonthPrompt(keeper);
   const [picked, setPicked] = useState(null);
   const [adding, setAdding] = useState(false);
+  const [stage, setStage] = useState(null);
+  const wide = useWide(stage);
   const issue = read?.issue || null;
   const records = issue?.records || [];
 
@@ -225,8 +378,11 @@ export default function Issue({ keeper = false }) {
   return (
     <div className={'is' + (picked !== null ? ' is--picked' : '')}>
       {read.stale && <p className="is-stale">Couldn’t refresh the issue; this is it as it was.</p>}
-      <div className="is-stage">
-        <Ring records={records} picked={picked} onPick={setPicked} />
+      {issue.standIn && <p className="is-stale">A stand-in issue of your own records, for trying the globe.</p>}
+      <div className={'is-stage' + (wide ? '' : ' is-stage--globe')} ref={setStage}>
+        {wide
+          ? <Ring records={records} picked={picked} onPick={setPicked} />
+          : <Globe records={records} picked={picked} onPick={setPicked} />}
         <div className="is-centre">
           <h2 className="is-said">{issue.prompt.said}</h2>
           <p className="is-meta">{meta}</p>
