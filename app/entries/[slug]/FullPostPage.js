@@ -12,7 +12,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { useRouter } from 'next/navigation';
 import { Envelope, Fingerprint, Heart, Pause, Play, SketchLogo, VinylRecord } from '@phosphor-icons/react';
 import { fonts } from '../../../library/sitewide_visuals';
-import { sizedAlbumArt, fetchAlbumArtUrl, readArtColor } from '../../../library/music_data_api';
+import { sizedAlbumArt, fetchAlbumArtUrl, washFromArt } from '../../../library/music_data_api';
 import { parseHorizon, entryTracks, splitNotes, parseRating, flawless } from '../../../library/entry_formatter';
 import { buildReferenceIndex, createReferenceLinker } from '../../../library/cross_references';
 import SiteNav from '../../../components/main_components/SiteNav';
@@ -265,12 +265,10 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   useEffect(() => {
     if (!entry.album_art) return undefined;
     let live = true;
-    // A cover with hardly any colour — most black-and-white sleeves — gets
-    // a soft grey rather than none, so no post is without one; home leaves
-    // those bare, and its beacon is one record, not every post.
-    readArtColor(entry.album_art).then(c => {
+    // A cover with hardly any colour gets a soft grey (washFromArt).
+    washFromArt(entry.album_art).then(c => {
       if (!live) return;
-      const next = !c ? 'transparent' : c.plain ? 'hsl(40 6% 62%)' : `hsl(${Math.round(c.hue)} 58% 60%)`;
+      const next = c || 'transparent';
       keepWash(next);
       setWash(next);
     });
@@ -623,6 +621,32 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   // at 0 the whole time and can't be what drives this. Watch both: .ln-screens
   // is the scroller on a phone, the window is the scroller on desktop.
   const [scrolled, setScrolled] = useState(false);
+  // ── And up under the clock, 2026-11-12 ─────────────────────────────────
+  // Miyel: "the top of the screen where the clock, battery and wifi is not
+  // taking on color." That strip is the brow (base.css), drawn once for the
+  // whole site in the page's colour, so the post tells the page its wash and
+  // the brow wears the wash's top — while the post is at its top; scrolled,
+  // the wash has gone up the screen and the brow is the page again. Left in
+  // place a moment after a post goes, so the next one in a swipe takes it
+  // over rather than the strip blinking to the page between them.
+  useEffect(() => {
+    const root = document.documentElement;
+    clearTimeout(root.__lnBrowAway);
+    if (wash && wash !== 'transparent' && !scrolled && !printing) {
+      root.style.setProperty('--post-wash', wash);
+      root.setAttribute('data-post-wash', '');
+    } else {
+      root.removeAttribute('data-post-wash');
+    }
+  }, [wash, scrolled, printing]);
+  useEffect(() => () => {
+    const root = document.documentElement;
+    clearTimeout(root.__lnBrowAway);
+    root.__lnBrowAway = setTimeout(() => {
+      if (!document.querySelector('.ln-screens')) root.removeAttribute('data-post-wash');
+    }, 120);
+  }, []);
+
   useEffect(() => {
     const screens = document.querySelector('.ln-screens');
     const read = () => setScrolled(Math.max(screens ? screens.scrollTop : 0, window.scrollY) > 24);

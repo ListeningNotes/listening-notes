@@ -52,7 +52,8 @@ import { createContext, useCallback, useContext, useEffect, useLayoutEffect, use
 import { usePathname, useRouter } from 'next/navigation';
 import { CaretLeft, CaretRight } from '@phosphor-icons/react';
 import { RecordScreen } from './LayerWaiting';
-import { tileBoxOf, neighboursOf, handOffNeighbour, arrivingBySwipe, tookASwipe, growBoxOf, arrivingBack, cameBack, cameAlone, arrivingAlone, carryReading, endReading, cameReadingOn, washOf } from '../../library/handoff';
+import { washFromArt, washKnown } from '../../library/music_data_api';
+import { tileBoxOf, neighboursOf, handOffNeighbour, arrivingBySwipe, tookASwipe, growBoxOf, arrivingBack, cameBack, cameAlone, arrivingAlone, carryReading, endReading, cameReadingOn, washOf, keepWash } from '../../library/handoff';
 
 // How long the sheet takes to grow to the screen. Unhurried, slowing as it
 // lands — the same curve the slide used.
@@ -628,6 +629,15 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
     // still at the foot while it loads.
     handOffNeighbour(folder?.some(e => e.slug === target.slug) ? { ...target, folder } : target);
     turnedTo = target;
+    // The colour turns as the page does (Miyel: "I do wish it happened
+    // faster, like on swipe"): the next record's wash was read ahead (below),
+    // so it is set now rather than once the record has been read.
+    const ahead = washKnown(target.album_art);
+    if (ahead) {
+      keepWash(ahead);
+      sheetRef.current?.style.setProperty('--wash', ahead);
+      if (document.documentElement.hasAttribute('data-post-wash')) document.documentElement.style.setProperty('--post-wash', ahead);
+    }
     arrivingBySwipe(dir);
     // A folder flipped from somewhere that does not browse stays that
     // folder: the next page arrives alone as this one did.
@@ -644,6 +654,11 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
     }, TURN_MS);
   }, [neighbours.prev, neighbours.next, router, arrival.alone, folder]);
   useEffect(() => () => window.clearTimeout(pendingTurn.current), []);
+  // The records either side, their colours read ahead for the turn.
+  useEffect(() => {
+    washFromArt(neighbours.prev?.album_art);
+    washFromArt(neighbours.next?.album_art);
+  }, [neighbours.prev, neighbours.next]);
   // A tab pressed: straight to that page of the folder, turning the way it
   // lies from this one.
   useEffect(() => {

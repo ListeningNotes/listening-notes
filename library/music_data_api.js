@@ -93,6 +93,30 @@ export function readArtColor(address) {
   });
 }
 
+// ── A post's wash, 2026-11-12 ─────────────────────────────────────────────
+// The colour a post is washed in, from its cover (FullPostPage): the cover's
+// one colour as home's wash takes it, and a soft grey for a cover with hardly
+// any — most black-and-white sleeves — so no post is without one. Kept per
+// cover, so the layer can read the records either side ahead and turn the
+// colour the moment a swipe commits, rather than once the next post is read.
+const washes = new Map();
+export function washFromArt(address) {
+  if (!address) return Promise.resolve('');
+  if (!washes.has(address)) {
+    washes.set(address, readArtColor(address).then(c => {
+      const wash = !c ? '' : c.plain ? 'hsl(40 6% 62%)' : `hsl(${Math.round(c.hue)} 58% 60%)`;
+      washes.set(address, wash);
+      return wash;
+    }));
+  }
+  return Promise.resolve(washes.get(address));
+}
+// What is already known, without asking: '' until the cover has been read.
+export function washKnown(address) {
+  const known = washes.get(address);
+  return typeof known === 'string' ? known : '';
+}
+
 // Pull the FULL, ordered tracklist from iTunes/Apple Music. Two steps:
 //   1. find the album's collection (scored match, like fetchAlbumArtUrl)
 //   2. look up that exact collection's songs — returns every track in order

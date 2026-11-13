@@ -2435,7 +2435,7 @@ html[data-printing] .sitenav-row { display: none; }
 .ln-entry {
   --bg: var(--canvas);
   background: var(--canvas);
-  transition: --wash 0.9s ease;
+  transition: --wash 0.4s ease;
   position: relative;
 }
 /* The layer a post opens on stands on the canvas too, so the stand-in
@@ -2515,3 +2515,13 @@ html[data-printing] .sitenav-row { display: none; }
 }
 .lay-under { display: none; }
 @media (max-width: 768px) { .lay-under { display: block; } }
+
+/* The brow, under the clock, in the wash's top while a post is at its top
+   (FullPostPage, And up under the clock): the same mix the wash starts at. */
+@property --post-wash {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: transparent;
+}
+html { transition: --post-wash 0.4s ease; }
+html[data-post-wash] .ln-brow { background: color-mix(in srgb, var(--post-wash) 55%, var(--canvas)); }
