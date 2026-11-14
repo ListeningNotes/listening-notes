@@ -16,9 +16,9 @@
 // already is (the brief).
 //
 // A finger turns it like a dial. Let go, and the nearest cover comes to the
-// top and its card slides up from the foot: their face and name, their
-// stars, the record, and the writing they sent — each a door to their
-// journal. A tap on a cover does the same.
+// top and its card slides up from the foot: the album, and a voice for each
+// keeper who sent it — their face and name, their stars and the writing
+// they sent, each a door to their journal. A tap on a cover does the same.
 //
 // The one filled control is the verb, Add yours (IssuePicker.js), while the
 // prompt is open and this journal has records left to send.
@@ -77,14 +77,15 @@ function closes(endsAt) {
 }
 
 // ── The card ────────────────────────────────────────────────────────────────
-function Card({ record, onClose }) {
+// One album and everybody who sent it to this issue: the album once at the
+// top, then a voice each — their face and name, their stars and marks, the
+// writing they sent, and Read more, their post on their own journal. The
+// writing is what they sent, nothing more (the brief).
+function Voice({ record }) {
   const home = record.journal ? journalUrl(record.journal) : '';
   const post = home && record.slug ? `${home}/entries/${encodeURIComponent(record.slug)}` : home;
   return (
-    <div className="is-card" role="dialog" aria-label={`${record.name || 'A keeper'} sent ${record.song || record.album}`}>
-      <button type="button" className="is-card-x" onClick={onClose} aria-label="Put this down">
-        <X size={16} weight="bold" />
-      </button>
+    <div className="is-voice">
       <div className="is-card-who">
         {home ? (
           <a href={home} className="is-card-face" target="_blank" rel="noreferrer">
@@ -99,12 +100,40 @@ function Card({ record, onClose }) {
           <Emblems record={record} size={14} />
         </span>
       </div>
-      <h3 className="is-card-title">{record.song || record.album}</h3>
-      <p className="is-card-by">{[record.song ? record.album : '', record.artist, record.year].filter(Boolean).join(' · ')}</p>
       {record.note && <p className="is-card-note">{record.note}</p>}
       {post && <a href={post} className="is-card-on" target="_blank" rel="noreferrer">Read more</a>}
     </div>
   );
+}
+
+function Card({ album, onClose }) {
+  return (
+    <div className="is-card" role="dialog" aria-label={album.song || album.album}>
+      <button type="button" className="is-card-x" onClick={onClose} aria-label="Put this down">
+        <X size={16} weight="bold" />
+      </button>
+      <h3 className="is-card-title">{album.song || album.album}</h3>
+      <p className="is-card-by">{[album.song ? album.album : '', album.artist, album.year].filter(Boolean).join(' · ')}</p>
+      <div className="is-voices">
+        {album.voices.map(v => <Voice key={v.key} record={v} />)}
+      </div>
+    </div>
+  );
+}
+
+// The records sent, one per album (or song): sent twice, it is one cover
+// with two voices, placed where it first arrived.
+function byAlbum(records) {
+  const albums = [];
+  const seen = new Map();
+  for (const r of records) {
+    const id = [r.album, r.artist, r.song].map(x => String(x || '').trim().toLowerCase()).join('|');
+    if (seen.has(id)) { seen.get(id).voices.push(r); continue; }
+    const album = { key: r.key, album: r.album, artist: r.artist, year: r.year, art: r.art, song: r.song, voices: [r] };
+    seen.set(id, album);
+    albums.push(album);
+  }
+  return albums;
 }
 
 // ── The ring ────────────────────────────────────────────────────────────────
@@ -189,7 +218,7 @@ function Ring({ records, picked, onPick }) {
             className={'is-cover' + (picked === i ? ' is-cover--picked' : '')}
             style={{ '--at': `${i * step}deg` }}
             onClick={() => { if (!drag.current?.moved) bring(i); }}
-            aria-label={`${r.name || 'A keeper'}: ${r.song || r.album}`}
+            aria-label={r.song || r.album}
           >
             {r.art ? <img src={r.art} alt="" loading="lazy" draggable={false} /> : <span>♪</span>}
           </button>
@@ -327,7 +356,7 @@ function Globe({ records, picked, onPick }) {
           type="button"
           className={'is-orb' + (picked === i ? ' is-orb--picked' : '')}
           onClick={() => { if (!drag.current?.moved) bring(i); }}
-          aria-label={`${r.name || 'A keeper'}: ${r.song || r.album}`}
+          aria-label={r.song || r.album}
         >
           {r.art ? <img src={r.art} alt="" loading="lazy" draggable={false} /> : <span>♪</span>}
           <i className="is-orb-back" />
@@ -360,6 +389,7 @@ export default function Issue({ keeper = false }) {
   const wide = useWide(stage);
   const issue = read?.issue || null;
   const records = issue?.records || [];
+  const albums = byAlbum(records);
 
   if (read === undefined) return <p className="is-quiet">Asking for this month’s issue…</p>;
   if (!issue) {
@@ -381,8 +411,8 @@ export default function Issue({ keeper = false }) {
       {issue.standIn && <p className="is-stale">A stand-in issue of your own records, for trying the globe.</p>}
       <div className={'is-stage' + (wide ? '' : ' is-stage--globe')} ref={setStage}>
         {wide
-          ? <Ring records={records} picked={picked} onPick={setPicked} />
-          : <Globe records={records} picked={picked} onPick={setPicked} />}
+          ? <Ring records={albums} picked={picked} onPick={setPicked} />
+          : <Globe records={albums} picked={picked} onPick={setPicked} />}
         <div className="is-centre">
           <h2 className="is-said">{issue.prompt.said}</h2>
           <p className="is-meta">{meta}</p>
@@ -391,7 +421,7 @@ export default function Issue({ keeper = false }) {
       {keeper && left > 0 && (
         <button type="button" className="is-add" onClick={() => setAdding(true)}>Add yours</button>
       )}
-      {picked !== null && records[picked] && <Card record={records[picked]} onClose={() => setPicked(null)} />}
+      {picked !== null && albums[picked] && <Card album={albums[picked]} onClose={() => setPicked(null)} />}
       {adding && (
         <IssuePicker
           prompt={prompt}

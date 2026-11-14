@@ -3765,3 +3765,7 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
 .ip-said { margin: 16px 24px 0; text-align: center; font-size: 12px; line-height: 1.5; color: var(--ink-soft); }
 .ip-trouble { margin: 8px 24px 0; text-align: center; font-size: 13px; color: var(--fav); }
 .ip-send { margin-top: 16px; }
+/* The voices on an album's card in the issue: one per keeper who sent it. */
+.is-voices { display: flex; flex-direction: column; gap: 16px; margin-top: 14px; }
+.is-voice + .is-voice { padding-top: 16px; border-top: 1px solid var(--border); }
+.is-voice .is-card-note { margin-top: 10px; }
