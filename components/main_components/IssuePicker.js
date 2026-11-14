@@ -25,7 +25,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
-import { MagnifyingGlass, X } from '@phosphor-icons/react';
+import { MagnifyingGlass, Plus, SquaresFour, X } from '@phosphor-icons/react';
 import { useMonthPrompt } from './MonthPrompt';
 import { SentLetter, LETTER_HOLD_MS, LETTER_GO_MS } from './SendSheet';
 import StarRating from './StarRating';
@@ -37,6 +37,9 @@ export default function IssuePicker({ prompt, left, sent, onClose, onSent }) {
   const [, tellPrompt] = useMonthPrompt(true);
   const [records, setRecords] = useState(null);
   const [thing, setThing] = useState(null);
+  // The first press: a post from your wall, or a new listen (Miyel,
+  // 2026-11-14: two doors, "like a video game"). '' until one is chosen.
+  const [way, setWay] = useState('');
   const [writing, setWriting] = useState({});
   const [sending, setSending] = useState(false);
   const [trouble, setTrouble] = useState('');
@@ -134,6 +137,11 @@ export default function IssuePicker({ prompt, left, sent, onClose, onSent }) {
     } catch { /* a private window still gets the picker, one tap further on */ }
     router.push('/session');
   };
+  // A new listen of whatever you like, the Listen bar's own door.
+  const listenNew = () => {
+    try { window.localStorage.removeItem('ln_pending_session'); } catch { /* private window */ }
+    router.push('/session');
+  };
 
   // The wall searched as you type: an album, an artist or a song. Your own
   // wall only, never the catalogue.
@@ -152,7 +160,7 @@ export default function IssuePicker({ prompt, left, sent, onClose, onSent }) {
           <SentLetter to="Community" thing={gone} going={going} />
         ) : (
           <section
-            className={'sn-popup ip-popup' + (thing ? '' : ' sn-popup--picking') + (tint ? ' ip-popup--washed' : '')}
+            className={'sn-popup ip-popup' + (way && !thing ? ' sn-popup--picking' : '') + (tint ? ' ip-popup--washed' : '')}
             style={tint ? { '--wash': tint } : undefined}
             role="dialog" aria-modal="true" aria-label="Add yours">
             <button type="button" className="sn-shut" onClick={shut} aria-label="Close" disabled={sending}>
@@ -186,7 +194,20 @@ export default function IssuePicker({ prompt, left, sent, onClose, onSent }) {
 
             <div className="sn-rule" aria-hidden="true" />
 
-            {!thing ? (
+            {!way ? (
+              <div className="ip-ways">
+                <button type="button" className="ip-way" onClick={() => setWay('wall')}>
+                  <SquaresFour size={30} weight="light" aria-hidden="true" />
+                  <span className="ip-way-word">From your wall</span>
+                  <span className="ip-way-say">A post you’ve written</span>
+                </button>
+                <button type="button" className="ip-way" onClick={listenNew}>
+                  <Plus size={30} weight="light" aria-hidden="true" />
+                  <span className="ip-way-word">New listen</span>
+                  <span className="ip-way-say">Write one now</span>
+                </button>
+              </div>
+            ) : !thing ? (
               <div className="sn-shelf ip-shelf">
                 {/* The session's own boxed search (.ses-search), so it reads
                     as the field it is. */}

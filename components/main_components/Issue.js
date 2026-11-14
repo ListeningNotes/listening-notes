@@ -367,9 +367,9 @@ function Globe({ records, picked, onPick }) {
   );
 }
 
-// Who sent it, on the cover's corner (Miyel, 2026-11-14): the faces of the
-// first two keepers who sent the album, overlapping, half off the corner so
-// they read as people beside the record rather than printed on it. A face
+// Who sent it, small in the cover's bottom corner, inside the art (Miyel,
+// 2026-11-14; hanging off the corner was tried the same day and refused):
+// the faces of the first two keepers who sent the album, overlapping. A face
 // that will not load leaves its ring empty rather than a broken picture.
 function Faces({ voices = [] }) {
   const homes = [...new Set(voices.map(v => v.journal).filter(Boolean))].slice(0, 2);
