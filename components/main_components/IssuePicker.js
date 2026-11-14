@@ -167,43 +167,113 @@ export default function IssuePicker({ prompt, left, sent, onClose, onSent }) {
     : records.filter(r => [r.album, r.artist, r.song].some(v => String(v || '').toLowerCase().includes(sought)));
 
   // ── The pull ──────────────────────────────────────────────────────────
-  // Down from the grip or the question, the way the listen's tab is pulled
-  // (LayerEntry): the sheet follows the finger, and let go far enough or
-  // fast enough it goes on down; short of that it settles back.
+  // Down anywhere on the sheet once it is at its top, the way the listen's
+  // sheet is pulled (LayerEntry): the sheet follows the finger, and let go
+  // far enough or fast enough it goes — back to your wall when an album is
+  // chosen, put away when you are choosing (Miyel, 2026-11-14). Short of
+  // that it settles back. A finger is read from touches, so the page behind
+  // never takes the drag; a mouse pulls from the grip or the question.
+  const thingRef = useRef(thing);
+  useEffect(() => { thingRef.current = thing; }, [thing]);
+  const busy = useRef(false);
+  useEffect(() => { busy.current = !!(sending || landing); }, [sending, landing]);
+  const follow = dy => {
+    const sheet = popRef.current;
+    if (!sheet) return;
+    sheet.style.transition = 'none';
+    sheet.style.transform = `translateY(${dy}px)`;
+  };
+  const letGo = useCallback((dy, v) => {
+    const sheet = popRef.current;
+    if (!sheet) return;
+    const goes = dy > sheet.clientHeight * 0.22 || v > 0.6;
+    if (goes && thingRef.current) {
+      // Back to choosing: the wall comes up as the sheet settles.
+      sheet.style.transition = 'transform 260ms cubic-bezier(0.22, 0.61, 0.36, 1)';
+      sheet.style.transform = '';
+      sheet.scrollTop = 0;
+      setThing(null);
+      setTrouble('');
+      return;
+    }
+    sheet.style.transition = `transform ${goes ? SINK_MS : 240}ms cubic-bezier(0.22, 0.61, 0.36, 1)`;
+    sheet.style.transform = goes ? 'translateY(100%)' : '';
+    if (goes) setTimeout(() => closeRef.current?.(), SINK_MS);
+  }, []);
+
+  useEffect(() => {
+    const sheet = popRef.current;
+    if (!sheet) return undefined;
+    let d = null;
+    const start = e => {
+      if (e.touches.length !== 1 || busy.current) { d = null; return; }
+      d = { y: e.touches[0].clientY, t: performance.now(), v: 0, dy: 0, on: false };
+    };
+    const move = e => {
+      if (!d) {
+        // Nothing to scroll here: never let the page behind take it.
+        if (sheet.scrollHeight <= sheet.clientHeight + 1) e.preventDefault();
+        return;
+      }
+      const dy = e.touches[0].clientY - d.y;
+      if (!d.on) {
+        if (dy > 6 && sheet.scrollTop <= 0) d.on = true;
+        else if (Math.abs(dy) > 6) {
+          if (sheet.scrollHeight <= sheet.clientHeight + 1) e.preventDefault();
+          d = null;
+          return;
+        } else return;
+      }
+      e.preventDefault();
+      const now = performance.now();
+      const down = Math.max(0, dy);
+      d.v = (down - d.dy) / Math.max(8, now - d.t);
+      d.dy = down; d.t = now;
+      follow(down);
+    };
+    const end = () => {
+      if (d?.on) letGo(d.dy, d.v);
+      d = null;
+    };
+    sheet.addEventListener('touchstart', start, { passive: true });
+    sheet.addEventListener('touchmove', move, { passive: false });
+    sheet.addEventListener('touchend', end);
+    sheet.addEventListener('touchcancel', end);
+    return () => {
+      sheet.removeEventListener('touchstart', start);
+      sheet.removeEventListener('touchmove', move);
+      sheet.removeEventListener('touchend', end);
+      sheet.removeEventListener('touchcancel', end);
+    };
+  }, [letGo]);
+
   const pull = {
     onPointerDown: e => {
-      if (sending || landing || (e.pointerType === 'mouse' && e.button !== 0)) return;
+      if (e.pointerType === 'touch' || sending || landing || e.button !== 0) return;
       drag.current = { y: e.clientY, t: performance.now(), v: 0, dy: 0 };
       pulled.current = false;
     },
     onPointerMove: e => {
       const d = drag.current;
-      const sheet = popRef.current;
-      if (!d || !sheet) return;
+      if (!d) return;
       const dy = Math.max(0, e.clientY - d.y);
       if (!pulled.current && dy < 6) return;
       if (!pulled.current) { pulled.current = true; try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* gone */ } }
       const now = performance.now();
       d.v = (dy - d.dy) / Math.max(8, now - d.t);
       d.dy = dy; d.t = now;
-      sheet.style.transition = 'none';
-      sheet.style.transform = `translateY(${dy}px)`;
+      follow(dy);
     },
     onPointerUp: () => {
       const d = drag.current;
-      const sheet = popRef.current;
       drag.current = null;
-      if (!d || !sheet || !pulled.current) return;
+      if (!d || !pulled.current) return;
       setTimeout(() => { pulled.current = false; }, 0);
-      const goes = d.dy > sheet.clientHeight * 0.22 || d.v > 0.6;
-      sheet.style.transition = `transform ${goes ? SINK_MS : 240}ms cubic-bezier(0.22, 0.61, 0.36, 1)`;
-      sheet.style.transform = goes ? 'translateY(100%)' : '';
-      if (goes) setTimeout(() => closeRef.current?.(), SINK_MS);
+      letGo(d.dy, d.v);
     },
     onPointerCancel: () => {
-      const sheet = popRef.current;
       drag.current = null;
-      if (sheet) { sheet.style.transition = 'transform 240ms ease'; sheet.style.transform = ''; }
+      follow(0);
     },
   };
 

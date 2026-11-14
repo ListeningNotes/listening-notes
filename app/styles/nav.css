@@ -3735,7 +3735,10 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   max-width: 520px; margin: 0 auto;
 }
 /* The question is a place to pull the sheet down from, like its grip. */
-.ip-pull { touch-action: none; cursor: grab; }
+.ip-pull { cursor: grab; }
+/* The page's own white, as the top row is, rather than the sheet's older
+   one (Miyel, 2026-11-14: "the whites don't match"). */
+.lay.ip-popup { --bg: var(--canvas); }
 .ip-in { position: relative; }
 .ip-back {
   position: absolute; top: 18px; left: max(8px, env(safe-area-inset-left, 0px)); z-index: 1;
