@@ -50,11 +50,8 @@
 import Link from 'next/link';
 import { handOff } from '../../library/handoff';
 import StarRating from './StarRating';
-import { Fingerprint, Heart, SketchLogo } from '@phosphor-icons/react';
 import { Marks } from '../../app/directory/Directory';
 
-// A mark as the wall's rows carry it: true, or the string a row may say.
-const isOn = v => v === true || v === 'true';
 
 export default function AlbumTile({ album, going = false, density = null }) {
   const face = album.face;
@@ -139,7 +136,9 @@ export default function AlbumTile({ album, going = false, density = null }) {
             off, to the entry, not over somebody's artwork. The new look
             brings the marks back as small emblems in the corner (Miyel: "lets
             do marks on walls covers small emblems"), the record's own three
-            and nothing else — no words, no counts. The fold is not a mark on
+            and nothing else — no words, no counts. Off again 2026-11-14
+            (Miyel: "lets remove icons from personal wall"): the wall is
+            covers, and the marks are on the entry. The fold is not a mark on
             the art: it is the corner of the page, turned over. */}
         <div className={'ft-face ft-face--front' + (folded ? ' ln-fold' : '')}>
           {face.album_art
@@ -148,13 +147,6 @@ export default function AlbumTile({ album, going = false, density = null }) {
           {folded && (
             <span className="ln-fold-flap" aria-hidden="true">
               {face.album_art && <img src={face.album_art} alt="" loading="lazy" draggable={false} />}
-            </span>
-          )}
-          {(isOn(face.favorite) || isOn(face.masterpiece) || face.rating === 'Masterpiece' || isOn(face.formative)) && (
-            <span className="ft-marks" aria-hidden="true">
-              {isOn(face.favorite) && <Heart size={11} weight="fill" color="var(--fav)" />}
-              {(isOn(face.masterpiece) || face.rating === 'Masterpiece') && <SketchLogo size={11} weight="fill" color="var(--mp)" />}
-              {isOn(face.formative) && <Fingerprint size={11} weight="bold" color="var(--formative)" />}
             </span>
           )}
           <div className="ft-hover">
