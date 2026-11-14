@@ -9,11 +9,16 @@
 // send as it stands; a tray under it of up to the records you have left
 // (three a prompt, 2026-11-12); and Send, the one filled control.
 //
+// A record is chosen by tapping it twice, or by dragging it down out of the
+// strip onto a spot in the tray (Miyel, 2026-11-13); dragged off the tray it
+// comes out again. Sideways is still the strip scrolling, so a drag starts
+// only when the finger goes more down than across.
+//
 // Nothing here is typed into. What goes is the post as it stands, through
 // the prompt's own door (/api/prompt, library/month_prompt.js), one record
 // at a time; a record that fails stays in the tray and says why.
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { X } from '@phosphor-icons/react';
 import { useMonthPrompt } from './MonthPrompt';
 
@@ -25,6 +30,11 @@ export default function IssuePicker({ prompt, left, sent, onClose, onSent }) {
   const [tray, setTray] = useState([]);
   const [sending, setSending] = useState(false);
   const [trouble, setTrouble] = useState('');
+  const [drag, setDrag] = useState(null);
+  const press = useRef(null);
+  const dragged = useRef(false);
+  const trayRef = useRef(null);
+  const slotRefs = useRef([]);
 
   // The wall's records, newest first, less any already sent.
   useEffect(() => {
@@ -61,6 +71,72 @@ export default function IssuePicker({ prompt, left, sent, onClose, onSent }) {
     if (inTray(record.slug)) setTray(t => t.filter(r => r.slug !== record.slug));
     else if (tray.length < left) setTray(t => [...t, record]);
   };
+
+  // Where a record let go goes: onto spot i (taking the place of what is
+  // there, or swapping with it when it came from the tray), into the next
+  // free spot, or out when it came from the tray and landed off it.
+  const place = (record, from, over) => {
+    setTrouble('');
+    setTray(t => {
+      const at = t.findIndex(r => r.slug === record.slug);
+      if (over === null) return at >= 0 && from === 'slot' ? t.filter(r => r.slug !== record.slug) : t;
+      if (over === 'tray' || over >= t.length) {
+        if (at >= 0) return t;
+        return t.length < left ? [...t, record] : t;
+      }
+      const next = [...t];
+      if (at >= 0) { next[at] = next[over]; next[over] = record; return next; }
+      next[over] = record;
+      return next;
+    });
+  };
+
+  const overAt = (x, y) => {
+    const hit = el => { const b = el?.getBoundingClientRect(); return b && x >= b.left - 8 && x <= b.right + 8 && y >= b.top - 8 && y <= b.bottom + 8; };
+    const i = slotRefs.current.findIndex(hit);
+    if (i >= 0) return i;
+    return hit(trayRef.current) ? 'tray' : null;
+  };
+
+  // The spot a record held over the tray would land in, to light it: the
+  // spots fill from the left, so past the last full one is the next free.
+  const landsAt = d => {
+    if (d.over === null) return null;
+    const at = tray.findIndex(r => r.slug === d.record.slug);
+    if (d.over !== 'tray' && d.over < tray.length) return d.over;
+    if (at >= 0) return d.from === 'slot' ? at : null;
+    return tray.length < left ? tray.length : null;
+  };
+
+  const grab = (record, from) => ({
+    onPointerDown: e => {
+      if (sending || (e.pointerType === 'mouse' && e.button !== 0)) return;
+      if (e.pointerType === 'mouse') e.preventDefault();
+      press.current = { record, from, id: e.pointerId, x: e.clientX, y: e.clientY, on: false };
+    },
+    onPointerMove: e => {
+      const p = press.current;
+      if (!p || p.id !== e.pointerId) return;
+      if (!p.on) {
+        const dx = Math.abs(e.clientX - p.x), dy = Math.abs(e.clientY - p.y);
+        if (from === 'strip' && dx > 10 && dx >= dy) { press.current = null; return; }
+        if (from === 'strip' ? !(dy > 8 && dy > dx) : Math.hypot(dx, dy) < 6) return;
+        p.on = true;
+        try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* the pointer is already gone */ }
+      }
+      setDrag({ record, from, x: e.clientX, y: e.clientY, over: overAt(e.clientX, e.clientY) });
+    },
+    onPointerUp: e => {
+      const p = press.current;
+      press.current = null;
+      if (!p?.on) return;
+      dragged.current = true;
+      setTimeout(() => { dragged.current = false; }, 0);
+      place(record, from, overAt(e.clientX, e.clientY));
+      setDrag(null);
+    },
+    onPointerCancel: () => { press.current = null; setDrag(null); },
+  });
 
   const send = async () => {
     if (!tray.length || sending) return;
@@ -106,7 +182,8 @@ export default function IssuePicker({ prompt, left, sent, onClose, onSent }) {
                 key={r.slug}
                 type="button"
                 className={'ip-one' + (r.slug === looking ? ' ip-one--looking' : '') + (inTray(r.slug) ? ' ip-one--in' : '')}
-                onClick={() => (r.slug === looking ? toggle(r) : setLooking(r.slug))}
+                onClick={() => { if (dragged.current) return; if (r.slug === looking) toggle(r); else setLooking(r.slug); }}
+                {...grab(r, 'strip')}
                 aria-label={r.song || r.album}
                 aria-pressed={inTray(r.slug)}
               >
@@ -130,10 +207,15 @@ export default function IssuePicker({ prompt, left, sent, onClose, onSent }) {
             </div>
           )}
 
-          <div className="ip-tray" aria-label="Chosen">
+          <div className="ip-tray" aria-label="Chosen" ref={trayRef}>
             {Array.from({ length: left }, (_, i) => tray[i]).map((r, i) => (
-              <span key={r?.slug || `empty-${i}`} className={'ip-slot' + (r ? ' ip-slot--full' : '')}>
-                {r?.album_art && <img src={r.album_art} alt="" />}
+              <span
+                key={r?.slug || `empty-${i}`}
+                ref={el => { slotRefs.current[i] = el; }}
+                className={'ip-slot' + (r ? ' ip-slot--full' : '') + (drag && landsAt(drag) === i ? ' ip-slot--over' : '') + (drag?.from === 'slot' && r?.slug === drag.record.slug ? ' ip-slot--lifted' : '')}
+                {...(r ? grab(r, 'slot') : {})}
+              >
+                {r?.album_art && !(drag?.from === 'slot' && r.slug === drag.record.slug) && <img src={r.album_art} alt="" draggable={false} />}
               </span>
             ))}
           </div>
@@ -144,6 +226,12 @@ export default function IssuePicker({ prompt, left, sent, onClose, onSent }) {
             {sending ? 'Sending…' : 'Send'}
           </button>
         </>
+      )}
+
+      {drag && (
+        <span className="ip-ghost" style={{ left: drag.x, top: drag.y }} aria-hidden="true">
+          {drag.record.album_art ? <img src={drag.record.album_art} alt="" draggable={false} /> : <span>♪</span>}
+        </span>
       )}
     </div>
   );

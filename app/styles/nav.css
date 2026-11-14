@@ -3737,6 +3737,8 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   transition: transform 0.24s cubic-bezier(0.22, 0.61, 0.36, 1); cursor: pointer; position: relative;
 }
 .ip-one img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* Sideways is the strip's own scroll; down is a drag to the tray. */
+.ip-one { touch-action: pan-x; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 .ip-one--looking { transform: scale(1.3); margin: 0 10px; z-index: 1; box-shadow: var(--lift-3); }
 .ip-one--in::after {
   content: ''; position: absolute; top: 5px; right: 5px; width: 12px; height: 12px; border-radius: 50%;
@@ -3758,6 +3760,15 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
 }
 .ip-slot--full { border: 0; box-shadow: var(--lift-2); }
 .ip-slot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ip-slot--full { touch-action: none; cursor: grab; }
+.ip-slot--over { border: 2px solid var(--ink); transform: scale(1.12); transition: transform 0.16s cubic-bezier(0.22, 0.61, 0.36, 1); }
+.ip-slot--lifted { border: 1px dashed var(--ink-faint); box-shadow: none; }
+.ip-ghost {
+  position: fixed; z-index: 400; width: 74px; height: 74px; border-radius: var(--tile-r, 12px); overflow: hidden;
+  transform: translate(-50%, -50%) scale(1.08) rotate(-3deg); pointer-events: none;
+  background: var(--bg-warm); box-shadow: var(--lift-3);
+}
+.ip-ghost img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .ip-said { margin: 16px 24px 0; text-align: center; font-size: 12px; line-height: 1.5; color: var(--ink-soft); }
 .ip-trouble { margin: 8px 24px 0; text-align: center; font-size: 13px; color: var(--fav); }
 .ip-send { margin-top: 16px; }
