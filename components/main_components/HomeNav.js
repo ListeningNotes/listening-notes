@@ -1506,6 +1506,14 @@ export default function HomeNav() {
     };
   }, [paneRefs, pane, cardOpen, wash, isLive, path, theme]);
 
+  // The journal's page is the canvas, up under the clock too (base.css,
+  // html[data-canvas]).
+  useEffect(() => {
+    const root = document.documentElement;
+    root.setAttribute('data-canvas', '');
+    return () => root.removeAttribute('data-canvas');
+  }, []);
+
   function goTo(index) {
     const el = railRef.current;
     if (!el) return;

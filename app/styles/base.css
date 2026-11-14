@@ -740,6 +740,13 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
      hairline (Miyel). It is the page continuing up under the clock. */
   background: var(--bg);
 }
+/* On the journal the page is the canvas (journal.css, .hn, the new look of
+   2026-11-12), so the ground behind it and the strip under the clock are
+   too: the top row was the canvas and the strip and page were still the
+   old colour, a shade apart in Day (Miyel, 2026-11-14). The colour alone,
+   so a post's wash or home's still paints over it. HomeNav says when. */
+html[data-canvas] .ln-brow { background-color: var(--canvas); }
+html[data-canvas] > body { background-color: var(--canvas); }
 
 /* ── The sandbox's mark, 2026-10-17 ──────────────────────────────────────
    SANDBOX in the top-left corner of every page of a preview built as one
