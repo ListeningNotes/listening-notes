@@ -403,7 +403,10 @@ export default function Issue({ keeper = false }) {
   const mine = prompt && prompt.said ? sentRecords(prompt) : [];
   const left = prompt ? Math.max(0, (prompt.most || 1) - mine.length) : 0;
   const count = albums.length === 1 ? '1 album' : `${albums.length} albums`;
-  const meta = [`Issue ${String(issue.number).padStart(2, '0')}`, count, closes(issue.prompt.ends_at)].filter(Boolean).join(' · ');
+  // The month, not "Issue 01": the word waits for the magazine and its back
+  // issues (Miyel, 2026-11-13). The number is still worked out for then.
+  const month = issue.prompt.month || (Date.parse(issue.prompt.ends_at || '') ? new Date(issue.prompt.ends_at).toLocaleDateString('en-US', { month: 'long' }) : '');
+  const meta = [month, count, closes(issue.prompt.ends_at)].filter(Boolean).join(' · ');
 
   return (
     <div className={'is' + (picked !== null ? ' is--picked' : '')}>
