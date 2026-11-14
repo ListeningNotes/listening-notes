@@ -30,7 +30,7 @@ async function standIn() {
   }));
   // The first album sent a second time, so its card shows two voices.
   if (records.length > 1) records.splice(3, 0, { ...records[0], key: 'stand-in-again', name: 'Juno', rating: '4', favorite: true, masterpiece: false, formative: false, note: String(records[1].note || '').slice(0, 240) });
-  return { number: 1, standIn: true, prompt: { id: 'stand-in', said: 'An album on repeat for you this month?', month: '', ends_at: '2026-11-30T23:59:00Z' }, records };
+  return { number: 1, standIn: true, prompt: { id: 'stand-in', said: 'An album that sounds like a rainy day?', month: '', ends_at: '2026-11-30T23:59:00Z' }, records };
 }
 
 export async function GET() {
