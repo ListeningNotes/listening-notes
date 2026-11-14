@@ -3,7 +3,7 @@
 'use client';
 // components/main_components/IssuePicker.js
 // Add yours: one of your own records sent to this month's prompt
-// (Community, Issue.js), in the send sheet's popup (SendSheet.js). The
+// (Community, Issue.js), on the listen's own sheet, risen from the foot. The
 // question, your wall, the album, Submit — started simple on purpose (Miyel,
 // 2026-11-14): no doors, no new-entry link, nothing to switch. A keeper's
 // journal is Listening Notes to them, so nothing here says it goes "to"
@@ -23,7 +23,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { MagnifyingGlass, X } from '@phosphor-icons/react';
+import { MagnifyingGlass } from '@phosphor-icons/react';
 import { useMonthPrompt } from './MonthPrompt';
 import { useBookplate } from './Bookplate';
 import StarRating from './StarRating';
@@ -32,6 +32,8 @@ import { washFromArt } from '../../library/music_data_api';
 
 // How long the popup takes to close in around the cover.
 const LANDING_MS = 380;
+// How long it takes to sink back down when put away.
+const SINK_MS = 300;
 
 export default function IssuePicker({ prompt, left, sent, onClose, onSent }) {
   const plate = useBookplate();
@@ -84,7 +86,15 @@ export default function IssuePicker({ prompt, left, sent, onClose, onSent }) {
   }, [thing]);
   const tint = thing && wash.art === thing.album_art ? wash.color : '';
 
-  const shut = useCallback(() => { if (!sending) closeRef.current?.(); }, [sending]);
+  // Put down the way the listen is: it sinks back to the foot, then goes.
+  const [sinking, setSinking] = useState(false);
+  const shut = useCallback(() => {
+    if (sending || sinking) return;
+    const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    if (still) { closeRef.current?.(); return; }
+    setSinking(true);
+    setTimeout(() => closeRef.current?.(), SINK_MS);
+  }, [sending, sinking]);
 
   // Escape puts it away, but not once it is on its way.
   useEffect(() => {
@@ -143,16 +153,17 @@ export default function IssuePicker({ prompt, left, sent, onClose, onSent }) {
 
   return createPortal(
     <>
-      <div className="sn-scrim" aria-hidden="true" />
-      <div className="sn-room" onClick={e => { if (e.target === e.currentTarget && !landing) shut(); }}>
+      {/* The listen's own sheet (.lay--sheet, entry.css): up from the foot
+          in one movement to just under the top row, no box around it, a
+          grip that puts it down (Miyel, 2026-11-14: "exactly the same way
+          the session does"). */}
         <section
             ref={popRef}
-            className={'sn-popup ip-popup' + (!thing ? ' sn-popup--picking' : '') + (tint ? ' ip-popup--washed' : '') + (landing ? ' ip-popup--landing' : '')}
+            className={'lay lay--sheet lay--rises ip-popup' + (tint ? ' ip-popup--washed' : '') + (landing ? ' ip-popup--landing' : '') + (sinking ? ' ip-popup--sinking' : '')}
             style={{ ...(tint ? { '--wash': tint } : {}), ...(landing ? { clipPath: landing.clip } : {}) }}
             role="dialog" aria-modal="true" aria-label="Add yours">
-            <button type="button" className="sn-shut" onClick={shut} aria-label="Close" disabled={sending}>
-              <X size={18} weight="regular" aria-hidden="true" />
-            </button>
+            <button type="button" className="lay-grip" onClick={shut} aria-label="Put this away" disabled={sending} />
+            <div className="ip-in">
 
             {/* The question and the album, nothing between them (Miyel,
                 2026-11-14: "there really doesn't even need to be a to and an
@@ -232,8 +243,8 @@ export default function IssuePicker({ prompt, left, sent, onClose, onSent }) {
                 </button>
               </div>
             )}
+            </div>
         </section>
-      </div>
     </>,
     document.body
   );
