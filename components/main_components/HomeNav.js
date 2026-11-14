@@ -1514,6 +1514,15 @@ export default function HomeNav() {
     return () => root.removeAttribute('data-canvas');
   }, []);
 
+  // An entry open under the top row (entry.css, the header stays) is put
+  // away by any press in the row, the way the browser's back would: the row
+  // is the journal's, and pressing it means the journal. True when one was.
+  function putEntryAway() {
+    if (!path || !path.startsWith('/entries/')) return false;
+    router.back();
+    return true;
+  }
+
   function goTo(index) {
     const el = railRef.current;
     if (!el) return;
@@ -1675,10 +1684,10 @@ export default function HomeNav() {
         pane={cardOpen ? -1 : pane}
         cardOpen={cardOpen}
         stops={stops}
-        goTo={goTo}
-        onHere={goBack}
-        onTop={() => { if (!cardOpen) goUp(pane); }}
-        onFace={() => setCardOpen(open => !open)}
+        goTo={i => { putEntryAway(); goTo(i); }}
+        onHere={i => { if (putEntryAway()) return; goBack(i); }}
+        onTop={() => { if (putEntryAway()) return; if (!cardOpen) goUp(pane); }}
+        onFace={() => { putEntryAway(); setCardOpen(open => !open); }}
         news={{ people: waiting?.friends === true }}
         lights={lights}
         mark={mark('hdr-mark-svg')}

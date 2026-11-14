@@ -2525,3 +2525,33 @@ html[data-printing] .sitenav-row { display: none; }
 }
 html { transition: --post-wash 0.4s ease; }
 html[data-post-wash] .ln-brow { background: color-mix(in srgb, var(--post-wash) 55%, var(--canvas)); }
+
+/* ── The header stays, 2026-11-14 ───────────────────────────────────────────
+   Miyel: "something about the header should stay when you open an entry."
+   On a phone an entry opened over the journal grows from its cover into the
+   room under the journal's top row — the face, LN. and the three rooms stay
+   where they are, and tapping a room puts the entry away (HomeNav). The
+   entry's own row comes down under that one and carries what is the post's:
+   ‹ back to the wall on the left, the ··· on the right; LN. is the top
+   row's, so the entry's own mark stands down. Its colour stays the post's
+   and stops at the top row, so the strip under the clock is the page's. */
+@media (max-width: 768px) {
+  .lay--over-journal { top: calc(var(--lay-lift, 0px) + var(--hn-bar-h, 80px)); }
+  .lay--over-journal .sitenav-row { top: var(--hn-bar-h, 80px); min-height: 48px; padding: 0 12px; }
+  .lay--over-journal .sitenav-logo,
+  .lay--over-journal .ln-crown { display: none; }
+  /* Its band starts under the top row and is only as tall as the row: the
+     post goes under the row as it scrolls, and the top row is never
+     covered. */
+  .lay--over-journal .sitenav-row::before { top: var(--hn-bar-h, 80px); height: 48px; }
+  .lay--over-journal .kt-tool--door { color: var(--ink-soft); }
+  .lay--over-journal .sitenav-back {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 40px; height: 40px; color: var(--ink); position: relative; z-index: 1;
+  }
+  html[data-post-wash][data-canvas] .ln-brow { background: var(--canvas); }
+  /* The record starts a little under the entry's own row (48), not under a
+     logo row of 80 that is no longer there. */
+  .lay--over-journal .ln-screen-one { padding-top: 60px; }
+  .lay--over-journal .ln-editing .ln-screen-one { padding-top: 60px; }
+}

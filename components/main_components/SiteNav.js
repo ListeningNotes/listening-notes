@@ -154,7 +154,7 @@ export default function SiteNav({ tools = null, mark = null, lede = true }) {
           because a page opened cold has nothing behind it to go back to. See
           .lay-back in entry.css, whose look this is. */}
       <div className="sitenav-side sitenav-side--left">
-        <Link href="/" className="sitenav-back" aria-label="Back to the journal" title="Back to the journal">
+        <Link href="/" className="sitenav-back" data-layer-back aria-label="Back to the journal" title="Back to the journal">
           <CaretLeft size={18} weight="bold" aria-hidden="true" />
         </Link>
         {/* Whose post this is: their face, to their page here (2026-10-28,
