@@ -121,6 +121,11 @@ const WORDS = {
   },
 };
 
+// Submit stands down for now (Miyel, 2026-11-13: "I don't think most people
+// will find it in the toolbar section of entries"): a record goes to the
+// month's prompt from Community. True brings the door back.
+const SUBMIT_HERE = false;
+
 export default function KeeperTools({
   what = 'entry',
   onEdit,
@@ -153,7 +158,7 @@ export default function KeeperTools({
     + (words.settings ? 1 : 0)
     + (onSender && words.sender ? 1 : 0)
     + (onSend && words.send ? 1 : 0)
-    + (onSubmit && words.submit ? 1 : 0)
+    + (SUBMIT_HERE && onSubmit && words.submit ? 1 : 0)
     + (onRelisten && words.relisten ? 1 : 0)
     + (onDelete && words.remove ? 1 : 0);
 
@@ -329,8 +334,9 @@ export default function KeeperTools({
   // thing a month and a keeper sends a record they have already written
   // about (library/month_prompt.js). Beside Send, the other door that sends
   // something away; a newspaper's clipping because it goes to the
-  // publication. Here only while a prompt is open and unanswered.
-  if (onSubmit && words.submit) {
+  // publication. Here only while a prompt is open and unanswered — and not
+  // at all for now (SUBMIT_HERE).
+  if (SUBMIT_HERE && onSubmit && words.submit) {
     tools.push(
       <button key="submit" type="button" onClick={() => { shut(); onSubmit(); }} {...box(...words.submit, <NewspaperClipping size={22} weight="regular" aria-hidden="true" />)} />
     );
