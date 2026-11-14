@@ -102,7 +102,7 @@ function Card({ record, onClose }) {
       <h3 className="is-card-title">{record.song || record.album}</h3>
       <p className="is-card-by">{[record.song ? record.album : '', record.artist, record.year].filter(Boolean).join(' · ')}</p>
       {record.note && <p className="is-card-note">{record.note}</p>}
-      {post && <a href={post} className="is-card-on" target="_blank" rel="noreferrer">On their journal</a>}
+      {post && <a href={post} className="is-card-on" target="_blank" rel="noreferrer">Read more</a>}
     </div>
   );
 }
