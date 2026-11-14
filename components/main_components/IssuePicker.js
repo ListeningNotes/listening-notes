@@ -47,6 +47,8 @@ export default function IssuePicker({ prompt, left, sent, onClose, onSent }) {
   const [wash, setWash] = useState({ art: '', color: '' });
   const [landing, setLanding] = useState(null);   // the clip closing in on the cover
   const popRef = useRef(null);
+  const drag = useRef(null);
+  const pulled = useRef(false);
   const coverRef = useRef(null);
   const closeRef = useRef(onClose);
   const sentRef = useRef(onSent);
@@ -148,6 +150,47 @@ export default function IssuePicker({ prompt, left, sent, onClose, onSent }) {
   const shown = !records || !sought ? records
     : records.filter(r => [r.album, r.artist, r.song].some(v => String(v || '').toLowerCase().includes(sought)));
 
+  // ── The pull ──────────────────────────────────────────────────────────
+  // Down from the grip or the question, the way the listen's tab is pulled
+  // (LayerEntry): the sheet follows the finger, and let go far enough or
+  // fast enough it goes on down; short of that it settles back.
+  const pull = {
+    onPointerDown: e => {
+      if (sending || landing || (e.pointerType === 'mouse' && e.button !== 0)) return;
+      drag.current = { y: e.clientY, t: performance.now(), v: 0, dy: 0 };
+      pulled.current = false;
+    },
+    onPointerMove: e => {
+      const d = drag.current;
+      const sheet = popRef.current;
+      if (!d || !sheet) return;
+      const dy = Math.max(0, e.clientY - d.y);
+      if (!pulled.current && dy < 6) return;
+      if (!pulled.current) { pulled.current = true; try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* gone */ } }
+      const now = performance.now();
+      d.v = (dy - d.dy) / Math.max(8, now - d.t);
+      d.dy = dy; d.t = now;
+      sheet.style.transition = 'none';
+      sheet.style.transform = `translateY(${dy}px)`;
+    },
+    onPointerUp: () => {
+      const d = drag.current;
+      const sheet = popRef.current;
+      drag.current = null;
+      if (!d || !sheet || !pulled.current) return;
+      setTimeout(() => { pulled.current = false; }, 0);
+      const goes = d.dy > sheet.clientHeight * 0.22 || d.v > 0.6;
+      sheet.style.transition = `transform ${goes ? SINK_MS : 240}ms cubic-bezier(0.22, 0.61, 0.36, 1)`;
+      sheet.style.transform = goes ? 'translateY(100%)' : '';
+      if (goes) setTimeout(() => closeRef.current?.(), SINK_MS);
+    },
+    onPointerCancel: () => {
+      const sheet = popRef.current;
+      drag.current = null;
+      if (sheet) { sheet.style.transition = 'transform 240ms ease'; sheet.style.transform = ''; }
+    },
+  };
+
   if (typeof document === 'undefined') return null;
   const words = thing ? writing[thing.slug] : undefined;
 
@@ -162,14 +205,16 @@ export default function IssuePicker({ prompt, left, sent, onClose, onSent }) {
             className={'lay lay--sheet lay--rises ip-popup' + (tint ? ' ip-popup--washed' : '') + (landing ? ' ip-popup--landing' : '') + (sinking ? ' ip-popup--sinking' : '')}
             style={{ ...(tint ? { '--wash': tint } : {}), ...(landing ? { clipPath: landing.clip } : {}) }}
             role="dialog" aria-modal="true" aria-label="Add yours">
-            <button type="button" className="lay-grip" onClick={shut} aria-label="Put this away" disabled={sending} />
+            <button type="button" className="lay-grip" onClick={() => { if (!pulled.current) shut(); }} aria-label="Put this away" disabled={sending} {...pull} />
             <div className="ip-in">
 
             {/* The question and the album, nothing between them (Miyel,
                 2026-11-14: "there really doesn't even need to be a to and an
                 arrow… maybe it can simply be the album"). */}
-            <p className="ip-tip">{prompt?.said}</p>
-            <p className="ip-count">{which} of {most} this month</p>
+            <div className="ip-pull" {...pull}>
+              <p className="ip-tip">{prompt?.said}</p>
+              <p className="ip-count">{which} of {most} this month</p>
+            </div>
 
             {thing && (
               <button
