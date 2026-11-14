@@ -391,7 +391,7 @@ export default function Issue({ keeper = false }) {
   const records = issue?.records || [];
   const albums = byAlbum(records);
 
-  if (read === undefined) return <p className="is-quiet">Asking for this month’s question…</p>;
+  if (read === undefined) return <p className="is-quiet">Fetching this month’s question…</p>;
   if (!issue) {
     return read?.stale
       ? <p className="is-quiet">Listening Notes couldn’t be reached just now.</p>
