@@ -3,50 +3,49 @@
 'use client';
 // components/main_components/IssuePicker.js
 // Add yours: one of your own records sent to this month's prompt
-// (Community, Issue.js), in the send sheet's popup (SendSheet.js) — the
-// question and the album, no arrow and no destination square: a keeper's
-// journal is Listening Notes to them, and a square saying where it goes
-// read as sending it back there (Miyel, 2026-11-14). One record a press, "1 of 3 this
-// month": the three are a month's allowance to come back to, not a tray to
-// fill now.
+// (Community, Issue.js), in the send sheet's popup (SendSheet.js). The
+// question, your wall, the album, Submit — started simple on purpose (Miyel,
+// 2026-11-14): no doors, no new-entry link, nothing to switch. A keeper's
+// journal is Listening Notes to them, so nothing here says it goes "to"
+// Listening Notes. One record a press, "1 of 3 this month": the three are a
+// month's allowance to come back to.
 //
-// The left square is filled from your wall, never a search: if nothing on
-// the wall answers the prompt, the answer is to go and listen. Filled, the
-// sheet shows the post's writing as it would go, read-only, with two doors:
-// Send your post, or Write a new entry, which starts a listen of the same
-// record — the words live in the journal and nowhere else (Miyel,
-// 2026-11-13: one place to write; the issue shows the post as it was sent).
+// Only from your wall, never a catalogue: everything in the issue was
+// really listened to. If the album is not on your wall yet, you listen the
+// ordinary way and come back. What goes is the post as it stands, through
+// the prompt's own door (/api/prompt, library/month_prompt.js) — its writing
+// is already public on your journal, so there is no choice to make about it.
+// A send that fails keeps the album chosen and says why.
 //
-// What goes is the post as it stands, through the prompt's own door
-// (/api/prompt, library/month_prompt.js). A send that fails keeps the record
-// in the square and says why. Sent, the popup becomes the send sheet's
-// letter, on its way to Community.
+// Sent, the popup closes in around the album's cover and hands the cover's
+// place to Community, which flies it into the globe (Issue.js) — in at once,
+// with nobody approving it.
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useRouter } from 'next/navigation';
-import { MagnifyingGlass, Plus, SquaresFour, X } from '@phosphor-icons/react';
+import { MagnifyingGlass, X } from '@phosphor-icons/react';
 import { useMonthPrompt } from './MonthPrompt';
-import { SentLetter, LETTER_HOLD_MS, LETTER_GO_MS } from './SendSheet';
+import { useBookplate } from './Bookplate';
 import StarRating from './StarRating';
 import { Emblems, starsOf } from './Issue';
 import { washFromArt } from '../../library/music_data_api';
 
+// How long the popup takes to close in around the cover.
+const LANDING_MS = 380;
+
 export default function IssuePicker({ prompt, left, sent, onClose, onSent }) {
-  const router = useRouter();
+  const plate = useBookplate();
   const [, tellPrompt] = useMonthPrompt(true);
   const [records, setRecords] = useState(null);
   const [thing, setThing] = useState(null);
-  // The first press: a post from your wall, or a new listen (Miyel,
-  // 2026-11-14: two doors, "like a video game"). '' until one is chosen.
-  const [way, setWay] = useState('');
   const [writing, setWriting] = useState({});
   const [sending, setSending] = useState(false);
   const [trouble, setTrouble] = useState('');
   const [find, setFind] = useState('');
   const [wash, setWash] = useState({ art: '', color: '' });
-  const [gone, setGone] = useState(null);
-  const [going, setGoing] = useState(false);
+  const [landing, setLanding] = useState(null);   // the clip closing in on the cover
+  const popRef = useRef(null);
+  const coverRef = useRef(null);
   const closeRef = useRef(onClose);
   const sentRef = useRef(onSent);
   useEffect(() => { closeRef.current = onClose; sentRef.current = onSent; }, [onClose, onSent]);
@@ -87,22 +86,12 @@ export default function IssuePicker({ prompt, left, sent, onClose, onSent }) {
 
   const shut = useCallback(() => { if (!sending) closeRef.current?.(); }, [sending]);
 
-  // Escape puts it away, but not the letter, which leaves on its own.
+  // Escape puts it away, but not once it is on its way.
   useEffect(() => {
-    const key = e => { if (e.key === 'Escape' && !gone) shut(); };
+    const key = e => { if (e.key === 'Escape' && !landing) shut(); };
     window.addEventListener('keydown', key);
     return () => window.removeEventListener('keydown', key);
-  }, [shut, gone]);
-
-  // The letter's clock, as the send sheet's: it holds, goes, and the issue
-  // is read again behind it.
-  useEffect(() => {
-    if (!gone) return undefined;
-    const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-    const hold = setTimeout(() => setGoing(true), LETTER_HOLD_MS);
-    const done = setTimeout(() => sentRef.current?.(), LETTER_HOLD_MS + (still ? 0 : LETTER_GO_MS));
-    return () => { clearTimeout(hold); clearTimeout(done); };
-  }, [gone]);
+  }, [shut, landing]);
 
   const send = async () => {
     if (!thing || sending) return;
@@ -119,28 +108,28 @@ export default function IssuePicker({ prompt, left, sent, onClose, onSent }) {
       return;
     }
     if (answer.prompt) tellPrompt(answer.prompt);
-    setGone({ song: thing.song, album: thing.album, artist: thing.artist, art: thing.album_art });
-  };
-
-  // A new entry is a new listen of the same record, opened the way a post's
-  // Listen again opens one (FullPostPage.js, revisit).
-  const writeNew = () => {
-    try {
-      window.localStorage.setItem('ln_pending_session', JSON.stringify({
-        album: thing.album,
-        artist: thing.artist || '',
-        year: thing.year || '',
-        artUrl: thing.album_art || '',
-        collectionId: thing.collection_id || null,
-        genre: thing.genre || '',
-      }));
-    } catch { /* a private window still gets the picker, one tap further on */ }
-    router.push('/session');
-  };
-  // A new listen of whatever you like, the Listen bar's own door.
-  const listenNew = () => {
-    try { window.localStorage.removeItem('ln_pending_session'); } catch { /* private window */ }
-    router.push('/session');
+    // The record as the issue will show it, so Community can put it on the
+    // globe now rather than when the publication is next asked.
+    const record = {
+      key: `mine-${thing.slug}`, album: thing.album, artist: thing.artist, year: thing.year || '',
+      art: thing.album_art || '', song: thing.song || '', note: writing[thing.slug] || '',
+      name: String(plate?.keeper_name || '').trim(),
+      journal: String(plate?.site_address || window.location.host || ''), slug: thing.slug,
+      rating: thing.rating || '', favorite: !!thing.favorite, masterpiece: !!thing.masterpiece, formative: !!thing.formative,
+      at: new Date().toISOString(),
+    };
+    // The popup closes in around the cover, then hands the cover's place on.
+    const pop = popRef.current?.getBoundingClientRect();
+    const cover = coverRef.current?.getBoundingClientRect();
+    const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    if (!pop || !cover || still) { sentRef.current?.({ record, from: cover || null }); return; }
+    // From the whole popup to the cover: the start is set a frame ahead so
+    // the clip has somewhere to move from.
+    setLanding({ clip: 'inset(0px 0px 0px 0px round 26px)' });
+    requestAnimationFrame(() => requestAnimationFrame(() => setLanding({
+      clip: `inset(${cover.top - pop.top}px ${pop.right - cover.right}px ${pop.bottom - cover.bottom}px ${cover.left - pop.left}px round 12px)`,
+    })));
+    setTimeout(() => sentRef.current?.({ record, from: { left: cover.left, top: cover.top, width: cover.width, height: cover.height } }), LANDING_MS);
   };
 
   // The wall searched as you type: an album, an artist or a song. Your own
@@ -154,14 +143,12 @@ export default function IssuePicker({ prompt, left, sent, onClose, onSent }) {
 
   return createPortal(
     <>
-      <div className={'sn-scrim' + (going ? ' sn-scrim--going' : '')} aria-hidden="true" />
-      <div className="sn-room" onClick={e => { if (e.target === e.currentTarget && !gone) shut(); }}>
-        {gone ? (
-          <SentLetter to="Community" thing={gone} going={going} />
-        ) : (
-          <section
-            className={'sn-popup ip-popup' + (way && !thing ? ' sn-popup--picking' : '') + (tint ? ' ip-popup--washed' : '')}
-            style={tint ? { '--wash': tint } : undefined}
+      <div className="sn-scrim" aria-hidden="true" />
+      <div className="sn-room" onClick={e => { if (e.target === e.currentTarget && !landing) shut(); }}>
+        <section
+            ref={popRef}
+            className={'sn-popup ip-popup' + (!thing ? ' sn-popup--picking' : '') + (tint ? ' ip-popup--washed' : '') + (landing ? ' ip-popup--landing' : '')}
+            style={{ ...(tint ? { '--wash': tint } : {}), ...(landing ? { clipPath: landing.clip } : {}) }}
             role="dialog" aria-modal="true" aria-label="Add yours">
             <button type="button" className="sn-shut" onClick={shut} aria-label="Close" disabled={sending}>
               <X size={18} weight="regular" aria-hidden="true" />
@@ -180,7 +167,7 @@ export default function IssuePicker({ prompt, left, sent, onClose, onSent }) {
                 onClick={() => { if (!sending) { setThing(null); setTrouble(''); } }}
                 aria-label={`${thing.song || thing.album} — tap to choose another`}
               >
-                {thing.album_art ? <img src={thing.album_art} alt="" /> : <span className="sn-slot-none" aria-hidden="true" />}
+                {thing.album_art ? <img ref={coverRef} src={thing.album_art} alt="" /> : <span ref={coverRef} className="sn-slot-none" aria-hidden="true" />}
                 <span className="sn-slot-name">{thing.song || thing.album}</span>
                 <span className="sn-slot-sub">{[thing.artist, thing.year].filter(Boolean).join(' · ')}</span>
                 {(starsOf(thing) > 0 || thing.favorite || thing.masterpiece || thing.formative) && (
@@ -194,20 +181,7 @@ export default function IssuePicker({ prompt, left, sent, onClose, onSent }) {
 
             <div className="sn-rule" aria-hidden="true" />
 
-            {!way ? (
-              <div className="ip-ways">
-                <button type="button" className="ip-way" onClick={() => setWay('wall')}>
-                  <SquaresFour size={30} weight="light" aria-hidden="true" />
-                  <span className="ip-way-word">From your wall</span>
-                  <span className="ip-way-say">A post you’ve written</span>
-                </button>
-                <button type="button" className="ip-way" onClick={listenNew}>
-                  <Plus size={30} weight="light" aria-hidden="true" />
-                  <span className="ip-way-word">New listen</span>
-                  <span className="ip-way-say">Write one now</span>
-                </button>
-              </div>
-            ) : !thing ? (
+            {!thing ? (
               <div className="sn-shelf ip-shelf">
                 {/* The session's own boxed search (.ses-search), so it reads
                     as the field it is. */}
@@ -256,11 +230,9 @@ export default function IssuePicker({ prompt, left, sent, onClose, onSent }) {
                 <button type="button" className="sn-send" onClick={send} disabled={sending}>
                   <span>{sending ? 'Submitting…' : 'Submit'}</span>
                 </button>
-                <button type="button" className="ln-word ip-new" onClick={writeNew} disabled={sending}>Write a new entry</button>
               </div>
             )}
-          </section>
-        )}
+        </section>
       </div>
     </>,
     document.body

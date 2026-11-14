@@ -26,6 +26,7 @@ import { pull_entry_by_slug } from '@/library/database_actions';
 import { pull_settings } from '@/library/settings_actions';
 import { tidyJournal } from '@/library/return_address';
 import { answerNoJournal } from '@/library/hosting_directory';
+import { forget_issue } from '@/library/the_issue';
 
 const NO_STORE = { 'Cache-Control': 'no-store' };
 
@@ -103,6 +104,7 @@ export async function POST(request) {
       from: tidyJournal(settings?.site_address),
     });
     if (!result.ok) return Response.json({ ok: false, error: result.error });
+    forget_issue();
     return Response.json({ ok: true, prompt: told(result.prompt) });
   } catch (error) {
     const nowhere = answerNoJournal(error);

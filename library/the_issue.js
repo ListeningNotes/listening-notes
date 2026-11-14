@@ -97,6 +97,10 @@ export async function pull_issue() {
 const KEPT_MS = 60 * 1000;
 let kept = { at: 0, issue: null };
 
+// A send just landed: the next read asks the publication again rather than
+// showing the issue from before it.
+export function forget_issue() { kept = { ...kept, at: 0 }; }
+
 export async function read_issue() {
   if (await takesPrompts().catch(() => false)) {
     return { issue: await pull_issue(), stale: false };

@@ -235,6 +235,10 @@ function Ring({ records, picked, onPick }) {
 // opens its card. Each cover is placed by hand a frame at a time — a point on
 // the ball, turned, then drawn smaller and shaded the further back it is.
 const GLOBE_BOX = 120;
+// How long a sent cover takes to fly into the globe, and how often Community
+// asks for the issue while it is on screen.
+const FLY_MS = 700;
+const ISSUE_EVERY_MS = 30 * 1000;
 const GLOBE_TILT = 0.12;
 
 function globePlace(i, n, R, W) {
@@ -250,7 +254,7 @@ function globePlace(i, n, R, W) {
 }
 const wrapPi = a => { const b = (a + Math.PI) % (2 * Math.PI); return (b < 0 ? b + 2 * Math.PI : b) - Math.PI; };
 
-function Globe({ records, picked, onPick }) {
+function Globe({ records, picked, onPick, turnTo = null }) {
   const floor = useRef(null);
   const covers = useRef([]);
   const view = useRef({ yaw: 0, pitch: GLOBE_TILT, vYaw: 0, vPitch: 0, aim: null, restUntil: 0 });
@@ -306,6 +310,21 @@ function Globe({ records, picked, onPick }) {
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
   }, [n, picked]);
+
+  // An album just sent turns to face you, without opening its card.
+  useEffect(() => {
+    if (turnTo === null) return;
+    const i = records.findIndex(a => a.voices?.some(v => v.key === turnTo));
+    if (i < 0) return;
+    const v = view.current;
+    const { W, R } = measure();
+    const p = globePlace(i, n, R, W);
+    v.vYaw = v.vPitch = 0;
+    v.aim = { yaw: v.yaw + wrapPi(-Math.atan2(p.x, p.z) - v.yaw), pitch: -Math.atan2(p.y, Math.hypot(p.x, p.z)) };
+    v.restUntil = performance.now() + 6000;
+    // measure reads the floor; records' order is what moves the target.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [turnTo, n]);
 
   // The turn that brings cover i to face you.
   const bring = useCallback(i => {
@@ -383,6 +402,37 @@ function Faces({ voices = [] }) {
   );
 }
 
+// ── Into the globe ──────────────────────────────────────────────────────────
+// A sent album's cover, from where the popup closed in around it to the
+// middle of the globe, shrinking to a cover's size on the way (Miyel,
+// 2026-11-14: "it kind of makes its way into the globe"). Moves, never fades.
+function Flyer({ from, art, to, onDone }) {
+  const [go, setGo] = useState(null);
+  const done = useRef(onDone);
+  useEffect(() => { done.current = onDone; }, [onDone]);
+  useEffect(() => {
+    const floor = to?.querySelector('.is-globe, .is-ring-floor') || to;
+    const box = floor?.getBoundingClientRect();
+    const x = box ? box.left + box.width / 2 : from.left + from.width / 2;
+    const y = box ? box.top + box.height * (floor?.classList.contains('is-globe') ? 0.56 : 0.5) : from.top;
+    const s = 72 / Math.max(1, from.width);
+    const frame = requestAnimationFrame(() => requestAnimationFrame(() => setGo({
+      transform: `translate(${x - (from.left + from.width / 2)}px, ${y - (from.top + from.height / 2)}px) scale(${s})`,
+    })));
+    const end = setTimeout(() => done.current(), FLY_MS + 120);
+    return () => { cancelAnimationFrame(frame); clearTimeout(end); };
+  }, [from, to]);
+  return (
+    <span
+      className="is-flyer"
+      style={{ left: from.left, top: from.top, width: from.width, height: from.height, ...(go || {}) }}
+      aria-hidden="true"
+    >
+      {art ? <img src={art} alt="" /> : null}
+    </span>
+  );
+}
+
 // Whether the stage is wide enough for the ring (a desk) rather than the
 // globe (a phone): measured on the stage itself, never the window.
 function useWide(box) {
@@ -406,7 +456,28 @@ export default function Issue({ keeper = false }) {
   const wide = useWide(stage);
   const issue = read?.issue || null;
   const records = issue?.records || [];
-  const albums = byAlbum(records);
+  // Your own sends, on the globe the moment they land, until the issue as
+  // the publication tells it has them too (a journal keeps the issue a
+  // minute, library/the_issue.js).
+  const [extra, setExtra] = useState([]);
+  const [flying, setFlying] = useState(null);
+  const [turnTo, setTurnTo] = useState(null);
+  const [root, setRoot] = useState(null);
+  const all = [...records, ...extra.filter(x => !records.some(r => r.journal && r.journal === x.journal && r.slug === x.slug))];
+  const albums = byAlbum(all);
+
+  // Read again every half minute while Community is on screen, so somebody
+  // watching sees an album arrive without a reload — nobody approves one
+  // first (Miyel, 2026-11-14). Off the screen, or the tab hidden, nothing
+  // is asked.
+  useEffect(() => {
+    if (!root) return undefined;
+    let seen = false;
+    const watch = new IntersectionObserver(([e]) => { seen = e.isIntersecting; });
+    watch.observe(root);
+    const every = setInterval(() => { if (seen && document.visibilityState === 'visible') readIssue(); }, ISSUE_EVERY_MS);
+    return () => { watch.disconnect(); clearInterval(every); };
+  }, [root]);
 
   if (read === undefined) return <p className="is-quiet">Fetching this month’s question…</p>;
   if (!issue) {
@@ -426,13 +497,13 @@ export default function Issue({ keeper = false }) {
   const meta = [month, count, closes(issue.prompt.ends_at)].filter(Boolean).join(' · ');
 
   return (
-    <div className={'is' + (picked !== null ? ' is--picked' : '')}>
+    <div className={'is' + (picked !== null ? ' is--picked' : '')} ref={setRoot}>
       {read.stale && <p className="is-stale">Couldn’t refresh this month’s question; this is how it was.</p>}
       {issue.standIn && <p className="is-stale">A stand-in issue of your own records, for trying the globe.</p>}
       <div className={'is-stage' + (wide ? '' : ' is-stage--globe')} ref={setStage}>
         {wide
           ? <Ring records={albums} picked={picked} onPick={setPicked} />
-          : <Globe records={albums} picked={picked} onPick={setPicked} />}
+          : <Globe records={albums} picked={picked} onPick={setPicked} turnTo={turnTo} />}
         <div className="is-centre">
           <h2 className="is-said">{issue.prompt.said}</h2>
           <p className="is-meta">{meta}</p>
@@ -448,7 +519,20 @@ export default function Issue({ keeper = false }) {
           left={left}
           sent={mine}
           onClose={() => setAdding(false)}
-          onSent={() => { setAdding(false); readIssue(); }}
+          onSent={({ record, from }) => {
+            setAdding(false);
+            readIssue();
+            if (from && stage) setFlying({ record, from });
+            else { setExtra(x => [...x, record]); setTurnTo(record.key); }
+          }}
+        />
+      )}
+      {flying && (
+        <Flyer
+          from={flying.from}
+          art={flying.record.art}
+          to={stage}
+          onDone={() => { setExtra(x => [...x, flying.record]); setTurnTo(flying.record.key); setFlying(null); }}
         />
       )}
     </div>
