@@ -21,7 +21,7 @@
 // place to Community, which flies it into the globe (Issue.js) — in at once,
 // with nobody approving it.
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { CaretLeft, MagnifyingGlass } from '@phosphor-icons/react';
 import { useMonthPrompt } from './MonthPrompt';
@@ -34,6 +34,8 @@ import { washFromArt } from '../../library/music_data_api';
 const LANDING_MS = 380;
 // How long it takes to sink back down when put away.
 const SINK_MS = 300;
+// How long a cover takes to grow from the wall into its place.
+const GROW_MS = 420;
 
 export default function IssuePicker({ prompt, left, sent, onClose, onSent }) {
   const plate = useBookplate();
@@ -87,6 +89,44 @@ export default function IssuePicker({ prompt, left, sent, onClose, onSent }) {
     return () => { live = false; };
   }, [thing]);
   const tint = thing && wash.art === thing.album_art ? wash.color : '';
+
+  // The top row takes the album's colour too, as it does over a post and
+  // over the listen's sheet, so the row and the sheet's top are one colour
+  // (Miyel, 2026-11-14: "the header doesn't take on color"). nav.css,
+  // html[data-ip-wash].
+  useEffect(() => {
+    const root = document.documentElement;
+    if (!tint) { root.removeAttribute('data-ip-wash'); return undefined; }
+    root.style.setProperty('--ip-wash', tint);
+    root.setAttribute('data-ip-wash', '');
+    return () => { root.removeAttribute('data-ip-wash'); root.style.removeProperty('--ip-wash'); };
+  }, [tint]);
+
+  // ── From the wall to the album ──────────────────────────────────────────
+  // The cover pressed grows from where it sat on the wall into its place at
+  // the top, and what is under it rises in behind — one movement, not a cut
+  // (Miyel, 2026-11-14).
+  const grewFrom = useRef(null);
+  const postRef = useRef(null);
+  useLayoutEffect(() => {
+    const from = grewFrom.current;
+    grewFrom.current = null;
+    const cover = coverRef.current;
+    if (!thing || !from || !cover?.animate) return;
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+    if (popRef.current) popRef.current.scrollTop = 0;
+    const to = cover.getBoundingClientRect();
+    if (!to.width) return;
+    const ease = 'cubic-bezier(0.22, 0.61, 0.36, 1)';
+    cover.style.transformOrigin = '0 0';
+    cover.animate([
+      { transform: `translate(${from.left - to.left}px, ${from.top - to.top}px) scale(${from.width / to.width})` },
+      { transform: 'none' },
+    ], { duration: GROW_MS, easing: ease });
+    const rise = [{ transform: 'translateY(40vh)' }, { transform: 'none' }];
+    cover.parentElement?.querySelectorAll(':scope > span').forEach(line => line.animate(rise, { duration: GROW_MS, easing: ease }));
+    postRef.current?.animate(rise, { duration: GROW_MS, easing: ease });
+  }, [thing]);
 
   // Put down the way the listen is: it sinks back to the foot, then goes.
   const [sinking, setSinking] = useState(false);
@@ -267,7 +307,7 @@ export default function IssuePicker({ prompt, left, sent, onClose, onSent }) {
                 ) : (
                   <div className="ip-wall">
                     {shown.map(r => (
-                      <button key={r.slug} type="button" className="ip-one" onClick={() => { setThing(r); setTrouble(''); }} aria-label={r.song || r.album}>
+                      <button key={r.slug} type="button" className="ip-one" onClick={e => { grewFrom.current = e.currentTarget.getBoundingClientRect(); setThing(r); setTrouble(''); }} aria-label={r.song || r.album}>
                         {r.album_art ? <img src={r.album_art} alt="" loading="lazy" /> : <span>♪</span>}
                       </button>
                     ))}
@@ -275,7 +315,7 @@ export default function IssuePicker({ prompt, left, sent, onClose, onSent }) {
                 )}
               </div>
             ) : (
-              <div className="ip-post">
+              <div className="ip-post" ref={postRef}>
                 <span className="sn-ask">Your post</span>
                 {words === undefined
                   ? <p className="ip-writing ip-writing--none">…</p>

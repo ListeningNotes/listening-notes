@@ -3736,6 +3736,10 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
 }
 /* The question is a place to pull the sheet down from, like its grip. */
 .ip-pull { touch-action: none; cursor: grab; }
+/* The top row and the strip over it wear the chosen album's colour at the
+   strength the sheet's top does, so they meet as one (IssuePicker.js). */
+html[data-ip-wash] .hn-bar-ground,
+html[data-ip-wash] .ln-brow { background: color-mix(in srgb, var(--ip-wash) 55%, var(--bg)); }
 .ip-in { position: relative; }
 .ip-back {
   position: absolute; top: 18px; left: max(8px, env(safe-area-inset-left, 0px)); z-index: 1;
