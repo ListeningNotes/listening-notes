@@ -15,7 +15,7 @@ import { SANDBOX } from '@/library/version';
 // publication runs this code: there only, with no records to show, an issue made of this
 // journal's own records under made-up names. Removed before community merges.
 const STAND_IN_NAMES = ['Ada', 'Rui', 'Noor', 'Tomas', 'Bea', 'Kofi', 'Lena', 'Ines', 'Sol', 'Mika', 'Odile', 'Pax'];
-async function standIn() {
+async function standIn(face) {
   const seen = new Set();
   const mine = (await pull_wall_entries()).filter(e => e.album_art && !seen.has(e.album_key) && seen.add(e.album_key)).slice(0, 30);
   const records = await Promise.all(mine.map(async (e, i) => {
@@ -23,7 +23,7 @@ async function standIn() {
     return {
       key: `stand-in-${i}`, album: e.album, artist: e.artist, year: e.year || '', art: e.album_art,
       song: e.song || '', note: String(whole?.notes || '').slice(0, 600),
-      name: STAND_IN_NAMES[i % STAND_IN_NAMES.length], journal: '', slug: '',
+      name: STAND_IN_NAMES[i % STAND_IN_NAMES.length], journal: face, slug: '',  // this journal's own face on every corner
       rating: e.rating || '', favorite: !!e.favorite, masterpiece: !!e.masterpiece, formative: !!e.formative,
       at: e.posted_at,
     };
@@ -33,10 +33,10 @@ async function standIn() {
   return { number: 1, standIn: true, prompt: { id: 'stand-in', said: 'An album that sounds like a rainy day?', month: '', ends_at: '2026-11-30T23:59:00Z' }, records };
 }
 
-export async function GET() {
+export async function GET(request) {
   try {
     let { issue, stale } = await read_issue();
-    if (!issue?.records?.length && (process.env.NODE_ENV === 'development' || SANDBOX)) { issue = await standIn(); stale = false; }
+    if (!issue?.records?.length && (process.env.NODE_ENV === 'development' || SANDBOX)) { issue = await standIn(request.headers.get('x-forwarded-host') || request.headers.get('host') || ''); stale = false; }
     return Response.json({ issue, stale }, { headers: { 'Cache-Control': 'no-store' } });
   } catch (error) {
     const nowhere = answerNoJournal(error);

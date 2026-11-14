@@ -360,9 +360,26 @@ function Globe({ records, picked, onPick }) {
         >
           {r.art ? <img src={r.art} alt="" loading="lazy" draggable={false} /> : <span>♪</span>}
           <i className="is-orb-back" />
+          <Faces voices={r.voices} />
         </button>
       ))}
     </div>
+  );
+}
+
+// Who sent it, on the cover's corner (Miyel, 2026-11-14): the faces of the
+// first two keepers who sent the album, overlapping, half off the corner so
+// they read as people beside the record rather than printed on it. A face
+// that will not load leaves its ring empty rather than a broken picture.
+function Faces({ voices = [] }) {
+  const homes = [...new Set(voices.map(v => v.journal).filter(Boolean))].slice(0, 2);
+  if (!homes.length) return null;
+  return (
+    <span className="is-orb-faces" aria-hidden="true">
+      {homes.map(home => (
+        <img key={home} src={`${journalUrl(home)}/api/portrait`} alt="" loading="lazy" draggable={false} onError={e => { e.currentTarget.style.visibility = 'hidden'; }} />
+      ))}
+    </span>
   );
 }
 
