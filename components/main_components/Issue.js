@@ -402,7 +402,7 @@ export default function Issue({ keeper = false }) {
   // still open, and fewer than three have gone.
   const mine = prompt && prompt.said ? sentRecords(prompt) : [];
   const left = prompt ? Math.max(0, (prompt.most || 1) - mine.length) : 0;
-  const count = records.length === 1 ? '1 record' : `${records.length} records`;
+  const count = albums.length === 1 ? '1 album' : `${albums.length} albums`;
   const meta = [`Issue ${String(issue.number).padStart(2, '0')}`, count, closes(issue.prompt.ends_at)].filter(Boolean).join(' · ');
 
   return (
