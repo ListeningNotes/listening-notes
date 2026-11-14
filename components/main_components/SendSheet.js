@@ -79,8 +79,8 @@ const DRAFT_KEY = 'ln-outbox-draft';
 
 // How long the letter holds before it goes, and how long the going takes —
 // .sn-letter--going in forms.css keeps the second number.
-const LETTER_HOLD_MS = 1500;
-const LETTER_GO_MS = 520;
+export const LETTER_HOLD_MS = 1500;
+export const LETTER_GO_MS = 520;
 
 // A thing to send, read into one shape from wherever it came — an entry's
 // row, the session's record, or either of the picker's two answers — rather
@@ -117,7 +117,7 @@ function asPerson(person) {
 // with square corners. The address block is written across the middle left,
 // stacked the way an address is: ON ITS WAY TO, the name large, the record.
 // Nothing to press; it leaves on its own.
-function SentLetter({ to, thing, going }) {
+export function SentLetter({ to, thing, going }) {
   // A mask needs an id and React's carry punctuation a `url(#…)` cannot.
   const maskId = 'sn-stamp-' + useId().replace(/[^a-zA-Z0-9_-]/g, '');
   // Nine notches a side on a 104-unit square: one every 104/9 units, the

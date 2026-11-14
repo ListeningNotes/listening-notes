@@ -3714,67 +3714,28 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-soft);
 }
 
-.ip {
-  position: fixed; inset: 0; z-index: 300; overflow-y: auto;
-  display: flex; flex-direction: column;
-  padding: calc(env(safe-area-inset-top, 0px) + 18px) 0 calc(env(safe-area-inset-bottom, 0px) + 18px);
-  background: var(--canvas, var(--bg));
-  animation: isCardUp 0.36s cubic-bezier(0.22, 0.61, 0.36, 1);
-}
-@media (prefers-reduced-motion: reduce) { .ip { animation: none; } }
-.ip-head { display: flex; align-items: flex-start; gap: 12px; padding: 0 16px; }
+/* Add yours, in the send sheet's shape (IssuePicker.js; .sn-*, forms.css):
+   the prompt is the right square, LN.'s mark in it. */
+.ip-to .sn-slot-box { display: grid; place-items: center; background: var(--card); }
+.ip-to .sn-slot-box svg { width: 54%; height: auto; fill: var(--ink); }
 .ip-tip {
-  flex: 1; margin: 0; padding: 14px 16px; border-radius: var(--panel-r, 20px);
-  background: var(--card); box-shadow: var(--lift-1);
+  margin: 16px 8px 0; text-align: center; text-wrap: balance;
   font-family: var(--font-display); font-weight: var(--font-display-weight); font-size: 17px; line-height: 1.3; color: var(--ink);
 }
-.ip-x { padding: 10px; border: 0; background: none; color: var(--ink-soft); cursor: pointer; }
-.ip-strip {
-  display: flex; align-items: center; gap: 12px; margin-top: 22px; padding: 18px 16px;
-  overflow-x: auto; scrollbar-width: none; scroll-snap-type: x proximity;
-}
-.ip-strip::-webkit-scrollbar { display: none; }
+.ip-shelf .sn-ask { margin-bottom: 14px; }
+.ip-wall { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
 .ip-one {
-  flex: 0 0 auto; width: 74px; height: 74px; padding: 0; border: 0; border-radius: var(--tile-r, 12px);
-  overflow: hidden; background: var(--bg-warm); box-shadow: var(--lift-2); scroll-snap-align: center;
-  transition: transform 0.24s cubic-bezier(0.22, 0.61, 0.36, 1); cursor: pointer; position: relative;
+  aspect-ratio: 1; padding: 0; border: 0; border-radius: var(--tile-r, 12px); overflow: hidden;
+  background: var(--bg-warm); box-shadow: var(--lift-1); cursor: pointer;
 }
 .ip-one img { width: 100%; height: 100%; object-fit: cover; display: block; }
-/* Sideways is the strip's own scroll; down is a drag to the tray. */
-.ip-one { touch-action: pan-x; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
-.ip-one--looking { transform: scale(1.3); margin: 0 10px; z-index: 1; box-shadow: var(--lift-3); }
-.ip-one--in::after {
-  content: ''; position: absolute; top: 5px; right: 5px; width: 12px; height: 12px; border-radius: 50%;
-  background: var(--ink); box-shadow: 0 0 0 2px var(--card);
-}
-.ip-seen { margin: 8px 16px 0; padding: 16px 20px; border-radius: var(--panel-r, 20px); background: var(--card); box-shadow: var(--lift-1); }
-.ip-title { margin: 0; font-family: var(--font-display); font-weight: var(--font-display-weight); font-size: 1.25rem; color: var(--ink); }
-.ip-by { margin: 4px 0 0; font-family: var(--font-label); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-soft); }
+.ip-post { display: flex; flex-direction: column; }
 .ip-writing {
-  margin: 10px 0 0; font-size: 14px; line-height: 1.55; color: var(--ink); white-space: pre-wrap;
-  max-height: 9.5em; overflow: hidden;
+  margin: 10px 0 18px; font-size: 14px; line-height: 1.55; color: var(--ink); white-space: pre-wrap;
+  max-height: 11em; overflow-y: auto; overscroll-behavior: contain;
 }
 .ip-writing--none { color: var(--ink-faint); }
-.ip-pick { margin-top: 12px; }
-.ip-tray { display: flex; justify-content: center; gap: 10px; margin-top: 20px; }
-.ip-slot {
-  width: 54px; height: 54px; border-radius: 10px; overflow: hidden;
-  border: 1px dashed var(--ink-faint); box-sizing: border-box;
-}
-.ip-slot--full { border: 0; box-shadow: var(--lift-2); }
-.ip-slot img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.ip-slot--full { touch-action: none; cursor: grab; }
-.ip-slot--over { border: 2px solid var(--ink); transform: scale(1.12); transition: transform 0.16s cubic-bezier(0.22, 0.61, 0.36, 1); }
-.ip-slot--lifted { border: 1px dashed var(--ink-faint); box-shadow: none; }
-.ip-ghost {
-  position: fixed; z-index: 400; width: 74px; height: 74px; border-radius: var(--tile-r, 12px); overflow: hidden;
-  transform: translate(-50%, -50%) scale(1.08) rotate(-3deg); pointer-events: none;
-  background: var(--bg-warm); box-shadow: var(--lift-3);
-}
-.ip-ghost img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.ip-said { margin: 16px 24px 0; text-align: center; font-size: 12px; line-height: 1.5; color: var(--ink-soft); }
-.ip-trouble { margin: 8px 24px 0; text-align: center; font-size: 13px; color: var(--fav); }
-.ip-send { margin-top: 16px; }
+.ip-new { align-self: center; margin-top: 14px; }
 /* The voices on an album's card in the issue: one per keeper who sent it. */
 .is-voices { display: flex; flex-direction: column; gap: 16px; margin-top: 14px; }
 .is-voice + .is-voice { padding-top: 16px; border-top: 1px solid var(--border); }

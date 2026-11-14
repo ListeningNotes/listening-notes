@@ -2,237 +2,209 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 'use client';
 // components/main_components/IssuePicker.js
-// Add yours: choosing which of your own records go to this month's prompt
-// (Community, Issue.js). Your wall's records in a strip — never a search,
-// so if nothing on the wall answers the prompt, the answer is to go and
-// listen — the one you are looking at large, with the writing it would
-// send as it stands; a tray under it of up to the records you have left
-// (three a prompt, 2026-11-12); and Send, the one filled control.
+// Add yours: one of your own records sent to this month's prompt
+// (Community, Issue.js), in the send sheet's shape (SendSheet.js) — your
+// record, an arrow, the prompt — so sending to the publication reads like
+// sending to a friend (Miyel, 2026-11-13). One record a press, "1 of 3 this
+// month": the three are a month's allowance to come back to, not a tray to
+// fill now.
 //
-// A record is chosen by tapping it twice, or by dragging it down out of the
-// strip onto a spot in the tray (Miyel, 2026-11-13); dragged off the tray it
-// comes out again. Sideways is still the strip scrolling, so a drag starts
-// only when the finger goes more down than across.
+// The left square is filled from your wall, never a search: if nothing on
+// the wall answers the prompt, the answer is to go and listen. Filled, the
+// sheet shows the post's writing as it would go, read-only, with two doors:
+// Send your post, or Write a new entry, which starts a listen of the same
+// record — the words live in the journal and nowhere else (Miyel,
+// 2026-11-13: one place to write; the issue shows the post as it was sent).
 //
-// Nothing here is typed into. What goes is the post as it stands, through
-// the prompt's own door (/api/prompt, library/month_prompt.js), one record
-// at a time; a record that fails stays in the tray and says why.
+// What goes is the post as it stands, through the prompt's own door
+// (/api/prompt, library/month_prompt.js). A send that fails keeps the record
+// in the square and says why. Sent, the popup becomes the send sheet's
+// letter, on its way to this month's prompt.
 
-import { useEffect, useRef, useState } from 'react';
-import { X } from '@phosphor-icons/react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { useRouter } from 'next/navigation';
+import { ArrowRight, Plus, X } from '@phosphor-icons/react';
 import { useMonthPrompt } from './MonthPrompt';
+import { SentLetter, LETTER_HOLD_MS, LETTER_GO_MS } from './SendSheet';
+import { LnMark } from './SiteNav';
 
 export default function IssuePicker({ prompt, left, sent, onClose, onSent }) {
+  const router = useRouter();
   const [, tellPrompt] = useMonthPrompt(true);
   const [records, setRecords] = useState(null);
-  const [looking, setLooking] = useState(null);
+  const [thing, setThing] = useState(null);
   const [writing, setWriting] = useState({});
-  const [tray, setTray] = useState([]);
   const [sending, setSending] = useState(false);
   const [trouble, setTrouble] = useState('');
-  const [drag, setDrag] = useState(null);
-  const press = useRef(null);
-  const dragged = useRef(false);
-  const trayRef = useRef(null);
-  const slotRefs = useRef([]);
+  const [gone, setGone] = useState(null);
+  const [going, setGoing] = useState(false);
+  const closeRef = useRef(onClose);
+  const sentRef = useRef(onSent);
+  useEffect(() => { closeRef.current = onClose; sentRef.current = onSent; }, [onClose, onSent]);
+
+  const most = prompt?.most || 3;
+  const which = Math.min(most, most - left + 1);
 
   // The wall's records, newest first, less any already sent.
   useEffect(() => {
     let live = true;
     fetch('/api/entries').then(r => (r.ok ? r.json() : { entries: [] })).catch(() => ({ entries: [] })).then(d => {
       if (!live) return;
-      const gone = new Set((sent || []).map(r => r.slug));
-      const mine = (d.entries || []).filter(e => e.slug && !gone.has(e.slug));
-      setRecords(mine);
-      if (mine[0]) setLooking(mine[0].slug);
+      const out = new Set((sent || []).map(r => r.slug));
+      setRecords((d.entries || []).filter(e => e.slug && !out.has(e.slug)));
     });
     return () => { live = false; };
   }, [sent]);
 
-  // The writing the one being looked at would send, read once each.
+  // The writing the chosen record would send, read once each.
   useEffect(() => {
-    if (!looking || writing[looking] !== undefined) return;
-    fetch(`/api/entries/${encodeURIComponent(looking)}`).then(r => (r.ok ? r.json() : null)).catch(() => null).then(d => {
-      setWriting(w => ({ ...w, [looking]: String(d?.entry?.notes || '') }));
+    const slug = thing?.slug;
+    if (!slug || writing[slug] !== undefined) return;
+    fetch(`/api/entries/${encodeURIComponent(slug)}`).then(r => (r.ok ? r.json() : null)).catch(() => null).then(d => {
+      setWriting(w => ({ ...w, [slug]: String(d?.entry?.notes || '') }));
     });
-  }, [looking, writing]);
+  }, [thing, writing]);
 
-  // Escape puts it away.
+  const shut = useCallback(() => { if (!sending) closeRef.current?.(); }, [sending]);
+
+  // Escape puts it away, but not the letter, which leaves on its own.
   useEffect(() => {
-    const key = e => { if (e.key === 'Escape' && !sending) onClose(); };
+    const key = e => { if (e.key === 'Escape' && !gone) shut(); };
     window.addEventListener('keydown', key);
     return () => window.removeEventListener('keydown', key);
-  }, [onClose, sending]);
+  }, [shut, gone]);
 
-  const seen = records?.find(r => r.slug === looking) || null;
-  const inTray = slug => tray.some(r => r.slug === slug);
-  const toggle = record => {
-    setTrouble('');
-    if (inTray(record.slug)) setTray(t => t.filter(r => r.slug !== record.slug));
-    else if (tray.length < left) setTray(t => [...t, record]);
-  };
-
-  // Where a record let go goes: onto spot i (taking the place of what is
-  // there, or swapping with it when it came from the tray), into the next
-  // free spot, or out when it came from the tray and landed off it.
-  const place = (record, from, over) => {
-    setTrouble('');
-    setTray(t => {
-      const at = t.findIndex(r => r.slug === record.slug);
-      if (over === null) return at >= 0 && from === 'slot' ? t.filter(r => r.slug !== record.slug) : t;
-      if (over === 'tray' || over >= t.length) {
-        if (at >= 0) return t;
-        return t.length < left ? [...t, record] : t;
-      }
-      const next = [...t];
-      if (at >= 0) { next[at] = next[over]; next[over] = record; return next; }
-      next[over] = record;
-      return next;
-    });
-  };
-
-  const overAt = (x, y) => {
-    const hit = el => { const b = el?.getBoundingClientRect(); return b && x >= b.left - 8 && x <= b.right + 8 && y >= b.top - 8 && y <= b.bottom + 8; };
-    const i = slotRefs.current.findIndex(hit);
-    if (i >= 0) return i;
-    return hit(trayRef.current) ? 'tray' : null;
-  };
-
-  // The spot a record held over the tray would land in, to light it: the
-  // spots fill from the left, so past the last full one is the next free.
-  const landsAt = d => {
-    if (d.over === null) return null;
-    const at = tray.findIndex(r => r.slug === d.record.slug);
-    if (d.over !== 'tray' && d.over < tray.length) return d.over;
-    if (at >= 0) return d.from === 'slot' ? at : null;
-    return tray.length < left ? tray.length : null;
-  };
-
-  const grab = (record, from) => ({
-    onPointerDown: e => {
-      if (sending || (e.pointerType === 'mouse' && e.button !== 0)) return;
-      if (e.pointerType === 'mouse') e.preventDefault();
-      press.current = { record, from, id: e.pointerId, x: e.clientX, y: e.clientY, on: false };
-    },
-    onPointerMove: e => {
-      const p = press.current;
-      if (!p || p.id !== e.pointerId) return;
-      if (!p.on) {
-        const dx = Math.abs(e.clientX - p.x), dy = Math.abs(e.clientY - p.y);
-        if (from === 'strip' && dx > 10 && dx >= dy) { press.current = null; return; }
-        if (from === 'strip' ? !(dy > 8 && dy > dx) : Math.hypot(dx, dy) < 6) return;
-        p.on = true;
-        try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* the pointer is already gone */ }
-      }
-      setDrag({ record, from, x: e.clientX, y: e.clientY, over: overAt(e.clientX, e.clientY) });
-    },
-    onPointerUp: e => {
-      const p = press.current;
-      press.current = null;
-      if (!p?.on) return;
-      dragged.current = true;
-      setTimeout(() => { dragged.current = false; }, 0);
-      place(record, from, overAt(e.clientX, e.clientY));
-      setDrag(null);
-    },
-    onPointerCancel: () => { press.current = null; setDrag(null); },
-  });
+  // The letter's clock, as the send sheet's: it holds, goes, and the issue
+  // is read again behind it.
+  useEffect(() => {
+    if (!gone) return undefined;
+    const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    const hold = setTimeout(() => setGoing(true), LETTER_HOLD_MS);
+    const done = setTimeout(() => sentRef.current?.(), LETTER_HOLD_MS + (still ? 0 : LETTER_GO_MS));
+    return () => { clearTimeout(hold); clearTimeout(done); };
+  }, [gone]);
 
   const send = async () => {
-    if (!tray.length || sending) return;
+    if (!thing || sending) return;
     setSending(true);
     setTrouble('');
-    let still = [...tray];
-    for (const record of tray) {
-      const answer = await fetch('/api/prompt', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ slug: record.slug }),
-      }).then(r => r.json()).catch(() => null);
-      if (!answer?.ok) {
-        setTrouble(answer?.error || 'It couldn’t be sent just now. Try again in a minute.');
-        break;
-      }
-      if (answer.prompt) tellPrompt(answer.prompt);
-      still = still.filter(r => r.slug !== record.slug);
-    }
-    setTray(still);
+    const answer = await fetch('/api/prompt', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ slug: thing.slug }),
+    }).then(r => r.json()).catch(() => null);
     setSending(false);
-    if (!still.length) onSent();
+    if (!answer?.ok) {
+      setTrouble(answer?.error || 'It couldn’t be sent just now. Try again in a minute.');
+      return;
+    }
+    if (answer.prompt) tellPrompt(answer.prompt);
+    setGone({ song: thing.song, album: thing.album, artist: thing.artist, art: thing.album_art });
   };
 
-  return (
-    <div className="ip" role="dialog" aria-label="Add yours">
-      <div className="ip-head">
-        <p className="ip-tip">{prompt?.said}</p>
-        <button type="button" className="ip-x" onClick={onClose} aria-label="Put this away" disabled={sending}>
-          <X size={18} weight="bold" />
-        </button>
-      </div>
+  // A new entry is a new listen of the same record, opened the way a post's
+  // Listen again opens one (FullPostPage.js, revisit).
+  const writeNew = () => {
+    try {
+      window.localStorage.setItem('ln_pending_session', JSON.stringify({
+        album: thing.album,
+        artist: thing.artist || '',
+        year: thing.year || '',
+        artUrl: thing.album_art || '',
+        collectionId: thing.collection_id || null,
+        genre: thing.genre || '',
+      }));
+    } catch { /* a private window still gets the picker, one tap further on */ }
+    router.push('/session');
+  };
 
-      {records === null ? (
-        <p className="is-quiet">Your wall…</p>
-      ) : records.length === 0 ? (
-        <p className="is-quiet">Nothing on your wall to send yet. Go and listen.</p>
-      ) : (
-        <>
-          <div className="ip-strip">
-            {records.map(r => (
+  if (typeof document === 'undefined') return null;
+  const words = thing ? writing[thing.slug] : undefined;
+
+  return createPortal(
+    <>
+      <div className={'sn-scrim' + (going ? ' sn-scrim--going' : '')} aria-hidden="true" />
+      <div className="sn-room" onClick={e => { if (e.target === e.currentTarget && !gone) shut(); }}>
+        {gone ? (
+          <SentLetter to="This month’s question" thing={gone} going={going} />
+        ) : (
+          <section className={'sn-popup ip-popup' + (thing ? '' : ' sn-popup--picking')} role="dialog" aria-modal="true" aria-label="Add yours">
+            <button type="button" className="sn-shut" onClick={shut} aria-label="Close" disabled={sending}>
+              <X size={18} weight="regular" aria-hidden="true" />
+            </button>
+
+            <div className="sn-pair">
               <button
-                key={r.slug}
                 type="button"
-                className={'ip-one' + (r.slug === looking ? ' ip-one--looking' : '') + (inTray(r.slug) ? ' ip-one--in' : '')}
-                onClick={() => { if (dragged.current) return; if (r.slug === looking) toggle(r); else setLooking(r.slug); }}
-                {...grab(r, 'strip')}
-                aria-label={r.song || r.album}
-                aria-pressed={inTray(r.slug)}
+                className={'sn-slot sn-slot--what' + (thing ? ' sn-slot--full' : ' sn-slot--lit')}
+                onClick={() => { if (thing && !sending) { setThing(null); setTrouble(''); } }}
+                aria-label={thing ? `${thing.song || thing.album} — tap to choose another` : 'Choose a record from your wall'}
               >
-                {r.album_art ? <img src={r.album_art} alt="" loading="lazy" draggable={false} /> : <span>♪</span>}
+                <span className="sn-slot-box">
+                  {thing
+                    ? (thing.album_art ? <img src={thing.album_art} alt="" /> : <span className="sn-slot-none" aria-hidden="true" />)
+                    : <Plus size={26} weight="light" aria-hidden="true" />}
+                </span>
+                {thing ? (
+                  <>
+                    <span className="sn-slot-name">{thing.song || thing.album}</span>
+                    <span className="sn-slot-sub">{thing.artist}</span>
+                  </>
+                ) : (
+                  <span className="sn-slot-ask">From<br />your wall</span>
+                )}
               </button>
-            ))}
-          </div>
 
-          {seen && (
-            <div className="ip-seen">
-              <h3 className="ip-title">{seen.song || seen.album}</h3>
-              <p className="ip-by">{[seen.song ? seen.album : '', seen.artist, seen.year].filter(Boolean).join(' · ')}</p>
-              {writing[seen.slug] === undefined
-                ? <p className="ip-writing ip-writing--none">…</p>
-                : writing[seen.slug]
-                  ? <p className="ip-writing">{writing[seen.slug]}</p>
-                  : <p className="ip-writing ip-writing--none">Nothing written; the record goes alone.</p>}
-              <button type="button" className="ln-word ip-pick" onClick={() => toggle(seen)} disabled={!inTray(seen.slug) && tray.length >= left}>
-                {inTray(seen.slug) ? 'Take it out' : 'Choose this one'}
-              </button>
+              <ArrowRight className={'sn-arrow' + (thing ? ' sn-arrow--ready' : '')} size={22} weight={thing ? 'bold' : 'regular'} aria-hidden="true" />
+
+              <div className="sn-slot sn-slot--who sn-slot--full ip-to">
+                <span className="sn-slot-box"><LnMark /></span>
+                <span className="sn-slot-name">This month</span>
+                <span className="sn-slot-sub">{which} of {most}</span>
+              </div>
             </div>
-          )}
 
-          <div className="ip-tray" aria-label="Chosen" ref={trayRef}>
-            {Array.from({ length: left }, (_, i) => tray[i]).map((r, i) => (
-              <span
-                key={r?.slug || `empty-${i}`}
-                ref={el => { slotRefs.current[i] = el; }}
-                className={'ip-slot' + (r ? ' ip-slot--full' : '') + (drag && landsAt(drag) === i ? ' ip-slot--over' : '') + (drag?.from === 'slot' && r?.slug === drag.record.slug ? ' ip-slot--lifted' : '')}
-                {...(r ? grab(r, 'slot') : {})}
-              >
-                {r?.album_art && !(drag?.from === 'slot' && r.slug === drag.record.slug) && <img src={r.album_art} alt="" draggable={false} />}
-              </span>
-            ))}
-          </div>
+            <p className="ip-tip">{prompt?.said}</p>
+            <div className="sn-rule" aria-hidden="true" />
 
-          <p className="ip-said">What you send is on the issue for anyone: the record, its writing as it stands, and your name.</p>
-          {trouble && <p className="ip-trouble">{trouble}</p>}
-          <button type="button" className="is-add ip-send" onClick={send} disabled={!tray.length || sending}>
-            {sending ? 'Sending…' : 'Send'}
-          </button>
-        </>
-      )}
-
-      {drag && (
-        <span className="ip-ghost" style={{ left: drag.x, top: drag.y }} aria-hidden="true">
-          {drag.record.album_art ? <img src={drag.record.album_art} alt="" draggable={false} /> : <span>♪</span>}
-        </span>
-      )}
-    </div>
+            {!thing ? (
+              <div className="sn-shelf ip-shelf">
+                <span className="sn-ask">Your wall</span>
+                {records === null ? (
+                  <p className="sn-empty">…</p>
+                ) : records.length === 0 ? (
+                  <p className="sn-empty">Nothing on your wall to send yet. Go and listen.</p>
+                ) : (
+                  <div className="ip-wall">
+                    {records.map(r => (
+                      <button key={r.slug} type="button" className="ip-one" onClick={() => { setThing(r); setTrouble(''); }} aria-label={r.song || r.album}>
+                        {r.album_art ? <img src={r.album_art} alt="" loading="lazy" /> : <span>♪</span>}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="ip-post">
+                <span className="sn-ask">Your post</span>
+                {words === undefined
+                  ? <p className="ip-writing ip-writing--none">…</p>
+                  : words
+                    ? <p className="ip-writing">{words}</p>
+                    : <p className="ip-writing ip-writing--none">Nothing written; the record goes alone.</p>}
+                {trouble && <p className="sn-error">{trouble}</p>}
+                <button type="button" className="sn-send" onClick={send} disabled={sending}>
+                  <span>{sending ? 'Sending…' : 'Send your post'}</span>
+                </button>
+                <button type="button" className="ln-word ip-new" onClick={writeNew} disabled={sending}>Write a new entry</button>
+                <p className="sn-foot-say">On the issue for anyone: the record, this writing, and your name.</p>
+              </div>
+            )}
+          </section>
+        )}
+      </div>
+    </>,
+    document.body
   );
 }
