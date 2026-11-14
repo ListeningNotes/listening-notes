@@ -2151,7 +2151,7 @@ export default function HomeNav() {
           not a pane's: it stays at the foot of the screen on every pane and
           over an entry opened on the journal, and steps down when anything
           else owns the foot (ListenBar.js). The keeper's alone. */}
-      {authed && <ListenBar held={inHand} live={isLive} />}
+      {authed && <ListenBar held={inHand} live={isLive} on={pane === HOME ? 'home' : pane === INBOX ? 'community' : 'other'} />}
     </div>
   );
 }

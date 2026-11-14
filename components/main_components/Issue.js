@@ -23,12 +23,13 @@
 // The one filled control is the verb, Add yours (IssuePicker.js), while the
 // prompt is open and this journal has records left to send.
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { Fingerprint, Heart, SketchLogo, X } from '@phosphor-icons/react';
 import StarRating from './StarRating';
 import IssuePicker from './IssuePicker';
 import { useMonthPrompt, sentRecords } from './MonthPrompt';
 import { journalUrl } from '../../library/return_address';
+import { heldNow, subscribeHeld } from './Dashboard';
 
 // The least number of places on the ring, so a new issue is a ring filling
 // rather than three covers spread round a whole circle.
@@ -55,6 +56,24 @@ function useIssue() {
     return () => listeners.delete(heard);
   }, []);
   return held;
+}
+
+// ── Add yours, at the foot ──────────────────────────────────────────────────
+// With no listen going, Community's Add yours is the Listen bar's place
+// (ListenBar.js, Miyel 2026-11-14), so the bar has to know whether there is
+// one to offer and how to open it. Community says so here.
+let addable = false;
+const addHeard = new Set();
+let opener = null;
+function sayAddable(next, open) {
+  opener = open;
+  if (addable === next) return;
+  addable = next;
+  addHeard.forEach(fn => fn());
+}
+export function useAddYours() {
+  const can = useSyncExternalStore(fn => { addHeard.add(fn); return () => addHeard.delete(fn); }, () => addable, () => false);
+  return [can, () => opener?.()];
 }
 
 export const starsOf = record => (record.masterpiece || record.rating === 'Masterpiece' ? 5 : parseFloat(record.rating) || 0);
@@ -469,6 +488,7 @@ export default function Issue({ keeper = false }) {
   const [flying, setFlying] = useState(null);
   const [turnTo, setTurnTo] = useState(null);
   const [root, setRoot] = useState(null);
+  const held = useSyncExternalStore(subscribeHeld, heldNow, () => null);
   const all = [...records, ...extra.filter(x => !records.some(r => r.journal && r.journal === x.journal && r.slug === x.slug))];
   const albums = byAlbum(all);
 
@@ -484,6 +504,14 @@ export default function Issue({ keeper = false }) {
     const every = setInterval(() => { if (seen && document.visibilityState === 'visible') readIssue(); }, ISSUE_EVERY_MS);
     return () => { watch.disconnect(); clearInterval(every); };
   }, [root]);
+
+  // Whether Add yours can be offered, told to the foot. Worked out from the
+  // same things the button below is, before the early returns.
+  const offer = !!(keeper && read?.issue && prompt && Math.max(0, (prompt.most || 1) - sentRecords(prompt).length) > 0);
+  useEffect(() => {
+    sayAddable(offer, () => setAdding(true));
+    return () => sayAddable(false, null);
+  }, [offer]);
 
   if (read === undefined) return <p className="is-quiet">Fetching this month’s question…</p>;
   if (!issue) {
@@ -515,7 +543,10 @@ export default function Issue({ keeper = false }) {
           <p className="is-meta">{meta}</p>
         </div>
       </div>
-      {keeper && left > 0 && (
+      {/* At the foot, in the Listen bar's place, with no listen going
+          (ListenBar.js); here on the page only while a listen holds the
+          foot. */}
+      {keeper && left > 0 && held && (
         <button type="button" className="is-add" onClick={() => setAdding(true)}>Add yours</button>
       )}
       {picked !== null && albums[picked] && <Card album={albums[picked]} onClose={() => setPicked(null)} />}

@@ -50,6 +50,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { TrackLength } from '../../library/session_timers';
+import { useAddYours } from './Issue';
 
 // What owns the foot when it is on screen. A folder's tabs that have stepped
 // aside for a keyboard (ff--away) do not. A friend's page (.pn-screen) owns
@@ -89,18 +90,38 @@ function useFootTaken() {
   return taken;
 }
 
-export default function ListenBar({ held, live = false }) {
+// ── Which page has it, 2026-11-14 ─────────────────────────────────────────
+// Miyel: the bar is worth its place when it holds something, and "Start a
+// listen" covering a friend's wall is not. So a listen in hand keeps the bar
+// on every page, as before — always one press from going back to it — and
+// with none: Home says Start a listen, Community says Add yours (the issue's
+// one control, moved down from over the globe), and Friends has no bar.
+// `on` is the pane: 'home', 'community' or anything else.
+export default function ListenBar({ held, live = false, on = 'home' }) {
   const taken = useFootTaken();
+  const [addable, addYours] = useAddYours();
+  const shown = !!held || on === 'home' || (on === 'community' && addable);
   // Said on the document while the bar is up, so a page laid over the
   // journal can keep its last lines clear of it (nav.css, html[data-listen]).
   useEffect(() => {
-    if (taken) return undefined;
+    if (taken || !shown) return undefined;
     document.documentElement.setAttribute('data-listen', '');
     return () => document.documentElement.removeAttribute('data-listen');
-  }, [taken]);
+  }, [taken, shown]);
   // A line and nothing else; the bar is what you press, not the grip.
   const grip = <span className="lb-grip" aria-hidden="true" />;
   const down = taken ? ' lb--down' : '';
+
+  if (!shown) return null;
+
+  if (!held && on === 'community') {
+    return (
+      <button type="button" className={'lb lb--add' + down} onClick={addYours} aria-hidden={taken || undefined} tabIndex={taken ? -1 : undefined}>
+        {grip}
+        Add yours
+      </button>
+    );
+  }
 
   if (!held) {
     return (
