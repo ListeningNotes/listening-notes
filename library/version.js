@@ -64,6 +64,14 @@ export const DIRECTORY_URL =
 // constant, not a setting; the Board's own branch turns it back on.
 export const BOARD_OPEN = false;
 
+// Whether Community draws the month's prompt yet, 2026-11-14: off while
+// Miyel finishes it ("pause community again behind the coming soon but keep
+// where we are work wise"). Off, Community says Coming soon and the foot
+// offers no Add yours; the prompt can still be sent to journals and the
+// publication still takes what arrives. A constant; turning it on is the
+// release that opens Community.
+export const COMMUNITY_OPEN = false;
+
 // Where keepers send Listening Notes, the publication, a record for the
 // month's prompt (2026-10-22, Miyel: "listeningnotes.blog is the magazine.
 // It is the publication. It is where people send"): the magazine's own

@@ -91,7 +91,7 @@ import Dashboard, { heldNow, subscribeHeld } from './Dashboard';
 import PeopleScreen from './PeopleScreen';
 // The Board's first screen, read when People opens (below).
 import { Everyone, readEveryone, useEveryone } from '../../app/directory/Directory';
-import { DIRECTORY_URL, PUBLICATION_URL } from '../../library/version';
+import { COMMUNITY_OPEN, DIRECTORY_URL, PUBLICATION_URL } from '../../library/version';
 import Issue from './Issue';
 import { readArtColor } from '../../library/music_data_api';
 // The same two the desk already reaches for, from the same module, so the
@@ -2118,7 +2118,14 @@ export default function HomeNav() {
             {/* The issue since 2026-11-12: the month's prompt and the
                 records keepers sent to it, which is what Community is
                 (Miyel, 2026-11-11, replacing the Board; Issue.js). */}
-            {visited[INBOX] && PUBLICATION_URL && <Issue keeper />}
+            {/* Coming soon while it is finished (COMMUNITY_OPEN,
+                library/version.js); everything under it is kept. */}
+            {visited[INBOX] && PUBLICATION_URL && (COMMUNITY_OPEN ? <Issue keeper /> : (
+              <div className="hn-soon">
+                <Globe size={22} weight="regular" aria-hidden="true" />
+                <span>Coming soon</span>
+              </div>
+            ))}
           </section>
         )}
 
