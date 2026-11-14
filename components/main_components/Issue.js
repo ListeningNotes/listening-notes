@@ -391,11 +391,11 @@ export default function Issue({ keeper = false }) {
   const records = issue?.records || [];
   const albums = byAlbum(records);
 
-  if (read === undefined) return <p className="is-quiet">Asking for this month’s issue…</p>;
+  if (read === undefined) return <p className="is-quiet">Asking for this month’s question…</p>;
   if (!issue) {
     return read?.stale
       ? <p className="is-quiet">Listening Notes couldn’t be reached just now.</p>
-      : <p className="is-quiet">No issue yet.</p>;
+      : <p className="is-quiet">No question yet.</p>;
   }
 
   // Records left to send: the prompt this journal holds is this issue's and
@@ -410,7 +410,7 @@ export default function Issue({ keeper = false }) {
 
   return (
     <div className={'is' + (picked !== null ? ' is--picked' : '')}>
-      {read.stale && <p className="is-stale">Couldn’t refresh the issue; this is it as it was.</p>}
+      {read.stale && <p className="is-stale">Couldn’t refresh this month’s question; this is how it was.</p>}
       {issue.standIn && <p className="is-stale">A stand-in issue of your own records, for trying the globe.</p>}
       <div className={'is-stage' + (wide ? '' : ' is-stage--globe')} ref={setStage}>
         {wide
