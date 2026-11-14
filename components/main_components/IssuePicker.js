@@ -28,6 +28,9 @@ import { useRouter } from 'next/navigation';
 import { MagnifyingGlass, X } from '@phosphor-icons/react';
 import { useMonthPrompt } from './MonthPrompt';
 import { SentLetter, LETTER_HOLD_MS, LETTER_GO_MS } from './SendSheet';
+import StarRating from './StarRating';
+import { Emblems, starsOf } from './Issue';
+import { washFromArt } from '../../library/music_data_api';
 
 export default function IssuePicker({ prompt, left, sent, onClose, onSent }) {
   const router = useRouter();
@@ -38,6 +41,7 @@ export default function IssuePicker({ prompt, left, sent, onClose, onSent }) {
   const [sending, setSending] = useState(false);
   const [trouble, setTrouble] = useState('');
   const [find, setFind] = useState('');
+  const [wash, setWash] = useState({ art: '', color: '' });
   const [gone, setGone] = useState(null);
   const [going, setGoing] = useState(false);
   const closeRef = useRef(onClose);
@@ -66,6 +70,17 @@ export default function IssuePicker({ prompt, left, sent, onClose, onSent }) {
       setWriting(w => ({ ...w, [slug]: String(d?.entry?.notes || '') }));
     });
   }, [thing, writing]);
+
+  // The chosen album's colour, the wash a post wears (washFromArt), so the
+  // popup turns the album's colour when it is chosen (Miyel, 2026-11-14).
+  useEffect(() => {
+    const art = thing?.album_art || '';
+    if (!art) return undefined;
+    let live = true;
+    washFromArt(art).then(color => { if (live) setWash({ art, color }); });
+    return () => { live = false; };
+  }, [thing]);
+  const tint = thing && wash.art === thing.album_art ? wash.color : '';
 
   const shut = useCallback(() => { if (!sending) closeRef.current?.(); }, [sending]);
 
@@ -136,7 +151,10 @@ export default function IssuePicker({ prompt, left, sent, onClose, onSent }) {
         {gone ? (
           <SentLetter to="Community" thing={gone} going={going} />
         ) : (
-          <section className={'sn-popup ip-popup' + (thing ? '' : ' sn-popup--picking')} role="dialog" aria-modal="true" aria-label="Add yours">
+          <section
+            className={'sn-popup ip-popup' + (thing ? '' : ' sn-popup--picking') + (tint ? ' ip-popup--washed' : '')}
+            style={tint ? { '--wash': tint } : undefined}
+            role="dialog" aria-modal="true" aria-label="Add yours">
             <button type="button" className="sn-shut" onClick={shut} aria-label="Close" disabled={sending}>
               <X size={18} weight="regular" aria-hidden="true" />
             </button>
@@ -156,7 +174,13 @@ export default function IssuePicker({ prompt, left, sent, onClose, onSent }) {
               >
                 {thing.album_art ? <img src={thing.album_art} alt="" /> : <span className="sn-slot-none" aria-hidden="true" />}
                 <span className="sn-slot-name">{thing.song || thing.album}</span>
-                <span className="sn-slot-sub">{thing.artist}</span>
+                <span className="sn-slot-sub">{[thing.artist, thing.year].filter(Boolean).join(' · ')}</span>
+                {(starsOf(thing) > 0 || thing.favorite || thing.masterpiece || thing.formative) && (
+                  <span className="ip-marks">
+                    {starsOf(thing) > 0 && <StarRating rating={starsOf(thing)} size={15} animate={false} />}
+                    <Emblems record={thing} size={15} />
+                  </span>
+                )}
               </button>
             )}
 
@@ -201,12 +225,17 @@ export default function IssuePicker({ prompt, left, sent, onClose, onSent }) {
                   : words
                     ? <p className="ip-writing">{words}</p>
                     : <p className="ip-writing ip-writing--none">Nothing written; the record goes alone.</p>}
+                {/* What Submit does, said before it is pressed. */}
+                <p className="ip-what">
+                  Submit puts this album and this post in Community, under this
+                  month’s question, for anyone to read, with your name. Your
+                  journal stays as it is.
+                </p>
                 {trouble && <p className="sn-error">{trouble}</p>}
                 <button type="button" className="sn-send" onClick={send} disabled={sending}>
-                  <span>{sending ? 'Sending…' : 'Send your post'}</span>
+                  <span>{sending ? 'Submitting…' : 'Submit'}</span>
                 </button>
                 <button type="button" className="ln-word ip-new" onClick={writeNew} disabled={sending}>Write a new entry</button>
-                <p className="sn-foot-say">On the issue for anyone: the record, this writing, and your name.</p>
               </div>
             )}
           </section>

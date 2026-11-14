@@ -3741,10 +3741,22 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
 .ip-post { display: flex; flex-direction: column; }
 .ip-writing {
   margin: 10px 0 18px; font-size: 14px; line-height: 1.55; color: var(--ink); white-space: pre-wrap;
-  max-height: 11em; overflow-y: auto; overscroll-behavior: contain;
+  max-height: 7.75em; overflow-y: auto; overscroll-behavior: contain;
 }
 .ip-writing--none { color: var(--ink-faint); }
 .ip-new { align-self: center; margin-top: 14px; }
+/* Chosen, the popup wears the album's colour as a post does (entry.css,
+   the wash): strongest at the top, the page's ground by the button. Swapped
+   at once, never faded. */
+.sn-popup.ip-popup--washed {
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--wash) 55%, var(--bg)) 0%,
+    color-mix(in srgb, var(--wash) 28%, var(--bg)) 45%,
+    var(--bg) 100%);
+}
+.ip-popup--washed .sn-rule { background: color-mix(in srgb, var(--ink) 14%, transparent); }
+.ip-marks { display: inline-flex; align-items: center; gap: 8px; margin-top: 6px; }
+.ip-what { margin: 0 0 14px; font-size: 13px; line-height: 1.5; color: var(--ink-soft); text-align: center; }
 /* The voices on an album's card in the issue: one per keeper who sent it. */
 .is-voices { display: flex; flex-direction: column; gap: 16px; margin-top: 14px; }
 .is-voice + .is-voice { padding-top: 16px; border-top: 1px solid var(--border); }

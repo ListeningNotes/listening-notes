@@ -57,9 +57,9 @@ function useIssue() {
   return held;
 }
 
-const starsOf = record => (record.masterpiece || record.rating === 'Masterpiece' ? 5 : parseFloat(record.rating) || 0);
+export const starsOf = record => (record.masterpiece || record.rating === 'Masterpiece' ? 5 : parseFloat(record.rating) || 0);
 
-function Emblems({ record, size = 14 }) {
+export function Emblems({ record, size = 14 }) {
   return (
     <span className="is-emblems">
       {record.favorite && <Heart size={size} weight="fill" color="var(--fav)" aria-label="Favorite" />}
