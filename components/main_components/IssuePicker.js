@@ -28,7 +28,6 @@ import { useMonthPrompt } from './MonthPrompt';
 import { useBookplate } from './Bookplate';
 import StarRating from './StarRating';
 import { Emblems, starsOf } from './Issue';
-import { washFromArt } from '../../library/music_data_api';
 
 // How long the popup takes to close in around the cover.
 const LANDING_MS = 380;
@@ -46,7 +45,6 @@ export default function IssuePicker({ prompt, left, sent, onClose, onSent }) {
   const [sending, setSending] = useState(false);
   const [trouble, setTrouble] = useState('');
   const [find, setFind] = useState('');
-  const [wash, setWash] = useState({ art: '', color: '' });
   const [landing, setLanding] = useState(null);   // the clip closing in on the cover
   const popRef = useRef(null);
   const drag = useRef(null);
@@ -79,28 +77,6 @@ export default function IssuePicker({ prompt, left, sent, onClose, onSent }) {
     });
   }, [thing, writing]);
 
-  // The chosen album's colour, the wash a post wears (washFromArt), so the
-  // popup turns the album's colour when it is chosen (Miyel, 2026-11-14).
-  useEffect(() => {
-    const art = thing?.album_art || '';
-    if (!art) return undefined;
-    let live = true;
-    washFromArt(art).then(color => { if (live) setWash({ art, color }); });
-    return () => { live = false; };
-  }, [thing]);
-  const tint = thing && wash.art === thing.album_art ? wash.color : '';
-
-  // The top row takes the album's colour too, as it does over a post and
-  // over the listen's sheet, so the row and the sheet's top are one colour
-  // (Miyel, 2026-11-14: "the header doesn't take on color"). nav.css,
-  // html[data-ip-wash].
-  useEffect(() => {
-    const root = document.documentElement;
-    if (!tint) { root.removeAttribute('data-ip-wash'); return undefined; }
-    root.style.setProperty('--ip-wash', tint);
-    root.setAttribute('data-ip-wash', '');
-    return () => { root.removeAttribute('data-ip-wash'); root.style.removeProperty('--ip-wash'); };
-  }, [tint]);
 
   // ── From the wall to the album ──────────────────────────────────────────
   // The cover pressed grows from where it sat on the wall into its place at
@@ -242,8 +218,8 @@ export default function IssuePicker({ prompt, left, sent, onClose, onSent }) {
           the session does"). */}
         <section
             ref={popRef}
-            className={'lay lay--sheet lay--rises ip-popup' + (tint ? ' ip-popup--washed' : '') + (landing ? ' ip-popup--landing' : '') + (sinking ? ' ip-popup--sinking' : '')}
-            style={{ ...(tint ? { '--wash': tint } : {}), ...(landing ? { clipPath: landing.clip } : {}) }}
+            className={'lay lay--sheet lay--rises ip-popup' + (landing ? ' ip-popup--landing' : '') + (sinking ? ' ip-popup--sinking' : '')}
+            style={landing ? { clipPath: landing.clip } : undefined}
             role="dialog" aria-modal="true" aria-label="Add yours">
             <button type="button" className="lay-grip" onClick={() => { if (!pulled.current) shut(); }} aria-label="Put this away" disabled={sending} {...pull} />
             <div className="ip-in">

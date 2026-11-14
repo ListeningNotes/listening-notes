@@ -3736,10 +3736,6 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
 }
 /* The question is a place to pull the sheet down from, like its grip. */
 .ip-pull { touch-action: none; cursor: grab; }
-/* The top row and the strip over it wear the chosen album's colour at the
-   strength the sheet's top does, so they meet as one (IssuePicker.js). */
-html[data-ip-wash] .hn-bar-ground,
-html[data-ip-wash] .ln-brow { background: color-mix(in srgb, var(--ip-wash) 55%, var(--bg)); }
 .ip-in { position: relative; }
 .ip-back {
   position: absolute; top: 18px; left: max(8px, env(safe-area-inset-left, 0px)); z-index: 1;
@@ -3786,17 +3782,6 @@ html[data-ip-wash] .ln-brow { background: color-mix(in srgb, var(--ip-wash) 55%,
 }
 .is-flyer img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .ip-popup--landing { transition: clip-path 0.38s cubic-bezier(0.22, 0.61, 0.36, 1); pointer-events: none; }
-/* Chosen, the popup wears the album's colour as a post does (entry.css,
-   the wash): strongest at the top, the page's ground by the button. Swapped
-   at once, never faded. */
-.lay.ip-popup--washed {
-  background: linear-gradient(180deg,
-    color-mix(in srgb, var(--wash) 55%, var(--bg)) 0%,
-    color-mix(in srgb, var(--wash) 28%, var(--bg)) 45%,
-    var(--bg) 100%);
-}
-.ip-popup--washed .sn-rule { background: color-mix(in srgb, var(--ink) 14%, transparent); }
-.ip-popup--washed .lay-grip { background: transparent; }
 .ip-marks { display: inline-flex; align-items: center; gap: 8px; margin-top: 6px; }
 .ip-what { margin: 0 0 14px; font-size: 13px; line-height: 1.5; color: var(--ink-soft); text-align: center; }
 /* The voices on an album's card in the issue: one per keeper who sent it. */
