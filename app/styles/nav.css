@@ -3672,6 +3672,9 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   font-family: var(--font-display); font-weight: var(--font-display-weight); font-size: 16px;
   cursor: pointer; box-shadow: var(--lift-2);
 }
+/* The issue's Add yours stays in sight over the Listen bar while the globe
+   runs taller than the screen, rather than under the bar at its foot. */
+.is > .is-add { position: sticky; bottom: 12px; z-index: 2; }
 .is-add:disabled { opacity: 0.35; cursor: default; }
 .is--picked .is-add { visibility: hidden; }
 .is-card {
