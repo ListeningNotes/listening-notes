@@ -3714,15 +3714,24 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-soft);
 }
 
-/* Add yours, in the send sheet's shape (IssuePicker.js; .sn-*, forms.css):
-   the prompt is the right square, LN.'s mark in it. */
-.ip-to .sn-slot-box { display: grid; place-items: center; background: var(--card); }
-.ip-to .sn-slot-box svg { width: 54%; height: auto; fill: var(--ink); }
+/* Add yours, in the send sheet's popup (IssuePicker.js; .sn-*, forms.css). */
 .ip-tip {
-  margin: 16px 8px 0; text-align: center; text-wrap: balance;
-  font-family: var(--font-display); font-weight: var(--font-display-weight); font-size: 17px; line-height: 1.3; color: var(--ink);
+  margin: 8px 28px 0; text-align: center; text-wrap: balance;
+  font-family: var(--font-display); font-weight: var(--font-display-weight); font-size: 19px; line-height: 1.3; color: var(--ink);
 }
-.ip-shelf .sn-ask { margin-bottom: 14px; }
+.ip-find { margin: 0 0 14px; }
+.ip-count {
+  margin: 6px 0 0; text-align: center;
+  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-faint);
+}
+.ip-album {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  margin: 18px auto 0; padding: 0; border: 0; background: none; color: var(--ink); cursor: pointer;
+}
+.ip-album img, .ip-album .sn-slot-none {
+  width: min(56vw, 200px); aspect-ratio: 1; object-fit: cover; display: block;
+  border-radius: var(--tile-r, 12px); box-shadow: var(--lift-3); margin-bottom: 10px;
+}
 .ip-wall { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
 .ip-one {
   aspect-ratio: 1; padding: 0; border: 0; border-radius: var(--tile-r, 12px); overflow: hidden;

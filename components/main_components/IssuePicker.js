@@ -3,9 +3,10 @@
 'use client';
 // components/main_components/IssuePicker.js
 // Add yours: one of your own records sent to this month's prompt
-// (Community, Issue.js), in the send sheet's shape (SendSheet.js) — your
-// record, an arrow, the prompt — so sending to the publication reads like
-// sending to a friend (Miyel, 2026-11-13). One record a press, "1 of 3 this
+// (Community, Issue.js), in the send sheet's popup (SendSheet.js) — the
+// question and the album, no arrow and no destination square: a keeper's
+// journal is Listening Notes to them, and a square saying where it goes
+// read as sending it back there (Miyel, 2026-11-14). One record a press, "1 of 3 this
 // month": the three are a month's allowance to come back to, not a tray to
 // fill now.
 //
@@ -19,15 +20,14 @@
 // What goes is the post as it stands, through the prompt's own door
 // (/api/prompt, library/month_prompt.js). A send that fails keeps the record
 // in the square and says why. Sent, the popup becomes the send sheet's
-// letter, on its way to this month's prompt.
+// letter, on its way to Community.
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, Plus, X } from '@phosphor-icons/react';
+import { MagnifyingGlass, X } from '@phosphor-icons/react';
 import { useMonthPrompt } from './MonthPrompt';
 import { SentLetter, LETTER_HOLD_MS, LETTER_GO_MS } from './SendSheet';
-import { LnMark } from './SiteNav';
 
 export default function IssuePicker({ prompt, left, sent, onClose, onSent }) {
   const router = useRouter();
@@ -37,6 +37,7 @@ export default function IssuePicker({ prompt, left, sent, onClose, onSent }) {
   const [writing, setWriting] = useState({});
   const [sending, setSending] = useState(false);
   const [trouble, setTrouble] = useState('');
+  const [find, setFind] = useState('');
   const [gone, setGone] = useState(null);
   const [going, setGoing] = useState(false);
   const closeRef = useRef(onClose);
@@ -119,6 +120,12 @@ export default function IssuePicker({ prompt, left, sent, onClose, onSent }) {
     router.push('/session');
   };
 
+  // The wall searched as you type: an album, an artist or a song. Your own
+  // wall only, never the catalogue.
+  const sought = find.trim().toLowerCase();
+  const shown = !records || !sought ? records
+    : records.filter(r => [r.album, r.artist, r.song].some(v => String(v || '').toLowerCase().includes(sought)));
+
   if (typeof document === 'undefined') return null;
   const words = thing ? writing[thing.slug] : undefined;
 
@@ -127,57 +134,58 @@ export default function IssuePicker({ prompt, left, sent, onClose, onSent }) {
       <div className={'sn-scrim' + (going ? ' sn-scrim--going' : '')} aria-hidden="true" />
       <div className="sn-room" onClick={e => { if (e.target === e.currentTarget && !gone) shut(); }}>
         {gone ? (
-          <SentLetter to="This month’s question" thing={gone} going={going} />
+          <SentLetter to="Community" thing={gone} going={going} />
         ) : (
           <section className={'sn-popup ip-popup' + (thing ? '' : ' sn-popup--picking')} role="dialog" aria-modal="true" aria-label="Add yours">
             <button type="button" className="sn-shut" onClick={shut} aria-label="Close" disabled={sending}>
               <X size={18} weight="regular" aria-hidden="true" />
             </button>
 
-            <div className="sn-pair">
+            {/* The question and the album, nothing between them (Miyel,
+                2026-11-14: "there really doesn't even need to be a to and an
+                arrow… maybe it can simply be the album"). */}
+            <p className="ip-tip">{prompt?.said}</p>
+            <p className="ip-count">{which} of {most} this month</p>
+
+            {thing && (
               <button
                 type="button"
-                className={'sn-slot sn-slot--what' + (thing ? ' sn-slot--full' : ' sn-slot--lit')}
-                onClick={() => { if (thing && !sending) { setThing(null); setTrouble(''); } }}
-                aria-label={thing ? `${thing.song || thing.album} — tap to choose another` : 'Choose a record from your wall'}
+                className="ip-album"
+                onClick={() => { if (!sending) { setThing(null); setTrouble(''); } }}
+                aria-label={`${thing.song || thing.album} — tap to choose another`}
               >
-                <span className="sn-slot-box">
-                  {thing
-                    ? (thing.album_art ? <img src={thing.album_art} alt="" /> : <span className="sn-slot-none" aria-hidden="true" />)
-                    : <Plus size={26} weight="light" aria-hidden="true" />}
-                </span>
-                {thing ? (
-                  <>
-                    <span className="sn-slot-name">{thing.song || thing.album}</span>
-                    <span className="sn-slot-sub">{thing.artist}</span>
-                  </>
-                ) : (
-                  <span className="sn-slot-ask">From<br />your wall</span>
-                )}
+                {thing.album_art ? <img src={thing.album_art} alt="" /> : <span className="sn-slot-none" aria-hidden="true" />}
+                <span className="sn-slot-name">{thing.song || thing.album}</span>
+                <span className="sn-slot-sub">{thing.artist}</span>
               </button>
+            )}
 
-              <ArrowRight className={'sn-arrow' + (thing ? ' sn-arrow--ready' : '')} size={22} weight={thing ? 'bold' : 'regular'} aria-hidden="true" />
-
-              <div className="sn-slot sn-slot--who sn-slot--full ip-to">
-                <span className="sn-slot-box"><LnMark /></span>
-                <span className="sn-slot-name">This month</span>
-                <span className="sn-slot-sub">{which} of {most}</span>
-              </div>
-            </div>
-
-            <p className="ip-tip">{prompt?.said}</p>
             <div className="sn-rule" aria-hidden="true" />
 
             {!thing ? (
               <div className="sn-shelf ip-shelf">
-                <span className="sn-ask">Your wall</span>
+                {/* The session's own boxed search (.ses-search), so it reads
+                    as the field it is. */}
+                <label className="ses-search ip-find">
+                  <MagnifyingGlass size={18} weight="regular" aria-hidden="true" />
+                  <input
+                    className="ses-input"
+                    value={find}
+                    onChange={e => setFind(e.target.value)}
+                    placeholder="Search your wall"
+                    aria-label="Search your wall"
+                    autoComplete="off"
+                  />
+                </label>
                 {records === null ? (
                   <p className="sn-empty">…</p>
                 ) : records.length === 0 ? (
                   <p className="sn-empty">Nothing on your wall to send yet. Go and listen.</p>
+                ) : shown.length === 0 ? (
+                  <p className="sn-empty">Nothing on your wall by that name.</p>
                 ) : (
                   <div className="ip-wall">
-                    {records.map(r => (
+                    {shown.map(r => (
                       <button key={r.slug} type="button" className="ip-one" onClick={() => { setThing(r); setTrouble(''); }} aria-label={r.song || r.album}>
                         {r.album_art ? <img src={r.album_art} alt="" loading="lazy" /> : <span>♪</span>}
                       </button>
