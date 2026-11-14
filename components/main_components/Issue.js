@@ -338,6 +338,8 @@ function Globe({ records, picked, onPick, turnTo = null }) {
 
   const down = e => {
     if (e.pointerType === 'mouse' && e.button !== 0) return;
+    // A drag starts on a cover; the floor around them is the page's swipe.
+    if (!e.target.closest?.('.is-orb')) return;
     const v = view.current;
     drag.current = { x: e.clientX, y: e.clientY, lx: e.clientX, ly: e.clientY, t: performance.now(), vx: 0, vy: 0, yaw: v.yaw, pitch: v.pitch, moved: false };
   };
@@ -393,10 +395,14 @@ function Globe({ records, picked, onPick, turnTo = null }) {
 function Faces({ voices = [] }) {
   const homes = [...new Set(voices.map(v => v.journal).filter(Boolean))].slice(0, 2);
   if (!homes.length) return null;
+  // This journal's own face is asked of this journal, by whatever address
+  // the page was reached at — a phone on the home network included.
+  const here = typeof window !== 'undefined' ? window.location.host : '';
+  const faceOf = home => (home === here ? '/api/portrait' : `${journalUrl(home)}/api/portrait`);
   return (
     <span className="is-orb-faces" aria-hidden="true">
       {homes.map(home => (
-        <img key={home} src={`${journalUrl(home)}/api/portrait`} alt="" loading="lazy" draggable={false} onError={e => { e.currentTarget.style.visibility = 'hidden'; }} />
+        <img key={home} src={faceOf(home)} alt="" loading="lazy" draggable={false} onError={e => { e.currentTarget.style.visibility = 'hidden'; }} />
       ))}
     </span>
   );
