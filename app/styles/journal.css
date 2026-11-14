@@ -687,12 +687,28 @@
    sent, between two hairlines over the covers (the blog brief's third
    frame). On a desk the wall's bar moves above the grid (order: -1), and the
    prompt goes with it, first in the source, so it stays on top. */
-.mp-note {
-  margin: 6px 16px 14px; padding: 14px 0 16px;
-  border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+/* Since 2026-11-13 it sits over the beacon instead, said by the LN. mark as
+   a chat bubble (Miyel): the mark in its circle, as on a letter, and the
+   bubble beside it, its corner nearest the mark squared off like a tail. */
+.mp-bubble {
+  position: relative; z-index: 1;
+  display: flex; align-items: flex-end; gap: 8px;
+  max-width: 520px; margin: 8px auto 4px; padding: 0 16px;
   text-align: left;
 }
-@media (min-width: 769px) { .mp-note { order: -1; margin-top: 12px; } }
+.mp-face {
+  width: 30px; height: 30px; border-radius: 999px; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center; background: var(--ink);
+}
+.mp-face svg { width: 18px; height: auto; display: block; }
+.mp-face path, .mp-face circle { fill: var(--bg); }
+.mp-speech {
+  flex: 1; min-width: 0;
+  padding: 12px 16px 13px;
+  border-radius: 20px 20px 20px 6px;
+  background: var(--card, var(--panel)); box-shadow: var(--lift-1, 0 1px 3px rgba(0,0,0,0.08));
+}
+.mp-speech .mp-said { margin: 6px 0 8px; font-size: 18px; }
 /* An LN. Admin letter pinned over the wall beside it (PinnedLetter.js,
    2026-10-27), at the prompt's own inset; its card is the inbox's. */
 .ib-letter-room.pl-room { margin: 6px 16px 14px; }

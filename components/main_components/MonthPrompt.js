@@ -5,9 +5,10 @@
 // The month's prompt, as the keeper sees it (2026-10-22, the blog's first
 // piece; library/month_prompt.js has the rest). Three things:
 //
-//   MonthPrompt (default)  pinned over the keeper's wall while the prompt is
-//                          open: what it asks, how long is left, and — once
-//                          a record was sent — which. Never in a listen, and
+//   MonthPrompt (default)  over the beacon while the prompt is open, said
+//                          by the LN. mark as a chat bubble (Miyel,
+//                          2026-11-13): what it asks, how long is left,
+//                          and — once a record was sent — which. Never in a listen, and
 //                          never on a page a visitor reads (the brief: the
 //                          prompt is pinned to the journal, never to the
 //                          session).
@@ -28,6 +29,7 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Check } from '@phosphor-icons/react';
+import { LnMark } from './SiteNav';
 
 // ── One copy of the prompt for the page ──────────────────────────────────
 // undefined until asked, null when there is none open.
@@ -85,22 +87,25 @@ export default function MonthPrompt({ authed }) {
   const [prompt] = useMonthPrompt(authed);
   if (!prompt) return null;
   return (
-    <section className="mp-note" aria-label="This month’s prompt">
-      <p className="mp-when">This month’s prompt · {timeLeft(prompt.ends_at)}</p>
-      <h2 className="mp-said">{prompt.said}</h2>
-      {sentRecords(prompt).length ? (
-        <p className="mp-how">
-          You sent{' '}
-          {sentRecords(prompt).map((r, i, all) => (
-            <span key={r.slug}>
-              <Link href={`/entries/${encodeURIComponent(r.slug)}`} className="mp-sent">{titleOf(r)}</Link>
-              {i < all.length - 2 ? ', ' : i === all.length - 2 ? ' and ' : ''}
-            </span>
-          ))}
-        </p>
-      ) : (
-        <p className="mp-how">Send a record from your wall</p>
-      )}
+    <section className="mp-bubble" aria-label="This month’s prompt">
+      <span className="mp-face" aria-hidden="true"><LnMark /></span>
+      <div className="mp-speech">
+        <p className="mp-when">This month · {timeLeft(prompt.ends_at)}</p>
+        <h2 className="mp-said">{prompt.said}</h2>
+        {sentRecords(prompt).length ? (
+          <p className="mp-how">
+            You sent{' '}
+            {sentRecords(prompt).map((r, i, all) => (
+              <span key={r.slug}>
+                <Link href={`/entries/${encodeURIComponent(r.slug)}`} className="mp-sent">{titleOf(r)}</Link>
+                {i < all.length - 2 ? ', ' : i === all.length - 2 ? ' and ' : ''}
+              </span>
+            ))}
+          </p>
+        ) : (
+          <p className="mp-how">Send an album from your wall</p>
+        )}
+      </div>
     </section>
   );
 }

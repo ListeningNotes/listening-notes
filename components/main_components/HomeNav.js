@@ -79,7 +79,6 @@ import ListeningBeacon from './ListeningBeacon';
 import ListenBar from './ListenBar';
 import Journal from './Journal';
 import Header from './Header';
-import MonthPrompt from './MonthPrompt';
 import PinnedLetter from './PinnedLetter';
 import About from './About';
 import Dashboard, { heldNow, subscribeHeld } from './Dashboard';
@@ -2025,6 +2024,10 @@ export default function HomeNav() {
                 art is 88px away in the cover, which is where it belongs.
                 The markup went with the rule — a ground nothing draws is
                 still an image the browser fetches. */}
+            {/* No month's prompt on home for now (Miyel, 2026-11-13: "keep it
+                off the wall page until I have it squared away, submission
+                happens on Community"). The bubble it was, LN. saying it over
+                the beacon, is MonthPrompt.js's default, kept for then. */}
             <div className="hn-screen hn-band">
               <div className="hp-dashboard">
                 <div className="hp-dash-cell hp-dash-beacon">
@@ -2071,10 +2074,7 @@ export default function HomeNav() {
           <div className="hn-floor hn-floor--wall">
             <div className="hn-floor-scroll" ref={floorRef}>
               <div className="hn-under">
-                {/* The month's prompt, pinned over the keeper's wall while it
-                    is open (MonthPrompt.js); nothing for a visitor. */}
                 {authed && <PinnedLetter authed={authed} again={waiting} />}
-                {authed && <MonthPrompt authed={authed} />}
                 <Journal
                   entries={entries}
                   loading={loading}
