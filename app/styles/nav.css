@@ -3736,6 +3736,12 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
 }
 /* The question is a place to pull the sheet down from, like its grip. */
 .ip-pull { touch-action: none; cursor: grab; }
+.ip-in { position: relative; }
+.ip-back {
+  position: absolute; top: 18px; left: max(8px, env(safe-area-inset-left, 0px)); z-index: 1;
+  display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0;
+  background: none; color: var(--ink); cursor: pointer;
+}
 .ip-popup--sinking { animation: ipSink 0.3s cubic-bezier(0.55, 0, 0.75, 0.4) forwards; }
 @keyframes ipSink { to { transform: translateY(100%); } }
 .ip-tip {

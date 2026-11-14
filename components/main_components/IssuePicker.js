@@ -23,7 +23,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { MagnifyingGlass } from '@phosphor-icons/react';
+import { CaretLeft, MagnifyingGlass } from '@phosphor-icons/react';
 import { useMonthPrompt } from './MonthPrompt';
 import { useBookplate } from './Bookplate';
 import StarRating from './StarRating';
@@ -207,6 +207,12 @@ export default function IssuePicker({ prompt, left, sent, onClose, onSent }) {
             role="dialog" aria-modal="true" aria-label="Add yours">
             <button type="button" className="lay-grip" onClick={() => { if (!pulled.current) shut(); }} aria-label="Put this away" disabled={sending} {...pull} />
             <div className="ip-in">
+              {/* Back to your wall, once an album is chosen. */}
+              {thing && !landing && (
+                <button type="button" className="ip-back" onClick={() => { if (!sending) { setThing(null); setTrouble(''); } }} aria-label="Back to your wall" disabled={sending}>
+                  <CaretLeft size={22} weight="regular" aria-hidden="true" />
+                </button>
+              )}
 
             {/* The question and the album, nothing between them (Miyel,
                 2026-11-14: "there really doesn't even need to be a to and an
