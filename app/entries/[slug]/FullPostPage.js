@@ -12,7 +12,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { useRouter } from 'next/navigation';
 import { Envelope, Fingerprint, Heart, Pause, Play, SketchLogo, VinylRecord } from '@phosphor-icons/react';
 import { fonts } from '../../../library/sitewide_visuals';
-import { sizedAlbumArt, fetchAlbumArtUrl, washFromArt } from '../../../library/music_data_api';
+import { sizedAlbumArt, fetchAlbumArtUrl } from '../../../library/music_data_api';
 import { parseHorizon, entryTracks, splitNotes, parseRating, flawless } from '../../../library/entry_formatter';
 import { buildReferenceIndex, createReferenceLinker } from '../../../library/cross_references';
 import SiteNav from '../../../components/main_components/SiteNav';
@@ -38,7 +38,7 @@ import PrintBar from '../../../components/main_components/Slug_Page/PrintBar';
 import HorizonChart from '../../../components/main_components/HorizonChart';
 import MiniCard from '../../../components/main_components/Slug_Page/MiniCard';
 import MarqueeTitle from '../../../components/main_components/MarqueeTitle';
-import { handedOver, cameReadingOn, keepWash, washOf } from '../../../library/handoff';
+import { handedOver, cameReadingOn } from '../../../library/handoff';
 import { tidyAddress } from '../../../library/return_address';
 import { useBookplate, useVisiting } from '../../../components/main_components/Bookplate';
 import { useTheme } from '../../../components/main_components/Lightswitch';
@@ -243,37 +243,10 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     ? (edit.draft.album_art ? sizedAlbumArt(edit.draft.album_art, 900) : '')
     : entry.album_art;
 
-  // ── The record's colour, washed down from the top, 2026-11-12 ─────────
-  // Miyel: "how the beacon bleeds the color from the top, maybe that can be
-  // a similar thing with the albums, and as you switch through them, it
-  // transitions that color." The cover's one colour (readArtColor, as home's
-  // wash), on the page as --wash. The last post's colour is where the next
-  // one starts, so a swipe carries the colour over rather than starting from
-  // nothing (entry.css, Panels: --wash is a registered colour, so it moves).
-  //
-  // And held over the wait, 2026-11-12 (Miyel: "keep the last color bleed
-  // then slowly fade to the next updated one … instead of having that
-  // flash"): between two posts the layer shows a stand-in while the next is
-  // read, and it had no wash, so the colour dropped to nothing and came back.
-  // The layer, which stays put while posts turn under it, is given the colour
-  // too, and its stand-in wears it (entry.css, Panels).
-  const [wash, setWash] = useState(washOf);
-  const washHost = useRef(null);
-  useEffect(() => {
-    if (wash) washHost.current?.closest('.lay')?.style.setProperty('--wash', wash);
-  }, [wash]);
-  useEffect(() => {
-    if (!entry.album_art) return undefined;
-    let live = true;
-    // A cover with hardly any colour gets a soft grey (washFromArt).
-    washFromArt(entry.album_art).then(c => {
-      if (!live) return;
-      const next = c || 'transparent';
-      keepWash(next);
-      setWash(next);
-    });
-    return () => { live = false; };
-  }, [entry.album_art]);
+  // ── No colour, 2026-11-16 ───────────────────────────────────────────
+  // The record's colour washed down from the top of the post (2026-11-12)
+  // came off on Miyel's word: "lets remove the color bleed from the album
+  // post i just dont think i need it now." The beacon keeps its own.
 
   const coverField = edit.editing && coverOpen && (
     <div className="ln-cover-swap">
@@ -621,32 +594,6 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   // at 0 the whole time and can't be what drives this. Watch both: .ln-screens
   // is the scroller on a phone, the window is the scroller on desktop.
   const [scrolled, setScrolled] = useState(false);
-  // ── And up under the clock, 2026-11-12 ─────────────────────────────────
-  // Miyel: "the top of the screen where the clock, battery and wifi is not
-  // taking on color." That strip is the brow (base.css), drawn once for the
-  // whole site in the page's colour, so the post tells the page its wash and
-  // the brow wears the wash's top — while the post is at its top; scrolled,
-  // the wash has gone up the screen and the brow is the page again. Left in
-  // place a moment after a post goes, so the next one in a swipe takes it
-  // over rather than the strip blinking to the page between them.
-  useEffect(() => {
-    const root = document.documentElement;
-    clearTimeout(root.__lnBrowAway);
-    if (wash && wash !== 'transparent' && !scrolled && !printing) {
-      root.style.setProperty('--post-wash', wash);
-      root.setAttribute('data-post-wash', '');
-    } else {
-      root.removeAttribute('data-post-wash');
-    }
-  }, [wash, scrolled, printing]);
-  useEffect(() => () => {
-    const root = document.documentElement;
-    clearTimeout(root.__lnBrowAway);
-    root.__lnBrowAway = setTimeout(() => {
-      if (!document.querySelector('.ln-screens')) root.removeAttribute('data-post-wash');
-    }, 120);
-  }, []);
-
   useEffect(() => {
     const screens = document.querySelector('.ln-screens');
     const read = () => setScrolled(Math.max(screens ? screens.scrollTop : 0, window.scrollY) > 24);
@@ -1492,9 +1439,8 @@ export default function FullPostPage({ entry, references = [], authed = false, l
 
   return (
     <div
-      ref={washHost}
       className={'ln-entry' + (scrolled ? ' ln-entry--scrolled' : '') + (crowning ? ' ln-entry--crowning' : '') + (inFolder ? ' ln-entry--folder' : '')}
-      style={{ background: 'var(--bg)', minHeight: '100vh', color: 'var(--ink)', fontFamily: fonts.sans, ...(wash ? { '--wash': wash } : {}) }}
+      style={{ background: 'var(--bg)', minHeight: '100vh', color: 'var(--ink)', fontFamily: fonts.sans }}
     >
 
       {/* ── NAV ── shared site nav (logo + tools + lights), identical to
