@@ -2611,3 +2611,51 @@ html[data-printing] .sitenav-row { display: none; }
 }
 @keyframes ln-card-in-r { from { transform: translateX(36px); } }
 @keyframes ln-card-in-l { from { transform: translateX(-36px); } }
+
+/* ── The card comes up from the foot, 2026-11-18 ────────────────────────────
+   Miyel: "have the whole thing come up from the bottom like a card… it stays
+   under the homepage banner instead of being in its own border." On a phone a
+   post opened over the journal rises (LayerEntry, `lifts`), and the card is
+   the sheet: the full width, from just under the journal's top row to the
+   foot, its top corners rounded. No row of its own over it — the ··· is on
+   the card ("not a whole new row at the top"); the pull down, or a press in
+   the top row, puts it away. Not the listen's rise: nothing is held still
+   and nothing fades. */
+@keyframes layLift { from { transform: translateY(100dvh); } to { transform: none; } }
+@media (max-width: 768px) {
+  .lay--lifts { animation: layLift 0.42s cubic-bezier(0.22, 0.61, 0.36, 1); }
+  .lay--over-journal .lay-header.ln-entry--carded .sitenav-row,
+  .lay--over-journal .lay-header.ln-entry--carded .sitenav-row::before { display: none; }
+  .lay--over-journal .ln-carded > .ln-card {
+    margin: 6px 0 0;
+    border-radius: var(--panel-r) var(--panel-r) 0 0;
+    min-height: calc(100dvh - var(--hn-bar-h, 80px) - 6px);
+    /* Clear of the Listen bar at the foot. */
+    padding-bottom: 140px;
+  }
+  .lay--over-journal .ln-entry--folder .ln-carded > .ln-card { padding-bottom: calc(var(--ff-h) + 140px); }
+  .ln-card { position: relative; }
+  .ln-card-tools { position: absolute; top: 6px; right: 6px; z-index: 2; }
+  /* Open, the doors come out over the cover on the card's own white, so the
+     row reads as the card's and not as icons laid on the picture. */
+  .ln-card-tools .kt-tools { background: var(--card); border-radius: 12px; padding: 2px 2px 2px 6px; }
+  .ln-card-tools + .ln-card-title { padding-right: 34px; }
+}
+@media (max-width: 768px) and (prefers-reduced-motion: reduce) {
+  .lay--lifts { animation: none; }
+}
+/* And what stands in while the post is read, when the wall knew nothing to
+   draw: the card's own shape, the cover's square beside two lines, rather
+   than a big cover that becomes a small one. */
+@media (max-width: 768px) {
+  .lay--over-journal .lay-wait {
+    display: grid; grid-template-columns: 116px minmax(0, 1fr); align-content: start; align-items: center;
+    column-gap: 16px; row-gap: 10px;
+    margin: 6px 0 0; padding: 18px;
+    min-height: calc(100dvh - var(--hn-bar-h, 80px) - 6px);
+    background: var(--card); border-radius: var(--panel-r) var(--panel-r) 0 0; box-shadow: var(--lift-1);
+  }
+  .lay--over-journal .lay-wait-art { grid-row: span 2; width: 116px; height: 116px; border-radius: 12px; }
+  .lay--over-journal .lay-wait-line--title { width: 80%; margin-top: 0; align-self: end; }
+  .lay--over-journal .lay-wait-line--byline { width: 55%; align-self: start; }
+}

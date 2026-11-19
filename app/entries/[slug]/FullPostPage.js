@@ -694,7 +694,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   // pick over a big one). A dot under a bar is a song with words, so
   // nobody pages through ten to find three; the bar of the song playing
   // fills as the preview runs — the horizon is the player.
-  const carded = !edit.editing && !printing && parsedTracks.length > 0;
+  const carded = !edit.editing && !printing;
   const song = parsedTracks[Math.min(songAt, parsedTracks.length - 1)];
   const songKey = `${entry.slug}:${songAt}`;
   const songNow = useSnippetState(songKey);
@@ -814,8 +814,10 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     if (!headerSlot) return;
     headerSlot.setAttribute('class', 'lay-header ln-entry'
       + (scrolled ? ' ln-entry--scrolled' : '')
-      + (crowning ? ' ln-entry--crowning' : ''));
-  }, [headerSlot, scrolled, crowning]);
+      + (crowning ? ' ln-entry--crowning' : '')
+      // A post read as one card wants no row of its own over it on a phone.
+      + (carded ? ' ln-entry--carded' : ''));
+  }, [headerSlot, scrolled, crowning, carded]);
   // Whether the first screen was already on the layer before this rendered —
   // drawn by LayerWaiting from what the wall handed over. Read once, on the
   // first render, because the handoff is about the moment of arrival.
@@ -1540,6 +1542,10 @@ export default function FullPostPage({ entry, references = [], authed = false, l
               <div className="ln-card-cover"><img src={entry.album_art} alt={entry.album} decoding="sync" /></div>
             )}
             <div className="ln-card-facts">
+              {/* The ···, on the card rather than a row of its own over it
+                  (Miyel, 2026-11-18). Over the journal only: a page opened
+                  cold keeps its own row, and the tools in it. */}
+              {headerSlot && keeperTools && <div className="ln-card-tools">{keeperTools}</div>}
               <h1 className="ln-card-title">{entry.album}</h1>
               <div className="ln-card-byline">{entry.artist}{entry.year ? ' · ' + entry.year : ''}</div>
               {displayRating > 0 && (
@@ -1564,6 +1570,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
             </div>
           )}
 
+          {parsedTracks.length > 0 && (<>
           <div className="ln-card-rule" />
 
           <div>
@@ -1650,6 +1657,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
               );
             })()}
           </div>
+          </>)}
 
           {snippet.recordLink && (
             <div className="ln-doors">

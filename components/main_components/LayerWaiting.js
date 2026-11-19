@@ -73,11 +73,14 @@ export default function LayerWaiting({ slug, authed = false }) {
   useLayoutEffect(() => {
     if (!headerSlot) return;
     headerSlot.setAttribute('class', 'lay-header ln-entry'
-      + (onward ? ' ln-entry--scrolled ln-entry--crowning' : ''));
+      + (onward ? ' ln-entry--scrolled ln-entry--crowning' : '')
+      // A post arrives as its card, with no row over it on a phone
+      // (FullPostPage, The post as one card).
+      + (!known?.song ? ' ln-entry--carded' : ''));
     // Where the handover stands, for the row this is about to draw and for
     // the swipe that may leave from it.
     if (onward) document.documentElement.style.setProperty('--ln-turn', '1');
-  }, [headerSlot, onward]);
+  }, [headerSlot, onward, known]);
   // A page of a folder, turned to from the page beside it, carries the
   // folder with it, so the tabs stay at the foot of the screen while it
   // loads, already on the page they are turning to, rather than blinking out
@@ -190,7 +193,31 @@ export function RecordScreen({ known }) {
     : null;
 
   return (
-    <div className="ln-screens">
+    <div className="ln-screens ln-carded">
+    {/* On a phone the post is one card (FullPostPage), so what stands in
+        for it while it loads is that card's top: the cover beside its
+        facts. Miyel, 2026-11-18, of the big cover that stood here: "it's
+        almost like big photo, and then it's like the old page I see for a
+        snap, and then it turns into the smaller card." */}
+    <article className="ln-card">
+      <div className="ln-card-album">
+        {known.album_art && <div className="ln-card-cover"><img src={known.album_art} alt="" /></div>}
+        <div className="ln-card-facts">
+          <h1 className="ln-card-title">{known.album}</h1>
+          <div className="ln-card-byline">{known.artist}{known.year ? ' · ' + known.year : ''}</div>
+          {displayRating > 0 && (
+            <div className="ln-card-rate">
+              <StarRating rating={displayRating} size={17} glow={isMasterpiece} />
+              <span className="ln-card-marks">
+                {known.favorite && <Heart size={17} weight="fill" color="var(--fav)" />}
+                {isMasterpiece && <SketchLogo size={17} weight="fill" color="var(--mp)" />}
+                {known.formative && <Fingerprint size={17} weight="bold" color="var(--formative)" />}
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+    </article>
     <section className="ln-screen-one">
       {/* The print card's two wrappers, as the post has them, so the new
           look's rules lay this out exactly as the post will be — the cover
