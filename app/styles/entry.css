@@ -2529,3 +2529,85 @@ html[data-printing] .sitenav-row { display: none; }
   .lay--over-journal .ln-screen-one { padding-top: 60px; }
   .lay--over-journal .ln-editing .ln-screen-one { padding-top: 60px; }
 }
+/* ── The post as one card, 2026-11-18 ───────────────────────────────────────
+   Miyel: "one continuous card (white card)… that card holds everything" —
+   the album beside its facts, the album note, the horizon, and one song at a
+   time under it in place of the track list (FullPostPage, The post as one
+   card). A phone's, while reading: a correction and the printer keep the
+   two screens, and a desk keeps its own page. Flat: hairlines, mono labels,
+   one ink highlight. */
+.ln-card { display: none; }
+@media (max-width: 768px) {
+  .ln-screens.ln-carded > .ln-screen-one,
+  .ln-screens.ln-carded > .ln-screen-two { display: none; }
+  .ln-card {
+    display: flex; flex-direction: column; gap: 18px;
+    /* Clear of the Listen bar at the foot. */
+    margin: 92px 16px 120px; padding: 18px;
+    background: var(--card); border-radius: var(--panel-r); box-shadow: var(--lift-1);
+    text-align: left;
+  }
+  .lay--over-journal .ln-card { margin-top: 60px; }
+  .ln-entry--folder .ln-card { margin-bottom: calc(var(--ff-h) + 24px); }
+  .ln-card-label { font-family: var(--font-label); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-faint); }
+  .ln-card-rule { height: 1px; background: var(--rule, rgba(128,128,128,0.16)); margin: 0 -18px; }
+
+  .ln-card-album { display: grid; grid-template-columns: 116px minmax(0, 1fr); gap: 16px; align-items: center; }
+  .ln-card-cover { width: 116px; height: 116px; border-radius: 12px; overflow: hidden; position: relative; }
+  .ln-card-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .ln-card-facts { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .ln-card-title { font-family: var(--font-display); font-weight: var(--font-display-weight); font-size: 23px; line-height: 1.12; margin: 0; color: var(--ink); overflow-wrap: anywhere; }
+  .ln-card-byline { font-family: var(--font-label); font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-soft); }
+  .ln-card-rate { display: flex; align-items: center; gap: 10px; margin-top: 4px; flex-wrap: wrap; }
+  .ln-card-marks { display: inline-flex; align-items: center; gap: 8px; }
+  .ln-card .ln-sent { margin-top: -6px; }
+
+  .ln-card-note { font-size: 15.5px; line-height: 1.7; white-space: pre-wrap; color: var(--ink); margin-top: 6px; }
+  .ln-card .ln-edited { margin: 6px 0 0; }
+
+  .ln-card-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+  .ln-card-count { font-family: var(--font-label); font-size: 10px; letter-spacing: 0.08em; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+  .ln-card-horizon { display: grid; gap: 4px; align-items: end; height: 84px; margin-top: 22px; margin-bottom: 26px; touch-action: pan-y; }
+  .ln-card-bar {
+    position: relative; height: calc(var(--r) * 20%); min-height: 4px; padding: 0;
+    border-radius: 3px 3px 0 0; background: color-mix(in srgb, var(--ink) 18%, var(--card));
+    transition: background 0.2s;
+  }
+  /* A wider press than the bar, reaching down over its number. */
+  .ln-card-bar::after { content: ''; position: absolute; inset: -14px -2px -24px; }
+  .ln-card-bar--on { background: var(--ink); }
+  .ln-card-bar--playing { background: color-mix(in srgb, var(--ink) 18%, var(--card)); box-shadow: inset 0 0 0 1.5px var(--ink); }
+  .ln-card-bar-fill { position: absolute; inset: 0; border-radius: inherit; background: var(--ink); transform-origin: bottom; transform: scaleY(0); transition: transform 0.25s linear; }
+  .ln-card-bar:not(.ln-card-bar--playing) .ln-card-bar-fill { transform: scaleY(0) !important; }
+  .ln-card-bar-heart { position: absolute; left: 50%; top: -13px; translate: -50% 0; color: var(--fav); }
+  .ln-card-tick {
+    position: absolute; left: 0; right: 0; top: calc(100% + 7px);
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    font-family: var(--font-label); font-size: 9.5px; color: var(--ink-faint); font-variant-numeric: tabular-nums;
+  }
+  .ln-card-tick::after { content: ''; width: 4px; height: 4px; border-radius: 50%; }
+  .ln-card-tick--words::after { background: var(--ink); }
+  .ln-card-bar--on .ln-card-tick { color: var(--ink); }
+
+  .ln-card-song { min-height: 96px; touch-action: pan-y; overflow: hidden; }
+  .ln-card-slide { display: flex; flex-direction: column; gap: 8px; }
+  .ln-card-slide--on { animation: ln-card-in-r 0.3s cubic-bezier(.22,1,.36,1); }
+  .ln-card-slide--back { animation: ln-card-in-l 0.3s cubic-bezier(.22,1,.36,1); }
+  .ln-card-song-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .ln-card-song-title { font-family: var(--font-display); font-weight: var(--font-display-weight); font-size: 17px; line-height: 1.25; color: var(--ink); min-width: 0; }
+  .ln-card-song-rate { display: inline-flex; align-items: center; gap: 8px; flex: none; }
+  .ln-card-words { font-size: 15.5px; line-height: 1.65; white-space: pre-wrap; color: var(--ink); }
+  .ln-card-none { margin: 0; font-size: 14px; color: var(--ink-faint); }
+
+  .ln-card-turn { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 10px; align-items: center; border-top: 1px solid var(--rule, rgba(128,128,128,0.16)); margin: 0 -18px; padding: 12px 18px 0; }
+  .ln-card-next { display: flex; align-items: center; gap: 6px; min-width: 0; padding: 6px 0; font-weight: 700; font-size: 13.5px; color: var(--ink-soft); background: none; border: 0; text-align: left; }
+  .ln-card-next span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ln-card-next i { font-style: normal; font-family: var(--font-label); color: var(--ink-faint); flex: none; }
+  .ln-card-next:not(.ln-card-next--back) { justify-content: flex-end; text-align: right; }
+  .ln-card-play { width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--ink); color: var(--card); display: grid; place-items: center; }
+  .ln-card-play:disabled { opacity: 0.25; }
+  .ln-card-posted { font-family: var(--font-label); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-faint); }
+  .ln-card .ln-doors { margin: 0; }
+}
+@keyframes ln-card-in-r { from { transform: translateX(36px); } }
+@keyframes ln-card-in-l { from { transform: translateX(-36px); } }
