@@ -2567,7 +2567,7 @@ html[data-printing] .sitenav-row { display: none; }
 
   .ln-card-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
   .ln-card-count { font-family: var(--font-label); font-size: 10px; letter-spacing: 0.08em; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
-  .ln-card-horizon { display: grid; gap: 4px; align-items: end; height: 84px; margin-top: 22px; margin-bottom: 150px; touch-action: pan-y; }
+  .ln-card-horizon { display: grid; gap: 4px; align-items: end; height: 84px; margin-top: 26px; margin-bottom: 26px; touch-action: pan-y; }
   .ln-card-bar {
     position: relative; height: calc(var(--r) * 20%); min-height: 4px; padding: 0;
     border-radius: 3px 3px 0 0; background: color-mix(in srgb, var(--ink) 18%, var(--card));
@@ -2588,16 +2588,18 @@ html[data-printing] .sitenav-row { display: none; }
   .ln-card-tick::after { content: ''; width: 4px; height: 4px; border-radius: 50%; }
   .ln-card-tick--words::after { background: var(--ink); }
   .ln-card-bar--on .ln-card-tick { color: var(--ink); }
-  .ln-card-tick::after { order: 1; }
-  .ln-card-tick-name {
-    order: 2; margin-top: 2px;
-    writing-mode: vertical-rl; max-height: 112px;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    font-family: var(--font-label); font-size: 10px; letter-spacing: 0.02em; line-height: 1;
-    color: var(--ink-faint);
+  .ln-card-flagrow { position: relative; height: 26px; margin-top: 14px; }
+  .ln-card-flag-tip {
+    position: absolute; bottom: -4px; left: var(--p); width: 8px; height: 8px; background: var(--ink);
+    transform: translateX(-50%) rotate(45deg); transition: left 0.22s cubic-bezier(0.2, 0.8, 0.3, 1);
   }
-  .ln-card-tick--words .ln-card-tick-name { color: var(--ink-soft); }
-  .ln-card-bar--on .ln-card-tick-name { color: var(--ink); }
+  .ln-card-flag {
+    position: absolute; bottom: 0; left: var(--p); transform: translateX(calc(var(--p) * -1));
+    max-width: 100%; box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    padding: 5px 9px; border-radius: 7px; background: var(--ink); color: var(--card);
+    font-family: var(--font-label); font-size: 11px; letter-spacing: 0.04em; line-height: 1;
+    transition: left 0.22s cubic-bezier(0.2, 0.8, 0.3, 1), transform 0.22s cubic-bezier(0.2, 0.8, 0.3, 1);
+  }
 
   .ln-card-song { min-height: 96px; touch-action: pan-y; overflow: hidden; }
   .ln-card-slide { display: flex; flex-direction: column; gap: 8px; }

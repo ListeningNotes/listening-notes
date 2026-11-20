@@ -1581,8 +1581,23 @@ export default function FullPostPage({ entry, references = [], authed = false, l
                 {notedTracks > 0 && ` · ${notedTracks} with notes`}
               </span>
             </div>
+            {/* The song you are on, named in a flag over its bar that
+                follows the finger along the horizon (Miyel, 2026-11-19: "we
+                should see song titles in horizon"; the flag picked over
+                spines under every bar). Moved by its share of the row and
+                pulled back by the same share of its own width, so its tip
+                is over the bar and it never leaves the card. */}
+            <div className="ln-card-flagrow" aria-hidden="true" style={{ '--p': `${((songAt + 0.5) / parsedTracks.length) * 100}%` }}>
+              <i className="ln-card-flag-tip" />
+              <span className="ln-card-flag">
+                {(song.name || '').replace(/\s*[([](feat\.|ft\.|with )[^)\]]*[)\]]/gi, '') || song.name}
+              </span>
+            </div>
             <div
               className="ln-card-horizon"
+              /* A slide along the horizon moves through the album, never to
+                 the next post (LayerEntry reads data-slide). */
+              data-slide
               style={{ gridTemplateColumns: `repeat(${parsedTracks.length}, 1fr)` }}
               onTouchMove={e => {
                 const box = e.currentTarget.getBoundingClientRect();
@@ -1603,12 +1618,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
                   <span className="ln-card-bar-fill" style={i === songAt ? { transform: `scaleY(${songShare})` } : undefined} />
                   {t.favorite && <Heart className="ln-card-bar-heart" size={9} weight="fill" />}
                   <span className={'ln-card-tick' + ((t.note || '').trim() ? ' ln-card-tick--words' : '')}>
-                    {t.num || i + 1}
-                    {/* Its title, down the way a spine reads on a shelf
-                        (Miyel, 2026-11-19: "we should see song titles in
-                        horizon"). */}
-                    {t.name && <span className="ln-card-tick-name" aria-hidden="true">{t.name}</span>}
-                  </span>
+{t.num || i + 1}</span>
                 </button>
               ))}
             </div>
@@ -1616,6 +1626,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
 
           <div
             className="ln-card-song"
+            data-slide
             onTouchStart={e => { songSwipe.current = e.touches[0].clientX; }}
             onTouchEnd={e => {
               if (songSwipe.current == null) return;
