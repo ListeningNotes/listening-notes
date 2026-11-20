@@ -2708,3 +2708,15 @@ html[data-printing] .sitenav-row { display: none; }
   .ln-card-home { border: 0; background: none; padding: 0; text-align: left; cursor: pointer; }
   .ln-card-home i { font-style: normal; }
 }
+@media (max-width: 768px) {
+  /* A song opens in place: its note grows out from under its row. */
+  .ln-card-shelf-body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.28s cubic-bezier(0.2, 0.8, 0.3, 1); }
+  .ln-card-shelf-body > div { overflow: hidden; min-height: 0; }
+  .ln-card-shelf--open .ln-card-shelf-body { grid-template-rows: 1fr; }
+  .ln-card-shelf-body .ln-card-words { padding: 2px 18px 16px 50px; }
+  .ln-card-shelf { border-bottom: 1px solid var(--rule, rgba(128,128,128,0.16)); }
+  .ln-card-shelf .ln-card-row { border-bottom: 0; }
+  .ln-card-shelf--open .ln-card-row-name { color: var(--ink); font-weight: 700; }
+  .ln-card-shelf--open .ln-card-row-num { color: var(--ink); }
+  .ln-card-row-num { display: inline-flex; align-items: center; }
+}

@@ -225,16 +225,13 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   // and a record arrives on its cover, not on the last one's code. The slot
   // itself is keyed on the slug below, so its own state starts over too.
   const [codeFor, setCodeFor] = useState(entry.slug);
-  // The song the card is open at (The post as one card, below): the first
-  // one with words, and the first one again on the next record.
+  // The song open on the shelf (The post as one card, below), or none.
   const [songAt, setSongAt] = useState(() => opening(entry));
-  const [songTurn, setSongTurn] = useState(0);
   if (codeFor !== entry.slug) {
     setCodeFor(entry.slug);
     setCoverCode(false);
     setTrailOpen(false);
     setSongAt(opening(entry));
-    setSongTurn(0);
   }
   // The dots are the page's ink, so the page asks for the file that matches
   // it. The art's mark rides along so a corrected cover is never a day stale.
@@ -705,19 +702,25 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   const songNow = useSnippetState(songKey);
   const songPlay = song ? snippet.playFor(song.num, song.name) : null;
   const songOn = songNow.playing || songNow.waiting;
-  const songShare = songNow.key && songNow.duration ? Math.min(songNow.at / songNow.duration, 1) : 0;
-  const goSong = (i, { hear = false } = {}) => {
-    // -1 is the opening, the album note, where there is one.
-    if (i < -1 || i >= parsedTracks.length) return;
-    setSongTurn(i - songAt);
-    setSongAt(i);
-    if (i < 0) return;
+  // ── A shelf, 2026-11-19 ───────────────────────────────────────────────
+  // Miyel: "it should just feel like a shelf opening. Like I can just read
+  // that note … and hear the song when I open it. And then I close it back
+  // up when I want to." A song pressed opens in place, under its row, and
+  // plays; pressed again it closes and stops; another pressed is that one.
+  // In order or anywhere, and never a page of its own — the horizon and the
+  // flip through went with this.
+  const openSong = i => {
     const t = parsedTracks[i];
+    if (!t) return;
+    if (i === songAt) {
+      setSongAt(-1);
+      if (songOn && songPlay) toggleSnippet(songKey, songPlay);
+      return;
+    }
+    setSongAt(i);
     const play = snippet.playFor(t.num, t.name);
-    // A song playing hands over to the next as you turn; a bar pressed plays.
-    if (play && (hear || songOn)) toggleSnippet(`${entry.slug}:${i}`, play);
+    if (play) toggleSnippet(`${entry.slug}:${i}`, play);
   };
-  const songSwipe = useRef(null);
 
   // ── When there is nothing under the fold ────────────────────────────────
   // A listen can be a cover, a score and nothing else since 2026-09-18, and
@@ -1553,33 +1556,6 @@ export default function FullPostPage({ entry, references = [], authed = false, l
                   (Miyel, 2026-11-18). Over the journal only: a page opened
                   cold keeps its own row, and the tools in it. */}
               {headerSlot && keeperTools && <div className="ln-card-tools">{keeperTools}</div>}
-              {/* ── The album area follows the listen, 2026-11-19 ──────────
-                  Miyel: "its the album area. thats what needs to change."
-                  On the opening it is the album; on a song, the same place
-                  beside the cover is the song — its title, where it falls
-                  on the record, its stars — and the box below holds only
-                  the words. */}
-              {song ? (
-                <div key={songAt} className={'ln-card-facts-song ln-card-slide' + (songTurn < 0 ? ' ln-card-slide--back' : songTurn > 0 ? ' ln-card-slide--on' : '')}>
-                  {(() => {
-                    // The featured artists on a small line of their own, so a
-                    // long credit does not stand the title five lines tall.
-                    const feat = (song.name || '').match(/^(.*?)\s*[([]((?:feat\.|ft\.|with) [^)\]]*)[)\]]\s*$/i);
-                    return (<>
-                      <h2 className="ln-card-title">{feat ? feat[1] : song.name}</h2>
-                      {feat && <div className="ln-card-byline">{feat[2]}</div>}
-                      {/* Where it falls on the album, and the way home. */}
-                      <button type="button" className="ln-card-byline ln-card-home" onClick={() => goSong(-1)}>
-                        <i aria-hidden="true">‹</i> {song.num || songAt + 1} of {parsedTracks.length} · {entry.album}
-                      </button>
-                    </>);
-                  })()}
-                  <div className="ln-card-rate">
-                    {song.stars > 0 && <StarRating rating={song.stars} size={17} />}
-                    {song.favorite && <span className="ln-card-marks"><Heart size={17} weight="fill" color="var(--fav)" aria-label="Favorite" /></span>}
-                  </div>
-                </div>
-              ) : (<>
               <h1 className="ln-card-title">{entry.album}</h1>
               <div className="ln-card-byline">{entry.artist}{entry.year ? ' · ' + entry.year : ''}</div>
               {displayRating > 0 && (
@@ -1602,126 +1578,47 @@ export default function FullPostPage({ entry, references = [], authed = false, l
                   </a>
                 )}
               </div>
-              </>)}
             </div>
           </div>
           {sentLine}
 
           <div className="ln-card-rule" />
 
-          {/* Flipping through: the horizon and the player, only once a song
-              is open. The home has the list instead. */}
-          {song && (<>
-            <div
-              className="ln-card-horizon"
-              /* A slide along the horizon moves through the album, never to
-                 the next post (LayerEntry reads data-slide). */
-              data-slide
-              style={{ gridTemplateColumns: `repeat(${parsedTracks.length}, 1fr)` }}
-              onTouchMove={e => {
-                const box = e.currentTarget.getBoundingClientRect();
-                const i = Math.floor((e.touches[0].clientX - box.left) / box.width * parsedTracks.length);
-                if (i !== songAt && i >= 0 && i < parsedTracks.length) goSong(i);
-              }}
-            >
-              {parsedTracks.map((t, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  className={'ln-card-bar' + (i === songAt ? ' ln-card-bar--on' : '') + (i === songAt && songOn ? ' ln-card-bar--playing' : '')}
-                  style={{ '--r': t.stars || 0 }}
-                  onClick={() => goSong(i, { hear: true })}
-                  aria-label={`${t.num}. ${t.name}${(t.note || '').trim() ? ', with a note' : ''}`}
-                  aria-current={i === songAt || undefined}
-                >
-                  <span className="ln-card-bar-fill" style={i === songAt ? { transform: `scaleY(${songShare})` } : undefined} />
-                  {t.favorite && <Heart className="ln-card-bar-heart" size={9} weight="fill" />}
-                  <span className={'ln-card-tick' + ((t.note || '').trim() ? ' ln-card-tick--words' : '')}>
-{t.num || i + 1}</span>
-                </button>
-              ))}
+          {albumNotes && (
+            <div className="ln-card-box">
+              <div className="ln-card-note">{linkedAlbumNotes}</div>
+              {editedOn && <p className="ln-edited">Edited {editedOn}</p>}
             </div>
+          )}
 
-          <div className="ln-card-turn">
-            {(() => {
-              // Back from the first song is the album note; on from the
-              // last is nothing — the end.
-              const before = songAt === 0 ? { name: 'Album note' } : parsedTracks[songAt - 1];
-              const after = parsedTracks[songAt + 1];
-              return (
-                <>
-                  <button type="button" className="ln-card-next ln-card-next--back" disabled={!before} onClick={() => goSong(songAt - 1)}>
-                    {before && <><i aria-hidden="true">‹</i><span>{before.name}</span></>}
-                  </button>
-                  <button
-                    type="button"
-                    className="ln-card-play"
-                    disabled={song ? !songPlay : !snippet.playFor(parsedTracks[0].num, parsedTracks[0].name)}
-                    /* From the opening, play is the beginning: the first song. */
-                    onClick={() => (song ? songPlay && toggleSnippet(songKey, songPlay) : goSong(0, { hear: true }))}
-                    aria-label={songOn ? `Pause the preview of ${song?.name}` : `Play a preview of ${(song || parsedTracks[0]).name}`}
-                  >
-                    {songOn ? <Pause size={16} weight="fill" /> : <Play size={16} weight="fill" />}
-                  </button>
-                  <button type="button" className="ln-card-next" disabled={!after} onClick={() => goSong(songAt + 1)}>
-                    {after && <><span>{after.name}</span><i aria-hidden="true">›</i></>}
-                  </button>
-                </>
-              );
-            })()}
-          </div>
-          </>)}
-
-          {/* ── One box of words, 2026-11-19 ─────────────────────────────
-              Miyel: "maybe there's only one box of text on the screen, and
-              whatever's on that screen changes by where you are in the
-              listen. So it's like you open it with something you want to
-              say, you have your tracks and what you thought of each one."
-              It opens on the album note with no song picked; play, a bar
-              or the song named at the right moves into the songs, and the
-              last one is the end ("it can also reach a natural end then
-              you close a post"). The box keeps its place and scrolls in
-              itself, so the horizon under it never moves. */}
-          <div
-            className="ln-card-box"
-            data-slide
-            onTouchStart={e => { songSwipe.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }; }}
-            onTouchEnd={e => {
-              const from = songSwipe.current;
-              songSwipe.current = null;
-              if (!from) return;
-              const dx = e.changedTouches[0].clientX - from.x;
-              const dy = e.changedTouches[0].clientY - from.y;
-              if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.5) goSong(songAt + (dx < 0 ? 1 : -1));
-            }}
-          >
-            <div key={songAt} className={'ln-card-slide' + (songTurn < 0 ? ' ln-card-slide--back' : songTurn > 0 ? ' ln-card-slide--on' : '')}>
-              {song ? (<>
-                {(song.note || '').trim() && <div className="ln-card-words">{linkedTrackNotes[songAt]}</div>}
-              </>) : albumNotes && (<>
-                <div className="ln-card-note">{linkedAlbumNotes}</div>
-                {editedOn && <p className="ln-edited">Edited {editedOn}</p>}
-              </>)}
-            </div>
-          </div>
-
-          {/* The overview, on the home: every song, its stars and whether it
-              has a note, and a press opens it. */}
-          {!song && parsedTracks.length > 0 && (
+          {/* The songs, under the album note: a press opens one in place
+              and plays it (A shelf, above). */}
+          {parsedTracks.length > 0 && (
             <ol className="ln-card-list">
-              {parsedTracks.map((t, i) => (
-                <li key={i}>
-                  <button type="button" className={'ln-card-row' + ((t.note || '').trim() ? ' ln-card-row--words' : '')} onClick={() => goSong(i)}>
-                    <span className="ln-card-row-num">{t.num || i + 1}</span>
-                    <span className="ln-card-row-name">{t.name}</span>
-                    <span className="ln-card-row-rate">
-                      {t.favorite && <Heart size={11} weight="fill" color="var(--fav)" aria-label="Favorite" />}
-                      {t.stars > 0 && <StarRating rating={t.stars} size={11} />}
-                    </span>
-                    <i className="ln-card-row-dot" aria-hidden="true" />
-                  </button>
-                </li>
-              ))}
+              {parsedTracks.map((t, i) => {
+                const open = i === songAt;
+                const words = (t.note || '').trim();
+                return (
+                  <li key={i} className={'ln-card-shelf' + (open ? ' ln-card-shelf--open' : '')}>
+                    <button type="button" className={'ln-card-row' + (words ? ' ln-card-row--words' : '')} onClick={() => openSong(i)} aria-expanded={open}>
+                      <span className="ln-card-row-num">
+                        {open && songOn ? <Pause size={11} weight="fill" aria-label="Playing" /> : (t.num || i + 1)}
+                      </span>
+                      <span className="ln-card-row-name">{t.name}</span>
+                      <span className="ln-card-row-rate">
+                        {t.favorite && <Heart size={11} weight="fill" color="var(--fav)" aria-label="Favorite" />}
+                        {t.stars > 0 && <StarRating rating={t.stars} size={11} />}
+                      </span>
+                      <i className="ln-card-row-dot" aria-hidden="true" />
+                    </button>
+                    <div className="ln-card-shelf-body" inert={!open}>
+                      <div>
+                        {words && <div className="ln-card-words">{linkedTrackNotes[i]}</div>}
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
             </ol>
           )}
 
