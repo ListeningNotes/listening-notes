@@ -1579,7 +1579,17 @@ export default function FullPostPage({ entry, references = [], authed = false, l
                 title becomes above… the title of the song and the stars
                 bigger"). No label, no count and no flag over it. */}
             <div key={songAt} className={'ln-card-now ln-card-slide' + (songTurn < 0 ? ' ln-card-slide--back' : songTurn > 0 ? ' ln-card-slide--on' : '')}>
-              <span className="ln-card-now-title">{song.name}</span>
+              {(() => {
+                // The featured artists on a small line of their own, so a
+                // long credit does not stand the title five lines tall.
+                const feat = (song.name || '').match(/^(.*?)\s*[([]((?:feat\.|ft\.|with) [^)\]]*)[)\]]\s*$/i);
+                return (
+                  <span className="ln-card-now-title">
+                    {feat ? feat[1] : song.name}
+                    {feat && <span className="ln-card-now-feat">{feat[2]}</span>}
+                  </span>
+                );
+              })()}
               <span className="ln-card-now-rate">
                 {song.stars > 0 && <StarRating rating={song.stars} size={19} />}
                 {song.favorite && <Heart size={19} weight="fill" color="var(--fav)" aria-label="Favorite" />}
