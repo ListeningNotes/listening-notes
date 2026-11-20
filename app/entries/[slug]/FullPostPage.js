@@ -716,32 +716,68 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     if (carded && songAt < 0) stopSnippet(`${entry.slug}:`);
   }, [carded, songAt, entry.slug]);
   useEffect(() => () => stopSnippet(`${entry.slug}:`), [entry.slug]);
+  // ── The song opened comes to the middle, in one movement ────────────────
+  // Miyel, 2026-11-19: "the open song should always be like centered", and
+  // then, of a glide that guessed and a second that corrected: "it should
+  // just open exactly to not bounce." So it is measured after the press has
+  // been drawn, when the rows already wear their new sizes and only the two
+  // notes are still to move — the one opening from nothing to its full
+  // height, the one closing from its full height to nothing — and both of
+  // those heights are known. The scroll is then run by hand on the shelf's
+  // own clock and curve, so the page and the song arrive together, and
+  // nearest the end it stops where the end is.
+  const glide = useRef(null);
+  useLayoutEffect(() => {
+    const row = glide.current;
+    glide.current = null;
+    const li = row?.closest('li');
+    const scroller = row?.closest('.ln-screens');
+    if (!li || !scroller || songAt < 0) return undefined;
+    const list = li.parentElement;
+    const opening = li.querySelector('.ln-card-shelf-body');
+    const grows = opening?.firstElementChild?.scrollHeight || 0;
+    let folds = 0;
+    let foldsAbove = 0;
+    for (const other of list.children) {
+      if (other === li) continue;
+      const body = other.querySelector('.ln-card-shelf-body');
+      const h = body ? body.getBoundingClientRect().height : 0;
+      if (!h) continue;
+      folds += h;
+      if (other.compareDocumentPosition(li) & Node.DOCUMENT_POSITION_FOLLOWING) foldsAbove += h;
+    }
+    const room = scroller.getBoundingClientRect();
+    const box = li.getBoundingClientRect();
+    const now = opening ? opening.getBoundingClientRect().height : 0;
+    const top = box.top - room.top + scroller.scrollTop - foldsAbove;
+    const height = box.height - now + grows;
+    const most = scroller.scrollHeight - scroller.clientHeight - folds + (grows - now);
+    const to = Math.max(0, Math.min(most, top + height / 2 - scroller.clientHeight / 2));
+    // Steered by where the row is on screen, frame by frame, rather than by
+    // the scroll's own number: the notes folding above it move it as well,
+    // and a scroll that ignored them went past and came back.
+    const startsAt = box.top - room.top;
+    const endsAt = top - to;
+    if (Math.abs(endsAt - startsAt) < 2) return undefined;
+    // The shelf's curve, cubic-bezier(0.2, 0.8, 0.3, 1), near enough.
+    const ease = x => 1 - Math.pow(1 - x, 3.2);
+    const start = performance.now();
+    let frame = 0;
+    const step = t => {
+      const k = Math.min(1, (t - start) / 300);
+      const at = startsAt + (endsAt - startsAt) * ease(k);
+      const rowTop = li.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
+      scroller.scrollTop += rowTop - at;
+      if (k < 1) frame = requestAnimationFrame(step);
+    };
+    frame = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(frame);
+  }, [songAt]);
   const openSong = (i, row) => {
     const t = parsedTracks[i];
     if (!t) return;
-    // The song opened comes to the middle of the screen, so what is left
-    // above and below it, and the end, can be seen (Miyel, 2026-11-19: "the
-    // open song should always be like centered"). Measured before it opens:
-    // where its row is once the song open above it (if any) has folded,
-    // and how tall it will be with its note out.
-    const li = row?.closest('li');
-    const scroller = row?.closest('.ln-screens');
-    if (li && scroller && i !== songAt) {
-      const before = songAt >= 0 && songAt < i ? li.parentElement.children[songAt]?.querySelector('.ln-card-shelf-body') : null;
-      const tall = row.offsetHeight + 14 + (li.querySelector('.ln-card-shelf-body > div')?.scrollHeight || 0);
-      const top = li.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop - (before?.offsetHeight || 0);
-      scroller.scrollTo({ top: top + tall / 2 - scroller.clientHeight / 2, behavior: 'smooth' });
-      // And once it has grown (the shelf's 0.28s, and the first glide), again from where it really
-      // is: near the end of the list there was no room to centre it until
-      // its note was out.
-      window.setTimeout(() => {
-        if (!li.classList.contains('ln-card-shelf--open')) return;
-        const box = li.getBoundingClientRect();
-        const room = scroller.getBoundingClientRect();
-        const off = box.top + box.height / 2 - (room.top + room.height / 2);
-        if (Math.abs(off) > 12) scroller.scrollBy({ top: off, behavior: 'smooth' });
-      }, 480);
-    }
+    // Where it was pressed, for the glide below.
+    glide.current = i !== songAt ? row : null;
     if (i === songAt) {
       setSongAt(-1);
       if (songOn && songPlay) toggleSnippet(songKey, songPlay);

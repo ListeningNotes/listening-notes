@@ -2749,3 +2749,16 @@ html[data-printing] .sitenav-row { display: none; }
   .ln-card-shelf--open .ln-card-row-rate { gap: 8px; }
   .ln-card-shelf--open .ln-card-words { padding-top: 0; padding-bottom: 20px; }
 }
+@media (max-width: 768px) {
+  /* One piece to the foot of the screen (Miyel, 2026-11-19: "it needs to
+     connect to the bottom, have no breaking points"): the card runs off the
+     bottom edge like the sheet it is, its last song the last thing on it. */
+  .lay--over-journal .ln-carded > .ln-card { border-radius: var(--panel-r) var(--panel-r) 0 0; margin-bottom: 0; }
+  html[data-post-open] .lay--over-journal .ln-carded > .ln-card { padding-bottom: env(safe-area-inset-bottom, 0px); }
+  .lay--over-journal .ln-card-list > li:last-child { border-bottom: 0; }
+}
+@media (max-width: 768px) {
+  /* The browser's own scroll anchoring would move the page as the notes
+     fold, against the glide that already accounts for them. */
+  .ln-screens.ln-carded { overflow-anchor: none; }
+}
