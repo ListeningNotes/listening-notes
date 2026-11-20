@@ -2744,3 +2744,13 @@ html[data-printing] .sitenav-row { display: none; }
      still looks cut off"). It is as tall as the room it has. */
   .lay--over-journal .ln-screens { height: calc(100dvh - var(--hn-bar-h, 80px) - var(--lay-lift, 0px) - var(--lay-bottom, 0px)); }
 }
+@media (max-width: 768px) {
+  /* The song open is a different thing from the rest, note or none (Miyel,
+     2026-11-19: "should be larger or feel more like it's open"): a shade of
+     its own, a bigger title and bigger stars. */
+  .ln-card-shelf--open { background: color-mix(in srgb, var(--ink) 4.5%, var(--card)); }
+  .ln-card-shelf--open .ln-card-row { padding-top: 18px; padding-bottom: 18px; }
+  .ln-card-shelf--open .ln-card-row-name { font-family: var(--font-display); font-weight: var(--font-display-weight); font-size: 20px; white-space: normal; }
+  .ln-card-shelf--open .ln-card-row-rate { gap: 8px; }
+  .ln-card-shelf--open .ln-card-words { padding-top: 0; padding-bottom: 20px; }
+}

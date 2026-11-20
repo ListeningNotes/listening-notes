@@ -1623,8 +1623,8 @@ export default function FullPostPage({ entry, references = [], authed = false, l
                       </span>
                       <span className="ln-card-row-name">{t.name}</span>
                       <span className="ln-card-row-rate">
-                        {t.favorite && <Heart size={11} weight="fill" color="var(--fav)" aria-label="Favorite" />}
-                        {t.stars > 0 && <StarRating rating={t.stars} size={11} />}
+                        {t.favorite && <Heart size={open ? 15 : 11} weight="fill" color="var(--fav)" aria-label="Favorite" />}
+                        {t.stars > 0 && <StarRating rating={t.stars} size={open ? 15 : 11} />}
                       </span>
                       <i className="ln-card-row-dot" aria-hidden="true" />
                     </button>
