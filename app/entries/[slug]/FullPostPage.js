@@ -1574,23 +1574,15 @@ export default function FullPostPage({ entry, references = [], authed = false, l
           <div className="ln-card-rule" />
 
           <div>
-            <div className="ln-card-head">
-              <span className="ln-card-label">Horizon</span>
-              <span className="ln-card-count">
-                {String(song.num || songAt + 1).padStart(2, '0')} / {String(parsedTracks.length).padStart(2, '0')}
-                {notedTracks > 0 && ` · ${notedTracks} with notes`}
-              </span>
-            </div>
-            {/* The song you are on, named in a flag over its bar that
-                follows the finger along the horizon (Miyel, 2026-11-19: "we
-                should see song titles in horizon"; the flag picked over
-                spines under every bar). Moved by its share of the row and
-                pulled back by the same share of its own width, so its tip
-                is over the bar and it never leaves the card. */}
-            <div className="ln-card-flagrow" aria-hidden="true" style={{ '--p': `${((songAt + 0.5) / parsedTracks.length) * 100}%` }}>
-              <i className="ln-card-flag-tip" />
-              <span className="ln-card-flag">
-                {(song.name || '').replace(/\s*[([](feat\.|ft\.|with )[^)\]]*[)\]]/gi, '') || song.name}
+            {/* The song you are on, over the bars: its title and its stars,
+                large — the point of the horizon (Miyel, 2026-11-19: "the
+                title becomes above… the title of the song and the stars
+                bigger"). No label, no count and no flag over it. */}
+            <div key={songAt} className={'ln-card-now ln-card-slide' + (songTurn < 0 ? ' ln-card-slide--back' : songTurn > 0 ? ' ln-card-slide--on' : '')}>
+              <span className="ln-card-now-title">{song.name}</span>
+              <span className="ln-card-now-rate">
+                {song.stars > 0 && <StarRating rating={song.stars} size={19} />}
+                {song.favorite && <Heart size={19} weight="fill" color="var(--fav)" aria-label="Favorite" />}
               </span>
             </div>
             <div
@@ -1624,30 +1616,26 @@ export default function FullPostPage({ entry, references = [], authed = false, l
             </div>
           </div>
 
-          <div
-            className="ln-card-song"
-            data-slide
-            onTouchStart={e => { songSwipe.current = e.touches[0].clientX; }}
-            onTouchEnd={e => {
-              if (songSwipe.current == null) return;
-              const dx = e.changedTouches[0].clientX - songSwipe.current;
-              songSwipe.current = null;
-              if (Math.abs(dx) > 40) goSong(songAt + (dx < 0 ? 1 : -1));
-            }}
-          >
-            <div key={songAt} className={'ln-card-slide' + (songTurn < 0 ? ' ln-card-slide--back' : songTurn > 0 ? ' ln-card-slide--on' : '')}>
-              <div className="ln-card-song-head">
-                <span className="ln-card-song-title">{song.name}</span>
-                <span className="ln-card-song-rate">
-                  {song.favorite && <Heart size={13} weight="fill" color="var(--fav)" aria-label="Favorite" />}
-                  {song.stars > 0 && <StarRating rating={song.stars} size={13} />}
-                </span>
+          {/* Under the bars, the song's note, and nothing at all where
+              there is none: "if it says no notes, then we don't need to
+              show that there's no notes." */}
+          {(song.note || '').trim() && (
+            <div
+              className="ln-card-song"
+              data-slide
+              onTouchStart={e => { songSwipe.current = e.touches[0].clientX; }}
+              onTouchEnd={e => {
+                if (songSwipe.current == null) return;
+                const dx = e.changedTouches[0].clientX - songSwipe.current;
+                songSwipe.current = null;
+                if (Math.abs(dx) > 40) goSong(songAt + (dx < 0 ? 1 : -1));
+              }}
+            >
+              <div key={songAt} className={'ln-card-slide' + (songTurn < 0 ? ' ln-card-slide--back' : songTurn > 0 ? ' ln-card-slide--on' : '')}>
+                <div className="ln-card-words">{linkedTrackNotes[songAt]}</div>
               </div>
-              {(song.note || '').trim()
-                ? <div className="ln-card-words">{linkedTrackNotes[songAt]}</div>
-                : <p className="ln-card-none">No note on this one.</p>}
             </div>
-          </div>
+          )}
 
           <div className="ln-card-turn">
             {(() => {
