@@ -97,11 +97,14 @@ const HERO_COVER_EASE = { transition: 'width 0.26s ease, height 0.26s ease' };
 // A short mark for the art's address, stamped onto the code's address so a
 // corrected cover asks for a fresh picture rather than the one the browser
 // cached for the old one. Not a fingerprint of anything: any change is enough.
-// Where the card opens: on the album note, the post's opening, where there
-// is one (-1); else the first song with words, else the first song.
-function opening(entry) {
-  if (splitNotes(entry.notes).albumNotes) return -1;
-  return Math.max(0, entryTracks(entry).findIndex(t => (t.note || '').trim()));
+// Where the card opens: on its home, the album note and the overview (-1).
+//
+// Since 2026-11-19 always the home: the album note and the track list as an
+// overview, and the songs flipped through from there (Miyel: "the album
+// note needs to feel like a home and maybe tracklist shows then you go
+// through it, like overview then flip through").
+function opening() {
+  return -1;
 }
 
 function artMark(text) {
@@ -705,7 +708,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   const songShare = songNow.key && songNow.duration ? Math.min(songNow.at / songNow.duration, 1) : 0;
   const goSong = (i, { hear = false } = {}) => {
     // -1 is the opening, the album note, where there is one.
-    if (i < (albumNotes ? -1 : 0) || i >= parsedTracks.length) return;
+    if (i < -1 || i >= parsedTracks.length) return;
     setSongTurn(i - songAt);
     setSongAt(i);
     if (i < 0) return;
@@ -1564,9 +1567,11 @@ export default function FullPostPage({ entry, references = [], authed = false, l
                     const feat = (song.name || '').match(/^(.*?)\s*[([]((?:feat\.|ft\.|with) [^)\]]*)[)\]]\s*$/i);
                     return (<>
                       <h2 className="ln-card-title">{feat ? feat[1] : song.name}</h2>
-                      <div className="ln-card-byline">
-                        {feat ? feat[2] + ' · ' : ''}{song.num || songAt + 1} of {parsedTracks.length} · {entry.album}
-                      </div>
+                      {feat && <div className="ln-card-byline">{feat[2]}</div>}
+                      {/* Where it falls on the album, and the way home. */}
+                      <button type="button" className="ln-card-byline ln-card-home" onClick={() => goSong(-1)}>
+                        <i aria-hidden="true">‹</i> {song.num || songAt + 1} of {parsedTracks.length} · {entry.album}
+                      </button>
                     </>);
                   })()}
                   <div className="ln-card-rate">
@@ -1604,7 +1609,9 @@ export default function FullPostPage({ entry, references = [], authed = false, l
 
           <div className="ln-card-rule" />
 
-          {parsedTracks.length > 0 && (<>
+          {/* Flipping through: the horizon and the player, only once a song
+              is open. The home has the list instead. */}
+          {song && (<>
             <div
               className="ln-card-horizon"
               /* A slide along the horizon moves through the album, never to
@@ -1639,7 +1646,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
             {(() => {
               // Back from the first song is the album note; on from the
               // last is nothing — the end.
-              const before = songAt === 0 && albumNotes ? { name: 'Album note' } : parsedTracks[songAt - 1];
+              const before = songAt === 0 ? { name: 'Album note' } : parsedTracks[songAt - 1];
               const after = parsedTracks[songAt + 1];
               return (
                 <>
@@ -1697,6 +1704,26 @@ export default function FullPostPage({ entry, references = [], authed = false, l
               </>)}
             </div>
           </div>
+
+          {/* The overview, on the home: every song, its stars and whether it
+              has a note, and a press opens it. */}
+          {!song && parsedTracks.length > 0 && (
+            <ol className="ln-card-list">
+              {parsedTracks.map((t, i) => (
+                <li key={i}>
+                  <button type="button" className={'ln-card-row' + ((t.note || '').trim() ? ' ln-card-row--words' : '')} onClick={() => goSong(i)}>
+                    <span className="ln-card-row-num">{t.num || i + 1}</span>
+                    <span className="ln-card-row-name">{t.name}</span>
+                    <span className="ln-card-row-rate">
+                      {t.favorite && <Heart size={11} weight="fill" color="var(--fav)" aria-label="Favorite" />}
+                      {t.stars > 0 && <StarRating rating={t.stars} size={11} />}
+                    </span>
+                    <i className="ln-card-row-dot" aria-hidden="true" />
+                  </button>
+                </li>
+              ))}
+            </ol>
+          )}
 
           {wayIn && <div className="ln-message-foot">{wayIn}</div>}
         </article>
