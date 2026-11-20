@@ -313,11 +313,11 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
     const swiped = tookASwipe();
     if (swiped) return { swiped, growFrom: null, alone };
     if (arrives === 'bottom') return { swiped: 0, growFrom: null, alone };
-    // A post on a phone comes up from the foot as its card, 2026-11-18 —
-    // Miyel: "maybe we should just have the whole thing come up from the
-    // bottom like a card." Growing out of the tile drew a full-screen cover
-    // that became the old page for a moment and then the card.
-    if (slug && over === 'journal' && window.matchMedia('(max-width: 768px)').matches) return { swiped: 0, growFrom: null, alone, lifts: true };
+    // A post rose from the foot as its card for two days (2026-11-18) and
+    // grows from its tile again: "things that already exist open where they
+    // are" (Miyel's home brief, 2026-11-20). What she disliked about the
+    // growth — a big cover, then the old page, then the card — was the
+    // stand-in, which is the card's own shape now (LayerWaiting).
     if (reduced) return { swiped: 0, growFrom: null, alone };
     // An entry grows out of its tile; anything else grows out of whatever
     // declared this address in data-grows (a row, a face) — see handoff.js.
@@ -327,7 +327,6 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
     return { swiped: 0, growFrom: slug ? (growBoxOf(pathname) || tileBoxOf(slug)) : growBoxOf(pathname), alone };
   });
   const rises = arrives === 'bottom';
-  const lifts = Boolean(arrival.lifts);
   const growFrom = arrival.growFrom;
 
   useLayoutEffect(() => {
@@ -519,7 +518,7 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
       slide.oncancel = back;
       return;
     }
-    if (rises || lifts) {
+    if (rises) {
       // Back the way it came: down and out, from wherever the pull left it.
       let went = false;
       const back = () => { if (went) return; went = true; goBack(); };
@@ -535,7 +534,7 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
     }
     // The cover as the entry draws it: the first screen's on a phone, the
     // hero band's on a wide window — whichever is laid out.
-    const cover = [...sheet.querySelectorAll('.ln-screen-one-art img, .ln-hero-row .ln-cover img')]
+    const cover = [...sheet.querySelectorAll('.ln-card-cover img, .tn-cover img, .ln-screen-one-art img, .ln-hero-row .ln-cover img')]
       .find(el => el.getBoundingClientRect().width > 0);
     // Whatever the animations do, the route goes back. A hidden tab freezes
     // every animation on the page and their finish never comes; a close that
@@ -576,7 +575,7 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
     run.oncancel = done;
     // The flying copy must not outlive the sheet, animation or not.
     window.setTimeout(() => flyer.remove(), GROW_MS + 100);
-  }, [goBack, slug, pathname, rises, lifts, over, router]);
+  }, [goBack, slug, pathname, rises, over, router]);
 
   // ── What the page wants done first ───────────────────────────────────────
   // Every way out goes through here — the pull, Escape, the back caret — so a
@@ -844,7 +843,7 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
          everything that is not in the content and still belongs to the turn
          — the record in the header, and the page arriving late enough that
          the content's animation has already been and gone. */
-      className={'lay' + (arrival.still ? ' lay--still' : arrival.swiped ? ' lay--swiped' : rises ? ' lay--rises' : lifts ? ' lay--lifts' : growFrom ? ' lay--grows' : ' lay--fades') + (scrolls ? ' lay--scrolls' : '')
+      className={'lay' + (arrival.still ? ' lay--still' : arrival.swiped ? ' lay--swiped' : rises ? ' lay--rises' : growFrom ? ' lay--grows' : ' lay--fades') + (scrolls ? ' lay--scrolls' : '')
         + (arrival.swiped === 1 ? ' lay--from-right' : arrival.swiped === -1 ? ' lay--from-left' : '')
         + (over ? ` lay--over-${over}` : '') + (settling ? ' lay--settling' : '') + (pulled ? ' lay--dragging' : '')
         /* The listen's shape since 2026-10-21: a sheet raised from the Listen

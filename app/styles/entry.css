@@ -2619,18 +2619,15 @@ html[data-printing] .sitenav-row { display: none; }
 @keyframes ln-card-in-r { from { transform: translateX(36px); } }
 @keyframes ln-card-in-l { from { transform: translateX(-36px); } }
 
-/* ── The card comes up from the foot, 2026-11-18 ────────────────────────────
-   Miyel: "have the whole thing come up from the bottom like a card… it stays
-   under the homepage banner instead of being in its own border." On a phone a
-   post opened over the journal rises (LayerEntry, `lifts`), and the card is
-   the sheet: the full width, from just under the journal's top row to the
-   foot, its top corners rounded. No row of its own over it — the ··· is on
-   the card ("not a whole new row at the top"); the pull down, or a press in
-   the top row, puts it away. Not the listen's rise: nothing is held still
-   and nothing fades. */
-@keyframes layLift { from { transform: translateY(100dvh); } to { transform: none; } }
+/* ── The card is the sheet, 2026-11-18 ──────────────────────────────────────
+   Miyel: "it stays under the homepage banner instead of being in its own
+   border." On a phone a post opened over the journal is the card: the full
+   width, from just under the journal's top row to the foot, its top corners
+   rounded. No row of its own over it — the ··· is on the card ("not a whole
+   new row at the top"); the pull down, or a press in the top row, puts it
+   away. It rose from the foot for two days and grows from its tile again
+   (LayerEntry). */
 @media (max-width: 768px) {
-  .lay--lifts { animation: layLift 0.42s cubic-bezier(0.22, 0.61, 0.36, 1); }
   .lay--over-journal .lay-header.ln-entry--carded .sitenav-row,
   .lay--over-journal .lay-header.ln-entry--carded .sitenav-row::before { display: none; }
   .lay--over-journal .ln-carded > .ln-card {
@@ -2647,9 +2644,6 @@ html[data-printing] .sitenav-row { display: none; }
      row reads as the card's and not as icons laid on the picture. */
   .ln-card-tools .kt-tools { background: var(--card); border-radius: 12px; padding: 2px 2px 2px 6px; }
   .ln-card-tools + .ln-card-title { padding-right: 34px; }
-}
-@media (max-width: 768px) and (prefers-reduced-motion: reduce) {
-  .lay--lifts { animation: none; }
 }
 /* And what stands in while the post is read, when the wall knew nothing to
    draw: the card's own shape, the cover's square beside two lines, rather
