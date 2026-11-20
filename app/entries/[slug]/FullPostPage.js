@@ -1578,7 +1578,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
               <span className="ln-card-label">Horizon</span>
               <span className="ln-card-count">
                 {String(song.num || songAt + 1).padStart(2, '0')} / {String(parsedTracks.length).padStart(2, '0')}
-                {notedTracks > 0 && ` · ${notedTracks} with words`}
+                {notedTracks > 0 && ` · ${notedTracks} with notes`}
               </span>
             </div>
             <div
@@ -1597,12 +1597,18 @@ export default function FullPostPage({ entry, references = [], authed = false, l
                   className={'ln-card-bar' + (i === songAt ? ' ln-card-bar--on' : '') + (i === songAt && songOn ? ' ln-card-bar--playing' : '')}
                   style={{ '--r': t.stars || 0 }}
                   onClick={() => goSong(i, { hear: true })}
-                  aria-label={`${t.num}. ${t.name}${(t.note || '').trim() ? ', with words' : ''}`}
+                  aria-label={`${t.num}. ${t.name}${(t.note || '').trim() ? ', with a note' : ''}`}
                   aria-current={i === songAt || undefined}
                 >
                   <span className="ln-card-bar-fill" style={i === songAt ? { transform: `scaleY(${songShare})` } : undefined} />
                   {t.favorite && <Heart className="ln-card-bar-heart" size={9} weight="fill" />}
-                  <span className={'ln-card-tick' + ((t.note || '').trim() ? ' ln-card-tick--words' : '')}>{t.num || i + 1}</span>
+                  <span className={'ln-card-tick' + ((t.note || '').trim() ? ' ln-card-tick--words' : '')}>
+                    {t.num || i + 1}
+                    {/* Its title, down the way a spine reads on a shelf
+                        (Miyel, 2026-11-19: "we should see song titles in
+                        horizon"). */}
+                    {t.name && <span className="ln-card-tick-name" aria-hidden="true">{t.name}</span>}
+                  </span>
                 </button>
               ))}
             </div>
@@ -1628,7 +1634,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
               </div>
               {(song.note || '').trim()
                 ? <div className="ln-card-words">{linkedTrackNotes[songAt]}</div>
-                : <p className="ln-card-none">No words on this one.</p>}
+                : <p className="ln-card-none">No note on this one.</p>}
             </div>
           </div>
 
