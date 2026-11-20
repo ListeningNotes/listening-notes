@@ -1595,6 +1595,27 @@ export default function FullPostPage({ entry, references = [], authed = false, l
                 {song.favorite && <Heart size={19} weight="fill" color="var(--fav)" aria-label="Favorite" />}
               </span>
             </div>
+              {/* Under its title, the song's note, and nothing at all where
+                  there is none (over the bars since 2026-11-19, Miyel: "move
+                  the note above the horizon too"): "if it says no notes, then we don't need to
+                  show that there's no notes." */}
+              {(song.note || '').trim() && (
+                <div
+                  className="ln-card-song"
+                  data-slide
+                  onTouchStart={e => { songSwipe.current = e.touches[0].clientX; }}
+                  onTouchEnd={e => {
+                    if (songSwipe.current == null) return;
+                    const dx = e.changedTouches[0].clientX - songSwipe.current;
+                    songSwipe.current = null;
+                    if (Math.abs(dx) > 40) goSong(songAt + (dx < 0 ? 1 : -1));
+                  }}
+                >
+                  <div key={songAt} className={'ln-card-slide' + (songTurn < 0 ? ' ln-card-slide--back' : songTurn > 0 ? ' ln-card-slide--on' : '')}>
+                    <div className="ln-card-words">{linkedTrackNotes[songAt]}</div>
+                  </div>
+                </div>
+              )}
             <div
               className="ln-card-horizon"
               /* A slide along the horizon moves through the album, never to
@@ -1625,27 +1646,6 @@ export default function FullPostPage({ entry, references = [], authed = false, l
               ))}
             </div>
           </div>
-
-          {/* Under the bars, the song's note, and nothing at all where
-              there is none: "if it says no notes, then we don't need to
-              show that there's no notes." */}
-          {(song.note || '').trim() && (
-            <div
-              className="ln-card-song"
-              data-slide
-              onTouchStart={e => { songSwipe.current = e.touches[0].clientX; }}
-              onTouchEnd={e => {
-                if (songSwipe.current == null) return;
-                const dx = e.changedTouches[0].clientX - songSwipe.current;
-                songSwipe.current = null;
-                if (Math.abs(dx) > 40) goSong(songAt + (dx < 0 ? 1 : -1));
-              }}
-            >
-              <div key={songAt} className={'ln-card-slide' + (songTurn < 0 ? ' ln-card-slide--back' : songTurn > 0 ? ' ln-card-slide--on' : '')}>
-                <div className="ln-card-words">{linkedTrackNotes[songAt]}</div>
-              </div>
-            </div>
-          )}
 
           <div className="ln-card-turn">
             {(() => {

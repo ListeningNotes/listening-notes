@@ -2596,7 +2596,7 @@ html[data-printing] .sitenav-row { display: none; }
   .ln-card-now-title { font-family: var(--font-display); font-weight: var(--font-display-weight); font-size: 22px; line-height: 1.15; color: var(--ink); overflow-wrap: anywhere; }
   .ln-card-now-rate { display: inline-flex; align-items: center; gap: 8px; min-height: 19px; }
 
-  .ln-card-song { touch-action: pan-y; overflow: hidden; }
+  .ln-card-song { touch-action: pan-y; overflow: hidden; margin-top: 12px; }
   .ln-card-slide { display: flex; flex-direction: column; gap: 8px; }
   .ln-card-slide--on { animation: ln-card-in-r 0.3s cubic-bezier(.22,1,.36,1); }
   .ln-card-slide--back { animation: ln-card-in-l 0.3s cubic-bezier(.22,1,.36,1); }
