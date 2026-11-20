@@ -2589,7 +2589,7 @@ html[data-printing] .sitenav-row { display: none; }
   .ln-card-tick--words::after { background: var(--ink); }
   .ln-card-bar--on .ln-card-tick { color: var(--ink); }
   /* The title on the left and its stars on the right, on one line (Miyel, 2026-11-19). */
-  .ln-card-now.ln-card-slide { display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 14px; min-height: 40px; text-align: left; }
+  .ln-card-now { display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 14px; min-height: 40px; text-align: left; }
   .ln-card-now-title { min-width: 0; }
   .ln-card-now-feat { display: block; margin-top: 4px; font-family: var(--font-label); font-weight: 400; font-size: 10.5px; letter-spacing: 0.06em; line-height: 1.35; color: var(--ink-soft); }
   .ln-card-now-rate { flex: none; }
@@ -2665,4 +2665,26 @@ html[data-printing] .sitenav-row { display: none; }
   .lay--over-journal .lay-wait-art { grid-row: span 2; width: 116px; height: 116px; border-radius: 12px; }
   .lay--over-journal .lay-wait-line--title { width: 80%; margin-top: 0; align-self: end; }
   .lay--over-journal .lay-wait-line--byline { width: 55%; align-self: start; }
+}
+
+/* ── One box of words, 2026-11-19 ───────────────────────────────────────────
+   The album note, then each song's, in one box that keeps its place and
+   scrolls in itself (FullPostPage). Over the journal the card is the screen:
+   it holds still and only the box moves — "I don't want this sense of
+   scrolling." */
+@media (max-width: 768px) {
+  .ln-card-box { max-height: 52dvh; overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y; }
+  .lay--over-journal .ln-carded > .ln-card {
+    height: calc(100dvh - var(--hn-bar-h, 80px) - 6px); min-height: 0;
+    padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+  }
+  .lay--over-journal .ln-entry--folder .ln-carded > .ln-card { padding-bottom: calc(var(--ff-h) + 96px); }
+  .lay--over-journal .ln-carded > .ln-card > .ln-card-box { flex: 1 1 0; min-height: 0; max-height: none; }
+  .ln-card-box .ln-card-slide { gap: 12px; }
+}
+@media (max-width: 768px) {
+  .ln-card-meta { display: flex; flex-wrap: wrap; gap: 4px 12px; font-family: var(--font-label); font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); }
+  .ln-card-meta a { display: inline-flex; align-items: center; gap: 4px; color: var(--ink-soft); text-decoration: none; }
+  .lay--over-journal .ln-carded > .ln-card { gap: 14px; }
+  .lay--over-journal .ln-card-horizon { height: 66px; margin-top: 22px; margin-bottom: 26px; }
 }

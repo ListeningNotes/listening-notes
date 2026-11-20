@@ -10,7 +10,7 @@
 'use client';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Envelope, Fingerprint, Heart, Pause, Play, SketchLogo, VinylRecord } from '@phosphor-icons/react';
+import { ArrowSquareOut, Envelope, Fingerprint, Heart, Pause, Play, SketchLogo, VinylRecord } from '@phosphor-icons/react';
 import { fonts } from '../../../library/sitewide_visuals';
 import { sizedAlbumArt, fetchAlbumArtUrl } from '../../../library/music_data_api';
 import { parseHorizon, entryTracks, splitNotes, parseRating, flawless } from '../../../library/entry_formatter';
@@ -97,9 +97,11 @@ const HERO_COVER_EASE = { transition: 'width 0.26s ease, height 0.26s ease' };
 // A short mark for the art's address, stamped onto the code's address so a
 // corrected cover asks for a fresh picture rather than the one the browser
 // cached for the old one. Not a fingerprint of anything: any change is enough.
-// Where the card opens: the first song with words, else the first song.
-function firstWords(tracks) {
-  return Math.max(0, tracks.findIndex(t => (t.note || '').trim()));
+// Where the card opens: on the album note, the post's opening, where there
+// is one (-1); else the first song with words, else the first song.
+function opening(entry) {
+  if (splitNotes(entry.notes).albumNotes) return -1;
+  return Math.max(0, entryTracks(entry).findIndex(t => (t.note || '').trim()));
 }
 
 function artMark(text) {
@@ -222,13 +224,13 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   const [codeFor, setCodeFor] = useState(entry.slug);
   // The song the card is open at (The post as one card, below): the first
   // one with words, and the first one again on the next record.
-  const [songAt, setSongAt] = useState(() => firstWords(entryTracks(entry)));
+  const [songAt, setSongAt] = useState(() => opening(entry));
   const [songTurn, setSongTurn] = useState(0);
   if (codeFor !== entry.slug) {
     setCodeFor(entry.slug);
     setCoverCode(false);
     setTrailOpen(false);
-    setSongAt(firstWords(entryTracks(entry)));
+    setSongAt(opening(entry));
     setSongTurn(0);
   }
   // The dots are the page's ink, so the page asks for the file that matches
@@ -695,18 +697,20 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   // nobody pages through ten to find three; the bar of the song playing
   // fills as the preview runs — the horizon is the player.
   const carded = !edit.editing && !printing;
-  const song = parsedTracks[Math.min(songAt, parsedTracks.length - 1)];
+  const song = songAt >= 0 ? parsedTracks[Math.min(songAt, parsedTracks.length - 1)] : null;
   const songKey = `${entry.slug}:${songAt}`;
   const songNow = useSnippetState(songKey);
   const songPlay = song ? snippet.playFor(song.num, song.name) : null;
   const songOn = songNow.playing || songNow.waiting;
   const songShare = songNow.key && songNow.duration ? Math.min(songNow.at / songNow.duration, 1) : 0;
   const goSong = (i, { hear = false } = {}) => {
-    if (i < 0 || i >= parsedTracks.length) return;
-    const t = parsedTracks[i];
-    const play = snippet.playFor(t.num, t.name);
+    // -1 is the opening, the album note, where there is one.
+    if (i < (albumNotes ? -1 : 0) || i >= parsedTracks.length) return;
     setSongTurn(i - songAt);
     setSongAt(i);
+    if (i < 0) return;
+    const t = parsedTracks[i];
+    const play = snippet.playFor(t.num, t.name);
     // A song playing hands over to the next as you turn; a bar pressed plays.
     if (play && (hear || songOn)) toggleSnippet(`${entry.slug}:${i}`, play);
   };
@@ -1558,64 +1562,73 @@ export default function FullPostPage({ entry, references = [], authed = false, l
                   </span>
                 </div>
               )}
+              {/* The date and the way out to Apple Music, up with the album's
+                  own facts, so the box of words below has the room. */}
+              <div className="ln-card-meta">
+                {postedOn && <span>Posted {postedOn}</span>}
+                {snippet.recordLink && (
+                  <a href={snippet.recordLink} target="_blank" rel="noopener noreferrer">
+                    Apple Music <ArrowSquareOut size={11} weight="bold" aria-hidden="true" />
+                  </a>
+                )}
+              </div>
             </div>
           </div>
           {sentLine}
 
-          {albumNotes && (
-            <div>
-              <span className="ln-card-label">Album note</span>
-              <div className="ln-card-note">{linkedAlbumNotes}</div>
-              {editedOn && <p className="ln-edited">Edited {editedOn}</p>}
-            </div>
-          )}
-
-          {parsedTracks.length > 0 && (<>
           <div className="ln-card-rule" />
 
-          <div>
-            {/* The song you are on, over the bars: its title and its stars,
-                large — the point of the horizon (Miyel, 2026-11-19: "the
-                title becomes above… the title of the song and the stars
-                bigger"). No label, no count and no flag over it. */}
-            <div key={songAt} className={'ln-card-now ln-card-slide' + (songTurn < 0 ? ' ln-card-slide--back' : songTurn > 0 ? ' ln-card-slide--on' : '')}>
-              {(() => {
-                // The featured artists on a small line of their own, so a
-                // long credit does not stand the title five lines tall.
-                const feat = (song.name || '').match(/^(.*?)\s*[([]((?:feat\.|ft\.|with) [^)\]]*)[)\]]\s*$/i);
-                return (
-                  <span className="ln-card-now-title">
-                    {feat ? feat[1] : song.name}
-                    {feat && <span className="ln-card-now-feat">{feat[2]}</span>}
+          {/* ── One box of words, 2026-11-19 ─────────────────────────────
+              Miyel: "maybe there's only one box of text on the screen, and
+              whatever's on that screen changes by where you are in the
+              listen. So it's like you open it with something you want to
+              say, you have your tracks and what you thought of each one."
+              It opens on the album note with no song picked; play, a bar
+              or the song named at the right moves into the songs, and the
+              last one is the end ("it can also reach a natural end then
+              you close a post"). The box keeps its place and scrolls in
+              itself, so the horizon under it never moves. */}
+          <div
+            className="ln-card-box"
+            data-slide
+            onTouchStart={e => { songSwipe.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }; }}
+            onTouchEnd={e => {
+              const from = songSwipe.current;
+              songSwipe.current = null;
+              if (!from) return;
+              const dx = e.changedTouches[0].clientX - from.x;
+              const dy = e.changedTouches[0].clientY - from.y;
+              if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.5) goSong(songAt + (dx < 0 ? 1 : -1));
+            }}
+          >
+            <div key={songAt} className={'ln-card-slide' + (songTurn < 0 ? ' ln-card-slide--back' : songTurn > 0 ? ' ln-card-slide--on' : '')}>
+              {song ? (<>
+                <div className="ln-card-now">
+                  {(() => {
+                    // The featured artists on a small line of their own, so a
+                    // long credit does not stand the title five lines tall.
+                    const feat = (song.name || '').match(/^(.*?)\s*[([]((?:feat\.|ft\.|with) [^)\]]*)[)\]]\s*$/i);
+                    return (
+                      <span className="ln-card-now-title">
+                        {feat ? feat[1] : song.name}
+                        {feat && <span className="ln-card-now-feat">{feat[2]}</span>}
+                      </span>
+                    );
+                  })()}
+                  <span className="ln-card-now-rate">
+                    {song.stars > 0 && <StarRating rating={song.stars} size={19} />}
+                    {song.favorite && <Heart size={19} weight="fill" color="var(--fav)" aria-label="Favorite" />}
                   </span>
-                );
-              })()}
-              <span className="ln-card-now-rate">
-                {song.stars > 0 && <StarRating rating={song.stars} size={19} />}
-                {song.favorite && <Heart size={19} weight="fill" color="var(--fav)" aria-label="Favorite" />}
-              </span>
-            </div>
-              {/* Under its title, the song's note, and nothing at all where
-                  there is none (over the bars since 2026-11-19, Miyel: "move
-                  the note above the horizon too"): "if it says no notes, then we don't need to
-                  show that there's no notes." */}
-              {(song.note || '').trim() && (
-                <div
-                  className="ln-card-song"
-                  data-slide
-                  onTouchStart={e => { songSwipe.current = e.touches[0].clientX; }}
-                  onTouchEnd={e => {
-                    if (songSwipe.current == null) return;
-                    const dx = e.changedTouches[0].clientX - songSwipe.current;
-                    songSwipe.current = null;
-                    if (Math.abs(dx) > 40) goSong(songAt + (dx < 0 ? 1 : -1));
-                  }}
-                >
-                  <div key={songAt} className={'ln-card-slide' + (songTurn < 0 ? ' ln-card-slide--back' : songTurn > 0 ? ' ln-card-slide--on' : '')}>
-                    <div className="ln-card-words">{linkedTrackNotes[songAt]}</div>
-                  </div>
                 </div>
-              )}
+                {(song.note || '').trim() && <div className="ln-card-words">{linkedTrackNotes[songAt]}</div>}
+              </>) : albumNotes && (<>
+                <div className="ln-card-note">{linkedAlbumNotes}</div>
+                {editedOn && <p className="ln-edited">Edited {editedOn}</p>}
+              </>)}
+            </div>
+          </div>
+
+          {parsedTracks.length > 0 && (<>
             <div
               className="ln-card-horizon"
               /* A slide along the horizon moves through the album, never to
@@ -1645,11 +1658,12 @@ export default function FullPostPage({ entry, references = [], authed = false, l
                 </button>
               ))}
             </div>
-          </div>
 
           <div className="ln-card-turn">
             {(() => {
-              const before = parsedTracks[songAt - 1];
+              // Back from the first song is the album note; on from the
+              // last is nothing — the end.
+              const before = songAt === 0 && albumNotes ? { name: 'Album note' } : parsedTracks[songAt - 1];
               const after = parsedTracks[songAt + 1];
               return (
                 <>
@@ -1659,9 +1673,10 @@ export default function FullPostPage({ entry, references = [], authed = false, l
                   <button
                     type="button"
                     className="ln-card-play"
-                    disabled={!songPlay}
-                    onClick={() => songPlay && toggleSnippet(songKey, songPlay)}
-                    aria-label={songOn ? `Pause the preview of ${song.name}` : `Play a preview of ${song.name}`}
+                    disabled={song ? !songPlay : !snippet.playFor(parsedTracks[0].num, parsedTracks[0].name)}
+                    /* From the opening, play is the beginning: the first song. */
+                    onClick={() => (song ? songPlay && toggleSnippet(songKey, songPlay) : goSong(0, { hear: true }))}
+                    aria-label={songOn ? `Pause the preview of ${song?.name}` : `Play a preview of ${(song || parsedTracks[0]).name}`}
                   >
                     {songOn ? <Pause size={16} weight="fill" /> : <Play size={16} weight="fill" />}
                   </button>
@@ -1674,14 +1689,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
           </div>
           </>)}
 
-          {snippet.recordLink && (
-            <div className="ln-doors">
-              <SnippetLink href={snippet.recordLink}>Apple Music</SnippetLink>
-            </div>
-          )}
           {wayIn && <div className="ln-message-foot">{wayIn}</div>}
-          <div className="ln-card-rule" />
-          <div className="ln-card-posted">Posted {postedOn}</div>
         </article>
       )}
       <section className="ln-screen-one" style={printing ? { '--print-ratio': FRAMES[size].w / FRAMES[size].h } : undefined}>
