@@ -2673,13 +2673,13 @@ html[data-printing] .sitenav-row { display: none; }
    it holds still and only the box moves — "I don't want this sense of
    scrolling." */
 @media (max-width: 768px) {
-  .ln-card-box { max-height: 52dvh; overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y; }
+  .ln-card-box { touch-action: pan-y; }
+  .ln-card-box:empty, .ln-card-box > .ln-card-slide:empty { display: none; }
   .lay--over-journal .ln-carded > .ln-card {
-    height: calc(100dvh - var(--hn-bar-h, 80px) - 6px); min-height: 0;
+    min-height: calc(100dvh - var(--hn-bar-h, 80px) - 6px);
     padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
   }
   .lay--over-journal .ln-entry--folder .ln-carded > .ln-card { padding-bottom: calc(var(--ff-h) + 96px); }
-  .lay--over-journal .ln-carded > .ln-card > .ln-card-box { flex: 1 1 0; min-height: 0; max-height: none; }
   .ln-card-box .ln-card-slide { gap: 12px; }
 }
 @media (max-width: 768px) {

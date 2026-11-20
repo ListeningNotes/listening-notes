@@ -1604,39 +1604,6 @@ export default function FullPostPage({ entry, references = [], authed = false, l
 
           <div className="ln-card-rule" />
 
-          {/* ── One box of words, 2026-11-19 ─────────────────────────────
-              Miyel: "maybe there's only one box of text on the screen, and
-              whatever's on that screen changes by where you are in the
-              listen. So it's like you open it with something you want to
-              say, you have your tracks and what you thought of each one."
-              It opens on the album note with no song picked; play, a bar
-              or the song named at the right moves into the songs, and the
-              last one is the end ("it can also reach a natural end then
-              you close a post"). The box keeps its place and scrolls in
-              itself, so the horizon under it never moves. */}
-          <div
-            className="ln-card-box"
-            data-slide
-            onTouchStart={e => { songSwipe.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }; }}
-            onTouchEnd={e => {
-              const from = songSwipe.current;
-              songSwipe.current = null;
-              if (!from) return;
-              const dx = e.changedTouches[0].clientX - from.x;
-              const dy = e.changedTouches[0].clientY - from.y;
-              if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.5) goSong(songAt + (dx < 0 ? 1 : -1));
-            }}
-          >
-            <div key={songAt} className={'ln-card-slide' + (songTurn < 0 ? ' ln-card-slide--back' : songTurn > 0 ? ' ln-card-slide--on' : '')}>
-              {song ? (<>
-                {(song.note || '').trim() && <div className="ln-card-words">{linkedTrackNotes[songAt]}</div>}
-              </>) : albumNotes && (<>
-                <div className="ln-card-note">{linkedAlbumNotes}</div>
-                {editedOn && <p className="ln-edited">Edited {editedOn}</p>}
-              </>)}
-            </div>
-          </div>
-
           {parsedTracks.length > 0 && (<>
             <div
               className="ln-card-horizon"
@@ -1697,6 +1664,39 @@ export default function FullPostPage({ entry, references = [], authed = false, l
             })()}
           </div>
           </>)}
+
+          {/* ── One box of words, 2026-11-19 ─────────────────────────────
+              Miyel: "maybe there's only one box of text on the screen, and
+              whatever's on that screen changes by where you are in the
+              listen. So it's like you open it with something you want to
+              say, you have your tracks and what you thought of each one."
+              It opens on the album note with no song picked; play, a bar
+              or the song named at the right moves into the songs, and the
+              last one is the end ("it can also reach a natural end then
+              you close a post"). The box keeps its place and scrolls in
+              itself, so the horizon under it never moves. */}
+          <div
+            className="ln-card-box"
+            data-slide
+            onTouchStart={e => { songSwipe.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }; }}
+            onTouchEnd={e => {
+              const from = songSwipe.current;
+              songSwipe.current = null;
+              if (!from) return;
+              const dx = e.changedTouches[0].clientX - from.x;
+              const dy = e.changedTouches[0].clientY - from.y;
+              if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.5) goSong(songAt + (dx < 0 ? 1 : -1));
+            }}
+          >
+            <div key={songAt} className={'ln-card-slide' + (songTurn < 0 ? ' ln-card-slide--back' : songTurn > 0 ? ' ln-card-slide--on' : '')}>
+              {song ? (<>
+                {(song.note || '').trim() && <div className="ln-card-words">{linkedTrackNotes[songAt]}</div>}
+              </>) : albumNotes && (<>
+                <div className="ln-card-note">{linkedAlbumNotes}</div>
+                {editedOn && <p className="ln-edited">Edited {editedOn}</p>}
+              </>)}
+            </div>
+          </div>
 
           {wayIn && <div className="ln-message-foot">{wayIn}</div>}
         </article>
