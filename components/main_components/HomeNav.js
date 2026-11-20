@@ -1529,7 +1529,12 @@ export default function HomeNav() {
     if (!el) return;
     // A room pressed puts the card away on the way there.
     setCardOpen(false);
-    el.scrollTo({ left: (index - RAIL_FROM) * el.clientWidth, behavior: ease() });
+    // On a phone the rooms are places you go on purpose, not panes you swipe
+    // through (her home brief, 2026-11-20): the rail no longer scrolls by
+    // hand (nav.css), and a press goes straight there — no slide, no fade.
+    // Each room stays mounted, so its scroll is where it was left.
+    const phone = window.matchMedia('(max-width: 768px)').matches;
+    el.scrollTo({ left: (index - RAIL_FROM) * el.clientWidth, behavior: phone ? 'instant' : ease() });
   }
 
   // Back to the top of whichever pane you are in. The band across the top of a

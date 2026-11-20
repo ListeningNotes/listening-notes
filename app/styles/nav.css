@@ -3794,3 +3794,14 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
   font-family: var(--font-label); font-size: 11px; letter-spacing: 0.04em; color: var(--ink-faint);
 }
+
+/* ── No swiping between rooms, 2026-11-20 ───────────────────────────────────
+   Miyel's home brief: "No sideways rail between rooms. Home, Friends and
+   Community are reached only by the header glyphs." On a phone the rail
+   keeps its shape — every room mounted side by side, so each keeps its
+   scroll — but a finger can no longer move it; only a glyph's press does
+   (HomeNav, goTo). Which also ends the sideways slip out of a room's lower
+   half that the note over .hn-rail calls unsolved. */
+@media (max-width: 768px) {
+  .hn-rail { overflow-x: hidden; scroll-snap-type: none; }
+}
