@@ -783,9 +783,11 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       if (songOn && songPlay) toggleSnippet(songKey, songPlay);
       return;
     }
+    // Opening is silent (Miyel, 2026-11-19: "what if it's too loud on
+    // click and they don't know it's going to play music?"): a song opened
+    // stops whatever was playing, and plays only from its own play button.
+    stopSnippet(`${entry.slug}:`);
     setSongAt(i);
-    const play = snippet.playFor(t.num, t.name);
-    if (play) toggleSnippet(`${entry.slug}:${i}`, play);
   };
 
   // ── When there is nothing under the fold ────────────────────────────────
@@ -1675,10 +1677,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
                 return (
                   <li key={i} className={'ln-card-shelf' + (open ? ' ln-card-shelf--open' : '')}>
                     <button type="button" className={'ln-card-row' + (words ? ' ln-card-row--words' : '')} onClick={e => openSong(i, e.currentTarget)} aria-expanded={open}>
-                      <span className="ln-card-row-num">
-                        {/* Playing, the site's one green: the live light. */}
-                        {open && songOn ? <i className="ln-card-row-live" aria-label="Playing" /> : (t.num || i + 1)}
-                      </span>
+                      <span className="ln-card-row-num">{open ? null : (t.num || i + 1)}</span>
                       <span className="ln-card-row-name">{t.name}</span>
                       <span className="ln-card-row-rate">
                         {t.favorite && <Heart size={open ? 15 : 11} weight="fill" color="var(--fav)" aria-label="Favorite" />}
@@ -1686,6 +1685,21 @@ export default function FullPostPage({ entry, references = [], authed = false, l
                       </span>
                       <i className="ln-card-row-dot" aria-hidden="true" />
                     </button>
+                    {/* Open, its number becomes its play button: press to hear
+                        it, and the live light while it plays. */}
+                    {open && (() => {
+                      const play = snippet.playFor(t.num, t.name);
+                      return play && (
+                        <button
+                          type="button"
+                          className="ln-card-row-play"
+                          onClick={() => toggleSnippet(`${entry.slug}:${i}`, play)}
+                          aria-label={songOn ? `Pause ${t.name}` : `Play a preview of ${t.name}`}
+                        >
+                          {songOn ? <i className="ln-card-row-live" aria-hidden="true" /> : <Play size={12} weight="fill" aria-hidden="true" />}
+                        </button>
+                      );
+                    })()}
                     <div className="ln-card-shelf-body" inert={!open}>
                       <div>
                         {words && <div className="ln-card-words">{linkedTrackNotes[i]}</div>}
