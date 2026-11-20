@@ -533,7 +533,6 @@ export default function Issue({ keeper = false }) {
   return (
     <div className={'is' + (picked !== null ? ' is--picked' : '')} ref={setRoot}>
       {read.stale && <p className="is-stale">Couldn’t refresh this month’s question; this is how it was.</p>}
-      {issue.standIn && <p className="is-stale">A stand-in issue of your own records, for trying the globe.</p>}
       <div className={'is-stage' + (wide ? '' : ' is-stage--globe')} ref={setStage}>
         {wide
           ? <Ring records={albums} picked={picked} onPick={setPicked} />

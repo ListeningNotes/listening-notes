@@ -2791,3 +2791,18 @@ html[data-printing] .sitenav-row { display: none; }
   .ln-card-row-play .ln-card-row-live { width: 7px; height: 7px; }
   .ln-card-shelf--open .ln-card-row { grid-template-columns: 32px minmax(0, 1fr) auto 6px; }
 }
+/* The song's card on a phone, from a link as from the wall; a desk keeps
+   its page. The card's pieces and the page's are both drawn, and each
+   width shows its own. */
+@media (min-width: 769px) {
+  .tn .ln-card-meta, .tn-glyph { display: none; }
+}
+@media (max-width: 768px) {
+  .tn--carded .tn-chips, .tn--carded .tn-posted, .tn--carded .tn-snippet { display: none; }
+  .tn--carded .tn-card {
+    position: relative; display: flex; flex-direction: column; gap: 14px;
+    max-width: none; box-sizing: border-box;
+    margin: 92px 16px 40px; padding: 18px;
+    background: var(--card); border-radius: var(--panel-r); box-shadow: var(--lift-1);
+  }
+}

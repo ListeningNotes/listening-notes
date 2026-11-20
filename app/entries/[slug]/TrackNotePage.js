@@ -292,18 +292,22 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
   // own (the ··· on the card), the marks as glyphs beside the stars, the
   // date and the ways out in one small line, and the note under them. The
   // folded corner is what says it is a song.
-  const carded = Boolean(headerSlot) && !composing;
+  // Read on a phone, from the wall or from a link alike (the stylesheet
+  // keeps a desk's page as it was); over the journal, the card is also the
+  // sheet and carries the ···.
+  const carded = !composing;
+  const sheeted = carded && Boolean(headerSlot);
   const songNow = useSnippetState(`${entry.slug}:song`);
   const songOn = songNow.playing || songNow.waiting;
   useEffect(() => {
-    if (!carded) return undefined;
+    if (!sheeted) return undefined;
     document.documentElement.setAttribute('data-post-open', '');
     return () => document.documentElement.removeAttribute('data-post-open');
-  }, [carded]);
+  }, [sheeted]);
   useEffect(() => () => stopSnippet(`${entry.slug}:`), [entry.slug]);
   useEffect(() => {
-    if (headerSlot) headerSlot.setAttribute('class', 'lay-header ln-entry' + (carded ? ' ln-entry--carded' : ''));
-  }, [headerSlot, carded]);
+    if (headerSlot) headerSlot.setAttribute('class', 'lay-header ln-entry' + (sheeted ? ' ln-entry--carded' : ''));
+  }, [headerSlot, sheeted]);
   const note = writing ? written.note : correcting ? edit.draft.notes : (entry.notes || '');
   const postedOn = entry.posted_at
     ? new Date(entry.posted_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
@@ -458,7 +462,7 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
               </span>
             )}
             <div className="tn-said">
-              {carded && keeperTools && <div className="ln-card-tools">{keeperTools}</div>}
+              {sheeted && keeperTools && <div className="ln-card-tools">{keeperTools}</div>}
               <h1 className="tn-song">{entry.song}</h1>
               <p className="tn-record">{[entry.album, entry.artist].filter(Boolean).join(' · ')}</p>
               <div className="tn-marks">
@@ -471,18 +475,18 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
                   />
                 ) : (<>
                   {rating > 0 && <StarRating rating={rating} size={17} />}
-                  {carded && isFavorite && <Heart size={17} weight="fill" color="var(--fav)" aria-label="Favorite" />}
-                  {carded && isFormative && <Fingerprint size={17} weight="bold" color="var(--formative)" aria-label="Formative" />}
+                  {carded && isFavorite && <Heart className="tn-glyph" size={17} weight="fill" color="var(--fav)" aria-label="Favorite" />}
+                  {carded && isFormative && <Fingerprint className="tn-glyph" size={17} weight="bold" color="var(--formative)" aria-label="Formative" />}
                 </>)}
               </div>
               {/* Read: the two marks as the chips an album entry wears. */}
-              {!composing && !carded && (isFavorite || isFormative) && (
+              {!composing && (isFavorite || isFormative) && (
                 <div className="tn-chips">
                   {isFavorite && <Chip tone="fav">Favorite</Chip>}
                   {isFormative && <Chip tone="formative">Formative</Chip>}
                 </div>
               )}
-              {!writing && !carded && postedOn && <p className="tn-posted">Posted {postedOn}</p>}
+              {!writing && postedOn && <p className="tn-posted">Posted {postedOn}</p>}
               {/* The card's one small line: the date, the preview (the live
                   light while it plays), Apple Music, and the keeper's Full
                   album. */}
@@ -535,7 +539,7 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
             </div>
           )}
 
-          {!composing && !carded && (songPlay || songLink || wholeAlbum) && (
+          {!composing && (songPlay || songLink || wholeAlbum) && (
             <div className="tn-snippet">
               {songPlay && (
                 <>
