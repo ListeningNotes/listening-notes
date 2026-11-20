@@ -47,7 +47,7 @@ import StarRating from '../../../components/main_components/StarRating';
 import StarPicker from '../../../components/session_components/StarRating';
 import { editStamp } from '../../../library/entry_formatter';
 import { useEntryEditor } from '../../../hooks/useEntryEditor';
-import { useSnippet, toggleSnippet, useSnippetState, stopSnippet } from '../../../hooks/useSnippet';
+import { useSnippet, toggleSnippet, useSnippetState, stopSnippet, useQuiet } from '../../../hooks/useSnippet';
 import { SnippetLink } from '../../../components/main_components/Slug_Page/SnippetButton';
 
 // ── Printing, 2026-09-13 ──────────────────────────────────────────────────
@@ -773,6 +773,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     frame = requestAnimationFrame(step);
     return () => cancelAnimationFrame(frame);
   }, [songAt]);
+  const quiet = useQuiet();
   const openSong = (i, row) => {
     const t = parsedTracks[i];
     if (!t) return;
@@ -783,11 +784,14 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       if (songOn && songPlay) toggleSnippet(songKey, songPlay);
       return;
     }
-    // Opening is silent (Miyel, 2026-11-19: "what if it's too loud on
-    // click and they don't know it's going to play music?"): a song opened
-    // stops whatever was playing, and plays only from its own play button.
+    // A song opened plays (Miyel, 2026-11-19: "it had better charm, and I
+    // think it had better flow to just be autoplay") — unless the sound
+    // beside the moon is off, when it opens quietly and its play button
+    // waits. Whatever was playing stops either way.
     stopSnippet(`${entry.slug}:`);
     setSongAt(i);
+    const play = quiet ? null : snippet.playFor(t.num, t.name);
+    if (play) toggleSnippet(`${entry.slug}:${i}`, play);
   };
 
   // ── When there is nothing under the fold ────────────────────────────────

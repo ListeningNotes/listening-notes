@@ -275,6 +275,30 @@ export function stopSnippet(prefix) {
   if (deck().state.key?.startsWith(prefix)) { player().pause(); reset(); }
 }
 
+// ── Quiet, 2026-11-19 ───────────────────────────────────────────────────
+// A post plays a song as it opens; this is the switch that says not to,
+// beside the moon in the top row (Miyel: "maybe there can be another
+// control up there by the moon that could be like a silent mode … I take
+// that from video game logic"). Kept in this browser, like the moon.
+// Quiet stops what is playing; a play button pressed still plays.
+const QUIET_KEY = 'ln-quiet';
+const quietListeners = new Set();
+function subscribeQuiet(fn) {
+  quietListeners.add(fn);
+  window.addEventListener('storage', fn);
+  return () => { quietListeners.delete(fn); window.removeEventListener('storage', fn); };
+}
+const readQuiet = () => { try { return localStorage.getItem(QUIET_KEY) === '1'; } catch { return false; } };
+export function useQuiet() {
+  return useSyncExternalStore(subscribeQuiet, readQuiet, () => false);
+}
+export function toggleQuiet() {
+  const quiet = !readQuiet();
+  try { localStorage.setItem(QUIET_KEY, quiet ? '1' : '0'); } catch { /* a private window keeps it for the page */ }
+  if (quiet && deck().state.key) { player().pause(); reset(); }
+  quietListeners.forEach(fn => fn());
+}
+
 function subscribe(fn) { const d = deck(); d.listeners.add(fn); return () => d.listeners.delete(fn); }
 
 // The player as one button sees it: itself, or nothing.

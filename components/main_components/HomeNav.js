@@ -70,7 +70,8 @@
 import { startTransition, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { ArrowsLeftRight, CaretDown, Globe } from '@phosphor-icons/react';
+import { ArrowsLeftRight, CaretDown, Globe, SpeakerHigh, SpeakerSlash } from '@phosphor-icons/react';
+import { useQuiet, toggleQuiet } from '../../hooks/useSnippet';
 import { announce, useListeningBeacon } from '../../hooks/useListeningBeacon';
 import { useSpineWidth } from '../../hooks/useSpineWidth';
 import { useTheme } from './Lightswitch';
@@ -1652,7 +1653,11 @@ export default function HomeNav() {
   // placed twice: the bar's right end on a desk, beside the face in the
   // phone's top row (Header.js, 2026-10-22 — her mockup's place for it, to
   // settle in place).
-  const lights = (
+  // And the sound beside it, 2026-11-19: on, a post plays a song as it
+  // opens; off, it keeps quiet (hooks/useSnippet.js, Quiet). The same
+  // classes as the moon, so it stands and stands down where the moon does.
+  const quiet = useQuiet();
+  const lights = (<>
     <button className="hp-icon-btn hn-lights" onClick={toggleTheme} aria-label="Toggle theme">
       {theme === 'dark' ? (
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
@@ -1660,7 +1665,10 @@ export default function HomeNav() {
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z"/></svg>
       )}
     </button>
-  );
+    <button className="hp-icon-btn hn-lights hn-sound" onClick={toggleQuiet} aria-label={quiet ? 'Sound off: songs open quietly' : 'Sound on: songs play as they open'} aria-pressed={!quiet}>
+      {quiet ? <SpeakerSlash size={18} weight="regular" aria-hidden="true" /> : <SpeakerHigh size={18} weight="regular" aria-hidden="true" />}
+    </button>
+  </>);
 
   // ── The top row's stops, 2026-10-22 ─────────────────────────────────────
   // The keeper's three rooms, at the panes they are on the rail; a visitor
