@@ -97,10 +97,31 @@ function useFootTaken() {
 // with none: Home says Start a listen, Community says Add yours (the issue's
 // one control, moved down from over the globe), and Friends has no bar.
 // `on` is the pane: 'home', 'community' or anything else.
+// ── No floating bar on a phone, 2026-11-20 ─────────────────────────────────
+// Miyel, of the bar: it floats over the wall, takes the foot, and reads as a
+// button from another app — all three. On a phone a listen starts from the
+// first tile on the wall (ListenTile, below) and is gone back into by the
+// live dot in the top row's mark (Header.js); only Community's Add yours
+// keeps the bar. A desk keeps it as it was.
+function usePhone() {
+  const [phone, setPhone] = useState(false);
+  useEffect(() => {
+    const q = window.matchMedia('(max-width: 768px)');
+    const read = () => setPhone(q.matches);
+    read();
+    q.addEventListener('change', read);
+    return () => q.removeEventListener('change', read);
+  }, []);
+  return phone;
+}
+
 export default function ListenBar({ held, live = false, on = 'home' }) {
   const taken = useFootTaken();
+  const phone = usePhone();
   const [addable, addYours] = useAddYours();
-  const shown = !!held || on === 'home' || (on === 'community' && addable);
+  const shown = phone
+    ? !held && on === 'community' && addable
+    : !!held || on === 'home' || (on === 'community' && addable);
   // Said on the document while the bar is up, so a page laid over the
   // journal can keep its last lines clear of it (nav.css, html[data-listen]).
   useEffect(() => {
@@ -165,6 +186,32 @@ export default function ListenBar({ held, live = false, on = 'home' }) {
           Live
         </span>
       )}
+    </Link>
+  );
+}
+
+// ── The Listen tile, 2026-11-20 ─────────────────────────────────────────────
+// The wall's first tile on a phone, the keeper's alone: the album not logged
+// yet. Pressed, it raises the listen, as the bar did. While a listen is in
+// hand it is that album, its cover, with the live dot while the beacon says
+// so, and pressed it brings the listen back up (Miyel's pick of three,
+// 2026-11-20: "the tile, and the live dot").
+export function ListenTile({ held, live = false }) {
+  if (!held) {
+    return (
+      <Link href="/session" className="lt" aria-label="Start a listen">
+        <span className="lt-plus" aria-hidden="true">+</span>
+        <span className="lt-word">Listen</span>
+      </Link>
+    );
+  }
+  return (
+    <Link href="/session" className="lt lt--held" aria-label={`Back to ${held.album}`} title={`Back to ${held.album}`}>
+      {held.artUrl ? <img className="lt-art" src={held.artUrl} alt="" aria-hidden="true" /> : null}
+      <span className="lt-held">
+        {live && <i className="lt-live" aria-hidden="true" />}
+        <span className="lt-album">{held.album}</span>
+      </span>
     </Link>
   );
 }

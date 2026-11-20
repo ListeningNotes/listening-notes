@@ -494,6 +494,10 @@ function Journal({
   records = null, tile = null, tail = null, filters = true, viewKey = VIEW_KEY,
   empty = null, seek = null, before = null, onOrder = null, shared = null,
   densities: offered = null, densityKey = undefined, printable = false,
+  // Drawn at the head of the grid, after its first band's heading: home's
+  // Listen tile (ListenBar.js). Not in the list or the feed, which are not
+  // tiles.
+  first = null,
 }) {
   const [ownEntries, setOwnEntries] = useState([]);
   const [ownLoading, setOwnLoading] = useState(true);
@@ -1398,6 +1402,7 @@ function Journal({
                     )}
                   </div>
                 )}
+                {i === 0 && first && density !== 'list' && density !== 'feed' && first}
                 {band && isFolded(band.key) ? null : tile ? tile(album, density) : (
                   <AlbumTile
                     album={album}

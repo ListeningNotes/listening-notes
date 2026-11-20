@@ -43,11 +43,17 @@
 // call, 2026-10-22), and draws none of it (nav.css).
 'use client';
 
+import Link from 'next/link';
+
 import { Globe, House, User, Users, X } from '@phosphor-icons/react';
 import { useBookplate } from './Bookplate';
 
 export default function Header({
   pane, stops, goTo, onHere = null, onFace, cardOpen = false, news = {}, lights = null, mark = null,
+  // While a listen is live, the mark's green dot is the way back into it
+  // (the home brief, 2026-11-20: the floating bar went, and the dot already
+  // says live on every screen). Null when nothing is live.
+  backToListen = null,
   // A tap on the row's own ground — between its buttons, on the mark, or the
   // strip above it under the clock — back to the top (2026-11-08, Miyel: "can
   // tapping top of the screen bring you back to top"). A phone's own status-bar
@@ -74,7 +80,9 @@ export default function Header({
         <span className="hdr-face-x" aria-hidden="true"><X size={16} weight="bold" /></span>
       </button>
       {lights}
-      {stops.length > 0 && <span className="hdr-mark hdr-mark--middle" aria-hidden="true">{mark}</span>}
+      {stops.length > 0 && (backToListen
+        ? <Link href="/session" className="hdr-mark hdr-mark--middle hdr-mark--back" aria-label={backToListen}>{mark}</Link>
+        : <span className="hdr-mark hdr-mark--middle" aria-hidden="true">{mark}</span>)}
       {stops.length > 0 ? (
         <nav className="hdr-stops" aria-label="The journal">
           {stops.map(stop => {

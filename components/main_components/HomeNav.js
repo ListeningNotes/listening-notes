@@ -77,7 +77,7 @@ import { useSpineWidth } from '../../hooks/useSpineWidth';
 import { useTheme } from './Lightswitch';
 import { useBookplate } from './Bookplate';
 import ListeningBeacon from './ListeningBeacon';
-import ListenBar from './ListenBar';
+import ListenBar, { ListenTile } from './ListenBar';
 import Journal from './Journal';
 import Header from './Header';
 import PinnedLetter from './PinnedLetter';
@@ -1704,6 +1704,7 @@ export default function HomeNav() {
         news={{ people: waiting?.friends === true }}
         lights={lights}
         mark={mark('hdr-mark-svg')}
+        backToListen={authed && isLive && inHand ? `Back to ${inHand.album}` : null}
       />
       {/* ── The ground the header stands on, 2026-09-20 ──────────────────
           The bar is 80px of opaque page colour and the crown hangs below it,
@@ -2110,6 +2111,7 @@ export default function HomeNav() {
                   loading={loading}
                   scroller={wallScroller}
                   printable={authed}
+                  first={authed ? <ListenTile held={inHand} live={isLive} /> : null}
                 />
               </div>
             </div>

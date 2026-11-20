@@ -3805,3 +3805,39 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
 @media (max-width: 768px) {
   .hn-rail { overflow-x: hidden; scroll-snap-type: none; }
 }
+
+/* ── The wall is home, 2026-11-20 ───────────────────────────────────────────
+   Miyel's home brief: "Home is the wall… The keeper no longer sees their own
+   beacon. They know what they are playing; the header's dot says they are
+   live from every screen." On a phone the keeper's home is the top row, the
+   wall's line and the covers; the beacon stays a visitor's (HomeNav still
+   draws it, for them and for a desk). The wall's first tile starts a listen
+   and the mark's live dot goes back into one (ListenBar.js, Header.js). */
+@media (max-width: 768px) {
+  .hn--keeper .hn-pane--home .hn-floor--beacon { display: none; }
+  .hn--keeper .hn-pane--home .hn-floor--wall { padding-top: var(--hn-bar-h); }
+  /* The live dot, pressable: the mark stops letting presses through only
+     while it is a way back in. */
+  .hdr-mark--back { pointer-events: auto; -webkit-tap-highlight-color: transparent; }
+}
+/* The Listen tile: the album not logged yet, a dashed square in the
+   wall's grid; holding a listen, that album's cover. */
+.lt {
+  position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  aspect-ratio: 1 / 1; border-radius: 10px; overflow: hidden;
+  border: 1.5px dashed color-mix(in srgb, var(--ink) 30%, transparent);
+  color: var(--ink-soft); text-decoration: none; -webkit-tap-highlight-color: transparent;
+}
+.lt-plus { font-family: var(--font-sans); font-size: 26px; line-height: 1; font-weight: 300; }
+.lt-word { font-family: var(--font-label); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; }
+.lt--held { border: 0; color: #fff; justify-content: flex-end; align-items: stretch; }
+.lt-art { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.lt-held {
+  position: relative; display: flex; align-items: center; gap: 6px; padding: 18px 8px 7px;
+  background: linear-gradient(to top, rgba(0,0,0,0.55), rgba(0,0,0,0));
+  font-family: var(--font-label); font-size: 8.5px; letter-spacing: 0.08em; text-transform: uppercase;
+}
+.lt-album { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lt-live { flex: none; width: 7px; height: 7px; border-radius: 50%; background: #7cff9b; animation: hp-logo-dot-pulse 2.5s ease-in-out infinite; }
+/* A desk keeps its bar; the tile is a phone's. */
+@media (min-width: 769px) { .arc-grid .lt { display: none; } }
