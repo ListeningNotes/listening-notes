@@ -716,9 +716,32 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     if (carded && songAt < 0) stopSnippet(`${entry.slug}:`);
   }, [carded, songAt, entry.slug]);
   useEffect(() => () => stopSnippet(`${entry.slug}:`), [entry.slug]);
-  const openSong = i => {
+  const openSong = (i, row) => {
     const t = parsedTracks[i];
     if (!t) return;
+    // The song opened comes to the middle of the screen, so what is left
+    // above and below it, and the end, can be seen (Miyel, 2026-11-19: "the
+    // open song should always be like centered"). Measured before it opens:
+    // where its row is once the song open above it (if any) has folded,
+    // and how tall it will be with its note out.
+    const li = row?.closest('li');
+    const scroller = row?.closest('.ln-screens');
+    if (li && scroller && i !== songAt) {
+      const before = songAt >= 0 && songAt < i ? li.parentElement.children[songAt]?.querySelector('.ln-card-shelf-body') : null;
+      const tall = row.offsetHeight + 14 + (li.querySelector('.ln-card-shelf-body > div')?.scrollHeight || 0);
+      const top = li.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop - (before?.offsetHeight || 0);
+      scroller.scrollTo({ top: top + tall / 2 - scroller.clientHeight / 2, behavior: 'smooth' });
+      // And once it has grown (the shelf's 0.28s, and the first glide), again from where it really
+      // is: near the end of the list there was no room to centre it until
+      // its note was out.
+      window.setTimeout(() => {
+        if (!li.classList.contains('ln-card-shelf--open')) return;
+        const box = li.getBoundingClientRect();
+        const room = scroller.getBoundingClientRect();
+        const off = box.top + box.height / 2 - (room.top + room.height / 2);
+        if (Math.abs(off) > 12) scroller.scrollBy({ top: off, behavior: 'smooth' });
+      }, 480);
+    }
     if (i === songAt) {
       setSongAt(-1);
       if (songOn && songPlay) toggleSnippet(songKey, songPlay);
@@ -1616,7 +1639,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
                 const words = (t.note || '').trim();
                 return (
                   <li key={i} className={'ln-card-shelf' + (open ? ' ln-card-shelf--open' : '')}>
-                    <button type="button" className={'ln-card-row' + (words ? ' ln-card-row--words' : '')} onClick={() => openSong(i)} aria-expanded={open}>
+                    <button type="button" className={'ln-card-row' + (words ? ' ln-card-row--words' : '')} onClick={e => openSong(i, e.currentTarget)} aria-expanded={open}>
                       <span className="ln-card-row-num">
                         {/* Playing, the site's one green: the live light. */}
                         {open && songOn ? <i className="ln-card-row-live" aria-label="Playing" /> : (t.num || i + 1)}
@@ -1637,26 +1660,6 @@ export default function FullPostPage({ entry, references = [], authed = false, l
                 );
               })}
             </ol>
-          )}
-
-          {/* The horizon, at the foot: the album's shape as the card's last
-              line, so the end of it is felt (Miyel, 2026-11-19: "maybe it
-              could be down there at the bottom, like as a footer … it feels
-              like there's no resistance to show that I'm at the bottom").
-              A bar pressed opens its song on the shelf above. */}
-          {parsedTracks.length > 0 && (
-            <div className="ln-card-foot" style={{ gridTemplateColumns: `repeat(${parsedTracks.length}, 1fr)` }}>
-              {parsedTracks.map((t, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  className={'ln-card-foot-bar' + (i === songAt ? ' ln-card-foot-bar--on' : '') + ((t.note || '').trim() ? ' ln-card-foot-bar--words' : '')}
-                  style={{ '--r': t.stars || 0 }}
-                  onClick={() => openSong(i)}
-                  aria-label={`${t.num || i + 1}. ${t.name}`}
-                />
-              ))}
-            </div>
           )}
 
           {wayIn && <div className="ln-message-foot">{wayIn}</div>}
