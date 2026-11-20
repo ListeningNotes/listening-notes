@@ -1657,7 +1657,6 @@ export default function FullPostPage({ entry, references = [], authed = false, l
           </div>
           {sentLine}
 
-          <div className="ln-card-rule" />
 
           {albumNotes && (
             <div className="ln-card-box">

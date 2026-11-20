@@ -76,7 +76,7 @@ export default function LayerWaiting({ slug, authed = false }) {
       + (onward ? ' ln-entry--scrolled ln-entry--crowning' : '')
       // A post arrives as its card, with no row over it on a phone
       // (FullPostPage, The post as one card).
-      + (!known?.song ? ' ln-entry--carded' : ''));
+      + ' ln-entry--carded');
     // Where the handover stands, for the row this is about to draw and for
     // the swipe that may leave from it.
     if (onward) document.documentElement.style.setProperty('--ln-turn', '1');

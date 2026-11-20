@@ -2762,3 +2762,25 @@ html[data-printing] .sitenav-row { display: none; }
      fold, against the glide that already accounts for them. */
   .ln-screens.ln-carded { overflow-anchor: none; }
 }
+/* ── A song's post is the album card, 2026-11-19 ────────────────────────────
+   The same white card as an album's (TrackNotePage, carded): cover beside
+   its facts, the marks as glyphs, one small line of date and ways out, the
+   note under it with no rule between. Its folded corner is the difference. */
+@media (max-width: 768px) {
+  .lay--over-journal .tn--carded .tn-card {
+    position: relative; display: flex; flex-direction: column; gap: 14px;
+    max-width: none; box-sizing: border-box;
+    margin: 6px 0 0; padding: 18px 18px env(safe-area-inset-bottom, 0px);
+    min-height: calc(100dvh - var(--hn-bar-h, 80px) - 6px);
+    background: var(--card); border-radius: var(--panel-r) var(--panel-r) 0 0; box-shadow: var(--lift-1);
+  }
+  .tn--carded .tn-head { display: grid; grid-template-columns: 116px minmax(0, 1fr); gap: 16px; align-items: center; justify-content: stretch; }
+  .tn--carded .tn-cover { width: 116px; height: 116px; border-radius: 12px; box-shadow: none; }
+  .tn--carded .tn-said { display: flex; flex-direction: column; gap: 6px; }
+  .tn--carded .ln-card-tools + .tn-song { padding-right: 34px; }
+  .tn--carded .tn-record { margin: 0; font-family: var(--font-label); font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-soft); }
+  .tn--carded .tn-marks { margin-top: 0; gap: 6px; min-height: 0; }
+  .tn--carded .tn-body { margin-top: 4px; }
+  .tn--carded .tn-note { font-size: 15.5px; line-height: 1.7; }
+  .ln-card-meta button { display: inline-flex; align-items: center; gap: 5px; padding: 0; border: 0; background: none; font: inherit; letter-spacing: inherit; text-transform: inherit; color: var(--ink-soft); cursor: pointer; }
+}

@@ -68,7 +68,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createPortal } from 'react-dom';
-import { Fingerprint, Heart, PaperPlaneTilt, VinylRecord, X } from '@phosphor-icons/react';
+import { ArrowSquareOut, Fingerprint, Heart, PaperPlaneTilt, Play, VinylRecord, X } from '@phosphor-icons/react';
 import { parseRating, editStamp, lookup_key } from '../../../library/entry_formatter';
 import { tidyAddress } from '../../../library/return_address';
 import SiteNav from '../../../components/main_components/SiteNav';
@@ -88,7 +88,7 @@ import Chip from '../../../components/main_components/Slug_Page/Chip';
 import { useBookplate, useVisiting } from '../../../components/main_components/Bookplate';
 import { useTheme } from '../../../components/main_components/Lightswitch';
 import { useEntryEditor } from '../../../hooks/useEntryEditor';
-import { useSnippet } from '../../../hooks/useSnippet';
+import { useSnippet, toggleSnippet, useSnippetState, stopSnippet } from '../../../hooks/useSnippet';
 import SnippetButton, { SnippetMeter, SnippetLink } from '../../../components/main_components/Slug_Page/SnippetButton';
 import { PENDING_KEY, TRACK_NOTE_KEY, TRACK_NOTE_WRITING, saidSoAboutTheDesk } from '../../../hooks/useListeningSession';
 
@@ -275,9 +275,6 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
 
   // On the layer the nav row lives in the layer's own header slot, and the
   // band behind it is styled off the entry's class.
-  useEffect(() => {
-    if (headerSlot) headerSlot.setAttribute('class', 'lay-header ln-entry');
-  }, [headerSlot]);
 
   const rating = writing ? written.rating : parseRating(correcting ? edit.draft.rating : entry.rating);
   // The two marks, from wherever they are being kept: the browser's copy
@@ -288,6 +285,25 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
   const isFormative = writing ? written.formative === true : correcting ? edit.draft.formative === true : truthy(entry.formative);
   const setMark = (key, on) => (writing ? setWritten(w => ({ ...w, [key]: on })) : edit.set(key, on));
   const composing = writing || correcting;
+  // ── A song's post is the album card, 2026-11-19 ───────────────────────
+  // Miyel: "can you match song posts to album posts in style … the only
+  // thing different should be the album icon will have the dogtag." Read
+  // over the journal on a phone, it is the same white card: no row of its
+  // own (the ··· on the card), the marks as glyphs beside the stars, the
+  // date and the ways out in one small line, and the note under them. The
+  // folded corner is what says it is a song.
+  const carded = Boolean(headerSlot) && !composing;
+  const songNow = useSnippetState(`${entry.slug}:song`);
+  const songOn = songNow.playing || songNow.waiting;
+  useEffect(() => {
+    if (!carded) return undefined;
+    document.documentElement.setAttribute('data-post-open', '');
+    return () => document.documentElement.removeAttribute('data-post-open');
+  }, [carded]);
+  useEffect(() => () => stopSnippet(`${entry.slug}:`), [entry.slug]);
+  useEffect(() => {
+    if (headerSlot) headerSlot.setAttribute('class', 'lay-header ln-entry' + (carded ? ' ln-entry--carded' : ''));
+  }, [headerSlot, carded]);
   const note = writing ? written.note : correcting ? edit.draft.notes : (entry.notes || '');
   const postedOn = entry.posted_at
     ? new Date(entry.posted_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
@@ -406,7 +422,7 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
   }
 
   return (
-    <div className={'ln-entry tn' + (writing ? ' tn--writing' : '') + (composing ? ' tn--composing' : '')}>
+    <div className={'ln-entry tn' + (writing ? ' tn--writing' : '') + (composing ? ' tn--composing' : '') + (carded ? ' tn--carded' : '')}>
       {headerSlot ? createPortal(chrome, headerSlot) : chrome}
 
       {/* The scroller the layer asks about before a pull closes it, the same
@@ -442,6 +458,7 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
               </span>
             )}
             <div className="tn-said">
+              {carded && keeperTools && <div className="ln-card-tools">{keeperTools}</div>}
               <h1 className="tn-song">{entry.song}</h1>
               <p className="tn-record">{[entry.album, entry.artist].filter(Boolean).join(' · ')}</p>
               <div className="tn-marks">
@@ -452,18 +469,40 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
                     size={26}
                     roomy
                   />
-                ) : (
-                  rating > 0 && <StarRating rating={rating} size={17} />
-                )}
+                ) : (<>
+                  {rating > 0 && <StarRating rating={rating} size={17} />}
+                  {carded && isFavorite && <Heart size={17} weight="fill" color="var(--fav)" aria-label="Favorite" />}
+                  {carded && isFormative && <Fingerprint size={17} weight="bold" color="var(--formative)" aria-label="Formative" />}
+                </>)}
               </div>
               {/* Read: the two marks as the chips an album entry wears. */}
-              {!composing && (isFavorite || isFormative) && (
+              {!composing && !carded && (isFavorite || isFormative) && (
                 <div className="tn-chips">
                   {isFavorite && <Chip tone="fav">Favorite</Chip>}
                   {isFormative && <Chip tone="formative">Formative</Chip>}
                 </div>
               )}
-              {!writing && postedOn && <p className="tn-posted">Posted {postedOn}</p>}
+              {!writing && !carded && postedOn && <p className="tn-posted">Posted {postedOn}</p>}
+              {/* The card's one small line: the date, the preview (the live
+                  light while it plays), Apple Music, and the keeper's Full
+                  album. */}
+              {carded && (
+                <div className="ln-card-meta">
+                  {postedOn && <span>Posted {postedOn}</span>}
+                  {songPlay && (
+                    <button type="button" onClick={() => toggleSnippet(`${entry.slug}:song`, songPlay)} aria-label={songOn ? `Pause ${entry.song}` : `Play a preview of ${entry.song}`}>
+                      {songOn ? <i className="ln-card-row-live" aria-hidden="true" /> : <Play size={10} weight="fill" aria-hidden="true" />}
+                      {songOn ? 'Playing' : 'Preview'}
+                    </button>
+                  )}
+                  {songLink && (
+                    <a href={songLink} target="_blank" rel="noopener noreferrer">
+                      Apple Music <ArrowSquareOut size={11} weight="bold" aria-hidden="true" />
+                    </a>
+                  )}
+                  {wholeAlbum && <button type="button" onClick={listenToAlbum}>Full album</button>}
+                </div>
+              )}
             </div>
           </div>
 
@@ -496,7 +535,7 @@ export default function TrackNotePage({ entry, authed = false, layered = false, 
             </div>
           )}
 
-          {!composing && (songPlay || songLink || wholeAlbum) && (
+          {!composing && !carded && (songPlay || songLink || wholeAlbum) && (
             <div className="tn-snippet">
               {songPlay && (
                 <>
