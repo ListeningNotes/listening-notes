@@ -1611,7 +1611,8 @@ export default function FullPostPage({ entry, references = [], authed = false, l
                   <li key={i} className={'ln-card-shelf' + (open ? ' ln-card-shelf--open' : '')}>
                     <button type="button" className={'ln-card-row' + (words ? ' ln-card-row--words' : '')} onClick={() => openSong(i)} aria-expanded={open}>
                       <span className="ln-card-row-num">
-                        {open && songOn ? <Pause size={11} weight="fill" aria-label="Playing" /> : (t.num || i + 1)}
+                        {/* Playing, the site's one green: the live light. */}
+                        {open && songOn ? <i className="ln-card-row-live" aria-label="Playing" /> : (t.num || i + 1)}
                       </span>
                       <span className="ln-card-row-name">{t.name}</span>
                       <span className="ln-card-row-rate">
@@ -1629,6 +1630,26 @@ export default function FullPostPage({ entry, references = [], authed = false, l
                 );
               })}
             </ol>
+          )}
+
+          {/* The horizon, at the foot: the album's shape as the card's last
+              line, so the end of it is felt (Miyel, 2026-11-19: "maybe it
+              could be down there at the bottom, like as a footer … it feels
+              like there's no resistance to show that I'm at the bottom").
+              A bar pressed opens its song on the shelf above. */}
+          {parsedTracks.length > 0 && (
+            <div className="ln-card-foot" style={{ gridTemplateColumns: `repeat(${parsedTracks.length}, 1fr)` }}>
+              {parsedTracks.map((t, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  className={'ln-card-foot-bar' + (i === songAt ? ' ln-card-foot-bar--on' : '') + ((t.note || '').trim() ? ' ln-card-foot-bar--words' : '')}
+                  style={{ '--r': t.stars || 0 }}
+                  onClick={() => openSong(i)}
+                  aria-label={`${t.num || i + 1}. ${t.name}`}
+                />
+              ))}
+            </div>
           )}
 
           {wayIn && <div className="ln-message-foot">{wayIn}</div>}

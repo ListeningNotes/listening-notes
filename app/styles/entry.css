@@ -2724,3 +2724,16 @@ html[data-printing] .sitenav-row { display: none; }
   html[data-post-open] .lb { display: none; }
   html[data-post-open] .lay--over-journal .ln-carded > .ln-card { padding-bottom: calc(32px + env(safe-area-inset-bottom, 0px)); }
 }
+@media (max-width: 768px) {
+  .ln-card-row-live { width: 7px; height: 7px; border-radius: 50%; background: #7cff9b; box-shadow: 0 0 0 1px color-mix(in srgb, #2f9e55 45%, transparent); animation: hp-logo-dot-pulse 2.5s ease-in-out infinite; }
+  /* The horizon as the card's foot. */
+  .ln-card-foot { display: grid; gap: 3px; align-items: end; height: 46px; margin: 10px 0 14px; }
+  .ln-card-foot-bar { position: relative; height: calc(var(--r) * 20%); min-height: 3px; padding: 0; border: 0; border-radius: 2px 2px 0 0; background: color-mix(in srgb, var(--ink) 16%, var(--card)); }
+  .ln-card-foot-bar::before { content: ''; position: absolute; inset: -10px -1px -12px; }
+  .ln-card-foot-bar--words::after { content: ''; position: absolute; left: 50%; bottom: -8px; width: 3px; height: 3px; border-radius: 50%; translate: -50% 0; background: var(--ink); }
+  .ln-card-foot-bar--on { background: var(--ink); }
+  /* The card ends where its foot does, its corners round at the bottom too,
+     so the end of the post is seen rather than run into. */
+  .lay--over-journal .ln-carded > .ln-card { border-radius: var(--panel-r); margin-bottom: calc(14px + env(safe-area-inset-bottom, 0px)); }
+  html[data-post-open] .lay--over-journal .ln-carded > .ln-card { padding-bottom: 18px; }
+}
