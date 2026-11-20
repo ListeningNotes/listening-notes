@@ -1550,6 +1550,31 @@ export default function FullPostPage({ entry, references = [], authed = false, l
                   (Miyel, 2026-11-18). Over the journal only: a page opened
                   cold keeps its own row, and the tools in it. */}
               {headerSlot && keeperTools && <div className="ln-card-tools">{keeperTools}</div>}
+              {/* ── The album area follows the listen, 2026-11-19 ──────────
+                  Miyel: "its the album area. thats what needs to change."
+                  On the opening it is the album; on a song, the same place
+                  beside the cover is the song — its title, where it falls
+                  on the record, its stars — and the box below holds only
+                  the words. */}
+              {song ? (
+                <div key={songAt} className={'ln-card-facts-song ln-card-slide' + (songTurn < 0 ? ' ln-card-slide--back' : songTurn > 0 ? ' ln-card-slide--on' : '')}>
+                  {(() => {
+                    // The featured artists on a small line of their own, so a
+                    // long credit does not stand the title five lines tall.
+                    const feat = (song.name || '').match(/^(.*?)\s*[([]((?:feat\.|ft\.|with) [^)\]]*)[)\]]\s*$/i);
+                    return (<>
+                      <h2 className="ln-card-title">{feat ? feat[1] : song.name}</h2>
+                      <div className="ln-card-byline">
+                        {feat ? feat[2] + ' · ' : ''}{song.num || songAt + 1} of {parsedTracks.length} · {entry.album}
+                      </div>
+                    </>);
+                  })()}
+                  <div className="ln-card-rate">
+                    {song.stars > 0 && <StarRating rating={song.stars} size={17} />}
+                    {song.favorite && <span className="ln-card-marks"><Heart size={17} weight="fill" color="var(--fav)" aria-label="Favorite" /></span>}
+                  </div>
+                </div>
+              ) : (<>
               <h1 className="ln-card-title">{entry.album}</h1>
               <div className="ln-card-byline">{entry.artist}{entry.year ? ' · ' + entry.year : ''}</div>
               {displayRating > 0 && (
@@ -1572,6 +1597,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
                   </a>
                 )}
               </div>
+              </>)}
             </div>
           </div>
           {sentLine}
@@ -1603,23 +1629,6 @@ export default function FullPostPage({ entry, references = [], authed = false, l
           >
             <div key={songAt} className={'ln-card-slide' + (songTurn < 0 ? ' ln-card-slide--back' : songTurn > 0 ? ' ln-card-slide--on' : '')}>
               {song ? (<>
-                <div className="ln-card-now">
-                  {(() => {
-                    // The featured artists on a small line of their own, so a
-                    // long credit does not stand the title five lines tall.
-                    const feat = (song.name || '').match(/^(.*?)\s*[([]((?:feat\.|ft\.|with) [^)\]]*)[)\]]\s*$/i);
-                    return (
-                      <span className="ln-card-now-title">
-                        {feat ? feat[1] : song.name}
-                        {feat && <span className="ln-card-now-feat">{feat[2]}</span>}
-                      </span>
-                    );
-                  })()}
-                  <span className="ln-card-now-rate">
-                    {song.stars > 0 && <StarRating rating={song.stars} size={19} />}
-                    {song.favorite && <Heart size={19} weight="fill" color="var(--fav)" aria-label="Favorite" />}
-                  </span>
-                </div>
                 {(song.note || '').trim() && <div className="ln-card-words">{linkedTrackNotes[songAt]}</div>}
               </>) : albumNotes && (<>
                 <div className="ln-card-note">{linkedAlbumNotes}</div>
