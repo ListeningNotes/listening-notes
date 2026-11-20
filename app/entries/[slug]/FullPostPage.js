@@ -778,6 +778,15 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   // nav row is styled off .ln-entry / .ln-entry--scrolled, which the row is
   // no longer inside, so the slot is given the same two classes.
   const headerSlot = useLayerHeaderSlot();
+  // The Listen bar stands down while a post is open over the journal on a
+  // phone, and comes back when it is put away (Miyel, 2026-11-19: "start a
+  // listen has to leave though it blocks the screen"). Said on the page's
+  // root because the bar is not inside the post (entry.css).
+  useEffect(() => {
+    if (!headerSlot || !carded) return undefined;
+    document.documentElement.setAttribute('data-post-open', '');
+    return () => document.documentElement.removeAttribute('data-post-open');
+  }, [headerSlot, carded]);
   // Whether the header is standing in for the record — see the collapse
   // further down, which is what turns it on.
   const [crowning, setCrowning] = useState(false);

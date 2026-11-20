@@ -2720,3 +2720,7 @@ html[data-printing] .sitenav-row { display: none; }
   .ln-card-shelf--open .ln-card-row-num { color: var(--ink); }
   .ln-card-row-num { display: inline-flex; align-items: center; }
 }
+@media (max-width: 768px) {
+  html[data-post-open] .lb { display: none; }
+  html[data-post-open] .lay--over-journal .ln-carded > .ln-card { padding-bottom: calc(32px + env(safe-area-inset-bottom, 0px)); }
+}
