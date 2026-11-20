@@ -1696,7 +1696,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
                       return play && (
                         <button
                           type="button"
-                          className="ln-card-row-play"
+                          className={'ln-card-row-play' + (songOn ? ' ln-card-row-play--live' : '')}
                           onClick={() => toggleSnippet(`${entry.slug}:${i}`, play)}
                           aria-label={songOn ? `Pause ${t.name}` : `Play a preview of ${t.name}`}
                         >
