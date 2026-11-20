@@ -269,6 +269,12 @@ export function toggleSnippet(key, play) {
   start(a, key);
 }
 
+// Stops whatever is playing if it belongs to one page (its keys share a
+// prefix): a post put away, or a post with no song open, is silent.
+export function stopSnippet(prefix) {
+  if (deck().state.key?.startsWith(prefix)) { player().pause(); reset(); }
+}
+
 function subscribe(fn) { const d = deck(); d.listeners.add(fn); return () => d.listeners.delete(fn); }
 
 // The player as one button sees it: itself, or nothing.

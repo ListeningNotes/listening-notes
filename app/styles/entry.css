@@ -2725,7 +2725,7 @@ html[data-printing] .sitenav-row { display: none; }
   html[data-post-open] .lay--over-journal .ln-carded > .ln-card { padding-bottom: calc(32px + env(safe-area-inset-bottom, 0px)); }
 }
 @media (max-width: 768px) {
-  .ln-card-row-live { width: 7px; height: 7px; border-radius: 50%; background: #7cff9b; box-shadow: 0 0 0 1px color-mix(in srgb, #2f9e55 45%, transparent); animation: hp-logo-dot-pulse 2.5s ease-in-out infinite; }
+  .ln-card-row-live { width: 7px; height: 7px; border-radius: 50%; background: #7cff9b; animation: hp-logo-dot-pulse 2.5s ease-in-out infinite; }
   /* The horizon as the card's foot. */
   .ln-card-foot { display: grid; gap: 3px; align-items: end; height: 46px; margin: 10px 0 14px; }
   .ln-card-foot-bar { position: relative; height: calc(var(--r) * 20%); min-height: 3px; padding: 0; border: 0; border-radius: 2px 2px 0 0; background: color-mix(in srgb, var(--ink) 16%, var(--card)); }
@@ -2736,4 +2736,11 @@ html[data-printing] .sitenav-row { display: none; }
      so the end of the post is seen rather than run into. */
   .lay--over-journal .ln-carded > .ln-card { border-radius: var(--panel-r); margin-bottom: calc(14px + env(safe-area-inset-bottom, 0px)); }
   html[data-post-open] .lay--over-journal .ln-carded > .ln-card { padding-bottom: 18px; }
+}
+@media (max-width: 768px) {
+  /* The post's scroller is a screen tall, and over the journal it starts
+     under the top row — so its last stretch, the card's foot, hung below
+     the screen where no scroll could reach it (Miyel, 2026-11-19: "bottom
+     still looks cut off"). It is as tall as the room it has. */
+  .lay--over-journal .ln-screens { height: calc(100dvh - var(--hn-bar-h, 80px) - var(--lay-lift, 0px) - var(--lay-bottom, 0px)); }
 }

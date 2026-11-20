@@ -47,7 +47,7 @@ import StarRating from '../../../components/main_components/StarRating';
 import StarPicker from '../../../components/session_components/StarRating';
 import { editStamp } from '../../../library/entry_formatter';
 import { useEntryEditor } from '../../../hooks/useEntryEditor';
-import { useSnippet, toggleSnippet, useSnippetState } from '../../../hooks/useSnippet';
+import { useSnippet, toggleSnippet, useSnippetState, stopSnippet } from '../../../hooks/useSnippet';
 import { SnippetLink } from '../../../components/main_components/Slug_Page/SnippetButton';
 
 // ── Printing, 2026-09-13 ──────────────────────────────────────────────────
@@ -709,6 +709,13 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   // plays; pressed again it closes and stops; another pressed is that one.
   // In order or anywhere, and never a page of its own — the horizon and the
   // flip through went with this.
+  // Music only while a song is open, and never after the post is put away
+  // (Miyel, 2026-11-19: "music should stop when you leave post, anytime a
+  // box isn't open").
+  useEffect(() => {
+    if (carded && songAt < 0) stopSnippet(`${entry.slug}:`);
+  }, [carded, songAt, entry.slug]);
+  useEffect(() => () => stopSnippet(`${entry.slug}:`), [entry.slug]);
   const openSong = i => {
     const t = parsedTracks[i];
     if (!t) return;
