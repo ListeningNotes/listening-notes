@@ -2806,3 +2806,9 @@ html[data-printing] .sitenav-row { display: none; }
     background: var(--card); border-radius: var(--panel-r); box-shadow: var(--lift-1);
   }
 }
+
+/* A record's tile is empty while its post is open on a phone, and fills
+   again as the post shrinks back into it (LayerEntry, 2026-11-21). */
+@media (max-width: 768px) {
+  .lay-away { visibility: hidden; }
+}

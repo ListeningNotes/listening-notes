@@ -120,13 +120,44 @@ export function growBoxOf(path) {
   return null;
 }
 
+// The tile an entry opened from, or — once a folder has been flipped to
+// another of its entries — the tile holding it (data-tile-slugs), so
+// closing still puts the cover back where it came from.
+export function tileOf(slug) {
+  if (typeof document === 'undefined' || !slug) return null;
+  return document.querySelector(`[data-tile-slug="${CSS.escape(slug)}"]`)
+    || document.querySelector(`[data-tile-slugs~="${CSS.escape(slug)}"]`);
+}
+
+// ── The tile back in sight before a post goes into it, 2026-11-21 ─────────
+// Swiped three records along, the record you end on can be a screen away on
+// the wall, and a post that shrinks into a tile nobody can see has gone
+// nowhere (Miyel's home brief: "closing after a swipe shrinks into the tile
+// of the record you ended on"). So the wall is moved, at once and under the
+// post, to put that tile in the middle of the screen. Its own scroller, by
+// hand: scrollIntoView moves every scrolling thing above it, the rooms too.
+export function bringTileIntoView(slug) {
+  const tile = tileOf(slug);
+  if (!tile) return;
+  const box = tile.getBoundingClientRect();
+  if (box.width === 0 || box.height === 0) return;
+  const top = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--hn-bar-h')) || 80;
+  if (box.top >= top && box.bottom <= window.innerHeight) return;
+  let scroller = tile.parentElement;
+  while (scroller && scroller !== document.body) {
+    const y = getComputedStyle(scroller).overflowY;
+    if ((y === 'auto' || y === 'scroll') && scroller.scrollHeight > scroller.clientHeight) break;
+    scroller = scroller.parentElement;
+  }
+  if (!scroller || scroller === document.body) scroller = document.scrollingElement;
+  if (!scroller) return;
+  const middle = top + (window.innerHeight - top) / 2;
+  scroller.scrollTop += box.top + box.height / 2 - middle;
+}
+
 export function tileBoxOf(slug) {
   if (typeof document === 'undefined') return null;
-  // The tile an entry opened from, or — once a folder has been flipped to
-  // another of its entries — the tile holding it (data-tile-slugs), so
-  // closing still puts the cover back where it came from.
-  const tile = document.querySelector(`[data-tile-slug="${CSS.escape(slug)}"]`)
-    || document.querySelector(`[data-tile-slugs~="${CSS.escape(slug)}"]`);
+  const tile = tileOf(slug);
   if (!tile) return null;
   const box = tile.getBoundingClientRect();
   if (box.width === 0 || box.height === 0) return null;

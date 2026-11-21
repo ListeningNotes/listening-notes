@@ -52,7 +52,7 @@ import { createContext, useCallback, useContext, useEffect, useLayoutEffect, use
 import { usePathname, useRouter } from 'next/navigation';
 import { CaretLeft, CaretRight } from '@phosphor-icons/react';
 import { RecordScreen } from './LayerWaiting';
-import { tileBoxOf, neighboursOf, handOffNeighbour, arrivingBySwipe, tookASwipe, growBoxOf, arrivingBack, cameBack, cameAlone, arrivingAlone, carryReading, endReading, cameReadingOn } from '../../library/handoff';
+import { tileOf, bringTileIntoView, tileBoxOf, neighboursOf, handOffNeighbour, arrivingBySwipe, tookASwipe, growBoxOf, arrivingBack, cameBack, cameAlone, arrivingAlone, carryReading, endReading, cameReadingOn } from '../../library/handoff';
 
 // How long the sheet takes to grow to the screen. Unhurried, slowing as it
 // lands — the same curve the slide used.
@@ -329,6 +329,20 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
   const rises = arrives === 'bottom';
   const growFrom = arrival.growFrom;
 
+  // ── Its tile empty while it is open, 2026-11-21 ───────────────────────
+  // The record is out of its square and on the card, so the square on the
+  // wall is empty until it comes back (Miyel's home brief). A class rather
+  // than a style, so only a phone hides it (entry.css): a desk shows the
+  // wall beside the post and keeps it whole. A turn to a neighbour is a new
+  // layer, which empties that record's tile and gives this one back.
+  useLayoutEffect(() => {
+    if (!slug || rises) return;
+    const tile = tileOf(slug);
+    if (!tile) return;
+    tile.classList.add('lay-away');
+    return () => tile.classList.remove('lay-away');
+  }, [slug, rises]);
+
   useLayoutEffect(() => {
     const sheet = sheetRef.current;
     const box = growFrom;
@@ -497,6 +511,8 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
     window.setTimeout(() => { if (alive.current) router.replace('/'); }, GROW_MS + 500);
     const sheet = sheetRef.current;
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const phone = window.matchMedia('(max-width: 768px)').matches;
+    if (phone && slug && !rises && !reduced) bringTileIntoView(slug);
     // Back into its tile — or, for a friend's entry read here (2026-10-28),
     // into whatever declared its address, the record pressed on Friends or
     // on their page.
@@ -530,6 +546,31 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
       ], { duration: GROW_MS * 0.7, easing: GROW_EASE, fill: 'forwards' });
       sink.onfinish = back;
       sink.oncancel = back;
+      return;
+    }
+    // ── On a phone the whole post goes back into its tile, 2026-11-21 ────
+    // The way it came out, run backwards, from wherever a pull left it.
+    // The cover alone flew home here, over a page that faded, and a sheet
+    // shrinking to a thumbnail was ruled out (above) when it was a long page
+    // of writing; the post is one card now, and Miyel's home brief asks for
+    // exactly this: "closing it shrinks the entry back into the same tile",
+    // with no fade (her rule). The tile stays empty until it lands (the
+    // effect below that hides it), so there is one record on screen. A desk
+    // keeps the flying cover.
+    if (phone && onScreen) {
+      let went = false;
+      const back = () => { if (went) return; went = true; goBack(); };
+      window.setTimeout(back, GROW_MS + 60);
+      const at = sheet.getBoundingClientRect();
+      const W = sheet.offsetWidth || window.innerWidth;
+      const H = sheet.offsetHeight || window.innerHeight;
+      const top = at.top - fromX;
+      const shrink = sheet.animate([
+        { transformOrigin: '0 0', transform: `translateY(${fromX}px)`, borderRadius: '0px' },
+        { transformOrigin: '0 0', transform: `translate(${box.x - at.left}px, ${box.y - top}px) scale(${box.w / W}, ${box.h / H})`, borderRadius: '14px' },
+      ], { duration: GROW_MS, easing: GROW_EASE, fill: 'forwards' });
+      shrink.onfinish = back;
+      shrink.oncancel = back;
       return;
     }
     // The cover as the entry draws it: the first screen's on a phone, the
