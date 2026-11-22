@@ -1686,10 +1686,11 @@ export default function HomeNav() {
   // while the place itself is what shows: a room, the card or anything laid
   // over the journal at an address of its own gets the brow back.
   useEffect(() => {
-    const placeShowing = authed && !roomUp && !cardOpen && path === '/';
+    // A listen in hand is the place too, and a listen is page colour.
+    const placeShowing = authed && !roomUp && !cardOpen && path === '/' && !inHand;
     document.documentElement.toggleAttribute('data-place', placeShowing);
     return () => document.documentElement.removeAttribute('data-place');
-  }, [authed, roomUp, cardOpen, path]);
+  }, [authed, roomUp, cardOpen, path, inHand]);
 
   function goTo(index) {
     const el = railRef.current;

@@ -18,6 +18,8 @@
 // when a different room greets each opening of the app.
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
+import { usePathname } from 'next/navigation';
 import { Globe, SquaresFour, User, Users, X } from '@phosphor-icons/react';
 import { readArtColor, sizedAlbumArt } from '../../library/music_data_api';
 
@@ -145,6 +147,11 @@ function ListeningRoom({ entries, hue, still }) {
   return <Canvas draw={draw} still={still} />;
 }
 
+// While a listen is in hand it is the place (Miyel, 2026-11-22: "session will
+// take over the home page"): the listen itself, under the rooms, so pulling a
+// room down is returning to it. Loaded only when there is one.
+const Listen = dynamic(() => import('../../app/session/page'), { ssr: false });
+
 // The room the place shows. One for now; a different one each opening later.
 const ROOMS = { salon: Salon, listening: ListeningRoom };
 const Room = ROOMS.salon;
@@ -159,20 +166,33 @@ export default function Place({ entries, held, waiting, community, roomUp, cardO
     return () => { gone = true; };
   }, [first]);
 
+  // The listen, at the place's own address; when it is open as a sheet of
+  // its own (/session) the sheet is the listen and this stands back.
+  const path = usePathname();
+  const listening = Boolean(held) && path !== '/session';
+
   return (<>
     <div
-      className={'pl' + (roomUp ? ' pl--under' : '')}
+      className={'pl' + (roomUp ? ' pl--under' : '') + (listening ? ' pl--listen' : '')}
       style={hue == null ? undefined : { '--pl-h': hue }}
       data-plain={hue == null ? '' : undefined}
     >
       {/* Under a raised room nothing of it shows, so it stops drawing. */}
+      {listening ? (
+        <div className="pl-listen"><Listen /></div>
+      ) : (<>
       <Room entries={entries} hue={hue} still={roomUp || cardOpen} />
       {/* The journal's own mark, as it stands in the top row. */}
       <span className="pl-mark" aria-hidden="true">{logo}</span>
-      <nav className="pl-doors" aria-label="The journal">
-        <Link href="/session" className="pl-key pl-key--listen" data-grows="/session">
-          {held ? `Back to ${held.album}` : 'Start a listen'}
-        </Link>
+      </>)}
+      {/* Over a listen the rooms are a row of glyphs along the top, beside
+          the face; over the art they are glass at the foot. */}
+      <nav className={listening ? 'pl-row' : 'pl-doors'} aria-label="The journal">
+        {!listening && (
+          <Link href="/session" className="pl-key pl-key--listen" data-grows="/session">
+            {held ? `Back to ${held.album}` : 'Start a listen'}
+          </Link>
+        )}
         <div className="pl-rooms">
         <button type="button" className="pl-key" onClick={() => onRoom('home')}>
           <SquaresFour size={22} weight="regular" aria-hidden="true" />
@@ -207,8 +227,9 @@ export default function Place({ entries, held, waiting, community, roomUp, cardO
           {portrait && <img src={portrait} alt="" />}
           <span className="hdr-face-x" aria-hidden="true"><X size={20} weight="bold" /></span>
         </button>
-        {/* Night and sound, the top row's lights, beside the face. */}
-        {!cardOpen && lights}
+        {/* Night and sound, the top row's lights, beside the face. Not over a
+            listen, which keeps the row for the rooms. */}
+        {!cardOpen && !listening && lights}
       </div>
     )}
     {roomUp && (

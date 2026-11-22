@@ -3942,6 +3942,28 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   /* The dot in the letters' white, green while a listen is live, as in the top row. */
   .pl-mark-svg .hn-mark-dot { fill: currentColor; }
   .pl-mark-svg .hn-mark-dot--live { fill: #7cff9b; }
+  /* A listen in hand is the place (Place.js): the listen itself, under a
+     row of the face and the rooms' glyphs, and the rooms rise over it. */
+  .pl--listen { background: var(--bg); }
+  .pl-listen {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    top: calc(72px + var(--safe-top));
+    overflow-y: auto; -webkit-overflow-scrolling: touch;
+  }
+  .pl-row {
+    position: absolute; z-index: 2;
+    top: calc(26px + var(--safe-top)); right: 16px;
+  }
+  .pl-row .pl-rooms { gap: 22px; }
+  .pl-row .pl-key {
+    flex: none; padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none;
+    -webkit-backdrop-filter: none; backdrop-filter: none;
+    color: var(--ink-soft); animation: none;
+  }
+  .pl-row .pl-key svg { filter: none; }
+  .pl-row .pl-key span { display: none; }
+  .pl-row .pl-new { top: -3px; right: -5px; background: var(--ink); box-shadow: none; }
+  .pl--listen ~ .pl-top .pl-face { box-shadow: 0 0 0 1px var(--border); }
   /* No brow over the art: the place runs up under the clock (HomeNav). */
   html[data-place] .ln-brow { display: none; }
   /* The doors: Start a listen across, one row of rooms under it, a glyph
