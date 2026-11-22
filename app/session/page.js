@@ -86,7 +86,9 @@ function letGo(except = null) {
   el.blur();
 }
 
-export default function SessionPage() {
+// onLeave: a listen drawn as the place on a phone (Place.js) has no page to
+// go back to; the place says what leaving it is.
+export default function SessionPage({ onLeave = null } = {}) {
   const [authed, setAuthed]     = useState(false);
   const [checking, setChecking] = useState(true);
 
@@ -851,7 +853,7 @@ export default function SessionPage() {
     if (song) {
       try { sessionStorage.removeItem(TRACK_NOTE_KEY); } catch { /* nothing to clear */ }
     } else if (pending?.album && !(await lower())) return;
-    router.push('/');
+    if (onLeave) onLeave(); else router.push('/');
   }
 
   // Every step change goes through here so the slide knows which way to travel.

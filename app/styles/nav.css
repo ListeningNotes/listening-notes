@@ -3870,15 +3870,16 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
 /* ── The shelf's top row, 2026-11-21 ─────────────────────────────────────────
    On the keeper's phone the rooms are a shelf over the place (Place.js), and
    its top row is the rooms' glyphs, Archive · Friends · Community, with the
-   one you are in underlined and no words (Miyel: "icons instead of words");
-   the place's X stands at the right. The face, the lights and the mark live
+   one you are in underlined and no words (Miyel: "icons instead of words"),
+   centred; it goes back down by being pulled. The face, the lights and the mark live
    on the place. A desk and a visitor are as they were. */
 @media (max-width: 768px) {
   .hn.hn--keeper { --hn-foot-h: env(safe-area-inset-bottom, 0px); }
   .hn--keeper .hdr .hdr-face,
   .hn--keeper .hdr .hn-lights,
   .hn--keeper .hdr .hdr-mark { display: none; }
-  .hn--keeper .hdr .hdr-stops { margin-left: 0; gap: 22px; }
+  /* Centred, with no X: pulled down, the shelf goes (Miyel, 2026-11-22). */
+  .hn--keeper .hdr .hdr-stops { margin: 0 auto; gap: 28px; }
   .hn--keeper .hdr .hdr-word { display: none; }
   .hn--keeper .hdr .hdr-stop { padding-bottom: 6px; border-bottom: 1.5px solid transparent; }
   .hn--keeper .hdr .hdr-stop--here { border-bottom-color: var(--ink); }
@@ -3922,7 +3923,7 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
    frame — rail, top row and all — waits below the screen and comes up over
    it like a shelf when a key is pressed (HomeNav, roomUp). Nowhere else:
    a visitor and a desk never see it. */
-.pl, .pl-face, .pl-down { display: none; }
+.pl, .pl-face { display: none; }
 @media (max-width: 768px) {
   .pl {
     --pl-h: 220;
@@ -3950,19 +3951,22 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
     top: calc(72px + var(--safe-top));
     overflow-y: auto; -webkit-overflow-scrolling: touch;
   }
-  .pl-row {
-    position: absolute; z-index: 2;
-    top: calc(26px + var(--safe-top)); right: 16px;
+  /* The rooms stay at the foot over a listen, standing just above the
+     listen's own bar (session.css, .ses-bar: 62 high, 15 up), in the
+     page's ink, since there is no art behind them to tint. */
+  .pl--listen .pl-doors {
+    z-index: 31;
+    bottom: calc(max(15px, env(safe-area-inset-bottom, 0px)) + 72px);
   }
-  .pl-row .pl-rooms { gap: 22px; }
-  .pl-row .pl-key {
-    flex: none; padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none;
-    -webkit-backdrop-filter: none; backdrop-filter: none;
-    color: var(--ink-soft); animation: none;
+  .pl--listen .pl-key {
+    color: var(--ink);
+    border-color: var(--border);
+    background: color-mix(in srgb, var(--pl-glass) 14%, var(--panel-solid));
+    box-shadow: 0 8px 22px rgba(26, 26, 26, 0.12);
   }
-  .pl-row .pl-key svg { filter: none; }
-  .pl-row .pl-key span { display: none; }
-  .pl-row .pl-new { top: -3px; right: -5px; background: var(--ink); box-shadow: none; }
+  .pl--listen .pl-key svg { filter: none; }
+  .pl--listen .pl-new { background: var(--ink); box-shadow: none; }
+  .pl-listen { padding-bottom: 84px; }
   .pl--listen ~ .pl-top .pl-face { box-shadow: 0 0 0 1px var(--border); }
   /* No brow over the art: the place runs up under the clock (HomeNav). */
   html[data-place] .ln-brow { display: none; }
@@ -4018,13 +4022,6 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
     box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.85), 0 4px 14px rgba(0, 0, 0, 0.3);
   }
   .pl-top .hn-lights { color: #fff; filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.35)); }
-  .pl-down {
-    display: grid; place-items: center;
-    position: fixed; z-index: 130;
-    top: calc(20px + var(--safe-top)); right: 10px;
-    width: 40px; height: 40px; padding: 0; border: 0; background: none;
-    color: var(--ink); cursor: pointer; -webkit-tap-highlight-color: transparent;
-  }
   /* The shelf: the journal's whole frame, opaque, over the place, and below
      the screen until a room is raised. */
   .hn.hn--keeper { position: relative; z-index: 1; background: var(--bg); }

@@ -1572,8 +1572,8 @@ export default function HomeNav() {
   // ── The place, 2026-11-21 ─────────────────────────────────────────────
   // On the keeper's phone the journal opens on the place (Place.js), and the
   // rooms are a shelf raised over it: the whole of this frame, rail and all,
-  // below the screen until a key brings it up, and taken down by the place's
-  // X. The rail still swipes between the rooms once it is up.
+  // below the screen until a key brings it up, and pulled down to go (below).
+  // The rail still swipes between the rooms once it is up.
   const [roomUp, setRoomUp] = useState(false);
   const hnRef = useRef(null);
   const shelfMove = useRef(null);
@@ -2107,7 +2107,6 @@ export default function HomeNav() {
         cardOpen={cardOpen}
         portrait={portrait}
         onRoom={raiseRoom}
-        onDown={() => lowerRoom()}
         onFace={() => setCardOpen(open => !open)}
         logo={mark('pl-mark-svg')}
         lights={lights}

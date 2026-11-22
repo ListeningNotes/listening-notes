@@ -4,8 +4,8 @@
 // The place, 2026-11-21 (Miyel: "this is the direction"). On the keeper's
 // phone the app opens into a room, not a feed: album art that never stops
 // moving, Start a listen at the foot and the rooms as glass keys under it.
-// A key raises that room over the place like a shelf (HomeNav, roomUp); the
-// X takes it down again and the place is still going underneath.
+// A key raises that room over the place like a shelf (HomeNav, roomUp);
+// pulled down, it goes, and the place is still going underneath.
 //
 // The keeper's alone, and a phone's alone: a visitor gets the journal as it
 // was, and a desk keeps its spine (nav.css hides this above 768px).
@@ -17,7 +17,6 @@
 // washing the room, the rest circling it; the one she liked least, kept for
 // when a different room greets each opening of the app.
 import { useEffect, useRef, useState } from 'react';
-import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { usePathname } from 'next/navigation';
 import { Globe, SquaresFour, User, Users, X } from '@phosphor-icons/react';
@@ -156,7 +155,7 @@ const Listen = dynamic(() => import('../../app/session/page'), { ssr: false });
 const ROOMS = { salon: Salon, listening: ListeningRoom };
 const Room = ROOMS.salon;
 
-export default function Place({ entries, held, waiting, community, roomUp, cardOpen, portrait, logo, lights, onRoom, onDown, onFace }) {
+export default function Place({ entries, held, waiting, community, roomUp, cardOpen, portrait, logo, lights, onRoom, onFace }) {
   // The colour of the album the room is made of, for the wash and the glass.
   const [hue, setHue] = useState(null);
   const first = entries.find(e => e.album_art)?.album_art;
@@ -166,10 +165,24 @@ export default function Place({ entries, held, waiting, community, roomUp, cardO
     return () => { gone = true; };
   }, [first]);
 
-  // The listen, at the place's own address; when it is open as a sheet of
-  // its own (/session) the sheet is the listen and this stands back.
+  // The listen replaces the room on the place (Miyel, 2026-11-22: "session
+  // replaces the screensaver and those archive, friend and community buttons
+  // stay"): Start a listen opens it here rather than on a page of its own,
+  // and a record in hand keeps it here. Ending it — posting, discarding,
+  // saving the draft — takes the record out of hand and the room comes back;
+  // so does pulling down out of the picker before a record is chosen. When it
+  // is open as a sheet of its own (/session) the sheet is the listen and
+  // this stands back.
   const path = usePathname();
-  const listening = Boolean(held) && path !== '/session';
+  const [started, setStarted] = useState(false);
+  // A record going out of hand ends the listen here; noticed as the render
+  // that sees it go, rather than in an effect a render later.
+  const [heldBefore, setHeldBefore] = useState(held);
+  if (held !== heldBefore) {
+    setHeldBefore(held);
+    if (heldBefore && !held) setStarted(false);
+  }
+  const listening = (Boolean(held) || started) && path !== '/session';
 
   return (<>
     <div
@@ -179,19 +192,18 @@ export default function Place({ entries, held, waiting, community, roomUp, cardO
     >
       {/* Under a raised room nothing of it shows, so it stops drawing. */}
       {listening ? (
-        <div className="pl-listen"><Listen /></div>
+        <div className="pl-listen"><Listen onLeave={() => setStarted(false)} /></div>
       ) : (<>
       <Room entries={entries} hue={hue} still={roomUp || cardOpen} />
       {/* The journal's own mark, as it stands in the top row. */}
       <span className="pl-mark" aria-hidden="true">{logo}</span>
       </>)}
-      {/* Over a listen the rooms are a row of glyphs along the top, beside
-          the face; over the art they are glass at the foot. */}
-      <nav className={listening ? 'pl-row' : 'pl-doors'} aria-label="The journal">
+      {/* The rooms stay at the foot over a listen, above its own bar. */}
+      <nav className="pl-doors" aria-label="The journal">
         {!listening && (
-          <Link href="/session" className="pl-key pl-key--listen" data-grows="/session">
-            {held ? `Back to ${held.album}` : 'Start a listen'}
-          </Link>
+          <button type="button" className="pl-key pl-key--listen" onClick={() => setStarted(true)}>
+            Start a listen
+          </button>
         )}
         <div className="pl-rooms">
         <button type="button" className="pl-key" onClick={() => onRoom('home')}>
@@ -231,11 +243,6 @@ export default function Place({ entries, held, waiting, community, roomUp, cardO
             listen, which keeps the row for the rooms. */}
         {!cardOpen && !listening && lights}
       </div>
-    )}
-    {roomUp && (
-      <button type="button" className="pl-down" onClick={onDown} aria-label="Back to the place">
-        <X size={22} weight="regular" aria-hidden="true" />
-      </button>
     )}
   </>);
 }
