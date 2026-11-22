@@ -3841,3 +3841,20 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
 .lt-live { flex: none; width: 7px; height: 7px; border-radius: 50%; background: #7cff9b; animation: hp-logo-dot-pulse 2.5s ease-in-out infinite; }
 /* A desk keeps its bar; the tile is a phone's. */
 @media (min-width: 769px) { .arc-grid .lt { display: none; } }
+
+/* ── A visitor's beacon by what is happening, 2026-11-21 ──────────────────
+   On a phone: live, the beacon; not live with a record pinned, that record
+   alone (LivingWith, ListeningBeacon.js) and nothing else on
+   the floor; nothing pinned, no floor at all and the wall straight under the
+   top row. A desk keeps the beacon as it was. */
+.beacon-living { color: inherit; text-decoration: none; -webkit-tap-highlight-color: transparent; }
+@media (min-width: 769px) {
+  .beacon-stage--living { display: none; }
+}
+@media (max-width: 768px) {
+  .hn--visitor .hn-pane--home .hn-floor--off { display: none; }
+  .hn--visitor .hn-pane--home .hn-floor--off + .hn-floor--wall { padding-top: var(--hn-bar-h); }
+  .hn-floor--living .beacon-stage:not(.beacon-stage--living),
+  .hn-floor--living .hp-recent-set,
+  .hn-floor--living .beacon-wash { display: none; }
+}

@@ -76,7 +76,7 @@ import { announce, useListeningBeacon } from '../../hooks/useListeningBeacon';
 import { useSpineWidth } from '../../hooks/useSpineWidth';
 import { useTheme } from './Lightswitch';
 import { useBookplate } from './Bookplate';
-import ListeningBeacon from './ListeningBeacon';
+import ListeningBeacon, { LivingWith } from './ListeningBeacon';
 import ListenBar, { ListenTile } from './ListenBar';
 import Journal from './Journal';
 import Header from './Header';
@@ -1871,6 +1871,16 @@ export default function HomeNav() {
   // something in memory.
   const pinned = entries.find(e => e.id === pinned_entry_id) || null;
 
+  // ── A visitor's beacon by what is happening, 2026-11-21 ─────────────────
+  // Miyel's home brief: on a phone a visitor sees the beacon only while the
+  // keeper is live; when they are not, the record pinned on the card, with
+  // no words over it (her call); and with nothing pinned, no beacon at all and no empty
+  // slot. A grey last-logged cover is not shown to anybody any more. The
+  // stylesheet keeps a desk as it was (nav.css).
+  const visitor = checked && !authed;
+  const living = visitor && !isLive && pinned ? pinned : null;
+  const unlit = visitor && !isLive && !pinned;
+
 
   // The one divider on a desk, as a grip: the fold between the two pages. A
   // separator the keyboard can hold too — an arrow moves it a step in the
@@ -2033,7 +2043,7 @@ export default function HomeNav() {
           {/* Floor one — the crown, the record with its caption, and what
               came before. On a phone it is exactly one screen tall, so the
               snap has one place to land; on a desk it is a wrapper. */}
-          <div className="hn-floor hn-floor--beacon">
+          <div className={'hn-floor hn-floor--beacon' + (living ? ' hn-floor--living' : '') + (unlit ? ' hn-floor--off' : '')}>
             {wash && (
               <div
                 className={'beacon-wash' + (isLive ? '' : ' beacon-wash--quiet')}
@@ -2063,6 +2073,7 @@ export default function HomeNav() {
               <div className="hp-dashboard">
                 <div className="hp-dash-cell hp-dash-beacon">
                   <ListeningBeacon emptied={false} />
+                  {living && <LivingWith entry={living} />}
                 </div>
               </div>
               {/* What came before. The picker took this room while a record
