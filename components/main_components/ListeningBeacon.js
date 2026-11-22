@@ -6,6 +6,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { CAPTION, useListeningBeacon } from '../../hooks/useListeningBeacon';
 import { handOff } from '../../library/handoff';
+import { useBookplate } from './Bookplate';
 
 // One beacon, one size. There used to be a `compact` shape as well, drawn in
 // the nav row of every page — that row does not carry it any more, so the
@@ -198,30 +199,34 @@ export function BeaconCard({ beacon, emptied = false }) {
   );
 }
 
-// ── The pinned record, 2026-11-21 ───────────────────────────────────────────────
+// ── The pinned record, 2026-11-21 ───────────────────────────────────────
 // What a visitor's phone shows in the beacon's place while nothing is
 // playing: the record the keeper pinned on their card. The brief named it
-// "Living with"; Miyel took the words off on sight (2026-11-21), so it is
-// the cover, the title and the artist alone. In full colour, because it is not a
-// listen gone grey, and with no dot and no green, because green is only
-// ever live. One press opens its post, growing out of this cover. Nothing
-// pinned, nothing drawn: no empty slot (HomeNav).
+// "Living with"; Miyel took those words off on sight and asked instead for
+// "[name] has [record] pinned." over it, and the record small, its cover
+// left and its words right, the way the post's card draws it (2026-11-21).
+// In full colour, because it is not a listen gone grey, and with no dot and
+// no green, because green is only ever live. One press opens its post,
+// growing out of this cover. Nothing pinned, nothing drawn: no empty slot
+// (HomeNav).
 export function LivingWith({ entry }) {
+  const { keeper_name } = useBookplate();
   const [failed, setFailed] = useState(false);
   const href = `/entries/${entry.slug}`;
   const title = entry.song || entry.album;
   return (
     <div className="beacon-stage beacon-stage--living">
-      <Link href={href} className="beacon-card beacon-card--main beacon-living" data-grows={href} onClick={() => handOff(entry)}>
-        <div className="beacon-art-wrap">
-          {entry.album_art && !failed
-            ? <img src={entry.album_art} alt={title} className="beacon-art" onError={() => setFailed(true)} />
-            : <div className="beacon-art-placeholder">♪</div>}
-        </div>
-        <div className="beacon-meta">
-          <div className="beacon-track beacon-track--wrap">{title}</div>
-          {entry.artist && <div className="beacon-artist">{entry.artist}</div>}
-        </div>
+      <p className="pin-line">
+        {keeper_name ? `${keeper_name} has ` : ''}<b>{title}</b>{keeper_name ? ' pinned.' : ' is pinned.'}
+      </p>
+      <Link href={href} className="pin-row" data-grows={href} onClick={() => handOff(entry)}>
+        {entry.album_art && !failed
+          ? <img src={entry.album_art} alt="" className="pin-cover" onError={() => setFailed(true)} />
+          : <span className="pin-cover pin-cover--none" aria-hidden="true">♪</span>}
+        <span className="pin-words">
+          <span className="pin-title">{title}</span>
+          {entry.artist && <span className="pin-artist">{entry.artist}</span>}
+        </span>
       </Link>
     </div>
   );
