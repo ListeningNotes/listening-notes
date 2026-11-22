@@ -114,12 +114,11 @@ the tile empty while it is open, and shrinks back into it — after a swipe, int
 the tile of the record it ended on. A song's note unfolds under its row. No
 fades, reduced motion included (her rule over the brief's crossfade).
 
-**The rail between rooms is retired on a phone, 2026-11-21.** Home, Friends
-and Community are reached by the top row's glyphs alone and nothing swipes
-between them: the wall became home, and rooms are places you go on purpose,
-not panes you swipe through. Sideways inside a post moves between records in
-the wall's current view and filters. The rooms stay mounted, so each keeps
-its scroll — the one thing the rail was protecting (The cross, below).
+**Rooms still swipe on a phone, 2026-11-21, her call.** The home brief
+retired the rail (rooms reached by the glyphs alone); it was built, and the
+same day she missed it, so it came back as it was. Swiping inside an open post
+moves between records in the wall's current view and filters; the post covers
+the wall, so the two never compete. Rooms stay mounted and keep their scroll.
 
 **No floating Listen bar on a phone, 2026-11-21, her call on all three
 counts** (it floats over the wall, takes the bottom, reads as another app's
