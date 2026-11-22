@@ -78,6 +78,7 @@ import { useTheme } from './Lightswitch';
 import { useBookplate } from './Bookplate';
 import ListeningBeacon, { LivingWith } from './ListeningBeacon';
 import ListenBar, { ListenTile } from './ListenBar';
+import Place from './Place';
 import Journal from './Journal';
 import Header from './Header';
 import PinnedLetter from './PinnedLetter';
@@ -1560,10 +1561,10 @@ export default function HomeNav() {
   useLayoutEffect(() => {
     if (!flownOnce.current) { flownOnce.current = true; return undefined; }
     const card = cardRef.current;
-    const foot = document.querySelector('.hn-foot-face');
+    const foot = [...document.querySelectorAll('.pl-face, .hn-foot-face')].find(f => f.offsetWidth);
     const square = card?.querySelector('.idc-portrait');
     const picture = square?.querySelector('img');
-    if (!authed || !foot || !square || !picture || !foot.offsetWidth) return undefined;
+    if (!authed || !foot || !square || !picture) return undefined;
     if (!window.matchMedia('(max-width: 768px)').matches) return undefined;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined;
     if (cardOpen) card.scrollTop = 0;
@@ -1594,6 +1595,55 @@ export default function HomeNav() {
     run.onfinish = land;
     return () => { run.cancel(); land(); };
   }, [cardOpen, authed]);
+
+  // ── The place, 2026-11-21 ─────────────────────────────────────────────
+  // On the keeper's phone the journal opens on the place (Place.js), and the
+  // rooms are a shelf raised over it: the whole of this frame, rail and all,
+  // below the screen until a key brings it up, and taken down by the place's
+  // X. The rail still swipes between the rooms once it is up.
+  const [roomUp, setRoomUp] = useState(false);
+  const hnRef = useRef(null);
+  const shelfMove = useRef(null);
+  const rising = useRef(false);
+  const onPhone = () => typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches;
+  const stillMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function raiseRoom(key) {
+    const index = key === 'people' ? BOOK : key === 'community' ? INBOX : HOME;
+    putEntryAway();
+    setCardOpen(false);
+    const rail = railRef.current;
+    if (rail) rail.scrollLeft = (index - RAIL_FROM) * rail.clientWidth;
+    rising.current = true;
+    setRoomUp(true);
+  }
+  function lowerRoom() {
+    const el = hnRef.current;
+    putEntryAway();
+    if (!el || !onPhone() || stillMotion()) { setRoomUp(false); return; }
+    shelfMove.current?.cancel();
+    const move = el.animate([{ transform: 'none' }, { transform: 'translateY(100%)' }],
+      { duration: 360, easing: 'cubic-bezier(0.4, 0, 0.7, 0.2)', fill: 'forwards' });
+    shelfMove.current = move;
+    let done = false;
+    const down = () => { if (done) return; done = true; setRoomUp(false); };
+    move.onfinish = down;
+    window.setTimeout(down, 420);
+  }
+  useLayoutEffect(() => {
+    const el = hnRef.current;
+    if (!roomUp) {
+      // The class holds it below now; the move that took it there can go.
+      shelfMove.current?.cancel();
+      shelfMove.current = null;
+      return;
+    }
+    if (!rising.current || !el) return;
+    rising.current = false;
+    if (!onPhone() || stillMotion()) return;
+    shelfMove.current?.cancel();
+    shelfMove.current = el.animate([{ transform: 'translateY(100%)' }, { transform: 'none' }],
+      { duration: 460, easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)' });
+  }, [roomUp]);
 
   function pressFace() {
     putEntryAway();
@@ -2006,7 +2056,21 @@ export default function HomeNav() {
     </div>
   ) : null;
 
-  return (
+  return (<>
+    {authed && (
+      <Place
+        entries={entries}
+        held={inHand}
+        waiting={waiting?.friends === true}
+        community={Boolean(PUBLICATION_URL)}
+        roomUp={roomUp}
+        cardOpen={cardOpen}
+        portrait={portrait}
+        onRoom={raiseRoom}
+        onDown={lowerRoom}
+        onFace={() => setCardOpen(open => !open)}
+      />
+    )}
     <div
       className={
         /* A visitor's leaf has one face, whatever this browser remembered
@@ -2024,6 +2088,8 @@ export default function HomeNav() {
         + (spine.dragging ? ' hn--dragging' : '')
         /* The card open over the page, on a phone (nav.css, .hn--card). */
         + (cardOpen ? ' hn--card' : '')
+        /* The rooms below the screen, under the place (Place.js). */
+        + (authed && !roomUp ? ' hn--below' : '')
         + (filing ? ' hn--filing' : '')
         /* The crown is travelling into the bar on this screen, so the bar's
            own small mark stays out of its way. See the morph effect. */
@@ -2039,6 +2105,7 @@ export default function HomeNav() {
         + (typing ? ' hn--typing' : '')
       }
       data-pane={pane}
+      ref={hnRef}
     >
       {header}
       {authed && (
@@ -2317,5 +2384,5 @@ export default function HomeNav() {
           else owns the foot (ListenBar.js). The keeper's alone. */}
       {authed && <ListenBar held={inHand} live={isLive} on={pane === HOME ? 'home' : pane === INBOX ? 'community' : 'other'} />}
     </div>
-  );
+  </>);
 }

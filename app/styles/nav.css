@@ -3939,3 +3939,101 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .hn--keeper .hn-face--card,
   .hn--keeper.hn--card .hn-face--card { transition: none; }
 }
+
+/* ── The place, 2026-11-21 ─────────────────────────────────────────────────
+   The keeper's phone opens on a room of moving album art (Place.js), with
+   Start a listen and the rooms as tinted glass at the foot. The journal's
+   frame — rail, top row and all — waits below the screen and comes up over
+   it like a shelf when a key is pressed (HomeNav, roomUp). Nowhere else:
+   a visitor and a desk never see it. */
+.pl, .pl-face, .pl-down { display: none; }
+@media (max-width: 768px) {
+  .pl {
+    --pl-h: 220;
+    --pl-glass: hsl(var(--pl-h) 55% 50%);
+    display: block;
+    position: fixed; inset: 0; z-index: 0;
+    background: #141414;
+    overflow: hidden;
+  }
+  .pl[data-plain] { --pl-glass: hsl(220 6% 55%); }
+  .pl-art { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .pl-mark {
+    position: absolute; top: calc(26px + var(--safe-top)); right: 20px;
+    font-family: var(--font-display); font-weight: 800; font-size: 22px; letter-spacing: -0.04em;
+    color: #fff; text-shadow: 0 1px 8px rgba(0, 0, 0, 0.35);
+  }
+  .pl-mark i {
+    position: absolute; right: -7px; bottom: 5px; width: 6px; height: 6px;
+    border-radius: 50%; background: #fff;
+  }
+  /* The doors: Start a listen across, one row of rooms under it, a glyph
+     over one word. Glass, tinted by the album behind. */
+  .pl-doors {
+    position: absolute; left: 16px; right: 16px;
+    bottom: calc(22px + env(safe-area-inset-bottom, 0px));
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .pl-rooms { display: flex; gap: 8px; }
+  .pl-rooms .pl-key { flex: 1 1 0; min-width: 0; }
+  .pl-key {
+    position: relative;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
+    padding: 10px 2px 9px; border-radius: 18px;
+    color: #fff; font: inherit; text-decoration: none; cursor: pointer;
+    border: 1px solid rgba(255, 255, 255, 0.34);
+    background: linear-gradient(160deg,
+      color-mix(in srgb, var(--pl-glass) 34%, rgba(255, 255, 255, 0.16)),
+      color-mix(in srgb, var(--pl-glass) 18%, rgba(255, 255, 255, 0.04)));
+    -webkit-backdrop-filter: blur(18px) saturate(170%);
+    backdrop-filter: blur(18px) saturate(170%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 12px 30px rgba(0, 0, 0, 0.28);
+    -webkit-tap-highlight-color: transparent;
+    animation: pl-float 7s ease-in-out infinite;
+  }
+  .pl-rooms .pl-key:nth-child(1) { animation-delay: -1.7s; }
+  .pl-rooms .pl-key:nth-child(2) { animation-delay: -3.1s; }
+  .pl-rooms .pl-key:nth-child(3) { animation-delay: -4.6s; }
+  .pl-key span {
+    font-family: var(--font-label); font-size: 9.5px; letter-spacing: 0.06em;
+  }
+  .pl-key svg { filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.25)); }
+  .pl-key--listen {
+    padding: 15px 16px;
+    font-family: var(--font-display); font-weight: 800; font-size: 18px;
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.25);
+  }
+  .pl-new {
+    position: absolute; top: 9px; right: calc(50% - 19px);
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #fff; box-shadow: 0 0 8px #fff;
+  }
+  .pl-face {
+    display: grid;
+    position: fixed; z-index: 130;
+    top: calc(22px + var(--safe-top)); left: 16px;
+    width: 38px; height: 38px;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.85), 0 4px 14px rgba(0, 0, 0, 0.3);
+  }
+  .pl-down {
+    display: grid; place-items: center;
+    position: fixed; z-index: 130;
+    top: calc(20px + var(--safe-top)); right: 10px;
+    width: 40px; height: 40px; padding: 0; border: 0; background: none;
+    color: var(--ink); cursor: pointer; -webkit-tap-highlight-color: transparent;
+  }
+  /* The shelf: the journal's whole frame, opaque, over the place, and below
+     the screen until a room is raised. */
+  .hn.hn--keeper { position: relative; z-index: 1; background: var(--bg); }
+  .hn.hn--keeper.hn--below { transform: translateY(100%); }
+  /* The card opens over the place, so the frame that holds it comes up
+     bare: only the card shows, under its own top row (the ··· is there). */
+  .hn.hn--keeper.hn--below.hn--card { transform: none; background: none; }
+  .hn--below.hn--card .hn-rail { visibility: hidden; }
+  /* The foot bar's work is the place's now. */
+  .hn--keeper .hn-foot { display: none; }
+}
+@keyframes pl-float { 0%, 100% { translate: 0 0; } 50% { translate: 0 -3px; } }
+@media (prefers-reduced-motion: reduce) {
+  .pl-key { animation: none; }
+}
