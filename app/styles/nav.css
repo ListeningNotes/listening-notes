@@ -3948,16 +3948,23 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .pl--listen { background: var(--bg); }
   .pl-listen {
     position: absolute; left: 0; right: 0; bottom: 0;
-    top: calc(72px + var(--safe-top));
+    top: calc(66px + var(--safe-top));
     overflow-y: auto; -webkit-overflow-scrolling: touch;
   }
-  /* The rooms stay at the foot over a listen, standing just above the
-     listen's own bar (session.css, .ses-bar: 62 high, 15 up), in the
-     page's ink, since there is no art behind them to tint. */
-  .pl--listen .pl-doors {
-    z-index: 31;
-    bottom: calc(max(15px, env(safe-area-inset-bottom, 0px)) + 72px);
+  /* It starts under the face's row, so the room the listen keeps at its top
+     for the clock and an old row of doors is room it has already. */
+  .pl .pl-listen .ses-picker { padding-top: 4px; }
+  .pl .pl-listen .ses-body--page { padding-top: 6px; }
+  /* The rooms stay at the very foot over a listen, where they are over the
+     art, and the listen's own bars stand on them instead (session.css,
+     .ses-bar and .ses-preview-bar: at the foot when a listen is a page). In
+     the page's ink, since there is no art behind them to tint. */
+  .pl .pl-listen .ses:not(.ses--wide) .ses-bar,
+  .pl .pl-listen .ses-preview-bar,
+  .pl .pl-listen .ses-preview-bar:not(.ses-preview-bar--done) {
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 92px);
   }
+  .pl .pl-listen .ses-preview-why { bottom: calc(env(safe-area-inset-bottom, 0px) + 162px); }
   .pl--listen .pl-key {
     color: var(--ink);
     border-color: var(--border);
@@ -3966,7 +3973,7 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   }
   .pl--listen .pl-key svg { filter: none; }
   .pl--listen .pl-new { background: var(--ink); box-shadow: none; }
-  .pl-listen { padding-bottom: 84px; }
+  .pl-listen { padding-bottom: 92px; }
   .pl--listen ~ .pl-top .pl-face { box-shadow: 0 0 0 1px var(--border); }
   /* No brow over the art: the place runs up under the clock (HomeNav). */
   html[data-place] .ln-brow { display: none; }
