@@ -3939,6 +3939,9 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
     color: #fff; filter: drop-shadow(0 1px 6px rgba(0, 0, 0, 0.35));
   }
   .pl-mark-svg { display: block; height: 22px; width: auto; fill: currentColor; }
+  /* The dot in the letters' white, green while a listen is live, as in the top row. */
+  .pl-mark-svg .hn-mark-dot { fill: currentColor; }
+  .pl-mark-svg .hn-mark-dot--live { fill: #7cff9b; }
   /* No brow over the art: the place runs up under the clock (HomeNav). */
   html[data-place] .ln-brow { display: none; }
   /* The doors: Start a listen across, one row of rooms under it, a glyph
