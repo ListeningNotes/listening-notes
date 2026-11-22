@@ -3906,9 +3906,36 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
     width: 54px; height: 54px; margin-top: -26px;
     box-shadow: 0 0 0 4px var(--bg), 0 8px 22px rgba(0, 0, 0, 0.18);
   }
-  /* The card's circle starts at the face down here. */
-  .hn--keeper .hn-face--card { --from: 50% calc(100% - 54px - env(safe-area-inset-bottom, 0px)); }
+  /* The card comes up from behind the bar like a shelf, not out of a
+     circle (Miyel, 2026-11-21), and the face rises with it into the card's
+     square (HomeNav.js, the flight); down again the same way. */
+  .hn--keeper .hn-face--card,
+  .hn--keeper.hn--card .hn-face--card {
+    -webkit-clip-path: none;
+    clip-path: none;
+  }
+  .hn--keeper .hn-face--card {
+    transform: translateY(100%);
+    transition:
+      transform 0.36s cubic-bezier(0.4, 0, 0.7, 0.2),
+      visibility 0s linear 0.36s;
+  }
+  .hn--keeper.hn--card .hn-face--card {
+    transform: none;
+    transition:
+      transform 0.46s cubic-bezier(0.22, 0.61, 0.36, 1),
+      visibility 0s;
+  }
+  .hn-flight {
+    position: fixed;
+    z-index: 128;
+    margin: 0;
+    object-fit: cover;
+    pointer-events: none;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
-  .hn-foot { transition: none; }
+  .hn-foot,
+  .hn--keeper .hn-face--card,
+  .hn--keeper.hn--card .hn-face--card { transition: none; }
 }

@@ -1551,6 +1551,50 @@ export default function HomeNav() {
     document.addEventListener('scroll', onScroll, { capture: true, passive: true });
     return () => document.removeEventListener('scroll', onScroll, { capture: true });
   }, [authed]);
+  // The face's flight: as the card comes up like a shelf, the face at the
+  // foot rises with it in one motion and lands as the card's square; as the
+  // card goes down it flies back. A copy of the picture does the flying,
+  // the square stays empty until it lands. The keeper's phone only, where
+  // the bar is drawn; the circle elsewhere is the stylesheet's.
+  const flownOnce = useRef(false);
+  useLayoutEffect(() => {
+    if (!flownOnce.current) { flownOnce.current = true; return undefined; }
+    const card = cardRef.current;
+    const foot = document.querySelector('.hn-foot-face');
+    const square = card?.querySelector('.idc-portrait');
+    const picture = square?.querySelector('img');
+    if (!authed || !foot || !square || !picture || !foot.offsetWidth) return undefined;
+    if (!window.matchMedia('(max-width: 768px)').matches) return undefined;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined;
+    if (cardOpen) card.scrollTop = 0;
+    const face = foot.getBoundingClientRect();
+    const box = square.getBoundingClientRect();
+    // Where the square stands once the card is all the way up: the card's
+    // own top is 0 there, whatever it is mid-slide now.
+    const top = box.top - card.getBoundingClientRect().top;
+    const rest = { left: `${box.left}px`, top: `${top}px`, width: `${box.width}px`, height: `${box.height}px`, borderRadius: getComputedStyle(square).borderRadius };
+    const dot = { left: `${face.left}px`, top: `${face.top}px`, width: `${face.width}px`, height: `${face.height}px`, borderRadius: '50%' };
+    const flier = document.createElement('img');
+    flier.src = picture.currentSrc || picture.src;
+    flier.alt = '';
+    flier.className = 'hn-flight';
+    flier.style.objectPosition = getComputedStyle(picture).objectPosition;
+    Object.assign(flier.style, cardOpen ? dot : { ...rest, top: `${box.top}px` });
+    document.body.appendChild(flier);
+    square.style.visibility = 'hidden';
+    const run = flier.animate(
+      cardOpen ? [dot, rest] : [{ ...rest, top: `${box.top}px` }, dot],
+      cardOpen
+        ? { duration: 460, easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)', fill: 'forwards' }
+        : { duration: 360, easing: 'cubic-bezier(0.4, 0, 0.7, 0.2)', fill: 'forwards' },
+    );
+    const land = () => { clearTimeout(late); flier.remove(); square.style.visibility = ''; };
+    // A page in the background runs no frames, so its finish may never come.
+    const late = setTimeout(land, (cardOpen ? 460 : 360) + 60);
+    run.onfinish = land;
+    return () => { run.cancel(); land(); };
+  }, [cardOpen, authed]);
+
   function pressFace() {
     putEntryAway();
     if (cardOpen) { setCardOpen(false); return; }
