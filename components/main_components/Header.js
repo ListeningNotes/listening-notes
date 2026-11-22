@@ -45,7 +45,7 @@
 
 import Link from 'next/link';
 
-import { Globe, House, User, Users, X } from '@phosphor-icons/react';
+import { Globe, SquaresFour, User, Users, X } from '@phosphor-icons/react';
 import { useBookplate } from './Bookplate';
 
 export default function Header({
@@ -114,4 +114,6 @@ export default function Header({
   );
 }
 
-const GLYPHS = { home: House, people: Users, community: Globe };
+// Home's glyph is the Archive's since the place, 2026-11-21: on a phone the
+// rooms are a shelf over it, and the first of them is the archive.
+const GLYPHS = { home: SquaresFour, people: Users, community: Globe };

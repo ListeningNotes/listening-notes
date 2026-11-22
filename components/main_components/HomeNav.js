@@ -1525,43 +1525,16 @@ export default function HomeNav() {
     return true;
   }
 
-  // ── The bar at the foot, 2026-11-21 ─────────────────────────────────────
-  // Miyel picked it from three phones: Friends · her face · Community, the
-  // face being Home — pressed away from home it goes home, pressed at home it
-  // opens the card, which grows out of it (nav.css). It steps down while a
-  // room is scrolled down and comes back on the way up, so the foot is clear
-  // while the wall is being looked at. The keeper's, on a phone; the desk and
-  // a visitor keep the top row.
-  const [footDown, setFootDown] = useState(false);
-  useEffect(() => { setFootDown(false); }, [pane, cardOpen]);
-  useEffect(() => {
-    if (!authed) return undefined;
-    const last = new WeakMap();
-    const onScroll = e => {
-      const el = e.target;
-      if (!(el instanceof Element) || !el.closest('.hn')) return;
-      const y = el.scrollTop;
-      const was = last.get(el) ?? 0;
-      last.set(el, y);
-      const d = y - was;
-      // A room's own scroll; the rail between rooms moves sideways and never
-      // changes its scrollTop, so it never gets here.
-      if (Math.abs(d) < 6) return;
-      setFootDown(d > 0 && y > 40);
-    };
-    document.addEventListener('scroll', onScroll, { capture: true, passive: true });
-    return () => document.removeEventListener('scroll', onScroll, { capture: true });
-  }, [authed]);
-  // The face's flight: as the card comes up like a shelf, the face at the
-  // foot rises with it in one motion and lands as the card's square; as the
+  // The face's flight: as the card comes up like a shelf, the face on the
+  // place rises with it in one motion and lands as the card's square; as the
   // card goes down it flies back. A copy of the picture does the flying,
   // the square stays empty until it lands. The keeper's phone only, where
-  // the bar is drawn; the circle elsewhere is the stylesheet's.
+  // the place is drawn; the circle elsewhere is the stylesheet's.
   const flownOnce = useRef(false);
   useLayoutEffect(() => {
     if (!flownOnce.current) { flownOnce.current = true; return undefined; }
     const card = cardRef.current;
-    const foot = [...document.querySelectorAll('.pl-face, .hn-foot-face')].find(f => f.offsetWidth);
+    const foot = [...document.querySelectorAll('.pl-face')].find(f => f.offsetWidth);
     const square = card?.querySelector('.idc-portrait');
     const picture = square?.querySelector('img');
     if (!authed || !foot || !square || !picture) return undefined;
@@ -1645,12 +1618,16 @@ export default function HomeNav() {
       { duration: 460, easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)' });
   }, [roomUp]);
 
-  function pressFace() {
-    putEntryAway();
-    if (cardOpen) { setCardOpen(false); return; }
-    if (pane !== HOME) { goTo(HOME); return; }
-    setCardOpen(true);
-  }
+  // The brow under the clock is page colour so rooms scroll under it; over
+  // the place it would be a band across the top of the art (Miyel: "background
+  // needs to go all the way to top"), so it stands down there (base.css). Only
+  // while the place itself is what shows: a room, the card or anything laid
+  // over the journal at an address of its own gets the brow back.
+  useEffect(() => {
+    const placeShowing = authed && !roomUp && !cardOpen && path === '/';
+    document.documentElement.toggleAttribute('data-place', placeShowing);
+    return () => document.documentElement.removeAttribute('data-place');
+  }, [authed, roomUp, cardOpen, path]);
 
   function goTo(index) {
     const el = railRef.current;
@@ -1805,7 +1782,7 @@ export default function HomeNav() {
   // retired the same day, and its pane is Community — the Board for now,
   // until Community's own brief — on a copy that has a Board at all.
   const stops = authed ? [
-    { key: 'home', word: 'Home', at: HOME },
+    { key: 'home', word: 'Archive', at: HOME },
     { key: 'people', word: 'Friends', at: BOOK },
     ...(PUBLICATION_URL ? [{ key: 'community', word: 'Community', at: INBOX }] : []),
   ] : [];
@@ -2069,6 +2046,8 @@ export default function HomeNav() {
         onRoom={raiseRoom}
         onDown={lowerRoom}
         onFace={() => setCardOpen(open => !open)}
+        logo={mark('pl-mark-svg')}
+        lights={lights}
       />
     )}
     <div
@@ -2108,47 +2087,6 @@ export default function HomeNav() {
       ref={hnRef}
     >
       {header}
-      {authed && (
-        <nav className={'hn-foot' + (footDown && !cardOpen ? ' hn-foot--down' : '')} aria-label="The journal">
-          <button
-            type="button"
-            className={'hn-foot-room' + (pane === BOOK && !cardOpen ? ' hn-foot-room--here' : '')}
-            onClick={() => { putEntryAway(); goTo(BOOK); }}
-            aria-label={waiting?.friends === true ? 'Friends, something new' : 'Friends'}
-          >
-            <span className="hdr-glyph">
-              <Users size={24} weight="regular" aria-hidden="true" />
-              {waiting?.friends === true && <span className="ln-new ln-new--stop" aria-hidden="true">New</span>}
-            </span>
-            <span className="hn-foot-word" aria-hidden="true">Friends</span>
-          </button>
-          <span className={'hn-foot-me' + (pane === HOME && !cardOpen ? ' hn-foot-room--here' : '')}>
-            <button
-              type="button"
-              className={'hdr-face hn-foot-face' + (cardOpen ? ' hdr-face--open' : '')}
-              onClick={pressFace}
-              aria-expanded={cardOpen}
-              aria-label={cardOpen ? 'Close' : pane !== HOME ? 'Home' : `About ${cover_name}`}
-            >
-              <User size={22} weight="regular" aria-hidden="true" />
-              {portrait && <img src={portrait} alt="" />}
-              <span className="hdr-face-x" aria-hidden="true"><X size={20} weight="bold" /></span>
-            </button>
-            <span className="hn-foot-word" aria-hidden="true">Home</span>
-          </span>
-          {PUBLICATION_URL && (
-            <button
-              type="button"
-              className={'hn-foot-room' + (pane === INBOX && !cardOpen ? ' hn-foot-room--here' : '')}
-              onClick={() => { putEntryAway(); goTo(INBOX); }}
-              aria-label="Community"
-            >
-              <span className="hdr-glyph"><Globe size={24} weight="regular" aria-hidden="true" /></span>
-              <span className="hn-foot-word" aria-hidden="true">Community</span>
-            </button>
-          )}
-        </nav>
-      )}
 
       <div className="hn-rail" ref={railRef}>
         {/* ── The ID and the desk ──────────────────────────────────────

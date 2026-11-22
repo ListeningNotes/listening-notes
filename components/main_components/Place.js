@@ -103,7 +103,7 @@ function ListeningRoom({ entries, hue, still }) {
   return <canvas className="pl-art" ref={ref} aria-hidden="true" />;
 }
 
-export default function Place({ entries, held, waiting, community, roomUp, cardOpen, portrait, onRoom, onDown, onFace }) {
+export default function Place({ entries, held, waiting, community, roomUp, cardOpen, portrait, logo, lights, onRoom, onDown, onFace }) {
   // The colour of the album the room is made of, for the wash and the glass.
   const [hue, setHue] = useState(null);
   const first = entries.find(e => e.album_art)?.album_art;
@@ -121,7 +121,8 @@ export default function Place({ entries, held, waiting, community, roomUp, cardO
     >
       {/* Under a raised room nothing of it shows, so it stops drawing. */}
       <ListeningRoom entries={entries} hue={hue} still={roomUp || cardOpen} />
-      <span className="pl-mark" aria-hidden="true">LN<i /></span>
+      {/* The journal's own mark, as it stands in the top row. */}
+      <span className="pl-mark" aria-hidden="true">{logo}</span>
       <nav className="pl-doors" aria-label="The journal">
         <Link href="/session" className="pl-key pl-key--listen" data-grows="/session">
           {held ? `Back to ${held.album}` : 'Start a listen'}
@@ -148,17 +149,21 @@ export default function Place({ entries, held, waiting, community, roomUp, cardO
     {/* Above the card as well as the place: the face opens the card, and is
         its X while it is open (the flight lands from here, HomeNav). */}
     {!roomUp && (
-      <button
-        type="button"
-        className={'hdr-face pl-face' + (cardOpen ? ' hdr-face--open' : '')}
-        onClick={onFace}
-        aria-expanded={cardOpen}
-        aria-label={cardOpen ? 'Close' : 'Your card'}
-      >
-        <User size={22} weight="regular" aria-hidden="true" />
-        {portrait && <img src={portrait} alt="" />}
-        <span className="hdr-face-x" aria-hidden="true"><X size={20} weight="bold" /></span>
-      </button>
+      <div className={'pl-top' + (cardOpen ? ' pl-top--card' : '')}>
+        <button
+          type="button"
+          className={'hdr-face pl-face' + (cardOpen ? ' hdr-face--open' : '')}
+          onClick={onFace}
+          aria-expanded={cardOpen}
+          aria-label={cardOpen ? 'Close' : 'Your card'}
+        >
+          <User size={22} weight="regular" aria-hidden="true" />
+          {portrait && <img src={portrait} alt="" />}
+          <span className="hdr-face-x" aria-hidden="true"><X size={20} weight="bold" /></span>
+        </button>
+        {/* Night and sound, the top row's lights, beside the face. */}
+        {!cardOpen && lights}
+      </div>
     )}
     {roomUp && (
       <button type="button" className="pl-down" onClick={onDown} aria-label="Back to the place">
