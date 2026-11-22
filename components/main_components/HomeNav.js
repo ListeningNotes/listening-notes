@@ -1589,13 +1589,15 @@ export default function HomeNav() {
     rising.current = true;
     setRoomUp(true);
   }
-  function lowerRoom() {
+  // From where a pull has left it (px), or from its resting place.
+  function lowerRoom(from = 0) {
     const el = hnRef.current;
     putEntryAway();
+    if (el) el.style.transform = '';
     if (!el || !onPhone() || stillMotion()) { setRoomUp(false); return; }
     shelfMove.current?.cancel();
-    const move = el.animate([{ transform: 'none' }, { transform: 'translateY(100%)' }],
-      { duration: 360, easing: 'cubic-bezier(0.4, 0, 0.7, 0.2)', fill: 'forwards' });
+    const move = el.animate([{ transform: `translateY(${from}px)` }, { transform: 'translateY(100%)' }],
+      { duration: from ? 260 : 360, easing: from ? 'cubic-bezier(0.22, 0.61, 0.36, 1)' : 'cubic-bezier(0.4, 0, 0.7, 0.2)', fill: 'forwards' });
     shelfMove.current = move;
     let done = false;
     const down = () => { if (done) return; done = true; setRoomUp(false); };
@@ -1617,6 +1619,66 @@ export default function HomeNav() {
     shelfMove.current = el.animate([{ transform: 'translateY(100%)' }, { transform: 'none' }],
       { duration: 460, easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)' });
   }, [roomUp]);
+
+  // Pulled down, the shelf goes down (Miyel, 2026-11-22: "pulling down to
+  // close would be good") — the way a post closes. From the top row, or from
+  // anywhere in a room already scrolled to its top; a pull that starts
+  // sideways is the rail's and is left alone.
+  useEffect(() => {
+    const el = hnRef.current;
+    if (!authed || !roomUp || !el) return undefined;
+    let pull = null;
+    const scrollerOf = node => {
+      for (let n = node; n && n !== el; n = n.parentElement) {
+        const o = getComputedStyle(n).overflowY;
+        if ((o === 'auto' || o === 'scroll') && n.scrollHeight > n.clientHeight) return n;
+      }
+      return null;
+    };
+    const start = e => {
+      if (!onPhone() || cardOpen || e.touches.length !== 1) { pull = null; return; }
+      const t = e.touches[0];
+      pull = { x: t.clientX, y: t.clientY, at: performance.now(), on: false, off: false, top: Boolean(e.target.closest?.('.hdr')), box: scrollerOf(e.target) };
+    };
+    const move = e => {
+      if (!pull || pull.off) return;
+      const t = e.touches[0], dx = t.clientX - pull.x, dy = t.clientY - pull.y;
+      if (!pull.on) {
+        if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+        const atTop = pull.top || !pull.box || pull.box.scrollTop <= 0;
+        if (Math.abs(dx) > Math.abs(dy) || dy < 0 || !atTop) { pull.off = true; return; }
+        pull.on = true;
+        shelfMove.current?.cancel();
+      }
+      e.preventDefault();
+      pull.dy = Math.max(0, dy);
+      el.style.transform = `translateY(${pull.dy}px)`;
+    };
+    const end = () => {
+      if (pull?.on) {
+        const fast = pull.dy / Math.max(1, performance.now() - pull.at) > 0.6;
+        if (pull.dy > 140 || (fast && pull.dy > 40)) lowerRoom(pull.dy);
+        else {
+          const from = pull.dy;
+          el.style.transform = '';
+          el.animate([{ transform: `translateY(${from}px)` }, { transform: 'none' }], { duration: 240, easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)' });
+        }
+      }
+      pull = null;
+    };
+    el.addEventListener('touchstart', start, { passive: true });
+    el.addEventListener('touchmove', move, { passive: false });
+    el.addEventListener('touchend', end);
+    el.addEventListener('touchcancel', end);
+    return () => {
+      el.removeEventListener('touchstart', start);
+      el.removeEventListener('touchmove', move);
+      el.removeEventListener('touchend', end);
+      el.removeEventListener('touchcancel', end);
+    };
+    // lowerRoom is redrawn each render and only ever reads refs and setters.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authed, roomUp, cardOpen]);
 
   // The brow under the clock is page colour so rooms scroll under it; over
   // the place it would be a band across the top of the art (Miyel: "background
@@ -2044,7 +2106,7 @@ export default function HomeNav() {
         cardOpen={cardOpen}
         portrait={portrait}
         onRoom={raiseRoom}
-        onDown={lowerRoom}
+        onDown={() => lowerRoom()}
         onFace={() => setCardOpen(open => !open)}
         logo={mark('pl-mark-svg')}
         lights={lights}

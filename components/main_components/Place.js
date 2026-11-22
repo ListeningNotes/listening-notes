@@ -10,27 +10,30 @@
 // The keeper's alone, and a phone's alone: a visitor gets the journal as it
 // was, and a desk keeps its spine (nav.css hides this above 768px).
 //
-// One room so far, the listening room: the album logged last, large and
-// turning like a record, its own colour washing the room, the rest of the
-// covers circling it at a distance. The other rooms come later, one each
-// time the app is opened.
+// Two rooms so far. The salon: the covers hung frame to frame across the
+// whole screen, the wall panning slowly past, one now and then breathing
+// larger (Miyel, 2026-11-22: "a more full screen background"). The listening
+// room: the album logged last, large and turning like a record, its colour
+// washing the room, the rest circling it; the one she liked least, kept for
+// when a different room greets each opening of the app.
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Globe, SquaresFour, User, Users, X } from '@phosphor-icons/react';
 import { readArtColor, sizedAlbumArt } from '../../library/music_data_api';
 
 const CIRCLING = 12;
+const HUNG = 40;
 
-// The covers the room is made of: the newest first, each loaded once.
-function useCovers(entries) {
+// The covers a room is made of: the newest first, each loaded once.
+function useCovers(entries, count, firstSize) {
   const [covers, setCovers] = useState([]);
-  const key = entries.slice(0, CIRCLING + 1).map(e => e.album_art).join('|');
+  const key = entries.slice(0, count).map(e => e.album_art).join('|');
   useEffect(() => {
-    const list = entries.filter(e => e.album_art).slice(0, CIRCLING + 1);
+    const list = entries.filter(e => e.album_art).slice(0, count);
     setCovers(list.map((e, i) => {
       const img = new Image();
       img.decoding = 'async';
-      img.src = sizedAlbumArt(e.album_art, i === 0 ? 600 : 160);
+      img.src = sizedAlbumArt(e.album_art, i === 0 ? firstSize : 240);
       return img;
     }));
     // The list is keyed on the addresses, not the array, which is new on every fetch.
@@ -47,14 +50,17 @@ function drawCover(pen, img, x, y, s, r) {
   pen.restore();
 }
 
-function ListeningRoom({ entries, hue, still }) {
+// A room's canvas: sized to the screen, drawn every frame while it shows,
+// held on one frame under reduced motion, and idle at a desk's width.
+function Canvas({ draw, still }) {
   const ref = useRef(null);
-  const covers = useCovers(entries);
+  const paint = useRef(draw);
+  useEffect(() => { paint.current = draw; }, [draw]);
   useEffect(() => {
     const canvas = ref.current;
     if (!canvas) return undefined;
     const pen = canvas.getContext('2d');
-    let raf = 0, W = 0, H = 0;
+    let raf = 0, idle = 0, W = 0, H = 0;
     const size = () => {
       const d = window.devicePixelRatio || 1;
       W = canvas.clientWidth; H = canvas.clientHeight;
@@ -64,44 +70,84 @@ function ListeningRoom({ entries, hue, still }) {
     size();
     const start = performance.now();
     const quiet = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    let idle = 0;
     const frame = now => {
       // Not drawn at this width (a desk): look again in a second rather than paint nothing sixty times one.
       if (!canvas.clientWidth) { idle = window.setTimeout(() => { size(); raf = requestAnimationFrame(frame); }, 1000); return; }
       if (!W) size();
-      const t = quiet ? 0 : (now - start) / 1000;
-      const h = hue ?? 220, sat = hue == null ? 8 : 55;
-      const wash = pen.createRadialGradient(W / 2 + Math.sin(t * 0.3) * 80, H * 0.42 + Math.cos(t * 0.25) * 90, 20, W / 2, H / 2, H * 0.8);
-      wash.addColorStop(0, `hsl(${h} ${sat + 15}% 58%)`);
-      wash.addColorStop(0.5, `hsl(${h + 30} ${sat}% 30%)`);
-      wash.addColorStop(1, `hsl(${h + 60} ${Math.max(0, sat - 15)}% 11%)`);
-      pen.fillStyle = wash; pen.fillRect(0, 0, W, H);
-      const cx = W / 2, cy = H * 0.4;
-      covers.slice(1).forEach((img, i, all) => {
-        const a = t * 0.12 + (i / all.length) * Math.PI * 2;
-        const R = Math.min(W * 0.46, 170) + Math.sin(t * 0.5 + i) * 12;
-        const s = 34 + (i % 3) * 8;
-        pen.save(); pen.shadowColor = 'rgba(0,0,0,0.3)'; pen.shadowBlur = 10;
-        drawCover(pen, img, cx + Math.cos(a) * R - s / 2, cy + Math.sin(a) * R * 0.62 - s / 2, s, 4);
-        pen.restore();
-      });
-      if (covers[0]) {
-        const S = Math.min(W * 0.52, 210) * (1 + Math.sin(t * 0.8) * 0.02);
-        pen.save(); pen.translate(cx, cy); pen.rotate(t * 0.05);
-        pen.shadowColor = 'rgba(0,0,0,0.45)'; pen.shadowBlur = 40; pen.shadowOffsetY = 16;
-        pen.fillStyle = 'rgba(0,0,0,0.2)'; pen.beginPath(); pen.roundRect(-S / 2, -S / 2, S, S, 10); pen.fill();
-        pen.shadowColor = 'transparent';
-        drawCover(pen, covers[0], -S / 2, -S / 2, S, 10);
-        pen.restore();
-      }
+      paint.current(pen, W, H, quiet ? 0 : (now - start) / 1000);
       if (!quiet && !still) raf = requestAnimationFrame(frame);
     };
     raf = requestAnimationFrame(frame);
     window.addEventListener('resize', size);
     return () => { cancelAnimationFrame(raf); window.clearTimeout(idle); window.removeEventListener('resize', size); };
-  }, [covers, hue, still]);
+  }, [still]);
   return <canvas className="pl-art" ref={ref} aria-hidden="true" />;
 }
+
+function Salon({ entries, still }) {
+  const covers = useCovers(entries, HUNG, 240);
+  const draw = (pen, W, H, t) => {
+    pen.fillStyle = '#16140f'; pen.fillRect(0, 0, W, H);
+    if (!covers.length) return;
+    const cell = Math.round(W / 3.1), gap = 10, unit = cell + gap;
+    const shift = t * 14, past = Math.floor(shift / unit), frac = shift - past * unit;
+    const n = covers.length;
+    // One cover at a time breathes larger, for three seconds each.
+    const beat = Math.floor(t / 3), swell = Math.sin(((t % 3) / 3) * Math.PI) * 0.12;
+    for (let r = -1; r * unit < H + unit; r++) {
+      const lean = r % 2 ? unit / 2 : 0;
+      for (let c = -1; c * unit - frac + lean < W + unit; c++) {
+        const k = c + past;
+        const idx = ((r * 7 + k * 3) % n + n) % n;
+        const near = ((r * 5 + k) % 9 + 9) % 9 === beat % 9;
+        const s = cell * (1 + (near ? swell : 0));
+        const x = c * unit - frac + lean - (s - cell) / 2;
+        const y = r * unit + 6 + Math.sin(t * 0.4 + k) * 2 - (s - cell) / 2;
+        pen.save();
+        pen.shadowColor = 'rgba(0,0,0,0.45)'; pen.shadowBlur = near ? 30 : 16; pen.shadowOffsetY = 6;
+        pen.fillStyle = '#000'; pen.beginPath(); pen.roundRect(x, y, s, s, 3); pen.fill();
+        pen.restore();
+        drawCover(pen, covers[idx], x, y, s, 3);
+      }
+    }
+  };
+  return <Canvas draw={draw} still={still} />;
+}
+
+function ListeningRoom({ entries, hue, still }) {
+  const covers = useCovers(entries, CIRCLING + 1, 600);
+  const draw = (pen, W, H, t) => {
+    const h = hue ?? 220, sat = hue == null ? 8 : 55;
+    const wash = pen.createRadialGradient(W / 2 + Math.sin(t * 0.3) * 80, H * 0.42 + Math.cos(t * 0.25) * 90, 20, W / 2, H / 2, H * 0.8);
+    wash.addColorStop(0, `hsl(${h} ${sat + 15}% 58%)`);
+    wash.addColorStop(0.5, `hsl(${h + 30} ${sat}% 30%)`);
+    wash.addColorStop(1, `hsl(${h + 60} ${Math.max(0, sat - 15)}% 11%)`);
+    pen.fillStyle = wash; pen.fillRect(0, 0, W, H);
+    const cx = W / 2, cy = H * 0.4;
+    covers.slice(1).forEach((img, i, all) => {
+      const a = t * 0.12 + (i / all.length) * Math.PI * 2;
+      const R = Math.min(W * 0.46, 170) + Math.sin(t * 0.5 + i) * 12;
+      const s = 34 + (i % 3) * 8;
+      pen.save(); pen.shadowColor = 'rgba(0,0,0,0.3)'; pen.shadowBlur = 10;
+      drawCover(pen, img, cx + Math.cos(a) * R - s / 2, cy + Math.sin(a) * R * 0.62 - s / 2, s, 4);
+      pen.restore();
+    });
+    if (covers[0]) {
+      const S = Math.min(W * 0.52, 210) * (1 + Math.sin(t * 0.8) * 0.02);
+      pen.save(); pen.translate(cx, cy); pen.rotate(t * 0.05);
+      pen.shadowColor = 'rgba(0,0,0,0.45)'; pen.shadowBlur = 40; pen.shadowOffsetY = 16;
+      pen.fillStyle = 'rgba(0,0,0,0.2)'; pen.beginPath(); pen.roundRect(-S / 2, -S / 2, S, S, 10); pen.fill();
+      pen.shadowColor = 'transparent';
+      drawCover(pen, covers[0], -S / 2, -S / 2, S, 10);
+      pen.restore();
+    }
+  };
+  return <Canvas draw={draw} still={still} />;
+}
+
+// The room the place shows. One for now; a different one each opening later.
+const ROOMS = { salon: Salon, listening: ListeningRoom };
+const Room = ROOMS.salon;
 
 export default function Place({ entries, held, waiting, community, roomUp, cardOpen, portrait, logo, lights, onRoom, onDown, onFace }) {
   // The colour of the album the room is made of, for the wash and the glass.
@@ -120,7 +166,7 @@ export default function Place({ entries, held, waiting, community, roomUp, cardO
       data-plain={hue == null ? '' : undefined}
     >
       {/* Under a raised room nothing of it shows, so it stops drawing. */}
-      <ListeningRoom entries={entries} hue={hue} still={roomUp || cardOpen} />
+      <Room entries={entries} hue={hue} still={roomUp || cardOpen} />
       {/* The journal's own mark, as it stands in the top row. */}
       <span className="pl-mark" aria-hidden="true">{logo}</span>
       <nav className="pl-doors" aria-label="The journal">
