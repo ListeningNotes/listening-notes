@@ -184,9 +184,23 @@ export default function Place({ entries, held, waiting, community, roomUp, cardO
   }
   const listening = (Boolean(held) || started) && path !== '/session';
 
+  // While a note is being typed in the listen, the keys step down out of the
+  // way of the writing and the keyboard, as the listen's own bar does.
+  const [typing, setTyping] = useState(false);
+  useEffect(() => {
+    if (!listening) return undefined;
+    const look = () => window.setTimeout(() => {
+      const el = document.activeElement;
+      setTyping(Boolean(el?.closest?.('.pl-listen')) && (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT' || el.isContentEditable));
+    }, 0);
+    document.addEventListener('focusin', look);
+    document.addEventListener('focusout', look);
+    return () => { document.removeEventListener('focusin', look); document.removeEventListener('focusout', look); };
+  }, [listening]);
+
   return (<>
     <div
-      className={'pl' + (roomUp ? ' pl--under' : '') + (listening ? ' pl--listen' : '')}
+      className={'pl' + (roomUp ? ' pl--under' : '') + (listening ? ' pl--listen' : '') + (listening && typing ? ' pl--typing' : '')}
       style={hue == null ? undefined : { '--pl-h': hue }}
       data-plain={hue == null ? '' : undefined}
     >
@@ -239,9 +253,9 @@ export default function Place({ entries, held, waiting, community, roomUp, cardO
           {portrait && <img src={portrait} alt="" />}
           <span className="hdr-face-x" aria-hidden="true"><X size={20} weight="bold" /></span>
         </button>
-        {/* Night and sound, the top row's lights, beside the face. Not over a
-            listen, which keeps the row for the rooms. */}
-        {!cardOpen && !listening && lights}
+        {/* Night and sound beside the face over a listen; not on the art,
+            where they did not belong (Miyel, 2026-11-22). */}
+        {!cardOpen && listening && lights}
       </div>
     )}
   </>);

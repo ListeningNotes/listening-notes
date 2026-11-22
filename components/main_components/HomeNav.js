@@ -1534,7 +1534,7 @@ export default function HomeNav() {
   useLayoutEffect(() => {
     if (!flownOnce.current) { flownOnce.current = true; return undefined; }
     const card = cardRef.current;
-    const foot = [...document.querySelectorAll('.pl-face')].find(f => f.offsetWidth);
+    const foot = [...document.querySelectorAll('.pl-face, .hn--keeper .hdr .hdr-face')].find(f => f.offsetWidth);
     const square = card?.querySelector('.idc-portrait');
     const picture = square?.querySelector('img');
     if (!authed || !foot || !square || !picture) return undefined;

@@ -3875,11 +3875,20 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
    on the place. A desk and a visitor are as they were. */
 @media (max-width: 768px) {
   .hn.hn--keeper { --hn-foot-h: env(safe-area-inset-bottom, 0px); }
-  .hn--keeper .hdr .hdr-face,
-  .hn--keeper .hdr .hn-lights,
+  /* The face at the left, opening the card over the room; night and sound
+     at the right; the rooms' glyphs centred between them, with no X:
+     pulled down, the shelf goes (Miyel, 2026-11-22). */
   .hn--keeper .hdr .hdr-mark { display: none; }
-  /* Centred, with no X: pulled down, the shelf goes (Miyel, 2026-11-22). */
-  .hn--keeper .hdr .hdr-stops { margin: 0 auto; gap: 28px; }
+  .hn--keeper .hdr .hdr-stops {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    margin: 0; gap: 28px;
+  }
+  /* In every room, not only on home (the rule over the beacon, above):
+     the place no longer carries them. */
+  .hn.hn--keeper .hdr .hn-lights { display: flex; }
+  .hn--keeper .hdr .hn-lights:not(.hn-sound) { margin-left: auto; }
+  /* Over the place, the card's own row: the place's face is its X. */
+  .hn--below.hn--card .hdr .hdr-face { visibility: hidden; }
   .hn--keeper .hdr .hdr-word { display: none; }
   .hn--keeper .hdr .hdr-stop { padding-bottom: 6px; border-bottom: 1.5px solid transparent; }
   .hn--keeper .hdr .hdr-stop--here { border-bottom-color: var(--ink); }
@@ -3974,6 +3983,12 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .pl--listen .pl-key svg { filter: none; }
   .pl--listen .pl-new { background: var(--ink); box-shadow: none; }
   .pl-listen { padding-bottom: 92px; }
+  /* Typing a note: the keys step down with the listen's own bar, and the bar
+     goes back to the foot to step down from there (session.css). */
+  .pl-doors { transition: transform 0.3s cubic-bezier(0.22, 0.61, 0.36, 1); }
+  .pl--typing .pl-doors { transform: translateY(calc(100% + 40px)); pointer-events: none; }
+  .pl.pl--typing .pl-listen .ses:not(.ses--wide) .ses-bar { bottom: max(15px, env(safe-area-inset-bottom, 0px)); }
+  .pl--listen .pl-top .hn-lights { color: var(--ink-faint); filter: none; }
   .pl--listen ~ .pl-top .pl-face { box-shadow: 0 0 0 1px var(--border); }
   /* No brow over the art: the place runs up under the clock (HomeNav). */
   html[data-place] .ln-brow { display: none; }

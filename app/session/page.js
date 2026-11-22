@@ -948,7 +948,10 @@ export default function SessionPage({ onLeave = null } = {}) {
     // way out of the page at all — so the same gesture is honoured here, from
     // the top of the screen, and lowers the listen the way the sheet's own
     // pull does: the draft written, the record kept in hand, home.
-    if (!layered && from.top && dy > 80 && dy > Math.abs(dx) * 1.5) { backToTheJournal(); return; }
+    // Drawn as the place (onLeave) with a record in hand there is nowhere to
+    // go down to: the listen is home until it is ended. Only the picker, with
+    // nothing chosen yet, is closed this way.
+    if (!layered && from.top && dy > 80 && dy > Math.abs(dx) * 1.5) { if (!(onLeave && pending?.album)) backToTheJournal(); return; }
     if (Math.abs(dx) < 56 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
     if (dx < 0) forward(); else goToStep(step - 1);
   }
