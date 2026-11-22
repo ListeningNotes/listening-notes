@@ -1262,3 +1262,11 @@ their friends' friends, which is what other people's hosting cannot afford.
 Reversed on Miyel's word ("lets remove it"): publishing every book cost a
 privacy switch on every friend, and at a few dozen keepers the second ring
 was the same handful of people. One shared Board meets strangers directly.
+
+**Retired 2026-11-21, the same day, for the place.** On a phone the keeper's
+rooms were a bar at the foot (Friends · her face · Community, the face being
+Home, stepping down on scroll), and before that the wall was the keeper's home
+with a + square to start a listen. She tried three footer designs and a thumb
+index (tabs on the page's edge, up-and-down and sideways, still and turning)
+and rejected each as looking like every other app; what she wanted was a place
+to stand in rather than a way around a product.

@@ -101,12 +101,17 @@ were rewritten the same day, while nobody else had a clone.
 
 ## Structure
 
-**On a phone the wall is home, 2026-11-21, Miyel's home brief.** Top row, the
-wall's line, covers. The keeper sees no beacon of their own; a visitor sees it
-only while the keeper is live, else "[name] has [record] pinned." (the card's
-pin), else nothing — never an empty slot, never a grey last-logged cover. No
-"Visit profile" control: the face already opens the card (her call). The desk
-is unchanged.
+**On the keeper's phone the journal is a place, 2026-11-21, Miyel: "this is
+the direction".** It opens on a room of her own covers, always moving (games
+too), with Start a listen and Archive · Friends · Community as tinted glass at
+the foot; a key raises that room as a shelf, pulled down or X'd to close. A
+listen in hand is the place itself. Never a nav bar or tabs again: a bottom
+bar and a thumb index were each built and rejected ("looks like an iphone").
+
+**A visitor's phone, 2026-11-21, the home brief.** The wall under the top
+row; the beacon only while the keeper is live, else "[name] has [record]
+pinned." (the card's pin), else nothing — never an empty slot. No "Visit
+profile": the face opens the card. Desks are unchanged.
 
 **One motion rule, 2026-11-21: things happening rise from the bottom; things
 that exist open where they are.** A listen rises. A post grows out of its tile,
@@ -119,13 +124,6 @@ retired the rail (rooms reached by the glyphs alone); it was built, and the
 same day she missed it, so it came back as it was. Swiping inside an open post
 moves between records in the wall's current view and filters; the post covers
 the wall, so the two never compete. Rooms stay mounted and keep their scroll.
-
-**On a phone the keeper's rooms are a bar at the foot, 2026-11-21, her pick
-of three working phones:** Friends · her face · Community. The face is Home,
-and pressed at home it opens the card, grown from it; the bar steps down while
-a room scrolls down and is back on the way up. No floating Listen bar: the
-wall's first square opens a listen, which grows out of it and goes back into
-it. The top row keeps the lights and the mark. Desk and visitors unchanged.
 
 **The frame: a top row, and the Listen bar at the foot, 2026-10-22, Miyel's
 answers.** The band of words at the foot is gone. The keeper's face sits top
