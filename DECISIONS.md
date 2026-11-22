@@ -101,6 +101,31 @@ were rewritten the same day, while nobody else had a clone.
 
 ## Structure
 
+**On a phone the wall is home, 2026-11-21, Miyel's home brief.** Top row, the
+wall's line, covers. The keeper sees no beacon of their own; a visitor sees it
+only while the keeper is live, else "[name] has [record] pinned." (the card's
+pin), else nothing — never an empty slot, never a grey last-logged cover. No
+"Visit profile" control: the face already opens the card (her call). The desk
+is unchanged.
+
+**One motion rule, 2026-11-21: things happening rise from the bottom; things
+that exist open where they are.** A listen rises. A post grows out of its tile,
+the tile empty while it is open, and shrinks back into it — after a swipe, into
+the tile of the record it ended on. A song's note unfolds under its row. No
+fades, reduced motion included (her rule over the brief's crossfade).
+
+**The rail between rooms is retired on a phone, 2026-11-21.** Home, Friends
+and Community are reached by the top row's glyphs alone and nothing swipes
+between them: the wall became home, and rooms are places you go on purpose,
+not panes you swipe through. Sideways inside a post moves between records in
+the wall's current view and filters. The rooms stay mounted, so each keeps
+its scroll — the one thing the rail was protecting (The cross, below).
+
+**No floating Listen bar on a phone, 2026-11-21, her call on all three
+counts** (it floats over the wall, takes the bottom, reads as another app's
+button). The wall's first tile starts a listen and holds one in hand; the LN.
+mark's live dot goes back into it. The desk keeps its bar.
+
 **The frame: a top row, and the Listen bar at the foot, 2026-10-22, Miyel's
 answers.** The band of words at the foot is gone. The keeper's face sits top
 left and opens the card over the page; Home · People · Inbox sit top right as
