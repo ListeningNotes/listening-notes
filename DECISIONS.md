@@ -120,10 +120,12 @@ same day she missed it, so it came back as it was. Swiping inside an open post
 moves between records in the wall's current view and filters; the post covers
 the wall, so the two never compete. Rooms stay mounted and keep their scroll.
 
-**No floating Listen bar on a phone, 2026-11-21, her call on all three
-counts** (it floats over the wall, takes the bottom, reads as another app's
-button). The wall's first tile starts a listen and holds one in hand; the LN.
-mark's live dot goes back into it. The desk keeps its bar.
+**On a phone the keeper's rooms are a bar at the foot, 2026-11-21, her pick
+of three working phones:** Friends · her face · Community. The face is Home,
+and pressed at home it opens the card, grown from it; the bar steps down while
+a room scrolls down and is back on the way up. No floating Listen bar: the
+wall's first square opens a listen, which grows out of it and goes back into
+it. The top row keeps the lights and the mark. Desk and visitors unchanged.
 
 **The frame: a top row, and the Listen bar at the foot, 2026-10-22, Miyel's
 answers.** The band of words at the foot is gone. The keeper's face sits top

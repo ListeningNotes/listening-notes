@@ -312,6 +312,15 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
     // again, which is a page reload with a curve on it.
     const swiped = tookASwipe();
     if (swiped) return { swiped, growFrom: null, alone };
+    // ── A listen grows out of the square on a phone, 2026-11-21 ────────────
+    // Miyel's pick: the wall's first square, the album not logged yet, opens
+    // into the listen, and the listen goes back into it (goAway). Anywhere
+    // the square is not on screen — the Listen bar on a desk — it rises.
+    if (arrives === 'bottom' && pathname === '/session' && !reduced
+      && window.matchMedia('(max-width: 768px)').matches) {
+      const square = growBoxOf(pathname);
+      if (square && square.y < window.innerHeight && square.y > -square.h) return { swiped: 0, growFrom: square, alone, square: true };
+    }
     if (arrives === 'bottom') return { swiped: 0, growFrom: null, alone };
     // A post rose from the foot as its card for two days (2026-11-18) and
     // grows from its tile again: "things that already exist open where they
@@ -335,6 +344,13 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
   // than a style, so only a phone hides it (entry.css): a desk shows the
   // wall beside the post and keeps it whole. A turn to a neighbour is a new
   // layer, which empties that record's tile and gives this one back.
+  useLayoutEffect(() => {
+    if (!arrival.square) return;
+    const square = document.querySelector('[data-grows="/session"]');
+    if (!square) return;
+    square.classList.add('lay-away');
+    return () => square.classList.remove('lay-away');
+  }, [arrival.square]);
   useLayoutEffect(() => {
     if (!slug || rises) return;
     const tile = tileOf(slug);
@@ -513,6 +529,22 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const phone = window.matchMedia('(max-width: 768px)').matches;
     if (phone && slug && !rises && !reduced) bringTileIntoView(slug);
+    // The whole sheet into a box on the wall, the way it came out of it.
+    function shrinkInto(into) {
+      let went = false;
+      const back = () => { if (went) return; went = true; goBack(); };
+      window.setTimeout(back, GROW_MS + 60);
+      const at = sheet.getBoundingClientRect();
+      const W = sheet.offsetWidth || window.innerWidth;
+      const H = sheet.offsetHeight || window.innerHeight;
+      const top = at.top - fromX;
+      const shrink = sheet.animate([
+        { transformOrigin: '0 0', transform: `translateY(${fromX}px)`, borderRadius: '0px' },
+        { transformOrigin: '0 0', transform: `translate(${into.x - at.left}px, ${into.y - top}px) scale(${into.w / W}, ${into.h / H})`, borderRadius: '14px' },
+      ], { duration: GROW_MS, easing: GROW_EASE, fill: 'forwards' });
+      shrink.onfinish = back;
+      shrink.oncancel = back;
+    }
     // Back into its tile — or, for a friend's entry read here (2026-10-28),
     // into whatever declared its address, the record pressed on Friends or
     // on their page.
@@ -532,6 +564,14 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
       ], { duration: GROW_MS * 0.7, easing: GROW_EASE, fill: 'forwards' });
       slide.onfinish = back;
       slide.oncancel = back;
+      return;
+    }
+    // A listen that grew out of the square goes back into it, from wherever a
+    // pull left it — on a save too, when the wall has gone back to its top
+    // under the sheet and the album files in beside the square (HomeNav).
+    const square = rises && pathname === '/session' && phone && !reduced ? growBoxOf(pathname) : null;
+    if (square && square.y < window.innerHeight && square.y > -square.h) {
+      shrinkInto(square);
       return;
     }
     if (rises) {
@@ -558,19 +598,7 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
     // effect below that hides it), so there is one record on screen. A desk
     // keeps the flying cover.
     if (phone && onScreen) {
-      let went = false;
-      const back = () => { if (went) return; went = true; goBack(); };
-      window.setTimeout(back, GROW_MS + 60);
-      const at = sheet.getBoundingClientRect();
-      const W = sheet.offsetWidth || window.innerWidth;
-      const H = sheet.offsetHeight || window.innerHeight;
-      const top = at.top - fromX;
-      const shrink = sheet.animate([
-        { transformOrigin: '0 0', transform: `translateY(${fromX}px)`, borderRadius: '0px' },
-        { transformOrigin: '0 0', transform: `translate(${box.x - at.left}px, ${box.y - top}px) scale(${box.w / W}, ${box.h / H})`, borderRadius: '14px' },
-      ], { duration: GROW_MS, easing: GROW_EASE, fill: 'forwards' });
-      shrink.onfinish = back;
-      shrink.oncancel = back;
+      shrinkInto(box);
       return;
     }
     // The cover as the entry draws it: the first screen's on a phone, the
@@ -884,7 +912,7 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
          everything that is not in the content and still belongs to the turn
          — the record in the header, and the page arriving late enough that
          the content's animation has already been and gone. */
-      className={'lay' + (arrival.still ? ' lay--still' : arrival.swiped ? ' lay--swiped' : rises ? ' lay--rises' : growFrom ? ' lay--grows' : ' lay--fades') + (scrolls ? ' lay--scrolls' : '')
+      className={'lay' + (arrival.still ? ' lay--still' : arrival.swiped ? ' lay--swiped' : rises && !growFrom ? ' lay--rises' : growFrom ? ' lay--grows' : ' lay--fades') + (scrolls ? ' lay--scrolls' : '')
         + (arrival.swiped === 1 ? ' lay--from-right' : arrival.swiped === -1 ? ' lay--from-left' : '')
         + (over ? ` lay--over-${over}` : '') + (settling ? ' lay--settling' : '') + (pulled ? ' lay--dragging' : '')
         /* The listen's shape since 2026-10-21: a sheet raised from the Listen

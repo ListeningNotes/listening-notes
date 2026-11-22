@@ -3866,3 +3866,49 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
 @media (min-width: 769px) {
   .hn .beacon-stage.beacon-stage--living, .beacon-stage--living { display: none; }
 }
+
+/* ── The bar at the foot, 2026-11-21 ────────────────────────────────────────
+   Miyel's pick of three phones: Friends · her face · Community along the
+   foot, the face standing up out of the bar and being Home (HomeNav,
+   pressFace). The top row keeps the lights and the mark. The card grows out
+   of the face down here, the same circle from the face it always was. The
+   bar steps down while a room is scrolled down and is back on the way up.
+   The keeper's, on a phone; a desk and a visitor are as they were. */
+.hn-foot { display: none; }
+@media (max-width: 768px) {
+  .hn.hn--keeper { --hn-foot-h: calc(64px + env(safe-area-inset-bottom, 0px)); }
+  .hn--keeper .hdr .hdr-face,
+  .hn--keeper .hdr .hdr-stops { display: none; }
+  .hn-foot {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 127;
+    height: calc(64px + env(safe-area-inset-bottom, 0px));
+    padding: 0 max(30px, env(safe-area-inset-right, 0px)) env(safe-area-inset-bottom, 0px) max(30px, env(safe-area-inset-left, 0px));
+    display: flex; align-items: center; justify-content: space-between;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+    border-top: 1px solid var(--border);
+    transition: transform 0.32s cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+  .hn-foot--down { transform: translateY(calc(100% + 36px)); }
+  .hn-foot-room, .hn-foot-me {
+    width: 86px; display: flex; flex-direction: column; align-items: center; gap: 4px;
+    background: none; border: 0; padding: 0; color: var(--ink-soft); cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .hn-foot-room--here { color: var(--ink); }
+  .hn-foot-room .hdr-glyph { position: relative; display: grid; place-items: center; }
+  .hn-foot-word {
+    font-family: var(--font-label); font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase;
+    border-bottom: 1.5px solid var(--ink); color: var(--ink); visibility: hidden;
+  }
+  .hn-foot-room--here .hn-foot-word { visibility: visible; }
+  .hn-foot .hn-foot-face {
+    width: 54px; height: 54px; margin-top: -26px;
+    box-shadow: 0 0 0 4px var(--bg), 0 8px 22px rgba(0, 0, 0, 0.18);
+  }
+  /* The card's circle starts at the face down here. */
+  .hn--keeper .hn-face--card { --from: 50% calc(100% - 54px - env(safe-area-inset-bottom, 0px)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hn-foot { transition: none; }
+}

@@ -70,7 +70,7 @@
 import { startTransition, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { ArrowsLeftRight, CaretDown, Globe, SpeakerHigh, SpeakerSlash } from '@phosphor-icons/react';
+import { ArrowsLeftRight, CaretDown, Globe, SpeakerHigh, SpeakerSlash, User, Users, X } from '@phosphor-icons/react';
 import { useQuiet, toggleQuiet } from '../../hooks/useSnippet';
 import { announce, useListeningBeacon } from '../../hooks/useListeningBeacon';
 import { useSpineWidth } from '../../hooks/useSpineWidth';
@@ -356,7 +356,7 @@ function secondFloorTop(pane) {
 }
 
 export default function HomeNav() {
-  const { cover_name, pinned_entry_id } = useBookplate();
+  const { cover_name, pinned_entry_id, portrait_url: portrait } = useBookplate();
   const { theme, toggle: toggleTheme } = useTheme();
   const { isLive, before, art: onAir, album: onAirAlbum, artist: onAirArtist, track: onAirTrack } = useListeningBeacon();
   // How wide the spine is on a desk, and the grip that changes it. The hook
@@ -1524,6 +1524,40 @@ export default function HomeNav() {
     return true;
   }
 
+  // ── The bar at the foot, 2026-11-21 ─────────────────────────────────────
+  // Miyel picked it from three phones: Friends · her face · Community, the
+  // face being Home — pressed away from home it goes home, pressed at home it
+  // opens the card, which grows out of it (nav.css). It steps down while a
+  // room is scrolled down and comes back on the way up, so the foot is clear
+  // while the wall is being looked at. The keeper's, on a phone; the desk and
+  // a visitor keep the top row.
+  const [footDown, setFootDown] = useState(false);
+  useEffect(() => { setFootDown(false); }, [pane, cardOpen]);
+  useEffect(() => {
+    if (!authed) return undefined;
+    const last = new WeakMap();
+    const onScroll = e => {
+      const el = e.target;
+      if (!(el instanceof Element) || !el.closest('.hn')) return;
+      const y = el.scrollTop;
+      const was = last.get(el) ?? 0;
+      last.set(el, y);
+      const d = y - was;
+      // A room's own scroll; the rail between rooms moves sideways and never
+      // changes its scrollTop, so it never gets here.
+      if (Math.abs(d) < 6) return;
+      setFootDown(d > 0 && y > 40);
+    };
+    document.addEventListener('scroll', onScroll, { capture: true, passive: true });
+    return () => document.removeEventListener('scroll', onScroll, { capture: true });
+  }, [authed]);
+  function pressFace() {
+    putEntryAway();
+    if (cardOpen) { setCardOpen(false); return; }
+    if (pane !== HOME) { goTo(HOME); return; }
+    setCardOpen(true);
+  }
+
   function goTo(index) {
     const el = railRef.current;
     if (!el) return;
@@ -1963,6 +1997,47 @@ export default function HomeNav() {
       data-pane={pane}
     >
       {header}
+      {authed && (
+        <nav className={'hn-foot' + (footDown && !cardOpen ? ' hn-foot--down' : '')} aria-label="The journal">
+          <button
+            type="button"
+            className={'hn-foot-room' + (pane === BOOK && !cardOpen ? ' hn-foot-room--here' : '')}
+            onClick={() => { putEntryAway(); goTo(BOOK); }}
+            aria-label={waiting?.friends === true ? 'Friends, something new' : 'Friends'}
+          >
+            <span className="hdr-glyph">
+              <Users size={24} weight="regular" aria-hidden="true" />
+              {waiting?.friends === true && <span className="ln-new ln-new--stop" aria-hidden="true">New</span>}
+            </span>
+            <span className="hn-foot-word" aria-hidden="true">Friends</span>
+          </button>
+          <span className={'hn-foot-me' + (pane === HOME && !cardOpen ? ' hn-foot-room--here' : '')}>
+            <button
+              type="button"
+              className={'hdr-face hn-foot-face' + (cardOpen ? ' hdr-face--open' : '')}
+              onClick={pressFace}
+              aria-expanded={cardOpen}
+              aria-label={cardOpen ? 'Close' : pane !== HOME ? 'Home' : `About ${cover_name}`}
+            >
+              <User size={22} weight="regular" aria-hidden="true" />
+              {portrait && <img src={portrait} alt="" />}
+              <span className="hdr-face-x" aria-hidden="true"><X size={20} weight="bold" /></span>
+            </button>
+            <span className="hn-foot-word" aria-hidden="true">Home</span>
+          </span>
+          {PUBLICATION_URL && (
+            <button
+              type="button"
+              className={'hn-foot-room' + (pane === INBOX && !cardOpen ? ' hn-foot-room--here' : '')}
+              onClick={() => { putEntryAway(); goTo(INBOX); }}
+              aria-label="Community"
+            >
+              <span className="hdr-glyph"><Globe size={24} weight="regular" aria-hidden="true" /></span>
+              <span className="hn-foot-word" aria-hidden="true">Community</span>
+            </button>
+          )}
+        </nav>
+      )}
 
       <div className="hn-rail" ref={railRef}>
         {/* ── The ID and the desk ──────────────────────────────────────

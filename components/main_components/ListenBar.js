@@ -199,14 +199,14 @@ export default function ListenBar({ held, live = false, on = 'home' }) {
 export function ListenTile({ held, live = false }) {
   if (!held) {
     return (
-      <Link href="/session" className="lt" aria-label="Start a listen">
+      <Link href="/session" className="lt" data-grows="/session" aria-label="Start a listen">
         <span className="lt-plus" aria-hidden="true">+</span>
         <span className="lt-word">Listen</span>
       </Link>
     );
   }
   return (
-    <Link href="/session" className="lt lt--held" aria-label={`Back to ${held.album}`} title={`Back to ${held.album}`}>
+    <Link href="/session" className="lt lt--held" data-grows="/session" aria-label={`Back to ${held.album}`} title={`Back to ${held.album}`}>
       {held.artUrl ? <img className="lt-art" src={held.artUrl} alt="" aria-hidden="true" /> : null}
       <span className="lt-held">
         {live && <i className="lt-live" aria-hidden="true" />}
