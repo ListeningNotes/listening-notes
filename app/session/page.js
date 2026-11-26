@@ -86,9 +86,7 @@ function letGo(except = null) {
   el.blur();
 }
 
-// onLeave: a listen drawn as the place on a phone (Place.js) has no page to
-// go back to; the place says what leaving it is.
-export default function SessionPage({ onLeave = null } = {}) {
+export default function SessionPage() {
   const [authed, setAuthed]     = useState(false);
   const [checking, setChecking] = useState(true);
 
@@ -853,7 +851,7 @@ export default function SessionPage({ onLeave = null } = {}) {
     if (song) {
       try { sessionStorage.removeItem(TRACK_NOTE_KEY); } catch { /* nothing to clear */ }
     } else if (pending?.album && !(await lower())) return;
-    if (onLeave) onLeave(); else router.push('/');
+    router.push('/');
   }
 
   // Every step change goes through here so the slide knows which way to travel.
@@ -948,10 +946,7 @@ export default function SessionPage({ onLeave = null } = {}) {
     // way out of the page at all — so the same gesture is honoured here, from
     // the top of the screen, and lowers the listen the way the sheet's own
     // pull does: the draft written, the record kept in hand, home.
-    // Drawn as the place (onLeave) with a record in hand there is nowhere to
-    // go down to: the listen is home until it is ended. Only the picker, with
-    // nothing chosen yet, is closed this way.
-    if (!layered && from.top && dy > 80 && dy > Math.abs(dx) * 1.5) { if (!(onLeave && pending?.album)) backToTheJournal(); return; }
+    if (!layered && from.top && dy > 80 && dy > Math.abs(dx) * 1.5) { backToTheJournal(); return; }
     if (Math.abs(dx) < 56 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
     if (dx < 0) forward(); else goToStep(step - 1);
   }

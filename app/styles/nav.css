@@ -3867,32 +3867,11 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .hn .beacon-stage.beacon-stage--living, .beacon-stage--living { display: none; }
 }
 
-/* ── The shelf's top row, 2026-11-21 ─────────────────────────────────────────
-   On the keeper's phone the rooms are a shelf over the place (Place.js), and
-   its top row is the rooms' glyphs, Archive · Friends · Community, with the
-   one you are in underlined and no words (Miyel: "icons instead of words"),
-   centred; it goes back down by being pulled. The face, the lights and the mark live
-   on the place. A desk and a visitor are as they were. */
+/* ── The card rises like a shelf, 2026-11-21 ────────────────────────────────
+   The keeper's top row is as it was (the face, the lights, the mark, the
+   rooms' glyphs, Header.js); only the card's arrival is this. */
 @media (max-width: 768px) {
   .hn.hn--keeper { --hn-foot-h: env(safe-area-inset-bottom, 0px); }
-  /* The face at the left, opening the card over the room; night and sound
-     at the right; the rooms' glyphs centred between them, with no X:
-     pulled down, the shelf goes (Miyel, 2026-11-22). */
-  .hn--keeper .hdr .hdr-mark { display: none; }
-  .hn--keeper .hdr .hdr-stops {
-    position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
-    margin: 0; gap: 28px;
-  }
-  /* In every room, not only on home (the rule over the beacon, above):
-     the place no longer carries them. */
-  .hn.hn--keeper .hdr .hn-lights { display: flex; }
-  .hn--keeper .hdr .hn-lights:not(.hn-sound) { margin-left: auto; }
-  /* Over the place, the card's own row: the place's face is its X. */
-  .hn--below.hn--card .hdr .hdr-face { visibility: hidden; }
-  .hn--keeper .hdr .hdr-word { display: none; }
-  .hn--keeper .hdr .hdr-stop { padding-bottom: 6px; border-bottom: 1.5px solid transparent; }
-  .hn--keeper .hdr .hdr-stop--here { border-bottom-color: var(--ink); }
-  .hn--keeper .hdr .hdr-glyph svg { width: 22px; height: 22px; }
   /* The card comes up from behind the bar like a shelf, not out of a
      circle (Miyel, 2026-11-21), and the face rises with it into the card's
      square (HomeNav.js, the flight); down again the same way. */
@@ -3926,147 +3905,18 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .hn--keeper.hn--card .hn-face--card { transition: none; }
 }
 
-/* ── The place, 2026-11-21 ─────────────────────────────────────────────────
-   The keeper's phone opens on a room of moving album art (Place.js), with
-   Start a listen and the rooms as tinted glass at the foot. The journal's
-   frame — rail, top row and all — waits below the screen and comes up over
-   it like a shelf when a key is pressed (HomeNav, roomUp). Nowhere else:
-   a visitor and a desk never see it. */
-.pl, .pl-face { display: none; }
+/* The screensaver's canvas (Place.js), the whole of its frame. */
 @media (max-width: 768px) {
-  .pl {
-    --pl-h: 220;
-    --pl-glass: hsl(var(--pl-h) 55% 50%);
-    display: block;
-    position: fixed; inset: 0; z-index: 0;
-    background: #141414;
-    overflow: hidden;
-  }
-  .pl[data-plain] { --pl-glass: hsl(220 6% 55%); }
   .pl-art { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-  .pl-mark {
-    position: absolute; top: calc(30px + var(--safe-top)); right: 20px;
-    color: #fff; filter: drop-shadow(0 1px 6px rgba(0, 0, 0, 0.35));
-  }
-  .pl-mark-svg { display: block; height: 22px; width: auto; fill: currentColor; }
-  /* The dot in the letters' white, green while a listen is live, as in the top row. */
-  .pl-mark-svg .hn-mark-dot { fill: currentColor; }
-  .pl-mark-svg .hn-mark-dot--live { fill: #7cff9b; }
-  /* A listen in hand is the place (Place.js): the listen itself, under a
-     row of the face and the rooms' glyphs, and the rooms rise over it. */
-  .pl--listen { background: var(--bg); }
-  .pl-listen {
-    position: absolute; left: 0; right: 0; bottom: 0;
-    top: calc(66px + var(--safe-top));
-    overflow-y: auto; -webkit-overflow-scrolling: touch;
-  }
-  /* It starts under the face's row, so the room the listen keeps at its top
-     for the clock and an old row of doors is room it has already. */
-  .pl .pl-listen .ses-picker { padding-top: 4px; }
-  .pl .pl-listen .ses-body--page { padding-top: 6px; }
-  /* The rooms stay at the very foot over a listen, where they are over the
-     art, and the listen's own bars stand on them instead (session.css,
-     .ses-bar and .ses-preview-bar: at the foot when a listen is a page). In
-     the page's ink, since there is no art behind them to tint. */
-  .pl .pl-listen .ses:not(.ses--wide) .ses-bar,
-  .pl .pl-listen .ses-preview-bar,
-  .pl .pl-listen .ses-preview-bar:not(.ses-preview-bar--done) {
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 92px);
-  }
-  .pl .pl-listen .ses-preview-why { bottom: calc(env(safe-area-inset-bottom, 0px) + 162px); }
-  .pl--listen .pl-key {
-    color: var(--ink);
-    border-color: var(--border);
-    background: color-mix(in srgb, var(--pl-glass) 14%, var(--panel-solid));
-    box-shadow: 0 8px 22px rgba(26, 26, 26, 0.12);
-  }
-  .pl--listen .pl-key svg { filter: none; }
-  .pl--listen .pl-new { background: var(--ink); box-shadow: none; }
-  .pl-listen { padding-bottom: 92px; }
-  /* Typing a note: the keys step down with the listen's own bar, and the bar
-     goes back to the foot to step down from there (session.css). */
-  .pl-doors { transition: transform 0.3s cubic-bezier(0.22, 0.61, 0.36, 1); }
-  .pl--typing .pl-doors { transform: translateY(calc(100% + 40px)); pointer-events: none; }
-  .pl.pl--typing .pl-listen .ses:not(.ses--wide) .ses-bar { bottom: max(15px, env(safe-area-inset-bottom, 0px)); }
-  .pl--listen .pl-top .hn-lights { color: var(--ink-faint); filter: none; }
-  .pl--listen ~ .pl-top .pl-face { box-shadow: 0 0 0 1px var(--border); }
-  /* No brow over the art: the place runs up under the clock (HomeNav). */
-  html[data-place] .ln-brow { display: none; }
-  /* The doors: Start a listen across, one row of rooms under it, a glyph
-     over one word. Glass, tinted by the album behind. */
-  .pl-doors {
-    position: absolute; left: 16px; right: 16px;
-    bottom: calc(22px + env(safe-area-inset-bottom, 0px));
-    display: flex; flex-direction: column; gap: 8px;
-  }
-  .pl-rooms { display: flex; gap: 8px; }
-  .pl-rooms .pl-key { flex: 1 1 0; min-width: 0; }
-  .pl-key {
-    position: relative;
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
-    padding: 10px 2px 9px; border-radius: 18px;
-    color: #fff; font: inherit; text-decoration: none; cursor: pointer;
-    border: 1px solid rgba(255, 255, 255, 0.34);
-    background: linear-gradient(160deg,
-      color-mix(in srgb, var(--pl-glass) 34%, rgba(255, 255, 255, 0.16)),
-      color-mix(in srgb, var(--pl-glass) 18%, rgba(255, 255, 255, 0.04)));
-    -webkit-backdrop-filter: blur(18px) saturate(170%);
-    backdrop-filter: blur(18px) saturate(170%);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 12px 30px rgba(0, 0, 0, 0.28);
-    -webkit-tap-highlight-color: transparent;
-    animation: pl-float 7s ease-in-out infinite;
-  }
-  .pl-rooms .pl-key:nth-child(1) { animation-delay: -1.7s; }
-  .pl-rooms .pl-key:nth-child(2) { animation-delay: -3.1s; }
-  .pl-rooms .pl-key:nth-child(3) { animation-delay: -4.6s; }
-  .pl-key span {
-    font-family: var(--font-label); font-size: 9.5px; letter-spacing: 0.06em;
-  }
-  .pl-key svg { filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.25)); }
-  .pl-key--listen {
-    padding: 15px 16px;
-    font-family: var(--font-display); font-weight: 800; font-size: 18px;
-    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.25);
-  }
-  .pl-new {
-    position: absolute; top: 9px; right: calc(50% - 19px);
-    width: 6px; height: 6px; border-radius: 50%;
-    background: #fff; box-shadow: 0 0 8px #fff;
-  }
-  .pl-top {
-    position: fixed; z-index: 130;
-    top: calc(22px + var(--safe-top)); left: 16px;
-    display: flex; align-items: center; gap: 14px;
-  }
-  .pl-face {
-    display: grid;
-    width: 38px; height: 38px;
-    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.85), 0 4px 14px rgba(0, 0, 0, 0.3);
-  }
-  .pl-top .hn-lights { color: #fff; filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.35)); }
-  /* The shelf: the journal's whole frame, opaque, over the place, and below
-     the screen until a room is raised. */
-  .hn.hn--keeper { position: relative; z-index: 1; background: var(--bg); }
-  .hn.hn--keeper.hn--below { transform: translateY(100%); }
-  /* The card opens over the place, so the frame that holds it comes up
-     bare: only the card shows, under its own top row (the ··· is there). */
-  .hn.hn--keeper.hn--below.hn--card { transform: none; background: none; }
-  .hn--below.hn--card .hn-rail { visibility: hidden; }
-  /* The wall's first square started a listen before the place had Start a
-     listen of its own. */
-  .hn--keeper .hn-pane--home .lt { display: none; }
-}
-@keyframes pl-float { 0%, 100% { translate: 0 0; } 50% { translate: 0 -3px; } }
-@media (prefers-reduced-motion: reduce) {
-  .pl-key { animation: none; }
 }
 
 /* ── The screensaver, 2026-11-25 ───────────────────────────────────────────
    The salon over everything — the brow, a post, the card — with the LN.
    mark the one thing on it (Place.js, Screensaver; HomeNav). It is there
-   from the first paint while the journal opens, lifts away upward when it is
-   ready or tapped, and comes back down over the page like a blind after a
-   while untouched. Moved, never faded. A phone's only. */
+   from the first paint while the journal opens and stays until it is tapped;
+   then its covers scatter off the screen and the page shows through. After a
+   while untouched it comes back down over the page like a blind. Moved,
+   never faded. A phone's only. */
 .saver { display: none; }
 @media (max-width: 768px) {
   .saver {
@@ -4078,7 +3928,10 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
     -webkit-tap-highlight-color: transparent;
   }
   .saver--arriving { animation: saver-down 0.46s cubic-bezier(0.22, 0.61, 0.36, 1); }
-  .saver--leaving { animation: saver-up 0.46s cubic-bezier(0.4, 0, 0.7, 0.2) forwards; pointer-events: none; }
+  /* Leaving, the covers scatter on the canvas (Place.js) and the wall shows
+     through where they were; the mark goes with the wall between them. */
+  .saver--leaving { background: none; pointer-events: none; }
+  .saver--leaving .saver-mark { visibility: hidden; }
   .saver-mark {
     position: absolute; left: 50%; transform: translateX(-50%);
     bottom: calc(44px + env(safe-area-inset-bottom, 0px));
@@ -4090,7 +3943,6 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .saver-mark-svg .hn-mark-dot { fill: currentColor; }
 }
 @keyframes saver-down { from { transform: translateY(-100%); } to { transform: none; } }
-@keyframes saver-up { from { transform: none; } to { transform: translateY(-100%); } }
 @media (prefers-reduced-motion: reduce) {
   .saver--arriving, .saver--leaving { animation: none; }
 }

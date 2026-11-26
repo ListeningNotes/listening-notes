@@ -78,7 +78,7 @@ import { useTheme } from './Lightswitch';
 import { useBookplate } from './Bookplate';
 import ListeningBeacon, { LivingWith } from './ListeningBeacon';
 import ListenBar, { ListenTile } from './ListenBar';
-import Place, { Screensaver, rememberCovers, useRemembered } from './Place';
+import { SCATTER_MS, Screensaver, rememberCovers, useRemembered } from './Place';
 import Journal from './Journal';
 import Header from './Header';
 import PinnedLetter from './PinnedLetter';
@@ -1536,7 +1536,7 @@ export default function HomeNav() {
   useLayoutEffect(() => {
     if (!flownOnce.current) { flownOnce.current = true; return undefined; }
     const card = cardRef.current;
-    const foot = [...document.querySelectorAll('.pl-face, .hn--keeper .hdr .hdr-face')].find(f => f.offsetWidth);
+    const foot = [...document.querySelectorAll('.hn--keeper .hdr .hdr-face')].find(f => f.offsetWidth);
     const square = card?.querySelector('.idc-portrait');
     const picture = square?.querySelector('img');
     if (!authed || !foot || !square || !picture) return undefined;
@@ -1571,141 +1571,21 @@ export default function HomeNav() {
     return () => { run.cancel(); land(); };
   }, [cardOpen, authed]);
 
-  // ── The place, 2026-11-21 ─────────────────────────────────────────────
-  // On the keeper's phone the journal opens on the place (Place.js), and the
-  // rooms are a shelf raised over it: the whole of this frame, rail and all,
-  // below the screen until a key brings it up, and pulled down to go (below).
-  // The rail still swipes between the rooms once it is up.
-  const [roomUp, setRoomUp] = useState(false);
-  const hnRef = useRef(null);
-  const shelfMove = useRef(null);
-  const rising = useRef(false);
-  const onPhone = () => typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches;
-  const stillMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  function raiseRoom(key) {
-    const index = key === 'people' ? BOOK : key === 'community' ? INBOX : HOME;
-    putEntryAway();
-    setCardOpen(false);
-    const rail = railRef.current;
-    if (rail) rail.scrollLeft = (index - RAIL_FROM) * rail.clientWidth;
-    rising.current = true;
-    setRoomUp(true);
-  }
-  // From where a pull has left it (px), or from its resting place.
-  function lowerRoom(from = 0) {
-    const el = hnRef.current;
-    putEntryAway();
-    if (el) el.style.transform = '';
-    if (!el || !onPhone() || stillMotion()) { setRoomUp(false); return; }
-    shelfMove.current?.cancel();
-    const move = el.animate([{ transform: `translateY(${from}px)` }, { transform: 'translateY(100%)' }],
-      { duration: from ? 260 : 360, easing: from ? 'cubic-bezier(0.22, 0.61, 0.36, 1)' : 'cubic-bezier(0.4, 0, 0.7, 0.2)', fill: 'forwards' });
-    shelfMove.current = move;
-    let done = false;
-    const down = () => { if (done) return; done = true; setRoomUp(false); };
-    move.onfinish = down;
-    window.setTimeout(down, 420);
-  }
-  useLayoutEffect(() => {
-    const el = hnRef.current;
-    if (!roomUp) {
-      // The class holds it below now; the move that took it there can go.
-      shelfMove.current?.cancel();
-      shelfMove.current = null;
-      return;
-    }
-    if (!rising.current || !el) return;
-    rising.current = false;
-    if (!onPhone() || stillMotion()) return;
-    shelfMove.current?.cancel();
-    shelfMove.current = el.animate([{ transform: 'translateY(100%)' }, { transform: 'none' }],
-      { duration: 460, easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)' });
-  }, [roomUp]);
-
-  // Pulled down, the shelf goes down (Miyel, 2026-11-22: "pulling down to
-  // close would be good") — the way a post closes. From the top row, or from
-  // anywhere in a room already scrolled to its top; a pull that starts
-  // sideways is the rail's and is left alone.
-  useEffect(() => {
-    const el = hnRef.current;
-    if (!authed || !roomUp || !el) return undefined;
-    let pull = null;
-    const scrollerOf = node => {
-      for (let n = node; n && n !== el; n = n.parentElement) {
-        const o = getComputedStyle(n).overflowY;
-        if ((o === 'auto' || o === 'scroll') && n.scrollHeight > n.clientHeight) return n;
-      }
-      return null;
-    };
-    const start = e => {
-      if (!onPhone() || cardOpen || e.touches.length !== 1) { pull = null; return; }
-      const t = e.touches[0];
-      pull = { x: t.clientX, y: t.clientY, at: performance.now(), on: false, off: false, top: Boolean(e.target.closest?.('.hdr')), box: scrollerOf(e.target) };
-    };
-    const move = e => {
-      if (!pull || pull.off) return;
-      const t = e.touches[0], dx = t.clientX - pull.x, dy = t.clientY - pull.y;
-      if (!pull.on) {
-        if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
-        const atTop = pull.top || !pull.box || pull.box.scrollTop <= 0;
-        if (Math.abs(dx) > Math.abs(dy) || dy < 0 || !atTop) { pull.off = true; return; }
-        pull.on = true;
-        shelfMove.current?.cancel();
-      }
-      e.preventDefault();
-      pull.dy = Math.max(0, dy);
-      el.style.transform = `translateY(${pull.dy}px)`;
-    };
-    const end = () => {
-      if (pull?.on) {
-        const fast = pull.dy / Math.max(1, performance.now() - pull.at) > 0.6;
-        if (pull.dy > 140 || (fast && pull.dy > 40)) lowerRoom(pull.dy);
-        else {
-          const from = pull.dy;
-          el.style.transform = '';
-          el.animate([{ transform: `translateY(${from}px)` }, { transform: 'none' }], { duration: 240, easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)' });
-        }
-      }
-      pull = null;
-    };
-    el.addEventListener('touchstart', start, { passive: true });
-    el.addEventListener('touchmove', move, { passive: false });
-    el.addEventListener('touchend', end);
-    el.addEventListener('touchcancel', end);
-    return () => {
-      el.removeEventListener('touchstart', start);
-      el.removeEventListener('touchmove', move);
-      el.removeEventListener('touchend', end);
-      el.removeEventListener('touchcancel', end);
-    };
-    // lowerRoom is redrawn each render and only ever reads refs and setters.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authed, roomUp, cardOpen]);
-
   // ── The screensaver, 2026-11-25 ────────────────────────────────────────
-  // The loading screen while the journal opens, lifting away once it is
-  // ready (and not before a second and a half, so it never flickers), and
-  // the same art again after a while untouched — never while a listen is in
-  // hand, a post or a listen is open, or something is being typed. A tap
-  // lifts it off exactly where you were (Place.js, Screensaver).
+  // The opening screen while the journal loads, which stays until it is
+  // tapped (Miyel: "you watch until you open"), and the same art again after
+  // a while untouched — never while a listen is in hand, a post or a listen
+  // is open, or something is being typed. A tap lifts it off exactly where
+  // you were (Place.js, Screensaver).
   const remembered = useRemembered();
   const [saver, setSaver] = useState('loading');
   const [saverLeaving, setSaverLeaving] = useState(false);
-  const openedAt = useRef(0);
-  useEffect(() => { openedAt.current = performance.now(); }, []);
   const liftSaver = useCallback(() => {
     if (saverLeaving) return;
     setSaverLeaving(true);
     const quiet = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    window.setTimeout(() => { setSaver(null); setSaverLeaving(false); }, quiet ? 0 : 460);
+    window.setTimeout(() => { setSaver(null); setSaverLeaving(false); }, quiet ? 0 : SCATTER_MS);
   }, [saverLeaving]);
-  const ready = checked && !loading;
-  useEffect(() => {
-    if (saver !== 'loading' || !ready) return undefined;
-    const wait = Math.max(0, 1500 - (performance.now() - openedAt.current));
-    const t = window.setTimeout(liftSaver, wait);
-    return () => window.clearTimeout(t);
-  }, [saver, ready, liftSaver]);
   useEffect(() => {
     if (authed && entries.length) rememberCovers(entries);
   }, [authed, entries]);
@@ -1731,18 +1611,6 @@ export default function HomeNav() {
     };
   }, [authed, saver, path, inHand]);
   const saverShows = saver === 'idle' || (saver === 'loading' && remembered.length > 0);
-
-  // The brow under the clock is page colour so rooms scroll under it; over
-  // the place it would be a band across the top of the art (Miyel: "background
-  // needs to go all the way to top"), so it stands down there (base.css). Only
-  // while the place itself is what shows: a room, the card or anything laid
-  // over the journal at an address of its own gets the brow back.
-  useEffect(() => {
-    // A listen in hand is the place too, and a listen is page colour.
-    const placeShowing = authed && !roomUp && !cardOpen && path === '/' && !inHand;
-    document.documentElement.toggleAttribute('data-place', placeShowing);
-    return () => document.documentElement.removeAttribute('data-place');
-  }, [authed, roomUp, cardOpen, path, inHand]);
 
   function goTo(index) {
     const el = railRef.current;
@@ -1897,7 +1765,7 @@ export default function HomeNav() {
   // retired the same day, and its pane is Community — the Board for now,
   // until Community's own brief — on a copy that has a Board at all.
   const stops = authed ? [
-    { key: 'home', word: 'Archive', at: HOME },
+    { key: 'home', word: 'Home', at: HOME },
     { key: 'people', word: 'Friends', at: BOOK },
     ...(PUBLICATION_URL ? [{ key: 'community', word: 'Community', at: INBOX }] : []),
   ] : [];
@@ -2158,21 +2026,6 @@ export default function HomeNav() {
         onEnter={liftSaver}
       />
     )}
-    {authed && (
-      <Place
-        entries={entries}
-        held={inHand}
-        waiting={waiting?.friends === true}
-        community={Boolean(PUBLICATION_URL)}
-        roomUp={roomUp}
-        cardOpen={cardOpen}
-        portrait={portrait}
-        onRoom={raiseRoom}
-        onFace={() => setCardOpen(open => !open)}
-        logo={mark('pl-mark-svg')}
-        lights={lights}
-      />
-    )}
     <div
       className={
         /* A visitor's leaf has one face, whatever this browser remembered
@@ -2190,8 +2043,6 @@ export default function HomeNav() {
         + (spine.dragging ? ' hn--dragging' : '')
         /* The card open over the page, on a phone (nav.css, .hn--card). */
         + (cardOpen ? ' hn--card' : '')
-        /* The rooms below the screen, under the place (Place.js). */
-        + (authed && !roomUp ? ' hn--below' : '')
         + (filing ? ' hn--filing' : '')
         /* The crown is travelling into the bar on this screen, so the bar's
            own small mark stays out of its way. See the morph effect. */
@@ -2207,7 +2058,6 @@ export default function HomeNav() {
         + (typing ? ' hn--typing' : '')
       }
       data-pane={pane}
-      ref={hnRef}
     >
       {header}
 

@@ -245,10 +245,9 @@
   box-shadow: 0 -14px 46px rgba(0, 0, 0, 0.26);
 }
 /* ── All the way up on a phone, 2026-11-22 ─────────────────────────────────
-   Over the place (Place.js) the strip of home above the sheet was a strip of
-   moving album art (Miyel: "it should be full screen no gap at the top"). It
-   starts where the brow under the clock ends, square-cornered, and keeps its
-   grip: still the tab you pull down. */
+   Miyel: "it should be full screen no gap at the top". It starts where the
+   brow under the clock ends, square-cornered, and keeps its grip: still the
+   tab you pull down. */
 @media (max-width: 768px) {
   .lay--sheet {
     --sheet-top: max(0px, calc(env(safe-area-inset-top, 0px) - 16px));

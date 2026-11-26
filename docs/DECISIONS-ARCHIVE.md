@@ -1270,3 +1270,10 @@ with a + square to start a listen. She tried three footer designs and a thumb
 index (tabs on the page's edge, up-and-down and sideways, still and turning)
 and rejected each as looking like every other app; what she wanted was a place
 to stand in rather than a way around a product.
+
+**The place, 2026-11-21 to 25.** On her phone the journal opened on moving
+album art with Start a listen and Archive · Friends · Community as tinted
+glass keys; a key raised that room as a shelf, pulled down to close, and a
+listen in hand replaced the art. She liked it, then found the art always
+standing between her and her albums; on 2026-11-25 the wall went back to
+being home and the art became the opening screen and the screensaver.

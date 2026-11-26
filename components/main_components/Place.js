@@ -1,26 +1,19 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 'use client';
-// The place, 2026-11-21 (Miyel: "this is the direction"). On the keeper's
-// phone the app opens into a room, not a feed: album art that never stops
-// moving, Start a listen at the foot and the rooms as glass keys under it.
-// A key raises that room over the place like a shelf (HomeNav, roomUp);
-// pulled down, it goes, and the place is still going underneath.
+// The screensaver (2026-11-25), drawn from the place that was the keeper's
+// home on a phone for four days, 2026-11-21 to 25 (DECISIONS-ARCHIVE): album
+// art that never stops moving, full screen, with nothing on it but the LN.
+// mark. It is the opening screen while the journal loads and comes back after
+// a while untouched (HomeNav); a tap scatters it off the page.
 //
-// The keeper's alone, and a phone's alone: a visitor gets the journal as it
-// was, and a desk keeps its spine (nav.css hides this above 768px).
-//
-// Two rooms so far. The salon: the covers hung frame to frame across the
-// whole screen, the wall panning slowly past, one now and then breathing
-// larger (Miyel, 2026-11-22: "a more full screen background"). The listening
-// room: the album logged last, large and turning like a record, its colour
-// washing the room, the rest circling it; the one she liked least, kept for
-// when a different room greets each opening of the app.
+// Two rooms. The salon: the covers hung frame to frame across the whole
+// screen, the wall panning slowly past, one now and then breathing larger.
+// The listening room: the album logged last, large and turning like a record,
+// its colour washing the room, the rest circling it; the one she liked least,
+// kept for when a different room greets each opening.
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
-import dynamic from 'next/dynamic';
-import { usePathname } from 'next/navigation';
-import { Globe, SquaresFour, User, Users, X } from '@phosphor-icons/react';
-import { readArtColor, sizedAlbumArt } from '../../library/music_data_api';
+import { sizedAlbumArt } from '../../library/music_data_api';
 
 const CIRCLING = 12;
 const HUNG = 40;
@@ -85,10 +78,21 @@ function Canvas({ draw, still }) {
   return <canvas className="pl-art" ref={ref} aria-hidden="true" />;
 }
 
-function Salon({ entries, still }) {
+// Leaving, the covers scatter: each flies out from the middle of the screen
+// past the nearest edge, turning a little, a few starting late, slowly at
+// first — and what is under them shows through as they go (Miyel, 2026-11-25:
+// "slowly disappear away to show the wall, maybe the album arts scatter").
+export const SCATTER_MS = 1300;
+
+function Salon({ entries, still, scatter = false }) {
   const covers = useCovers(entries, HUNG, 240);
+  const scatterFrom = useRef(null);
   const draw = (pen, W, H, t) => {
-    pen.fillStyle = '#16140f'; pen.fillRect(0, 0, W, H);
+    if (scatter && scatterFrom.current == null) scatterFrom.current = t;
+    const gone = scatter ? Math.min(1, (t - scatterFrom.current) / (SCATTER_MS / 1000)) : 0;
+    // The wall between the frames goes at once; only the covers travel.
+    if (gone) pen.clearRect(0, 0, W, H);
+    else { pen.fillStyle = '#16140f'; pen.fillRect(0, 0, W, H); }
     if (!covers.length) return;
     const cell = Math.round(W / 3.1), gap = 10, unit = cell + gap;
     const shift = t * 14, past = Math.floor(shift / unit), frac = shift - past * unit;
@@ -102,13 +106,22 @@ function Salon({ entries, still }) {
         const idx = ((r * 7 + k * 3) % n + n) % n;
         const near = ((r * 5 + k) % 9 + 9) % 9 === beat % 9;
         const s = cell * (1 + (near ? swell : 0));
-        const x = c * unit - frac + lean - (s - cell) / 2;
-        const y = r * unit + 6 + Math.sin(t * 0.4 + k) * 2 - (s - cell) / 2;
+        let x = c * unit - frac + lean - (s - cell) / 2;
+        let y = r * unit + 6 + Math.sin(t * 0.4 + k) * 2 - (s - cell) / 2;
         pen.save();
+        if (gone) {
+          const luck = Math.abs(Math.sin(r * 12.9898 + k * 78.233)) % 1;
+          const q = Math.max(0, Math.min(1, (gone - luck * 0.3) / 0.7));
+          const ox = x + s / 2 - W / 2, oy = y + s / 2 - H / 2, far = Math.hypot(ox, oy) || 1;
+          const reach = q * q * Math.max(W, H) * 1.3;
+          x += (ox / far) * reach; y += (oy / far) * reach;
+          pen.translate(x + s / 2, y + s / 2); pen.rotate((luck - 0.5) * q * 1.4); pen.translate(-(x + s / 2), -(y + s / 2));
+        }
         pen.shadowColor = 'rgba(0,0,0,0.45)'; pen.shadowBlur = near ? 30 : 16; pen.shadowOffsetY = 6;
         pen.fillStyle = '#000'; pen.beginPath(); pen.roundRect(x, y, s, s, 3); pen.fill();
-        pen.restore();
+        pen.shadowColor = 'transparent';
         drawCover(pen, covers[idx], x, y, s, 3);
+        pen.restore();
       }
     }
   };
@@ -146,12 +159,8 @@ function ListeningRoom({ entries, hue, still }) {
   return <Canvas draw={draw} still={still} />;
 }
 
-// While a listen is in hand it is the place (Miyel, 2026-11-22: "session will
-// take over the home page"): the listen itself, under the rooms, so pulling a
-// room down is returning to it. Loaded only when there is one.
-const Listen = dynamic(() => import('../../app/session/page'), { ssr: false });
-
-// The room the place shows. One for now; a different one each opening later.
+// The rooms the screensaver is drawn as. The salon for now; a different one
+// each time, later (the listening room is hers to keep or drop).
 const ROOMS = { salon: Salon, listening: ListeningRoom };
 const Room = ROOMS.salon;
 
@@ -195,7 +204,7 @@ export function Screensaver({ entries, arriving, leaving, logo, onEnter }) {
   const shown = entries.some(e => e.album_art) ? entries : remembered;
   return (
     <div className={'saver' + (arriving ? ' saver--arriving' : '') + (leaving ? ' saver--leaving' : '')} onClick={onEnter} role="presentation">
-      <Salon entries={shown} still={false} />
+      <Room entries={shown} still={false} scatter={leaving} />
       <button
         type="button"
         className="saver-mark"
@@ -206,110 +215,4 @@ export function Screensaver({ entries, arriving, leaving, logo, onEnter }) {
       </button>
     </div>
   );
-}
-
-export default function Place({ entries, held, waiting, community, roomUp, cardOpen, portrait, logo, lights, onRoom, onFace }) {
-  // The colour of the album the room is made of, for the wash and the glass.
-  const [hue, setHue] = useState(null);
-  const first = entries.find(e => e.album_art)?.album_art;
-  useEffect(() => {
-    let gone = false;
-    readArtColor(first).then(c => { if (!gone) setHue(c && !c.plain ? Math.round(c.hue) : null); });
-    return () => { gone = true; };
-  }, [first]);
-
-  // The listen replaces the room on the place (Miyel, 2026-11-22: "session
-  // replaces the screensaver and those archive, friend and community buttons
-  // stay"): Start a listen opens it here rather than on a page of its own,
-  // and a record in hand keeps it here. Ending it — posting, discarding,
-  // saving the draft — takes the record out of hand and the room comes back;
-  // so does pulling down out of the picker before a record is chosen. When it
-  // is open as a sheet of its own (/session) the sheet is the listen and
-  // this stands back.
-  const path = usePathname();
-  const [started, setStarted] = useState(false);
-  // A record going out of hand ends the listen here; noticed as the render
-  // that sees it go, rather than in an effect a render later.
-  const [heldBefore, setHeldBefore] = useState(held);
-  if (held !== heldBefore) {
-    setHeldBefore(held);
-    if (heldBefore && !held) setStarted(false);
-  }
-  const listening = (Boolean(held) || started) && path !== '/session';
-
-  // While a note is being typed in the listen, the keys step down out of the
-  // way of the writing and the keyboard, as the listen's own bar does.
-  const [typing, setTyping] = useState(false);
-  useEffect(() => {
-    if (!listening) return undefined;
-    const look = () => window.setTimeout(() => {
-      const el = document.activeElement;
-      setTyping(Boolean(el?.closest?.('.pl-listen')) && (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT' || el.isContentEditable));
-    }, 0);
-    document.addEventListener('focusin', look);
-    document.addEventListener('focusout', look);
-    return () => { document.removeEventListener('focusin', look); document.removeEventListener('focusout', look); };
-  }, [listening]);
-
-  return (<>
-    <div
-      className={'pl' + (roomUp ? ' pl--under' : '') + (listening ? ' pl--listen' : '') + (listening && typing ? ' pl--typing' : '')}
-      style={hue == null ? undefined : { '--pl-h': hue }}
-      data-plain={hue == null ? '' : undefined}
-    >
-      {/* Under a raised room nothing of it shows, so it stops drawing. */}
-      {listening ? (
-        <div className="pl-listen"><Listen onLeave={() => setStarted(false)} /></div>
-      ) : (<>
-      <Room entries={entries} hue={hue} still={roomUp || cardOpen} />
-      {/* The journal's own mark, as it stands in the top row. */}
-      <span className="pl-mark" aria-hidden="true">{logo}</span>
-      </>)}
-      {/* The rooms stay at the foot over a listen, above its own bar. */}
-      <nav className="pl-doors" aria-label="The journal">
-        {!listening && (
-          <button type="button" className="pl-key pl-key--listen" onClick={() => setStarted(true)}>
-            Start a listen
-          </button>
-        )}
-        <div className="pl-rooms">
-        <button type="button" className="pl-key" onClick={() => onRoom('home')}>
-          <SquaresFour size={22} weight="regular" aria-hidden="true" />
-          <span>Archive</span>
-        </button>
-        <button type="button" className="pl-key" onClick={() => onRoom('people')} aria-label={waiting ? 'Friends, something new' : 'Friends'}>
-          <Users size={22} weight="regular" aria-hidden="true" />
-          <span>Friends</span>
-          {waiting && <i className="pl-new" aria-hidden="true" />}
-        </button>
-        {community && (
-          <button type="button" className="pl-key" onClick={() => onRoom('community')}>
-            <Globe size={22} weight="regular" aria-hidden="true" />
-            <span>Community</span>
-          </button>
-        )}
-        </div>
-      </nav>
-    </div>
-    {/* Above the card as well as the place: the face opens the card, and is
-        its X while it is open (the flight lands from here, HomeNav). */}
-    {!roomUp && (
-      <div className={'pl-top' + (cardOpen ? ' pl-top--card' : '')}>
-        <button
-          type="button"
-          className={'hdr-face pl-face' + (cardOpen ? ' hdr-face--open' : '')}
-          onClick={onFace}
-          aria-expanded={cardOpen}
-          aria-label={cardOpen ? 'Close' : 'Your card'}
-        >
-          <User size={22} weight="regular" aria-hidden="true" />
-          {portrait && <img src={portrait} alt="" />}
-          <span className="hdr-face-x" aria-hidden="true"><X size={20} weight="bold" /></span>
-        </button>
-        {/* Night and sound beside the face over a listen; not on the art,
-            where they did not belong (Miyel, 2026-11-22). */}
-        {!cardOpen && listening && lights}
-      </div>
-    )}
-  </>);
 }

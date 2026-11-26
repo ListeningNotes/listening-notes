@@ -101,12 +101,12 @@ were rewritten the same day, while nobody else had a clone.
 
 ## Structure
 
-**On the keeper's phone the journal is a place, 2026-11-21, Miyel: "this is
-the direction".** It opens on a room of her own covers, always moving (games
-too), with Start a listen and Archive · Friends · Community as tinted glass at
-the foot; a key raises that room as a shelf, pulled down or X'd to close. A
-listen in hand is the place itself. Never a nav bar or tabs again: a bottom
-bar and a thumb index were each built and rejected ("looks like an iphone").
+**On the keeper's phone the wall is home, and the art is a screensaver,
+2026-11-25, her blend.** Her covers, full screen and always moving, open the
+app while it loads and stay until tapped; they come back after ninety seconds
+untouched, never during a listen; a tap scatters them to where she was. Pure
+art, only the LN. mark. The place with glass keys (2026-11-21) was rejected,
+and so were a bottom bar and a thumb index: never a nav bar or tabs again.
 
 **A visitor's phone, 2026-11-21, the home brief.** The wall under the top
 row; the beacon only while the keeper is live, else "[name] has [record]
