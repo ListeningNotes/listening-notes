@@ -80,6 +80,7 @@ import ListeningBeacon from './ListeningBeacon';
 import Landing from './Landing';
 import ListenBar, { ListenTile } from './ListenBar';
 import { SCATTER_MS, Screensaver, rememberCovers, useRemembered } from './Place';
+import { PINNED_EVENT, setPinning, usePinning } from './Landing';
 import Journal from './Journal';
 import Header from './Header';
 import PinnedLetter from './PinnedLetter';
@@ -1573,6 +1574,18 @@ export default function HomeNav() {
     return () => { run.cancel(); land(); };
   }, [cardOpen, authed]);
 
+  // ── Choosing a pin, 2026-11-25 ─────────────────────────────────────────
+  // An empty place on the landing opens the wall as a screen of its own:
+  // "Choose an album" and an X where the top row was (Landing.js). An album
+  // pinned, or the X, ends it and puts the landing back up.
+  const pinning = usePinning();
+  useEffect(() => {
+    if (!pinning) return undefined;
+    const pinned = () => { setPinning(false); setCardOpen(true); };
+    window.addEventListener(PINNED_EVENT, pinned);
+    return () => window.removeEventListener(PINNED_EVENT, pinned);
+  }, [pinning]);
+
   // ── The screensaver, 2026-11-25 ────────────────────────────────────────
   // The opening screen while the journal loads, which stays until it is
   // tapped (Miyel: "you watch until you open"), and the same art again after
@@ -1592,7 +1605,7 @@ export default function HomeNav() {
     if (authed && entries.length) rememberCovers(entries);
   }, [authed, entries]);
   useEffect(() => {
-    if (!authed || saver || path !== '/' || inHand) return undefined;
+    if (!authed || saver || path !== '/' || inHand || pinning) return undefined;
     let t = 0;
     const later = () => {
       window.clearTimeout(t);
@@ -1611,8 +1624,9 @@ export default function HomeNav() {
       kinds.forEach(k => document.removeEventListener(k, later, { capture: true }));
       document.removeEventListener('scroll', later, { capture: true });
     };
-  }, [authed, saver, path, inHand]);
+  }, [authed, saver, path, inHand, pinning]);
   const saverShows = saver === 'idle' || (saver === 'loading' && remembered.length > 0);
+
 
   function goTo(index) {
     const el = railRef.current;
@@ -2048,6 +2062,7 @@ export default function HomeNav() {
         + (spine.dragging ? ' hn--dragging' : '')
         /* The card open over the page, on a phone (nav.css, .hn--card). */
         + (cardOpen ? ' hn--card' : '')
+        + (pinning ? ' hn--pinning' : '')
         + (filing ? ' hn--filing' : '')
         /* The crown is travelling into the bar on this screen, so the bar's
            own small mark stays out of its way. See the morph effect. */
@@ -2065,6 +2080,14 @@ export default function HomeNav() {
       data-pane={pane}
     >
       {header}
+      {pinning && (
+        <div className="pin-pick-bar">
+          <span className="pin-pick-words">Choose an album</span>
+          <button type="button" className="pin-pick-x" onClick={() => { setPinning(false); setCardOpen(true); }} aria-label="Back">
+            <X size={22} weight="regular" aria-hidden="true" />
+          </button>
+        </div>
+      )}
 
       <div className="hn-rail" ref={railRef}>
         {/* ── The ID and the desk ──────────────────────────────────────
@@ -2088,7 +2111,7 @@ export default function HomeNav() {
                 keeper
                 live={isLive}
                 onAir={{ album: onAirAlbum, artist: onAirArtist, art: onAir }}
-                onEmpty={() => { setCardOpen(false); goTo(HOME); }}
+                onEmpty={() => { setPinning(true); setCardOpen(false); goTo(HOME); }}
               />
             )}
             <About stamps={stamps} authed={authed} pinned={pinned} entries={entries} onSignedIn={letIn} />

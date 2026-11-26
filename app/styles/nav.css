@@ -3943,6 +3943,31 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
 .pin-line-instead img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .pin-line-never { width: 36px; height: 36px; border: 0; background: none; color: var(--ink-soft); cursor: pointer; display: grid; place-items: center; }
 
+/* ── Choosing a pin, 2026-11-25 ─────────────────────────────────────────────
+   The wall as a screen of its own (HomeNav, pinning): "Choose an album" and an
+   X where the top row was, and nothing to start a listen. The album opened
+   from it shows its note as sentences to tap (Landing.js, LineChooser). */
+.pin-pick-bar { display: none; }
+@media (max-width: 768px) {
+  .hn--pinning .hdr { visibility: hidden; }
+  .hn--pinning .hn-pane--home .lt { display: none; }
+  .pin-pick-bar {
+    position: fixed; z-index: 128; left: 18px; right: 10px;
+    top: calc(22px + var(--safe-top)); height: 58px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .pin-pick-words { font-family: var(--font-display); font-weight: var(--font-display-weight, 800); font-size: 20px; }
+  .pin-pick-x { width: 40px; height: 40px; border: 0; background: none; color: var(--ink); display: grid; place-items: center; cursor: pointer; }
+}
+.pick-note { font-size: 16px; line-height: 1.6; }
+.pick-break { display: block; height: 12px; }
+.pick-line {
+  display: inline; padding: 1px 2px; margin: 0 -2px; border: 0; border-radius: 4px;
+  background: none; color: var(--ink); font: inherit; text-align: left; cursor: pointer;
+  -webkit-tap-highlight-color: transparent; box-decoration-break: clone; -webkit-box-decoration-break: clone;
+}
+.pick-line--lit { background: color-mix(in srgb, #f2d64b 55%, transparent); }
+
 /* ── The card rises like a shelf, 2026-11-21 ────────────────────────────────
    The keeper's top row is as it was (the face, the lights, the mark, the
    rooms' glyphs, Header.js); only the card's arrival is this. */

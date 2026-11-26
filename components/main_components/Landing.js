@@ -23,7 +23,7 @@
 // for each place not yet pinned, and a small × to take a pin down. A pin is
 // made from a post, by selecting words in its album note (PinThisLine, below).
 import Link from 'next/link';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 import { PushPin, User, X } from '@phosphor-icons/react';
 import { useBookplate } from './Bookplate';
 import { readBioAnswers } from '../../library/bioprompt';
@@ -124,12 +124,15 @@ export default function Landing({ live = false, onAir = null, keeper = false, on
 // and kept only if the note says them (library/pinned_actions.js). With three
 // pinned already, the three come up to choose which one this replaces. The
 // note says where it may be lifted from with data-pin-from (FullPostPage).
-export function PinThisLine() {
-  const [picked, setPicked] = useState(null);
+export function PinThisLine({ chosen = null, onPinned = null }) {
+  const [selected, setPicked] = useState(null);
+  // A line chosen by tapping (LineChooser) stands in for a selection.
+  const picked = chosen || selected;
   const [full, setFull] = useState(null);
   const [done, setDone] = useState(false);
   useEffect(() => {
     const look = () => {
+      if (chosen) return;
       const sel = window.getSelection();
       const text = sel && !sel.isCollapsed ? sel.toString().replace(/\s+/g, ' ').trim() : '';
       const from = text && sel.anchorNode ? (sel.anchorNode.nodeType === 1 ? sel.anchorNode : sel.anchorNode.parentElement)?.closest?.('[data-pin-from]') : null;
@@ -138,7 +141,7 @@ export function PinThisLine() {
     };
     document.addEventListener('selectionchange', look);
     return () => document.removeEventListener('selectionchange', look);
-  }, [full]);
+  }, [full, chosen]);
   async function pin(replacing = null) {
     if (!picked) return;
     const r = await fetch('/api/pinned', {
@@ -152,10 +155,10 @@ export function PinThisLine() {
       setDone(true);
       window.dispatchEvent(new Event(PINNED_EVENT));
       window.getSelection()?.removeAllRanges();
-      window.setTimeout(() => { setDone(false); setPicked(null); }, 1400);
+      window.setTimeout(() => { setDone(false); setPicked(null); onPinned?.(); }, onPinned ? 700 : 1400);
     }
   }
-  if (!picked && !done) return null;
+  if (!picked && !done && !chosen) return null;
   return (
     <div className="pin-line-bar" role="region" aria-label="Pin this line">
       {full ? (
@@ -169,11 +172,75 @@ export function PinThisLine() {
           <button type="button" className="pin-line-never" onClick={() => setFull(null)} aria-label="Keep the three as they are"><X size={16} weight="bold" aria-hidden="true" /></button>
         </div>
       ) : (
-        <button type="button" className="pin-line-key" onMouseDown={e => e.preventDefault()} onClick={() => pin()} disabled={done}>
+        <button type="button" className="pin-line-key" onMouseDown={e => e.preventDefault()} onClick={() => pin()} disabled={done || !picked}>
           <PushPin size={18} weight="regular" aria-hidden="true" />
           {done ? 'Pinned' : 'Pin this line'}
         </button>
       )}
     </div>
+  );
+}
+
+// ── Choosing a pin, 2026-11-25 ────────────────────────────────────────────
+// On a phone a selection can barely be made — a word at most, and dragging
+// its handles turns the page (Miyel: "on my phone I can't highlight"). So an
+// empty place on the keeper's landing opens the wall as a screen of its own,
+// "Choose an album" (HomeNav, pinning), and the album opened from it shows
+// its note as sentences to tap (LineChooser). Pinning closes the album and
+// goes back to the landing with the new pin on it.
+let pinningNow = false;
+const pinningHeard = new Set();
+export function setPinning(on) {
+  pinningNow = Boolean(on);
+  pinningHeard.forEach(hear => hear());
+}
+export function usePinning() {
+  return useSyncExternalStore(
+    hear => { pinningHeard.add(hear); return () => pinningHeard.delete(hear); },
+    () => pinningNow,
+    () => false,
+  );
+}
+
+// The note as sentences: tap one to light it, tap the one before or after to
+// carry the light on, tap an end to take it back. The lit run is the line.
+// Sentences are split where the note has a full stop, a question or an
+// exclamation, or a line break, so the run is always words the note says,
+// in its order, with only the spaces between them made single.
+export function LineChooser({ slug, note, onPinned }) {
+  const pieces = String(note || '')
+    .split(/\n+/)
+    .flatMap((para, p) => para.split(/(?<=[.!?…])\s+/).map(t => ({ t: t.trim(), p })))
+    .filter(piece => piece.t);
+  const [run, setRun] = useState(null);
+  function press(i) {
+    if (!run) { setRun([i, i]); return; }
+    const [a, b] = run;
+    if (i === a - 1) setRun([i, b]);
+    else if (i === b + 1) setRun([a, i]);
+    else if (a === b && i === a) setRun(null);
+    else if (i === a) setRun([a + 1, b]);
+    else if (i === b) setRun([a, b - 1]);
+    else setRun([i, i]);
+  }
+  const line = run ? pieces.slice(run[0], run[1] + 1).map(piece => piece.t).join(' ') : '';
+  return (
+    <>
+      <div className="pick-note">
+        {pieces.map((piece, i) => (
+          <span key={i}>
+            {i > 0 && pieces[i - 1].p !== piece.p && <span className="pick-break" />}
+            <button
+              type="button"
+              className={'pick-line' + (run && i >= run[0] && i <= run[1] ? ' pick-line--lit' : '')}
+              onClick={() => press(i)}
+            >
+              {piece.t}
+            </button>{' '}
+          </span>
+        ))}
+      </div>
+      <PinThisLine chosen={line ? { slug, line } : null} onPinned={onPinned} />
+    </>
   );
 }
