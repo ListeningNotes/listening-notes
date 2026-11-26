@@ -108,10 +108,23 @@ untouched, never during a listen; a tap scatters them to where she was. Pure
 art, only the LN. mark. The place with glass keys (2026-11-21) was rejected,
 and so were a bottom bar and a thumb index: never a nav bar or tabs again.
 
-**A visitor's phone, 2026-11-21, the home brief.** The wall under the top
-row; the beacon only while the keeper is live, else "[name] has [record]
-pinned." (the card's pin), else nothing — never an empty slot. No "Visit
-profile": the face opens the card. Desks are unchanged.
+**A visitor lands on the card, 2026-11-25, her brief (her word "landing").**
+On a phone the card is the top of the page, not a thing to open: portrait,
+name and lines, the lamp only while a listen is open, up to three pinned
+albums framed with their lines, then the wall. The keeper's face opens the
+same landing, with empty places and a × only they see. Never "room" or
+"mantel" in code or on screen (her call: the plain word).
+
+**A pinned line is lifted, never typed, 2026-11-25.** It is words from the
+post's own album or song notes, chosen by tapping sentences (a phone cannot
+select), checked when pinned and each time it is read; a line the note no
+longer says is not shown. A box to type into invites performed writing.
+
+**Nothing reads the database on a clock, 2026-11-25: a light in a window,
+not a broadcast.** The beacon, the friends' beacons and the sign-in page ask
+when a page opens, on coming back to it and on a pull down; the clocks kept
+the database awake. A visitor sees a listen start when they look again. The
+Board and Community's issue reading other journals are the next to look at.
 
 **One motion rule, 2026-11-21: things happening rise from the bottom; things
 that exist open where they are.** A listen rises. A post grows out of its tile,

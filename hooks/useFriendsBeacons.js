@@ -33,7 +33,6 @@
 
 import { useSyncExternalStore } from 'react';
 
-const REFRESH_MS = 60 * 1000;  // ask our own server once a minute
 
 // Frozen and shared, for the same reason the beacon's EMPTY is: the store is
 // read by identity, and a fresh object per read would render forever.
@@ -118,32 +117,27 @@ async function poll(how = '') {
   publish(friends.length === 0 ? EMPTY : { friends });
 }
 
-// Coming back to the tab. One ask straight away, and the clock restarted so
-// the next is a full minute from this one.
+// ── No clock, 2026-11-25 (her brief, the wall as home) ─────────────────
+// It asked once a minute while the room was on screen, which kept this
+// journal's database and every friend's awake. It asks now when the room
+// opens, when the app comes back into view and on the pull down — the
+// friends' faces still say who is live, read when somebody looks.
 function wake() {
-  if (document.visibilityState !== 'visible' || !room.timer) return;
+  if (document.visibilityState !== 'visible' || room.listeners.size === 0) return;
   poll();
-  clearInterval(room.timer);
-  room.timer = setInterval(() => poll(), REFRESH_MS);
 }
 
-// Starts the timer for the first component that asks and stops it when the
-// last one leaves, so a page with no room on it is not quietly polling. The
-// listener for coming back goes on and off with it, for the same reason.
+// The first thing on a page to draw the room asks once; the listener for
+// coming back goes on and off with it.
 function subscribe(listener) {
   room.listeners.add(listener);
   if (room.listeners.size === 1) {
     poll();
-    room.timer = setInterval(() => poll(), REFRESH_MS);
     document.addEventListener('visibilitychange', wake);
   }
   return () => {
     room.listeners.delete(listener);
-    if (room.listeners.size === 0) {
-      clearInterval(room.timer);
-      room.timer = null;
-      document.removeEventListener('visibilitychange', wake);
-    }
+    if (room.listeners.size === 0) document.removeEventListener('visibilitychange', wake);
   };
 }
 
@@ -152,12 +146,7 @@ function subscribe(listener) {
 // is no room on screen to refresh, and nothing is asked.
 export function refreshFriends() {
   if (room.listeners.size === 0) return Promise.resolve();
-  const asked = poll('fresh');
-  if (room.timer) {
-    clearInterval(room.timer);
-    room.timer = setInterval(() => poll(), REFRESH_MS);
-  }
-  return asked;
+  return poll('fresh');
 }
 
 // The whole grid has opened: everyone past the first thirty is asked once,

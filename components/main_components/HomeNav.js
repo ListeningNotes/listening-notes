@@ -72,7 +72,8 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { ArrowsLeftRight, CaretDown, Globe, SpeakerHigh, SpeakerSlash, User, Users, X } from '@phosphor-icons/react';
 import { useQuiet, toggleQuiet } from '../../hooks/useSnippet';
-import { announce, useListeningBeacon } from '../../hooks/useListeningBeacon';
+import { announce, refreshBeacon, useListeningBeacon } from '../../hooks/useListeningBeacon';
+import PullDown from './PullDown';
 import { useSpineWidth } from '../../hooks/useSpineWidth';
 import { useTheme } from './Lightswitch';
 import { useBookplate } from './Bookplate';
@@ -2159,6 +2160,9 @@ export default function HomeNav() {
           ref={homeRef}
           aria-label="The beacon and the journal"
         >
+          {/* Pulled down, home asks again — the lamp and the wall — since
+              nothing asks on a clock any more (useListeningBeacon). */}
+          <PullDown scroller={homeRef} onPull={() => Promise.all([refreshBeacon(), fetchEntries().then(list => { setEntries(list); }).catch(() => {})])} mark={mark('ln-pull-svg')} />
           {/* Two floors, always. There is no version of this pane without a
               beacon on it (Miyel, 2026-09-16): a journal showing a record it
               sat with months ago is not a beacon failing, that IS the signal,

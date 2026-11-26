@@ -59,7 +59,8 @@ export function canHoldKeys() {
 // Every Unlock and Use Face ID holds options fetched before the press,
 // because Safari asks for Face ID only straight from one, and the challenge
 // in them lasts five minutes (library/keyring.js), so they are asked for
-// again every four. Only while the page is on screen, 2026-10-20: each ask
+// again once four minutes old (on no clock since 2026-11-25, below). Only
+// while the page is on screen, 2026-10-20: each ask
 // reads the database, and four minutes is under the five Neon waits before
 // it sleeps, so one sign-in tab left behind another window kept the
 // journal's database awake all day. Hidden, nothing is asked; back on
@@ -70,28 +71,25 @@ export function canHoldKeys() {
 const FRESH_MS = 4 * 60 * 1000;
 
 export function keepFresh(ask) {
+  // ── No clock, 2026-11-25 (her brief, the wall as home) ───────────────────
+  // It asked every four minutes while on screen. Now it asks only when the
+  // options it holds are four minutes old and somebody comes back to the
+  // page or touches it — a page left open asks nothing. A press on options
+  // gone stale in the moment between is answered by the lock's own error,
+  // and the next press holds fresh ones.
   let at = Date.now();
-  let timer = null;
-  const wait = ms => { clearTimeout(timer); timer = setTimeout(renew, ms); };
-  function renew() {
-    // A clock that runs out while hidden asks nothing and stops; coming
-    // back starts it again.
-    if (document.visibilityState !== 'visible') return;
+  function stale() {
+    if (document.visibilityState !== 'visible' || Date.now() - at < FRESH_MS) return;
     at = Date.now();
     ask();
-    wait(FRESH_MS);
   }
-  function back() {
-    if (document.visibilityState !== 'visible') return;
-    const left = FRESH_MS - (Date.now() - at);
-    if (left <= 0) renew();
-    else wait(left);
-  }
-  wait(FRESH_MS);
-  document.addEventListener('visibilitychange', back);
+  document.addEventListener('visibilitychange', stale);
+  document.addEventListener('pointerdown', stale, { capture: true, passive: true });
+  document.addEventListener('focusin', stale);
   return () => {
-    clearTimeout(timer);
-    document.removeEventListener('visibilitychange', back);
+    document.removeEventListener('visibilitychange', stale);
+    document.removeEventListener('pointerdown', stale, { capture: true });
+    document.removeEventListener('focusin', stale);
   };
 }
 

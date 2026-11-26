@@ -56,16 +56,9 @@ export const CAPTION = {
   logged: 'Last logged',
 };
 
-// ── How often, 2026-10-20 ─────────────────────────────────────────────────
-// Every fifteen seconds while a listen is live, and once a minute while
-// nothing is (Miyel, on what hosting will cost: every open journal asking
-// four times a minute whether anything is playing was most of the requests
-// the free plan counts). A quiet journal's visitor sees a listen start within
-// about a minute; a live one moves at the old pace; and the keeper's own
-// device never waits on either, because `announce` publishes at once and
-// puts the clock on the right pace.
-const LIVE_MS = 15000;
-const QUIET_MS = 60000;
+// ── How often, 2026-10-20 to 2026-11-25 ──────────────────────────────────
+// Every fifteen seconds while live and once a minute while not, until the
+// clock went altogether (below, No clock).
 // How long the owner's own hand outranks the server's answer. It has to clear
 // the ten seconds /api/public/beacon may be served from the edge cache, plus a
 // poll's own flight — see `announce` and the check in `poll`.
@@ -279,57 +272,38 @@ export function announce({ album, artist, art, track = '', rated = [] }, state =
   beacon.held = next;
   beacon.heldUntil = Date.now() + hold;
   publish(next);
-  // A listen begun or ended here changes the pace at once: the next ask is a
-  // full live or quiet beat from now, and lands after the hold has done its
-  // work.
-  if (beacon.timer) schedule();
 }
 
-// The next ask, at the pace of what is on the beacon now: fifteen seconds
-// while live, a minute while quiet. Set again after every answer, so a
-// listen that starts or ends changes the pace from the next ask on.
-function schedule() {
-  clearTimeout(beacon.timer);
-  beacon.timer = setTimeout(async () => {
-    await poll();
-    if (beacon.listeners.size > 0) schedule();
-  }, beacon.snapshot.isLive ? LIVE_MS : QUIET_MS);
-}
-
-// Coming back to the tab. One ask straight away — somebody who has just looked
-// at the beacon should not be reading a record from before lunch — and then the
-// clock is restarted, so the next ask is a full beat from this one rather than
-// whenever the old schedule happened to have landed.
+// ── No clock, 2026-11-25 (her brief, the wall as home: "a light in a window,
+// not a broadcast") ───────────────────────────────────────────────────────
+// The beacon was asked every fifteen seconds while live and every minute
+// while not, and that clock was what kept the database awake. It is asked
+// now when a page that draws it opens, when the app comes back into view,
+// and on a pull down (refreshBeacon) — never on a timer. A visitor watching
+// sees a listen start when they look again, which is accepted. The keeper's
+// own device never waited on the clock anyway: `announce` publishes at once.
 function wake() {
-  if (document.visibilityState !== 'visible' || !beacon.timer) return;
-  schedule();
-  askAndPace();
+  if (document.visibilityState !== 'visible' || beacon.listeners.size === 0) return;
+  poll();
 }
 
-// One ask now, and the clock set again at the pace its answer calls for.
-function askAndPace() {
-  poll().then(() => { if (beacon.listeners.size > 0) schedule(); });
-}
-
-// Starts the timer for the first component that asks and stops it when the last
-// one leaves, so a page with no beacon on it is not quietly polling. The
-// listener for coming back goes on and off with it, for the same reason.
+// The first thing on a page to draw the beacon asks once; coming back to the
+// app asks again. Nothing asks while nothing draws it.
 function subscribe(listener) {
   beacon.listeners.add(listener);
   if (beacon.listeners.size === 1) {
-    // The clock starts now; the first answer then sets its pace.
-    schedule();
-    askAndPace();
+    poll();
     document.addEventListener('visibilitychange', wake);
   }
   return () => {
     beacon.listeners.delete(listener);
-    if (beacon.listeners.size === 0) {
-      clearTimeout(beacon.timer);
-      beacon.timer = null;
-      document.removeEventListener('visibilitychange', wake);
-    }
+    if (beacon.listeners.size === 0) document.removeEventListener('visibilitychange', wake);
   };
+}
+
+// A pull down asks now.
+export function refreshBeacon() {
+  return beacon.listeners.size === 0 ? Promise.resolve() : poll();
 }
 
 // Every journal polls. It used to be skipped for a journal whose keeper had

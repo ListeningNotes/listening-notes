@@ -1277,3 +1277,8 @@ glass keys; a key raised that room as a shelf, pulled down to close, and a
 listen in hand replaced the art. She liked it, then found the art always
 standing between her and her albums; on 2026-11-25 the wall went back to
 being home and the art became the opening screen and the screensaver.
+
+**A visitor's phone, 2026-11-21 to 25.** The wall under the top row; the
+beacon only while the keeper was live, else "[name] has [record] pinned."
+from the card's pin, else nothing. The revised brief (2026-11-25) dropped the
+pinned row and the beacon for the landing: the card as the top of the page.
