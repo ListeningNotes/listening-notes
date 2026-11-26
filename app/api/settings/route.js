@@ -19,6 +19,7 @@ import { requireWristband } from '@/library/wristband';
 import { pull_settings, save_settings, note_old_address } from '@/library/settings_actions';
 import { hosting, isHere } from '@/library/hosting_directory';
 import { tidyJournal } from '@/library/return_address';
+import { follow_card_pin } from '@/library/pinned_actions';
 
 export async function GET() {
   const settings = await pull_settings();
@@ -43,6 +44,8 @@ export async function PATCH(request) {
       body.moved_to = to && to !== own && !(await isHere(to)) ? to : '';
     }
     const settings = await save_settings(body);
+    // The card's one pin leads the pinned albums (library/pinned_actions.js).
+    if ('pinned_entry_id' in body) await follow_card_pin(settings?.pinned_entry_id ?? null);
     // A copy given a new address here keeps the one it had among those it
     // lived at (2026-10-21), so its sends from there are known when they
     // come back. Never in the way of the save.

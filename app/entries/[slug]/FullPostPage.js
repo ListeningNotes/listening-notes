@@ -49,6 +49,7 @@ import { editStamp } from '../../../library/entry_formatter';
 import { useEntryEditor } from '../../../hooks/useEntryEditor';
 import { useSnippet, toggleSnippet, useSnippetState, stopSnippet, useQuiet } from '../../../hooks/useSnippet';
 import { SnippetLink } from '../../../components/main_components/Slug_Page/SnippetButton';
+import { PinThisLine } from '../../../components/main_components/Landing';
 
 // ── Printing, 2026-09-13 ──────────────────────────────────────────────────
 // The printer is a mode of this page, the way correcting is: press the
@@ -620,6 +621,9 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   }, []);
 
   const { albumNotes } = splitNotes(entry.notes);
+  // Where a pinned line may be lifted from (Landing.js, PinThisLine): the
+  // keeper's own album note, on a record, while it is being read.
+  const pinFrom = authed && !preview && !entry.song ? entry.slug : undefined;
   const parsedTracks = entryTracks(entry);
   const horizonBars = parseHorizon(entry.horizon);
   const printGlyph = (w, h) => <svg width="23" height="23" viewBox="0 0 256 256" aria-hidden="true"><rect x={(256 - w) / 2} y={(256 - h) / 2} width={w} height={h} rx="14" fill="none" stroke="currentColor" strokeWidth="16" /></svg>;
@@ -1666,7 +1670,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
 
           {albumNotes && (
             <div className="ln-card-box">
-              <div className="ln-card-note">{linkedAlbumNotes}</div>
+              <div className="ln-card-note" data-pin-from={pinFrom}>{linkedAlbumNotes}</div>
               {editedOn && <p className="ln-edited">Edited {editedOn}</p>}
             </div>
           )}
@@ -1987,7 +1991,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
                 aria-label="Album note"
               />
             ) : (
-              <div style={{ lineHeight: 1.95, fontSize: '15px', whiteSpace: 'pre-wrap', color: 'var(--ink)', marginBottom: '6px' }}>{linkedAlbumNotes}</div>
+              <div data-pin-from={pinFrom} style={{ lineHeight: 1.95, fontSize: '15px', whiteSpace: 'pre-wrap', color: 'var(--ink)', marginBottom: '6px' }}>{linkedAlbumNotes}</div>
             )}
             {editedOn && !edit.editing && <p className="ln-edited">Edited {editedOn}</p>}
             {wayIn}
@@ -2134,6 +2138,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
         prompt={prompt}
         onSent={tellPrompt}
       />
+      {pinFrom && <PinThisLine />}
     </div>
   );
 }

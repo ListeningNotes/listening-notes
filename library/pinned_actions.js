@@ -114,3 +114,23 @@ export async function unpin(position) {
   await keep_the_card_pin();
   return { pinned: await pull_pinned() };
 }
+
+// The card's editor still chooses one pin (settings.pinned_entry_id). When it
+// does, the first place follows it, so the two never disagree: the album it
+// names takes the first place, keeping its line if it was already there.
+export async function follow_card_pin(entryId) {
+  const [{ count }] = await database`SELECT count(*)::int AS count FROM pinned`;
+  if (!count) return;
+  const [first] = await database`SELECT entry_id FROM pinned WHERE position = 1`;
+  if ((first?.entry_id ?? null) === (entryId ?? null)) return;
+  if (entryId == null) {
+    await database`DELETE FROM pinned WHERE position = 1`;
+    return;
+  }
+  const [was] = await database`SELECT position, line FROM pinned WHERE entry_id = ${entryId}`;
+  if (was) await database`DELETE FROM pinned WHERE position = ${was.position}`;
+  await database`
+    INSERT INTO pinned (position, entry_id, line) VALUES (1, ${entryId}, ${was?.line ?? null})
+    ON CONFLICT (position) DO UPDATE SET entry_id = EXCLUDED.entry_id, line = EXCLUDED.line, pinned_at = now()
+  `;
+}

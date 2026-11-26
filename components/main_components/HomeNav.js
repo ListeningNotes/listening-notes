@@ -1538,7 +1538,8 @@ export default function HomeNav() {
     if (!flownOnce.current) { flownOnce.current = true; return undefined; }
     const card = cardRef.current;
     const foot = [...document.querySelectorAll('.hn--keeper .hdr .hdr-face')].find(f => f.offsetWidth);
-    const square = card?.querySelector('.idc-portrait');
+    // The landing's portrait, or the card's while it is being edited.
+    const square = card ? [...card.querySelectorAll('.ld-face, .idc-portrait')].find(e => e.offsetWidth) : null;
     const picture = square?.querySelector('img');
     if (!authed || !foot || !square || !picture) return undefined;
     if (!window.matchMedia('(max-width: 768px)').matches) return undefined;
@@ -2080,6 +2081,16 @@ export default function HomeNav() {
         <div className="hn-pane hn-pane--turn">
           <div className="hn-leaf">
           <section className="hn-pane hn-face hn-face--card" ref={cardRef} aria-label="About this journal">
+            {/* The keeper's own landing, as a visitor sees it (Landing.js); the
+                card under it is what editing opens (nav.css, data-editing). */}
+            {authed && (
+              <Landing
+                keeper
+                live={isLive}
+                onAir={{ album: onAirAlbum, artist: onAirArtist, art: onAir }}
+                onEmpty={() => { setCardOpen(false); goTo(HOME); }}
+              />
+            )}
             <About stamps={stamps} authed={authed} pinned={pinned} entries={entries} onSignedIn={letIn} />
           </section>
 
