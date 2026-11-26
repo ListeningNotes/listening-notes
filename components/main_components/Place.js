@@ -78,51 +78,121 @@ function Canvas({ draw, still }) {
   return <canvas className="pl-art" ref={ref} aria-hidden="true" />;
 }
 
-// Leaving, the covers scatter: each flies out from the middle of the screen
-// past the nearest edge, turning a little, a few starting late, slowly at
-// first — and what is under them shows through as they go (Miyel, 2026-11-25:
-// "slowly disappear away to show the wall, maybe the album arts scatter").
-export const SCATTER_MS = 1300;
+// The screensaver and the wall are one set of albums (Miyel, 2026-11-25: "the
+// albums on the screensaver [are] the same live entity as the wall behind
+// it… they should move into place, or get into formation, like it's coming
+// awake and resting"). Tapped, each cover on the wall's screen is taken by
+// the nearest cover of the screensaver, which glides into its place and
+// settles there as it; the covers with no place on screen drift off past
+// the nearest edge. Coming back, the covers lift off the wall into the
+// screensaver's arrangement and the others drift in from the edges, and
+// only then does the ground come in behind them and the wall start to pan.
+// The wall's own covers stand aside while theirs are in the air.
+export const SCATTER_MS = 1250;
+const MOVE_S = 1.2;
 
-function Salon({ entries, still, scatter = false }) {
+const smooth = p => (p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2);
+const between = (a, b, k) => a + (b - a) * k;
+
+// The wall's covers on the screen just now: where each is, its picture and
+// its corners.
+function wallCovers(W, H) {
+  return [...document.querySelectorAll('.hn-pane--home [data-tile-slug] .ft-art')]
+    .map(img => ({ img, r: img.getBoundingClientRect() }))
+    .filter(({ r }) => r.width > 0 && r.bottom > 0 && r.top < H && r.right > 0 && r.left < W)
+    .map(({ img, r }) => ({
+      img, x: r.left, y: r.top, s: r.width,
+      round: parseFloat(getComputedStyle(img.closest('.ft-face') || img).borderTopLeftRadius) || 9,
+    }));
+}
+
+function Salon({ entries, still, scatter = false, arrive = false }) {
   const covers = useCovers(entries, HUNG, 240);
-  const scatterFrom = useRef(null);
+  const plan = useRef(null);
+  useEffect(() => () => document.documentElement.removeAttribute('data-settling'), []);
   const draw = (pen, W, H, t) => {
-    if (scatter && scatterFrom.current == null) scatterFrom.current = t;
-    const gone = scatter ? Math.min(1, (t - scatterFrom.current) / (SCATTER_MS / 1000)) : 0;
-    // The wall between the frames goes at once; only the covers travel.
-    if (gone) pen.clearRect(0, 0, W, H);
-    else { pen.fillStyle = '#16140f'; pen.fillRect(0, 0, W, H); }
-    if (!covers.length) return;
     const cell = Math.round(W / 3.1), gap = 10, unit = cell + gap;
-    const shift = t * 14, past = Math.floor(shift / unit), frac = shift - past * unit;
     const n = covers.length;
-    // One cover at a time breathes larger, for three seconds each.
-    const beat = Math.floor(t / 3), swell = Math.sin(((t % 3) / 3) * Math.PI) * 0.12;
-    for (let r = -1; r * unit < H + unit; r++) {
-      const lean = r % 2 ? unit / 2 : 0;
-      for (let c = -1; c * unit - frac + lean < W + unit; c++) {
-        const k = c + past;
-        const idx = ((r * 7 + k * 3) % n + n) % n;
-        const near = ((r * 5 + k) % 9 + 9) % 9 === beat % 9;
-        const s = cell * (1 + (near ? swell : 0));
-        let x = c * unit - frac + lean - (s - cell) / 2;
-        let y = r * unit + 6 + Math.sin(t * 0.4 + k) * 2 - (s - cell) / 2;
-        pen.save();
-        if (gone) {
-          const luck = Math.abs(Math.sin(r * 12.9898 + k * 78.233)) % 1;
-          const q = Math.max(0, Math.min(1, (gone - luck * 0.3) / 0.7));
-          const ox = x + s / 2 - W / 2, oy = y + s / 2 - H / 2, far = Math.hypot(ox, oy) || 1;
-          const reach = q * q * Math.max(W, H) * 1.3;
-          x += (ox / far) * reach; y += (oy / far) * reach;
-          pen.translate(x + s / 2, y + s / 2); pen.rotate((luck - 0.5) * q * 1.4); pen.translate(-(x + s / 2), -(y + s / 2));
+    // The arrangement at a moment: every cell, the cover in it, and which one
+    // is breathing.
+    const gridAt = (when, breathe) => {
+      const shift = when * 14, past = Math.floor(shift / unit), frac = shift - past * unit;
+      const beat = Math.floor(when / 3), swell = Math.sin(((when % 3) / 3) * Math.PI) * 0.12;
+      const cells = [];
+      for (let r = -1; r * unit < H + unit; r++) {
+        const lean = r % 2 ? unit / 2 : 0;
+        for (let c = -1; c * unit - frac + lean < W + unit; c++) {
+          const k = c + past;
+          const near = breathe && ((r * 5 + k) % 9 + 9) % 9 === beat % 9;
+          const s = cell * (1 + (near ? swell : 0));
+          cells.push({
+            key: `${r},${k}`, r, k, near, s,
+            idx: ((r * 7 + k * 3) % n + n) % n,
+            x: c * unit - frac + lean - (s - cell) / 2,
+            y: r * unit + 6 + Math.sin(when * 0.4 + k) * 2 - (s - cell) / 2,
+          });
         }
-        pen.shadowColor = 'rgba(0,0,0,0.45)'; pen.shadowBlur = near ? 30 : 16; pen.shadowOffsetY = 6;
-        pen.fillStyle = '#000'; pen.beginPath(); pen.roundRect(x, y, s, s, 3); pen.fill();
-        pen.shadowColor = 'transparent';
-        drawCover(pen, covers[idx], x, y, s, 3);
-        pen.restore();
       }
+      return cells;
+    };
+    const moving = scatter ? 'settle' : arrive ? 'arrive' : null;
+    if (moving && n && (!plan.current || plan.current.kind !== moving)) {
+      const cells = gridAt(t, false);
+      const free = new Set(cells.map(c => c.key));
+      const pairs = new Map();
+      for (const tile of wallCovers(W, H)) {
+        let best = null, far = Infinity;
+        for (const c of cells) {
+          if (!free.has(c.key)) continue;
+          const d = (c.x - tile.x) ** 2 + (c.y - tile.y) ** 2;
+          if (d < far) { far = d; best = c; }
+        }
+        if (best) { free.delete(best.key); pairs.set(best.key, tile); }
+      }
+      plan.current = { kind: moving, from: t, pairs, frozen: moving === 'settle' ? cells : null };
+      document.documentElement.setAttribute('data-settling', '');
+    }
+    if (!moving) plan.current = null;
+    const quiet = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const p = plan.current ? (quiet ? 1 : Math.min(1, (t - plan.current.from) / MOVE_S)) : 0;
+    const e = smooth(p);
+    const kind = plan.current?.kind;
+    const landed = kind === 'arrive' && p >= 1;
+    if (landed) document.documentElement.removeAttribute('data-settling');
+    // The ground is there at rest, and not while the covers are moving
+    // between it and the wall.
+    if (!kind || landed) { pen.fillStyle = '#16140f'; pen.fillRect(0, 0, W, H); }
+    else pen.clearRect(0, 0, W, H);
+    if (!n) return;
+    const cells = plan.current?.frozen || gridAt(t, !kind || landed);
+    for (const c of cells) {
+      const tile = kind && !landed ? plan.current.pairs.get(c.key) : null;
+      let { x, y, s } = c;
+      let round = 3, img = covers[c.idx], lift = 1;
+      pen.save();
+      if (tile) {
+        // 0 in its cell, 1 in its place on the wall.
+        const k = kind === 'settle' ? e : 1 - e;
+        x = between(c.x, tile.x, k); y = between(c.y, tile.y, k); s = between(c.s, tile.s, k);
+        round = between(3, tile.round, k); lift = 1 - k;
+        img = tile.img;
+      } else if (kind && !landed) {
+        // The rest go out past the nearest edge, or come in from it.
+        const luck = Math.abs(Math.sin(c.r * 12.9898 + c.k * 78.233)) % 1;
+        const g = kind === 'settle' ? e : 1 - e;
+        const q = Math.max(0, Math.min(1, (g - luck * 0.3) / 0.7));
+        const ox = x + s / 2 - W / 2, oy = y + s / 2 - H / 2, far = Math.hypot(ox, oy) || 1;
+        const reach = q * q * Math.max(W, H) * 1.3;
+        x += (ox / far) * reach; y += (oy / far) * reach;
+        pen.translate(x + s / 2, y + s / 2); pen.rotate((luck - 0.5) * q * 1.4); pen.translate(-(x + s / 2), -(y + s / 2));
+      }
+      if (lift > 0.02) {
+        pen.shadowColor = `rgba(0,0,0,${0.45 * lift})`; pen.shadowBlur = (c.near ? 30 : 16) * lift; pen.shadowOffsetY = 6 * lift;
+        pen.fillStyle = '#000'; pen.beginPath(); pen.roundRect(x, y, s, s, round); pen.fill();
+        pen.shadowColor = 'transparent';
+      }
+      drawCover(pen, img, x, y, s, round);
+      pen.restore();
     }
   };
   return <Canvas draw={draw} still={still} />;
@@ -204,7 +274,7 @@ export function Screensaver({ entries, arriving, leaving, logo, onEnter }) {
   const shown = entries.some(e => e.album_art) ? entries : remembered;
   return (
     <div className={'saver' + (arriving ? ' saver--arriving' : '') + (leaving ? ' saver--leaving' : '')} onClick={onEnter} role="presentation">
-      <Room entries={shown} still={false} scatter={leaving} />
+      <Room entries={shown} still={false} scatter={leaving} arrive={arriving} />
       <button
         type="button"
         className="saver-mark"

@@ -3987,8 +3987,8 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
    The salon over everything — the brow, a post, the card — with the LN.
    mark the one thing on it (Place.js, Screensaver; HomeNav). It is there
    from the first paint while the journal opens and stays until it is tapped;
-   then its covers scatter off the screen and the page shows through. After a
-   while untouched it comes back down over the page like a blind. Moved,
+   then its covers glide into their places on the wall and settle there.
+   After a while untouched they lift off the wall into it again. Moved,
    never faded. A phone's only. */
 .saver { display: none; }
 @media (max-width: 768px) {
@@ -4000,11 +4000,15 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
   }
-  .saver--arriving { animation: saver-down 0.46s cubic-bezier(0.22, 0.61, 0.36, 1); }
-  /* Leaving, the covers scatter on the canvas (Place.js) and the wall shows
-     through where they were; the mark goes with the wall between them. */
-  .saver--leaving { background: none; pointer-events: none; }
+  /* Coming and going, the covers move between the screensaver and the wall
+     on the canvas (Place.js), which paints the ground itself once they are
+     in their places; the page shows through until then, and the mark is
+     there only at rest. */
+  .saver--arriving, .saver--leaving { background: none; }
+  .saver--leaving { pointer-events: none; }
   .saver--leaving .saver-mark { visibility: hidden; }
+  /* The wall's own covers stand aside while theirs are in the air. */
+  html[data-settling] .hn-pane--home [data-tile-slug] .ft-art { visibility: hidden; }
   .saver-mark {
     position: absolute; left: 50%; transform: translateX(-50%);
     bottom: calc(44px + env(safe-area-inset-bottom, 0px));
@@ -4014,8 +4018,4 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   }
   .saver-mark-svg { display: block; height: 30px; width: auto; fill: currentColor; }
   .saver-mark-svg .hn-mark-dot { fill: currentColor; }
-}
-@keyframes saver-down { from { transform: translateY(-100%); } to { transform: none; } }
-@media (prefers-reduced-motion: reduce) {
-  .saver--arriving, .saver--leaving { animation: none; }
 }
