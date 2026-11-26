@@ -3831,40 +3831,68 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
 /* A desk keeps its bar; the tile is a phone's. */
 @media (min-width: 769px) { .arc-grid .lt { display: none; } }
 
-/* ── A visitor's beacon by what is happening, 2026-11-21 ──────────────────
-   On a phone: live, the beacon; not live with a record pinned, that record
-   alone (LivingWith, ListeningBeacon.js) and nothing else on
-   the floor; nothing pinned, no floor at all and the wall straight under the
-   top row. A desk keeps the beacon as it was. */
-.hn .beacon-stage.beacon-stage--living, .beacon-stage--living {
-  display: flex; flex-direction: column; align-items: stretch; justify-content: flex-start; gap: 12px; height: auto;
-  align-self: stretch; width: auto; max-width: none; margin: 0; padding: 18px 14px 4px; box-sizing: border-box;
-}
-.pin-line { margin: 0; font-size: 15px; line-height: 1.4; color: var(--ink-soft); text-wrap: balance; }
-.pin-line b { color: var(--ink); font-weight: 700; }
-.pin-row {
-  display: flex; align-items: center; gap: 14px; color: inherit; text-decoration: none;
-  -webkit-tap-highlight-color: transparent;
-}
-.pin-cover {
-  flex: none; width: 96px; height: 96px; border-radius: 10px; object-fit: cover;
-  box-shadow: 0 6px 18px color-mix(in srgb, var(--ink) 16%, transparent);
-}
-.pin-cover--none { display: grid; place-items: center; background: color-mix(in srgb, var(--ink) 6%, transparent); color: var(--ink-soft); }
-.pin-words { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-.pin-title { font-family: var(--font-display); font-weight: var(--font-display-weight, 800); font-size: 20px; line-height: 1.15; }
-.pin-artist { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-soft); }
+/* ── The landing, 2026-11-25 ────────────────────────────────────────────────
+   What a visitor lands on, on a phone (Landing.js): who keeps the journal,
+   the lamp while a listen is open, the pinned albums framed with their
+   lines, and the wall under them. It takes the beacon's floor; the beacon,
+   its wash and what came before stand down there. A desk keeps its book. */
+.ld { display: none; }
 @media (max-width: 768px) {
-  .hn--visitor .hn-pane--home .hn-floor--off { display: none; }
-  .hn--visitor .hn-pane--home .hn-floor--off + .hn-floor--wall { padding-top: var(--hn-bar-h); }
-  .hn-floor--living .beacon-stage:not(.beacon-stage--living),
-  .hn-floor--living .hp-recent-set,
-  .hn-floor--living .beacon-wash { display: none; }
-  .hn .hn-floor--living .hn-band { display: block; padding: 0; min-height: 0; height: auto; }
-}
-/* A desk keeps the beacon; the pinned record is a phone's. */
-@media (min-width: 769px) {
-  .hn .beacon-stage.beacon-stage--living, .beacon-stage--living { display: none; }
+  .hn--visitor .hn-pane--home .hn-floor--landing { padding-top: var(--hn-bar-h); }
+  .hn .hn-pane--home .hn-floor--landing > .beacon-wash,
+  .hn .hn-pane--home .hn-floor--landing > .hn-screen { display: none; }
+  .ld { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 26px; padding: 14px 0 22px; }
+  .ld-who { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; padding: 0 22px; }
+  .ld-face {
+    width: 132px; height: 132px; border-radius: 18px; overflow: hidden;
+    display: grid; place-items: center;
+    background: var(--panel-strong); color: var(--ink-faint);
+    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.14);
+  }
+  .ld-face img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .ld-name {
+    margin: 6px 0 0; font-family: var(--font-display); font-weight: var(--font-display-weight, 800);
+    font-size: 26px; line-height: 1.15; text-wrap: balance;
+  }
+  .ld-lines { list-style: none; margin: 2px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; max-width: 32ch; }
+  .ld-lines li { font-size: 15px; line-height: 1.45; color: var(--ink); }
+  .ld-prompt { color: var(--ink-soft); }
+  /* The lamp: a small dark pill, only while a listen is open. */
+  .ld-lamp {
+    align-self: center; margin: 0;
+    display: inline-flex; align-items: center; gap: 10px; max-width: calc(100% - 44px);
+    padding: 6px 16px 6px 6px; border-radius: 999px;
+    background: #16140f; color: #f4f1ea;
+    font-size: 13px; line-height: 1.2;
+  }
+  .ld-lamp img, .ld-lamp-art { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; flex: none; background: #333; }
+  .ld-lamp-dot { width: 7px; height: 7px; border-radius: 50%; background: #7cff9b; flex: none; }
+  .ld-lamp-words { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* The pinned albums: framed, large, on one ledge that scrolls sideways
+     when the screen cannot hold them. */
+  .ld-pinned {
+    display: flex; gap: 18px; overflow-x: auto; scroll-snap-type: x mandatory;
+    padding: 4px 22px 18px; scrollbar-width: none;
+    border-bottom: 1px solid var(--border);
+  }
+  .ld-pinned::-webkit-scrollbar { display: none; }
+  /* Centred while they fit, and still scrolling from the first when not. */
+  .ld-frame:first-child { margin-left: auto; }
+  .ld-frame:last-child { margin-right: auto; }
+  .ld-frame {
+    flex: 0 0 min(72vw, 270px); scroll-snap-align: center;
+    display: flex; flex-direction: column; gap: 10px;
+    color: inherit; text-decoration: none; -webkit-tap-highlight-color: transparent;
+  }
+  .ld-mat {
+    display: block; aspect-ratio: 1; padding: 10px; background: var(--card, #fff);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08), 0 14px 30px rgba(0, 0, 0, 0.16);
+  }
+  .ld-mat img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .ld-mat-none { display: grid; place-items: center; width: 100%; height: 100%; color: var(--ink-faint); }
+  .ld-said { font-size: 16px; line-height: 1.45; color: var(--ink); text-wrap: pretty; }
+  .ld-title { font-family: var(--font-label); font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-soft); }
+  .ld-title b { font-weight: 500; color: var(--ink); }
 }
 
 /* ── The card rises like a shelf, 2026-11-21 ────────────────────────────────

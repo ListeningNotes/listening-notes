@@ -76,7 +76,8 @@ import { announce, useListeningBeacon } from '../../hooks/useListeningBeacon';
 import { useSpineWidth } from '../../hooks/useSpineWidth';
 import { useTheme } from './Lightswitch';
 import { useBookplate } from './Bookplate';
-import ListeningBeacon, { LivingWith } from './ListeningBeacon';
+import ListeningBeacon from './ListeningBeacon';
+import Landing from './Landing';
 import ListenBar, { ListenTile } from './ListenBar';
 import { SCATTER_MS, Screensaver, rememberCovers, useRemembered } from './Place';
 import Journal from './Journal';
@@ -1783,7 +1784,9 @@ export default function HomeNav() {
         goTo={i => { putEntryAway(); goTo(i); }}
         onHere={i => { if (putEntryAway()) return; goBack(i); }}
         onTop={() => { if (putEntryAway()) return; if (!cardOpen) goUp(pane); }}
-        onFace={() => { putEntryAway(); setCardOpen(open => !open); }}
+        // A visitor is already standing in the card (Landing.js): the face
+        // takes them back to the top of it.
+        onFace={() => { putEntryAway(); if (authed) setCardOpen(open => !open); else { goTo(HOME); goUp(HOME); } }}
         news={{ people: waiting?.friends === true }}
         lights={lights}
         mark={mark('hdr-mark-svg')}
@@ -1961,8 +1964,9 @@ export default function HomeNav() {
   // slot. A grey last-logged cover is not shown to anybody any more. The
   // stylesheet keeps a desk as it was (nav.css).
   const visitor = checked && !authed;
-  const living = visitor && !isLive && pinned ? pinned : null;
-  const unlit = visitor && !isLive && !pinned;
+  // A visitor lands on the landing (Landing.js): the card, the lamp, the
+  // pinned albums, then the wall. A phone's; a desk keeps its book.
+  const landing = visitor;
 
 
   // The one divider on a desk, as a grip: the fold between the two pages. A
@@ -2135,7 +2139,8 @@ export default function HomeNav() {
           {/* Floor one — the crown, the record with its caption, and what
               came before. On a phone it is exactly one screen tall, so the
               snap has one place to land; on a desk it is a wrapper. */}
-          <div className={'hn-floor hn-floor--beacon' + (living ? ' hn-floor--living' : '') + (unlit ? ' hn-floor--off' : '')}>
+          <div className={'hn-floor hn-floor--beacon' + (landing ? ' hn-floor--landing' : '')}>
+            {landing && <Landing live={isLive} onAir={{ album: onAirAlbum, artist: onAirArtist, art: onAir }} />}
             {wash && (
               <div
                 className={'beacon-wash' + (isLive ? '' : ' beacon-wash--quiet')}
@@ -2165,7 +2170,6 @@ export default function HomeNav() {
               <div className="hp-dashboard">
                 <div className="hp-dash-cell hp-dash-beacon">
                   <ListeningBeacon emptied={false} />
-                  {living && <LivingWith entry={living} />}
                 </div>
               </div>
               {/* What came before. The picker took this room while a record
