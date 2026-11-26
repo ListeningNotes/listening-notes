@@ -23,6 +23,7 @@ import { isCurrentCode } from '../library/portrait_code';
 import { takesReports } from '../library/report_actions';
 import { SANDBOX } from '../library/version';
 import { wristbandOnHand } from '../library/wristband';
+import { LAUNCH_SCREENS, launchMedia, launchName } from '../library/launch_image';
 import { journalUrl } from '../library/return_address';
 import { redirect } from 'next/navigation';
 
@@ -101,6 +102,9 @@ export async function generateMetadata() {
       capable: true,
       title: name,
       statusBarStyle: 'black-translucent',
+      // The picture shown the instant the icon is tapped, one per iPhone size
+      // (library/launch_image.js), 2026-11-25.
+      startupImage: LAUNCH_SCREENS.map(screen => ({ url: `/launch-image/${launchName(screen)}`, media: launchMedia(screen) })),
     },
     // What a link to this journal looks like when it is pasted somewhere else.
     // Same name, for the same reason: the reader is a preview card in an app
