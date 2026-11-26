@@ -202,19 +202,21 @@ export function usePinning() {
   );
 }
 
-// The note as sentences: tap one to light it, tap the one before or after to
-// carry the light on, tap an end to take it back. The lit run is the line.
-// Sentences are split where the note has a full stop, a question or an
-// exclamation, or a line break, so the run is always words the note says,
-// in its order, with only the spaces between them made single.
-export function LineChooser({ slug, note, onPinned }) {
-  const pieces = String(note || '')
+// The notes as sentences — the album note, then each song's note under its
+// song's name — tap one to light it, tap the one before or after to carry
+// the light on, tap an end to take it back. The lit run is the line, and it
+// stays inside one note. Sentences are split where a note has a full stop, a
+// question or an exclamation, or a line break, so the run is always words
+// the note says, in its order, with only the spaces between them made single.
+export function LineChooser({ slug, notes, onPinned }) {
+  const pieces = (notes || []).flatMap((note, n) => String(note.text || '')
     .split(/\n+/)
-    .flatMap((para, p) => para.split(/(?<=[.!?…])\s+/).map(t => ({ t: t.trim(), p })))
+    .flatMap((para, p) => para.split(/(?<=[.!?…])\s+/).map(t => ({ t: t.trim(), p, n }))))
     .filter(piece => piece.t);
   const [run, setRun] = useState(null);
   function press(i) {
-    if (!run) { setRun([i, i]); return; }
+    const same = run && pieces[run[0]].n === pieces[i].n;
+    if (!run || !same) { setRun([i, i]); return; }
     const [a, b] = run;
     if (i === a - 1) setRun([i, b]);
     else if (i === b + 1) setRun([a, i]);
@@ -227,18 +229,24 @@ export function LineChooser({ slug, note, onPinned }) {
   return (
     <>
       <div className="pick-note">
-        {pieces.map((piece, i) => (
-          <span key={i}>
-            {i > 0 && pieces[i - 1].p !== piece.p && <span className="pick-break" />}
-            <button
-              type="button"
-              className={'pick-line' + (run && i >= run[0] && i <= run[1] ? ' pick-line--lit' : '')}
-              onClick={() => press(i)}
-            >
-              {piece.t}
-            </button>{' '}
-          </span>
-        ))}
+        {pieces.map((piece, i) => {
+          const first = i === 0 || pieces[i - 1].n !== piece.n;
+          const label = first ? notes[piece.n].label : null;
+          return (
+            <span key={i}>
+              {first && i > 0 && <span className="pick-break pick-break--note" />}
+              {label && <span className="pick-label">{label}</span>}
+              {!first && pieces[i - 1].p !== piece.p && <span className="pick-break" />}
+              <button
+                type="button"
+                className={'pick-line' + (run && i >= run[0] && i <= run[1] ? ' pick-line--lit' : '')}
+                onClick={() => press(i)}
+              >
+                {piece.t}
+              </button>{' '}
+            </span>
+          );
+        })}
       </div>
       <PinThisLine chosen={line ? { slug, line } : null} onPinned={onPinned} />
     </>

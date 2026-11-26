@@ -8,8 +8,10 @@
 // when it is pinned and again every time it is read, and a line the note no
 // longer says is read as no line at all (Miyel's brief: "never show words
 // that are not in the entry"). Only what the entry's own page shows anybody
-// can be lifted — the album note, never a track note, never an entry whose
-// credit was kept quiet (pull_public_note's rule, database_actions.js).
+// can be lifted — its album note or one of its songs' notes, or a song's own
+// post (Miyel, 2026-11-25: "what if I want to choose a line from a track
+// note") — never from an entry whose credit was kept quiet. A line comes from
+// one note: it is matched against each on its own, never across two.
 //
 // settings.pinned_entry_id, the card's one pin from before, is the first
 // place: read as it while nothing has been pinned here, and kept equal to it
@@ -24,22 +26,24 @@ export const MOST_PINNED = 3;
 // matches the note it came from.
 const flat = text => String(text || '').replace(/\s+/g, ' ').trim();
 
-// The words a line may be lifted from: the album note, as its page shows it.
+// The notes a line may be lifted from, each as its page shows it: the album
+// note (a song's post keeps its note there too) and every song's own note.
 function liftable(row) {
-  if (!row || row.song || row.credit_private) return '';
-  return flat(splitNotes(row.notes).albumNotes);
+  if (!row || row.credit_private) return [];
+  const songs = Array.isArray(row.tracks) ? row.tracks.map(t => flat(t?.note)) : [];
+  return [flat(splitNotes(row.notes).albumNotes), ...songs].filter(Boolean);
 }
 
 function said(row, line) {
   const words = flat(line);
-  return Boolean(words) && liftable(row).includes(words);
+  return Boolean(words) && liftable(row).some(note => note.includes(words));
 }
 
 // What anybody may read: each place, its album and the line if the entry
 // still says it. Never the note itself.
 export async function pull_pinned() {
   const rows = await database`
-    SELECT p.position, p.line, e.id, e.slug, e.album, e.artist, e.album_art, e.song, e.notes, e.credit_private
+    SELECT p.position, p.line, e.id, e.slug, e.album, e.artist, e.album_art, e.song, e.notes, e.tracks, e.credit_private
     FROM pinned p JOIN entries e ON e.id = p.entry_id
     ORDER BY p.position
   `;
@@ -84,10 +88,10 @@ async function keep_the_card_pin() {
 // the three as they stand, for the keeper to choose from.
 export async function pin_line(slug, line, replacing = null) {
   const [row] = await database`
-    SELECT id, slug, song, notes, credit_private FROM entries WHERE slug = ${slug} LIMIT 1
+    SELECT id, slug, song, notes, tracks, credit_private FROM entries WHERE slug = ${slug} LIMIT 1
   `;
   if (!row) return { trouble: 'There is no entry by that name.' };
-  if (!said(row, line)) return { trouble: 'A pinned line has to be words from this album’s note.' };
+  if (!said(row, line)) return { trouble: 'A pinned line has to be words from one of this post’s notes.' };
   const words = flat(line);
   await take_in_the_card_pin();
   const [already] = await database`SELECT position FROM pinned WHERE entry_id = ${row.id}`;

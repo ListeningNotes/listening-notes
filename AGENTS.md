@@ -149,7 +149,9 @@ reasoning; these are inline so nobody has to go looking.
 - **Public reads are allow-lists.** The feed (`PUBLIC_FIELDS`) and the wall
   never carry the writing; one entry's album note leaves only through
   `/api/public/notes/[slug]`, one entry at a time, never for a track note or
-  an entry whose credit was kept quiet; a new column stays private until
+  an entry whose credit was kept quiet; a pinned line leaves through
+  `/api/pinned`, only words the post's own album or song notes say, never
+  from a quiet entry (library/pinned_actions.js); a new column stays private until
   somebody decides otherwise; the chain fields leave only through `withoutChain`, and only on a
   Submission entry that was not marked quiet. What a keeper sent to the
   month's prompt is published only through the publication's

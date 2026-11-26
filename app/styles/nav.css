@@ -3961,6 +3961,8 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
 }
 .pick-note { font-size: 16px; line-height: 1.6; }
 .pick-break { display: block; height: 12px; }
+.pick-break--note { height: 22px; }
+.pick-label { display: block; margin-bottom: 6px; font-family: var(--font-label); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-soft); }
 .pick-line {
   display: inline; padding: 1px 2px; margin: 0 -2px; border: 0; border-radius: 4px;
   background: none; color: var(--ink); font: inherit; text-align: left; cursor: pointer;
