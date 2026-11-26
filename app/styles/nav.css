@@ -3892,7 +3892,10 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
     display: grid; place-items: center; cursor: pointer;
     background: var(--bg); color: var(--ink-soft); box-shadow: 0 0 0 1px var(--border), 0 4px 12px rgba(0, 0, 0, 0.12);
   }
-  .ld-frame--empty { border: 0; padding: 0; background: none; cursor: pointer; align-self: flex-start; }
+  /* Small and quiet: a place to fill, not a frame as large as a pinned
+     album's — three of those, empty, were most of the screen. */
+  .ld-frame--empty { flex: 0 0 72px; border: 0; padding: 0; background: none; cursor: pointer; align-self: flex-start; scroll-snap-align: none; }
+  .ld-frame--empty .ld-mat { padding: 0; }
   .ld-frame--empty .ld-mat {
     display: grid; place-items: center; background: none; box-shadow: none;
     border: 1.5px dashed color-mix(in srgb, var(--ink) 22%, transparent); color: var(--ink-faint);
