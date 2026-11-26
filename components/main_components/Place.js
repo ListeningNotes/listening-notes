@@ -16,7 +16,7 @@
 // room: the album logged last, large and turning like a record, its colour
 // washing the room, the rest circling it; the one she liked least, kept for
 // when a different room greets each opening of the app.
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import dynamic from 'next/dynamic';
 import { usePathname } from 'next/navigation';
 import { Globe, SquaresFour, User, Users, X } from '@phosphor-icons/react';
@@ -154,6 +154,59 @@ const Listen = dynamic(() => import('../../app/session/page'), { ssr: false });
 // The room the place shows. One for now; a different one each opening later.
 const ROOMS = { salon: Salon, listening: ListeningRoom };
 const Room = ROOMS.salon;
+
+// ── The screensaver, 2026-11-25 (Miyel's blend of the place and her brief) ──
+// The salon, full screen and nothing else on it but the LN. mark: the loading
+// screen while the journal opens (the sleeping database takes a few seconds to
+// wake, and a still page in that time "feels like it's actually broken"), and
+// after a while untouched it comes back over whatever was open. A tap — the
+// mark, or anywhere — lifts it away onto exactly where you were. Never during
+// a listen (HomeNav). The keeper's phone only.
+//
+// It cannot wait for the albums, which are the slow part, so it draws the
+// covers this browser remembers from the last time the journal was open.
+// A browser that remembers none — a new phone, a visitor — gets no loading
+// screen at all.
+const REMEMBERED = 'ln_saver_covers';
+export function rememberCovers(entries) {
+  const list = entries.filter(e => e.album_art).slice(0, HUNG).map(e => e.album_art);
+  if (!list.length) return;
+  try { localStorage.setItem(REMEMBERED, JSON.stringify(list)); } catch { /* storage off: no loading screen */ }
+}
+let rememberedRaw = null, rememberedList = [];
+function rememberedNow() {
+  let raw = null;
+  try { raw = localStorage.getItem(REMEMBERED); } catch { /* storage off */ }
+  if (raw !== rememberedRaw) {
+    rememberedRaw = raw;
+    try { rememberedList = (JSON.parse(raw) || []).map(album_art => ({ album_art })); } catch { rememberedList = []; }
+  }
+  return rememberedList;
+}
+const NONE = [];
+// Whether this browser has covers to open on, read once the page is the
+// browser's (a server never does).
+export function useRemembered() {
+  return useSyncExternalStore(() => () => {}, rememberedNow, () => NONE);
+}
+
+export function Screensaver({ entries, arriving, leaving, logo, onEnter }) {
+  const remembered = useRemembered();
+  const shown = entries.some(e => e.album_art) ? entries : remembered;
+  return (
+    <div className={'saver' + (arriving ? ' saver--arriving' : '') + (leaving ? ' saver--leaving' : '')} onClick={onEnter} role="presentation">
+      <Salon entries={shown} still={false} />
+      <button
+        type="button"
+        className="saver-mark"
+        onClick={e => { e.stopPropagation(); onEnter(); }}
+        aria-label="Open your journal"
+      >
+        {logo}
+      </button>
+    </div>
+  );
+}
 
 export default function Place({ entries, held, waiting, community, roomUp, cardOpen, portrait, logo, lights, onRoom, onFace }) {
   // The colour of the album the room is made of, for the wash and the glass.

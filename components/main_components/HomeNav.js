@@ -78,7 +78,7 @@ import { useTheme } from './Lightswitch';
 import { useBookplate } from './Bookplate';
 import ListeningBeacon, { LivingWith } from './ListeningBeacon';
 import ListenBar, { ListenTile } from './ListenBar';
-import Place from './Place';
+import Place, { Screensaver, rememberCovers, useRemembered } from './Place';
 import Journal from './Journal';
 import Header from './Header';
 import PinnedLetter from './PinnedLetter';
@@ -126,6 +126,8 @@ const INBOX = 3;
 // so a place on the rail is a pane less one. A desk's rail is a grid and is
 // never scrolled sideways.
 const RAIL_FROM = HOME;
+// How long untouched before the screensaver comes back (HomeNav, the screensaver).
+const IDLE_MS = 90 * 1000;
 
 // Which face the spine was left on, per browser. Not a setting and not on the
 // settings row: it is where somebody put their own left-hand page down, the
@@ -1680,6 +1682,56 @@ export default function HomeNav() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authed, roomUp, cardOpen]);
 
+  // ── The screensaver, 2026-11-25 ────────────────────────────────────────
+  // The loading screen while the journal opens, lifting away once it is
+  // ready (and not before a second and a half, so it never flickers), and
+  // the same art again after a while untouched — never while a listen is in
+  // hand, a post or a listen is open, or something is being typed. A tap
+  // lifts it off exactly where you were (Place.js, Screensaver).
+  const remembered = useRemembered();
+  const [saver, setSaver] = useState('loading');
+  const [saverLeaving, setSaverLeaving] = useState(false);
+  const openedAt = useRef(0);
+  useEffect(() => { openedAt.current = performance.now(); }, []);
+  const liftSaver = useCallback(() => {
+    if (saverLeaving) return;
+    setSaverLeaving(true);
+    const quiet = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    window.setTimeout(() => { setSaver(null); setSaverLeaving(false); }, quiet ? 0 : 460);
+  }, [saverLeaving]);
+  const ready = checked && !loading;
+  useEffect(() => {
+    if (saver !== 'loading' || !ready) return undefined;
+    const wait = Math.max(0, 1500 - (performance.now() - openedAt.current));
+    const t = window.setTimeout(liftSaver, wait);
+    return () => window.clearTimeout(t);
+  }, [saver, ready, liftSaver]);
+  useEffect(() => {
+    if (authed && entries.length) rememberCovers(entries);
+  }, [authed, entries]);
+  useEffect(() => {
+    if (!authed || saver || path !== '/' || inHand) return undefined;
+    let t = 0;
+    const later = () => {
+      window.clearTimeout(t);
+      t = window.setTimeout(() => {
+        const el = document.activeElement;
+        if (el && (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT' || el.isContentEditable)) { later(); return; }
+        if (document.visibilityState === 'visible') setSaver('idle');
+      }, IDLE_MS);
+    };
+    later();
+    const kinds = ['pointerdown', 'keydown', 'wheel', 'touchstart'];
+    kinds.forEach(k => document.addEventListener(k, later, { capture: true, passive: true }));
+    document.addEventListener('scroll', later, { capture: true, passive: true });
+    return () => {
+      window.clearTimeout(t);
+      kinds.forEach(k => document.removeEventListener(k, later, { capture: true }));
+      document.removeEventListener('scroll', later, { capture: true });
+    };
+  }, [authed, saver, path, inHand]);
+  const saverShows = saver === 'idle' || (saver === 'loading' && remembered.length > 0);
+
   // The brow under the clock is page colour so rooms scroll under it; over
   // the place it would be a band across the top of the art (Miyel: "background
   // needs to go all the way to top"), so it stands down there (base.css). Only
@@ -2097,6 +2149,15 @@ export default function HomeNav() {
   ) : null;
 
   return (<>
+    {saverShows && (
+      <Screensaver
+        entries={entries}
+        arriving={saver === 'idle'}
+        leaving={saverLeaving}
+        logo={mark('saver-mark-svg')}
+        onEnter={liftSaver}
+      />
+    )}
     {authed && (
       <Place
         entries={entries}

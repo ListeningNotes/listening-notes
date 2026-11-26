@@ -4060,3 +4060,37 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
 @media (prefers-reduced-motion: reduce) {
   .pl-key { animation: none; }
 }
+
+/* ── The screensaver, 2026-11-25 ───────────────────────────────────────────
+   The salon over everything — the brow, a post, the card — with the LN.
+   mark the one thing on it (Place.js, Screensaver; HomeNav). It is there
+   from the first paint while the journal opens, lifts away upward when it is
+   ready or tapped, and comes back down over the page like a blind after a
+   while untouched. Moved, never faded. A phone's only. */
+.saver { display: none; }
+@media (max-width: 768px) {
+  .saver {
+    display: block;
+    position: fixed; inset: 0; z-index: 1100;
+    background: #16140f;
+    overflow: hidden;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .saver--arriving { animation: saver-down 0.46s cubic-bezier(0.22, 0.61, 0.36, 1); }
+  .saver--leaving { animation: saver-up 0.46s cubic-bezier(0.4, 0, 0.7, 0.2) forwards; pointer-events: none; }
+  .saver-mark {
+    position: absolute; left: 50%; transform: translateX(-50%);
+    bottom: calc(44px + env(safe-area-inset-bottom, 0px));
+    padding: 14px 18px; border: 0; background: none; cursor: pointer;
+    color: #fff; filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.55));
+    -webkit-tap-highlight-color: transparent;
+  }
+  .saver-mark-svg { display: block; height: 30px; width: auto; fill: currentColor; }
+  .saver-mark-svg .hn-mark-dot { fill: currentColor; }
+}
+@keyframes saver-down { from { transform: translateY(-100%); } to { transform: none; } }
+@keyframes saver-up { from { transform: none; } to { transform: translateY(-100%); } }
+@media (prefers-reduced-motion: reduce) {
+  .saver--arriving, .saver--leaving { animation: none; }
+}
