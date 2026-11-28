@@ -3867,6 +3867,17 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
     top: calc(14px + env(safe-area-inset-top, 0px)); bottom: auto; padding: 10px 14px;
   }
   .saver--profile .saver-mark-svg { height: 44px; }
+  /* A soft dark fade from the top edge down past the mark, as the foot has
+     one under the keeper, so the mark reads over any cover (Miyel,
+     2026-11-27). Not while the covers are settling into the wall. */
+  .saver--profile::before {
+    content: ''; position: absolute; left: 0; right: 0; top: 0; z-index: 1;
+    height: calc(150px + env(safe-area-inset-top, 0px));
+    background: linear-gradient(rgba(22, 20, 15, 0.82), rgba(22, 20, 15, 0.5) 55%, rgba(22, 20, 15, 0));
+    pointer-events: none;
+  }
+  .saver--profile.saver--leaving::before { display: none; }
+  .saver--profile .saver-mark { z-index: 3; }
   .saver .ld {
     position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
     display: flex; flex-direction: column; gap: 12px;
