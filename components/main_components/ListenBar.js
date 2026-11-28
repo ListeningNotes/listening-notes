@@ -51,7 +51,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { TrackLength } from '../../library/session_timers';
 import { useAddYours } from './Issue';
-import { Stop } from '@phosphor-icons/react';
+import { Eject } from '@phosphor-icons/react';
 import { PENDING_KEY, saidSoAboutTheDesk } from '../../hooks/useListeningSession';
 import { refreshBeacon } from '../../hooks/useListeningBeacon';
 
@@ -264,6 +264,8 @@ function HeldScreen({ held, live }) {
     setAsking(false);
     if (!done) setTrouble(true);
   }
+  // One big square of the album, the width of the wall, and a fade at its
+  // foot with the track playing (Miyel, 2026-11-28).
   return (
     <div className="lt lt--held lt--screen">
       <Link href="/session" className="lt-screen-in" data-grows="/session" aria-label={`Back to ${held.album}`}>
@@ -273,13 +275,14 @@ function HeldScreen({ held, live }) {
             {live && <i className="lt-live" aria-hidden="true" />}
             Listening
           </span>
-          <span className="lt-screen-album">{held.album}</span>
-          {held.artist && <span className="lt-screen-artist">{held.artist}</span>}
-          {held.lit?.title && <span className="lt-screen-track">{held.lit.number ? `${held.lit.number}. ` : ''}{held.lit.title}</span>}
+          {held.lit?.title
+            ? <span className="lt-screen-album">{held.lit.title}</span>
+            : <span className="lt-screen-album">{held.album}</span>}
+          <span className="lt-screen-artist">{held.lit?.title ? [held.album, held.artist].filter(Boolean).join(' · ') : held.artist}</span>
         </span>
       </Link>
       <button type="button" className={'lt-screen-end' + (asking ? ' lt-screen-end--asking' : '')} onClick={end} disabled={ending}>
-        <Stop size={18} weight="regular" aria-hidden="true" />
+        <Eject size={20} weight="regular" aria-hidden="true" />
         {ending ? 'Ending' : trouble ? 'Try again' : asking ? 'End?' : 'End'}
       </button>
     </div>
