@@ -1282,3 +1282,12 @@ being home and the art became the opening screen and the screensaver.
 beacon only while the keeper was live, else "[name] has [record] pinned."
 from the card's pin, else nothing. The revised brief (2026-11-25) dropped the
 pinned row and the beacon for the landing: the card as the top of the page.
+
+
+**A visitor lands on the card (2026-11-25 to 27).** On a phone the card was the
+top of a visitor's page: portrait, name and lines, the lamp while live, up to
+three pinned albums framed with their lines, then the wall; the keeper's face
+opened the same landing with empty places. Replaced 2026-11-27 by the profile
+as the screensaver (DECISIONS, Structure). Tried and taken out the same day:
+pins as a turning stack answering the card's openings, and the card as a
+magazine with a large photograph.

@@ -104,16 +104,17 @@ were rewritten the same day, while nobody else had a clone.
 **On the keeper's phone the wall is home, and the art is a screensaver,
 2026-11-25, her blend.** Her covers, full screen and always moving, open the
 app while it loads and stay until tapped; they come back after ninety seconds
-untouched, never during a listen; a tap scatters them to where she was. Pure
-art, only the LN. mark. The place with glass keys (2026-11-21) was rejected,
+untouched, never during a listen; a tap scatters them to where she was. Since
+2026-11-27 it carries the profile (below). The place with glass keys (2026-11-21) was rejected,
 and so were a bottom bar and a thumb index: never a nav bar or tabs again.
 
-**A visitor lands on the card, 2026-11-25, her brief (her word "landing").**
-On a phone the card is the top of the page, not a thing to open: portrait,
-name and lines, the lamp only while a listen is open, up to three pinned
-albums framed with their lines, then the wall. The keeper's face opens the
-same landing, with empty places and a × only they see. Never "room" or
-"mantel" in code or on screen (her call: the plain word).
+**The profile is the screensaver, for everybody, 2026-11-27, her call.** On
+a phone a journal opens, to keeper and visitor alike, on the moving covers
+with the keeper low and light at the foot (face, name, marks, rig, links)
+and their answers as a bubble from the face, above it, never over it. A tap
+settles the covers into the wall. Inside, a visitor has Compare and Add,
+nothing else. A big photo, stacked text and pins as a stack were all tried
+that day and rejected: the music moves, the words stay few.
 
 **A pinned line is lifted, never typed, 2026-11-25.** It is words from the
 post's own album or song notes, chosen by tapping sentences (a phone cannot
