@@ -51,6 +51,9 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { TrackLength } from '../../library/session_timers';
 import { useAddYours } from './Issue';
+import { Stop } from '@phosphor-icons/react';
+import { PENDING_KEY, saidSoAboutTheDesk } from '../../hooks/useListeningSession';
+import { refreshBeacon } from '../../hooks/useListeningBeacon';
 
 // What owns the foot when it is on screen. A folder's tabs that have stepped
 // aside for a keyboard (ff--away) do not. A friend's page (.pn-screen) owns
@@ -205,13 +208,80 @@ export function ListenTile({ held, live = false }) {
       </Link>
     );
   }
+  return <HeldScreen held={held} live={live} />;
+}
+
+// ── A listen in hand, as a screen, 2026-11-28 ─────────────────────────────
+// Miyel: while a listen is going, the Listen tile "becomes like a screen"
+// across the whole top row of the wall; a press on it goes back into the
+// listen, and End puts it down as a draft. End asks twice — the first press
+// says End?, the second ends — "so people know". Ending keeps everything:
+// the draft row was written when the listen was lowered, and one is made
+// for the record here only if none is there, so nothing written is ever
+// overwritten (AGENTS, Never: nothing a person typed is lost). Then the
+// record comes off the desk and the needle lifts.
+const fold = text => String(text || '').trim().toLowerCase();
+async function endHeld(held) {
+  try {
+    const listed = await fetch('/api/drafts').then(r => (r.ok ? r.json() : null));
+    if (!listed) return false;
+    const kept = (listed.drafts || []).some(d => !d.song && fold(d.album) === fold(held.album) && fold(d.artist) === fold(held.artist));
+    if (!kept) {
+      const made = await fetch('/api/drafts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ album: held.album, artist: held.artist || '', album_art: held.artUrl || '', collection_id: held.collectionId || '' }),
+      });
+      if (!made.ok) return false;
+    }
+  } catch {
+    return false;
+  }
+  try { localStorage.removeItem(PENDING_KEY); } catch { /* nothing to clear */ }
+  saidSoAboutTheDesk();
+  await fetch('/api/needle', { method: 'DELETE' }).catch(() => {});
+  refreshBeacon();
+  return true;
+}
+
+function HeldScreen({ held, live }) {
+  const [asking, setAsking] = useState(false);
+  const [ending, setEnding] = useState(false);
+  const [trouble, setTrouble] = useState(false);
+  useEffect(() => {
+    if (!asking) return undefined;
+    const t = window.setTimeout(() => setAsking(false), 3200);
+    return () => window.clearTimeout(t);
+  }, [asking]);
+  async function end(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (ending) return;
+    if (!asking) { setAsking(true); setTrouble(false); return; }
+    setEnding(true);
+    const done = await endHeld(held);
+    setEnding(false);
+    setAsking(false);
+    if (!done) setTrouble(true);
+  }
   return (
-    <Link href="/session" className="lt lt--held" data-grows="/session" aria-label={`Back to ${held.album}`} title={`Back to ${held.album}`}>
-      {held.artUrl ? <img className="lt-art" src={held.artUrl} alt="" aria-hidden="true" /> : null}
-      <span className="lt-held">
-        {live && <i className="lt-live" aria-hidden="true" />}
-        <span className="lt-album">{held.album}</span>
-      </span>
-    </Link>
+    <div className="lt lt--held lt--screen">
+      <Link href="/session" className="lt-screen-in" data-grows="/session" aria-label={`Back to ${held.album}`}>
+        {held.artUrl ? <img className="lt-screen-art" src={held.artUrl} alt="" aria-hidden="true" /> : <span className="lt-screen-art" />}
+        <span className="lt-screen-said">
+          <span className="lt-screen-state">
+            {live && <i className="lt-live" aria-hidden="true" />}
+            Listening
+          </span>
+          <span className="lt-screen-album">{held.album}</span>
+          {held.artist && <span className="lt-screen-artist">{held.artist}</span>}
+          {held.lit?.title && <span className="lt-screen-track">{held.lit.number ? `${held.lit.number}. ` : ''}{held.lit.title}</span>}
+        </span>
+      </Link>
+      <button type="button" className={'lt-screen-end' + (asking ? ' lt-screen-end--asking' : '')} onClick={end} disabled={ending}>
+        <Stop size={18} weight="regular" aria-hidden="true" />
+        {ending ? 'Ending' : trouble ? 'Try again' : asking ? 'End?' : 'End'}
+      </button>
+    </div>
   );
 }
