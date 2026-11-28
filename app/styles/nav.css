@@ -3868,57 +3868,47 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .ld-lamp img, .ld-lamp-art { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; flex: none; background: #333; }
   .ld-lamp-dot { width: 7px; height: 7px; border-radius: 50%; background: #7cff9b; flex: none; }
   .ld-lamp-words { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  /* The pinned albums as a stack (Landing.js, PinnedStack): the sentence the
-     pin answers, the deck, then the line, the artist and a dot each. */
-  .ld-stack { display: flex; flex-direction: column; gap: 16px; padding: 4px 22px 22px; border-bottom: 1px solid var(--border); }
-  .ld-sentence {
-    margin: 0; min-height: 2.5em;
-    font-family: var(--font-display); font-weight: var(--font-display-weight, 800);
-    font-size: 23px; line-height: 1.25; letter-spacing: -0.01em; text-wrap: balance;
+  /* The pinned albums: framed, large, on one ledge that scrolls sideways
+     when the screen cannot hold them. */
+  .ld-pinned {
+    display: flex; gap: 18px; overflow-x: auto; scroll-snap-type: x mandatory;
+    padding: 4px 22px 18px; scrollbar-width: none;
+    border-bottom: 1px solid var(--border);
   }
-  .ld-opening { color: var(--ink-soft); font-weight: 600; }
-  /* Words roll: out upward, in from below. A clip, never a fade. */
-  .ld-roll { display: inline-block; overflow: hidden; vertical-align: bottom; padding-bottom: 2px; max-width: 100%; }
-  .ld-roll-in { display: inline-block; font-weight: inherit; animation: ld-roll-up 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); transition: transform 0.34s cubic-bezier(0.4, 0, 1, 1); }
-  .ld-sentence b.ld-roll-in { font-weight: var(--font-display-weight, 800); }
-  .ld-roll-in--out { transform: translateY(-110%); }
-  @keyframes ld-roll-up { from { transform: translateY(110%); } to { transform: none; } }
-  /* The deck: room on the right and above for the covers peeking behind. */
-  .ld-deck {
-    position: relative; width: min(64vw, 250px); min-width: 0;
-    aspect-ratio: 1; margin-top: calc(var(--behind) * 10px);
+  .ld-pinned::-webkit-scrollbar { display: none; }
+  /* Centred while they fit, and still scrolling from the first when not. */
+  .ld-frame:first-child { margin-left: auto; }
+  .ld-frame:last-child { margin-right: auto; }
+  /* min-width 0 all the way down: Safari otherwise lets the cover's own
+     600 pixels push the frame wider than its 270 (Miyel's phone, 2026-11-26,
+     the frame off the side of the screen). */
+  .ld-frame { position: relative; flex: 0 0 min(72vw, 270px); min-width: 0; max-width: min(72vw, 270px); scroll-snap-align: center; }
+  .ld-frame-link { min-width: 0; width: 100%;
+    display: flex; flex-direction: column; gap: 10px;
+    color: inherit; text-decoration: none; -webkit-tap-highlight-color: transparent;
   }
-  .ld-card {
-    position: absolute; inset: 0; display: block; padding: 0; border: 0; border-radius: 4px; overflow: hidden;
-    background: var(--panel-strong); cursor: pointer; -webkit-tap-highlight-color: transparent;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08), 0 14px 30px rgba(0, 0, 0, 0.18);
-    transform-origin: 50% 100%;
-    transition: transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
-  }
-  .ld-card img { display: block; width: 100%; height: 100%; max-width: 100%; object-fit: cover; }
-  .ld-under { display: flex; flex-direction: column; gap: 8px; min-height: 5.5em; }
-  .ld-said { margin: 0; }
-  .ld-dots { display: flex; gap: 4px; margin-top: 2px; }
-  .ld-dot { width: 22px; height: 22px; padding: 0; border: 0; background: none; cursor: pointer; display: grid; place-items: center; }
-  .ld-dot::after { content: ''; width: 6px; height: 6px; border-radius: 50%; background: color-mix(in srgb, var(--ink) 22%, transparent); }
-  .ld-dot--on::after { background: var(--ink); }
-  @media (prefers-reduced-motion: reduce) {
-    .ld-card, .ld-roll-in { transition: none; animation: none; }
-  }
-  /* The keeper's own: a small × to take the front pin down, and a small
-     dashed square for each place not yet pinned (a visitor sees neither). */
+  /* The keeper's own: a small × to take a pin down, and an empty frame for a
+     place not yet pinned (a visitor sees neither). */
   .ld-unpin {
-    position: absolute; top: -8px; left: -8px; z-index: 9;
+    position: absolute; top: -8px; right: -8px;
     width: 28px; height: 28px; border-radius: 50%; border: 0; padding: 0;
     display: grid; place-items: center; cursor: pointer;
     background: var(--bg); color: var(--ink-soft); box-shadow: 0 0 0 1px var(--border), 0 4px 12px rgba(0, 0, 0, 0.12);
   }
-  .ld-free { display: flex; gap: 12px; padding: 0 22px; margin-top: -10px; }
-  .ld-frame--empty {
-    width: 56px; height: 56px; padding: 0; cursor: pointer; background: none;
-    display: grid; place-items: center; color: var(--ink-faint);
-    border: 1.5px dashed color-mix(in srgb, var(--ink) 22%, transparent);
+  /* Small and quiet: a place to fill, not a frame as large as a pinned
+     album's — three of those, empty, were most of the screen. */
+  .ld-frame--empty { flex: 0 0 72px; border: 0; padding: 0; background: none; cursor: pointer; align-self: flex-start; scroll-snap-align: none; }
+  .ld-frame--empty .ld-mat { padding: 0; }
+  .ld-frame--empty .ld-mat {
+    display: grid; place-items: center; background: none; box-shadow: none;
+    border: 1.5px dashed color-mix(in srgb, var(--ink) 22%, transparent); color: var(--ink-faint);
   }
+  .ld-mat {
+    display: block; aspect-ratio: 1; padding: 10px; background: var(--card, #fff);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08), 0 14px 30px rgba(0, 0, 0, 0.16);
+  }
+  .ld-mat { width: 100%; box-sizing: border-box; }
+  .ld-mat img { display: block; width: 100%; height: 100%; max-width: 100%; min-width: 0; object-fit: cover; }
   .ld-mat-none { display: grid; place-items: center; width: 100%; height: 100%; color: var(--ink-faint); }
   .ld-said { font-size: 16px; line-height: 1.45; color: var(--ink); text-wrap: pretty; }
   .ld-title { font-family: var(--font-label); font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-soft); }
@@ -3946,24 +3936,7 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   padding: 6px; border-radius: 16px;
   background: var(--bg); box-shadow: 0 0 0 1px var(--border), 0 10px 28px rgba(0, 0, 0, 0.18);
 }
-/* It answers —: the openings in one sideways row over the key, the chosen one
-   lit as a tapped sentence is; one another pin answers is faint, and taking
-   it moves it here (Miyel, 2026-11-27). */
-.pin-line-bar { flex-direction: column; }
-.pin-line-bar--asks { align-items: stretch; width: min(92vw, 440px); }
-.pin-answers { display: flex; flex-direction: column; gap: 6px; padding: 8px 6px 4px; min-width: 0; max-width: min(92vw, 440px); }
-.pin-answers-ask { font-family: var(--font-label); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-soft); padding: 0 4px; }
-.pin-answers-row { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
-.pin-answers-row::-webkit-scrollbar { display: none; }
-.pin-answer {
-  flex: none; padding: 6px 8px; border: 0; border-radius: 4px; background: none; cursor: pointer;
-  font: inherit; font-size: 14px; line-height: 1.3; color: var(--ink); white-space: nowrap;
-  -webkit-tap-highlight-color: transparent;
-}
-.pin-answer--lit { background: color-mix(in srgb, #f2d64b 55%, transparent); }
-.pin-answer--taken:not(.pin-answer--lit) { color: var(--ink-faint); }
 .pin-line-key {
-  align-self: center;
   display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px;
   border: 0; background: none; color: var(--ink); cursor: pointer;
   font-family: var(--font-label); font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase;

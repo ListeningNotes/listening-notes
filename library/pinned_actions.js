@@ -19,13 +19,6 @@
 
 import database from './database_connection.js';
 import { splitNotes } from './entry_formatter.js';
-import { CARD_PROMPT, bioPrompt } from './bioprompt.js';
-
-// An opening a pin may answer: one of the card's, but not the one addressed
-// to the visitor, which stays under the name (migrations/048_pinned_prompt.sql).
-export function pinnablePrompt(key) {
-  return key && key !== CARD_PROMPT && bioPrompt(key) ? key : null;
-}
 
 export const MOST_PINNED = 3;
 
@@ -50,7 +43,7 @@ function said(row, line) {
 // still says it. Never the note itself.
 export async function pull_pinned() {
   const rows = await database`
-    SELECT p.position, p.line, p.prompt, e.id, e.slug, e.album, e.artist, e.album_art, e.song, e.notes, e.tracks, e.credit_private
+    SELECT p.position, p.line, e.id, e.slug, e.album, e.artist, e.album_art, e.song, e.notes, e.tracks, e.credit_private
     FROM pinned p JOIN entries e ON e.id = p.entry_id
     ORDER BY p.position
   `;
@@ -59,7 +52,6 @@ export async function pull_pinned() {
       position: row.position,
       slug: row.slug, album: row.album, artist: row.artist, album_art: row.album_art, song: row.song,
       line: said(row, row.line) ? flat(row.line) : null,
-      prompt: pinnablePrompt(row.prompt),
     }));
   }
   // Nothing pinned here yet: the card's one pin, without a line.
@@ -68,7 +60,7 @@ export async function pull_pinned() {
     FROM settings s JOIN entries e ON e.id = s.pinned_entry_id
     WHERE s.id = 1
   `;
-  return only ? [{ position: 1, ...only, line: null, prompt: null }] : [];
+  return only ? [{ position: 1, ...only, line: null }] : [];
 }
 
 // The card's one pin moves into the first place the first time anything is
@@ -90,32 +82,29 @@ async function keep_the_card_pin() {
   `;
 }
 
-// Pin a line of an entry's writing, answering an opening or none. An album
-// already pinned takes the new line and opening in its place. An opening
-// answers one pin at a time: given to this one, it leaves any other. With three pinned, `replacing` (a place, 1 to 3) says
+// Pin a line of an entry's writing. An album already pinned takes the new
+// line in its place. With three pinned, `replacing` (a place, 1 to 3) says
 // which one this takes the place of; without it the answer is { full } and
 // the three as they stand, for the keeper to choose from.
-export async function pin_line(slug, line, replacing = null, prompt = null) {
+export async function pin_line(slug, line, replacing = null) {
   const [row] = await database`
     SELECT id, slug, song, notes, tracks, credit_private FROM entries WHERE slug = ${slug} LIMIT 1
   `;
   if (!row) return { trouble: 'There is no entry by that name.' };
   if (!said(row, line)) return { trouble: 'A pinned line has to be words from one of this post’s notes.' };
   const words = flat(line);
-  const answers = pinnablePrompt(prompt);
   await take_in_the_card_pin();
-  if (answers) await database`UPDATE pinned SET prompt = NULL WHERE prompt = ${answers} AND entry_id <> ${row.id}`;
   const [already] = await database`SELECT position FROM pinned WHERE entry_id = ${row.id}`;
   if (already) {
-    await database`UPDATE pinned SET line = ${words}, prompt = ${answers}, pinned_at = now() WHERE position = ${already.position}`;
+    await database`UPDATE pinned SET line = ${words}, pinned_at = now() WHERE position = ${already.position}`;
   } else {
     const taken = (await database`SELECT position FROM pinned`).map(r => r.position);
     const free = [1, 2, 3].find(p => !taken.includes(p));
     const place = free ?? (Number.isInteger(replacing) && replacing >= 1 && replacing <= MOST_PINNED ? replacing : null);
     if (!place) return { full: true, pinned: await pull_pinned() };
     await database`
-      INSERT INTO pinned (position, entry_id, line, prompt) VALUES (${place}, ${row.id}, ${words}, ${answers})
-      ON CONFLICT (position) DO UPDATE SET entry_id = EXCLUDED.entry_id, line = EXCLUDED.line, prompt = EXCLUDED.prompt, pinned_at = now()
+      INSERT INTO pinned (position, entry_id, line) VALUES (${place}, ${row.id}, ${words})
+      ON CONFLICT (position) DO UPDATE SET entry_id = EXCLUDED.entry_id, line = EXCLUDED.line, pinned_at = now()
     `;
   }
   await keep_the_card_pin();
@@ -142,10 +131,10 @@ export async function follow_card_pin(entryId) {
     await database`DELETE FROM pinned WHERE position = 1`;
     return;
   }
-  const [was] = await database`SELECT position, line, prompt FROM pinned WHERE entry_id = ${entryId}`;
+  const [was] = await database`SELECT position, line FROM pinned WHERE entry_id = ${entryId}`;
   if (was) await database`DELETE FROM pinned WHERE position = ${was.position}`;
   await database`
-    INSERT INTO pinned (position, entry_id, line, prompt) VALUES (1, ${entryId}, ${was?.line ?? null}, ${was?.prompt ?? null})
-    ON CONFLICT (position) DO UPDATE SET entry_id = EXCLUDED.entry_id, line = EXCLUDED.line, prompt = EXCLUDED.prompt, pinned_at = now()
+    INSERT INTO pinned (position, entry_id, line) VALUES (1, ${entryId}, ${was?.line ?? null})
+    ON CONFLICT (position) DO UPDATE SET entry_id = EXCLUDED.entry_id, line = EXCLUDED.line, pinned_at = now()
   `;
 }
