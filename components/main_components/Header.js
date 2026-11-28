@@ -80,9 +80,12 @@ export default function Header({
         <span className="hdr-face-x" aria-hidden="true"><X size={16} weight="bold" /></span>
       </button>
       {lights}
-      {stops.length > 0 && (backToListen
+      {/* In the middle for everybody: a visitor's row, with no stops to its
+          right, had it at the far end until 2026-11-27 (Miyel: "center the
+          LN logo for visitors"). */}
+      {backToListen
         ? <Link href="/session" className="hdr-mark hdr-mark--middle hdr-mark--back" aria-label={backToListen}>{mark}</Link>
-        : <span className="hdr-mark hdr-mark--middle" aria-hidden="true">{mark}</span>)}
+        : <span className="hdr-mark hdr-mark--middle" aria-hidden="true">{mark}</span>}
       {stops.length > 0 ? (
         <nav className="hdr-stops" aria-label="The journal">
           {stops.map(stop => {
@@ -107,9 +110,7 @@ export default function Header({
             );
           })}
         </nav>
-      ) : (
-        <span className="hdr-mark" aria-hidden="true">{mark}</span>
-      )}
+      ) : null}
     </div>
   );
 }
