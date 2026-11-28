@@ -80,55 +80,61 @@ export default function Landing({ stamps = null, keeper = false, onEdit = null }
   }, [said.length]);
   const saying = said.length ? said[turn % said.length] : null;
 
-  const who = (
+  // Photo at the left, everything else stacked tight at its right (Miyel,
+  // 2026-11-27: "photo left, other stuff right… takes up less screen space",
+  // "allows more space to see background"). The keeper's photo and name
+  // open the card to edit it.
+  const face = (
+    <span className={'ld-face' + (live ? ' ld-face--live' : '')}>
+      {portrait
+        ? <img src={portrait} alt="" style={{ objectPosition: portrait_position || '50% 50%' }} />
+        : <User size={26} weight="light" aria-hidden="true" />}
+    </span>
+  );
+  const name = (
     <>
-      <span className={'ld-face' + (live ? ' ld-face--live' : '')}>
-        {portrait
-          ? <img src={portrait} alt="" style={{ objectPosition: portrait_position || '50% 50%' }} />
-          : <User size={26} weight="light" aria-hidden="true" />}
+      <span className="ld-name">
+        {cover_name}
+        {keeper && <PencilSimple className="ld-edit" size={15} weight="regular" aria-hidden="true" />}
       </span>
-      <span className="ld-who-said">
-        <span className="ld-name">
-          {cover_name}
-          {keeper && <PencilSimple className="ld-edit" size={15} weight="regular" aria-hidden="true" />}
+      {(since || records !== null) && (
+        <span className="ld-since">
+          {[since ? `Since ${since}` : null, records !== null ? `${records} albums` : null].filter(Boolean).join(' · ')}
         </span>
-        {(since || records !== null) && (
-          <span className="ld-since">
-            {[since ? `Since ${since}` : null, records !== null ? `${records} albums` : null].filter(Boolean).join(' · ')}
-          </span>
-        )}
-      </span>
+      )}
     </>
   );
+  const editable = keeper && onEdit;
 
   return (
     <section className="ld" aria-label={cover_name || 'This journal'} onClick={e => e.stopPropagation()}>
-      <div className="ld-me">
+      <div className="ld-row">
         {saying && (
           <p className={'ld-bubble' + (up ? ' ld-bubble--up' : '')} aria-live="off">
             <span className="ld-bubble-ask">{saying.text.replace(/\s*[—–-]\s*$/, '')}</span>
             <span className="ld-bubble-said">{saying.answer}</span>
           </p>
         )}
-        {keeper && onEdit
-          ? <button type="button" className="ld-who" onClick={onEdit} aria-label="Edit your card">{who}</button>
-          : <div className="ld-who">{who}</div>}
-      </div>
-      {marks.length > 0 && (
-        <p className="ld-marks">
-          {marks.map(m => (
-            <span key={m.key} className="ld-mark" title={`${m.n} ${m.word}`}>
-              <m.Icon size={16} weight={m.weight} color={m.tone} aria-hidden="true" />
-              {m.n}<span className="ld-hidden"> {m.word}</span>
-            </span>
-          ))}
-        </p>
-      )}
-      {(rigNames.length > 0 || links.length > 0) && (
-        <div className="ld-meta">
+        {editable
+          ? <button type="button" className="ld-face-door" onClick={onEdit} aria-label="Edit your card">{face}</button>
+          : face}
+        <div className="ld-right">
+          {editable
+            ? <button type="button" className="ld-who" onClick={onEdit} tabIndex={-1} aria-hidden="true">{name}</button>
+            : <div className="ld-who">{name}</div>}
+          {marks.length > 0 && (
+            <p className="ld-marks">
+              {marks.map(m => (
+                <span key={m.key} className="ld-mark" title={`${m.n} ${m.word}`}>
+                  <m.Icon size={15} weight={m.weight} color={m.tone} aria-hidden="true" />
+                  {m.n}<span className="ld-hidden"> {m.word}</span>
+                </span>
+              ))}
+            </p>
+          )}
           {rigNames.length > 0 && (
             <p className="ld-rig">
-              {RigIcon && <RigIcon size={15} weight="regular" aria-hidden="true" />}
+              {RigIcon && <RigIcon size={14} weight="regular" aria-hidden="true" />}
               <span>{rigNames.join(' · ')}</span>
             </p>
           )}
@@ -136,14 +142,14 @@ export default function Landing({ stamps = null, keeper = false, onEdit = null }
             <p className="ld-links">
               {links.map(({ href, label, Icon }) => (
                 <a key={href} href={href} target="_blank" rel="noopener noreferrer" className="ld-link">
-                  <Icon size={15} weight="regular" aria-hidden="true" />
+                  <Icon size={14} weight="regular" aria-hidden="true" />
                   {label}
                 </a>
               ))}
             </p>
           )}
         </div>
-      )}
+      </div>
     </section>
   );
 }

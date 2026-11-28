@@ -3881,22 +3881,24 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .saver .ld {
     position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
     display: flex; flex-direction: column; gap: 12px;
-    padding: 150px 22px calc(26px + env(safe-area-inset-bottom, 0px));
-    background: linear-gradient(rgba(22, 20, 15, 0), rgba(22, 20, 15, 0.86) 46%, #16140f);
+    padding: 90px 20px calc(22px + env(safe-area-inset-bottom, 0px));
+    background: linear-gradient(rgba(22, 20, 15, 0), rgba(22, 20, 15, 0.82) 45%, rgba(22, 20, 15, 0.95));
     color: #f4f1ea; cursor: default;
     transition: transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
   }
   .saver--arriving .ld { animation: ld-rise 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); }
   .saver--leaving .ld { transform: translateY(110%); }
   @keyframes ld-rise { from { transform: translateY(110%); } to { transform: none; } }
-  .ld-me { position: relative; }
+  .ld-row { position: relative; display: flex; align-items: flex-start; gap: 14px; }
+  .ld-face-door { padding: 0; border: 0; background: none; cursor: pointer; flex: none; -webkit-tap-highlight-color: transparent; }
+  .ld-right { display: flex; flex-direction: column; gap: 7px; min-width: 0; padding-top: 2px; }
   .ld-who {
     display: flex; align-items: center; gap: 12px; padding: 0; border: 0; background: none;
     color: inherit; text-align: left; font: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent;
   }
   div.ld-who { cursor: default; }
   .ld-face {
-    width: 54px; height: 54px; border-radius: 50%; overflow: hidden; flex: none;
+    width: 76px; height: 76px; border-radius: 50%; overflow: hidden; flex: none;
     display: grid; place-items: center; background: #2a2620; color: #9c978b;
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
   }
@@ -3914,8 +3916,8 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
     /* From the face's upper right, over the start of the name, the way a
        speech bubble leaves a mouth (Miyel, 2026-11-27): its pointed corner
        at the face's diagonal. */
-    position: absolute; left: 48px; bottom: calc(100% + 4px); margin: 0;
-    max-width: min(290px, calc(100% - 48px));
+    position: absolute; left: 60px; bottom: calc(100% + 2px); margin: 0;
+    max-width: min(290px, calc(100% - 62px));
     display: flex; flex-direction: column; gap: 3px;
     padding: 10px 13px 11px; border-radius: 16px 16px 16px 4px;
     background: #f4f1ea; color: #1d1b17; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
@@ -3936,11 +3938,11 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
     font-size: 14px; line-height: 1.38;
     display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;
   }
-  .ld-marks { margin: 0; display: flex; gap: 16px; font-weight: 800; font-size: 15px; }
+  .ld-marks { margin: 0; display: flex; gap: 14px; font-weight: 800; font-size: 14px; }
   .ld-mark { display: inline-flex; align-items: center; gap: 5px; }
   .ld-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   .ld-meta { display: flex; flex-direction: column; gap: 6px; }
-  .ld-rig, .ld-links { margin: 0; display: flex; align-items: center; gap: 7px; flex-wrap: wrap; font-size: 13.5px; color: rgba(244, 241, 234, 0.7); }
+  .ld-rig, .ld-links { margin: 0; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 12.5px; line-height: 1.3; color: rgba(244, 241, 234, 0.7); }
   .ld-rig svg { flex: none; color: #f4f1ea; }
   .ld-links { gap: 14px; }
   .ld-link { display: inline-flex; align-items: center; gap: 6px; color: #f4f1ea; font-weight: 700; text-decoration: none; }
@@ -4078,4 +4080,8 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .saver-mark-svg .hn-mark-dot { fill: currentColor; }
   /* Lit while the journal is live, as the mark is everywhere else (Miyel, 2026-11-27). */
   .saver-mark-svg .hn-mark-dot--live { fill: #7cff9b; }
+}
+@media (max-width: 768px) {
+  /* In the right column the name sits over its line. */
+  .ld-right .ld-who { flex-direction: column; align-items: flex-start; gap: 3px; }
 }
