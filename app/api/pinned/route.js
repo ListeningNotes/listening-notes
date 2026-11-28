@@ -8,7 +8,7 @@
 // too, so it says so out loud. A line is only ever words the entry's own page
 // already shows anybody.
 //
-// POST pins a line of an entry's writing ({ slug, line, replacing }); DELETE
+// POST pins a line of an entry's writing ({ slug, line, replacing, prompt }); DELETE
 // takes one down (?position=). The keeper's alone.
 
 import { requireWristband } from '@/library/wristband';
@@ -43,8 +43,8 @@ export async function POST(request) {
   const blocked = await requireWristband(request);
   if (blocked) return blocked;
   try {
-    const { slug, line, replacing = null } = await request.json();
-    const answer = await pin_line(String(slug || ''), String(line || ''), replacing == null ? null : Number(replacing));
+    const { slug, line, replacing = null, prompt = null } = await request.json();
+    const answer = await pin_line(String(slug || ''), String(line || ''), replacing == null ? null : Number(replacing), prompt == null ? null : String(prompt));
     if (answer.trouble) return Response.json({ error: answer.trouble }, { status: 400 });
     return Response.json(answer);
   } catch (error) {

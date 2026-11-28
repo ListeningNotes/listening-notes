@@ -1,0 +1,11 @@
+-- Copyright (C) 2026 Miyel Brown
+-- SPDX-License-Identifier: AGPL-3.0-or-later
+-- Which opening a pinned album answers, 2026-11-27.
+--
+-- Miyel's pick: the card's openings ("I can never skip —") are answered by
+-- the pinned albums rather than typed under the name. A pin may answer one
+-- of them, kept as its key from library/bioprompt.js and never as the
+-- sentence, so rewording an opening never orphans a pin; a key that is no
+-- longer an opening is read as none. Empty means the pin answers nothing and
+-- the landing shows its album's name alone.
+ALTER TABLE pinned ADD COLUMN IF NOT EXISTS prompt text;

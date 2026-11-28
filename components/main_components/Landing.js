@@ -26,7 +26,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { PushPin, User, X } from '@phosphor-icons/react';
 import { useBookplate } from './Bookplate';
-import { CARD_PROMPT, bioPrompt, readBioAnswers } from '../../library/bioprompt';
+import { BIO_PROMPTS, CARD_PROMPT, bioPrompt, readBioAnswers } from '../../library/bioprompt';
 import { handOff } from '../../library/handoff';
 import { sizedAlbumArt } from '../../library/music_data_api';
 
@@ -216,6 +216,23 @@ export function PinThisLine({ chosen = null, onPinned = null }) {
   const picked = chosen || selected;
   const [full, setFull] = useState(null);
   const [done, setDone] = useState(false);
+  // Which opening the pin answers (Miyel, 2026-11-27): none until one is
+  // tapped, or the one the album answers already if it is pinned. The pins as
+  // they stand are asked once a line is picked, to show the openings taken.
+  const [answers, setAnswers] = useState(null);
+  const [standing, setStanding] = useState(null);
+  const pickedSlug = picked?.slug || null;
+  useEffect(() => {
+    if (!pickedSlug) return undefined;
+    let gone = false;
+    fetch('/api/pinned').then(r => (r.ok ? r.json() : null)).then(data => {
+      if (gone || !Array.isArray(data?.pinned)) return;
+      setStanding(data.pinned);
+      setAnswers(data.pinned.find(pin => pin.slug === pickedSlug)?.prompt || null);
+    }).catch(() => {});
+    return () => { gone = true; };
+  }, [pickedSlug]);
+  const takenBy = key => standing?.find(pin => pin.prompt === key && pin.slug !== pickedSlug) || null;
   useEffect(() => {
     const look = () => {
       if (chosen) return;
@@ -232,7 +249,7 @@ export function PinThisLine({ chosen = null, onPinned = null }) {
     if (!picked) return;
     const r = await fetch('/api/pinned', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ slug: picked.slug, line: picked.line, replacing }),
+      body: JSON.stringify({ slug: picked.slug, line: picked.line, replacing, prompt: answers }),
     }).catch(() => null);
     const data = r ? await r.json().catch(() => null) : null;
     if (data?.full) { setFull(data.pinned); return; }
@@ -246,7 +263,7 @@ export function PinThisLine({ chosen = null, onPinned = null }) {
   }
   if (!picked && !done && !chosen) return null;
   return (
-    <div className="pin-line-bar" role="region" aria-label="Pin this line">
+    <div className={'pin-line-bar' + (picked && !done && !full ? ' pin-line-bar--asks' : '')} role="region" aria-label="Pin this line">
       {full ? (
         <div className="pin-line-full">
           <span className="pin-line-ask">In place of</span>
@@ -258,10 +275,40 @@ export function PinThisLine({ chosen = null, onPinned = null }) {
           <button type="button" className="pin-line-never" onClick={() => setFull(null)} aria-label="Keep the three as they are"><X size={16} weight="bold" aria-hidden="true" /></button>
         </div>
       ) : (
-        <button type="button" className="pin-line-key" onMouseDown={e => e.preventDefault()} onClick={() => pin()} disabled={done || !picked}>
-          <PushPin size={18} weight="regular" aria-hidden="true" />
-          {done ? 'Pinned' : 'Pin this line'}
-        </button>
+        <>
+          {picked && !done && (
+            <div className="pin-answers" role="group" aria-label="It answers">
+              <span className="pin-answers-ask">It answers —</span>
+              <span className="pin-answers-row">
+                <button
+                  type="button"
+                  className={'pin-answer' + (answers === null ? ' pin-answer--lit' : '')}
+                  onMouseDown={e => e.preventDefault()}
+                  onClick={() => setAnswers(null)}
+                  aria-pressed={answers === null}
+                >
+                  None
+                </button>
+                {BIO_PROMPTS.filter(p => p.key !== CARD_PROMPT).map(p => (
+                  <button
+                    key={p.key}
+                    type="button"
+                    className={'pin-answer' + (answers === p.key ? ' pin-answer--lit' : '') + (takenBy(p.key) ? ' pin-answer--taken' : '')}
+                    onMouseDown={e => e.preventDefault()}
+                    onClick={() => setAnswers(answers === p.key ? null : p.key)}
+                    aria-pressed={answers === p.key}
+                  >
+                    {p.text.replace(/\s*—$/, '')}
+                  </button>
+                ))}
+              </span>
+            </div>
+          )}
+          <button type="button" className="pin-line-key" onMouseDown={e => e.preventDefault()} onClick={() => pin()} disabled={done || !picked}>
+            <PushPin size={18} weight="regular" aria-hidden="true" />
+            {done ? 'Pinned' : 'Pin this line'}
+          </button>
+        </>
       )}
     </div>
   );
