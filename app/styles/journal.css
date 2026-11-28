@@ -782,10 +782,8 @@
   .arc-shelf .arc-picks { flex-direction: row; flex-wrap: wrap; gap: 0 10px; }
 }
 @media (max-width: 768px) {
-  /* The order the wall is in, lit rather than underlined (Miyel, 2026-11-27). */
+  /* The order the wall is in, in full ink among the quiet others; no
+     underline and no highlight (Miyel, 2026-11-27). */
   .arc-shelf .arc-views-word { color: var(--ink-faint); text-decoration: none; }
-  .arc-shelf .arc-views-word.ln-word--on {
-    color: var(--ink); text-decoration: none; font-weight: 500;
-    background: color-mix(in srgb, #f2d64b 45%, transparent); border-radius: 4px;
-  }
+  .arc-shelf .arc-views-word.ln-word--on { color: var(--ink); text-decoration: none; font-weight: 600; }
 }

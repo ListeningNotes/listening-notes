@@ -126,10 +126,9 @@ export const VIEWS = [
   // from sort and filter. remove time of day"). A browser that remembered
   // either opens In order.
   { value: 'rating',  label: 'By rating' },
-  // Stored as 'shape', its first name, so a browser that remembered it still
-  // opens on it; named By horizon, after the row of bars it is read from
-  // (Miyel, 2026-10-22: "instead of by shape lets do by horizon").
-  { value: 'shape',   label: 'By horizon',     fun: true },
+  // By horizon ('shape') is paused, 2026-11-27 (Miyel: "remove horizon from
+  // sort, it's not even on the album page… I do want it back"): its grouping
+  // below stays, stricter, for when it returns.
   { value: 'color',   label: 'By color',       fun: true },
   { value: 'shuffle', label: 'Shuffle',        fun: true },
 ];
@@ -1440,7 +1439,9 @@ function Journal({
               <span className={'arc-views' + (viewsLeaving ? ' arc-views--leaving' : '')} role="menu" aria-label="Views">
                 {VIEWS.map(v => (
                   <Fragment key={v.value}>
-                    {v === VIEWS.find(w => w.fun) && <span className="arc-views-rule" aria-hidden="true" />}
+                    {/* No rule between the practical orders and the fun ones on a
+                        phone's shelf (Miyel, 2026-11-27); a desk's menu keeps it. */}
+                    {!isPhone && v === VIEWS.find(w => w.fun) && <span className="arc-views-rule" aria-hidden="true" />}
                     <button
                       type="button"
                       role="menuitemradio"
