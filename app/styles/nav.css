@@ -3831,21 +3831,22 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
 /* A desk keeps its bar; the tile is a phone's. */
 @media (min-width: 769px) { .arc-grid .lt { display: none; } }
 
-/* A visitor's doors at the top of the wall, inside (Landing.js, VisitorDoors),
-   and no beacon under them unless the keeper is logging (HomeNav). */
+/* No beacon under a visitor's top row unless the keeper is logging (HomeNav),
+   and the field a visitor's Compare or Add asks with (Landing.js, AskJournal). */
 @media (max-width: 768px) {
-  .hn .hn-pane--home .hn-floor--off { display: none; }
-}
-.ld-doors { display: none; }
-@media (max-width: 768px) {
-  .ld-doors {
-    display: flex; flex-direction: column; gap: 12px;
-    padding: calc(var(--hn-bar-h, 64px) + 4px) 18px 14px;
+  /* Not drawn, but the top row's height kept, so the wall starts under it. */
+  .hn .hn-pane--home .hn-floor--off { display: block; height: var(--hn-bar-h); min-height: 0; overflow: hidden; }
+  .hn .hn-pane--home .hn-floor--off > * { display: none; }
+  .ld-doors-ask {
+    display: flex; gap: 10px; align-items: center;
+    padding: 6px 18px 10px;
   }
-  .ld-doors .fr-door { flex: 1 1 0; min-width: 0; color: var(--ink); text-decoration: none; }
-  .ld-doors-ask { display: flex; gap: 10px; align-items: center; }
   .ld-doors-ask .ln-say-field { flex: 1; min-width: 0; }
+  .hdr-stops--doors .hdr-stop { color: var(--ink); }
+  .hdr-stops--doors .hdr-word { display: block; text-decoration: none; color: var(--ink-soft); }
 }
+.ld-doors-ask { display: none; }
+@media (max-width: 768px) { .ld-doors-ask { display: flex; } }
 
 /* ── The profile, 2026-11-27 ─────────────────────────────────────────────────
    What anybody opens a journal to on a phone (Landing.js): the screensaver's

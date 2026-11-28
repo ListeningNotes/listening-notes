@@ -156,15 +156,12 @@ export default function MessageForm({
 // keeper writing from your own copy: nobody to ask a name of, and the words
 // go through your outbox to them, about this entry (app/api/outbox), so
 // your side is kept for Words. The page says so (Visiting, Bookplate.js).
-// `start` opens it at once with no way in of its own drawn, for a door that is
-// its way in (Landing.js, VisitorDoors), and `onDone` tells that door it has
-// closed; with no `slug` the message is about no entry, to the keeper.
-export function MessageWayIn({ slug = '', keeper = '', start = false, onDone = null }) {
+export function MessageWayIn({ slug, keeper = '' }) {
   const writingTo = useVisiting();
-  const [writing, setWriting] = useState(start);
+  const [writing, setWriting] = useState(false);
   const [gone, setGone] = useState(false);
-  const [name, setName] = useState(() => (start ? recallSender().name : ''));
-  const [address, setAddress] = useState(() => (start ? recallSender().address : ''));
+  const [name, setName] = useState('');
+  const [address, setAddress] = useState('');
   const [asking, setAsking] = useState(false);
   const mine = useRef(null);
   const to = String(keeper || '').trim();
@@ -208,7 +205,7 @@ export function MessageWayIn({ slug = '', keeper = '', start = false, onDone = n
     const answer = await fetch('/api/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, journal: address, said, ...(slug ? { about: { slug } } : {}) }),
+      body: JSON.stringify({ name, journal: address, said, about: { slug } }),
     }).catch(() => null);
     const body = await answer?.json().catch(() => null);
     if (!answer?.ok || !body?.ok) {
@@ -223,7 +220,7 @@ export function MessageWayIn({ slug = '', keeper = '', start = false, onDone = n
 
   return (
     <div ref={mine} className="ln-message">
-      {!writing && (!start || gone) && (
+      {!writing && (
         <div className="ln-say-way">
           {gone ? (
             <span className="ln-word ln-message-gone" role="status">On its way{to ? ` to ${to}` : ''}</span>
@@ -237,16 +234,16 @@ export function MessageWayIn({ slug = '', keeper = '', start = false, onDone = n
       {writing && (
         <div className="ln-say-form">
           <MessageForm
-            draftKey={slug ? `entry-${slug}` : 'keeper'}
+            draftKey={`entry-${slug}`}
             label={to ? `Your message to ${to}` : 'Your message'}
             placeholder={to ? `Write to ${to}` : 'Write a message'}
             send={send}
             onSent={() => {
               setWriting(false);
               setGone(true);
-              setTimeout(() => { setGone(false); onDone?.(); }, 2600);
+              setTimeout(() => setGone(false), 2600);
             }}
-            onLeave={() => { setWriting(false); onDone?.(); }}
+            onLeave={() => setWriting(false)}
           >
             {writingTo ? null : knowMe ? (
               // Who this is going to be signed by. Not a field and not a

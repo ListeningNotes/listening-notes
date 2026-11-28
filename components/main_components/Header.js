@@ -59,6 +59,10 @@ export default function Header({
   // tapping top of the screen bring you back to top"). A phone's own status-bar
   // tap only scrolls the page itself, and every pane here scrolls in a box.
   onTop = null,
+  // A visitor's doors, where the keeper's stops stand (Miyel, 2026-11-27:
+  // "those can go top right where the user tools would've been"): each a
+  // glyph over its word, [{ key, word, Icon, onPress }] (Landing.js).
+  doors = null,
 }) {
   const { portrait_url: portrait, keeper_name, cover_name } = useBookplate();
   const whose = keeper_name || cover_name;
@@ -109,6 +113,15 @@ export default function Header({
               </button>
             );
           })}
+        </nav>
+      ) : doors?.length ? (
+        <nav className="hdr-stops hdr-stops--doors" aria-label="Visiting">
+          {doors.map(door => (
+            <button key={door.key} type="button" className="hdr-stop" onClick={door.onPress}>
+              <span className="hdr-glyph"><door.Icon size={19} weight="regular" aria-hidden="true" /></span>
+              <span className="hdr-word">{door.word}</span>
+            </button>
+          ))}
         </nav>
       ) : null}
     </div>

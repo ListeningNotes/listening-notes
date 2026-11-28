@@ -81,7 +81,7 @@ import ListeningBeacon from './ListeningBeacon';
 import Landing from './Landing';
 import ListenBar, { ListenTile } from './ListenBar';
 import { SCATTER_MS, Screensaver, rememberCovers, useRemembered } from './Place';
-import { PINNED_EVENT, VisitorDoors, setPinning, usePinning } from './Landing';
+import { AskJournal, PINNED_EVENT, VISITOR_DOORS, setPinning, usePinning, visitTheirs } from './Landing';
 import Journal from './Journal';
 import Header from './Header';
 import PinnedLetter from './PinnedLetter';
@@ -362,7 +362,7 @@ function secondFloorTop(pane) {
 }
 
 export default function HomeNav() {
-  const { cover_name, keeper_name, pinned_entry_id, portrait_url: portrait } = useBookplate();
+  const { cover_name, pinned_entry_id, portrait_url: portrait } = useBookplate();
   const { theme, toggle: toggleTheme } = useTheme();
   const { isLive, before, art: onAir, album: onAirAlbum, artist: onAirArtist, track: onAirTrack } = useListeningBeacon();
   // How wide the spine is on a desk, and the grip that changes it. The hook
@@ -1595,6 +1595,9 @@ export default function HomeNav() {
   // you were (Place.js, Screensaver).
   const remembered = useRemembered();
   const [saver, setSaver] = useState('loading');
+  // A visitor pressed Compare or Add and this browser does not know their
+  // journal (Landing.js, AskJournal).
+  const [askingHome, setAskingHome] = useState(false);
   const [saverLeaving, setSaverLeaving] = useState(false);
   const liftSaver = useCallback(() => {
     if (saverLeaving) return;
@@ -1810,6 +1813,7 @@ export default function HomeNav() {
         lights={lights}
         mark={mark('hdr-mark-svg')}
         backToListen={authed && isLive && inHand ? `Back to ${inHand.album}` : null}
+        doors={checked && !authed ? VISITOR_DOORS.map(d => ({ ...d, onPress: () => { if (!visitTheirs()) { setAskingHome(true); goTo(HOME); goUp(HOME); } } })) : null}
       />
       {/* ── The ground the header stands on, 2026-09-20 ──────────────────
           The bar is 80px of opaque page colour and the crown hangs below it,
@@ -2162,9 +2166,6 @@ export default function HomeNav() {
           {/* Pulled down, home asks again — the lamp and the wall — since
               nothing asks on a clock any more (useListeningBeacon). */}
           <PullDown scroller={homeRef} onPull={() => Promise.all([refreshBeacon(), fetchEntries().then(list => { setEntries(list); }).catch(() => {})])} mark={mark('ln-pull-svg')} />
-          {/* A visitor, inside from the profile: what they can do about this
-              journal, at the top of it (Landing.js, VisitorDoors). A phone's. */}
-          {visitor && <VisitorDoors keeper={keeper_name || ''} />}
           {/* Two floors, always. There is no version of this pane without a
               beacon on it (Miyel, 2026-09-16): a journal showing a record it
               sat with months ago is not a beacon failing, that IS the signal,
@@ -2252,6 +2253,9 @@ export default function HomeNav() {
           {/* Floor two — the wall, scrolling inside a box of its own, so
               the pane only ever has two stops. The entry's second screen,
               in the cross. */}
+          {/* A visitor's Compare or Add, when this browser does not know
+              their journal: asked once, over the wall (Landing.js, AskJournal). */}
+          {visitor && askingHome && <AskJournal />}
           <div className="hn-floor hn-floor--wall">
             <div className="hn-floor-scroll" ref={floorRef}>
               <div className="hn-under">
