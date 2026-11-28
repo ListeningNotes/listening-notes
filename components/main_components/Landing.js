@@ -23,10 +23,10 @@
 // for each place not yet pinned, and a small × to take a pin down. A pin is
 // made from a post, by selecting words in its album note (PinThisLine, below).
 import Link from 'next/link';
-import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { PushPin, User, X } from '@phosphor-icons/react';
 import { useBookplate } from './Bookplate';
-import { readBioAnswers } from '../../library/bioprompt';
+import { CARD_PROMPT, bioPrompt, readBioAnswers } from '../../library/bioprompt';
 import { handOff } from '../../library/handoff';
 import { sizedAlbumArt } from '../../library/music_data_api';
 
@@ -35,7 +35,9 @@ const MOST = 3;
 
 export default function Landing({ live = false, onAir = null, keeper = false, onEmpty = null }) {
   const { portrait_url: portrait, portrait_position, cover_name, bioanswers } = useBookplate();
-  const lines = readBioAnswers(bioanswers);
+  // Of the card's openings only the one addressed to the visitor stays under
+  // the name; the others are answered by the pins (Miyel, 2026-11-27).
+  const lines = readBioAnswers(bioanswers).filter(line => line.key === CARD_PROMPT);
   const [pinned, setPinned] = useState([]);
   const ask = useCallback(() => fetch('/api/pinned')
     .then(r => (r.ok ? r.json() : null))
@@ -82,39 +84,123 @@ export default function Landing({ live = false, onAir = null, keeper = false, on
         </p>
       )}
 
-      {(pinned.length > 0 || free.length > 0) && (
-        <div className="ld-pinned">
-          {pinned.map(pin => (
-            <div key={pin.position} className="ld-frame">
-              <Link
-                href={`/entries/${pin.slug}`}
-                className="ld-frame-link"
-                data-grows={`/entries/${pin.slug}`}
-                onClick={() => handOff(pin)}
-              >
-                <span className="ld-mat">
-                  {pin.album_art
-                    ? <img src={sizedAlbumArt(pin.album_art, 600)} alt="" />
-                    : <span className="ld-mat-none" aria-hidden="true">♪</span>}
-                </span>
-                {pin.line && <span className="ld-said">{pin.line}</span>}
-                <span className="ld-title"><b>{pin.album}</b>{pin.artist ? ` · ${pin.artist}` : ''}</span>
-              </Link>
-              {keeper && (
-                <button type="button" className="ld-unpin" onClick={() => takeDown(pin.position)} aria-label={`Take ${pin.album} down`}>
-                  <X size={14} weight="bold" aria-hidden="true" />
-                </button>
-              )}
-            </div>
-          ))}
+      {pinned.length > 0 && (
+        <PinnedStack pinned={pinned} keeper={keeper} onTakeDown={takeDown} />
+      )}
+
+      {free.length > 0 && (
+        <div className="ld-free">
           {free.map(place => (
-            <button key={`free-${place}`} type="button" className="ld-frame ld-frame--empty" onClick={onEmpty || undefined} aria-label="An empty place: pin a line from a post">
-              <span className="ld-mat"><PushPin size={22} weight="light" aria-hidden="true" /></span>
+            <button key={`free-${place}`} type="button" className="ld-frame--empty" onClick={onEmpty || undefined} aria-label="An empty place: pin a line from a post">
+              <PushPin size={22} weight="light" aria-hidden="true" />
             </button>
           ))}
         </div>
       )}
     </section>
+  );
+}
+
+// ── The stack, 2026-11-27 (Miyel's pick of four moving prototypes) ────────
+// The pinned albums share one place on the landing: a deck, the top cover
+// whole and the others peeking behind it. The sentence over it is the
+// opening the pin answers, finished by the album — "I can never skip —
+// Voodoo" — and the keeper's lifted line is under it. Every few seconds the
+// top cover slides off to the back and the next one comes up, its name
+// rolling into the sentence. Nothing fades: covers slide, words roll.
+//
+// The top cover opens its post; a cover peeking behind is brought to the
+// front by a tap, and so is one by its dot. The turning waits while the page
+// is out of sight and does not run at all for somebody who asked their phone
+// for less motion. A pin answering no opening is its album's name alone.
+const TURN_MS = 4200;
+const ROLL_MS = 360;
+
+function PinnedStack({ pinned, keeper, onTakeDown }) {
+  const count = pinned.length;
+  const [top, setTop] = useState(0);
+  const [leaving, setLeaving] = useState(null);
+  const [rolling, setRolling] = useState(false);
+  const busy = useRef(false);
+  const at = count ? top % count : 0;
+  const shown = pinned[at];
+
+  const turnTo = useCallback(next => {
+    if (busy.current || count < 2) return;
+    busy.current = true;
+    setLeaving(at);
+    setRolling(true);
+    window.setTimeout(() => {
+      setTop(next % count);
+      setLeaving(null);
+      setRolling(false);
+      busy.current = false;
+    }, ROLL_MS);
+  }, [at, count]);
+
+  useEffect(() => {
+    if (count < 2) return undefined;
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return undefined;
+    const tick = window.setInterval(() => {
+      if (document.visibilityState === 'visible') turnTo(at + 1);
+    }, TURN_MS);
+    return () => window.clearInterval(tick);
+  }, [at, count, turnTo]);
+
+  if (!shown) return null;
+  const opening = bioPrompt(shown.prompt)?.text || null;
+  return (
+    <div className="ld-stack">
+      <p className="ld-sentence">
+        {opening && <span className="ld-roll"><span key={at} className={'ld-roll-in ld-opening' + (rolling ? ' ld-roll-in--out' : '')}>{opening}</span></span>}
+        {opening && ' '}
+        <span className="ld-roll"><b key={at} className={'ld-roll-in' + (rolling ? ' ld-roll-in--out' : '')}>{shown.album}</b></span>
+      </p>
+      <div className="ld-deck" style={{ '--behind': Math.max(0, count - 1) }}>
+        {pinned.map((pin, i) => {
+          const place = (i - at + count) % count;
+          const style = i === leaving
+            ? { zIndex: count + 1, transform: 'translate(120%, 0) rotate(12deg)' }
+            : { zIndex: count - place, transform: `translate(${place * 24}px, ${place * -10}px) rotate(${place * 3}deg) scale(${1 - place * 0.06})` };
+          const art = pin.album_art
+            ? <img src={sizedAlbumArt(pin.album_art, 600)} alt="" />
+            : <span className="ld-mat-none" aria-hidden="true">♪</span>;
+          return place === 0 && i !== leaving ? (
+            <Link
+              key={pin.position}
+              href={`/entries/${pin.slug}`}
+              className="ld-card"
+              style={style}
+              data-grows={`/entries/${pin.slug}`}
+              onClick={() => handOff(pin)}
+              aria-label={pin.album}
+            >
+              {art}
+            </Link>
+          ) : (
+            <button key={pin.position} type="button" className="ld-card" style={style} onClick={() => turnTo(i)} aria-label={`Bring ${pin.album} to the front`}>
+              {art}
+            </button>
+          );
+        })}
+        {keeper && (
+          <button type="button" className="ld-unpin" onClick={() => onTakeDown(shown.position)} aria-label={`Take ${shown.album} down`}>
+            <X size={14} weight="bold" aria-hidden="true" />
+          </button>
+        )}
+      </div>
+      <div className="ld-under">
+        {shown.line && <p className="ld-said">{shown.line}</p>}
+        {shown.artist && <span className="ld-title">{shown.artist}</span>}
+        {count > 1 && (
+          <span className="ld-dots">
+            {pinned.map((pin, i) => (
+              <button key={pin.position} type="button" className={'ld-dot' + (i === at ? ' ld-dot--on' : '')} onClick={() => i !== at && turnTo(i)} aria-label={pin.album} />
+            ))}
+          </span>
+        )}
+      </div>
+    </div>
   );
 }
 
