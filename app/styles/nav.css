@@ -3831,7 +3831,11 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
 /* A desk keeps its bar; the tile is a phone's. */
 @media (min-width: 769px) { .arc-grid .lt { display: none; } }
 
-/* A visitor's doors at the top of the wall, inside (Landing.js, VisitorDoors). */
+/* A visitor's doors at the top of the wall, inside (Landing.js, VisitorDoors),
+   and no beacon under them unless the keeper is logging (HomeNav). */
+@media (max-width: 768px) {
+  .hn .hn-pane--home .hn-floor--off { display: none; }
+}
 .ld-doors { display: none; }
 @media (max-width: 768px) {
   .ld-doors {
