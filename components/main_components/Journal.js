@@ -29,7 +29,7 @@
 
 import { Fragment, memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { sheetReopened, sheetToReopen } from './LayerEntry';
-import { ArrowsDownUp, CaretDown, Export, Moon, MoonStars, Sun, SunHorizon } from '@phosphor-icons/react';
+import { ArrowsDownUp, CalendarBlank, CaretDown, ClockCounterClockwise, Export, Hourglass, Moon, MoonStars, Palette, Shuffle, SortAscending, Star, Sun, SunHorizon } from '@phosphor-icons/react';
 import { parseHorizon, parseRating } from '../../library/entry_formatter';
 import { readArtColor } from '../../library/music_data_api';
 import AlbumTile from './AlbumTile';
@@ -132,6 +132,11 @@ export const VIEWS = [
   { value: 'color',   label: 'By color',       fun: true },
   { value: 'shuffle', label: 'Shuffle',        fun: true },
 ];
+// The glyph over each order on a phone's shelf.
+const VIEW_GLYPHS = {
+  order: ClockCounterClockwise, az: SortAscending, month: CalendarBlank, era: Hourglass,
+  rating: Star, color: Palette, shuffle: Shuffle,
+};
 const VIEW_KEY = 'ln-wall-view';
 // A wall of somebody else's records holds none of the keeper's entries, and
 // one empty list for it, so nothing that watches the entries wakes for it.
@@ -1449,7 +1454,10 @@ function Journal({
                       className={'ln-word arc-views-word' + (v.value === view ? ' ln-word--on' : '')}
                       onClick={() => chooseView(v.value)}
                     >
-                      {v.label}
+                      {/* A glyph over the word on a phone's shelf (Miyel,
+                          2026-11-27: "give them symbols above"). */}
+                      {isPhone && VIEW_GLYPHS[v.value] && (() => { const G = VIEW_GLYPHS[v.value]; return <G className="arc-views-glyph" size={20} weight="regular" aria-hidden="true" />; })()}
+                      <span className="arc-views-label">{v.label}</span>
                     </button>
                   </Fragment>
                 ))}

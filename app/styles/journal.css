@@ -787,3 +787,13 @@
   .arc-shelf .arc-views-word { color: var(--ink-faint); text-decoration: none; }
   .arc-shelf .arc-views-word.ln-word--on { color: var(--ink); text-decoration: none; font-weight: 600; }
 }
+@media (max-width: 768px) {
+  /* Each order a glyph over its word, spread across the shelf in one or two
+     even rows (Miyel, 2026-11-27). */
+  .arc-shelf .arc-views { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px 4px; padding: 10px 2px 14px; }
+  .arc-shelf .arc-views-word {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    padding: 6px 2px; text-align: center; white-space: nowrap;
+  }
+  .arc-shelf .arc-views-glyph { color: inherit; }
+}
