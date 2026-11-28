@@ -20,7 +20,6 @@ import { journalUrl, recallSender, tidyJournal } from '../../library/return_addr
 import { useBookplate } from './Bookplate';
 import CodeSlot from './CodeSlot';
 import { useTheme } from './Lightswitch';
-import { RELEASE_URL, SOURCE_URL, VERSION } from '../../library/version';
 import { readBioAnswers } from '../../library/bioprompt';
 import { identify, readLink, rigIcon } from '../../library/card_links';
 import { sizedAlbumArt } from '../../library/music_data_api';
@@ -158,13 +157,6 @@ export default function Landing({ stamps = null, keeper = false, onEdit = null }
               ))}
             </p>
           )}
-          {/* The version and the source, which every copy shows a visitor
-              and none may switch off (AGENTS, Never). */}
-          <p className="ld-version">
-            <a href={RELEASE_URL} target="_blank" rel="noopener noreferrer">{VERSION}</a>
-            {' · '}
-            <a href={SOURCE_URL} target="_blank" rel="noopener noreferrer">Source</a>
-          </p>
         </div>
       </div>
     </section>

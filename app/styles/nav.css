@@ -4084,9 +4084,15 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   /* In the right column the name sits over its line. */
   .ld-right .ld-who { flex-direction: column; align-items: flex-start; gap: 3px; }
 }
+/* The version and the source at the end of the wall (HomeNav). A phone's;
+   a desk's card keeps its own. */
+.hn-wall-foot { display: none; }
 @media (max-width: 768px) {
-  .ld-version { margin: 2px 0 0; font-family: var(--font-label); font-size: 9.5px; letter-spacing: 0.08em; color: rgba(244, 241, 234, 0.45); }
-  .ld-version a { color: inherit; text-decoration: none; }
+  .hn-wall-foot {
+    display: block; margin: 28px 0 0; padding: 0 0 calc(36px + env(safe-area-inset-bottom, 0px));
+    text-align: center; font-family: var(--font-label); font-size: 10px; letter-spacing: 0.1em; color: var(--ink-faint);
+  }
+  .hn-wall-foot a { color: inherit; text-decoration: none; }
 }
 @media (max-width: 768px) {
   /* Turned to the code, the square grows so a phone can read it. */

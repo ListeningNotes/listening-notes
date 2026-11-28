@@ -168,7 +168,8 @@ reasoning; these are inline so nobody has to go looking.
 - **A copy is never called Listening Notes, and the software's name never
   becomes a setting.** Titles read `{keeper_name} · Listening Notes` on every
   copy; the Source line and the version ship on every copy, at the foot of
-  the card for a visitor, and cannot be switched off; the canonical address,
+  the journal where a visitor can reach them — the end of the wall on a
+  phone, the card's foot on a desk — and cannot be switched off; the canonical address,
   `REPORTS_URL`, `INSTAGRAM_URL`, `DIRECTORY_URL` and `PUBLICATION_URL` are
   constants, with an environment variable for a fork; so is the public half
   of the LN. Admin key (`LETTERHEAD_KEY`, in `library/letterhead.js`), which

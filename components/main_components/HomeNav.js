@@ -96,7 +96,7 @@ import Dashboard, { heldNow, subscribeHeld } from './Dashboard';
 import PeopleScreen from './PeopleScreen';
 // The Board's first screen, read when People opens (below).
 import { Everyone, readEveryone, useEveryone } from '../../app/directory/Directory';
-import { COMMUNITY_OPEN, DIRECTORY_URL, PUBLICATION_URL } from '../../library/version';
+import { COMMUNITY_OPEN, DIRECTORY_URL, PUBLICATION_URL, RELEASE_URL, SOURCE_URL, VERSION } from '../../library/version';
 import Issue from './Issue';
 import { readArtColor } from '../../library/music_data_api';
 // The same two the desk already reaches for, from the same module, so the
@@ -2268,6 +2268,18 @@ export default function HomeNav() {
                   scroller={wallScroller}
                   printable={authed}
                   first={authed ? <ListenTile held={inHand} live={isLive} /> : null}
+                  /* The version and the source at the end of the wall, where
+                     the scrolling stops: every copy shows a visitor these and
+                     none may switch them off (AGENTS, Never). On a phone they
+                     left the profile for here (Miyel, 2026-11-27); a desk's
+                     card keeps its own. */
+                  foot={(
+                    <p className="hn-wall-foot">
+                      <a href={RELEASE_URL} target="_blank" rel="noopener noreferrer">{VERSION}</a>
+                      {' · '}
+                      <a href={SOURCE_URL} target="_blank" rel="noopener noreferrer">Source</a>
+                    </p>
+                  )}
                 />
               </div>
             </div>
