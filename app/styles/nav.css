@@ -3889,16 +3889,16 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .saver--arriving .ld { animation: ld-rise 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); }
   .saver--leaving .ld { transform: translateY(110%); }
   @keyframes ld-rise { from { transform: translateY(110%); } to { transform: none; } }
-  .ld-row { position: relative; display: flex; align-items: flex-start; gap: 14px; }
+  .ld-row { position: relative; display: flex; align-items: stretch; gap: 14px; }
   .ld-face-door { padding: 0; border: 0; background: none; cursor: pointer; flex: none; -webkit-tap-highlight-color: transparent; }
-  .ld-right { display: flex; flex-direction: column; gap: 7px; min-width: 0; padding-top: 2px; }
+  .ld-right { display: flex; flex-direction: column; justify-content: space-between; gap: 5px; min-width: 0; padding: 1px 0; }
   .ld-who {
     display: flex; align-items: center; gap: 12px; padding: 0; border: 0; background: none;
     color: inherit; text-align: left; font: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent;
   }
   div.ld-who { cursor: default; }
   .ld-face {
-    width: 76px; height: 76px; border-radius: 14px; overflow: hidden; flex: none; position: relative;
+    width: 116px; height: 116px; border-radius: 16px; overflow: hidden; flex: none; position: relative;
     display: grid; place-items: center; background: #2a2620; color: #9c978b;
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
   }
@@ -3916,8 +3916,8 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
     /* From the face's upper right, over the start of the name, the way a
        speech bubble leaves a mouth (Miyel, 2026-11-27): its pointed corner
        at the face's diagonal. */
-    position: absolute; left: 60px; bottom: calc(100% + 2px); margin: 0;
-    max-width: min(290px, calc(100% - 62px));
+    position: absolute; left: 92px; bottom: calc(100% + 4px); margin: 0;
+    max-width: min(240px, calc(100% - 92px));
     display: flex; flex-direction: column; gap: 3px;
     padding: 10px 13px 11px; border-radius: 16px 16px 16px 4px;
     background: #f4f1ea; color: #1d1b17; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
@@ -3934,8 +3934,8 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .ld-live-dot { width: 7px; height: 7px; border-radius: 50%; background: #2f9e57; display: inline-block; }
   .ld-bubble-ask { font-family: var(--font-label); font-size: 9.5px; letter-spacing: 0.07em; text-transform: uppercase; color: #77736a; }
   .ld-bubble-said {
-    font-size: 14px; line-height: 1.38;
-    display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;
+    font-size: 13.5px; line-height: 1.36;
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
   }
   .ld-marks { margin: 0; display: flex; gap: 14px; font-weight: 800; font-size: 14px; }
   .ld-mark { display: inline-flex; align-items: center; gap: 5px; }
@@ -4091,5 +4091,9 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
 @media (max-width: 768px) {
   /* Turned to the code, the square grows so a phone can read it. */
   .ld-face { transition: width 0.45s cubic-bezier(0.2, 0.8, 0.2, 1), height 0.45s cubic-bezier(0.2, 0.8, 0.2, 1); }
-  .ld-face--code { width: 150px; height: 150px; }
+  .ld-face--code { width: 160px; height: 160px; }
+}
+@media (max-width: 768px) {
+  .ld-rig { flex-wrap: nowrap; min-width: 0; }
+  .ld-rig span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 }
