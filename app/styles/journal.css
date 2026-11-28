@@ -790,10 +790,14 @@
 @media (max-width: 768px) {
   /* Each order a glyph over its word, spread across the shelf in one or two
      even rows (Miyel, 2026-11-27). */
-  .arc-shelf .arc-views { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px 4px; padding: 10px 2px 14px; }
+  /* Small, beside the word, the way the filters draw theirs (Miyel,
+     2026-11-27: "small like they are on filter side… on the side the same
+     way"). */
+  .arc-shelf .arc-views { display: flex; flex-wrap: wrap; align-items: center; gap: 0 10px; padding: 6px 0 12px; margin: 0 -6px; }
   .arc-shelf .arc-views-word {
-    display: flex; flex-direction: column; align-items: center; gap: 6px;
-    padding: 6px 2px; text-align: center; white-space: nowrap;
+    display: inline-flex; flex-direction: row; align-items: center; gap: 10px;
+    padding: 5px 10px; white-space: nowrap;
+    font-family: var(--font-label); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
   }
-  .arc-shelf .arc-views-glyph { color: inherit; }
+  .arc-shelf .arc-views-glyph { width: 15px; height: 15px; flex-shrink: 0; color: inherit; }
 }
