@@ -482,13 +482,6 @@ export default function About({ stamps, authed = false, pinned = null, entries =
   // what keeps the caret away. Editing needs the floor for its fields.
   const hasReading = answered.length > 0 || rigList.length > 0 || edit.editing;
 
-  // ── What I love, 2026-11-27 ─────────────────────────────────────────────
-  // The magazine's picture of the music (Miyel's pick of three): the albums
-  // marked Favorite, newest first as the wall keeps them, three of them — one
-  // large and two beside it. A choice the keeper made on each record, never a
-  // count of anything. On a phone only (idcard.css); a desk keeps its column.
-  const loved = useMemo(() => entries.filter(e => !e.song && e.favorite === true && e.album_art).slice(0, 3), [entries]);
-
   return (
     <div className={'ab-pane' + (edit.editing ? ' ab-pane--editing' : '')} ref={paneRef}>
       {/* ── The bar that says a correction is open ──────────────────────
@@ -712,25 +705,6 @@ export default function About({ stamps, authed = false, pinned = null, entries =
       {/* `--kept` when there is a colophon under it: that section brings its
           own air and this one's 40px at the foot of the writing would be a
           second helping of it. Keyed on authed because .ab-keep is. */}
-      {loved.length > 0 && !edit.editing && (
-        <section className={'ab-loved ab-loved--' + loved.length} aria-label="What I love">
-          <h2 className="ab-loved-head">What I love</h2>
-          <div className="ab-loved-grid">
-            {loved.map(row => (
-              <Link
-                key={row.id ?? row.slug}
-                href={entryAt(row.slug)}
-                className="ab-loved-cover"
-                aria-label={`${row.album} — ${row.artist}`}
-                onClick={() => arrivingAlone()}
-              >
-                <img src={row.album_art} alt="" loading="lazy" />
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
-
       {hasReading && (
       <div className={'ab-below' + (authed ? ' ab-below--kept' : '')}>
         {/* The prompts. Prompt and answer on one line, because they are one

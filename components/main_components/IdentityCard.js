@@ -439,7 +439,6 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
   const showCounts = (records !== null || marks.length > 0) && showing('albums');
   const showGenres = genres.length > 0 && showing('genres');
   const showSince = Boolean(since) && showing('since');
-  const overPhoto = !editing && Boolean(cover_name) && Boolean(portrait_url) && !slotCode;
 
   // The photograph used to be lifted down the column by a measured spacer, to
   // land on exactly the same line as the beacon's album art on the other face
@@ -530,33 +529,13 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
 
             The code stays in its corner, a little larger now that there is a
             photograph to carry it. */}
-        {/* ── The magazine, on a phone, 2026-11-27 ─────────────────────────
-            Miyel's pick of three (idcard.css, The magazine): the photograph
-            large with the name and how long set over its foot, the way a
-            magazine sets a profile. The words over it are the name and line
-            below, drawn a second time for the eye only; the ones below stay
-            for a screen reader and for a desk, and step out of sight on a
-            phone while these show. Not over the code, and not while editing,
-            where the name is a field. */}
-        <div className="idc-photo">
-          {slot}
-          {overPhoto && (
-            <div className="idc-over" aria-hidden="true">
-              <span className="idc-over-name">{cover_name}</span>
-              {(showSince || showGenres) && (
-                <span className="idc-over-since">
-                  {[showSince ? `Keeping since ${since}` : null, ...(showGenres ? genres.slice(0, 3) : [])].filter(Boolean).join(' · ')}
-                </span>
-              )}
-            </div>
-          )}
-        </div>
+        <div className="idc-photo">{slot}</div>
 
         {/* The name, and under it how long. It shared this line with Send and
             Add until 2026-09-19; both are at the foot of the beacon now, where
             a visitor lands, and the note above pressAdd's old home says why
             they are not in two places. */}
-        <div className={'idc-ident' + (overPhoto ? ' idc-ident--over' : '')}>
+        <div className="idc-ident">
           <div className="idc-ident-said">
             {(editing || cover_name) && (
               <h1 className="idc-name">
@@ -626,7 +605,7 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
             it sat for an hour. Computed, never chosen: what this journal
             listens to, not what its keeper would claim. */}
         {showGenres && (
-          <p className={'idc-genres' + off('genres') + (overPhoto ? ' idc-genres--over' : '')}>
+          <p className={'idc-genres' + off('genres')}>
             <span className="idc-genres-label">Top genres</span>
             <span className="idc-genres-said">{genres.join(' · ')}</span>
             {eyeFor('genres')}
