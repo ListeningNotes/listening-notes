@@ -70,6 +70,8 @@ const TILE_OUT_MS  = 520;   // the tile shrinking where it stands
 // of deleting." Slowed from 420 with the rest of the cutaway, which means the
 // delete slowed with it, which is the point of it being one number.
 const FILE_MS      = 700;
+// How long the covers take to reach their new size after a pinch.
+const PINCH_MS     = 1100;
 // The views menu folding away; the length of .arc-views--leaving.
 const VIEWS_OUT_MS = 160;
 
@@ -1320,15 +1322,17 @@ function Journal({
       const next = k > 1.22 ? at - 1 : k < 0.82 ? at + 1 : null;
       if (next == null || next < 0 || next >= densities.length) return;
       done = true;
-      const mx = (e.touches[0].clientX + e.touches[1].clientX) / 2;
-      const my = (e.touches[0].clientY + e.touches[1].clientY) / 2;
-      const under = document.elementFromPoint(mx, my)?.closest?.('[data-tile-key]');
+      // The page keeps its top (Miyel, 2026-11-27): the first album showing
+      // under the line stays where it is, whichever way the size goes.
+      const line = lineWrap.current?.getBoundingClientRect().bottom ?? 0;
       const rects = new Map();
+      let under = null, underRect = null;
       for (const tile of grid.current?.querySelectorAll('[data-tile-key]') || []) {
         const r = tile.getBoundingClientRect();
         if (r.bottom > -200 && r.top < window.innerHeight + 200) rects.set(tile.dataset.tileKey, r);
+        if (r.bottom > line + 4 && (!underRect || r.top < underRect.top - 1 || (Math.abs(r.top - underRect.top) <= 1 && r.left < underRect.left))) { under = tile; underRect = r; }
       }
-      pinchFrom.current = { key: under?.dataset.tileKey || null, top: under ? under.getBoundingClientRect().top : 0, rects };
+      pinchFrom.current = { key: under?.dataset.tileKey || null, top: underRect ? Math.max(underRect.top, line) : 0, rects };
       changeDensity(densities[next]);
     };
     const up = e => { if (e.touches.length < 2) start = 0; };
@@ -1373,8 +1377,10 @@ function Journal({
     }
     if (!moved.length) return;
     const go = () => {
-      for (const tile of moved) { tile.style.transition = `transform ${FILE_MS}ms cubic-bezier(0.2, 0.8, 0.2, 1)`; tile.style.transform = ''; }
-      clocks.current.push(setTimeout(() => { for (const tile of moved) { tile.style.transition = ''; tile.style.transformOrigin = ''; } }, FILE_MS + 40));
+      // Slower and softer than a filter's glide (Miyel: "slower and more
+      // fluid"): a long ease-out, so the covers drift the last of the way.
+      for (const tile of moved) { tile.style.transition = `transform ${PINCH_MS}ms cubic-bezier(0.16, 1, 0.3, 1)`; tile.style.transform = ''; }
+      clocks.current.push(setTimeout(() => { for (const tile of moved) { tile.style.transition = ''; tile.style.transformOrigin = ''; } }, PINCH_MS + 40));
     };
     requestAnimationFrame(() => requestAnimationFrame(go));
   }, [density, scroller]);
