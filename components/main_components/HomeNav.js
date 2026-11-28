@@ -2180,10 +2180,11 @@ export default function HomeNav() {
           {/* Floor one — the crown, the record with its caption, and what
               came before. On a phone it is exactly one screen tall, so the
               snap has one place to land; on a desk it is a wrapper. */}
-          {/* A visitor sees the beacon only while the keeper is logging
-              (Miyel, 2026-11-21, again 2026-11-27): otherwise nothing stands
-              between their doors and the wall (nav.css, .hn-floor--off). */}
-          <div className={'hn-floor hn-floor--beacon' + (landing ? ' hn-floor--landing' : '') + (visitor && !isLive ? ' hn-floor--off' : '')}>
+          {/* A visitor never sees the beacon inside (Miyel, 2026-11-27): a
+              listen shows on the profile, where you might catch it
+              (Landing.js), and the wall starts under the top row
+              (nav.css, .hn-floor--off). */}
+          <div className={'hn-floor hn-floor--beacon' + (landing ? ' hn-floor--landing' : '') + (visitor ? ' hn-floor--off' : '')}>
             {landing && <Landing stamps={stamps} />}
             {wash && (
               <div

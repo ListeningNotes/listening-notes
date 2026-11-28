@@ -3903,6 +3903,14 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
     transition: transform 0.45s cubic-bezier(0.3, 1.4, 0.5, 1);
   }
   .ld-bubble--up { transform: scale(1); }
+  /* Logging: the cover, a green dot and the album, held up while it lasts. */
+  .ld-bubble--live { flex-direction: row; align-items: center; gap: 10px; padding: 8px 14px 8px 8px; }
+  .ld-bubble-art { width: 40px; height: 40px; border-radius: 4px; object-fit: cover; flex: none; }
+  .ld-bubble-live { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .ld-bubble-live .ld-bubble-said { -webkit-line-clamp: 2; }
+  .ld-bubble-ask { display: inline-flex; align-items: center; gap: 6px; }
+  .ld-live-dot { width: 7px; height: 7px; border-radius: 50%; background: #2f9e57; display: inline-block; }
+  .ld-face--live { box-shadow: 0 0 0 2.5px #7cff9b, 0 4px 14px rgba(0, 0, 0, 0.4); }
   .ld-bubble-ask { font-family: var(--font-label); font-size: 9.5px; letter-spacing: 0.07em; text-transform: uppercase; color: #77736a; }
   .ld-bubble-said {
     font-size: 14px; line-height: 1.38;
