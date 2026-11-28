@@ -18,10 +18,12 @@ import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 import { Fingerprint, Heart, PencilSimple, Plus, PushPin, Shuffle, SketchLogo, User, X } from '@phosphor-icons/react';
 import { journalUrl, recallSender, tidyJournal } from '../../library/return_address';
 import { useBookplate } from './Bookplate';
+import CodeSlot from './CodeSlot';
+import { useTheme } from './Lightswitch';
+import { RELEASE_URL, SOURCE_URL, VERSION } from '../../library/version';
 import { readBioAnswers } from '../../library/bioprompt';
 import { identify, readLink, rigIcon } from '../../library/card_links';
 import { sizedAlbumArt } from '../../library/music_data_api';
-import { useListeningBeacon } from '../../hooks/useListeningBeacon';
 
 export const PINNED_EVENT = 'ln-pinned';
 const SAYS_MS = 6500;
@@ -37,8 +39,10 @@ function monthAndYear(value) {
 export default function Landing({ stamps = null, keeper = false, onEdit = null }) {
   const {
     portrait_url: portrait, portrait_position, cover_name, bioanswers,
-    founded_at, rig, rig_icon, social_links,
+    founded_at, rig, rig_icon, social_links, site_address, portrait_code_url,
   } = useBookplate();
+  const { theme } = useTheme();
+  const [codeUp, setCodeUp] = useState(false);
   const said = readBioAnswers(bioanswers);
   const since = monthAndYear(founded_at) || monthAndYear(stamps?.first_listen);
   const records = stamps?.records ?? null;
@@ -59,11 +63,8 @@ export default function Landing({ stamps = null, keeper = false, onEdit = null }
   // stays, shrinks back, and the next comes. Never moving for somebody who
   // asked for less motion — the first answer simply stays.
   // While the keeper is logging, the covers behind all become the album
-  // playing (Place.js, Screensaver) and the face wears a green ring; the
-  // bubble keeps to their answers (Miyel, 2026-11-27). The profile is the only
-  // place a visitor sees a listen (HomeNav).
-  const { isLive, album: onAirAlbum } = useListeningBeacon();
-  const live = Boolean(isLive && onAirAlbum);
+  // playing (Place.js, Screensaver) and the LN. mark's dot is lit; nothing
+  // else says so, no ring on the face (Miyel, 2026-11-27).
   const [turn, setTurn] = useState(0);
   const [up, setUp] = useState(false);
   useEffect(() => {
@@ -84,12 +85,23 @@ export default function Landing({ stamps = null, keeper = false, onEdit = null }
   // 2026-11-27: "photo left, other stuff right… takes up less screen space",
   // "allows more space to see background"). The keeper's photo and name
   // open the card to edit it.
+  // The photo turns into the journal's code and copies its address, as the
+  // card's did (Miyel, 2026-11-27: "clicking that pfp should still bring up
+  // your link, QR copyable"); square, since a code is (her yes).
+  const address = site_address ? `https://${String(site_address).replace(/^https?:\/\//, '')}` : '';
   const face = (
-    <span className={'ld-face' + (live ? ' ld-face--live' : '')}>
-      {portrait
+    <CodeSlot
+      className={'ld-face' + (codeUp ? ' ld-face--code' : '')}
+      picture={portrait
         ? <img src={portrait} alt="" style={{ objectPosition: portrait_position || '50% 50%' }} />
         : <User size={26} weight="light" aria-hidden="true" />}
-    </span>
+      address={address}
+      codeSrc={portrait_code_url ? `${portrait_code_url}&theme=${theme === 'dark' ? 'dark' : 'light'}` : ''}
+      turned={codeUp}
+      onTurn={setCodeUp}
+      backGlyph={<User size={12} weight="bold" />}
+      labels={{ toCode: 'Show the code for this journal', toPicture: 'Show the photo' }}
+    />
   );
   const name = (
     <>
@@ -115,12 +127,10 @@ export default function Landing({ stamps = null, keeper = false, onEdit = null }
             <span className="ld-bubble-said">{saying.answer}</span>
           </p>
         )}
-        {editable
-          ? <button type="button" className="ld-face-door" onClick={onEdit} aria-label="Edit your card">{face}</button>
-          : face}
+        {face}
         <div className="ld-right">
           {editable
-            ? <button type="button" className="ld-who" onClick={onEdit} tabIndex={-1} aria-hidden="true">{name}</button>
+            ? <button type="button" className="ld-who" onClick={onEdit} aria-label="Edit your card">{name}</button>
             : <div className="ld-who">{name}</div>}
           {marks.length > 0 && (
             <p className="ld-marks">
@@ -148,6 +158,13 @@ export default function Landing({ stamps = null, keeper = false, onEdit = null }
               ))}
             </p>
           )}
+          {/* The version and the source, which every copy shows a visitor
+              and none may switch off (AGENTS, Never). */}
+          <p className="ld-version">
+            <a href={RELEASE_URL} target="_blank" rel="noopener noreferrer">{VERSION}</a>
+            {' · '}
+            <a href={SOURCE_URL} target="_blank" rel="noopener noreferrer">Source</a>
+          </p>
         </div>
       </div>
     </section>
