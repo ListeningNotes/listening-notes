@@ -6,7 +6,7 @@
 // it. Drawn once, when the site is built, and the same for every journal.
 
 import { ImageResponse } from 'next/og';
-import { LAUNCH_SCREENS, launchName, markFoot } from '@/library/launch_image';
+import { LAUNCH_SCREENS, launchName, markTop } from '@/library/launch_image';
 
 export const dynamic = 'force-static';
 
@@ -25,8 +25,8 @@ export async function GET(request, { params }) {
   const screen = LAUNCH_SCREENS.find(s => launchName(s) === size);
   if (!screen) return new Response('Not found', { status: 404 });
   const [w, h, r] = screen;
-  // The mark is 30 points tall on the screensaver (nav.css, .saver-mark-svg).
-  const tall = 30 * r, wide = Math.round(tall * 241 / 140);
+  // The mark is 22 points tall on the profile (nav.css, .saver--profile .saver-mark-svg).
+  const tall = 22 * r, wide = Math.round(tall * 241 / 140);
   return new ImageResponse(
     (
       <div style={{ width: '100%', height: '100%', display: 'flex', background: '#16140f', position: 'relative' }}>
@@ -34,7 +34,7 @@ export async function GET(request, { params }) {
           viewBox="76 96 241 140"
           width={wide}
           height={tall}
-          style={{ position: 'absolute', left: (w * r - wide) / 2, bottom: markFoot(screen) * r }}
+          style={{ position: 'absolute', left: (w * r - wide) / 2, top: markTop(screen) * r }}
         >
           {LETTERS.map(l => <path key={l.transform} transform={l.transform} d={l.d} fill="#ffffff" />)}
           <circle cx="297.0547" cy="216.71875" r="14.1328" fill="#ffffff" />

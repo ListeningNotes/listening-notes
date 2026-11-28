@@ -1626,7 +1626,10 @@ export default function HomeNav() {
       document.removeEventListener('scroll', later, { capture: true });
     };
   }, [authed, saver, path, inHand, pinning]);
-  const saverShows = saver === 'idle' || (saver === 'loading' && remembered.length > 0);
+  // Since 2026-11-27 the screensaver is the profile too (Landing.js), what
+  // anybody opens a journal to on a phone, so it shows from the first paint
+  // whether or not this browser remembers any covers.
+  const saverShows = Boolean(saver);
 
 
   function goTo(index) {
@@ -1802,7 +1805,7 @@ export default function HomeNav() {
         onTop={() => { if (putEntryAway()) return; if (!cardOpen) goUp(pane); }}
         // A visitor is already standing in the card (Landing.js): the face
         // takes them back to the top of it.
-        onFace={() => { putEntryAway(); if (authed) setCardOpen(open => !open); else { goTo(HOME); goUp(HOME); } }}
+        onFace={() => { putEntryAway(); setCardOpen(false); setSaver('idle'); }}
         news={{ people: waiting?.friends === true }}
         lights={lights}
         mark={mark('hdr-mark-svg')}
@@ -1982,7 +1985,9 @@ export default function HomeNav() {
   const visitor = checked && !authed;
   // A visitor lands on the landing (Landing.js): the card, the lamp, the
   // pinned albums, then the wall. A phone's; a desk keeps its book.
-  const landing = visitor;
+  // Since 2026-11-27 the profile is the screensaver's (Landing.js, over
+  // everything), so the visitor's floor is the beacon again.
+  const landing = false;
 
 
   // The one divider on a desk, as a grip: the fold between the two pages. A
@@ -2044,7 +2049,9 @@ export default function HomeNav() {
         leaving={saverLeaving}
         logo={mark('saver-mark-svg')}
         onEnter={liftSaver}
-      />
+      >
+        <Landing stamps={stamps} keeper={authed} onEdit={() => { setSaver(null); setCardOpen(true); }} />
+      </Screensaver>
     )}
     <div
       className={
@@ -2105,16 +2112,8 @@ export default function HomeNav() {
         <div className="hn-pane hn-pane--turn">
           <div className="hn-leaf">
           <section className="hn-pane hn-face hn-face--card" ref={cardRef} aria-label="About this journal">
-            {/* The keeper's own landing, as a visitor sees it (Landing.js); the
-                card under it is what editing opens (nav.css, data-editing). */}
-            {authed && (
-              <Landing
-                keeper
-                live={isLive}
-                onAir={{ album: onAirAlbum, artist: onAirArtist, art: onAir }}
-                onEmpty={() => { setPinning(true); setCardOpen(false); goTo(HOME); }}
-              />
-            )}
+            {/* The card, to read and to edit: the keeper reaches it from their
+                face on the profile (Landing.js, onEdit). */}
             <About stamps={stamps} authed={authed} pinned={pinned} entries={entries} onSignedIn={letIn} />
           </section>
 
@@ -2178,7 +2177,7 @@ export default function HomeNav() {
               came before. On a phone it is exactly one screen tall, so the
               snap has one place to land; on a desk it is a wrapper. */}
           <div className={'hn-floor hn-floor--beacon' + (landing ? ' hn-floor--landing' : '')}>
-            {landing && <Landing live={isLive} onAir={{ album: onAirAlbum, artist: onAirArtist, art: onAir }} />}
+            {landing && <Landing stamps={stamps} />}
             {wash && (
               <div
                 className={'beacon-wash' + (isLive ? '' : ' beacon-wash--quiet')}

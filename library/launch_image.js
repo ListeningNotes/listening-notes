@@ -25,10 +25,11 @@ export function launchMedia([w, h, r]) {
   return `(device-width: ${w}px) and (device-height: ${h}px) and (-webkit-device-pixel-ratio: ${r}) and (orientation: portrait)`;
 }
 
-// Where the mark stands, in points from the foot of the screen to the foot of
-// the mark: the screensaver's 44 and its button's 14 of padding, over the
-// home bar's 34 on a phone with one (taller than two to one) and none on one
-// with a home button.
-export function markFoot([w, h]) {
-  return 44 + 14 + (h / w > 2 ? 34 : 0);
+// Where the mark stands, in points from the top of the screen to the top of
+// the mark: since 2026-11-27 the screensaver is also the profile and its mark
+// is at the top (nav.css, .saver--profile .saver-mark) — 14 and its button's
+// 10 of padding, under the status bar: about 47 on a phone with a notch or an
+// island (taller than two to one), 20 on one with a home button.
+export function markTop([w, h]) {
+  return 14 + 10 + (h / w > 2 ? 47 : 20);
 }

@@ -269,12 +269,17 @@ export function useRemembered() {
   return useSyncExternalStore(() => () => {}, rememberedNow, () => NONE);
 }
 
-export function Screensaver({ entries, arriving, leaving, logo, onEnter }) {
+// Since 2026-11-27 it is also the profile (Landing.js), handed in as
+// children and set at its foot, with the mark moved to the top: one screen
+// that anybody opens a journal to, the keeper and a visitor alike (Miyel:
+// "should it just be the same whether it's your profile or not").
+export function Screensaver({ entries, arriving, leaving, logo, onEnter, children = null }) {
   const remembered = useRemembered();
   const shown = entries.some(e => e.album_art) ? entries : remembered;
   return (
-    <div className={'saver' + (arriving ? ' saver--arriving' : '') + (leaving ? ' saver--leaving' : '')} onClick={onEnter} role="presentation">
+    <div className={'saver' + (arriving ? ' saver--arriving' : '') + (leaving ? ' saver--leaving' : '') + (children ? ' saver--profile' : '')} onClick={onEnter} role="presentation">
       <Room entries={shown} still={false} scatter={leaving} arrive={arriving} />
+      {children}
       <button
         type="button"
         className="saver-mark"

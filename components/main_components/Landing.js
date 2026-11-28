@@ -1,117 +1,137 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 'use client';
-// The landing, 2026-11-25 (Miyel's brief, the wall as home; her word for it).
-// What a visitor lands on, on a phone: the card is not a thing to open any
-// more, it is the top of the page. Top to bottom —
+// The landing, 2026-11-27: the profile (Miyel's direction the same day, "the
+// profile becomes the screensaver"; prototype WPHWjQAB3sYSbtLAjEiFRb). It is
+// what anybody opens a journal to on a phone, the keeper as well as a visitor:
+// the screensaver's covers moving over the whole screen (Place.js), and the
+// keeper low and light at its foot — the face, the name, since when and how
+// many, the marks with their counts, the rig and the links each one quiet
+// line — and their answers to the card's openings coming up one at a time as
+// a speech bubble from the face, always above the face and name, never over
+// them (her ask). A tap on the covers goes in: they settle into the wall.
 //
-//   who keeps the journal: the portrait, the name and the card's lines;
-//   the lamp, only while a listen is open: the record, a green dot and
-//     "Logging [album] · [artist]" — and nothing at all when none is, never
-//     an empty slot (green stays live's alone);
-//   the pinned albums, up to three, framed and large, each with the one line
-//     of the keeper's own writing it was pinned with (library/pinned_actions.js),
-//     then title · artist — none at all when nothing is pinned;
-//   and the wall under it, as it always was (HomeNav).
-//
-// The pinned albums are read once when the page opens. They change only when
-// the keeper pins, so nothing here asks again on a timer — only when a pin is
-// made or taken down on this page (PINNED_EVENT).
-//
-// The keeper's own face opens this, exactly as a visitor sees it (HomeNav,
-// the card), with two things only the keeper is shown: a faint empty frame
-// for each place not yet pinned, and a small × to take a pin down. A pin is
-// made from a post, by selecting words in its album note (PinThisLine, below).
+// The same for everybody. The keeper's face and name open the card to edit
+// it (onEdit); a visitor's do nothing more than show them.
 import Link from 'next/link';
 import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
-import { PushPin, User, X } from '@phosphor-icons/react';
+import { Fingerprint, Heart, PencilSimple, PushPin, SketchLogo, User, X } from '@phosphor-icons/react';
 import { useBookplate } from './Bookplate';
 import { readBioAnswers } from '../../library/bioprompt';
-import { handOff } from '../../library/handoff';
+import { identify, readLink, rigIcon } from '../../library/card_links';
 import { sizedAlbumArt } from '../../library/music_data_api';
 
 export const PINNED_EVENT = 'ln-pinned';
-const MOST = 3;
+const SAYS_MS = 6500;
 
-export default function Landing({ live = false, onAir = null, keeper = false, onEmpty = null }) {
-  const { portrait_url: portrait, portrait_position, cover_name, bioanswers } = useBookplate();
-  const lines = readBioAnswers(bioanswers);
-  const [pinned, setPinned] = useState([]);
-  const ask = useCallback(() => fetch('/api/pinned')
-    .then(r => (r.ok ? r.json() : null))
-    .then(data => (Array.isArray(data?.pinned) ? data.pinned : null))
-    .catch(() => null), []);
+// A month and a year, never a day, as the card prints it.
+function monthAndYear(value) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', timeZone: 'UTC' });
+}
+
+export default function Landing({ stamps = null, keeper = false, onEdit = null }) {
+  const {
+    portrait_url: portrait, portrait_position, cover_name, bioanswers,
+    founded_at, rig, rig_icon, social_links,
+  } = useBookplate();
+  const said = readBioAnswers(bioanswers);
+  const since = monthAndYear(founded_at) || monthAndYear(stamps?.first_listen);
+  const records = stamps?.records ?? null;
+  const marks = [
+    { key: 'favorites', n: stamps?.favorites ?? 0, Icon: Heart, weight: 'fill', tone: 'var(--fav)', word: 'favorites' },
+    { key: 'masterpieces', n: stamps?.masterpieces ?? 0, Icon: SketchLogo, weight: 'fill', tone: 'var(--mp)', word: 'masterpieces' },
+    { key: 'formative', n: stamps?.formative ?? 0, Icon: Fingerprint, weight: 'bold', tone: 'var(--formative)', word: 'formative' },
+  ].filter(m => m.n > 0);
+  const rigNames = (Array.isArray(rig) ? rig : []).map(r => r?.name?.trim()).filter(Boolean);
+  const RigIcon = rigIcon(rig_icon).Icon;
+  const links = (Array.isArray(social_links) ? social_links.map(readLink) : [])
+    .filter(l => l.url?.trim())
+    .map(l => identify(l.url.trim(), l.icon))
+    .filter(Boolean)
+    .slice(0, 3);
+
+  // One answer at a time, from the face: it grows out of the face's corner,
+  // stays, shrinks back, and the next comes. Never moving for somebody who
+  // asked for less motion — the first answer simply stays.
+  const [turn, setTurn] = useState(0);
+  const [up, setUp] = useState(false);
   useEffect(() => {
-    let gone = false;
-    const read = () => ask().then(list => { if (!gone && list) setPinned(list); });
-    read();
-    window.addEventListener(PINNED_EVENT, read);
-    return () => { gone = true; window.removeEventListener(PINNED_EVENT, read); };
-  }, [ask]);
-  async function takeDown(position) {
-    const r = await fetch(`/api/pinned?position=${position}`, { method: 'DELETE' }).catch(() => null);
-    const data = r?.ok ? await r.json() : null;
-    if (Array.isArray(data?.pinned)) setPinned(data.pinned);
-  }
-  // The keeper sees the places still free; a visitor never does.
-  const free = keeper ? [1, 2, 3].filter(p => !pinned.some(pin => pin.position === p)).slice(0, MOST - pinned.length) : [];
+    if (!said.length) return undefined;
+    const quiet = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const first = window.setTimeout(() => setUp(true), 700);
+    if (quiet || said.length < 2) return () => window.clearTimeout(first);
+    let down = 0;
+    const tick = window.setInterval(() => {
+      setUp(false);
+      down = window.setTimeout(() => { setTurn(t => t + 1); setUp(true); }, 450);
+    }, SAYS_MS);
+    return () => { window.clearTimeout(first); window.clearInterval(tick); window.clearTimeout(down); };
+  }, [said.length]);
+  const saying = said.length ? said[turn % said.length] : null;
+
+  const who = (
+    <>
+      <span className="ld-face">
+        {portrait
+          ? <img src={portrait} alt="" style={{ objectPosition: portrait_position || '50% 50%' }} />
+          : <User size={26} weight="light" aria-hidden="true" />}
+      </span>
+      <span className="ld-who-said">
+        <span className="ld-name">{cover_name}</span>
+        {(since || records !== null) && (
+          <span className="ld-since">
+            {[since ? `Since ${since}` : null, records !== null ? `${records} albums` : null].filter(Boolean).join(' · ')}
+          </span>
+        )}
+      </span>
+      {keeper && <PencilSimple className="ld-edit" size={16} weight="regular" aria-hidden="true" />}
+    </>
+  );
 
   return (
-    <section className="ld" aria-label={`${cover_name || 'This journal'}`}>
-      <div className="ld-who">
-        <span className="ld-face">
-          {portrait
-            ? <img src={portrait} alt="" style={{ objectPosition: portrait_position || '50% 50%' }} />
-            : <User size={40} weight="light" aria-hidden="true" />}
-        </span>
-        <h1 className="ld-name">{cover_name}</h1>
-        {lines.length > 0 && (
-          <ul className="ld-lines">
-            {lines.map(line => (
-              <li key={line.key}><span className="ld-prompt">{line.text}</span> {line.answer}</li>
-            ))}
-          </ul>
+    <section className="ld" aria-label={cover_name || 'This journal'} onClick={e => e.stopPropagation()}>
+      <div className="ld-me">
+        {saying && (
+          <p className={'ld-bubble' + (up ? ' ld-bubble--up' : '')} aria-live="off">
+            <span className="ld-bubble-ask">{saying.text.replace(/\s*[—–-]\s*$/, '')}</span>
+            <span className="ld-bubble-said">{saying.answer}</span>
+          </p>
         )}
+        {keeper && onEdit
+          ? <button type="button" className="ld-who" onClick={onEdit} aria-label="Edit your card">{who}</button>
+          : <div className="ld-who">{who}</div>}
       </div>
-
-      {live && onAir?.album && (
-        <p className="ld-lamp">
-          {onAir.art ? <img src={sizedAlbumArt(onAir.art, 120)} alt="" /> : <span className="ld-lamp-art" />}
-          <i className="ld-lamp-dot" aria-hidden="true" />
-          <span className="ld-lamp-words">Logging <b>{onAir.album}</b>{onAir.artist ? ` · ${onAir.artist}` : ''}</span>
+      {marks.length > 0 && (
+        <p className="ld-marks">
+          {marks.map(m => (
+            <span key={m.key} className="ld-mark" title={`${m.n} ${m.word}`}>
+              <m.Icon size={16} weight={m.weight} color={m.tone} aria-hidden="true" />
+              {m.n}<span className="ld-hidden"> {m.word}</span>
+            </span>
+          ))}
         </p>
       )}
-
-      {(pinned.length > 0 || free.length > 0) && (
-        <div className="ld-pinned">
-          {pinned.map(pin => (
-            <div key={pin.position} className="ld-frame">
-              <Link
-                href={`/entries/${pin.slug}`}
-                className="ld-frame-link"
-                data-grows={`/entries/${pin.slug}`}
-                onClick={() => handOff(pin)}
-              >
-                <span className="ld-mat">
-                  {pin.album_art
-                    ? <img src={sizedAlbumArt(pin.album_art, 600)} alt="" />
-                    : <span className="ld-mat-none" aria-hidden="true">♪</span>}
-                </span>
-                {pin.line && <span className="ld-said">{pin.line}</span>}
-                <span className="ld-title"><b>{pin.album}</b>{pin.artist ? ` · ${pin.artist}` : ''}</span>
-              </Link>
-              {keeper && (
-                <button type="button" className="ld-unpin" onClick={() => takeDown(pin.position)} aria-label={`Take ${pin.album} down`}>
-                  <X size={14} weight="bold" aria-hidden="true" />
-                </button>
-              )}
-            </div>
-          ))}
-          {free.map(place => (
-            <button key={`free-${place}`} type="button" className="ld-frame ld-frame--empty" onClick={onEmpty || undefined} aria-label="An empty place: pin a line from a post">
-              <span className="ld-mat"><PushPin size={22} weight="light" aria-hidden="true" /></span>
-            </button>
-          ))}
+      {(rigNames.length > 0 || links.length > 0) && (
+        <div className="ld-meta">
+          {rigNames.length > 0 && (
+            <p className="ld-rig">
+              {RigIcon && <RigIcon size={15} weight="regular" aria-hidden="true" />}
+              <span>{rigNames.join(' · ')}</span>
+            </p>
+          )}
+          {links.length > 0 && (
+            <p className="ld-links">
+              {links.map(({ href, label, Icon }) => (
+                <a key={href} href={href} target="_blank" rel="noopener noreferrer" className="ld-link">
+                  <Icon size={15} weight="regular" aria-hidden="true" />
+                  {label}
+                </a>
+              ))}
+            </p>
+          )}
         </div>
       )}
     </section>

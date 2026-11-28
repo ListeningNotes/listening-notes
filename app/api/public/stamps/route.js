@@ -56,6 +56,7 @@ export async function GET() {
         COUNT(*) FILTER (WHERE song IS NOT NULL)::int                 AS songs,
         COUNT(*) FILTER (WHERE masterpiece AND song IS NULL)::int     AS masterpieces,
         COUNT(*) FILTER (WHERE formative AND song IS NULL)::int       AS formative,
+        COUNT(*) FILTER (WHERE favorite AND song IS NULL)::int        AS favorites,
         MIN(posted_at)                                                AS first_listen
       FROM entries
     `;
@@ -83,6 +84,9 @@ export async function GET() {
       songs: row?.songs ?? 0,
       masterpieces: row?.masterpieces ?? 0,
       formative: row?.formative ?? 0,
+      // Favorites joined the three, 2026-11-27, for the profile's marks
+      // (Landing.js). A copy that predates it reads nothing here and shows none.
+      favorites: row?.favorites ?? 0,
       first_listen: row?.first_listen ?? null,
       genres: genres.map(g => g.name),
     }, { headers: HEADERS });

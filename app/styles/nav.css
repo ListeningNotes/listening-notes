@@ -3831,98 +3831,76 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
 /* A desk keeps its bar; the tile is a phone's. */
 @media (min-width: 769px) { .arc-grid .lt { display: none; } }
 
-/* ── The landing, 2026-11-25 ────────────────────────────────────────────────
-   What a visitor lands on, on a phone (Landing.js): who keeps the journal,
-   the lamp while a listen is open, the pinned albums framed with their
-   lines, and the wall under them. It takes the beacon's floor; the beacon,
-   its wash and what came before stand down there. A desk keeps its book. */
+/* ── The profile, 2026-11-27 ─────────────────────────────────────────────────
+   What anybody opens a journal to on a phone (Landing.js): the screensaver's
+   covers moving over the whole screen, and at its foot the keeper, low and
+   light — face, name, since and how many, the marks, the rig and the links —
+   with their answers coming up as a speech bubble from the face, above the
+   face and name, never over them. The mark goes to the top. Going in, the
+   profile slides down off the screen as the covers settle into the wall. */
 .ld { display: none; }
 @media (max-width: 768px) {
-  .hn--visitor .hn-pane--home .hn-floor--landing { padding-top: var(--hn-bar-h); }
-  .hn .hn-pane--home .hn-floor--landing > .beacon-wash,
-  .hn .hn-pane--home .hn-floor--landing > .hn-screen { display: none; }
-  .ld { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 26px; padding: 14px 0 22px; }
-  .ld-who { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; padding: 0 22px; }
+  .saver--profile .saver-mark {
+    top: calc(14px + env(safe-area-inset-top, 0px)); bottom: auto; padding: 10px 14px;
+  }
+  .saver--profile .saver-mark-svg { height: 22px; }
+  .saver .ld {
+    position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
+    display: flex; flex-direction: column; gap: 12px;
+    padding: 150px 22px calc(26px + env(safe-area-inset-bottom, 0px));
+    background: linear-gradient(rgba(22, 20, 15, 0), rgba(22, 20, 15, 0.86) 46%, #16140f);
+    color: #f4f1ea; cursor: default;
+    transition: transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .saver--arriving .ld { animation: ld-rise 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); }
+  .saver--leaving .ld { transform: translateY(110%); }
+  @keyframes ld-rise { from { transform: translateY(110%); } to { transform: none; } }
+  .ld-me { position: relative; }
+  .ld-who {
+    display: flex; align-items: center; gap: 12px; padding: 0; border: 0; background: none;
+    color: inherit; text-align: left; font: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent;
+  }
+  div.ld-who { cursor: default; }
   .ld-face {
-    width: 132px; height: 132px; border-radius: 18px; overflow: hidden;
-    display: grid; place-items: center;
-    background: var(--panel-strong); color: var(--ink-faint);
-    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.14);
+    width: 54px; height: 54px; border-radius: 50%; overflow: hidden; flex: none;
+    display: grid; place-items: center; background: #2a2620; color: #9c978b;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
   }
   .ld-face img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .ld-who-said { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
   .ld-name {
-    margin: 6px 0 0; font-family: var(--font-display); font-weight: var(--font-display-weight, 800);
-    font-size: 26px; line-height: 1.15; text-wrap: balance;
+    font-family: var(--font-display); font-weight: var(--font-display-weight, 800);
+    font-size: 20px; line-height: 1.1;
   }
-  .ld-lines { list-style: none; margin: 2px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; max-width: 32ch; }
-  .ld-lines li { font-size: 15px; line-height: 1.45; color: var(--ink); }
-  .ld-prompt { color: var(--ink-soft); }
-  /* The lamp: a small dark pill, only while a listen is open. */
-  .ld-lamp {
-    align-self: center; margin: 0;
-    display: inline-flex; align-items: center; gap: 10px; max-width: calc(100% - 44px);
-    padding: 6px 16px 6px 6px; border-radius: 999px;
-    background: #16140f; color: #f4f1ea;
-    font-size: 13px; line-height: 1.2;
+  .ld-since { font-family: var(--font-label); font-size: 10.5px; letter-spacing: 0.07em; text-transform: uppercase; color: rgba(244, 241, 234, 0.66); }
+  .ld-edit { color: rgba(244, 241, 234, 0.6); margin-left: 2px; }
+  /* The bubble grows out of the face's corner and shrinks back into it. */
+  .ld-bubble {
+    position: absolute; left: 22px; bottom: calc(100% + 12px); margin: 0;
+    max-width: min(300px, calc(100% - 22px));
+    display: flex; flex-direction: column; gap: 3px;
+    padding: 10px 13px 11px; border-radius: 16px 16px 16px 4px;
+    background: #f4f1ea; color: #1d1b17; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    transform-origin: 0 100%; transform: scale(0);
+    transition: transform 0.45s cubic-bezier(0.3, 1.4, 0.5, 1);
   }
-  .ld-lamp img, .ld-lamp-art { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; flex: none; background: #333; }
-  .ld-lamp-dot { width: 7px; height: 7px; border-radius: 50%; background: #7cff9b; flex: none; }
-  .ld-lamp-words { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  /* The pinned albums: framed, large, on one ledge that scrolls sideways
-     when the screen cannot hold them. */
-  .ld-pinned {
-    display: flex; gap: 18px; overflow-x: auto; scroll-snap-type: x mandatory;
-    padding: 4px 22px 18px; scrollbar-width: none;
-    border-bottom: 1px solid var(--border);
+  .ld-bubble--up { transform: scale(1); }
+  .ld-bubble-ask { font-family: var(--font-label); font-size: 9.5px; letter-spacing: 0.07em; text-transform: uppercase; color: #77736a; }
+  .ld-bubble-said {
+    font-size: 14px; line-height: 1.38;
+    display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;
   }
-  .ld-pinned::-webkit-scrollbar { display: none; }
-  /* Centred while they fit, and still scrolling from the first when not. */
-  .ld-frame:first-child { margin-left: auto; }
-  .ld-frame:last-child { margin-right: auto; }
-  /* min-width 0 all the way down: Safari otherwise lets the cover's own
-     600 pixels push the frame wider than its 270 (Miyel's phone, 2026-11-26,
-     the frame off the side of the screen). */
-  .ld-frame { position: relative; flex: 0 0 min(72vw, 270px); min-width: 0; max-width: min(72vw, 270px); scroll-snap-align: center; }
-  .ld-frame-link { min-width: 0; width: 100%;
-    display: flex; flex-direction: column; gap: 10px;
-    color: inherit; text-decoration: none; -webkit-tap-highlight-color: transparent;
+  .ld-marks { margin: 0; display: flex; gap: 16px; font-weight: 800; font-size: 15px; }
+  .ld-mark { display: inline-flex; align-items: center; gap: 5px; }
+  .ld-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .ld-meta { display: flex; flex-direction: column; gap: 6px; }
+  .ld-rig, .ld-links { margin: 0; display: flex; align-items: center; gap: 7px; flex-wrap: wrap; font-size: 13.5px; color: rgba(244, 241, 234, 0.7); }
+  .ld-rig svg { flex: none; color: #f4f1ea; }
+  .ld-links { gap: 14px; }
+  .ld-link { display: inline-flex; align-items: center; gap: 6px; color: #f4f1ea; font-weight: 700; text-decoration: none; }
+  @media (prefers-reduced-motion: reduce) {
+    .saver .ld, .ld-bubble { transition: none; animation: none; }
   }
-  /* The keeper's own: a small × to take a pin down, and an empty frame for a
-     place not yet pinned (a visitor sees neither). */
-  .ld-unpin {
-    position: absolute; top: -8px; right: -8px;
-    width: 28px; height: 28px; border-radius: 50%; border: 0; padding: 0;
-    display: grid; place-items: center; cursor: pointer;
-    background: var(--bg); color: var(--ink-soft); box-shadow: 0 0 0 1px var(--border), 0 4px 12px rgba(0, 0, 0, 0.12);
-  }
-  /* Small and quiet: a place to fill, not a frame as large as a pinned
-     album's — three of those, empty, were most of the screen. */
-  .ld-frame--empty { flex: 0 0 72px; border: 0; padding: 0; background: none; cursor: pointer; align-self: flex-start; scroll-snap-align: none; }
-  .ld-frame--empty .ld-mat { padding: 0; }
-  .ld-frame--empty .ld-mat {
-    display: grid; place-items: center; background: none; box-shadow: none;
-    border: 1.5px dashed color-mix(in srgb, var(--ink) 22%, transparent); color: var(--ink-faint);
-  }
-  .ld-mat {
-    display: block; aspect-ratio: 1; padding: 10px; background: var(--card, #fff);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08), 0 14px 30px rgba(0, 0, 0, 0.16);
-  }
-  .ld-mat { width: 100%; box-sizing: border-box; }
-  .ld-mat img { display: block; width: 100%; height: 100%; max-width: 100%; min-width: 0; object-fit: cover; }
-  .ld-mat-none { display: grid; place-items: center; width: 100%; height: 100%; color: var(--ink-faint); }
-  .ld-said { font-size: 16px; line-height: 1.45; color: var(--ink); text-wrap: pretty; }
-  .ld-title { font-family: var(--font-label); font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-soft); }
-  .ld-title b { font-weight: 500; color: var(--ink); }
-}
-
-/* ── The keeper's face opens their landing, 2026-11-25 ─────────────────────
-   The shelf the face raises holds the landing as a visitor sees it
-   (Landing.js); the card under it is what editing opens, so it shows only
-   while the cross says it is being edited (About.js sets data-editing). */
-@media (max-width: 768px) {
-  .hn--keeper .hn-face--card > .ab-pane { display: none; }
-  .hn--keeper[data-editing] .hn-face--card > .ab-pane { display: block; }
-  .hn--keeper[data-editing] .hn-face--card > .ld { display: none; }
 }
 
 /* ── Pin this line, 2026-11-25 ──────────────────────────────────────────────
