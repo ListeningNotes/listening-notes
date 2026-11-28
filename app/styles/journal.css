@@ -750,3 +750,34 @@
 /* The sizes as buttons for a mouse; a touch screen pinches (Journal.js). */
 .arc-sizes { display: contents; }
 @media (pointer: coarse) { .arc-sizes { display: none; } }
+
+/* ── The shelf, on a phone, 2026-11-27 ─────────────────────────────────────
+   The views and the filters open under the line in the page (Journal.js),
+   pushing the wall down, their options laid out across the width; the same
+   press folds the shelf back up. It grows and shrinks, never fades. */
+.arc-shelf { display: none; }
+@media (max-width: 768px) {
+  .arc-shelf {
+    display: block; overflow: hidden;
+    border-bottom: 1px solid var(--border);
+    animation: arcShelfDown 0.38s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .arc-shelf--leaving { animation: arcShelfUp 0.26s cubic-bezier(0.4, 0, 1, 1) forwards; pointer-events: none; }
+  @keyframes arcShelfDown { from { max-height: 0; } to { max-height: 70vh; } }
+  @keyframes arcShelfUp { from { max-height: 70vh; } to { max-height: 0; } }
+  .arc-shelf .arc-views {
+    position: static; width: auto; animation: none;
+    flex-direction: row; flex-wrap: wrap; align-items: center; gap: 2px 4px;
+    padding: 6px 2px 12px; background: none; border: 0; border-radius: 0; box-shadow: none;
+  }
+  .arc-shelf .arc-views-rule { flex-basis: 100%; height: 1px; margin: 4px 8px; }
+  .arc-shelf .arc-sheet--shelf {
+    position: static; width: auto; max-height: none; overflow: visible; animation: none;
+    background: none; border: 0; border-radius: 0; box-shadow: none; padding: 4px 0 12px;
+  }
+  @media (prefers-reduced-motion: reduce) { .arc-shelf, .arc-shelf--leaving { animation: none; } }
+}
+@media (max-width: 768px) {
+  /* Across the width in the shelf, so it stays short. */
+  .arc-shelf .arc-picks { flex-direction: row; flex-wrap: wrap; gap: 0 10px; }
+}

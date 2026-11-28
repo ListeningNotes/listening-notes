@@ -53,6 +53,9 @@ export default function JournalFilters({
   favoritesOnly, setFavoritesOnly, masterpiecesOnly, setMasterpiecesOnly, formativeOnly, setFormativeOnly,
   sentOnly, setSentOnly, canShare = false, sharedOnly = false, setSharedOnly = null,
   hasActiveFilters, clearFilters, shownCount, leaving = false,
+  // On a phone, in the wall's shelf under the line (Journal.js): in the page,
+  // so nothing is held still, placed or dimmed.
+  shelf = false,
 }) {
   const sheetRef = useRef(null);
   // Genre is folded to its one line until pressed, unless it was left open.
@@ -65,7 +68,7 @@ export default function JournalFilters({
   // element — the wall's own scroller, guessed at from the prop below — and
   // inside the cross there are two more above it, the pane and the rail, both
   // of which went on scrolling under the sheet. See hooks/useHoldStill.js.
-  useHoldStill(scrimRef, isPhone);
+  useHoldStill(scrimRef, isPhone && !shelf);
 
   // Measured after the open commits, off the live layout — reading the rect
   // inside the click handler catches whatever the bar looked like before
@@ -83,6 +86,7 @@ export default function JournalFilters({
   // a desk somebody may scroll with it open. A desk's used to close on a
   // scroll, when it hung over the grid and would have been left behind.
   useLayoutEffect(() => {
+    if (shelf) return undefined;
     // Its right edge on the button's, since the button sits at the right end
     // of the line and a panel hung from its left ran off the screen; its top
     // where the views menu's is, under the line. Never taller than what is
@@ -102,7 +106,7 @@ export default function JournalFilters({
     const port = scroller?.current || window;
     port.addEventListener('scroll', place, { passive: true });
     return () => port.removeEventListener('scroll', place);
-  }, [anchorRef, scroller]);
+  }, [anchorRef, scroller, shelf]);
 
   useEffect(() => {
     const onKey = e => { if (e.key === 'Escape') onClose(); };
@@ -113,10 +117,10 @@ export default function JournalFilters({
   return (
     <>
           {/* A press anywhere off the panel closes it. */}
-          <div ref={scrimRef} className="arc-scrim" onClick={onClose} />
+          {!shelf && <div ref={scrimRef} className="arc-scrim" onClick={onClose} />}
           <div
             ref={sheetRef}
-            className={'arc-sheet' + (leaving ? ' arc-sheet--leaving' : '')}
+            className={'arc-sheet' + (shelf ? ' arc-sheet--shelf' : '') + (leaving ? ' arc-sheet--leaving' : '')}
             role="dialog"
             aria-label="Filters"
           >

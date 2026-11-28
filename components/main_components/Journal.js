@@ -73,7 +73,7 @@ const FILE_MS      = 700;
 // How long the covers take to reach their new size after a pinch.
 const PINCH_MS     = 1100;
 // The views menu folding away; the length of .arc-views--leaving.
-const VIEWS_OUT_MS = 160;
+const VIEWS_OUT_MS = 260;
 
 // Beyonce should find Beyoncé, and Bjork should find Bjork. Accents are a
 // spelling most people don't reach for and half the archive's artists have
@@ -1418,6 +1418,37 @@ function Journal({
   const narrowed = Boolean(kind) || Boolean(genre) || favoritesOnly || masterpiecesOnly || formativeOnly || sentOnly || sharedOnly || yearActive;
   const hasActiveFilters = Boolean(search) || narrowed;
 
+  // The views, as a menu dropped from the line on a desk and, on a phone, as
+  // a shelf under the line that pushes the wall down (Miyel, 2026-11-27).
+  const viewsMenu = (
+              <span className={'arc-views' + (viewsLeaving ? ' arc-views--leaving' : '')} role="menu" aria-label="Views">
+                {VIEWS.map(v => (
+                  <Fragment key={v.value}>
+                    {v === VIEWS.find(w => w.fun) && <span className="arc-views-rule" aria-hidden="true" />}
+                    <button
+                      type="button"
+                      role="menuitemradio"
+                      aria-checked={v.value === view}
+                      className={'ln-word arc-views-word' + (v.value === view ? ' ln-word--on' : '')}
+                      onClick={() => chooseView(v.value)}
+                    >
+                      {v.label}
+                    </button>
+                  </Fragment>
+                ))}
+                {/* How big the covers are, under a last hairline: how the wall
+                    is shown, as the order is. The menu stays open for it, so
+                    the sizes can be tried one after another. */}
+                {/* A pinch does this on a touch screen, so there the buttons
+                    are gone (Miyel, 2026-11-27: "then we can eliminate those
+                    buttons"); a mouse keeps them (journal.css, .arc-sizes). */}
+                <span className="arc-sizes">
+                  <span className="arc-views-rule" aria-hidden="true" />
+                  <GridDensity value={density} onChange={changeDensity} options={densities} />
+                </span>
+              </span>
+  );
+
   return (
     <>
 
@@ -1521,7 +1552,7 @@ function Journal({
       <div className="arc-bar-wrap" ref={lineWrap}>
         {/* Catches the press that closes the views, and nothing else: it is
             clear, and before the bar so the bar stays above it. */}
-        {viewsOpen && <div className="arc-views-scrim" onClick={closeViews} />}
+        {viewsOpen && !isPhone && <div className="arc-views-scrim" onClick={closeViews} />}
         <div className={'arc-bar' + (searchOpen ? ' arc-bar--searching' : '')}>
           {/* The order the wall is in, which is also how to change it — the
               thing that tells you where you are is the thing that moves you.
@@ -1538,6 +1569,7 @@ function Journal({
               className="arc-ctl arc-view-now"
               onClick={() => {
                 if (viewsOpen) { closeViews(); return; }
+                if (isPhone && filtersOpen) closeFilters();
                 setViewsOpen(true);
               }}
               aria-expanded={viewsOpen && !viewsLeaving}
@@ -1547,34 +1579,7 @@ function Journal({
               <ArrowsDownUp size={16} weight="regular" aria-hidden="true" />
               {view !== DEFAULT_VIEW && <span>{activeView.label}</span>}
             </button>
-            {viewsOpen && (
-              <span className={'arc-views' + (viewsLeaving ? ' arc-views--leaving' : '')} role="menu" aria-label="Views">
-                {VIEWS.map(v => (
-                  <Fragment key={v.value}>
-                    {v === VIEWS.find(w => w.fun) && <span className="arc-views-rule" aria-hidden="true" />}
-                    <button
-                      type="button"
-                      role="menuitemradio"
-                      aria-checked={v.value === view}
-                      className={'ln-word arc-views-word' + (v.value === view ? ' ln-word--on' : '')}
-                      onClick={() => chooseView(v.value)}
-                    >
-                      {v.label}
-                    </button>
-                  </Fragment>
-                ))}
-                {/* How big the covers are, under a last hairline: how the wall
-                    is shown, as the order is. The menu stays open for it, so
-                    the sizes can be tried one after another. */}
-                {/* A pinch does this on a touch screen, so there the buttons
-                    are gone (Miyel, 2026-11-27: "then we can eliminate those
-                    buttons"); a mouse keeps them (journal.css, .arc-sizes). */}
-                <span className="arc-sizes">
-                  <span className="arc-views-rule" aria-hidden="true" />
-                  <GridDensity value={density} onChange={changeDensity} options={densities} />
-                </span>
-              </span>
-            )}
+            {viewsOpen && !isPhone && viewsMenu}
           </span>
           {/* One thing that is a magnifier and a search: pressed, the field
               grows out to the left and the magnifier draws itself into the ×
@@ -1628,6 +1633,7 @@ function Journal({
             className={'arc-ctl' + (narrowed ? ' arc-ctl--on' : '')}
             onClick={() => {
               if (filtersOpen) { closeFilters(); return; }
+              if (isPhone && viewsOpen) closeViews();
               setFiltersOpen(true);
             }}
             aria-label="Filters"
@@ -1668,9 +1674,38 @@ function Journal({
               : `${filtered.length} of ${albums.length}`}
           </span>
         </div>
+        {/* ── The shelf, on a phone, 2026-11-27 ───────────────────────────
+            Miyel: the sorts and the filters "a shelf that pushes albums
+            down", its options showing, the same press bringing it back up.
+            It opens under the line, in the page, so the wall moves down
+            to make room, and folds up again as it goes. One at a time. */}
+        {isPhone && (viewsOpen || filtersOpen) && (
+          <div className={'arc-shelf' + ((viewsOpen ? viewsLeaving : filtersLeaving) ? ' arc-shelf--leaving' : '')}>
+            {viewsOpen ? viewsMenu : (
+              <JournalFilters
+                shelf
+                onClose={closeFilters}
+                isPhone={isPhone}
+                scroller={scroller}
+                anchorRef={filterBtnRef}
+                kind={kind} setKind={gliding(setKind)}
+                genre={genre} setGenre={gliding(setGenre)} genres={genres} genresShown={genresShown} genresRest={genresRest}
+                genresOpen={genresOpen} setGenresOpen={setGenresOpen}
+                yearBounds={yearBounds} yearRange={yearRange} setYearPicked={setYearPicked}
+                favoritesOnly={favoritesOnly} setFavoritesOnly={gliding(setFavoritesOnly)}
+                masterpiecesOnly={masterpiecesOnly} setMasterpiecesOnly={gliding(setMasterpiecesOnly)}
+                formativeOnly={formativeOnly} setFormativeOnly={gliding(setFormativeOnly)}
+                sentOnly={sentOnly} setSentOnly={gliding(setSentOnly)}
+                canShare={Boolean(shared)} sharedOnly={sharedOnly} setSharedOnly={gliding(setSharedOnly)}
+                hasActiveFilters={hasActiveFilters} clearFilters={clearFilters}
+                shownCount={filtered.length}
+              />
+            )}
+          </div>
+        )}
       </div>
 
-      {filtersOpen && (
+      {filtersOpen && !isPhone && (
         <JournalFilters
           onClose={closeFilters}
           isPhone={isPhone}
