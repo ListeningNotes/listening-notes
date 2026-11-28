@@ -2105,16 +2105,9 @@ export default function HomeNav() {
         <div className="hn-pane hn-pane--turn">
           <div className="hn-leaf">
           <section className="hn-pane hn-face hn-face--card" ref={cardRef} aria-label="About this journal">
-            {/* The keeper's own landing, as a visitor sees it (Landing.js); the
-                card under it is what editing opens (nav.css, data-editing). */}
-            {authed && (
-              <Landing
-                keeper
-                live={isLive}
-                onAir={{ album: onAirAlbum, artist: onAirArtist, art: onAir }}
-                onEmpty={() => { setPinning(true); setCardOpen(false); goTo(HOME); }}
-              />
-            )}
+            {/* The card, in the magazine look on a phone (Miyel, 2026-11-27,
+                her pick of three: idcard.css, The magazine). The keeper's
+                landing stood here for two days and was taken out. */}
             <About stamps={stamps} authed={authed} pinned={pinned} entries={entries} onSignedIn={letIn} />
           </section>
 

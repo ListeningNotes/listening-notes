@@ -3915,16 +3915,6 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .ld-title b { font-weight: 500; color: var(--ink); }
 }
 
-/* ── The keeper's face opens their landing, 2026-11-25 ─────────────────────
-   The shelf the face raises holds the landing as a visitor sees it
-   (Landing.js); the card under it is what editing opens, so it shows only
-   while the cross says it is being edited (About.js sets data-editing). */
-@media (max-width: 768px) {
-  .hn--keeper .hn-face--card > .ab-pane { display: none; }
-  .hn--keeper[data-editing] .hn-face--card > .ab-pane { display: block; }
-  .hn--keeper[data-editing] .hn-face--card > .ld { display: none; }
-}
-
 /* ── Pin this line, 2026-11-25 ──────────────────────────────────────────────
    At the foot of the keeper's own post while words of its album note are
    selected (Landing.js, PinThisLine): a glyph and the words, and with three
