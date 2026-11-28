@@ -782,10 +782,11 @@
   .arc-shelf .arc-picks { flex-direction: row; flex-wrap: wrap; gap: 0 10px; }
 }
 @media (max-width: 768px) {
-  /* The order the wall is in, in full ink among the quiet others; no
-     underline and no highlight (Miyel, 2026-11-27). */
+  /* The order the wall is in, in full ink among the quiet others. */
   .arc-shelf .arc-views-word { color: var(--ink-faint); text-decoration: none; }
-  .arc-shelf .arc-views-word.ln-word--on { color: var(--ink); text-decoration: none; font-weight: 600; }
+  .arc-shelf .arc-views-word.ln-word--on { color: var(--ink); text-decoration: none; font-weight: inherit; }
+  /* Underlined as a chosen filter is (Miyel, 2026-11-27). */
+  .arc-shelf .arc-views-word.ln-word--on .arc-views-label { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 5px; }
 }
 @media (max-width: 768px) {
   /* Each order a glyph over its word, spread across the shelf in one or two
@@ -800,4 +801,13 @@
     font-family: var(--font-label); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
   }
   .arc-shelf .arc-views-glyph { width: 15px; height: 15px; flex-shrink: 0; color: inherit; }
+}
+@media (max-width: 768px) {
+  /* The search at the left, opening to the right; the order and the filters
+     together at the right (Miyel, 2026-11-27: "try moving sort and filter
+     both to the right and search bar on left"). */
+  .arc-bar .arc-seek { order: -1; margin-left: 0; margin-right: auto; flex-direction: row-reverse; justify-content: flex-end; }
+  .arc-bar .arc-seek-field { padding: 0 13px 0 2px; }
+  .arc-bar .arc-view { order: 1; }
+  .arc-bar > .arc-ctl { order: 2; }
 }

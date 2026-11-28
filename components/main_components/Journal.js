@@ -117,19 +117,21 @@ const releaseYear = entry => {
 // Remembered per browser, the way the album size is: a visitor opens in the
 // default and may rearrange for themselves, and nothing is written to anybody's
 // journal.
+// The words, 2026-11-27 (Miyel: "remove by and change in order to most
+// recent").
 export const VIEWS = [
-  { value: 'order',   label: 'In order' },
+  { value: 'order',   label: 'Most recent' },
   { value: 'az',      label: 'A–Z' },
-  { value: 'month',   label: 'By month' },
-  { value: 'era',     label: 'By era' },
+  { value: 'month',   label: 'Month' },
+  { value: 'era',     label: 'Era' },
   // By genre and By time of day came off, 2026-11-27 (Miyel: "remove genre
   // from sort and filter. remove time of day"). A browser that remembered
   // either opens In order.
-  { value: 'rating',  label: 'By rating' },
+  { value: 'rating',  label: 'Rating' },
   // By horizon ('shape') is paused, 2026-11-27 (Miyel: "remove horizon from
   // sort, it's not even on the album page… I do want it back"): its grouping
   // below stays, stricter, for when it returns.
-  { value: 'color',   label: 'By color',       fun: true },
+  { value: 'color',   label: 'Color',          fun: true },
   { value: 'shuffle', label: 'Shuffle',        fun: true },
 ];
 // The glyph over each order on a phone's shelf.
@@ -1594,7 +1596,9 @@ function Journal({
               className="arc-ctl arc-view-now"
               onClick={() => {
                 if (viewsOpen) { closeViews(); return; }
-                if (isPhone && filtersOpen) closeFilters();
+                // One shelf at a time, never one over the other: the other
+                // goes at once (Miyel, 2026-11-27).
+                if (isPhone) { setFiltersOpen(false); setFiltersLeaving(false); }
                 setViewsOpen(true);
               }}
               aria-expanded={viewsOpen && !viewsLeaving}
@@ -1658,7 +1662,7 @@ function Journal({
             className={'arc-ctl' + (narrowed ? ' arc-ctl--on' : '')}
             onClick={() => {
               if (filtersOpen) { closeFilters(); return; }
-              if (isPhone && viewsOpen) closeViews();
+              if (isPhone) { setViewsOpen(false); setViewsLeaving(false); }
               setFiltersOpen(true);
             }}
             aria-label="Filters"
