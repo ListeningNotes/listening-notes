@@ -3227,6 +3227,12 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
     cursor: pointer; -webkit-tap-highlight-color: transparent;
   }
   .hdr-face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  /* A visitor's row: the face and the mark side by side in the middle, the
+     moon and the sound at the left, Compare and Add at the right (Miyel,
+     2026-11-27). The keeper's three stops make that row too crowded, so
+     theirs keeps the face at the left. */
+  .hn--visitor .hdr > .hdr-face { position: absolute; left: calc(50% - 44px); top: 50%; transform: translateY(-50%); }
+  .hn--visitor .hdr > .hdr-mark--middle { left: calc(50% + 26px); }
   .hdr-face:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 2px; }
   .hdr-stops { margin-left: auto; display: flex; align-items: flex-start; gap: 20px; }
   .hdr-stop {
