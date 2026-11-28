@@ -73,7 +73,7 @@ const FILE_MS      = 700;
 // How long the covers take to reach their new size after a pinch.
 const PINCH_MS     = 1100;
 // The views menu folding away; the length of .arc-views--leaving.
-const VIEWS_OUT_MS = 260;
+const VIEWS_OUT_MS = 450;
 
 // Beyonce should find Beyoncé, and Bjork should find Bjork. Accents are a
 // spelling most people don't reach for and half the archive's artists have
@@ -122,9 +122,10 @@ export const VIEWS = [
   { value: 'az',      label: 'A–Z' },
   { value: 'month',   label: 'By month' },
   { value: 'era',     label: 'By era' },
-  { value: 'genre',   label: 'By genre' },
+  // By genre and By time of day came off, 2026-11-27 (Miyel: "remove genre
+  // from sort and filter. remove time of day"). A browser that remembered
+  // either opens In order.
   { value: 'rating',  label: 'By rating' },
-  { value: 'time',    label: 'By time of day', fun: true },
   // Stored as 'shape', its first name, so a browser that remembered it still
   // opens on it; named By horizon, after the row of bars it is read from
   // (Miyel, 2026-10-22: "instead of by shape lets do by horizon").
@@ -247,22 +248,35 @@ const SHAPES = {
   last:   { key: 'last',   label: 'Best last',          bars: [1, 2, 3, 4, 5], rank: 3 },
   wild:   { key: 'wild',   label: 'Up and down',        bars: [3, 5, 1, 5, 2], rank: 4 },
   song:   { key: 'song',   label: 'Tracks',             bars: [4],             rank: 5 },
+  unclear:{ key: 'unclear',label: 'No clear shape',     bars: null,            rank: 6 },
   none:   { key: 'none',   label: 'No horizon',         bars: null,            rank: Infinity },
 };
 const mean = list => list.reduce((sum, v) => sum + v, 0) / list.length;
 function shapeOf(horizon) {
+  // Stricter, 2026-11-27 (Miyel: "horizon needs to be much more strict… some
+  // of these simply aren't what it's saying"). A shape is named only when the
+  // record plainly has it: five starred tracks at least; Even only when every
+  // track is within half a star; Best first or last only when one end is a
+  // whole star above the other and the middle sits between them; Best in the
+  // middle only when the middle is a whole star above both ends; Up and down
+  // only when the stars swing by two or more, at least three times. Anything
+  // short of that is said to have no clear shape.
   const stars = parseHorizon(horizon).map(v => v * 5);
-  if (stars.length < 3) return 'none';
-  if (Math.max(...stars) - Math.min(...stars) <= 1) return 'even';
+  if (stars.length < 5) return 'none';
+  const lo = Math.min(...stars), hi = Math.max(...stars);
+  if (hi - lo <= 0.5) return 'even';
   const third = Math.ceil(stars.length / 3);
   const start = mean(stars.slice(0, third));
   const end = mean(stars.slice(-third));
-  const middle = stars.length > 2 * third ? mean(stars.slice(third, -third)) : (start + end) / 2;
-  const STANDS_OUT = 0.5;
-  if (middle - Math.max(start, end) >= STANDS_OUT) return 'middle';
-  if (start - end >= STANDS_OUT && start >= middle) return 'first';
-  if (end - start >= STANDS_OUT && end >= middle) return 'last';
-  return 'wild';
+  const middle = mean(stars.slice(third, -third).length ? stars.slice(third, -third) : stars);
+  const CLEAR = 1;
+  if (middle - Math.max(start, end) >= CLEAR) return 'middle';
+  if (start - end >= CLEAR && start >= middle && middle >= end) return 'first';
+  if (end - start >= CLEAR && end >= middle && middle >= start) return 'last';
+  let swings = 0;
+  for (let i = 1; i < stars.length; i++) if (Math.abs(stars[i] - stars[i - 1]) >= 2) swings++;
+  if (swings >= 3) return 'wild';
+  return 'unclear';
 }
 
 // ── Read off the covers, 2026-10-22 ────────────────────────────────────────
@@ -1088,7 +1102,9 @@ function Journal({
     storeView(value, viewKey);
     setDrawn(COVERS_AT_A_TIME);
     if (under > 1) (scroller?.current || document.scrollingElement)?.scrollBy({ top: -under });
-    closeViews();
+    // The shelf stays open on a phone while the orders are tried one after
+    // another (Miyel, 2026-11-27); its own button folds it.
+    if (!isPhone) closeViews();
   }
 
   // ── The band you are in, 2026-10-23 ───────────────────────────────────

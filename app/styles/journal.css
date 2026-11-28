@@ -760,9 +760,9 @@
   .arc-shelf {
     display: block; overflow: hidden;
     border-bottom: 1px solid var(--border);
-    animation: arcShelfDown 0.38s cubic-bezier(0.2, 0.8, 0.2, 1);
+    animation: arcShelfDown 0.62s cubic-bezier(0.22, 1, 0.36, 1);
   }
-  .arc-shelf--leaving { animation: arcShelfUp 0.26s cubic-bezier(0.4, 0, 1, 1) forwards; pointer-events: none; }
+  .arc-shelf--leaving { animation: arcShelfUp 0.45s cubic-bezier(0.55, 0, 0.45, 1) forwards; pointer-events: none; }
   @keyframes arcShelfDown { from { max-height: 0; } to { max-height: 70vh; } }
   @keyframes arcShelfUp { from { max-height: 70vh; } to { max-height: 0; } }
   .arc-shelf .arc-views {
@@ -780,4 +780,12 @@
 @media (max-width: 768px) {
   /* Across the width in the shelf, so it stays short. */
   .arc-shelf .arc-picks { flex-direction: row; flex-wrap: wrap; gap: 0 10px; }
+}
+@media (max-width: 768px) {
+  /* The order the wall is in, lit rather than underlined (Miyel, 2026-11-27). */
+  .arc-shelf .arc-views-word { color: var(--ink-faint); text-decoration: none; }
+  .arc-shelf .arc-views-word.ln-word--on {
+    color: var(--ink); text-decoration: none; font-weight: 500;
+    background: color-mix(in srgb, #f2d64b 45%, transparent); border-radius: 4px;
+  }
 }

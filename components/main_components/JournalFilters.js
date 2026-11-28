@@ -39,6 +39,8 @@ import { useHoldStill } from '../../hooks/useHoldStill';
 // cut off by the start a listen button"). Read by this panel for its most
 // height and by the wall for how far to slide the page (Journal.js,
 // makeRoom).
+const GENRE_SHOWN = false;
+
 export function roomFloor(line) {
   const bar = document.querySelector('.lb:not(.lb--down)')?.getBoundingClientRect();
   const under = bar && line && bar.top > line.bottom && bar.left < line.right && bar.right > line.left;
@@ -178,7 +180,9 @@ export default function JournalFilters({
             {/* Only worth a group once there's more than one genre to choose
                 between — on a young archive it would be a row with a single
                 option and nothing to compare it against. */}
-            {genres.length > 1 && (
+            {/* Genre came off the filters, 2026-11-27 (Miyel: "remove genre from
+                sort and filter"); GENRE_SHOWN brings it back. */}
+            {GENRE_SHOWN && genres.length > 1 && (
               <div className="arc-sheet-group">
                 {/* Folded to one line, which says the genre the wall is kept
                     to, the way the year's line says its span: the panel reads
