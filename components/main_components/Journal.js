@@ -1291,6 +1291,94 @@ function Journal({
     clocks.current.push(setTimeout(show, 120));
   }, [arranged, closeTheGap]);
 
+  // ── Pinch to change the size, 2026-11-27 ─────────────────────────────────
+  // Miyel: "can we have the wall adjust with a pinch to zoom mechanism" —
+  // stepped, the way the Photos grid steps. Two fingers spreading go one
+  // size bigger, pinching in one smaller, once per gesture, through the
+  // sizes this wall offers (largest first). The album between the fingers
+  // keeps its place on the screen, and the covers glide and grow or shrink
+  // from where they stood to where they land (transforms, never a fade).
+  // The page's own zoom stands down on the wall while two fingers are on it.
+  const pinchFrom = useRef(null);
+  const densityRef = useRef(density);
+  useEffect(() => { densityRef.current = density; }, [density]);
+  useEffect(() => {
+    const wall = wallMain.current;
+    if (!wall) return undefined;
+    let start = 0, done = false;
+    const apart = t => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+    const down = e => {
+      if (e.touches.length !== 2) return;
+      start = apart(e.touches); done = false;
+    };
+    const move = e => {
+      if (e.touches.length !== 2 || !start) return;
+      e.preventDefault();
+      if (done) return;
+      const k = apart(e.touches) / start;
+      const at = densities.indexOf(densityRef.current);
+      const next = k > 1.22 ? at - 1 : k < 0.82 ? at + 1 : null;
+      if (next == null || next < 0 || next >= densities.length) return;
+      done = true;
+      const mx = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+      const my = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+      const under = document.elementFromPoint(mx, my)?.closest?.('[data-tile-key]');
+      const rects = new Map();
+      for (const tile of grid.current?.querySelectorAll('[data-tile-key]') || []) {
+        const r = tile.getBoundingClientRect();
+        if (r.bottom > -200 && r.top < window.innerHeight + 200) rects.set(tile.dataset.tileKey, r);
+      }
+      pinchFrom.current = { key: under?.dataset.tileKey || null, top: under ? under.getBoundingClientRect().top : 0, rects };
+      changeDensity(densities[next]);
+    };
+    const up = e => { if (e.touches.length < 2) start = 0; };
+    // Safari's own pinch, which would zoom the whole page.
+    const gesture = e => e.preventDefault();
+    wall.addEventListener('touchstart', down, { passive: true });
+    wall.addEventListener('touchmove', move, { passive: false });
+    wall.addEventListener('touchend', up, { passive: true });
+    wall.addEventListener('touchcancel', up, { passive: true });
+    wall.addEventListener('gesturestart', gesture, { passive: false });
+    wall.addEventListener('gesturechange', gesture, { passive: false });
+    return () => {
+      wall.removeEventListener('touchstart', down);
+      wall.removeEventListener('touchmove', move);
+      wall.removeEventListener('touchend', up);
+      wall.removeEventListener('touchcancel', up);
+      wall.removeEventListener('gesturestart', gesture);
+      wall.removeEventListener('gesturechange', gesture);
+    };
+  }, [densities, changeDensity]);
+  useLayoutEffect(() => {
+    const from = pinchFrom.current;
+    pinchFrom.current = null;
+    if (!from) return;
+    const box = grid.current;
+    if (!box) return;
+    // The album between the fingers back where it was.
+    const port = scroller?.current || document.scrollingElement;
+    const held = from.key ? box.querySelector(`[data-tile-key="${CSS.escape(from.key)}"]`) : null;
+    if (held && port) port.scrollTop += held.getBoundingClientRect().top - from.top;
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+    const moved = [];
+    for (const tile of box.querySelectorAll('[data-tile-key]')) {
+      const was = from.rects.get(tile.dataset.tileKey);
+      if (!was) continue;
+      const now = tile.getBoundingClientRect();
+      if (!now.width || !now.height) continue;
+      tile.style.transition = 'none';
+      tile.style.transformOrigin = '0 0';
+      tile.style.transform = `translate(${was.left - now.left}px, ${was.top - now.top}px) scale(${was.width / now.width}, ${was.height / now.height})`;
+      moved.push(tile);
+    }
+    if (!moved.length) return;
+    const go = () => {
+      for (const tile of moved) { tile.style.transition = `transform ${FILE_MS}ms cubic-bezier(0.2, 0.8, 0.2, 1)`; tile.style.transform = ''; }
+      clocks.current.push(setTimeout(() => { for (const tile of moved) { tile.style.transition = ''; tile.style.transformOrigin = ''; } }, FILE_MS + 40));
+    };
+    requestAnimationFrame(() => requestAnimationFrame(go));
+  }, [density, scroller]);
+
   // ── A filter glides as a view does, 2026-10-28 ──────────────────────────
   // Miyel: the wall "doesn't do moving animations that the sort does for
   // filters". A view took where every cover stood before it changed
@@ -1472,8 +1560,13 @@ function Journal({
                 {/* How big the covers are, under a last hairline: how the wall
                     is shown, as the order is. The menu stays open for it, so
                     the sizes can be tried one after another. */}
-                <span className="arc-views-rule" aria-hidden="true" />
-                <GridDensity value={density} onChange={changeDensity} options={densities} />
+                {/* A pinch does this on a touch screen, so there the buttons
+                    are gone (Miyel, 2026-11-27: "then we can eliminate those
+                    buttons"); a mouse keeps them (journal.css, .arc-sizes). */}
+                <span className="arc-sizes">
+                  <span className="arc-views-rule" aria-hidden="true" />
+                  <GridDensity value={density} onChange={changeDensity} options={densities} />
+                </span>
               </span>
             )}
           </span>

@@ -746,3 +746,7 @@
   pointer-events: none;
 }
 .arc-grid[data-density="small"] .ft-marks { top: 4px; right: 4px; padding: 2px 4px; gap: 2px; }
+
+/* The sizes as buttons for a mouse; a touch screen pinches (Journal.js). */
+.arc-sizes { display: contents; }
+@media (pointer: coarse) { .arc-sizes { display: none; } }
