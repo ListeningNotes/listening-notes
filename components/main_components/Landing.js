@@ -80,14 +80,16 @@ export default function Landing({ stamps = null, keeper = false, onEdit = null }
           : <User size={26} weight="light" aria-hidden="true" />}
       </span>
       <span className="ld-who-said">
-        <span className="ld-name">{cover_name}</span>
+        <span className="ld-name">
+          {cover_name}
+          {keeper && <PencilSimple className="ld-edit" size={15} weight="regular" aria-hidden="true" />}
+        </span>
         {(since || records !== null) && (
           <span className="ld-since">
             {[since ? `Since ${since}` : null, records !== null ? `${records} albums` : null].filter(Boolean).join(' · ')}
           </span>
         )}
       </span>
-      {keeper && <PencilSimple className="ld-edit" size={16} weight="regular" aria-hidden="true" />}
     </>
   );
 

@@ -3873,7 +3873,8 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
     font-size: 20px; line-height: 1.1;
   }
   .ld-since { font-family: var(--font-label); font-size: 10.5px; letter-spacing: 0.07em; text-transform: uppercase; color: rgba(244, 241, 234, 0.66); }
-  .ld-edit { color: rgba(244, 241, 234, 0.6); margin-left: 2px; }
+  .ld-name { display: flex; align-items: center; gap: 7px; }
+  .ld-edit { color: rgba(244, 241, 234, 0.6); flex: none; }
   /* The bubble grows out of the face's corner and shrinks back into it. */
   .ld-bubble {
     position: absolute; left: 22px; bottom: calc(100% + 12px); margin: 0;
