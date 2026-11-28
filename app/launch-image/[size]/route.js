@@ -25,8 +25,8 @@ export async function GET(request, { params }) {
   const screen = LAUNCH_SCREENS.find(s => launchName(s) === size);
   if (!screen) return new Response('Not found', { status: 404 });
   const [w, h, r] = screen;
-  // The mark is 22 points tall on the profile (nav.css, .saver--profile .saver-mark-svg).
-  const tall = 22 * r, wide = Math.round(tall * 241 / 140);
+  // The mark is 32 points tall on the profile (nav.css, .saver--profile .saver-mark-svg).
+  const tall = 32 * r, wide = Math.round(tall * 241 / 140);
   return new ImageResponse(
     (
       <div style={{ width: '100%', height: '100%', display: 'flex', background: '#16140f', position: 'relative' }}>

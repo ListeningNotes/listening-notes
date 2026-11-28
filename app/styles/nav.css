@@ -3860,7 +3860,7 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .saver--profile .saver-mark {
     top: calc(14px + env(safe-area-inset-top, 0px)); bottom: auto; padding: 10px 14px;
   }
-  .saver--profile .saver-mark-svg { height: 22px; }
+  .saver--profile .saver-mark-svg { height: 32px; }
   .saver .ld {
     position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
     display: flex; flex-direction: column; gap: 12px;
@@ -3894,8 +3894,11 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .ld-edit { color: rgba(244, 241, 234, 0.6); flex: none; }
   /* The bubble grows out of the face's corner and shrinks back into it. */
   .ld-bubble {
-    position: absolute; left: 22px; bottom: calc(100% + 12px); margin: 0;
-    max-width: min(300px, calc(100% - 22px));
+    /* From the face's upper right, over the start of the name, the way a
+       speech bubble leaves a mouth (Miyel, 2026-11-27): its pointed corner
+       at the face's diagonal. */
+    position: absolute; left: 48px; bottom: calc(100% + 4px); margin: 0;
+    max-width: min(290px, calc(100% - 48px));
     display: flex; flex-direction: column; gap: 3px;
     padding: 10px 13px 11px; border-radius: 16px 16px 16px 4px;
     background: #f4f1ea; color: #1d1b17; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
@@ -4056,4 +4059,6 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   }
   .saver-mark-svg { display: block; height: 30px; width: auto; fill: currentColor; }
   .saver-mark-svg .hn-mark-dot { fill: currentColor; }
+  /* Lit while the journal is live, as the mark is everywhere else (Miyel, 2026-11-27). */
+  .saver-mark-svg .hn-mark-dot--live { fill: #7cff9b; }
 }
