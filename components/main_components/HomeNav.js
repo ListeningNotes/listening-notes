@@ -2053,6 +2053,7 @@ export default function HomeNav() {
         leaving={saverLeaving}
         logo={mark('saver-mark-svg')}
         onEnter={liftSaver}
+        live={isLive && onAir ? onAir : null}
       >
         <Landing stamps={stamps} keeper={authed} onEdit={() => { setSaver(null); setCardOpen(true); }} />
       </Screensaver>

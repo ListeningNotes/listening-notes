@@ -58,16 +58,15 @@ export default function Landing({ stamps = null, keeper = false, onEdit = null }
   // One answer at a time, from the face: it grows out of the face's corner,
   // stays, shrinks back, and the next comes. Never moving for somebody who
   // asked for less motion — the first answer simply stays.
-  // While the keeper is logging, the bubble says that instead and stays up,
-  // and the face wears a green ring (Miyel, 2026-11-27: "that way it feels
-  // like a rare occurrence but you might catch them"). The profile is the
-  // only place a visitor sees a listen now; the inside does not (HomeNav).
-  const { isLive, album: onAirAlbum, artist: onAirArtist, art: onAirArt } = useListeningBeacon();
+  // While the keeper is logging, the covers behind all become the album
+  // playing (Place.js, Screensaver) and the face wears a green ring; the
+  // bubble keeps to their answers (Miyel, 2026-11-27). The profile is the only
+  // place a visitor sees a listen (HomeNav).
+  const { isLive, album: onAirAlbum } = useListeningBeacon();
   const live = Boolean(isLive && onAirAlbum);
   const [turn, setTurn] = useState(0);
   const [up, setUp] = useState(false);
   useEffect(() => {
-    if (live) { const t = window.setTimeout(() => setUp(true), 300); return () => window.clearTimeout(t); }
     if (!said.length) return undefined;
     const quiet = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const first = window.setTimeout(() => setUp(true), 700);
@@ -78,7 +77,7 @@ export default function Landing({ stamps = null, keeper = false, onEdit = null }
       down = window.setTimeout(() => { setTurn(t => t + 1); setUp(true); }, 450);
     }, SAYS_MS);
     return () => { window.clearTimeout(first); window.clearInterval(tick); window.clearTimeout(down); };
-  }, [said.length, live]);
+  }, [said.length]);
   const saying = said.length ? said[turn % said.length] : null;
 
   const who = (
@@ -105,15 +104,7 @@ export default function Landing({ stamps = null, keeper = false, onEdit = null }
   return (
     <section className="ld" aria-label={cover_name || 'This journal'} onClick={e => e.stopPropagation()}>
       <div className="ld-me">
-        {live ? (
-          <p className={'ld-bubble ld-bubble--live' + (up ? ' ld-bubble--up' : '')}>
-            {onAirArt ? <img className="ld-bubble-art" src={sizedAlbumArt(onAirArt, 120)} alt="" /> : null}
-            <span className="ld-bubble-live">
-              <span className="ld-bubble-ask"><i className="ld-live-dot" aria-hidden="true" />Logging</span>
-              <span className="ld-bubble-said"><b>{onAirAlbum}</b>{onAirArtist ? ` · ${onAirArtist}` : ''}</span>
-            </span>
-          </p>
-        ) : saying && (
+        {saying && (
           <p className={'ld-bubble' + (up ? ' ld-bubble--up' : '')} aria-live="off">
             <span className="ld-bubble-ask">{saying.text.replace(/\s*[—–-]\s*$/, '')}</span>
             <span className="ld-bubble-said">{saying.answer}</span>

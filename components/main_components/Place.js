@@ -273,9 +273,14 @@ export function useRemembered() {
 // children and set at its foot, with the mark moved to the top: one screen
 // that anybody opens a journal to, the keeper and a visitor alike (Miyel:
 // "should it just be the same whether it's your profile or not").
-export function Screensaver({ entries, arriving, leaving, logo, onEnter, children = null }) {
+// While the keeper is logging, every cover in it is the album playing, moving
+// as the covers always do (Miyel, 2026-11-27: "they all become that one
+// album") — the screensaver broadcasting the listen until a saver of its own
+// is thought of. `live` is that album's art.
+export function Screensaver({ entries, arriving, leaving, logo, onEnter, children = null, live = null }) {
   const remembered = useRemembered();
-  const shown = entries.some(e => e.album_art) ? entries : remembered;
+  const own = entries.some(e => e.album_art) ? entries : remembered;
+  const shown = live ? [{ album_art: live }] : own;
   return (
     <div className={'saver' + (arriving ? ' saver--arriving' : '') + (leaving ? ' saver--leaving' : '') + (children ? ' saver--profile' : '')} onClick={onEnter} role="presentation">
       <Room entries={shown} still={false} scatter={leaving} arrive={arriving} />
