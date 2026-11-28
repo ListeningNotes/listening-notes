@@ -3831,6 +3831,18 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
 /* A desk keeps its bar; the tile is a phone's. */
 @media (min-width: 769px) { .arc-grid .lt { display: none; } }
 
+/* A visitor's doors at the top of the wall, inside (Landing.js, VisitorDoors). */
+.ld-doors { display: none; }
+@media (max-width: 768px) {
+  .ld-doors {
+    display: flex; flex-direction: column; gap: 12px;
+    padding: calc(var(--hn-bar-h, 64px) + 4px) 18px 14px;
+  }
+  .ld-doors .fr-door { flex: 1 1 0; min-width: 0; color: var(--ink); text-decoration: none; }
+  .ld-doors-ask { display: flex; gap: 10px; align-items: center; }
+  .ld-doors-ask .ln-say-field { flex: 1; min-width: 0; }
+}
+
 /* ── The profile, 2026-11-27 ─────────────────────────────────────────────────
    What anybody opens a journal to on a phone (Landing.js): the screensaver's
    covers moving over the whole screen, and at its foot the keeper, low and

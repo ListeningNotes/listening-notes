@@ -81,7 +81,7 @@ import ListeningBeacon from './ListeningBeacon';
 import Landing from './Landing';
 import ListenBar, { ListenTile } from './ListenBar';
 import { SCATTER_MS, Screensaver, rememberCovers, useRemembered } from './Place';
-import { PINNED_EVENT, setPinning, usePinning } from './Landing';
+import { PINNED_EVENT, VisitorDoors, setPinning, usePinning } from './Landing';
 import Journal from './Journal';
 import Header from './Header';
 import PinnedLetter from './PinnedLetter';
@@ -362,7 +362,7 @@ function secondFloorTop(pane) {
 }
 
 export default function HomeNav() {
-  const { cover_name, pinned_entry_id, portrait_url: portrait } = useBookplate();
+  const { cover_name, keeper_name, pinned_entry_id, portrait_url: portrait } = useBookplate();
   const { theme, toggle: toggleTheme } = useTheme();
   const { isLive, before, art: onAir, album: onAirAlbum, artist: onAirArtist, track: onAirTrack } = useListeningBeacon();
   // How wide the spine is on a desk, and the grip that changes it. The hook
@@ -2162,6 +2162,9 @@ export default function HomeNav() {
           {/* Pulled down, home asks again — the lamp and the wall — since
               nothing asks on a clock any more (useListeningBeacon). */}
           <PullDown scroller={homeRef} onPull={() => Promise.all([refreshBeacon(), fetchEntries().then(list => { setEntries(list); }).catch(() => {})])} mark={mark('ln-pull-svg')} />
+          {/* A visitor, inside from the profile: what they can do about this
+              journal, at the top of it (Landing.js, VisitorDoors). A phone's. */}
+          {visitor && <VisitorDoors keeper={keeper_name || ''} />}
           {/* Two floors, always. There is no version of this pane without a
               beacon on it (Miyel, 2026-09-16): a journal showing a record it
               sat with months ago is not a beacon failing, that IS the signal,

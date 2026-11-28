@@ -15,7 +15,9 @@
 // it (onEdit); a visitor's do nothing more than show them.
 import Link from 'next/link';
 import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
-import { Fingerprint, Heart, PencilSimple, PushPin, SketchLogo, User, X } from '@phosphor-icons/react';
+import { ChatCircle, Fingerprint, Heart, PaperPlaneTilt, PencilSimple, Plus, PushPin, Shuffle, SketchLogo, User, X } from '@phosphor-icons/react';
+import { MessageWayIn } from './Slug_Page/MessageForm';
+import { journalUrl, recallSender, tidyJournal } from '../../library/return_address';
 import { useBookplate } from './Bookplate';
 import { readBioAnswers } from '../../library/bioprompt';
 import { identify, readLink, rigIcon } from '../../library/card_links';
@@ -137,6 +139,75 @@ export default function Landing({ stamps = null, keeper = false, onEdit = null }
         </div>
       )}
     </section>
+  );
+}
+
+// ── Inside, a visitor's doors, 2026-11-27 ───────────────────────────────
+// Once a visitor has tapped in from the profile, the top of the wall holds
+// what they can do about this journal, a glyph over one word each (Miyel's
+// profile prototype): Compare and Add, which happen on the visitor's own
+// journal — this one cannot write to theirs (AGENTS, Never) — so both open
+// their page about this keeper there, where Add is in its top row; Message,
+// a few words to the keeper's inbox; and Send, an album, on this journal's
+// own page for it. A visitor whose browser does not know their journal is
+// asked for it once, in a field, the way a message asks.
+export function VisitorDoors({ keeper = '' }) {
+  const [mine, setMine] = useState('');
+  const [asking, setAsking] = useState(false);
+  const [typed, setTyped] = useState('');
+  const [writing, setWriting] = useState(false);
+  const there = () => (typeof window === 'undefined' ? '' : window.location.host);
+  const pageAboutThem = home => `${journalUrl(home)}/dashboard/people/${encodeURIComponent(there())}`;
+  function toTheirs() {
+    const home = tidyJournal(mine || recallSender().address);
+    if (home) { window.location.href = pageAboutThem(home); return; }
+    setWriting(false);
+    setAsking(true);
+  }
+  function go(event) {
+    event.preventDefault();
+    const home = tidyJournal(typed);
+    if (!home) return;
+    setMine(home);
+    window.location.href = pageAboutThem(home);
+  }
+  return (
+    <div className="ld-doors">
+      <div className="fr-doors-row">
+        <button type="button" className="fr-door" onClick={toTheirs}>
+          <Shuffle size={22} weight="regular" aria-hidden="true" />
+          Compare
+        </button>
+        <button type="button" className="fr-door" onClick={toTheirs}>
+          <Plus size={22} weight="regular" aria-hidden="true" />
+          Add
+        </button>
+        <button type="button" className="fr-door" onClick={() => { setAsking(false); setWriting(w => !w); }} aria-expanded={writing}>
+          <ChatCircle size={22} weight="regular" aria-hidden="true" />
+          Message
+        </button>
+        <Link className="fr-door" href="/submit">
+          <PaperPlaneTilt size={22} weight="regular" aria-hidden="true" />
+          Send
+        </Link>
+      </div>
+      {asking && (
+        <form className="ld-doors-ask" onSubmit={go}>
+          <input
+            className="ln-say-field"
+            value={typed}
+            onChange={e => setTyped(e.target.value)}
+            placeholder="Your journal"
+            aria-label="Your journal"
+            autoComplete="off"
+            inputMode="url"
+            autoFocus
+          />
+          <button type="submit" className="ln-word">Go</button>
+        </form>
+      )}
+      {writing && <MessageWayIn keeper={keeper} start onDone={() => setWriting(false)} />}
+    </div>
   );
 }
 
